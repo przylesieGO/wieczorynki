@@ -71,6 +71,8 @@ nav button.on{background:var(--navon);color:var(--ink);box-shadow:0 1px 3px rgba
 .cprev{display:flex;flex-direction:column;gap:8px;margin-top:8px}.cprev div{display:flex;flex-wrap:wrap;gap:6px;align-items:center;border-radius:10px;padding:10px;border:1px solid var(--line)}
 .crow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font-size:16px}
 .crow input[type=color]{width:56px;height:36px;padding:2px;border-radius:9px;cursor:pointer}
+.onl{border:0;background:var(--acc2);color:var(--acc);border-radius:999px;padding:6px 12px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap}
+.sheetbox .stats{grid-template-columns:1fr 1fr}.sheetbox .st b{font-size:24px}.sheetbox .st span{font-size:14px}
 .sdanger{display:block;margin:16px auto 0;padding:8px;border:0;background:none;color:var(--bad);font:inherit;font-size:15px;cursor:pointer;text-decoration:underline}
 .sheetbox ul{margin:6px 0 0;padding-left:20px;font-size:15px}
 .arow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);font-size:17px}
@@ -163,7 +165,8 @@ details.card>summary{font-size:16px}
 <!-- ===== START ===== -->
 <section id="p0">
  <div class="card">
-  <h2>Kto chce jechać?</h2>
+  <div class="row between" style="margin-bottom:10px"><h2 style="margin:0">Kto chce jechać?</h2><button class="onl hide" id="onlbtn" title="Kto ma teraz otwartą aplikację"></button></div>
+  <div id="onllist" class="hide" style="margin:-4px 0 10px"></div>
   <div id="wantguest" class="note">Zaloguj się, aby zobaczyć chętnych i zgłosić ochotę na przejażdżkę.</div>
   <div id="wantmain" class="hide">
    <button class="roundbtn" id="wantbtn"><span class="ri">🚴</span><span>Mam ochotę<br>pojeździć</span></button>
@@ -560,6 +563,7 @@ function adminHtml(){
     :'<div class="note">Brak użytkowników z nickiem, którym można nadać uprawnienia.</div>';
   return '<button class="sback" data-c="back">‹ Ustawienia</button>'
    +'<div class="sname" style="margin-top:26px">🛡️ Administracja</div>'
+   +'<button class="b sbtn g" data-c="stats">📊 Statystyki</button>'
    +(genderOk?'<button class="b sbtn g" data-c="colors">🎨 Kolory nicków</button>':'')
    +'<div class="sleft"><h3>Administratorzy</h3>'+rows
    +'<h3>Nadaj uprawnienia administratora</h3>'+add
@@ -634,7 +638,7 @@ function renderGear(){
   const p=$("gearpanel");
   if(!gearOpen){p.classList.add("hide");gearView="main";return}
   p.classList.remove("hide");
-  if((gearView==="admin"||gearView==="unick"||gearView==="colors")&&!(session&&isAdmin))gearView="main";
+  if((gearView==="admin"||gearView==="unick"||gearView==="colors"||gearView==="stats")&&!(session&&isAdmin))gearView="main";
   if(gearView==="unick"&&!nicks[unickId])gearView="admin";
   const keepSel=$("adminsel")?$("adminsel").value:"";
   const keepCol=gearView==="colors"&&$("colK")?colVals():null;
@@ -647,6 +651,7 @@ function renderGear(){
   if(gearView==="admin")body=adminHtml();
   else if(gearView==="unick")body=unickHtml();
   else if(gearView==="colors")body=colorsHtml();
+  else if(gearView==="stats")body=adminStatsHtml();
   else if(gearView==="nick"&&session)body=nickHtml();
   else if(gearView==="del"&&session)body=delHtml();
   else body=session
@@ -700,6 +705,7 @@ $("gearpanel").addEventListener("click",async e=>{
   const c=b.dataset.c;
   if(c==="admin"){gearView="admin";renderGear();return}
   if(c==="colors"){gearView="colors";renderGear();return}
+  if(c==="stats"){gearView="stats";loadStats();return}
   if(c==="coldef"){["K","M"].forEach(g=>{$("col"+g).value=DEF_COLORS[g];$("bg"+g).value=DEF_BGS[g];$("nob"+g).checked=false});colorsPreview();return}
   if(c==="colsave"){await saveColors();return}
   if(c==="nick"){selGender=genders[uid]||"";gearView="nick";renderGear();const i=$("gnick");if(i){i.focus();i.select()}return}
@@ -1013,7 +1019,59 @@ $("ladd").onclick=async()=>{
   }catch(e){inf.textContent="Nie udało się dodać: "+(e&&e.message?e.message:"błąd")}
 };
 
-function refreshUi(){renderChrome();renderWants();renderNext();renderNav();renderCard();renderList();renderLibUi()}
+/* ---------- online (Supabase Realtime Presence, bez zmian w bazie) ---------- */
+let presCh=null,presUid="",onlineIds=[],onlOpen=false;
+function startPresence(){
+  if(!sb||!session||typeof sb.channel!=="function")return;
+  if(presCh&&presUid===uid)return;
+  stopPresence();presUid=uid;
+  try{
+    presCh=sb.channel("online",{config:{presence:{key:uid}}});
+    presCh.on("presence",{event:"sync"},()=>{onlineIds=Object.keys(presCh.presenceState()||{});renderOnline()})
+      .subscribe(async st=>{if(st==="SUBSCRIBED"){try{await presCh.track({t:Date.now()})}catch(e){}}});
+  }catch(e){presCh=null}
+}
+function stopPresence(){
+  if(presCh){try{sb.removeChannel(presCh)}catch(e){}}
+  presCh=null;presUid="";onlineIds=[];onlOpen=false;renderOnline();
+}
+function renderOnline(){
+  const b=$("onlbtn"),l=$("onllist");if(!b)return;
+  const show=!!session&&onlineIds.length>0;
+  b.classList.toggle("hide",!show);
+  if(!show){l.classList.add("hide");return}
+  b.textContent="🟢 "+onlineIds.length+" online";
+  l.classList.toggle("hide",!onlOpen);
+  if(onlOpen)l.innerHTML=nkList(onlineIds.slice().sort((a,c)=>(nicks[a]||"~").localeCompare(nicks[c]||"~","pl")));
+}
+$("onlbtn").onclick=()=>{onlOpen=!onlOpen;renderOnline()};
+
+/* ---------- statystyki dla administratora ---------- */
+let statsData=null,statsErr="",seenAt=0,seenFor="";
+async function loadStats(){
+  statsData=null;statsErr="";renderGear();
+  try{
+    const r=await sb.rpc("admin_stats");
+    if(r.error)statsErr=(r.error.code==="PGRST202"||/admin_stats/.test(r.error.message||""))?"Statystyki nie są jeszcze włączone w bazie (brak funkcji admin_stats — KROK 9).":"Nie udało się pobrać: "+r.error.message;
+    else statsData=r.data;
+  }catch(e){statsErr="Nie udało się pobrać statystyk."}
+  if(gearView==="stats")renderGear();
+}
+function adminStatsHtml(){
+  const head='<button class="sback" data-c="backadmin">‹ Administracja</button><div class="sname" style="margin-top:26px">📊 Statystyki</div>';
+  if(statsErr)return head+'<div class="sleft"><div class="changed">'+esc(statsErr)+'</div></div>';
+  if(!statsData)return head+'<div class="smail">Ładuję…</div>';
+  const d=statsData,t=(v,l)=>'<div class="st"><b>'+esc(v==null?"—":v)+'</b><span>'+l+'</span></div>';
+  const since=d.since?new Date(d.since).toLocaleDateString("pl-PL",{day:"numeric",month:"long",year:"numeric"}):"";
+  return head+'<div class="sleft">'
+   +'<h3>Konta</h3><div class="stats">'+t(d.accounts,"założone konta")+t(d.profiles,"z nickiem")+'</div>'
+   +'<h3>Aktywność</h3><div class="stats">'+t(onlineIds.length,"teraz online")+t(d.active7,"aktywni 7 dni")+t(d.active30,"aktywni 30 dni")+'</div>'
+   +'<h3>Płeć</h3><div class="stats">'+t(d.women,"👩 kobiety")+t(d.men,"👨 mężczyźni")+(d.nogender?t(d.nogender,"bez płci"):"")+'</div>'
+   +'<p class="note">Aktywny = otworzył aplikację zalogowany w danym okresie.'+(since?' Aktywność zapisywana od '+esc(since)+'.':'')+' Konta bez nicku liczą się tylko w „założone konta”.</p>'
+   +'<button class="b sbtn g" data-c="stats">↻ Odśwież</button></div>';
+}
+
+function refreshUi(){renderChrome();renderWants();renderNext();renderNav();renderCard();renderList();renderLibUi();renderOnline()}
 
 async function showRide(idx){
   cur=idx;const token=++viewToken;
@@ -1091,8 +1149,10 @@ async function loadRemote(selectId){
     wants=ok(w)||[];
     joins={};(ok(j)||[]).forEach(x=>{(joins[x.want_id]=joins[x.want_id]||[]).push(x.user_id)});
     lib=ok(l)||[];
+    startPresence();
+    if(seenFor!==uid||Date.now()-seenAt>15*60000){seenFor=uid;seenAt=Date.now();Promise.resolve(sb.rpc("touch_seen")).catch(()=>{})}
     adminIds=(ok(ad)||[]).map(x=>x.user_id);isAdmin=adminIds.includes(uid);
-  }else{nicks={};genders={};me.nick=null;wants=[];joins={};lib=[];adminIds=[];isAdmin=false}
+  }else{nicks={};genders={};me.nick=null;wants=[];joins={};lib=[];adminIds=[];isAdmin=false;stopPresence()}
   sorted=a.data.map(r=>({id:r.id,title:r.title,when:r.starts_at,place:r.place,pace:r.pace,owner:r.owner_name,note:r.note,creator:r.creator,edited_at:r.edited_at||null,change_note:r.change_note||null,route_title:r.route_title||null,route_desc:r.route_desc||null}));
   const want=selectId||prevId;
   let idx=want?sorted.findIndex(r=>r.id===want):-1;
