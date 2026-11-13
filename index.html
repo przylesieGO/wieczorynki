@@ -62,6 +62,8 @@ nav button.on{background:var(--navon);color:var(--ink);box-shadow:0 1px 3px rgba
 .sheetbox .note{font-size:16px}
 .sheetbox .seg button{padding:13px 4px;font-size:17px}
 .sleft{text-align:left;margin-top:6px}
+.sdanger{display:block;margin:16px auto 0;padding:8px;border:0;background:none;color:var(--bad);font:inherit;font-size:15px;cursor:pointer;text-decoration:underline}
+.sheetbox ul{margin:6px 0 0;padding-left:20px;font-size:15px}
 .arow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);font-size:17px}
 .roundbtn:active{transform:scale(.96)}.roundbtn .ri{font-size:48px;line-height:1}
 .pw{position:relative}.pw input{padding-right:46px}
@@ -557,28 +559,44 @@ function nickHtml(){
    +'<div class="note" id="gnickinfo" style="color:var(--bad)"></div>'
    +'<button class="b sbtn" data-c="nicksave">Zapisz nick</button></div>';
 }
+const lastAdmin=()=>isAdmin&&adminIds.length<=1;
+function delHtml(){
+  const head='<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">🗑️ Usuń konto</div>';
+  if(lastAdmin())return head+'<div class="sleft"><div class="changed">Jesteś jedynym administratorem, więc nie możesz usunąć konta. Najpierw nadaj komuś uprawnienia administratora (Ustawienia → 🛡️ Administracja).</div></div>';
+  return head+'<div class="sleft">'
+   +'<h3>Zostanie usunięte na zawsze</h3><ul><li>konto i adres e-mail</li><li>nick</li><li>zapisy na wieczorynki</li><li>zgłoszenia „Mam ochotę pojeździć” i dołączenia</li>'+(isAdmin?'<li>uprawnienia administratora</li>':'')+'</ul>'
+   +'<h3>Zostanie</h3><ul><li>wieczorynki, które organizujesz (z Twoim nickiem jako organizatorem)</li><li>trasy dodane do biblioteki</li></ul>'
+   +'<label for="gdel" style="font-size:15px;margin-top:16px">Aby potwierdzić, wpisz <b>USUŃ</b></label>'
+   +'<input id="gdel" maxlength="10" autocomplete="off" autocapitalize="characters">'
+   +'<div class="note" id="gdelinfo" style="color:var(--bad)"></div>'
+   +'<button class="b sbtn" style="background:var(--bad)" data-c="delgo">Usuń konto na zawsze</button></div>';
+}
 function renderGear(){
   const p=$("gearpanel");
   if(!gearOpen){p.classList.add("hide");gearView="main";return}
   p.classList.remove("hide");
   if(gearView==="admin"&&!(session&&isAdmin))gearView="main";
   const keepSel=$("adminsel")?$("adminsel").value:"";
+  const keepDel=gearView==="del"&&$("gdel")?{v:$("gdel").value,i:$("gdelinfo").textContent}:null;
   const keepNick=gearView==="nick"&&$("gnick")?{v:$("gnick").value,i:$("gnickinfo").textContent}:null;
   const tg='<a class="b sbtn g" href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">📣 Kanał na Telegramie</a>';
   let body;
   if(gearView==="admin")body=adminHtml();
   else if(gearView==="nick"&&session)body=nickHtml();
+  else if(gearView==="del"&&session)body=delHtml();
   else body=session
     ?'<div class="sname">👤 '+esc(me.nick||"ustaw nick")+(isAdmin?' 🛡️':'')+'</div><div class="smail">'+esc(session.user.email||"")+'</div>'
      +'<button class="b sbtn g" data-c="nick">✏️ Zmień nick</button>'+tg
      +(isAdmin?'<button class="b sbtn g" data-c="admin">🛡️ Administracja</button>':'')
      +themeHtml()
      +'<button class="b sbtn" style="background:var(--bad);margin-top:20px" data-c="out">Wyloguj</button>'
+     +'<button class="sdanger" data-c="del">Usuń konto…</button>'
     :'<div class="sname">Przeglądasz jako gość</div><div class="smail">Zaloguj się, żeby zapisywać się na wieczorynki i zgłaszać ochotę na jazdę.</div>'
      +'<button class="b sbtn" data-c="login">Zaloguj się / załóż konto</button>'+tg+themeHtml();
   p.innerHTML='<div class="sheetbox"><button class="sclose" data-c="close" aria-label="Zamknij">✕</button>'+body+'</div>';
   const s=$("adminsel");
   if(s&&keepSel&&[...s.options].some(o=>o.value===keepSel))s.value=keepSel;
+  if(keepDel&&$("gdel")){$("gdel").value=keepDel.v;$("gdelinfo").textContent=keepDel.i}
   if(keepNick&&$("gnick")){$("gnick").value=keepNick.v;$("gnickinfo").textContent=keepNick.i}
 }
 function renderChrome(){
@@ -614,6 +632,8 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="admin"){gearView="admin";renderGear();return}
   if(c==="nick"){gearView="nick";renderGear();const i=$("gnick");if(i){i.focus();i.select()}return}
   if(c==="nicksave"){await gearSaveNick();return}
+  if(c==="del"){gearView="del";renderGear();const i=$("gdel");if(i)i.focus();return}
+  if(c==="delgo"){await gearDeleteAccount();return}
   if(c==="back"){gearView="main";renderGear();return}
   if(c==="adminadd"){
     const s=$("adminsel"),id=s?s.value:"";if(!id||!isAdmin)return;
@@ -629,7 +649,33 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="out"){setGuest(false);if(sb)sb.auth.signOut();renderChrome()}
   else if(c==="login"){setGuest(false);renderChrome()}
 });
-$("gearpanel").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="gnick"){e.preventDefault();gearSaveNick()}});
+$("gearpanel").addEventListener("keydown",e=>{
+  if(e.key!=="Enter")return;
+  if(e.target.id==="gnick"){e.preventDefault();gearSaveNick()}
+  else if(e.target.id==="gdel"){e.preventDefault();gearDeleteAccount()}
+});
+let deleting=false;
+async function gearDeleteAccount(){
+  const i=$("gdel"),inf=$("gdelinfo");if(!i||deleting||!session)return;
+  if(lastAdmin()){renderGear();return}
+  if(i.value.trim().toUpperCase()!=="USUŃ"){inf.textContent="Wpisz słowo USUŃ, aby potwierdzić.";return}
+  if(!confirm("Na pewno usunąć konto? Tej operacji nie można cofnąć."))return;
+  deleting=true;inf.textContent="Usuwam konto…";
+  try{
+    const r=await sb.rpc("delete_my_account");
+    if(r.error){
+      const m=r.error.message||"";
+      inf.textContent=/LAST_ADMIN/.test(m)?"Jesteś jedynym administratorem — najpierw nadaj komuś uprawnienia."
+        :(r.error.code==="PGRST202"||/delete_my_account/.test(m))?"Usuwanie kont nie jest jeszcze włączone w bazie (brak funkcji delete_my_account).":"Nie udało się usunąć konta: "+m;
+      return;
+    }
+    try{await sb.auth.signOut()}catch(e){}
+    setSession(null);setGuest(false);gearOpen=false;
+    await loadRemote().catch(()=>{});renderChrome();
+    say("Konto zostało usunięte.");
+  }catch(e){inf.textContent="Nie udało się usunąć konta."}
+  finally{deleting=false}
+}
 async function gearSaveNick(){
   const i=$("gnick");if(!i)return;
   const n=i.value.trim();
