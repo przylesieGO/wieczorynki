@@ -149,6 +149,14 @@ html[data-theme=dark] .fcard::after{background:rgba(0,0,0,.25);box-shadow:0 1px 
 .mybtns{display:flex;gap:8px;margin-top:12px}.mybtns .b{flex:1;padding:12px 8px;font-size:15px}
 .mydel{display:block;margin:6px auto 0;border:0;background:none;color:var(--bad);font:inherit;font-size:15px;font-weight:600;cursor:pointer;padding:6px}
 .mynew{display:block;margin:10px auto 0}
+.mycar{display:flex;gap:10px}
+.mycar.multi{overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -4px;padding:0 4px}
+.mycar.multi::-webkit-scrollbar{display:none}
+.mycar .mywant{flex:0 0 100%;scroll-snap-align:center;box-sizing:border-box}
+.mycar.multi .mywant{flex-basis:calc(100% - 26px)}
+.mydots{display:flex;justify-content:center;gap:7px;margin-top:10px}
+.mydots button{width:8px;height:8px;padding:0;border:0;border-radius:50%;background:var(--line);cursor:pointer}
+.mydots button.on{background:var(--acc);width:20px;border-radius:4px}
 .wlead{font-size:16px;color:var(--mut);margin:12px 6px 6px}
 .wpts{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:10px 0 18px}
 .wpts span{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:13px;font-weight:600}
@@ -1253,17 +1261,37 @@ function renderMyWant(){
   const bd=$("wbadge");bd.textContent=others+" dziś";bd.classList.toggle("hide",!others);
   $("rbwrap").classList.toggle("hide",!!mine.length);
   if(!mine.length){box.innerHTML="";return}
-  const w=mine[0],d=new Date(w.starts_at),j=(joins[w.id]||[]).filter(x=>x!==uid);
-  const wd=d.toLocaleDateString("pl-PL",{weekday:"long"}),n=dayDiff(d);
-  box.innerHTML='<div class="mywant"><div class="myh">Twoje zaproszenie'+(mine.length>1?' · 1 z '+mine.length:'')+'</div>'
-   +'<div class="myt">'+esc(n>=0&&n<=2?["Dziś","Jutro","Pojutrze"][n]+" "+hhmm(d):wd.charAt(0).toUpperCase()+wd.slice(1)+" "+hhmm(d))+(n>=0&&n<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
-   +(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')
-   +'<div class="mym">'+(j.length?'Dołączyli ('+j.length+'):'+nkList(j):'Na razie nikt nie dołączył.')+'</div>'
-   +'<div class="mybtns"><button class="b g" data-my="edit" data-id="'+esc(w.id)+'">✏️ Zmień godzinę</button><button class="b g" data-my="share" data-id="'+esc(w.id)+'">📤 Udostępnij</button></div>'
-   +'<button class="mydel" data-my="del" data-id="'+esc(w.id)+'">Odwołaj zaproszenie</button></div>'
+  // kilka zaproszeń: karuzela przewijana w bok (z kropkami)
+  const card=(w,i)=>{
+    const d=new Date(w.starts_at),j=(joins[w.id]||[]).filter(x=>x!==uid);
+    const wd=d.toLocaleDateString("pl-PL",{weekday:"long"}),n=dayDiff(d);
+    return '<div class="mywant" data-i="'+i+'"><div class="myh">Twoje zaproszenie'+(mine.length>1?' · '+(i+1)+' z '+mine.length:'')+'</div>'
+     +'<div class="myt">'+esc(n>=0&&n<=2?["Dziś","Jutro","Pojutrze"][n]+" "+hhmm(d):wd.charAt(0).toUpperCase()+wd.slice(1)+" "+hhmm(d))+(n>=0&&n<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
+     +(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')
+     +'<div class="mym">'+(j.length?'Dołączyli ('+j.length+'):'+nkList(j):'Na razie nikt nie dołączył.')+'</div>'
+     +'<div class="mybtns"><button class="b g" data-my="edit" data-id="'+esc(w.id)+'">✏️ Zmień godzinę</button><button class="b g" data-my="share" data-id="'+esc(w.id)+'">📤 Udostępnij</button></div>'
+     +'<button class="mydel" data-my="del" data-id="'+esc(w.id)+'">Odwołaj zaproszenie</button></div>';
+  };
+  const multi=mine.length>1,keep=multi?Math.min(myIdx,mine.length-1):0;
+  box.innerHTML='<div class="mycar'+(multi?' multi':'')+'" id="mycar">'+mine.map(card).join("")+'</div>'
+   +(multi?'<div class="mydots" id="mydots">'+mine.map((_,i)=>'<button type="button" data-dot="'+i+'" class="'+(i===keep?'on':'')+'" aria-label="Zaproszenie '+(i+1)+'"></button>').join("")+'</div>':'')
    +'<button class="lnk mynew" data-my="new">+ Zaproś na inny dzień</button>';
+  if(multi){const c=$("mycar");const it=c.children[keep];if(it)c.scrollLeft=it.offsetLeft-c.offsetLeft}
 }
+let myIdx=0;
+function myCarIdx(){
+  const c=$("mycar");if(!c||!c.children.length)return 0;
+  const w=c.children[0].getBoundingClientRect().width+10;
+  return Math.max(0,Math.min(c.children.length-1,Math.round(c.scrollLeft/w)));
+}
+$("mywant").addEventListener("scroll",e=>{
+  if(e.target.id!=="mycar")return;
+  myIdx=myCarIdx();
+  const dots=$("mydots");if(dots)[...dots.children].forEach((b,i)=>b.classList.toggle("on",i===myIdx));
+},true);
 $("mywant").addEventListener("click",async e=>{
+  const dot=e.target.closest("button[data-dot]");
+  if(dot){const c=$("mycar"),it=c&&c.children[+dot.dataset.dot];if(it)c.scrollTo({left:it.offsetLeft-c.offsetLeft,behavior:"smooth"});return}
   const b=e.target.closest("button[data-my]");if(!b)return;
   const w=wants.find(x=>x.id===b.dataset.id);
   if(b.dataset.my==="new"){openWantForm(null);return}
