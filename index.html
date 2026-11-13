@@ -37,6 +37,14 @@ nav{display:flex;gap:2px;padding:3px;background:var(--navbg);border-radius:12px;
 nav button{flex:1;padding:9px 4px;border:0;background:transparent;color:var(--mut);border-radius:9px;font:inherit;font-weight:600;font-size:15px;cursor:pointer}
 nav button.on{background:var(--navon);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.18)}
 .roundbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:164px;height:164px;margin:8px auto 4px;border:0;border-radius:50%;background:linear-gradient(160deg,#3ecf62,#248a3d);color:#fff;font:inherit;font-weight:700;font-size:17px;line-height:1.2;cursor:pointer;box-shadow:0 10px 24px rgba(36,138,61,.35),inset 0 1px 0 rgba(255,255,255,.35);transition:transform .12s}
+.sheet{position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.sheetbox{position:relative;width:100%;max-width:400px;max-height:92vh;overflow:auto;background:var(--card);border-radius:26px;padding:30px 22px 22px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.sclose{position:absolute;top:10px;right:10px;width:40px;height:40px;border-radius:50%;border:0;background:var(--fill);color:var(--ink);font-size:18px;cursor:pointer}
+.sname{font-size:23px;font-weight:700;letter-spacing:-.01em}
+.smail{font-size:16px;color:var(--mut);margin:4px 0 18px;word-break:break-word}
+.sheetbox .sbtn{display:block;width:100%;padding:16px;margin-top:12px;font-size:18px;border-radius:15px;text-align:center}
+.sheetbox .note{font-size:16px}
+.sheetbox .seg button{padding:13px 4px;font-size:17px}
 .roundbtn:active{transform:scale(.96)}.roundbtn .ri{font-size:48px;line-height:1}
 .pw{position:relative}.pw input{padding-right:46px}
 .eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:38px;height:38px;border:0;background:transparent;font-size:19px;cursor:pointer;border-radius:50%}
@@ -110,7 +118,7 @@ details.card>summary{font-size:16px}
  <h1 class="apptitle">🚲 PrzylesieGo! <span class="wsub2">Ustawki rowerowe</span></h1>
  <button class="gear" id="gear" aria-label="Ustawienia" title="Ustawienia">⚙️</button>
 </div>
-<div class="card hide" id="gearpanel"></div>
+<div class="sheet hide" id="gearpanel"></div>
 
 <div class="card hide" id="pwbox">
  <h2>Ustaw nowe hasło</h2>
@@ -508,12 +516,14 @@ function renderGear(){
   const p=$("gearpanel");
   if(!gearOpen){p.classList.add("hide");return}
   p.classList.remove("hide");
-  p.innerHTML=session
-    ?'<div><b>👤 '+esc(me.nick||"ustaw nick")+'</b>'+(isAdmin?' 🛡️':'')+'</div><div class="note">'+esc(session.user.email||"")+'</div>'
-     +'<div class="row" style="margin-top:10px"><button class="b g small" data-c="nick">Zmień nick</button><button class="b small" data-c="out">Wyloguj</button><a class="b g small" href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">📣 Kanał na Telegramie</a></div>'
-    :'<div><b>Przeglądasz jako gość</b></div><div class="note">Zaloguj się, żeby zapisywać się na wieczorynki i zgłaszać ochotę na jazdę.</div>'
-     +'<div class="row" style="margin-top:10px"><button class="b small" data-c="login">Zaloguj się / załóż konto</button><a class="b g small" href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">📣 Kanał na Telegramie</a></div>';
-  p.insertAdjacentHTML("beforeend",themeHtml());
+  const tg='<a class="b sbtn g" href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">📣 Kanał na Telegramie</a>';
+  const body=session
+    ?'<div class="sname">👤 '+esc(me.nick||"ustaw nick")+(isAdmin?' 🛡️':'')+'</div><div class="smail">'+esc(session.user.email||"")+'</div>'
+     +'<button class="b sbtn g" data-c="nick">✏️ Zmień nick</button>'+tg+themeHtml()
+     +'<button class="b sbtn" style="background:var(--bad);margin-top:20px" data-c="out">Wyloguj</button>'
+    :'<div class="sname">Przeglądasz jako gość</div><div class="smail">Zaloguj się, żeby zapisywać się na wieczorynki i zgłaszać ochotę na jazdę.</div>'
+     +'<button class="b sbtn" data-c="login">Zaloguj się / załóż konto</button>'+tg+themeHtml();
+  p.innerHTML='<div class="sheetbox"><button class="sclose" data-c="close" aria-label="Zamknij">✕</button>'+body+'</div>';
 }
 function renderChrome(){
   const welcome=!session&&!guestMode;
@@ -531,8 +541,10 @@ $("gear").onclick=()=>{gearOpen=!gearOpen;renderGear()};
 $("gearpanel").addEventListener("click",e=>{
   const th=e.target.closest("button[data-t]");
   if(th){setTheme(th.dataset.t);renderGear();return}
+  if(e.target===$("gearpanel")){gearOpen=false;renderGear();return}
   const b=e.target.closest("button[data-c]");if(!b)return;
   gearOpen=false;
+  if(b.dataset.c==="close"){renderGear();return}
   if(b.dataset.c==="out"){setGuest(false);if(sb)sb.auth.signOut();renderChrome()}
   else if(b.dataset.c==="login"){setGuest(false);renderChrome()}
   else{nickEdit=true;$("nickin").value=me.nick||"";$("nickinfo").textContent="";renderChrome()}
