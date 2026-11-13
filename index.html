@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Wieczorynki rowerowe</title>
 <meta name="description" content="Wspólne wieczorne przejazdy rowerowe: kto chce jechać, trasa na mapie, prognoza wiatru, zapisy.">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1f7a4d">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Wieczorynki">
 <meta property="og:type" content="website">
 <meta property="og:title" content="🚲 Wieczorynki rowerowe">
 <meta property="og:description" content="Dołącz do wspólnych przejazdów: kto chce jechać, trasa na mapie, prognoza wiatru, zapisy.">
@@ -134,6 +141,7 @@ details.card>summary{font-size:16px}
    <div class="legend"><span><i class="dot" style="background:#d64545"></i>pod wiatr</span><span><i class="dot" style="background:#e0b83a"></i>bocznie</span><span><i class="dot" style="background:#2a9d5c"></i>z wiatrem</span></div>
   </div>
   <div class="routeinfo hide" id="routeinfo1"></div>
+  <div class="routeinfo hide" id="placesbox1"></div>
   <div class="stats" id="stats1"></div>
   <div class="note" id="windinfo1" style="margin-top:8px"></div>
   <div class="tip hide" id="tip1"></div>
@@ -171,7 +179,7 @@ details.card>summary{font-size:16px}
  <div class="card">
   <h2>Analiza trasy GPX</h2>
   <p class="note" style="margin-top:0">Wgraj plik GPX, żeby zobaczyć trasę na mapie i sprawdzić wiatr. Nic się nie zapisuje w bazie.</p>
-  <div class="row"><input type="file" id="file" accept=".gpx,application/gpx+xml,text/xml" style="max-width:300px"><button class="b g" id="rev">⇄ Odwróć kierunek</button><button class="b g" id="gpx">⬇ Pobierz GPX</button></div>
+  <div class="row"><input type="file" id="file" accept=".gpx,application/gpx+xml,text/xml" style="max-width:300px"><button class="b g" id="rev">⇄ Odwróć kierunek</button><button class="b g" id="gpx">⬇ Pobierz GPX</button><button class="b g" id="places2">📍 Miejscowości na trasie</button></div>
   <label>Na kiedy prognoza wiatru</label><input type="datetime-local" id="wt" style="max-width:260px">
   <div class="row" style="margin-top:8px"><button class="b" id="aw">🌬 Pobierz wiatr automatycznie</button><span class="note" id="awi"></span></div>
   <details style="margin-top:10px"><summary>Ustawienia ręczne (wiatr, tempo)</summary>
@@ -189,6 +197,7 @@ details.card>summary{font-size:16px}
   <div class="note" id="empty2" style="margin-top:10px">Wgraj plik GPX albo wybierz trasę z biblioteki, żeby zobaczyć ją na mapie.</div>
   <div class="stats" id="stats2"></div>
   <div class="tip hide" id="tip2"></div>
+  <div class="routeinfo hide" id="placesbox2"></div>
  </div>
 
  <details class="card hide" id="libbox">
@@ -338,7 +347,7 @@ function makeMap(elId){
     const m=L.map($(elId),{scrollWheelZoom:false});
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(m);
     m.setView([52.23,21.01],11);
-    return {m,g:L.layerGroup().addTo(m)};
+    return {m,g:L.layerGroup().addTo(m),p:L.layerGroup().addTo(m)};
   }catch(e){return null}
 }
 function drawRoute(mp,pts,segs,fit){
@@ -361,6 +370,45 @@ function setArrow(id,wf,ws){
   if(wf==null){el.classList.add("hide");return}
   el.classList.remove("hide");
   el.innerHTML='<svg viewBox="0 0 40 40" width="38" height="38" style="transform:rotate('+((wf+180)%360)+'deg)"><path d="M20 3 L29 22 L22 20 L22 37 L18 37 L18 20 L11 22 Z" fill="var(--acc)"/></svg><div>'+Math.round(ws)+' km/h</div>';
+}
+
+/* ---------- miejscowości wzdłuż trasy (OpenStreetMap / Overpass) ---------- */
+const placeCache={};
+async function overpass(q){
+  let last;
+  for(const ep of ["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"]){
+    try{const r=await fetch(ep+"?data="+encodeURIComponent(q));if(!r.ok)throw new Error("http "+r.status);return await r.json()}catch(e){last=e}
+  }
+  throw last;
+}
+async function placesAlong(pts,key){
+  if(placeCache[key])return placeCache[key];
+  let s=90,w=180,n=-90,e=-180;
+  pts.forEach(p=>{s=Math.min(s,p.lat);n=Math.max(n,p.lat);w=Math.min(w,p.lon);e=Math.max(e,p.lon)});
+  const bb=[s-0.03,w-0.05,n+0.03,e+0.05].map(x=>x.toFixed(4)).join(",");
+  const J=await overpass('[out:json][timeout:20];node["place"~"^(city|town|village|suburb|hamlet)$"]["name"]('+bb+');out;');
+  const cum=[0];for(let i=1;i<pts.length;i++)cum.push(cum[i-1]+dist(pts[i-1],pts[i]));
+  const lim={city:4,town:3,village:1.5,suburb:1.2,hamlet:1},out=[];
+  (J.elements||[]).forEach(el=>{
+    if(el.lat==null||!el.tags)return;
+    let best=1e9,bi=0;const o={lat:el.lat,lon:el.lon};
+    for(let i=0;i<pts.length;i++){const d=dist(pts[i],o);if(d<best){best=d;bi=i}}
+    if(best<=(lim[el.tags.place]||1))out.push({name:el.tags.name,type:el.tags.place,lat:el.lat,lon:el.lon,km:cum[bi]});
+  });
+  out.sort((a,b)=>a.km-b.km);
+  const seen=new Set(),res=out.filter(p=>{if(seen.has(p.name))return false;seen.add(p.name);return true});
+  placeCache[key]=res;return res;
+}
+const PICON={city:"🏙️",town:"🏘️",village:"🏡",suburb:"📍",hamlet:"📍"};
+function renderPlaces(boxId,mp,list,err){
+  const box=$(boxId);
+  if(mp)mp.p.clearLayers();
+  if(err){box.innerHTML='<b>Miejscowości na trasie</b><div class="note">Nie udało się pobrać danych z OpenStreetMap. Spróbuj za chwilę.</div>';box.classList.remove("hide");return}
+  if(!list.length){box.classList.add("hide");return}
+  const kmt=k=>k<10?k.toFixed(1):String(Math.round(k));
+  box.innerHTML='<b>Trasa prowadzi przez</b><div style="margin-top:4px">'+list.map(p=>'<span style="white-space:nowrap">'+(PICON[p.type]||"📍")+' '+esc(p.name)+' <span class="note">'+kmt(p.km)+' km</span></span>').join(' → ')+'</div><div class="note" style="margin-top:4px">Odległości od startu wzdłuż trasy. Dane: OpenStreetMap.</div>';
+  box.classList.remove("hide");
+  if(mp)list.forEach(p=>L.circleMarker([p.lat,p.lon],{radius:5,color:"#fff",weight:1.5,fillColor:"#7a4fd1",fillOpacity:1}).addTo(mp.p).bindTooltip(p.name+" · "+kmt(p.km)+" km"));
 }
 
 /* ---------- stan ---------- */
@@ -657,7 +705,7 @@ async function showRide(idx){
   cur=idx;const token=++viewToken;
   refreshUi();
   const r=sorted[cur],wrap=$("mapwrap1");
-  const clear=msg=>{wrap.classList.add("hide");$("stats1").innerHTML="";$("tip1").classList.add("hide");$("routeinfo1").classList.add("hide");$("windinfo1").textContent=msg||""};
+  const clear=msg=>{wrap.classList.add("hide");$("stats1").innerHTML="";$("tip1").classList.add("hide");$("routeinfo1").classList.add("hide");$("placesbox1").classList.add("hide");$("windinfo1").textContent=msg||""};
   if(!r){clear();return}
   $("windinfo1").textContent="Ładuję trasę…";
   let pts;
@@ -675,6 +723,8 @@ async function showRide(idx){
   let an=analyze(pts,0,0,bs,false);
   map1.m.invalidateSize();
   drawRoute(map1,pts,null,true);setArrow("warrow1",null);
+  map1.p.clearLayers();$("placesbox1").classList.add("hide");
+  placesAlong(pts,"r"+r.id+":"+(r.edited_at||"")).then(l=>{if(token===viewToken)renderPlaces("placesbox1",map1,l)}).catch(()=>{});
   $("stats1").innerHTML=statsHtml(an);$("tip1").classList.add("hide");
   $("windinfo1").textContent="Sprawdzam prognozę wiatru…";
   try{
@@ -879,9 +929,18 @@ $("file").onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
   const p=parseGpx(await f.text());
   if(p.length<2){$("awi").textContent="Nie znaleziono punktów trasy w pliku GPX.";return}
-  advBase=thin(p,500);advRev=false;advPts=advBase.slice();$("awi").textContent="";advRender(true);
+  advBase=thin(p,500);advRev=false;advPts=advBase.slice();$("awi").textContent="";$("placesbox2").classList.add("hide");if(map2)map2.p.clearLayers();advRender(true);
 };
-$("rev").onclick=()=>{advRev=!advRev;advPts=advRev?advBase.slice().reverse():advBase.slice();advRender(false)};
+$("places2").onclick=async()=>{
+  if(advPts.length<2){$("awi").textContent="Najpierw wgraj trasę.";return}
+  $("awi").textContent="Szukam miejscowości…";
+  try{
+    const l=await placesAlong(advPts,"a"+advRev+":"+advPts.length+":"+advPts[0].lat+":"+advPts[advPts.length>>1].lon);
+    renderPlaces("placesbox2",map2,l);
+    $("awi").textContent=l.length?"":"Nie znaleziono miejscowości przy tej trasie.";
+  }catch(e){$("awi").textContent="";renderPlaces("placesbox2",map2,[],true)}
+};
+$("rev").onclick=()=>{advRev=!advRev;$("placesbox2").classList.add("hide");if(map2)map2.p.clearLayers();advPts=advRev?advBase.slice().reverse():advBase.slice();advRender(false)};
 $("gpx").onclick=()=>{
   if(advPts.length<2){$("awi").textContent="Najpierw wgraj trasę.";return}
   const n="trasa"+(advRev?"-odwrocona":"")+".gpx";
@@ -941,6 +1000,8 @@ $("pwsave").onclick=async()=>{
   try{history.replaceState(null,"",location.pathname)}catch(e){}
   refreshUi();say("Nowe hasło zapisane ✔ — jesteś zalogowany.");
 };
+
+if("serviceWorker" in navigator&&location.protocol==="https:")window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 
 /* ---------- start aplikacji ---------- */
 (async()=>{
