@@ -75,6 +75,16 @@ nav button.on{background:var(--navon);color:var(--ink);box-shadow:0 1px 3px rgba
 .crow input[type=color]{width:56px;height:36px;padding:2px;border-radius:9px;cursor:pointer}
 .onl{background:var(--acc2);color:var(--acc);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:700;white-space:nowrap}
 .sheetbox .stats{grid-template-columns:1fr 1fr}.sheetbox .st b{font-size:24px}.sheetbox .st span{font-size:14px}
+details.wday{border:1px solid var(--line);border-radius:14px;margin-top:10px;background:var(--card)}
+details.wday[open]{border-color:var(--acc)}
+details.wday>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;-webkit-user-select:none;user-select:none}
+details.wday>summary::-webkit-details-marker{display:none}
+details.wday>summary::after{content:"›";margin-left:auto;font-size:22px;line-height:1;color:var(--mut);transition:transform .15s}
+details.wday[open]>summary::after{transform:rotate(90deg)}
+.wdl{font-size:17px;font-weight:700}.wdd{font-size:13px;color:var(--mut);font-weight:500}
+.wdc{font-size:13px;color:var(--mut);font-weight:500;white-space:nowrap}
+.wme{font-size:12px;font-weight:700;color:var(--acc);background:var(--acc2);border-radius:999px;padding:2px 8px;white-space:nowrap}
+details.wday .want{margin:0 10px 10px}
 .sdanger{display:block;margin:16px auto 0;padding:8px;border:0;background:none;color:var(--bad);font:inherit;font-size:15px;cursor:pointer;text-decoration:underline}
 .sheetbox ul{margin:6px 0 0;padding-left:20px;font-size:15px}
 .arow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);font-size:17px}
@@ -824,16 +834,38 @@ function renderWants(){
   const list=wants.filter(w=>new Date(w.starts_at).getTime()>=Date.now()-3*36e5);
   const box=$("wantlist");
   if(!list.length){box.innerHTML='<div class="note" style="margin-top:12px">Nikt jeszcze nie zgłosił ochoty. Bądź pierwszy!</div>';return}
-  box.innerHTML=list.map(w=>{
+  // grupowanie po dniu: jedna rozwijana karta na dzień
+  const days=[];
+  list.slice().sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at)).forEach(w=>{
+    const k=localIso(new Date(w.starts_at)).slice(0,10);
+    let d=days.find(x=>x.k===k);if(!d){d={k,ws:[]};days.push(d)}
+    d.ws.push(w);
+  });
+  box.innerHTML=days.map((d,i)=>{
+    const dt=new Date(d.ws[0].starts_at),rel=relDay(dt),n=dayDiff(dt);
+    const full=dt.toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"});
+    const ppl=new Set();let me=false;
+    d.ws.forEach(w=>{ppl.add(w.user_id);(joins[w.id]||[]).forEach(x=>ppl.add(x));if(w.user_id===uid||(joins[w.id]||[]).includes(uid))me=true});
+    const open=d.k in wantOpen?wantOpen[d.k]:i===0;
+    const cnt=d.ws.length,zg=cnt===1?"zgłoszenie":(cnt%10>=2&&cnt%10<=4&&(cnt%100<10||cnt%100>=20))?"zgłoszenia":"zgłoszeń";
+    const os=ppl.size===1?"osoba":(ppl.size%10>=2&&ppl.size%10<=4&&(ppl.size%100<10||ppl.size%100>=20))?"osoby":"osób";
+    return '<details class="wday" data-day="'+d.k+'"'+(open?' open':'')+'><summary>'
+     +'<span><span class="wdl">'+esc(rel)+'</span>'+(n>=0&&n<=2?' <span class="wdd">'+esc(full)+'</span>':'')+'</span>'
+     +'<span class="wdc">'+cnt+' '+zg+' · '+ppl.size+' '+os+'</span>'+(me?'<span class="wme">Ty</span>':'')
+     +'</summary>'+d.ws.map(wantHtml).join("")+'</details>';
+  }).join("");
+}
+let wantOpen={};
+$("wantlist").addEventListener("toggle",e=>{const d=e.target;if(d.classList&&d.classList.contains("wday"))wantOpen[d.dataset.day]=d.open},true);
+function wantHtml(w){
     const j=joins[w.id]||[],mine=w.user_id===uid,joined=j.includes(uid),others=j.filter(x=>x!==w.user_id);
-    return '<div class="want'+(mine?' mine':'')+'"><div>'+nk(w.user_id)+' · '+esc(relWhen(w.starts_at))+(mine?' <span class="note">(Twoje zgłoszenie)</span>':'')+'</div>'
+    return '<div class="want'+(mine?' mine':'')+'"><div>'+nk(w.user_id)+' · 🕖 '+esc(hhmm(new Date(w.starts_at)))+(mine?' <span class="note">(Twoje zgłoszenie)</span>':'')+'</div>'
      +(w.note?'<div>'+esc(w.note)+'</div>':'')
      +'<div class="meta">'+(others.length?'Dołączyli ('+others.length+'):'+nkList(others):(mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.'))+'</div>'
      +'<div class="row" style="margin-top:8px">'
      +(mine?'':'<button class="b'+(joined?' g':'')+'" data-w="join" data-id="'+esc(w.id)+'">'+(joined?'Rezygnuję':'Ja też!')+'</button>')
      +((mine||isAdmin)?'<button class="b g" data-w="del" data-id="'+esc(w.id)+'">Usuń</button>':'')
      +'</div></div>';
-  }).join("");
 }
 $("wantbtn").onclick=()=>{
   if(needProfile()){askNick();return}
