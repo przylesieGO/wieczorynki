@@ -1,12 +1,13 @@
 {
-  "name": "Wieczorynki rowerowe",
-  "short_name": "Wieczorynki",
-  "description": "Wspólne wieczorne przejazdy rowerowe: kto chce jechać, trasa, wiatr, zapisy.",
+  "id": "./",
+  "name": "PrzylesieGo! Ustawki rowerowe",
+  "short_name": "PrzylesieGo!",
+  "description": "Umawiaj się ze znajomymi na wspólną jazdę rowerem: kto jedzie, trasa, wiatr, zapisy.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f6f4ef",
-  "theme_color": "#1f7a4d",
+  "background_color": "#f5f5f7",
+  "theme_color": "#f5f5f7",
   "lang": "pl",
   "icons": [
     {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
