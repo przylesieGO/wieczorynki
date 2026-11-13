@@ -73,7 +73,14 @@ details.card>summary{font-size:16px}
 <div class="card" id="authbox">
  <div class="grid"><div><label>E-mail</label><input id="ae" type="email" autocomplete="email"></div>
  <div><label>Hasło (min. 6 znaków)</label><input id="ap" type="password" autocomplete="current-password"></div></div>
- <div class="row" style="margin-top:8px"><button class="b" id="login">Zaloguj</button><button class="b g" id="signup">Załóż konto</button><span class="note" id="ainfo"></span></div>
+ <div class="row" style="margin-top:8px"><button class="b" id="login">Zaloguj</button><button class="b g" id="signup">Załóż konto</button><button class="b g" id="forgot">Nie pamiętam hasła</button></div>
+ <div class="note" id="ainfo" style="margin-top:6px"></div>
+</div>
+
+<div class="card hide" id="pwbox">
+ <h2>Ustaw nowe hasło</h2>
+ <div class="row"><input id="pw1" type="password" autocomplete="new-password" placeholder="Nowe hasło (min. 6 znaków)" style="max-width:280px"><button class="b" id="pwsave">Zapisz hasło</button></div>
+ <div class="note" id="pwinfo" style="margin-top:6px"></div>
 </div>
 
 <div class="card hide" id="nickbox">
@@ -357,6 +364,8 @@ function setArrow(id,wf,ws){
 }
 
 /* ---------- stan ---------- */
+const RECOVERY=/type=recovery/.test(location.hash||""),HASH_EXPIRED=/error_code=otp_expired/.test(location.hash||"");
+let pwMode=false;
 let sb=null,session=null,uid="",ready=false;
 let me={nick:null},isAdmin=false,adminIds=[],nickEdit=false;
 let nicks={},sorted=[],cur=-1,rsvps={},wants=[],joins={},lib=[];
@@ -392,7 +401,8 @@ async function getLibRoute(id){
 /* ---------- góra strony: konto i nick ---------- */
 function renderChrome(){
   $("authbox").classList.toggle("hide",!!session);
-  const needNick=!!session&&(!me.nick||nickEdit);
+  $("pwbox").classList.toggle("hide",!(pwMode&&session));
+  const needNick=!!session&&(!me.nick||nickEdit)&&!pwMode;
   $("nickbox").classList.toggle("hide",!needNick);
   $("nickcancel").classList.toggle("hide",!me.nick);
   $("chip").innerHTML=session?'<span>👤 <b>'+esc(me.nick||"ustaw nick")+'</b>'+(isAdmin?' 🛡️':'')+'</span> <button class="b g small" data-c="nick">zmień nick</button> <button class="b g small" data-c="out">Wyloguj</button>':'';
@@ -915,6 +925,23 @@ $("signup").onclick=async()=>{
   $("ainfo").textContent=r.error?amsg(r.error):(r.data.session?"Konto założone.":"Sprawdź skrzynkę i potwierdź adres e-mail.");
 };
 
+$("forgot").onclick=async()=>{
+  if(!sb)return;
+  const em=$("ae").value.trim(),inf=$("ainfo");
+  if(!em){inf.textContent="Wpisz swój e-mail w polu powyżej, a potem kliknij „Nie pamiętam hasła”.";return}
+  const r=await sb.auth.resetPasswordForEmail(em,{redirectTo:location.origin+location.pathname});
+  inf.textContent=r.error?("Nie udało się wysłać: "+r.error.message):"Wysłano wiadomość z linkiem do ustawienia nowego hasła. Link działa jednorazowo — kliknij go ręcznie w przeglądarce, na której używasz aplikacji.";
+};
+$("pwsave").onclick=async()=>{
+  const p=$("pw1").value,inf=$("pwinfo");
+  if(p.length<6){inf.textContent="Hasło musi mieć min. 6 znaków.";return}
+  const r=await sb.auth.updateUser({password:p});
+  if(r.error){inf.textContent="Nie udało się zapisać: "+r.error.message;return}
+  pwMode=false;$("pw1").value="";inf.textContent="";
+  try{history.replaceState(null,"",location.pathname)}catch(e){}
+  refreshUi();say("Nowe hasło zapisane ✔ — jesteś zalogowany.");
+};
+
 /* ---------- start aplikacji ---------- */
 (async()=>{
   $("rw").value=defaultWhen();
@@ -924,7 +951,11 @@ $("signup").onclick=async()=>{
   if(!window.supabase){$("dbnote").textContent="Nie udało się załadować biblioteki bazy danych — sprawdź połączenie z internetem i odśwież stronę.";return}
   sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
   try{const r=await sb.auth.getSession();setSession(r.data.session)}catch(e){}
-  sb.auth.onAuthStateChange((_ev,s)=>{
+  if(RECOVERY&&session)pwMode=true;
+  if(HASH_EXPIRED&&!session){$("ainfo").textContent="Link z maila wygasł albo został już użyty. Wpisz e-mail i kliknij „Nie pamiętam hasła”, żeby wysłać nowy.";try{history.replaceState(null,"",location.pathname)}catch(e){}}
+  refreshUi();
+  sb.auth.onAuthStateChange((ev,s)=>{
+    if(ev==="PASSWORD_RECOVERY"){pwMode=true;setTimeout(refreshUi,0)}
     const nid=s?s.user.id:"";
     if(nid===uid){session=s;return}
     setSession(s);
