@@ -116,10 +116,44 @@ html[data-theme=dark] .ftile:not(.today) .fh,html[data-theme=dark] .ftile:not(.t
 .wme{font-size:13px;font-weight:700;color:var(--acc);background:var(--acc2);border-radius:999px;padding:1px 9px;white-space:nowrap}
 .wl3{font-size:15px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 details.wday .want{margin:0 10px 10px}
+.wsub{font-size:14px;color:var(--mut);margin:4px 0 0;line-height:1.35}.wsub a{color:var(--acc);font-weight:600;text-decoration:none;border-bottom:1px solid currentColor}
+.rbwrap{position:relative;width:164px;margin:14px auto 4px}.rbwrap .roundbtn{margin:0}
+.rbadge{position:absolute;top:6px;right:-14px;background:#fff;color:#248a3d;border-radius:999px;font-size:13px;font-weight:800;padding:3px 9px;box-shadow:0 2px 6px rgba(0,0,0,.2);white-space:nowrap}
+.wlbl{font-size:13px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin:16px 0 8px}
+#wdays button{padding:10px 4px;font-size:15px}
+.fclock{display:flex;justify-content:center;align-items:center;gap:10px;margin:14px 0 4px}
+.fcol{display:flex;flex-direction:column;align-items:center;gap:6px}
+.farr{border:0;background:var(--fill);color:var(--mut);width:88px;height:30px;border-radius:9px;font-size:14px;cursor:pointer}
+.farr:active{opacity:.6}
+.fcolon{font:700 44px/1 "SF Mono",ui-monospace,Menlo,monospace;color:var(--mut);padding-bottom:4px}
+.fcard{position:relative;width:88px;height:100px;border-radius:12px;display:flex;align-items:center;justify-content:center;font:700 58px/1 "SF Mono",ui-monospace,Menlo,Consolas,monospace;color:#f4f4f6;cursor:ns-resize;touch-action:none;-webkit-user-select:none;user-select:none;
+  background:linear-gradient(180deg,#48484d 0%,#3a3a3e 27%,#26262a 50%,#1c1c1f 50%,#2a2a2d 70%,#333337 100%);box-shadow:0 3px 8px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.12)}
+.fcard::after{content:"";position:absolute;left:0;right:0;top:50%;height:1.5px;margin-top:-.75px;background:rgba(255,255,255,.42);box-shadow:0 1px 1px rgba(0,0,0,.35)}
+.fcard::before{content:"";position:absolute;left:0;right:0;top:50%;margin-top:-5px;height:10px;background:linear-gradient(90deg,#8e8e94 0 3px,transparent 3px calc(100% - 3px),#8e8e94 calc(100% - 3px));z-index:1}
+html[data-theme=dark] .fcard{color:#1d1d1f;background:linear-gradient(180deg,#fff 0%,#f1f1f4 27%,#d6d6dc 50%,#c4c4cb 50%,#dfdfe4 70%,#ececf0 100%);box-shadow:0 3px 10px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.6)}
+html[data-theme=dark] .fcard::after{background:rgba(0,0,0,.25);box-shadow:0 1px 0 rgba(255,255,255,.6)}
+.fcard.flipping{animation:fcflip .28s ease-out}
+@keyframes fcflip{0%{transform:perspective(300px) rotateX(0)}45%{transform:perspective(300px) rotateX(70deg);filter:brightness(.7)}100%{transform:perspective(300px) rotateX(0)}}
+@media (prefers-reduced-motion:reduce){.fcard.flipping{animation:none}}
+.qchips{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.qchips button{border:0;background:var(--acc2);color:var(--acc);font:inherit;font-size:15px;font-weight:700;border-radius:999px;padding:8px 14px;cursor:pointer}
+.wx{font-size:15px;margin-top:12px;padding:9px 12px;border-radius:10px;background:var(--acc2);text-align:center}
+#wnotesel{font-size:16px;font-weight:600}
+#wnote{margin-top:8px}
+.lnk{border:0;background:none;color:var(--acc);font:inherit;font-size:15px;font-weight:600;cursor:pointer;padding:6px 2px}
+#wcancel{color:var(--mut)}
+.mywant{border:2px solid var(--acc);border-radius:16px;padding:14px;margin-top:14px;background:linear-gradient(180deg,var(--acc2),transparent 75%)}
+.myh{font-size:13px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.04em}
+.myt{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.15;margin-top:2px}.myt span{font-size:17px;font-weight:600;color:var(--mut);margin-left:6px;letter-spacing:0}
+.mym{font-size:15px;color:var(--mut);margin-top:6px}
+.mybtns{display:flex;gap:8px;margin-top:12px}.mybtns .b{flex:1;padding:12px 8px;font-size:15px}
+.mydel{display:block;margin:6px auto 0;border:0;background:none;color:var(--bad);font:inherit;font-size:15px;font-weight:600;cursor:pointer;padding:6px}
+.mynew{display:block;margin:10px auto 0}
 .sdanger{display:block;margin:16px auto 0;padding:8px;border:0;background:none;color:var(--bad);font:inherit;font-size:15px;cursor:pointer;text-decoration:underline}
 .sheetbox ul{margin:6px 0 0;padding-left:20px;font-size:15px}
 .arow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);font-size:17px}
-.roundbtn:active{transform:scale(.96)}.roundbtn .ri{font-size:48px;line-height:1}
+.roundbtn:active{transform:scale(.96)}.roundbtn .ri{font-size:48px;line-height:1;margin-bottom:12px}
+.roundbtn .rb1{font-size:21px;font-weight:800;line-height:1.15;letter-spacing:-.01em;margin-top:4px}.roundbtn .rb2{font-size:14px;font-weight:600;opacity:.92}
 .pw{position:relative}.pw input{padding-right:46px}
 .eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:38px;height:38px;border:0;background:transparent;font-size:19px;cursor:pointer;border-radius:50%}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -208,18 +242,28 @@ details.card>summary{font-size:16px}
 <!-- ===== START ===== -->
 <section id="p0">
  <div class="card">
-  <div class="row between" style="margin-bottom:10px"><h2 style="margin:0">Kto chce jechać?</h2><span class="onl hide" id="onlbtn" title="Tyle osób ma teraz otwartą aplikację — ich nicki mają zieloną obwódkę"></span></div>
+  <div class="row between"><h2 style="margin:0">Umów się na rower</h2><span class="onl hide" id="onlbtn" title="Tyle osób ma teraz otwartą aplikację — ich nicki mają zieloną obwódkę"></span></div>
   <div id="wantguest" class="note">Zaloguj się, aby zobaczyć chętnych i zgłosić ochotę na przejażdżkę.</div>
+  <p class="wsub">Kliknij i wyślij zaproszenie do wspólnej jazdy — pojawi się też na naszym <a href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">kanale 📣 Telegram</a>.</p>
   <div id="wantmain" class="hide">
-   <button class="roundbtn" id="wantbtn"><span class="ri">🚴</span><span>Mam ochotę<br>pojeździć</span></button>
+   <div id="mywant"></div>
+   <div class="rbwrap" id="rbwrap"><button class="roundbtn" id="wantbtn"><span class="ri">🚴</span><span class="rb1">Idziemy<br>na rower?</span></button><b class="rbadge hide" id="wbadge"></b></div>
    <div id="wantform" class="hide">
-    <div class="chips" id="wchips"><button class="chip on" data-d="0">Dziś</button><button class="chip" data-d="1">Jutro</button><button class="chip" data-d="2">Pojutrze</button><button class="chip" data-d="x">Inny dzień</button></div>
-    <div class="grid">
-     <div><label>Godzina</label><input type="time" id="wtm" value="19:00"></div>
-     <div id="wdwrap" class="hide"><label>Data</label><input type="date" id="wdt"></div>
+    <div class="wlbl" id="wftitle">Kiedy jedziesz?</div>
+    <div class="seg" id="wdays"><button type="button" data-d="0" class="on">Dziś</button><button type="button" data-d="1">Jutro</button><button type="button" data-d="2">Pojutrze</button><button type="button" data-d="x">Inny dzień</button></div>
+    <div id="wdwrap" class="hide" style="margin-top:8px"><input type="date" id="wdt"></div>
+    <div class="fclock" id="fclock">
+     <div class="fcol" data-u="h"><button type="button" class="farr" data-s="1" aria-label="Godzina później">▲</button><div class="fcard" id="fch" title="Przeciągnij w górę/dół albo przewiń">19</div><button type="button" class="farr" data-s="-1" aria-label="Godzina wcześniej">▼</button></div>
+     <div class="fcolon">:</div>
+     <div class="fcol" data-u="m"><button type="button" class="farr" data-s="1" aria-label="Minuty później">▲</button><div class="fcard" id="fcm" title="Przeciągnij w górę/dół albo przewiń">00</div><button type="button" class="farr" data-s="-1" aria-label="Minuty wcześniej">▼</button></div>
     </div>
-    <label>Notatka (opcjonalnie)</label><input id="wnote" maxlength="200" placeholder="np. szybka pętla nad Wisłą">
-    <div class="row" style="margin-top:10px"><button class="b" id="wsave">Zgłoś</button><button class="b g" id="wcancel">Anuluj</button></div>
+    <div class="qchips" id="wquick"><button type="button" data-q="30">Za 30 min</button><button type="button" data-q="17:30">17:30</button><button type="button" data-q="18:00">18:00</button><button type="button" data-q="19:00">19:00</button></div>
+    <div class="wx hide" id="wwx"></div>
+    <div class="wlbl">Notatka</div>
+    <select id="wnotesel"><option value="">— bez notatki —</option><option>Na godzinkę +/- :)</option><option>Trochę po mieście</option><option>Może do lasu</option><option>Nad rzekę</option><option>Nocna Wataha</option><option value="*">✏️ Własna…</option></select>
+    <input id="wnote" class="hide" maxlength="200" placeholder="Napisz własną notatkę">
+    <button type="button" class="b big" id="wsave" style="margin-top:12px">Wyślij zaproszenie</button>
+    <div class="row between" style="margin-top:6px"><button type="button" class="lnk" id="wlast"></button><button type="button" class="lnk" id="wcancel">Anuluj</button></div>
    </div>
    <div id="wantlist"></div>
   </div>
@@ -425,7 +469,7 @@ const windCache={};
 async function getWind(lat,lon,when){
   const key=lat.toFixed(2)+","+lon.toFixed(2);
   if(!windCache[key]||Date.now()-windCache[key].t>6e5){
-    const u="https://api.open-meteo.com/v1/forecast?latitude="+lat.toFixed(3)+"&longitude="+lon.toFixed(3)+"&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=kmh&timezone=auto&past_days=30&forecast_days=16";
+    const u="https://api.open-meteo.com/v1/forecast?latitude="+lat.toFixed(3)+"&longitude="+lon.toFixed(3)+"&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_2m&wind_speed_unit=kmh&timezone=auto&past_days=30&forecast_days=16";
     windCache[key]={t:Date.now(),p:fetch(u).then(r=>{if(!r.ok)throw new Error("http "+r.status);return r.json()})};
   }
   let J;
@@ -437,7 +481,7 @@ async function getWind(lat,lon,when){
     const err=new Error(k<H.time[0]?"Brak danych o wietrze dla tak dawnego terminu (dostępne ok. 30 dni wstecz).":"Prognoza wiatru jest dostępna do 16 dni naprzód — wróć bliżej terminu.");
     err.code="range";throw err;
   }
-  return {dir:H.wind_direction_10m[i],speed:H.wind_speed_10m[i],gust:H.wind_gusts_10m[i],time:H.time[i].slice(11,16)};
+  return {dir:H.wind_direction_10m[i],speed:H.wind_speed_10m[i],gust:H.wind_gusts_10m[i],temp:H.temperature_2m?H.temperature_2m[i]:null,time:H.time[i].slice(11,16)};
 }
 
 /* ---------- mapa (Leaflet + OpenStreetMap) ---------- */
@@ -531,7 +575,7 @@ let sb=null,session=null,uid="",ready=false;
 let me={nick:null},isAdmin=false,adminIds=[];
 let nicks={},sorted=[],cur=-1,rsvps={},wants=[],joins={},lib=[];
 let viewToken=0,shareFor=null,map1=null,map2=null;
-let editId=null,formRoute,wantDay="0",libFile=null;
+let editId=null,formRoute,libFile=null;
 const routeCache={},libCache={};
 
 const nickOf=id=>nicks[id]||"ktoś";
@@ -674,7 +718,7 @@ function delHtml(){
   const head='<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">🗑️ Usuń konto</div>';
   if(lastAdmin())return head+'<div class="sleft"><div class="changed">Jesteś jedynym administratorem, więc nie możesz usunąć konta. Najpierw nadaj komuś uprawnienia administratora (Ustawienia → 🛡️ Administracja).</div></div>';
   return head+'<div class="sleft">'
-   +'<h3>Zostanie usunięte na zawsze</h3><ul><li>konto i adres e-mail</li><li>nick i płeć</li><li>zapisy na wieczorynki</li><li>zgłoszenia „Mam ochotę pojeździć” i dołączenia</li>'+(isAdmin?'<li>uprawnienia administratora</li>':'')+'</ul>'
+   +'<h3>Zostanie usunięte na zawsze</h3><ul><li>konto i adres e-mail</li><li>nick i płeć</li><li>zapisy na wieczorynki</li><li>zgłoszenia „Kto jedzie ze mną?” i dołączenia</li>'+(isAdmin?'<li>uprawnienia administratora</li>':'')+'</ul>'
    +'<h3>Zostanie</h3><ul><li>wieczorynki, które organizujesz (z Twoim nickiem jako organizatorem)</li><li>trasy dodane do biblioteki</li></ul>'
    +'<label for="gdel" style="font-size:15px;margin-top:16px">Aby potwierdzić, wpisz <b>USUŃ</b></label>'
    +'<input id="gdel" maxlength="10" autocomplete="off" autocapitalize="characters">'
@@ -907,6 +951,7 @@ function renderWants(){
   $("wantguest").classList.toggle("hide",!guest);
   $("wantmain").classList.toggle("hide",guest);
   if(guest)return;
+  renderMyWant();
   const list=wants.filter(w=>new Date(w.starts_at).getTime()>=Date.now()-3*36e5);
   const box=$("wantlist");
   if(!list.length){box.innerHTML='<div class="note" style="margin-top:12px">Nikt jeszcze nie zgłosił ochoty. Bądź pierwszy!</div>';return}
@@ -961,34 +1006,209 @@ function wantHtml(w){
      +((mine||isAdmin)?'<button class="b g" data-w="del" data-id="'+esc(w.id)+'">Usuń</button>':'')
      +'</div></div>';
 }
-$("wantbtn").onclick=()=>{
+/* ---------- formularz zaproszenia: dzień + zegar klapkowy + notatka ---------- */
+const wf={day:"0",h:19,m:0,editId:null};
+const WX_LAT=52.23,WX_LON=21.01; // pogoda dla Warszawy (środek mapy)
+function wfDate(){
+  let d;
+  if(wf.day==="x"){
+    if(!$("wdt").value)return null;
+    const [y,mo,da]=$("wdt").value.split("-").map(Number);d=new Date(y,mo-1,da,wf.h,wf.m);
+  }else{d=new Date();d.setDate(d.getDate()+(+wf.day));d.setHours(wf.h,wf.m,0,0)}
+  return d;
+}
+function wfLabel(d){return relDay(d)+" "+hhmm(d)}
+function flipCard(el,txt){
+  if(el.textContent===txt)return;
+  el.textContent=txt;el.classList.remove("flipping");void el.offsetWidth;el.classList.add("flipping");
+}
+function wfSetDay(day,keep){
+  wf.day=day;
+  [...$("wdays").children].forEach(b=>b.classList.toggle("on",b.dataset.d===day));
+  $("wdwrap").classList.toggle("hide",day!=="x");
+  if(day==="x"&&!$("wdt").value&&!keep){const t=new Date();t.setDate(t.getDate()+3);$("wdt").value=localIso(t).slice(0,10)}
+}
+function wfSetTime(hh,mm){
+  wf.h=((hh%24)+24)%24;wf.m=mm;
+  flipCard($("fch"),pad(wf.h));flipCard($("fcm"),pad(wf.m));
+  wfUpdate();
+}
+function wfStep(unit,dir){
+  let hh=wf.h,mm=wf.m;
+  if(unit==="h")hh+=dir;
+  else{
+    mm=dir>0?(Math.floor(mm/15)+1)*15:(Math.ceil(mm/15)-1)*15;
+    if(mm>=60){mm=0;hh++}else if(mm<0){mm=45;hh--}
+  }
+  wfSetTime(hh,mm);
+}
+let wxTimer=null;
+function wfUpdate(){
+  const d=wfDate(),btn=$("wsave");
+  btn.textContent=(wf.editId?"Zapisz zmianę":"Wyślij zaproszenie")+(d?" · "+wfLabel(d):"");
+  clearTimeout(wxTimer);
+  const box=$("wwx");
+  if(!d){box.classList.add("hide");return}
+  wxTimer=setTimeout(async()=>{
+    try{
+      const w=await getWind(WX_LAT,WX_LON,d);
+      if(wfDate()&&wfDate().getTime()!==d.getTime())return;
+      box.textContent="🌬 "+wfLabel(d)+": wiatr "+Math.round(w.speed)+" km/h z "+NAMES[Math.round(w.dir/45)%8]+(w.temp!=null?" · "+Math.round(w.temp)+"°C":"");
+      box.classList.remove("hide");
+    }catch(e){
+      if(e.code==="range"){box.textContent="🌬 "+e.message;box.classList.remove("hide")}else box.classList.add("hide");
+    }
+  },350);
+}
+// notatka: lista gotowych + „Własna…” (pole tekstowe)
+function wfNoteSync(){
+  const v=$("wnote").value.trim(),s=$("wnotesel");
+  const preset=[...s.options].some(o=>o.value!=="*"&&o.value===v);
+  s.value=preset?v:"*";
+  $("wnote").classList.toggle("hide",preset);
+}
+function lastWant(){try{return JSON.parse(localStorage.getItem("lastWant")||"null")}catch(e){return null}}
+function openWantForm(w){
+  if(!session){say("Najpierw zaloguj się.");return}
   if(needProfile()){askNick();return}
-  $("wantform").classList.toggle("hide");
-};
-$("wcancel").onclick=()=>$("wantform").classList.add("hide");
-$("wchips").addEventListener("click",e=>{
-  const c=e.target.closest(".chip");if(!c)return;
-  wantDay=c.dataset.d;
-  [...$("wchips").children].forEach(x=>x.classList.toggle("on",x===c));
-  $("wdwrap").classList.toggle("hide",wantDay!=="x");
+  wf.editId=w?w.id:null;
+  $("wftitle").textContent=w?"Zmień termin zaproszenia":"Kiedy jedziesz?";
+  let d;
+  if(w)d=new Date(w.starts_at);
+  else{
+    const L=lastWant();d=new Date();
+    if(L){d.setHours(L.h,L.m,0,0)}else{d.setHours(19,0,0,0)}
+    if(d.getTime()<Date.now()+15*60000)d.setDate(d.getDate()+1);
+  }
+  const n=dayDiff(d);
+  if(n>=0&&n<=2)wfSetDay(String(n));else{$("wdt").value=localIso(d).slice(0,10);wfSetDay("x",true)}
+  $("fch").textContent=pad(d.getHours());$("fcm").textContent=pad(d.getMinutes());
+  wf.h=d.getHours();wf.m=d.getMinutes();
+  $("wnote").value=w?(w.note||""):"";wfNoteSync();
+  const L=lastWant();
+  $("wlast").classList.toggle("hide",!L||!!w);
+  if(L)$("wlast").textContent="↺ Jak ostatnio: "+pad(L.h)+":"+pad(L.m)+(L.note?" · "+L.note:"");
+  $("wantform").classList.remove("hide");
+  wfUpdate();
+  $("wantform").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+function closeWantForm(){$("wantform").classList.add("hide");wf.editId=null}
+$("wantbtn").onclick=()=>{$("wantform").classList.contains("hide")||wf.editId?openWantForm(null):closeWantForm()};
+$("wcancel").onclick=closeWantForm;
+$("wdays").addEventListener("click",e=>{const b=e.target.closest("button[data-d]");if(!b)return;wfSetDay(b.dataset.d);wfUpdate()});
+$("wdt").addEventListener("change",wfUpdate);
+$("fclock").addEventListener("click",e=>{const b=e.target.closest(".farr");if(!b)return;wfStep(b.closest(".fcol").dataset.u,+b.dataset.s)});
+// kółko myszy i przeciąganie palcem po kartkach
+let wheelT=0;
+["fch","fcm"].forEach(id=>{
+  const el=$(id),unit=id==="fch"?"h":"m";
+  el.addEventListener("wheel",e=>{e.preventDefault();const now=Date.now();if(now-wheelT<110)return;wheelT=now;wfStep(unit,e.deltaY<0?1:-1)},{passive:false});
+  let y0=null;
+  el.addEventListener("touchstart",e=>{y0=e.touches[0].clientY},{passive:true});
+  el.addEventListener("touchmove",e=>{
+    if(y0==null)return;e.preventDefault();
+    const y=e.touches[0].clientY;
+    while(y0-y>=26){wfStep(unit,1);y0-=26}
+    while(y-y0>=26){wfStep(unit,-1);y0+=26}
+  },{passive:false});
+  el.addEventListener("touchend",()=>{y0=null});
+  let my0=null;
+  el.addEventListener("mousedown",e=>{my0=e.clientY;e.preventDefault()});
+  window.addEventListener("mousemove",e=>{
+    if(my0==null)return;
+    while(my0-e.clientY>=20){wfStep(unit,1);my0-=20}
+    while(e.clientY-my0>=20){wfStep(unit,-1);my0+=20}
+  });
+  window.addEventListener("mouseup",()=>{my0=null});
 });
+$("wquick").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-q]");if(!b)return;
+  let d;
+  if(b.dataset.q==="30"){d=new Date(Date.now()+30*60000);d.setMinutes(Math.ceil(d.getMinutes()/5)*5,0,0)}
+  else{
+    const [hh,mm]=b.dataset.q.split(":").map(Number);
+    d=wf.day==="x"?(wfDate()||new Date()):new Date();
+    if(wf.day!=="x"&&wf.day!=="0")d.setDate(d.getDate()+(+wf.day));
+    d.setHours(hh,mm,0,0);
+    if(d.getTime()<Date.now()+5*60000&&wf.day==="0")d.setDate(d.getDate()+1);
+  }
+  if(wf.day!=="x"||b.dataset.q==="30"){const n=dayDiff(d);if(n>=0&&n<=2)wfSetDay(String(n))}
+  wfSetTime(d.getHours(),d.getMinutes());
+});
+$("wnotesel").addEventListener("change",()=>{
+  const v=$("wnotesel").value;
+  if(v==="*"){$("wnote").value="";$("wnote").classList.remove("hide");$("wnote").focus()}
+  else{$("wnote").value=v;$("wnote").classList.add("hide")}
+});
+$("wlast").onclick=()=>{
+  const L=lastWant();if(!L)return;
+  const d=wfDate()||new Date();d.setHours(L.h,L.m,0,0);
+  if(wf.day==="0"&&d.getTime()<Date.now()+5*60000)wfSetDay("1");
+  wfSetTime(L.h,L.m);$("wnote").value=L.note||"";wfNoteSync();
+};
 $("wsave").onclick=async()=>{
   if(!session){say("Najpierw zaloguj się.");return}
   if(needProfile()){askNick();return}
-  const [hh,mm]=($("wtm").value||"19:00").split(":").map(Number);
-  let d;
-  if(wantDay==="x"){
-    if(!$("wdt").value){say("Wybierz datę.");return}
-    const [y,mo,da]=$("wdt").value.split("-").map(Number);d=new Date(y,mo-1,da,hh,mm);
-  }else{d=new Date();d.setDate(d.getDate()+(+wantDay));d.setHours(hh,mm,0,0)}
-  if(d.getTime()<Date.now()-5*60000){say("Ten termin już minął.");return}
+  const d=wfDate();
+  if(!d){say("Wybierz datę.");return}
+  if(d.getTime()<Date.now()-5*60000){say("Ten termin już minął — wybierz późniejszą godzinę.");return}
+  const note=$("wnote").value.trim()||null,k=localIso(d).slice(0,10);
+  const same=wants.find(w=>w.user_id===uid&&w.id!==wf.editId&&localIso(new Date(w.starts_at)).slice(0,10)===k&&new Date(w.starts_at).getTime()>=Date.now()-3*36e5);
+  if(same){say("Masz już zaproszenie na ten dzień ("+hhmm(new Date(same.starts_at))+") — zmień w nim godzinę.");return}
   try{
-    const res=await sb.from("wants").insert({starts_at:d.toISOString(),note:$("wnote").value.trim()||null});
-    if(res.error)throw res.error;
-    $("wnote").value="";$("wantform").classList.add("hide");
-    await loadRemote();say("Zgłoszono ✔ — inni zalogowani zobaczą Twoją ochotę.");
-  }catch(e){say("Nie udało się zgłosić: "+(e&&e.message?e.message:"błąd"))}
+    if(wf.editId){
+      const res=await sb.from("wants").update({starts_at:d.toISOString(),note}).eq("id",wf.editId).select("id");
+      if(res.error||!res.data||!res.data.length)throw new Error(res.error?res.error.message:"zmiana terminu wymaga KROKU 11 w bazie");
+    }else{
+      const res=await sb.from("wants").insert({starts_at:d.toISOString(),note});
+      if(res.error)throw res.error;
+    }
+    try{localStorage.setItem("lastWant",JSON.stringify({h:wf.h,m:wf.m,note}))}catch(e){}
+    try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}
+    const wasEdit=!!wf.editId;
+    closeWantForm();$("wnote").value="";
+    await loadRemote();
+    say(wasEdit?"Zmieniono termin ✔ "+wfLabel(d):"Wysłane ✔ Zaproszenie na "+wfLabel(d)+" jest też na kanale Telegram.");
+  }catch(e){say("Nie udało się: "+(e&&e.message?e.message:"błąd"))}
 };
+/* ---------- Twoje zaproszenie (zamiast dużego przycisku) ---------- */
+function renderMyWant(){
+  const box=$("mywant");if(!box)return;
+  const act=w=>new Date(w.starts_at).getTime()>=Date.now()-3*36e5;
+  const mine=wants.filter(w=>w.user_id===uid&&act(w)).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
+  const others=wants.filter(w=>w.user_id!==uid&&act(w)&&dayDiff(new Date(w.starts_at))===0).length;
+  const bd=$("wbadge");bd.textContent=others+" dziś";bd.classList.toggle("hide",!others);
+  $("rbwrap").classList.toggle("hide",!!mine.length);
+  if(!mine.length){box.innerHTML="";return}
+  const w=mine[0],d=new Date(w.starts_at),j=(joins[w.id]||[]).filter(x=>x!==uid);
+  const wd=d.toLocaleDateString("pl-PL",{weekday:"long"}),n=dayDiff(d);
+  box.innerHTML='<div class="mywant"><div class="myh">Twoje zaproszenie'+(mine.length>1?' · 1 z '+mine.length:'')+'</div>'
+   +'<div class="myt">'+esc(n>=0&&n<=2?["Dziś","Jutro","Pojutrze"][n]+" "+hhmm(d):wd.charAt(0).toUpperCase()+wd.slice(1)+" "+hhmm(d))+(n>=0&&n<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
+   +(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')
+   +'<div class="mym">'+(j.length?'Dołączyli ('+j.length+'):'+nkList(j):'Na razie nikt nie dołączył.')+'</div>'
+   +'<div class="mybtns"><button class="b g" data-my="edit" data-id="'+esc(w.id)+'">✏️ Zmień godzinę</button><button class="b g" data-my="share" data-id="'+esc(w.id)+'">📤 Udostępnij</button></div>'
+   +'<button class="mydel" data-my="del" data-id="'+esc(w.id)+'">Odwołaj zaproszenie</button></div>'
+   +'<button class="lnk mynew" data-my="new">+ Zaproś na inny dzień</button>';
+}
+$("mywant").addEventListener("click",async e=>{
+  const b=e.target.closest("button[data-my]");if(!b)return;
+  const w=wants.find(x=>x.id===b.dataset.id);
+  if(b.dataset.my==="new"){openWantForm(null);return}
+  if(!w)return;
+  if(b.dataset.my==="edit"){openWantForm(w);return}
+  if(b.dataset.my==="share"){
+    const d=new Date(w.starts_at),url=location.origin+location.pathname;
+    const t="🚴 Idziemy na rower? "+wfLabel(d)+(w.note?" · "+w.note:"")+"\nDołącz w PrzylesieGo!";
+    if(navigator.share){try{await navigator.share({title:"Idziemy na rower?",text:t,url});return}catch(err){if(err&&err.name==="AbortError")return}}
+    try{await navigator.clipboard.writeText(t+"\n"+url);say("Skopiowano zaproszenie — wklej je znajomym.")}catch(err){say(t+" "+url)}
+    return;
+  }
+  if(b.dataset.my==="del"){
+    if(!confirm("Odwołać zaproszenie na "+wfLabel(new Date(w.starts_at))+"?"))return;
+    try{const res=await sb.from("wants").delete().eq("id",w.id);if(res.error)throw res.error;closeWantForm();await loadRemote();say("Zaproszenie odwołane.")}
+    catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+  }
+});
 $("wantlist").addEventListener("click",async e=>{
   const b=e.target.closest("button[data-w]");if(!b)return;
   const id=b.dataset.id;
