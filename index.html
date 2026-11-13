@@ -62,8 +62,13 @@ nav button.on{background:var(--navon);color:var(--ink);box-shadow:0 1px 3px rgba
 .sheetbox .note{font-size:16px}
 .sheetbox .seg button{padding:13px 4px;font-size:17px}
 .sleft{text-align:left;margin-top:6px}
-.nk{font-weight:700}
-.cprev{display:flex;gap:8px;margin-top:8px}.cprev div{flex:1;border-radius:10px;padding:8px 10px;font-size:15px;border:1px solid var(--line)}
+.nk{display:inline-block;padding:2px 10px;margin:1px 0;border-radius:999px;font-size:16px;font-weight:700;line-height:1.4;letter-spacing:-.01em;background:var(--fill);color:var(--ink);white-space:nowrap;vertical-align:baseline}
+.nk.nobg{padding:2px 1px}
+.nks{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.crow small{color:var(--mut);font-size:13px}
+.crow label{display:flex;align-items:center;gap:6px;margin:0;font-size:14px;color:var(--mut)}
+.crow label input{width:auto}
+.cprev{display:flex;flex-direction:column;gap:8px;margin-top:8px}.cprev div{display:flex;flex-wrap:wrap;gap:6px;align-items:center;border-radius:10px;padding:10px;border:1px solid var(--line)}
 .crow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font-size:16px}
 .crow input[type=color]{width:56px;height:36px;padding:2px;border-radius:9px;cursor:pointer}
 .sdanger{display:block;margin:16px auto 0;padding:8px;border:0;background:none;color:var(--bad);font:inherit;font-size:15px;cursor:pointer;text-decoration:underline}
@@ -487,13 +492,15 @@ const routeCache={},libCache={};
 const nickOf=id=>nicks[id]||"ktoś";
 /* płeć i kolory nicków */
 let genders={},genderOk=false;
-const DEF_COLORS={K:"#d6337a",M:"#2f6fd6"};
-let nickColors={...DEF_COLORS};
+const DEF_COLORS={K:"#b0245f",M:"#1f56b3"},DEF_BGS={K:"#fde4ef",M:"#e3edfc"};
+let nickColors={...DEF_COLORS},nickBgs={...DEF_BGS};
 const HEX_RE=/^#[0-9a-fA-F]{6}$/;
 const colorOf=id=>{const g=genders[id];return g&&HEX_RE.test(nickColors[g]||"")?nickColors[g]:""};
 // nick jako kolorowy HTML (tekst zawsze przez esc)
-const nk=(id,fallback)=>{const c=colorOf(id),t=nicks[id]||fallback||"ktoś";return '<span class="nk"'+(c?' style="color:'+c+'"':'')+'>'+esc(t)+'</span>'};
-const nkList=ids=>ids.map(id=>nk(id)).join(", ");
+// nick jako „pigułka”: kolor tekstu i tło zależne od płci (ustawia admin); bez płci — szara
+const pill=(t,c,bg)=>'<span class="nk'+(c&&bg==="none"?' nobg':'')+'"'+(c?' style="color:'+c+';background:'+(bg==="none"?"transparent":bg)+'"':'')+'>'+esc(t)+'</span>';
+const nk=(id,fallback)=>{const c=colorOf(id),g=genders[id];return pill(nicks[id]||fallback||"ktoś",c,c?nickBgs[g]:"")};
+const nkList=ids=>'<div class="nks">'+ids.map(id=>nk(id)).join("")+'</div>';
 const needProfile=()=>!!session&&(!me.nick||(genderOk&&!genders[uid]));
 const isUpcoming=r=>new Date(r.when).getTime()>=Date.now()-3*36e5;
 const firstUpcoming=()=>sorted.findIndex(isUpcoming);
@@ -562,21 +569,27 @@ function adminHtml(){
    +'</div>';
 }
 function colorsHtml(){
-  const row=(k,t)=>'<div class="crow"><span>'+t+'</span><input type="color" id="col'+k+'" value="'+(HEX_RE.test(nickColors[k]||"")?nickColors[k]:DEF_COLORS[k])+'"></div>';
+  const v=(m,d,k)=>HEX_RE.test(m[k]||"")?m[k]:d[k];
+  const blk=(k,t)=>'<h3>'+t+'</h3>'
+   +'<div class="crow"><span>Tekst</span><input type="color" id="col'+k+'" value="'+v(nickColors,DEF_COLORS,k)+'"></div>'
+   +'<div class="crow"><span>Tło</span><label><input type="checkbox" id="nob'+k+'"'+(nickBgs[k]==="none"?" checked":"")+'> bez tła</label><input type="color" id="bg'+k+'" value="'+v(nickBgs,DEF_BGS,k)+'"></div>';
   return '<button class="sback" data-c="backadmin">‹ Administracja</button>'
    +'<div class="sname" style="margin-top:26px">🎨 Kolory nicków</div>'
-   +'<div class="sleft">'+row("K","👩 Kobiety")+row("M","👨 Mężczyźni")
-   +'<h3>Podgląd</h3><div class="cprev"><div style="background:#fff;color:#1d1d1f" id="pvL"></div><div style="background:#2c2c2e;color:#f5f5f7" id="pvD"></div></div>'
-   +'<p class="note">Sprawdź, czy oba nicki są czytelne na jasnym i na ciemnym tle. Zmiana działa u wszystkich po odświeżeniu danych (do 1 minuty).</p>'
+   +'<div class="sleft">'+blk("K","👩 Kobiety")+blk("M","👨 Mężczyźni")
+   +'<h3>Podgląd</h3><div class="cprev"><div style="background:#fff" id="pvL"></div><div style="background:#2c2c2e" id="pvD"></div></div>'
+   +'<p class="note">Sprawdź, czy nicki są czytelne w trybie jasnym (góra) i ciemnym (dół). Szara pigułka to nick bez podanej płci. Zmiana działa u wszystkich po odświeżeniu danych (do 1 minuty).</p>'
    +'<div class="note" id="colinfo" style="color:var(--bad)"></div>'
    +'<button class="b sbtn" data-c="colsave">Zapisz kolory</button>'
    +'<button class="b sbtn g" data-c="coldef">Przywróć domyślne</button></div>';
 }
+const colVals=()=>({cK:$("colK").value,cM:$("colM").value,bK:$("nobK").checked?"none":$("bgK").value,bM:$("nobM").checked?"none":$("bgM").value});
 function colorsPreview(){
-  const k=$("colK"),m=$("colM");if(!k||!m)return;
-  const s=(c,t)=>'<b style="color:'+c+'">'+t+'</b>';
-  const html=s(k.value,"Ania")+' · '+s(m.value,"GAWRON");
-  $("pvL").innerHTML=html;$("pvD").innerHTML=html;
+  if(!$("colK"))return;
+  const x=colVals();
+  $("bgK").disabled=x.bK==="none";$("bgM").disabled=x.bM==="none";
+  const html=pill("Ania",x.cK,x.bK)+pill("GAWRON",x.cM,x.bM)+pill("Kasia",x.cK,x.bK)+pill("Marek",x.cM,x.bM);
+  $("pvL").innerHTML=html+pill("bez płci","#1d1d1f","#f2f2f7");
+  $("pvD").innerHTML=html+pill("bez płci","#f5f5f7","#3a3a3c");
 }
 let unickId="";
 function unickHtml(){
@@ -624,7 +637,7 @@ function renderGear(){
   if((gearView==="admin"||gearView==="unick"||gearView==="colors")&&!(session&&isAdmin))gearView="main";
   if(gearView==="unick"&&!nicks[unickId])gearView="admin";
   const keepSel=$("adminsel")?$("adminsel").value:"";
-  const keepCol=gearView==="colors"&&$("colK")?{k:$("colK").value,m:$("colM").value}:null;
+  const keepCol=gearView==="colors"&&$("colK")?colVals():null;
   const keepNickSex=gearView==="nick";
   const keepUnick=gearView==="unick"&&$("gunick")?{v:$("gunick").value,i:$("gunickinfo").textContent}:null;
   const keepDel=gearView==="del"&&$("gdel")?{v:$("gdel").value,i:$("gdelinfo").textContent}:null;
@@ -648,7 +661,7 @@ function renderGear(){
   p.innerHTML='<div class="sheetbox"><button class="sclose" data-c="close" aria-label="Zamknij">✕</button>'+body+'</div>';
   const s=$("adminsel");
   if(s&&keepSel&&[...s.options].some(o=>o.value===keepSel))s.value=keepSel;
-  if(keepCol&&$("colK")){$("colK").value=keepCol.k;$("colM").value=keepCol.m}
+  if(keepCol&&$("colK")){["K","M"].forEach(g=>{$("col"+g).value=keepCol["c"+g];$("nob"+g).checked=keepCol["b"+g]==="none";if(keepCol["b"+g]!=="none")$("bg"+g).value=keepCol["b"+g]})}
   if(gearView==="colors")colorsPreview();
   if(keepUnick&&$("gunick")){$("gunick").value=keepUnick.v;$("gunickinfo").textContent=keepUnick.i}
   if(keepDel&&$("gdel")){$("gdel").value=keepDel.v;$("gdelinfo").textContent=keepDel.i}
@@ -687,7 +700,7 @@ $("gearpanel").addEventListener("click",async e=>{
   const c=b.dataset.c;
   if(c==="admin"){gearView="admin";renderGear();return}
   if(c==="colors"){gearView="colors";renderGear();return}
-  if(c==="coldef"){$("colK").value=DEF_COLORS.K;$("colM").value=DEF_COLORS.M;colorsPreview();return}
+  if(c==="coldef"){["K","M"].forEach(g=>{$("col"+g).value=DEF_COLORS[g];$("bg"+g).value=DEF_BGS[g];$("nob"+g).checked=false});colorsPreview();return}
   if(c==="colsave"){await saveColors();return}
   if(c==="nick"){selGender=genders[uid]||"";gearView="nick";renderGear();const i=$("gnick");if(i){i.focus();i.select()}return}
   if(c==="nicksave"){await gearSaveNick();return}
@@ -710,15 +723,15 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="out"){setGuest(false);if(sb)sb.auth.signOut();renderChrome()}
   else if(c==="login"){setGuest(false);renderChrome()}
 });
-$("gearpanel").addEventListener("input",e=>{if(e.target.id==="colK"||e.target.id==="colM")colorsPreview()});
+$("gearpanel").addEventListener("input",e=>{if(/^(col|bg|nob)[KM]$/.test(e.target.id))colorsPreview()});
 async function saveColors(){
   if(!isAdmin)return;
-  const k=$("colK").value,m=$("colM").value,inf=$("colinfo");
-  if(!HEX_RE.test(k)||!HEX_RE.test(m)){inf.textContent="Nieprawidłowy kolor.";return}
+  const x=colVals(),inf=$("colinfo"),okBg=b=>b==="none"||HEX_RE.test(b);
+  if(!HEX_RE.test(x.cK)||!HEX_RE.test(x.cM)||!okBg(x.bK)||!okBg(x.bM)){inf.textContent="Nieprawidłowy kolor.";return}
   try{
-    const res=await sb.from("app_settings").upsert([{key:"nick_color_K",value:k},{key:"nick_color_M",value:m}]).select("key");
+    const res=await sb.from("app_settings").upsert([{key:"nick_color_K",value:x.cK},{key:"nick_color_M",value:x.cM},{key:"nick_bg_K",value:x.bK},{key:"nick_bg_M",value:x.bM}]).select("key");
     if(res.error)throw res.error;
-    if(!res.data||res.data.length<2)throw new Error("brak uprawnień");
+    if(!res.data||res.data.length<4)throw new Error("brak uprawnień");
     await loadRemote();gearView="admin";renderGear();say("Kolory nicków zapisane ✔");
   }catch(err){inf.textContent="Nie udało się zapisać: "+(err&&err.message?err.message:"błąd")}
 }
@@ -808,7 +821,7 @@ function renderWants(){
     const j=joins[w.id]||[],mine=w.user_id===uid,joined=j.includes(uid),others=j.filter(x=>x!==w.user_id);
     return '<div class="want'+(mine?' mine':'')+'"><div>'+nk(w.user_id)+' · '+esc(relWhen(w.starts_at))+(mine?' <span class="note">(Twoje zgłoszenie)</span>':'')+'</div>'
      +(w.note?'<div>'+esc(w.note)+'</div>':'')
-     +'<div class="meta">'+(others.length?'Dołączyli ('+others.length+'): '+nkList(others):(mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.'))+'</div>'
+     +'<div class="meta">'+(others.length?'Dołączyli ('+others.length+'):'+nkList(others):(mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.'))+'</div>'
      +'<div class="row" style="margin-top:8px">'
      +(mine?'':'<button class="b'+(joined?' g':'')+'" data-w="join" data-id="'+esc(w.id)+'">'+(joined?'Rezygnuję':'Ja też!')+'</button>')
      +((mine||isAdmin)?'<button class="b g" data-w="del" data-id="'+esc(w.id)+'">Usuń</button>':'')
@@ -869,7 +882,7 @@ function renderNext(){
   box.innerHTML='<div style="font-size:18px;font-weight:700">'+esc(r.title)+'</div>'
    +'<div class="meta">🕖 '+esc(relWhen(r.when))+' · 📍 '+esc(r.place||"miejsce do ustalenia")+' · '+esc(r.pace||"")+'</div>'
    +changedHtml(r)
-   +'<div class="meta">Jedzie: <b>'+g.length+'</b>'+(session&&g.length?' — '+nkList(g):'')+'</div>'
+   +'<div class="meta">Jedzie: <b>'+g.length+'</b>'+(session&&g.length?nkList(g):'')+'</div>'
    +'<div class="row" style="margin-top:10px"><button class="b'+(goes?' g':'')+'" data-go="join" data-id="'+esc(r.id)+'">'+(goes?'Rezygnuję':'Jadę!')+'</button><button class="b g" data-go="ride" data-i="'+fu+'">Szczegóły i mapa →</button></div>';
 }
 $("nextbody").addEventListener("click",async e=>{
@@ -914,7 +927,7 @@ function renderCard(){
    +'<div class="meta">🕖 '+esc(fmtWhen(r.when))+' · 📍 '+esc(r.place||"miejsce do ustalenia")+' · '+esc(r.pace||"")+'</div>'
    +changedHtml(r)
    +(r.note?'<div>'+esc(r.note)+'</div>':'')
-   +'<div class="meta">Organizuje: '+(nicks[r.creator]?nk(r.creator):esc(r.owner||"?"))+' · jedzie: <b>'+g.length+'</b>'+(session&&g.length?' — '+nkList(g):'')+'</div>'
+   +'<div class="meta">Organizuje: '+(nicks[r.creator]?nk(r.creator):esc(r.owner||"?"))+' · jedzie: <b>'+g.length+'</b>'+(session&&g.length?nkList(g):'')+'</div>'
    +'<div class="row" style="margin-top:10px">'
    +'<button class="b'+(goes?' g':'')+'" data-act="join" data-id="'+esc(r.id)+'">'+(goes?'Rezygnuję':'Jadę!')+'</button>'
    +'<a class="b g" target="_blank" rel="noopener" href="'+esc(gcalUrl(r))+'">📅 Google Kalendarz</a>'
@@ -1069,7 +1082,11 @@ async function loadRemote(selectId){
     ]);
     nicks={};genders={};(ok(p)||[]).forEach(x=>{nicks[x.user_id]=x.nick;if(x.gender)genders[x.user_id]=x.gender});
     me.nick=nicks[uid]||null;
-    nickColors={...DEF_COLORS};(ok(st)||[]).forEach(x=>{const m=/^nick_color_([KM])$/.exec(x.key);if(m&&HEX_RE.test(x.value))nickColors[m[1]]=x.value});
+    nickColors={...DEF_COLORS};nickBgs={...DEF_BGS};
+    (ok(st)||[]).forEach(x=>{
+      let m=/^nick_color_([KM])$/.exec(x.key);if(m&&HEX_RE.test(x.value))nickColors[m[1]]=x.value;
+      m=/^nick_bg_([KM])$/.exec(x.key);if(m&&(x.value==="none"||HEX_RE.test(x.value)))nickBgs[m[1]]=x.value;
+    });
     if(!p.error&&needProfile()&&!pwMode&&nickAskedFor!==uid){nickAskedFor=uid;setTimeout(askNick,0)}
     wants=ok(w)||[];
     joins={};(ok(j)||[]).forEach(x=>{(joins[x.want_id]=joins[x.want_id]||[]).push(x.user_id)});
