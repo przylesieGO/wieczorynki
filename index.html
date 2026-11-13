@@ -75,9 +75,16 @@ nav button.on{background:var(--navon);color:var(--ink);box-shadow:0 1px 3px rgba
 .crow input[type=color]{width:56px;height:36px;padding:2px;border-radius:9px;cursor:pointer}
 .onl{background:var(--acc2);color:var(--acc);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:700;white-space:nowrap}
 .sheetbox .stats{grid-template-columns:1fr 1fr}.sheetbox .st b{font-size:24px}.sheetbox .st span{font-size:14px}
+.nk[data-u]{cursor:pointer}
+.wfav{font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.favline{margin-top:6px;font-size:14px;font-weight:600}
+.starb{border:0;background:var(--fill);border-radius:999px;width:40px;height:36px;font-size:19px;cursor:pointer;flex:none}
+.starb.on{background:#fff3c4}
+html[data-theme=dark] .starb.on{background:#4a3f12}
+.bigpill .nk{font-size:22px;padding:4px 16px}
 details.wday{border:1px solid var(--line);border-radius:14px;margin-top:10px;background:var(--card)}
 details.wday[open]{border-color:var(--acc)}
-details.wday>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;-webkit-user-select:none;user-select:none}
+details.wday>summary{list-style:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:12px 14px;cursor:pointer;-webkit-user-select:none;user-select:none}
 details.wday>summary::-webkit-details-marker{display:none}
 details.wday>summary::after{content:"›";margin-left:auto;font-size:22px;line-height:1;color:var(--mut);transition:transform .15s}
 details.wday[open]>summary::after{transform:rotate(90deg)}
@@ -512,9 +519,14 @@ const HEX_RE=/^#[0-9a-fA-F]{6}$/;
 const colorOf=id=>{const g=genders[id];return g&&HEX_RE.test(nickColors[g]||"")?nickColors[g]:""};
 // nick jako kolorowy HTML (tekst zawsze przez esc)
 // nick jako „pigułka”: kolor tekstu i tło zależne od płci (ustawia admin); bez płci — szara
-const pill=(t,c,bg,live)=>'<span class="nk'+(c&&bg==="none"?' nobg':'')+(live?' live" title="teraz w aplikacji':'')+'"'+(c?' style="color:'+c+';background:'+(bg==="none"?"transparent":bg)+'"':'')+'>'+esc(t)+'</span>';
-const nk=(id,fallback)=>{const c=colorOf(id),g=genders[id];return pill(nicks[id]||fallback||"ktoś",c,c?nickBgs[g]:"",onlineIds.includes(id))};
-const nkList=ids=>'<div class="nks">'+ids.map(id=>nk(id)).join("")+'</div>';
+const pill=(t,c,bg,live,uid_)=>'<span'+(uid_?' data-u="'+esc(uid_)+'"':'')+' class="nk'+(c&&bg==="none"?' nobg':'')+(live?' live" title="teraz w aplikacji':'')+'"'+(c?' style="color:'+c+';background:'+(bg==="none"?"transparent":bg)+'"':'')+'>'+esc(t)+'</span>';
+/* ulubieni (prywatni: każdy widzi tylko swoich) */
+let favs=new Set(),favOk=false;
+const isFav=id=>favs.has(id);
+const nk=(id,fallback)=>{const c=colorOf(id),g=genders[id],t=nicks[id]||fallback||"ktoś";return pill((isFav(id)?"⭐ ":"")+t,c,c?nickBgs[g]:"",onlineIds.includes(id),nicks[id]&&favOk&&id!==uid?id:"")};
+const favFirst=ids=>ids.slice().sort((a,b)=>(isFav(b)?1:0)-(isFav(a)?1:0));
+const nkList=ids=>'<div class="nks">'+favFirst(ids).map(id=>nk(id)).join("")+'</div>';
+const favNames=ids=>favFirst(ids).filter(isFav).map(id=>nicks[id]).filter(Boolean);
 const needProfile=()=>!!session&&(!me.nick||(genderOk&&!genders[uid]));
 const isUpcoming=r=>new Date(r.when).getTime()>=Date.now()-3*36e5;
 const firstUpcoming=()=>sorted.findIndex(isUpcoming);
@@ -645,6 +657,40 @@ function delHtml(){
    +'<div class="note" id="gdelinfo" style="color:var(--bad)"></div>'
    +'<button class="b sbtn" style="background:var(--bad)" data-c="delgo">Usuń konto na zawsze</button></div>';
 }
+let userId="",userBack="";
+const starBtn=id=>'<button class="starb'+(isFav(id)?' on':'')+'" data-a="fav" data-id="'+esc(id)+'" title="'+(isFav(id)?'Usuń z ulubionych':'Dodaj do ulubionych')+'">'+(isFav(id)?'⭐':'☆')+'</button>';
+function favsHtml(){
+  const ids=Object.keys(nicks).filter(id=>id!==uid).sort((a,b)=>((isFav(b)?1:0)-(isFav(a)?1:0))||nicks[a].localeCompare(nicks[b],"pl"));
+  return '<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">⭐ Ulubieni</div>'
+   +'<div class="smail">Tylko Ty widzisz, kogo masz w ulubionych. Ulubieni są na początku list i widać ich w nagłówkach dni.</div>'
+   +'<div class="sleft">'+(ids.map(id=>'<div class="arow">'+nk(id)+starBtn(id)+'</div>').join("")||'<div class="note">Brak innych użytkowników z nickiem.</div>')+'</div>';
+}
+function userHtml(){
+  const g=genders[userId],fav=isFav(userId);
+  return (userBack?'<button class="sback" data-c="userback">‹ '+(userBack==="favs"?'Ulubieni':'Ustawienia')+'</button>':'')
+   +'<div class="bigpill" style="margin-top:'+(userBack?'26px':'6px')+'">'+nk(userId)+'</div>'
+   +'<div class="smail">'+(g==="K"?"👩 Kobieta":g==="M"?"👨 Mężczyzna":"")+(onlineIds.includes(userId)?(g?" · ":"")+"🟢 teraz w aplikacji":"")+'</div>'
+   +'<button class="b sbtn'+(fav?' g':'')+'" data-a="fav" data-id="'+esc(userId)+'">'+(fav?'⭐ Usuń z ulubionych':'☆ Dodaj do ulubionych')+'</button>'
+   +(isAdmin?'<button class="b sbtn g" data-a="unick" data-id="'+esc(userId)+'">✏️ Zmień nick (admin)</button>':'');
+}
+async function toggleFav(id){
+  if(!session||!favOk||!id||id===uid)return;
+  const on=isFav(id);
+  try{
+    const res=on?await sb.from("favorites").delete().eq("user_id",uid).eq("fav_id",id):await sb.from("favorites").insert({fav_id:id});
+    if(res.error)throw res.error;
+    on?favs.delete(id):favs.add(id);
+    renderWants();renderNext();renderCard();renderLibUi();renderGear();
+    say(on?"Usunięto z ulubionych: "+nicks[id]:"⭐ Dodano do ulubionych: "+nicks[id]);
+  }catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+}
+// kliknięcie pigułki z nickiem (poza panelem) otwiera kartę osoby
+document.addEventListener("click",e=>{
+  const p=e.target.closest(".nk[data-u]");if(!p||!session||!favOk)return;
+  const inPanel=!!p.closest("#gearpanel");
+  if(inPanel&&gearView!=="favs")return;
+  userBack=inPanel?"favs":"";userId=p.dataset.u;gearOpen=true;gearView="user";renderGear();
+});
 function renderGear(){
   const p=$("gearpanel");
   if(!gearOpen){p.classList.add("hide");gearView="main";return}
@@ -663,11 +709,14 @@ function renderGear(){
   else if(gearView==="unick")body=unickHtml();
   else if(gearView==="colors")body=colorsHtml();
   else if(gearView==="stats")body=adminStatsHtml();
+  else if(gearView==="favs"&&session)body=favsHtml();
+  else if(gearView==="user"&&session&&nicks[userId])body=userHtml();
   else if(gearView==="nick"&&session)body=nickHtml();
   else if(gearView==="del"&&session)body=delHtml();
   else body=session
     ?'<div class="sname">👤 '+(me.nick?nk(uid):'ustaw nick')+(isAdmin?' 🛡️':'')+'</div><div class="smail">'+esc(session.user.email||"")+'</div>'
-     +'<button class="b sbtn g" data-c="nick">✏️ '+(me.nick?'Nick i płeć':'Ustaw nick')+'</button>'+tg
+     +'<button class="b sbtn g" data-c="nick">✏️ '+(me.nick?'Nick i płeć':'Ustaw nick')+'</button>'
+     +(favOk?'<button class="b sbtn g" data-c="favs">⭐ Ulubieni'+(favs.size?' ('+favs.size+')':'')+'</button>':'')+tg
      +(isAdmin?'<button class="b sbtn g" data-c="admin">🛡️ Administracja</button>':'')
      +themeHtml()
      +'<button class="b sbtn" style="background:var(--bad);margin-top:20px" data-c="out">Wyloguj</button>'
@@ -702,6 +751,7 @@ $("gearpanel").addEventListener("click",async e=>{
   if(e.target===$("gearpanel")){gearOpen=false;renderGear();return}
   const a=e.target.closest("button[data-a]");
   if(a){
+    if(a.dataset.a==="fav"){await toggleFav(a.dataset.id);return}
     if(!isAdmin)return;
     if(a.dataset.a==="unick"){unickId=a.dataset.id;gearView="unick";renderGear();const i=$("gunick");if(i){i.focus();i.select()}return}
     if(!confirm("Odebrać uprawnienia administratora użytkownikowi "+nickOf(a.dataset.id)+"?"))return;
@@ -717,6 +767,8 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="admin"){gearView="admin";renderGear();return}
   if(c==="colors"){gearView="colors";renderGear();return}
   if(c==="stats"){gearView="stats";loadStats();return}
+  if(c==="favs"){gearView="favs";renderGear();return}
+  if(c==="userback"){gearView=userBack||"main";renderGear();return}
   if(c==="coldef"){["K","M"].forEach(g=>{$("col"+g).value=DEF_COLORS[g];$("bg"+g).value=DEF_BGS[g];$("nob"+g).checked=false});colorsPreview();return}
   if(c==="colsave"){await saveColors();return}
   if(c==="nick"){selGender=genders[uid]||"";gearView="nick";renderGear();const i=$("gnick");if(i){i.focus();i.select()}return}
@@ -852,6 +904,7 @@ function renderWants(){
     return '<details class="wday" data-day="'+d.k+'"'+(open?' open':'')+'><summary>'
      +'<span><span class="wdl">'+esc(rel)+'</span>'+(n>=0&&n<=2?' <span class="wdd">'+esc(full)+'</span>':'')+'</span>'
      +'<span class="wdc">'+cnt+' '+zg+' · '+ppl.size+' '+os+'</span>'+(me?'<span class="wme">Ty</span>':'')
+     +(favNames([...ppl]).length?'<span class="wfav">⭐ '+esc(favNames([...ppl]).join(", "))+'</span>':'')
      +'</summary>'+d.ws.map(wantHtml).join("")+'</details>';
   }).join("");
 }
@@ -922,6 +975,7 @@ function renderNext(){
    +'<div class="meta">🕖 '+esc(relWhen(r.when))+' · 📍 '+esc(r.place||"miejsce do ustalenia")+' · '+esc(r.pace||"")+'</div>'
    +changedHtml(r)
    +'<div class="meta">Jedzie: <b>'+g.length+'</b>'+(session&&g.length?nkList(g):'')+'</div>'
+   +(session&&favNames(g).length?'<div class="favline">⭐ Jadą Twoi ulubieni: '+esc(favNames(g).join(", "))+'</div>':'')
    +'<div class="row" style="margin-top:10px"><button class="b'+(goes?' g':'')+'" data-go="join" data-id="'+esc(r.id)+'">'+(goes?'Rezygnuję':'Jadę!')+'</button><button class="b g" data-go="ride" data-i="'+fu+'">Szczegóły i mapa →</button></div>';
 }
 $("nextbody").addEventListener("click",async e=>{
@@ -967,6 +1021,7 @@ function renderCard(){
    +changedHtml(r)
    +(r.note?'<div>'+esc(r.note)+'</div>':'')
    +'<div class="meta">Organizuje: '+(nicks[r.creator]?nk(r.creator):esc(r.owner||"?"))+' · jedzie: <b>'+g.length+'</b>'+(session&&g.length?nkList(g):'')+'</div>'
+   +(session&&favNames(g).length?'<div class="favline">⭐ Jadą Twoi ulubieni: '+esc(favNames(g).join(", "))+'</div>':'')
    +'<div class="row" style="margin-top:10px">'
    +'<button class="b'+(goes?' g':'')+'" data-act="join" data-id="'+esc(r.id)+'">'+(goes?'Rezygnuję':'Jadę!')+'</button>'
    +'<a class="b g" target="_blank" rel="noopener" href="'+esc(gcalUrl(r))+'">📅 Google Kalendarz</a>'
@@ -1164,15 +1219,17 @@ async function loadRemote(selectId){
     let p=await sb.from("profiles").select("user_id,nick,gender").limit(1000);
     genderOk=!p.error;
     if(p.error)p=await sb.from("profiles").select("user_id,nick").limit(1000);
-    const [w,j,l,ad,st]=await Promise.all([
+    const [w,j,l,ad,st,fv]=await Promise.all([
       sb.from("wants").select("id,user_id,starts_at,note").order("starts_at").limit(200),
       sb.from("want_joins").select("want_id,user_id").limit(1000),
       sb.from("routes").select("id,title,description,km,creator,created_at").order("created_at",{ascending:false}).limit(200),
       sb.from("admins").select("user_id"),
-      genderOk?sb.from("app_settings").select("key,value"):Promise.resolve({data:[]})
+      genderOk?sb.from("app_settings").select("key,value"):Promise.resolve({data:[]}),
+      sb.from("favorites").select("fav_id").eq("user_id",uid).limit(1000)
     ]);
     nicks={};genders={};(ok(p)||[]).forEach(x=>{nicks[x.user_id]=x.nick;if(x.gender)genders[x.user_id]=x.gender});
     me.nick=nicks[uid]||null;
+    favOk=!fv.error;favs=new Set((ok(fv)||[]).map(x=>x.fav_id));
     nickColors={...DEF_COLORS};nickBgs={...DEF_BGS};
     (ok(st)||[]).forEach(x=>{
       let m=/^nick_color_([KM])$/.exec(x.key);if(m&&HEX_RE.test(x.value))nickColors[m[1]]=x.value;
@@ -1185,7 +1242,7 @@ async function loadRemote(selectId){
     startPresence();
     if(seenFor!==uid||Date.now()-seenAt>15*60000){seenFor=uid;seenAt=Date.now();Promise.resolve(sb.rpc("touch_seen")).catch(()=>{})}
     adminIds=(ok(ad)||[]).map(x=>x.user_id);isAdmin=adminIds.includes(uid);
-  }else{nicks={};genders={};me.nick=null;wants=[];joins={};lib=[];adminIds=[];isAdmin=false;stopPresence()}
+  }else{favs=new Set();favOk=false;nicks={};genders={};me.nick=null;wants=[];joins={};lib=[];adminIds=[];isAdmin=false;stopPresence()}
   sorted=a.data.map(r=>({id:r.id,title:r.title,when:r.starts_at,place:r.place,pace:r.pace,owner:r.owner_name,note:r.note,creator:r.creator,edited_at:r.edited_at||null,change_note:r.change_note||null,route_title:r.route_title||null,route_desc:r.route_desc||null}));
   const want=selectId||prevId;
   let idx=want?sorted.findIndex(r=>r.id===want):-1;
