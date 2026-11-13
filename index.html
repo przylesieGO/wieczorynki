@@ -541,7 +541,21 @@ function adminHtml(){
    +'<div class="sname" style="margin-top:26px">🛡️ Administracja</div>'
    +'<div class="sleft"><h3>Administratorzy</h3>'+rows
    +'<h3>Nadaj uprawnienia administratora</h3>'+add
-   +'<p class="note">Administrator może edytować i usuwać każdą wieczorynkę, zgłoszenie i trasę oraz zarządzać administratorami.</p></div>';
+   +'<p class="note">Administrator może edytować i usuwać każdą wieczorynkę, zgłoszenie i trasę oraz zarządzać administratorami.</p>'
+   +'<h3>Użytkownicy ('+Object.keys(nicks).length+')</h3>'
+   +(Object.keys(nicks).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")).map(id=>'<div class="arow"><b>'+esc(nicks[id])+'</b>'+(id===uid?'<span class="note">(Ty)</span>':'<button class="b g small" data-a="unick" data-id="'+esc(id)+'">Zmień nick</button>')+'</div>').join("")||'<div class="note">Brak użytkowników z nickiem.</div>')
+   +'</div>';
+}
+let unickId="";
+function unickHtml(){
+  return '<button class="sback" data-c="backadmin">‹ Administracja</button>'
+   +'<div class="sname" style="margin-top:26px">✏️ Zmień nick użytkownika</div>'
+   +'<div class="smail">Obecny nick: <b>'+esc(nickOf(unickId))+'</b></div>'
+   +'<div class="sleft"><label for="gunick" style="font-size:15px">Nowy nick</label>'
+   +'<input id="gunick" maxlength="20" autocomplete="off" value="'+esc(nicks[unickId]||"")+'">'
+   +'<p class="note">Użyj, gdy ktoś podszywa się pod inny nick albo nick jest nieodpowiedni. Wieczorynki zorganizowane przez tę osobę pokażą nowy nick.</p>'
+   +'<div class="note" id="gunickinfo" style="color:var(--bad)"></div>'
+   +'<button class="b sbtn" data-c="unicksave">Zapisz nick</button></div>';
 }
 function nickHtml(){
   const first=!me.nick;
@@ -569,13 +583,16 @@ function renderGear(){
   const p=$("gearpanel");
   if(!gearOpen){p.classList.add("hide");gearView="main";return}
   p.classList.remove("hide");
-  if(gearView==="admin"&&!(session&&isAdmin))gearView="main";
+  if((gearView==="admin"||gearView==="unick")&&!(session&&isAdmin))gearView="main";
+  if(gearView==="unick"&&!nicks[unickId])gearView="admin";
   const keepSel=$("adminsel")?$("adminsel").value:"";
+  const keepUnick=gearView==="unick"&&$("gunick")?{v:$("gunick").value,i:$("gunickinfo").textContent}:null;
   const keepDel=gearView==="del"&&$("gdel")?{v:$("gdel").value,i:$("gdelinfo").textContent}:null;
   const keepNick=gearView==="nick"&&$("gnick")?{v:$("gnick").value,i:$("gnickinfo").textContent}:null;
   const tg='<a class="b sbtn g" href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">📣 Kanał na Telegramie</a>';
   let body;
   if(gearView==="admin")body=adminHtml();
+  else if(gearView==="unick")body=unickHtml();
   else if(gearView==="nick"&&session)body=nickHtml();
   else if(gearView==="del"&&session)body=delHtml();
   else body=session
@@ -590,6 +607,7 @@ function renderGear(){
   p.innerHTML='<div class="sheetbox"><button class="sclose" data-c="close" aria-label="Zamknij">✕</button>'+body+'</div>';
   const s=$("adminsel");
   if(s&&keepSel&&[...s.options].some(o=>o.value===keepSel))s.value=keepSel;
+  if(keepUnick&&$("gunick")){$("gunick").value=keepUnick.v;$("gunickinfo").textContent=keepUnick.i}
   if(keepDel&&$("gdel")){$("gdel").value=keepDel.v;$("gdelinfo").textContent=keepDel.i}
   if(keepNick&&$("gnick")){$("gnick").value=keepNick.v;$("gnickinfo").textContent=keepNick.i}
 }
@@ -611,6 +629,7 @@ $("gearpanel").addEventListener("click",async e=>{
   const a=e.target.closest("button[data-a]");
   if(a){
     if(!isAdmin)return;
+    if(a.dataset.a==="unick"){unickId=a.dataset.id;gearView="unick";renderGear();const i=$("gunick");if(i){i.focus();i.select()}return}
     if(!confirm("Odebrać uprawnienia administratora użytkownikowi "+nickOf(a.dataset.id)+"?"))return;
     try{
       const res=await sb.from("admins").delete().eq("user_id",a.dataset.id);
@@ -627,6 +646,8 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="del"){gearView="del";renderGear();const i=$("gdel");if(i)i.focus();return}
   if(c==="delgo"){await gearDeleteAccount();return}
   if(c==="back"){gearView="main";renderGear();return}
+  if(c==="backadmin"){gearView="admin";renderGear();return}
+  if(c==="unicksave"){await adminSaveNick();return}
   if(c==="adminadd"){
     const s=$("adminsel"),id=s?s.value:"";if(!id||!isAdmin)return;
     try{
@@ -644,6 +665,7 @@ $("gearpanel").addEventListener("click",async e=>{
 $("gearpanel").addEventListener("keydown",e=>{
   if(e.key!=="Enter")return;
   if(e.target.id==="gnick"){e.preventDefault();gearSaveNick()}
+  else if(e.target.id==="gunick"){e.preventDefault();adminSaveNick()}
   else if(e.target.id==="gdel"){e.preventDefault();gearDeleteAccount()}
 });
 let deleting=false;
@@ -684,13 +706,30 @@ function askNick(){
   const i=$("gnick");if(i)i.focus();
 }
 $("guestbtn").onclick=()=>{setGuest(true);renderChrome()};
-async function saveNick(n){
+// „spłaszczony” nick: małe litery, bez polskich znaków, cyfr, spacji i znaków — tak samo jak w bazie (nick_key)
+function nickKey(n){
+  const k=String(n||"").toLowerCase().replace(/[ąćęłńóśźż]/g,c=>({"ą":"a","ć":"c","ę":"e","ł":"l","ń":"n","ó":"o","ś":"s","ź":"z","ż":"z"}[c])).replace(/[^a-z]/g,"");
+  return k||String(n||"").toLowerCase();
+}
+async function saveNick(n,target){
+  const who=target||uid;
   if(!NICK_RE.test(n))return "Nick: 2–20 znaków — litery, cyfry, spacja, kropka, _ lub -.";
+  const k=nickKey(n),twin=Object.keys(nicks).find(id=>id!==who&&nickKey(nicks[id])===k);
+  if(twin)return "Ten nick jest zajęty albo zbyt podobny do „"+nicks[twin]+"” (różni się tylko wielkością liter, cyframi, znakami lub polskimi literami). Wybierz inny.";
   try{
-    const res=me.nick?await sb.from("profiles").update({nick:n}).eq("user_id",uid):await sb.from("profiles").insert({user_id:uid,nick:n});
-    if(res.error)return res.error.code==="23505"?"Ten nick jest już zajęty — wybierz inny.":"Nie udało się zapisać: "+res.error.message;
+    const res=nicks[who]?await sb.from("profiles").update({nick:n}).eq("user_id",who).select("user_id"):await sb.from("profiles").insert({user_id:who,nick:n}).select("user_id");
+    if(res.error)return res.error.code==="23505"?"Ten nick jest zajęty albo zbyt podobny do istniejącego — wybierz inny.":"Nie udało się zapisać: "+res.error.message;
+    if(!res.data||!res.data.length)return "Brak uprawnień do zmiany tego nicku.";
     await loadRemote();return null;
   }catch(e){return "Nie udało się zapisać nicku."}
+}
+async function adminSaveNick(){
+  const i=$("gunick");if(!i||!isAdmin)return;
+  const n=i.value.trim(),old=nicks[unickId];
+  if(n===old){gearView="admin";renderGear();return}
+  const err=await saveNick(n,unickId);
+  if(err){$("gunickinfo").textContent=err;return}
+  gearView="admin";renderGear();say("Zmieniono nick: "+old+" → "+n);
 }
 
 /* ---------- START: chętni ---------- */
