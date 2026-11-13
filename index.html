@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Wieczorynki rowerowe</title>
+<title>PrzylesieGo! Ustawki rowerowe</title>
 <meta name="description" content="Wspólne wieczorne przejazdy rowerowe: kto chce jechać, trasa na mapie, prognoza wiatru, zapisy.">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1f7a4d">
@@ -11,9 +11,9 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Wieczorynki">
+<meta name="apple-mobile-web-app-title" content="PrzylesieGo">
 <meta property="og:type" content="website">
-<meta property="og:title" content="🚲 Wieczorynki rowerowe">
+<meta property="og:title" content="🚲 PrzylesieGo! Ustawki rowerowe">
 <meta property="og:description" content="Dołącz do wspólnych przejazdów: kto chce jechać, trasa na mapie, prognoza wiatru, zapisy.">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 <style>
@@ -24,7 +24,11 @@ body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-ap
 .wrap{max-width:900px;margin:0 auto;padding:16px}
 h1{font-size:22px;margin:4px 0}h2{font-size:17px;margin:0 0 8px}h3{font-size:14px;margin:14px 0 6px;color:var(--mut)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
-.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.apptitle{font-size:20px;line-height:1.2}.wsub2{display:block;font-size:13px;font-weight:500;color:var(--mut)}
+.welcome{max-width:420px;margin:8vh auto 0}
+.wtitle{font-size:34px;margin:6px 0 0}.wsub{font-size:18px;color:var(--acc);font-weight:600}
+.gear{flex:none;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:21px;line-height:1;cursor:pointer}
 nav{display:flex;gap:6px;margin-bottom:14px}
 nav button{flex:1;padding:10px 4px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;font:inherit;font-weight:600;cursor:pointer}
 nav button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
@@ -72,17 +76,31 @@ details.card>summary{font-size:16px}
 <body>
 <div class="wrap">
 
-<div class="top">
- <h1>🚲 Wieczorynki rowerowe</h1>
- <div id="chip"></div>
+<!-- ===== PLANSZA POWITALNA ===== -->
+<div class="welcome hide" id="welcome">
+ <div class="center">
+  <div style="font-size:54px;line-height:1">🚲</div>
+  <h1 class="wtitle">PrzylesieGo!</h1>
+  <div class="wsub">Ustawki rowerowe</div>
+  <p class="note" style="margin:12px 0 18px">Wspólne wieczorne przejazdy: kto chce jechać, trasa na mapie, prognoza wiatru i zapisy.</p>
+ </div>
+ <div class="card">
+  <label>E-mail</label><input id="ae" type="email" autocomplete="email">
+  <label>Hasło (min. 6 znaków)</label><input id="ap" type="password" autocomplete="current-password">
+  <div class="row" style="margin-top:12px"><button class="b" id="login">Zaloguj</button><button class="b g" id="signup">Załóż konto</button></div>
+  <div style="margin-top:10px"><button class="b g small" id="forgot">Nie pamiętam hasła</button></div>
+  <div class="note" id="ainfo" style="margin-top:8px"></div>
+ </div>
+ <div class="center"><button class="b g" id="guestbtn">Przeglądaj bez logowania</button>
+ <p class="note">Bez konta zobaczysz najbliższą wieczorynkę i mapę. Zapisy i zgłoszenia wymagają logowania.</p></div>
 </div>
 
-<div class="card" id="authbox">
- <div class="grid"><div><label>E-mail</label><input id="ae" type="email" autocomplete="email"></div>
- <div><label>Hasło (min. 6 znaków)</label><input id="ap" type="password" autocomplete="current-password"></div></div>
- <div class="row" style="margin-top:8px"><button class="b" id="login">Zaloguj</button><button class="b g" id="signup">Załóż konto</button><button class="b g" id="forgot">Nie pamiętam hasła</button></div>
- <div class="note" id="ainfo" style="margin-top:6px"></div>
+<div id="app">
+<div class="top">
+ <h1 class="apptitle">🚲 PrzylesieGo! <span class="wsub2">Ustawki rowerowe</span></h1>
+ <button class="gear" id="gear" aria-label="Ustawienia" title="Ustawienia">⚙️</button>
 </div>
+<div class="card hide" id="gearpanel"></div>
 
 <div class="card hide" id="pwbox">
  <h2>Ustaw nowe hasło</h2>
@@ -222,6 +240,8 @@ details.card>summary{font-size:16px}
   <p class="note">Administrator może edytować i usuwać każdą wieczorynkę, zgłoszenie i trasę oraz zarządzać administratorami.</p>
  </details>
 </section>
+
+</div><!-- /app -->
 
 <p class="note" id="dbnote"></p>
 <p class="note">Mapa © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · prognoza wiatru: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a></p>
@@ -447,19 +467,38 @@ async function getLibRoute(id){
 }
 
 /* ---------- góra strony: konto i nick ---------- */
+let guestMode=false,gearOpen=false;
+try{guestMode=sessionStorage.getItem("guest")==="1"}catch(e){}
+const setGuest=v=>{guestMode=v;try{v?sessionStorage.setItem("guest","1"):sessionStorage.removeItem("guest")}catch(e){}};
+function renderGear(){
+  const p=$("gearpanel");
+  if(!gearOpen){p.classList.add("hide");return}
+  p.classList.remove("hide");
+  p.innerHTML=session
+    ?'<div><b>👤 '+esc(me.nick||"ustaw nick")+'</b>'+(isAdmin?' 🛡️':'')+'</div><div class="note">'+esc(session.user.email||"")+'</div>'
+     +'<div class="row" style="margin-top:10px"><button class="b g small" data-c="nick">Zmień nick</button><button class="b small" data-c="out">Wyloguj</button><a class="b g small" href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">📣 Kanał na Telegramie</a></div>'
+    :'<div><b>Przeglądasz jako gość</b></div><div class="note">Zaloguj się, żeby zapisywać się na wieczorynki i zgłaszać ochotę na jazdę.</div>'
+     +'<div class="row" style="margin-top:10px"><button class="b small" data-c="login">Zaloguj się / załóż konto</button><a class="b g small" href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">📣 Kanał na Telegramie</a></div>';
+}
 function renderChrome(){
-  $("authbox").classList.toggle("hide",!!session);
+  const welcome=!session&&!guestMode;
+  $("welcome").classList.toggle("hide",!welcome);
+  $("app").classList.toggle("hide",welcome);
+  renderGear();
   $("pwbox").classList.toggle("hide",!(pwMode&&session));
   const needNick=!!session&&(!me.nick||nickEdit)&&!pwMode;
   $("nickbox").classList.toggle("hide",!needNick);
   $("nickcancel").classList.toggle("hide",!me.nick);
-  $("chip").innerHTML=session?'<span>👤 <b>'+esc(me.nick||"ustaw nick")+'</b>'+(isAdmin?' 🛡️':'')+'</span> <button class="b g small" data-c="nick">zmień nick</button> <button class="b g small" data-c="out">Wyloguj</button>':'';
 }
-$("chip").addEventListener("click",e=>{
+$("gear").onclick=()=>{gearOpen=!gearOpen;renderGear()};
+$("gearpanel").addEventListener("click",e=>{
   const b=e.target.closest("button[data-c]");if(!b)return;
-  if(b.dataset.c==="out"){if(sb)sb.auth.signOut()}
+  gearOpen=false;
+  if(b.dataset.c==="out"){setGuest(false);if(sb)sb.auth.signOut();renderChrome()}
+  else if(b.dataset.c==="login"){setGuest(false);renderChrome()}
   else{nickEdit=true;$("nickin").value=me.nick||"";$("nickinfo").textContent="";renderChrome()}
 });
+$("guestbtn").onclick=()=>{setGuest(true);renderChrome()};
 $("nickcancel").onclick=()=>{nickEdit=false;renderChrome()};
 $("nicksave").onclick=async()=>{
   const n=$("nickin").value.trim(),inf=$("nickinfo");
