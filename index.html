@@ -4,348 +4,573 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Wieczorynki rowerowe</title>
-<meta name="description" content="Trasy GPX, wiatr i wspólne wieczorne przejazdy rowerowe">
+<meta name="description" content="Wspólne wieczorne przejazdy rowerowe: trasa na mapie, prognoza wiatru, zapisy.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="🚲 Wieczorynki rowerowe">
+<meta property="og:description" content="Dołącz do wspólnych przejazdów: trasa na mapie, prognoza wiatru, zapisy.">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 <style>
-:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
---bg:#f6f4ef;--card:#fff;--ink:#1d2a24;--mut:#6a766f;--line:#e2ded3;--acc:#1f7a4d;--acc2:#e8f3ec;--bad:#d64545;--good:#2a9d5c}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121815;--card:#1b241f;--ink:#e8efe9;--mut:#93a39a;--line:#2b3830;--acc:#47c183;--acc2:#1f3328;--bad:#ef6b6b;--good:#4cc985}}
-:root[data-theme="dark"]{--bg:#121815;--card:#1b241f;--ink:#e8efe9;--mut:#93a39a;--line:#2b3830;--acc:#47c183;--acc2:#1f3328;--bad:#ef6b6b;--good:#4cc985}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
+:root{--bg:#f6f4ef;--card:#fff;--ink:#1d2a24;--mut:#6a766f;--line:#e2ded3;--acc:#1f7a4d;--acc2:#e8f3ec;--bad:#d64545;--good:#2a9d5c}
+@media (prefers-color-scheme:dark){:root{--bg:#121815;--card:#1b241f;--ink:#e8efe9;--mut:#93a39a;--line:#2b3830;--acc:#47c183;--acc2:#1f3328;--bad:#ef6b6b;--good:#4cc985}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 .wrap{max-width:960px;margin:0 auto;padding:16px}
-h1{font-size:22px;margin:4px 0 2px}h2{font-size:16px;margin:0 0 10px}
-.sub{color:var(--mut);margin:0 0 14px}
+h1{font-size:22px;margin:4px 0 12px}h2{font-size:17px;margin:0 0 8px}h3{font-size:14px;margin:12px 0 6px;color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
 nav{display:flex;gap:6px;margin-bottom:14px}
 nav button{flex:1;padding:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;font:inherit;font-weight:600;cursor:pointer}
 nav button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:700px){.grid{grid-template-columns:1fr}}
 label{display:block;font-size:12px;color:var(--mut);margin:8px 0 3px}
-input,select,textarea{width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
-button.b{padding:9px 14px;border:0;border-radius:9px;background:var(--acc);color:#fff;font:inherit;font-weight:600;cursor:pointer}
-button.g{background:var(--acc2);color:var(--acc)}
+input,select,textarea{width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:16px}
+button.b,a.b{display:inline-block;padding:9px 14px;border:0;border-radius:9px;background:var(--acc);color:#fff;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;line-height:1.25}
+.g{background:var(--acc2)!important;color:var(--acc)!important}
+button:disabled{opacity:.4;cursor:default}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.between{justify-content:space-between;flex-wrap:nowrap}
+.center{text-align:center}
+.note{font-size:12px;color:var(--mut)}
+.hide{display:none!important}
+.notice{background:var(--acc2);border-radius:10px;padding:8px 12px;margin:10px 0}
+.meta{color:var(--mut);font-size:13px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:10px}
 .st{background:var(--acc2);border-radius:10px;padding:8px 10px}.st b{display:block;font-size:18px}.st span{font-size:12px;color:var(--mut)}
-svg{width:100%;height:auto;display:block;background:var(--bg);border-radius:10px;border:1px solid var(--line)}
 .tip{padding:10px 12px;border-radius:10px;background:var(--acc2);margin-top:10px}
-.ride{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
-.ride h3{margin:0 0 2px;font-size:16px}.meta{color:var(--mut);font-size:13px}
-.legend{display:flex;gap:10px;font-size:12px;color:var(--mut);margin-top:6px;flex-wrap:wrap}
+.mapwrap{position:relative;margin-top:12px}
+.map{height:340px;border-radius:12px;border:1px solid var(--line);z-index:0}
+.warrow{position:absolute;top:10px;right:10px;z-index:900;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:4px 8px;text-align:center;font-size:12px;color:var(--ink)}
+.warrow svg{display:block;margin:0 auto}
+.legend{display:flex;gap:12px;font-size:12px;color:var(--mut);margin-top:6px;flex-wrap:wrap}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
-.hide{display:none}
-a.b{display:inline-block;text-decoration:none;line-height:1.2;font-size:15px}
-#rem .tip{margin:0 0 12px;border:1px solid var(--acc)}
-.note{font-size:12px;color:var(--mut)}
+summary{cursor:pointer;font-weight:600}
+details.card>summary{font-size:16px}
+.item{padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;cursor:pointer}
+.item.cur{border-color:var(--acc);background:var(--acc2)}
+.sharebox{margin-top:10px;padding:10px;border-radius:10px;background:var(--acc2)}
+.msg{min-height:18px;margin:4px 0}
+.leaflet-container{z-index:0}
 </style>
 </head>
 <body>
 <div class="wrap">
 <h1>🚲 Wieczorynki rowerowe</h1>
-<p class="sub">Wgraj trasę GPX, sprawdź wiatr i zaproś ekipę na wspólny przejazd.</p>
-<div id="rem"></div>
-<nav><button id="t1" class="on">Trasa i wiatr</button><button id="t2">Wieczorynki</button></nav>
+
+<div class="card" id="authbox">
+ <div id="authout">
+  <div class="grid"><div><label>E-mail</label><input id="ae" type="email" autocomplete="email"></div>
+  <div><label>Hasło (min. 6 znaków)</label><input id="ap" type="password" autocomplete="current-password"></div></div>
+  <div class="row" style="margin-top:8px"><button class="b" id="login">Zaloguj</button><button class="b g" id="signup">Załóż konto</button><span class="note" id="ainfo"></span></div>
+ </div>
+ <div id="authin" class="hide row"><span id="who"></span><button class="b g" id="logout">Wyloguj</button></div>
+</div>
+
+<nav><button id="t1" class="on">Wieczorynki</button><button id="t2">Zaawansowane</button></nav>
 
 <section id="p1">
- <div class="card">
-  <div class="row">
-   <input type="file" id="file" accept=".gpx,application/gpx+xml,text/xml" style="max-width:280px">
-   <button class="b g" id="demo">Przykładowa pętla</button>
-   <button class="b g" id="rev">⇄ Odwróć kierunek</button>
-   <button class="b g" id="gpx">⬇ Pobierz GPX</button><span class="note" id="dlinfo"></span>
+ <div class="card" id="view">
+  <div class="row between">
+   <button class="b g" id="prev">← Wcześniejsza</button>
+   <div class="center" id="pos"></div>
+   <button class="b g" id="next">Późniejsza →</button>
   </div>
-  <div class="grid" style="margin-top:6px">
-   <div>
-    <label>Na kiedy prognoza (dzień i godzina)</label><input type="datetime-local" id="wt">
-    <button class="b" id="aw" style="margin-top:6px">🌬 Pobierz wiatr automatycznie</button> <span class="note" id="awi"></span>
-    <label>Wiatr wieje Z kierunku (°) — 0 = północ, 90 = wschód</label>
-    <input type="range" id="wd" min="0" max="359" value="250">
-    <div class="row" id="wdl" style="justify-content:space-between"><span id="wdv"></span>
-     <span><button class="b g" data-d="0">N</button> <button class="b g" data-d="90">E</button> <button class="b g" data-d="180">S</button> <button class="b g" data-d="270">W</button></span></div>
-   </div>
-   <div>
-    <label>Prędkość wiatru (km/h)</label><input type="number" id="ws" value="15" min="0" max="80">
-    <label>Twoje tempo bez wiatru (km/h)</label><input type="number" id="bs" value="24" min="8" max="45">
-   </div>
+  <div class="notice hide" id="notice"></div>
+  <div class="center" style="margin-top:8px"><button class="b g hide" id="nearest">Wróć do najbliższej</button></div>
+  <div class="msg note" id="msg"></div>
+  <div id="ridecard"></div>
+  <div class="mapwrap hide" id="mapwrap1">
+   <div class="map" id="map1"></div>
+   <div class="warrow hide" id="warrow1"></div>
+   <div class="legend"><span><i class="dot" style="background:#d64545"></i>pod wiatr</span><span><i class="dot" style="background:#e0b83a"></i>bocznie</span><span><i class="dot" style="background:#2a9d5c"></i>z wiatrem</span></div>
   </div>
-  <p class="note">Wiatr pobierany jest z Open-Meteo dla punktu startu trasy. Możesz go też ustawić ręcznie suwakiem. Strzałka na mapie pokazuje, dokąd wiatr wieje.</p>
+  <div class="stats" id="stats1"></div>
+  <div class="note" id="windinfo1" style="margin-top:8px"></div>
+  <div class="tip hide" id="tip1"></div>
  </div>
- <div class="card">
-  <svg id="map" viewBox="0 0 600 400"></svg>
-  <div class="legend"><span><i class="dot" style="background:var(--bad)"></i>pod wiatr</span><span><i class="dot" style="background:#e0b83a"></i>bocznie</span><span><i class="dot" style="background:var(--good)"></i>z wiatrem</span><span>● start</span></div>
-  <div class="stats" id="stats"></div>
-  <div class="tip" id="tip"></div>
- </div>
+
+ <details class="card" id="newbox">
+  <summary>➕ Nowa wieczorynka</summary>
+  <div class="grid" style="margin-top:8px">
+   <div><label>Nazwa</label><input id="rt" maxlength="80" placeholder="np. Wieczorynki nad Wisłą"></div>
+   <div><label>Kiedy</label><input id="rw" type="datetime-local"></div>
+   <div><label>Miejsce zbiórki</label><input id="rp" maxlength="120" placeholder="np. Pole Mokotowskie, przy fontannie"></div>
+   <div><label>Tempo</label><select id="rk"><option>Spokojne (~18 km/h)</option><option selected>Średnie (~24 km/h)</option><option>Szybkie (28+ km/h)</option></select></div>
+   <div><label>Twoje imię</label><input id="rn" maxlength="40" placeholder="Kto organizuje"></div>
+   <div><label>Opis</label><input id="ro" maxlength="300" placeholder="Światła, kask, lody na końcu…"></div>
+   <div><label>Trasa: wgraj plik GPX</label><input type="file" id="rf" accept=".gpx,application/gpx+xml,text/xml"></div>
+   <div><label>…albo użyj trasy z poprzednich wieczorynek</label><select id="rprev"></select></div>
+  </div>
+  <div class="note" id="rrinfo" style="margin-top:6px"></div>
+  <div class="row" style="margin-top:10px"><button class="b" id="add">Opublikuj wieczorynkę</button><span class="note" id="rinfo"></span></div>
+ </details>
+
+ <div class="card"><h2>Wszystkie wieczorynki</h2><div id="list"></div></div>
 </section>
 
 <section id="p2" class="hide">
- <div class="card" id="authbox">
-  <h2>Konto</h2>
-  <div id="authout">
-   <div class="grid"><div><label>E-mail</label><input id="ae" type="email" autocomplete="email"></div>
-   <div><label>Hasło (min. 6 znaków)</label><input id="ap" type="password" autocomplete="current-password"></div></div>
-   <div class="row" style="margin-top:8px"><button class="b" id="login">Zaloguj</button><button class="b g" id="signup">Załóż konto</button><span class="note" id="ainfo"></span></div>
-  </div>
-  <div id="authin" class="hide row"><span id="who"></span><button class="b g" id="logout">Wyloguj</button></div>
+ <div class="card">
+  <h2>Analiza trasy GPX</h2>
+  <p class="note" style="margin-top:0">Wgraj plik GPX, żeby zobaczyć trasę na mapie i sprawdzić wiatr. Nic się nie zapisuje w bazie.</p>
+  <div class="row"><input type="file" id="file" accept=".gpx,application/gpx+xml,text/xml" style="max-width:300px"><button class="b g" id="rev">⇄ Odwróć kierunek</button><button class="b g" id="gpx">⬇ Pobierz GPX</button></div>
+  <label>Na kiedy prognoza wiatru</label><input type="datetime-local" id="wt" style="max-width:260px">
+  <div class="row" style="margin-top:8px"><button class="b" id="aw">🌬 Pobierz wiatr automatycznie</button><span class="note" id="awi"></span></div>
+  <details style="margin-top:10px"><summary>Ustawienia ręczne (wiatr, tempo)</summary>
+   <div class="grid">
+    <div><label>Wiatr wieje Z kierunku: <b id="wdv"></b></label><input type="range" id="wd" min="0" max="359" value="250"></div>
+    <div><label>Prędkość wiatru (km/h)</label><input type="number" id="ws" value="15" min="0" max="80"></div>
+    <div><label>Twoje tempo bez wiatru (km/h)</label><input type="number" id="bs" value="24" min="8" max="45"></div>
+   </div>
+  </details>
  </div>
  <div class="card">
-  <h2>Zaproś na wieczorynki</h2>
-  <div class="grid">
-   <div><label>Nazwa</label><input id="rt" placeholder="np. Wieczorynki nad Wisłą"></div>
-   <div><label>Kiedy</label><input id="rw" type="datetime-local"></div>
-   <div><label>Miejsce zbiórki</label><input id="rp" placeholder="np. Pole Mokotowskie, przy fontannie"></div>
-   <div><label>Tempo</label><select id="rk"><option>Spokojne (~18 km/h)</option><option selected>Średnie (~24 km/h)</option><option>Szybkie (28+ km/h)</option></select></div>
-   <div><label>Twoje imię</label><input id="rn" placeholder="Kto organizuje"></div>
-   <div><label>Opis</label><input id="ro" placeholder="Światła, kask, lody na końcu…"></div>
+  <div class="mapwrap hide" id="mapwrap2">
+   <div class="map" id="map2"></div>
+   <div class="warrow hide" id="warrow2"></div>
+   <div class="legend"><span><i class="dot" style="background:#d64545"></i>pod wiatr</span><span><i class="dot" style="background:#e0b83a"></i>bocznie</span><span><i class="dot" style="background:#2a9d5c"></i>z wiatrem</span></div>
   </div>
-  <div class="row" style="margin-top:10px"><button class="b" id="add">Opublikuj wieczorynki</button><span class="note" id="rinfo"></span></div>
-  <p class="note">Do wydarzenia dołączana jest trasa aktualnie załadowana w zakładce „Trasa i wiatr”.</p>
+  <div class="note" id="empty2">Wgraj plik GPX, żeby zobaczyć trasę.</div>
+  <div class="stats" id="stats2"></div>
+  <div class="tip hide" id="tip2"></div>
  </div>
- <div id="list"></div>
- <p class="note" id="dbnote"></p>
 </section>
+
+<p class="note" id="dbnote"></p>
+<p class="note">Mapa © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · prognoza wiatru: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a></p>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
-/* === KONFIGURACJA SUPABASE: wklej swoje dane (klucz publishable jest jawny, to normalne) === */
 const SUPABASE_URL="https://onhdnsjtszrbvlmqfgvi.supabase.co";
 const SUPABASE_KEY="sb_publishable_ms2InCwXXoczxIqwkuAm1Q_HPS4uZv6";
-/* ============================================================================================ */
+
 const $=id=>document.getElementById(id);
-let sb=null,session=null;
-let pts=[],base=[],rev=false,rides=[],db=null,uid="local",localMode=true;
-const R=6371;
-const rad=x=>x*Math.PI/180;
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad=n=>String(n).padStart(2,"0");
+const R=6371,rad=x=>x*Math.PI/180;
 function dist(a,b){const dl=rad(b.lat-a.lat),dn=rad(b.lon-a.lon);const h=Math.sin(dl/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
 function brg(a,b){const y=Math.sin(rad(b.lon-a.lon))*Math.cos(rad(b.lat));const x=Math.cos(rad(a.lat))*Math.sin(rad(b.lat))-Math.sin(rad(a.lat))*Math.cos(rad(b.lat))*Math.cos(rad(b.lon-a.lon));return (Math.atan2(y,x)*180/Math.PI+360)%360}
-function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function localIso(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"T"+pad(d.getHours())+":"+pad(d.getMinutes())}
+function fmtWhen(s){try{return new Date(s).toLocaleString("pl-PL",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}catch(e){return s}}
+function slug(s){return String(s||"trasa").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/ł/g,"l").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"trasa"}
+function say(t){const m=$("msg");m.textContent=t;clearTimeout(say.t);say.t=setTimeout(()=>{m.textContent=""},7000)}
+function routeKm(p){let s=0;for(let i=1;i<p.length;i++)s+=dist(p[i-1],p[i]);return s}
+function paceKmh(p){const m=/(\d+)/.exec(p||"");return m?+m[1]:24}
 
 /* ---------- GPX ---------- */
 function parseGpx(txt){
   const d=new DOMParser().parseFromString(txt,"application/xml");
+  if(d.getElementsByTagName("parsererror").length)return [];
   let n=[...d.getElementsByTagName("trkpt")];
   if(!n.length)n=[...d.getElementsByTagName("rtept")];
   return n.map(e=>({lat:+e.getAttribute("lat"),lon:+e.getAttribute("lon"),ele:+((e.getElementsByTagName("ele")[0]||{}).textContent||0)})).filter(p=>isFinite(p.lat)&&isFinite(p.lon));
 }
 function thin(a,max){if(a.length<=max)return a;const s=(a.length-1)/(max-1);return Array.from({length:max},(_,i)=>a[Math.round(i*s)])}
-function setRoute(a){base=thin(a,500);rev=false;pts=base.slice();render()}
-function demoRoute(){const a=[];for(let i=0;i<=120;i++){const t=i/120*2*Math.PI;const r=1+0.25*Math.sin(3*t);a.push({lat:52.19+0.035*r*Math.sin(t),lon:21.0+0.055*r*Math.cos(t),ele:100+10*Math.sin(2*t)})}setRoute(a)}
-
-/* ---------- render ---------- */
-function render(){
-  const svg=$("map");
-  const wf=+$("wd").value,ws=+$("ws").value,bs=+$("bs").value;
-  $("wdv").textContent=wf+"° ("+["N","NE","E","SE","S","SW","W","NW"][Math.round(wf/45)%8]+")";
-  if(pts.length<2){svg.innerHTML='<text x="300" y="200" text-anchor="middle" fill="currentColor">Wgraj plik GPX albo wybierz przykład</text>';$("stats").innerHTML="";$("tip").textContent="";return}
-  const la0=pts[0].lat,k=Math.cos(rad(la0));
-  const xs=pts.map(p=>p.lon*k),ys=pts.map(p=>-p.lat);
-  const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
-  const sc=Math.min(520/((x1-x0)||1e-6),340/((y1-y0)||1e-6));
-  const ox=(600-(x1-x0)*sc)/2,oy=(400-(y1-y0)*sc)/2;
-  const X=i=>ox+(xs[i]-x0)*sc,Y=i=>oy+(ys[i]-y0)*sc;
-  let total=0,gain=0,tsec=0,head=0,h1=0,h2=0,half=0,segs="";
-  const D=[];for(let i=1;i<pts.length;i++){D.push(dist(pts[i-1],pts[i]))}
-  const sum=D.reduce((a,b)=>a+b,0);
-  for(let i=1;i<pts.length;i++){
-    const d=D[i-1];const h=ws*Math.cos(rad(brg(pts[i-1],pts[i])-wf));
-    const v=Math.max(6,bs-0.55*h);tsec+=d/v*3600;total+=d;
-    if(h>3)head+=d;
-    if(total-d<sum/2)h1+=h*d;else h2+=h*d;
-    const dz=pts[i].ele-pts[i-1].ele;if(dz>0)gain+=dz;
-    const r=ws?h/ws:0;const col=r>0.35?"var(--bad)":r<-0.35?"var(--good)":"#e0b83a";
-    segs+=`<line x1="${X(i-1).toFixed(1)}" y1="${Y(i-1).toFixed(1)}" x2="${X(i).toFixed(1)}" y2="${Y(i).toFixed(1)}" stroke="${col}" stroke-width="4" stroke-linecap="round"/>`;
-  }
-  // wind arrow (blows toward wf+180)
-  const a=rad(wf+180);const cx=545,cy=55,L=28;
-  const ax=cx+Math.sin(a)*L,ay=cy-Math.cos(a)*L,bx=cx-Math.sin(a)*L,by=cy+Math.cos(a)*L;
-  const hd=(s)=>`${(ax-Math.sin(a+s)*10).toFixed(1)},${(ay+Math.cos(a+s)*10).toFixed(1)}`;
-  const arrow=`<circle cx="${cx}" cy="${cy}" r="38" fill="none" stroke="var(--line)"/><text x="${cx}" y="${cy-42}" text-anchor="middle" font-size="11" fill="var(--mut)">N</text>
-   <line x1="${bx.toFixed(1)}" y1="${by.toFixed(1)}" x2="${ax.toFixed(1)}" y2="${ay.toFixed(1)}" stroke="var(--acc)" stroke-width="3"/>
-   <polygon points="${ax.toFixed(1)},${ay.toFixed(1)} ${hd(0.5)} ${hd(-0.5)}" fill="var(--acc)"/>
-   <text x="${cx}" y="${cy+56}" text-anchor="middle" font-size="11" fill="var(--mut)">${ws} km/h</text>`;
-  svg.innerHTML=`<g>${segs}</g><circle cx="${X(0).toFixed(1)}" cy="${Y(0).toFixed(1)}" r="7" fill="var(--acc)" stroke="#fff" stroke-width="2"/>${arrow}`;
-  const mm=s=>{const m=Math.round(s/60);return Math.floor(m/60)+" h "+String(m%60).padStart(2,"0")+" min"};
-  $("stats").innerHTML=[["Dystans",total.toFixed(1)+" km"],["Przewyższenie",Math.round(gain)+" m"],["Czas (szac.)",mm(tsec)],["Pod wiatr",Math.round(head/total*100)+"% trasy"]].map(([a,b])=>`<div class="st"><b>${b}</b><span>${a}</span></div>`).join("");
-  let tip;
-  if(ws<5)tip="Wiatr słaby — kierunek bez znaczenia, jedź jak lubisz.";
-  else if(h1>h2+ws*total*0.15)tip="⚠️ Pierwsza połowa pod wiatr, powrót z wiatrem — to dobry układ: siły masz na początku, a wracasz zmęczony z wiatrem w plecy.";
-  else if(h2>h1+ws*total*0.15)tip="⚠️ Powrót będzie pod wiatr. Rozważ „Odwróć kierunek”, żeby wiatr pomagał na końcu.";
-  else tip="Wiatr rozkłada się mniej więcej równo na obie połowy trasy.";
-  if(h1>h2+ws*total*0.15)tip=tip.replace("⚠️","✅");
-  $("tip").textContent=tip;
-}
-
-/* ---------- rides ---------- */
-function fmtWhen(s){try{return new Date(s).toLocaleString("pl-PL",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}catch(e){return s}}
-/* ---------- GPX / ICS / reminders ---------- */
-function slug(s){return String(s||"trasa").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/ł/g,"l").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"trasa"}
 function makeGpx(a,name){
   const x=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
   return '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Wieczorynki rowerowe" xmlns="http://www.topografix.com/GPX/1/1">\n<trk><name>'+x(name||"Trasa")+'</name><trkseg>\n'+a.map(p=>'<trkpt lat="'+p.lat.toFixed(6)+'" lon="'+p.lon.toFixed(6)+'"><ele>'+Math.round(p.ele||0)+'</ele></trkpt>').join("\n")+'\n</trkseg></trk>\n</gpx>\n';
 }
+function saveFile(data,filename,type){
+  try{
+    const url=URL.createObjectURL(new Blob([data],{type}));
+    const a=document.createElement("a");a.href=url;a.download=filename;
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),4000);
+    return true;
+  }catch(e){return false}
+}
+
+/* ---------- Google Calendar / share ---------- */
 function gcalUrl(r){
   const f=d=>d.toISOString().replace(/[-:]|\.\d{3}/g,"");
   const st=new Date(r.when),en=new Date(st.getTime()+2*36e5);
   const q=new URLSearchParams({action:"TEMPLATE",text:"🚲 "+(r.title||"Wieczorynki"),dates:f(st)+"/"+f(en),details:((r.pace||"")+(r.note?". "+r.note:"")).trim(),location:r.place||""});
   return "https://calendar.google.com/calendar/render?"+q.toString();
 }
-function icsDate(d){const p=n=>String(n).padStart(2,"0");return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"T"+p(d.getHours())+p(d.getMinutes())+"00"}
-function makeIcs(r){
-  const s=new Date(r.when),e=new Date(s.getTime()+2*36e5);
-  const t=v=>String(v||"").replace(/[\\;,]/g,m=>"\\"+m).replace(/\n/g,"\\n");
-  const al=(tr,txt)=>"BEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:"+txt+"\r\nTRIGGER:"+tr+"\r\nEND:VALARM";
-  return ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Wieczorynki rowerowe//PL","BEGIN:VEVENT","UID:"+r.id+"@wieczorynki","DTSTAMP:"+icsDate(new Date())+"","DTSTART:"+icsDate(s),"DTEND:"+icsDate(e),"SUMMARY:🚲 "+t(r.title),"LOCATION:"+t(r.place),"DESCRIPTION:"+t((r.pace||"")+". "+(r.note||"")),al("-P1D","Jutro wieczorynki: "+t(r.title)),al("-PT1H","Za godzinę wieczorynki: "+t(r.title)+" — kask, światła, bidon!"),"END:VEVENT","END:VCALENDAR"].join("\r\n");
-}
-async function saveFile(data,filename,type){
-  const msg=m=>{$("rinfo").textContent=m;$("dlinfo").textContent=m};
-  try{
-    const url=URL.createObjectURL(new Blob([data],{type}));
-    const a=document.createElement("a");a.href=url;a.download=filename;
-    document.body.appendChild(a);a.click();a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),4000);
-    msg("Pobrano: "+filename);
-  }catch(e){msg("Nie udało się pobrać pliku.")}
-}
-function drawReminders(){
-  const now=Date.now(),box=$("rem");
-  const soon=rides.filter(r=>(r.going||[]).includes(uid)).map(r=>({r,t:new Date(r.when).getTime()})).filter(o=>o.t>now-36e5&&o.t-now<48*36e5).sort((a,b)=>a.t-b.t);
-  box.innerHTML=soon.map(({r,t})=>{const m=Math.round((t-now)/6e4);
-    const w=m<=0?"trwa teraz":m<60?"za "+m+" min":m<36*60?"za "+Math.round(m/60)+" h":"za 2 dni";
-    return '<div class="tip">🔔 <b>'+esc(r.title)+'</b> — '+w+' ('+esc(fmtWhen(r.when))+', '+esc(r.place||"miejsce do ustalenia")+')</div>'}).join("");
-}
-setInterval(drawReminders,60000);
+const shareUrl=r=>location.origin+location.pathname+"#ride="+r.id;
+const shareText=r=>"🚲 "+r.title+"\n🕖 "+fmtWhen(r.when)+(r.place?"\n📍 "+r.place:"")+"\nJedziesz z nami?";
 
-function drawRides(){
-  if(localMode)persist();drawReminders();
-  const box=$("list");
-  const up=rides.slice().sort((a,b)=>String(a.when).localeCompare(String(b.when)));
-  if(!up.length){box.innerHTML='<div class="card note">Na razie pusto — zaproponuj pierwsze wieczorynki!</div>';return}
-  box.innerHTML=up.map(r=>{const g=r.going||[];const me=g.includes(uid);
-   return `<div class="ride card"><h3>${esc(r.title)}</h3><div class="meta">🕖 ${esc(fmtWhen(r.when))} · 📍 ${esc(r.place||"—")} · ${esc(r.pace)}</div>
-   <div>${esc(r.note||"")}</div><div class="meta">Organizuje: ${esc(r.owner||"?")} · jedzie: <b>${g.length}</b></div>
-   <div class="row" style="margin-top:8px"><button class="b${me?" g":""}" data-j="${esc(r.id)}">${me?"Rezygnuję":"Jadę!"}</button>
-   ${r.route?`<button class="b g" data-l="${esc(r.id)}">Pokaż trasę</button><button class="b g" data-g="${esc(r.id)}">⬇ GPX</button>`:""}
-   <button class="b g" data-c="${esc(r.id)}">🔔 Przypomnienie</button><a class="b g" target="_blank" rel="noopener" href="${esc(gcalUrl(r))}">📅 Google Kalendarz</a>
-   ${r.creator===uid?`<button class="b g" data-x="${esc(r.id)}">Usuń</button>`:""}</div></div>`}).join("");
+/* ---------- wiatr i analiza ---------- */
+const NAMES=["północy","północnego wschodu","wschodu","południowego wschodu","południa","południowego zachodu","zachodu","północnego zachodu"];
+const windLabel=d=>"z "+NAMES[Math.round(d/45)%8]+" ("+Math.round(d)+"°)";
+function tipText(ws,h1,h2,total,reversible){
+  if(ws<5)return "Wiatr słaby — kierunek jazdy nie ma większego znaczenia.";
+  const thr=ws*total*0.15;
+  if(h1>h2+thr)return "✅ Pierwsza połowa trasy pod wiatr, powrót z wiatrem — dobry układ: siły masz na początku, a wracasz z wiatrem w plecy.";
+  if(h2>h1+thr)return reversible?"⚠️ Powrót będzie pod wiatr. Rozważ „Odwróć kierunek”, żeby wiatr pomagał na końcu.":"⚠️ Druga połowa trasy jest pod wiatr — miejcie zapas sił na powrót.";
+  return "Wiatr rozkłada się mniej więcej równo na obie połowy trasy.";
 }
-async function loadRemote(){
-  const since=new Date(Date.now()-864e5).toISOString();
-  const a=await sb.from("rides").select("*").gte("starts_at",since).order("starts_at").limit(60);
-  if(a.error)throw a.error;
-  const ids=a.data.map(r=>r.id),g={};
-  if(ids.length){const b=await sb.from("rsvps").select("ride_id,user_id").in("ride_id",ids);
-    if(b.error)throw b.error;b.data.forEach(x=>{(g[x.ride_id]=g[x.ride_id]||[]).push(x.user_id)})}
-  rides=a.data.map(r=>({id:r.id,title:r.title,when:r.starts_at,place:r.place,pace:r.pace,owner:r.owner_name,note:r.note,creator:r.creator,route:r.route,going:g[r.id]||[]}));
-  drawRides();
+function analyze(pts,wf,ws,bs,reversible){
+  const D=[];for(let i=1;i<pts.length;i++)D.push(dist(pts[i-1],pts[i]));
+  const sum=D.reduce((a,b)=>a+b,0);
+  let acc=0,gain=0,tsec=0,head=0,h1=0,h2=0;const segs=[];
+  for(let i=1;i<pts.length;i++){
+    const d=D[i-1],h=ws*Math.cos(rad(brg(pts[i-1],pts[i])-wf));
+    tsec+=d/Math.max(6,bs-0.55*h)*3600;
+    if(h>3)head+=d;
+    if(acc<sum/2)h1+=h*d;else h2+=h*d;
+    acc+=d;
+    const dz=pts[i].ele-pts[i-1].ele;if(dz>0)gain+=dz;
+    const r=ws?h/ws:0;
+    segs.push({col:r>0.35?"head":r<-0.35?"tail":"side"});
+  }
+  return {segs,total:sum,gain,tsec,headPct:sum?Math.round(head/sum*100):0,ws,tip:tipText(ws,h1,h2,sum,reversible)};
 }
-async function addRide(){
-  const t=$("rt").value.trim(),w=$("rw").value,info=$("rinfo");
-  if(!t||!w){info.textContent="Podaj nazwę i termin.";return}
-  const route=pts.length>1?JSON.stringify(thin(base.length?base:pts,200).map(p=>[+p.lat.toFixed(5),+p.lon.toFixed(5),Math.round(p.ele)])):"";
+function statsHtml(an){
+  const m=Math.round(an.tsec/60);
+  return [["Dystans",an.total.toFixed(1)+" km"],["Przewyższenie",Math.round(an.gain)+" m"],["Czas (szac.)",Math.floor(m/60)+" h "+pad(m%60)+" min"],["Pod wiatr",an.ws>0?an.headPct+"% trasy":"—"]].map(([a,b])=>'<div class="st"><b>'+b+'</b><span>'+a+'</span></div>').join("");
+}
+const windCache={};
+async function getWind(lat,lon,when){
+  const key=lat.toFixed(2)+","+lon.toFixed(2);
+  if(!windCache[key]||Date.now()-windCache[key].t>6e5){
+    const u="https://api.open-meteo.com/v1/forecast?latitude="+lat.toFixed(3)+"&longitude="+lon.toFixed(3)+"&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=kmh&timezone=auto&past_days=30&forecast_days=16";
+    windCache[key]={t:Date.now(),p:fetch(u).then(r=>{if(!r.ok)throw new Error("http "+r.status);return r.json()})};
+  }
+  let J;
+  try{J=await windCache[key].p}catch(e){delete windCache[key];throw e}
+  const H=J.hourly,off=(J.utc_offset_seconds||0)*1000;
+  const k=new Date(when.getTime()+off+30*60000).toISOString().slice(0,13)+":00";
+  const i=H.time.indexOf(k);
+  if(i<0){
+    const err=new Error(k<H.time[0]?"Brak danych o wietrze dla tak dawnego terminu (dostępne ok. 30 dni wstecz).":"Prognoza wiatru jest dostępna do 16 dni naprzód — wróć bliżej terminu.");
+    err.code="range";throw err;
+  }
+  return {dir:H.wind_direction_10m[i],speed:H.wind_speed_10m[i],gust:H.wind_gusts_10m[i],time:H.time[i].slice(11,16)};
+}
+
+/* ---------- mapa (Leaflet + OpenStreetMap) ---------- */
+const COL={head:"#d64545",side:"#e0b83a",tail:"#2a9d5c",plain:"#2f7fd1"};
+function makeMap(elId){
+  if(!window.L)return null;
   try{
-    if(localMode){
-      rides.push({id:"r"+Date.now().toString(36),title:t,when:w,place:$("rp").value,pace:$("rk").value,owner:$("rn").value||"ktoś",note:$("ro").value,going:[uid],creator:uid,route});drawRides();
-    }else{
-      if(!session){info.textContent="Zaloguj się, aby dodać wieczorynki.";return}
-      const row={title:t,starts_at:new Date(w).toISOString(),place:$("rp").value||null,pace:$("rk").value,owner_name:$("rn").value||null,note:$("ro").value||null,route:route||null};
-      const ins=await sb.from("rides").insert(row).select("id").single();
-      if(ins.error)throw ins.error;
-      await sb.from("rsvps").insert({ride_id:ins.data.id});
+    const m=L.map($(elId),{scrollWheelZoom:false});
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(m);
+    m.setView([52.23,21.01],11);
+    return {m,g:L.layerGroup().addTo(m)};
+  }catch(e){return null}
+}
+function drawRoute(mp,pts,segs,fit){
+  mp.g.clearLayers();
+  const ll=pts.map(p=>[p.lat,p.lon]),o={weight:5,opacity:.9,lineCap:"round"};
+  if(!segs)L.polyline(ll,Object.assign({color:COL.plain},o)).addTo(mp.g);
+  else{
+    let run=[ll[0]],col=segs[0].col;
+    segs.forEach((s,i)=>{
+      if(s.col!==col){L.polyline(run,Object.assign({color:COL[col]},o)).addTo(mp.g);run=[ll[i]];col=s.col}
+      run.push(ll[i+1]);
+    });
+    L.polyline(run,Object.assign({color:COL[col]},o)).addTo(mp.g);
+  }
+  L.circleMarker(ll[0],{radius:8,color:"#fff",weight:2,fillColor:"#1f7a4d",fillOpacity:1}).addTo(mp.g).bindTooltip("Start");
+  if(fit)mp.m.fitBounds(L.latLngBounds(ll),{padding:[24,24]});
+}
+function setArrow(id,wf,ws){
+  const el=$(id);
+  if(wf==null){el.classList.add("hide");return}
+  el.classList.remove("hide");
+  el.innerHTML='<svg viewBox="0 0 40 40" width="38" height="38" style="transform:rotate('+((wf+180)%360)+'deg)"><path d="M20 3 L29 22 L22 20 L22 37 L18 37 L18 20 L11 22 Z" fill="var(--acc)"/></svg><div>'+Math.round(ws)+' km/h</div>';
+}
+
+/* ---------- stan ---------- */
+let sb=null,session=null,uid="";
+let sorted=[],cur=-1,rsvps={},viewToken=0,shareFor=null,map1=null,map2=null,formRoute=null;
+const routeCache={};
+
+const isUpcoming=r=>new Date(r.when).getTime()>=Date.now()-3*36e5;
+const firstUpcoming=()=>sorted.findIndex(isUpcoming);
+function pickDefault(){const f=firstUpcoming();return f>=0?f:sorted.length-1}
+
+async function getRoute(id){
+  if(id in routeCache)return routeCache[id];
+  const r=await sb.from("rides").select("route").eq("id",id).single();
+  if(r.error)throw r.error;
+  let pts=false;
+  if(r.data&&r.data.route){
+    try{pts=JSON.parse(r.data.route).map(a=>({lat:+a[0],lon:+a[1],ele:+a[2]||0})).filter(p=>isFinite(p.lat)&&isFinite(p.lon));if(pts.length<2)pts=false}catch(e){pts=false}
+  }
+  routeCache[id]=pts;return pts;
+}
+
+/* ---------- widok wieczorynki ---------- */
+function renderNav(){
+  const n=sorted.length;
+  $("prev").disabled=!(cur>0);
+  $("next").disabled=!(cur>=0&&cur<n-1);
+  if(!n){$("pos").innerHTML="";$("notice").classList.add("hide");$("nearest").classList.add("hide");return}
+  const r=sorted[cur],fu=firstUpcoming(),up=isUpcoming(r);
+  const tag=up?(cur===fu?"Najbliższa wieczorynka":"Nadchodząca wieczorynka"):"Archiwalna wieczorynka";
+  $("pos").innerHTML="<b>"+tag+"</b><br><span class='note'>"+(cur+1)+" z "+n+"</span>";
+  const nt=$("notice");
+  if(fu<0){nt.textContent="Brak nadchodzących wieczorynek — pokazuję ostatnią archiwalną.";nt.classList.remove("hide")}
+  else if(!up){nt.textContent="To wieczorynka archiwalna.";nt.classList.remove("hide")}
+  else nt.classList.add("hide");
+  const target=fu>=0?fu:n-1;
+  $("nearest").classList.toggle("hide",cur===target);
+  $("nearest").textContent=fu>=0?"Wróć do najbliższej":"Wróć do ostatniej";
+}
+function renderCard(){
+  const box=$("ridecard"),r=sorted[cur];
+  if(!r){box.innerHTML='<div class="notice">Brak zaplanowanych wieczorynek. '+(session?'Dodaj pierwszą w sekcji „➕ Nowa wieczorynka”.':'Zaloguj się, aby dodać pierwszą.')+'</div>';return}
+  const g=rsvps[r.id]||[],me=!!session&&g.includes(uid);
+  let h='<h2 style="margin-top:10px">'+esc(r.title)+'</h2>'
+   +'<div class="meta">🕖 '+esc(fmtWhen(r.when))+' · 📍 '+esc(r.place||"miejsce do ustalenia")+' · '+esc(r.pace||"")+'</div>'
+   +(r.note?'<div>'+esc(r.note)+'</div>':'')
+   +'<div class="meta">Organizuje: '+esc(r.owner||"?")+' · jedzie: <b>'+g.length+'</b></div>'
+   +'<div class="row" style="margin-top:10px">'
+   +'<button class="b'+(me?' g':'')+'" data-act="join" data-id="'+esc(r.id)+'">'+(me?'Rezygnuję':'Jadę!')+'</button>'
+   +'<a class="b g" target="_blank" rel="noopener" href="'+esc(gcalUrl(r))+'">📅 Google Kalendarz</a>'
+   +'<button class="b g" data-act="share" data-id="'+esc(r.id)+'">📤 Udostępnij</button>'
+   +(routeCache[r.id]?'<button class="b g" data-act="gpx" data-id="'+esc(r.id)+'">⬇ GPX</button>':'')
+   +(session&&r.creator===uid?'<button class="b g" data-act="del" data-id="'+esc(r.id)+'">Usuń</button>':'')
+   +'</div>';
+  if(shareFor===r.id){
+    const u=shareUrl(r),t=shareText(r);
+    h+='<div class="sharebox"><b>Udostępnij:</b> <div class="row" style="margin-top:6px">'
+     +'<a class="b" target="_blank" rel="noopener" href="https://wa.me/?text='+encodeURIComponent(t+"\n"+u)+'">WhatsApp</a>'
+     +'<a class="b" target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(u)+'">Facebook</a>'
+     +'<button class="b g" data-act="copy" data-id="'+esc(r.id)+'">Kopiuj link</button></div>'
+     +'<div class="note" style="margin-top:6px">Facebook wstawia sam link — treść wiadomości dopisz ręcznie.</div></div>';
+  }
+  box.innerHTML=h;
+}
+function renderList(){
+  const box=$("list");
+  if(!sorted.length){box.innerHTML='<div class="note">Na razie pusto.</div>';return}
+  const was=box.querySelector("details"),wasOpen=was?was.open:false;
+  const item=(r,i)=>'<div class="item'+(i===cur?' cur':'')+'" data-i="'+i+'"><b>'+esc(r.title)+'</b><span class="note"> · '+esc(fmtWhen(r.when))+' · jedzie: '+(rsvps[r.id]||[]).length+'</span></div>';
+  const up=[],old=[];
+  sorted.forEach((r,i)=>(isUpcoming(r)?up:old).push(item(r,i)));
+  old.reverse();
+  const open=wasOpen||(cur>=0&&!isUpcoming(sorted[cur]));
+  box.innerHTML=(up.length?'<h3>Nadchodzące</h3>'+up.join(""):'<div class="note">Brak nadchodzących wieczorynek.</div>')
+   +(old.length?'<details'+(open?' open':'')+' style="margin-top:8px"><summary>Archiwalne ('+old.length+')</summary><div style="margin-top:6px">'+old.join("")+'</div></details>':"");
+}
+function renderPrevSelect(){
+  const s=$("rprev"),v=s.value;
+  s.innerHTML='<option value="">— brak —</option>'+sorted.slice().reverse().map(r=>'<option value="'+esc(r.id)+'">'+esc(r.title)+' — '+esc(fmtWhen(r.when))+'</option>').join("");
+  s.value=v;
+}
+function refreshUi(){renderNav();renderCard();renderList();renderPrevSelect()}
+
+async function showRide(idx){
+  cur=idx;const token=++viewToken;
+  refreshUi();
+  const r=sorted[cur],wrap=$("mapwrap1");
+  const clear=msg=>{wrap.classList.add("hide");$("stats1").innerHTML="";$("tip1").classList.add("hide");$("windinfo1").textContent=msg||""};
+  if(!r){clear();return}
+  $("windinfo1").textContent="Ładuję trasę…";
+  let pts;
+  try{pts=await getRoute(r.id)}catch(e){if(token===viewToken)clear("Nie udało się pobrać trasy.");return}
+  if(token!==viewToken)return;
+  renderCard();
+  if(!pts){clear("Ta wieczorynka nie ma dołączonej trasy.");return}
+  wrap.classList.remove("hide");
+  if(!map1)map1=makeMap("map1");
+  if(!map1){clear("Nie udało się załadować mapy (sprawdź połączenie z internetem).");return}
+  const bs=paceKmh(r.pace);
+  let an=analyze(pts,0,0,bs,false);
+  map1.m.invalidateSize();
+  drawRoute(map1,pts,null,true);setArrow("warrow1",null);
+  $("stats1").innerHTML=statsHtml(an);$("tip1").classList.add("hide");
+  $("windinfo1").textContent="Sprawdzam prognozę wiatru…";
+  try{
+    const w=await getWind(pts[0].lat,pts[0].lon,new Date(r.when));
+    if(token!==viewToken)return;
+    an=analyze(pts,w.dir,w.speed,bs,false);
+    drawRoute(map1,pts,an.segs,false);setArrow("warrow1",w.dir,w.speed);
+    $("stats1").innerHTML=statsHtml(an);
+    $("tip1").textContent=an.tip;$("tip1").classList.remove("hide");
+    $("windinfo1").textContent="Wiatr o "+w.time+": "+windLabel(w.dir)+", "+Math.round(w.speed)+" km/h, porywy do "+Math.round(w.gust)+" km/h (Open-Meteo).";
+  }catch(e){
+    if(token!==viewToken)return;
+    $("windinfo1").textContent=e.code==="range"?e.message:"Nie udało się pobrać prognozy wiatru.";
+  }
+}
+
+/* ---------- baza ---------- */
+async function loadRemote(selectId){
+  const prevId=sorted[cur]&&sorted[cur].id;
+  const since=new Date(Date.now()-120*864e5).toISOString();
+  const a=await sb.from("rides").select("id,title,starts_at,place,pace,owner_name,note,creator").gte("starts_at",since).order("starts_at").limit(300);
+  if(a.error)throw a.error;
+  const b=await sb.from("rsvps").select("ride_id,user_id,rides!inner(starts_at)").gte("rides.starts_at",since).limit(1000);
+  const g={};
+  if(!b.error)b.data.forEach(x=>{(g[x.ride_id]=g[x.ride_id]||[]).push(x.user_id)});
+  rsvps=g;
+  sorted=a.data.map(r=>({id:r.id,title:r.title,when:r.starts_at,place:r.place,pace:r.pace,owner:r.owner_name,note:r.note,creator:r.creator}));
+  const want=selectId||prevId;
+  let idx=want?sorted.findIndex(r=>r.id===want):-1;
+  if(idx<0)idx=pickDefault();
+  if(!selectId&&idx>=0&&sorted[idx].id===prevId){cur=idx;refreshUi()}
+  else showRide(idx);
+}
+
+/* ---------- akcje na wieczorynce ---------- */
+$("ridecard").addEventListener("click",async e=>{
+  const b=e.target.closest("button[data-act]");if(!b)return;
+  const id=b.dataset.id,r=sorted.find(x=>x.id===id);if(!r)return;
+  try{
+    if(b.dataset.act==="join"){
+      if(!session){say("Zaloguj się, aby dołączyć.");return}
+      const me=(rsvps[id]||[]).includes(uid);
+      const res=me?await sb.from("rsvps").delete().eq("ride_id",id).eq("user_id",uid):await sb.from("rsvps").insert({ride_id:id});
+      if(res.error)throw res.error;
+      await loadRemote();
+    }else if(b.dataset.act==="share"){
+      if(navigator.share){
+        try{await navigator.share({title:r.title,text:shareText(r),url:shareUrl(r)});return}
+        catch(err){if(err&&err.name==="AbortError")return}
+      }
+      shareFor=shareFor===id?null:id;renderCard();
+    }else if(b.dataset.act==="copy"){
+      try{await navigator.clipboard.writeText(shareUrl(r));say("Link skopiowany.")}catch(err){say("Nie udało się skopiować — zaznacz link ręcznie: "+shareUrl(r))}
+    }else if(b.dataset.act==="gpx"){
+      const pts=await getRoute(id);
+      if(!pts){say("Ta wieczorynka nie ma trasy.");return}
+      if(saveFile(makeGpx(pts,r.title),slug(r.title)+".gpx","application/gpx+xml"))say("Pobrano: "+slug(r.title)+".gpx");else say("Nie udało się pobrać pliku.");
+    }else if(b.dataset.act==="del"){
+      if(!confirm("Usunąć wieczorynkę „"+r.title+"”? Tej operacji nie można cofnąć."))return;
+      const res=await sb.from("rides").delete().eq("id",id);
+      if(res.error)throw res.error;
+      delete routeCache[id];
       await loadRemote();
     }
-    info.textContent="Opublikowano ✔";$("rt").value="";
-  }catch(e){info.textContent="Nie udało się zapisać"+(e&&e.message?": "+e.message:".")}
-}
-$("list").addEventListener("click",async e=>{
-  const b=e.target.closest("button");if(!b)return;
-  const find=id=>rides.find(r=>r.id===id),info=$("rinfo");
-  try{
-    if(b.dataset.j){
-      const r=find(b.dataset.j),me=(r.going||[]).includes(uid);
-      if(localMode){r.going=me?r.going.filter(x=>x!==uid):r.going.concat(uid);drawRides()}
-      else{
-        if(!session){info.textContent="Zaloguj się, aby dołączyć.";return}
-        const q=me?sb.from("rsvps").delete().eq("ride_id",r.id).eq("user_id",uid):sb.from("rsvps").insert({ride_id:r.id});
-        const res=await q;if(res.error)throw res.error;await loadRemote();
-      }
-    }
-    else if(b.dataset.g){const r=find(b.dataset.g);saveFile(makeGpx(JSON.parse(r.route).map(a=>({lat:a[0],lon:a[1],ele:a[2]})),r.title),slug(r.title)+".gpx","application/gpx+xml")}
-    else if(b.dataset.c){const r=find(b.dataset.c);saveFile(makeIcs(r),slug(r.title)+".ics","text/calendar")}
-    else if(b.dataset.l){const r=find(b.dataset.l);setRoute(JSON.parse(r.route).map(a=>({lat:a[0],lon:a[1],ele:a[2]})));if(r.when)$("wt").value=localIso(new Date(r.when));show(1);fetchWind()}
-    else if(b.dataset.x){
-      if(localMode){rides=rides.filter(r=>r.id!==b.dataset.x);drawRides()}
-      else{const res=await sb.from("rides").delete().eq("id",b.dataset.x);if(res.error)throw res.error;await loadRemote()}
-    }
-  }catch(err){info.textContent="Operacja nie powiodła się"+(err&&err.message?": "+err.message:".")}
+  }catch(err){say("Operacja nie powiodła się"+(err&&err.message?": "+err.message:"."))}
 });
+$("list").addEventListener("click",e=>{
+  const it=e.target.closest(".item");if(!it)return;
+  showRide(+it.dataset.i);
+  $("view").scrollIntoView({behavior:"smooth",block:"start"});
+});
+$("prev").onclick=()=>{if(cur>0)showRide(cur-1)};
+$("next").onclick=()=>{if(cur<sorted.length-1)showRide(cur+1)};
+$("nearest").onclick=()=>showRide(pickDefault());
 
-/* ---------- UI ---------- */
-function show(n){$("p1").classList.toggle("hide",n!==1);$("p2").classList.toggle("hide",n!==2);$("t1").classList.toggle("on",n===1);$("t2").classList.toggle("on",n===2)}
-$("t1").onclick=()=>show(1);$("t2").onclick=()=>show(2);
-$("file").onchange=async e=>{const f=e.target.files[0];if(!f)return;const p=parseGpx(await f.text());if(p.length<2){$("tip").textContent="Nie znaleziono punktów trasy w pliku GPX.";return}setRoute(p)};
-$("demo").onclick=demoRoute;
-$("gpx").onclick=()=>{if(pts.length<2){$("dlinfo").textContent="Najpierw załaduj trasę.";return}saveFile(makeGpx(pts,rev?"Trasa (odwrócona)":"Trasa"),"trasa"+(rev?"-odwrocona":"")+".gpx","application/gpx+xml")};
-$("rev").onclick=()=>{rev=!rev;pts=(rev?base.slice().reverse():base.slice());render()};
-["wd","ws","bs"].forEach(i=>$(i).oninput=render);
-document.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{$("wd").value=b.dataset.d;render()});
-function localIso(d){return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,16)}
-async function fetchWind(){
-  const st=$("awi");
-  if(pts.length<2){st.textContent="Najpierw załaduj trasę.";return}
-  const p=pts[0];st.textContent="Pobieram prognozę…";
+/* ---------- formularz nowej wieczorynki ---------- */
+$("rf").onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  const p=parseGpx(await f.text());
+  if(p.length<2){formRoute=null;$("rrinfo").textContent="Nie znaleziono punktów trasy w pliku GPX.";return}
+  formRoute=thin(p,500);$("rprev").value="";
+  $("rrinfo").textContent="Wczytano trasę z pliku: "+routeKm(p).toFixed(1)+" km.";
+};
+$("rprev").onchange=async e=>{
+  const id=e.target.value;
+  if(!id){formRoute=null;$("rrinfo").textContent="";return}
   try{
-    const u="https://api.open-meteo.com/v1/forecast?latitude="+p.lat.toFixed(3)+"&longitude="+p.lon.toFixed(3)+"&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m&wind_speed_unit=kmh&timezone=auto&forecast_days=10";
-    const r=await fetch(u);if(!r.ok)throw new Error("http "+r.status);
-    const H=(await r.json()).hourly;
-    const key=($("wt").value||localIso(new Date())).slice(0,13);
-    const last=H.time[H.time.length-1].slice(0,13);
-    if(key>last){st.textContent="Prognoza obejmuje tylko najbliższe 10 dni.";return}
-    let i=H.time.findIndex(t=>t.slice(0,13)>=key);if(i<0)i=0;
-    $("wd").value=Math.round(H.wind_direction_10m[i])%360;
-    $("ws").value=Math.round(H.wind_speed_10m[i]);
-    render();
-    st.textContent="Ustawiono na "+H.time[i].slice(11,16)+": "+Math.round(H.wind_direction_10m[i])+"°, "+Math.round(H.wind_speed_10m[i])+" km/h (porywy do "+Math.round(H.wind_gusts_10m[i])+") — Open-Meteo.";
-  }catch(e){st.textContent="Nie udało się pobrać prognozy (brak internetu?). Wpisz wiatr ręcznie."}
+    const pts=await getRoute(id);
+    if(!pts){formRoute=null;$("rrinfo").textContent="Ta wieczorynka nie ma trasy — wybierz inną albo wgraj plik GPX.";return}
+    formRoute=pts;$("rf").value="";
+    $("rrinfo").textContent="Użyto trasy z poprzedniej wieczorynki: "+routeKm(pts).toFixed(1)+" km.";
+  }catch(err){$("rrinfo").textContent="Nie udało się pobrać trasy."}
+};
+$("add").onclick=async()=>{
+  const info=$("rinfo"),t=$("rt").value.trim(),w=$("rw").value;
+  if(!session){info.textContent="Zaloguj się, aby dodać wieczorynkę.";return}
+  if(!t||!w){info.textContent="Podaj nazwę i termin.";return}
+  const route=formRoute&&formRoute.length>1?JSON.stringify(thin(formRoute,300).map(p=>[+p.lat.toFixed(5),+p.lon.toFixed(5),Math.round(p.ele||0)])):null;
+  const name=$("rn").value.trim();
+  try{localStorage.setItem("wieczorynki_name",name)}catch(e){}
+  try{
+    const row={title:t,starts_at:new Date(w).toISOString(),place:$("rp").value.trim()||null,pace:$("rk").value,owner_name:name||null,note:$("ro").value.trim()||null,route};
+    const ins=await sb.from("rides").insert(row).select("id").single();
+    if(ins.error)throw ins.error;
+    await sb.from("rsvps").insert({ride_id:ins.data.id});
+    $("rt").value="";$("ro").value="";$("rf").value="";$("rprev").value="";formRoute=null;$("rrinfo").textContent="";info.textContent="";
+    $("newbox").open=false;
+    await loadRemote(ins.data.id);
+    say("Opublikowano ✔");
+    $("view").scrollIntoView({behavior:"smooth",block:"start"});
+  }catch(e){info.textContent="Nie udało się zapisać"+(e&&e.message?": "+e.message:".")}
+};
+
+/* ---------- zakładka Zaawansowane ---------- */
+let advBase=[],advPts=[],advRev=false;
+function advRender(fit){
+  const wrap=$("mapwrap2");
+  const wf=+$("wd").value;
+  $("wdv").textContent=windLabel(wf);
+  if(advPts.length<2){wrap.classList.add("hide");$("empty2").classList.remove("hide");$("stats2").innerHTML="";$("tip2").classList.add("hide");return}
+  $("empty2").classList.add("hide");wrap.classList.remove("hide");
+  if(!map2)map2=makeMap("map2");
+  if(!map2){$("empty2").textContent="Nie udało się załadować mapy (sprawdź połączenie z internetem).";$("empty2").classList.remove("hide");wrap.classList.add("hide");return}
+  const ws=Math.max(0,+$("ws").value||0),bs=Math.max(8,+$("bs").value||24);
+  const an=analyze(advPts,wf,ws,bs,true);
+  map2.m.invalidateSize();
+  drawRoute(map2,advPts,ws>0?an.segs:null,fit);setArrow("warrow2",wf,ws);
+  $("stats2").innerHTML=statsHtml(an);
+  $("tip2").textContent=an.tip;$("tip2").classList.remove("hide");
 }
-$("aw").onclick=fetchWind;
-$("wt").value=localIso(new Date(Math.ceil(Date.now()/36e5)*36e5));
-$("add").onclick=addRide;
-(()=>{const d=new Date();d.setDate(d.getDate()+1);d.setHours(19,0,0,0);$("rw").value=new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,16)})();
+$("file").onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  const p=parseGpx(await f.text());
+  if(p.length<2){$("awi").textContent="Nie znaleziono punktów trasy w pliku GPX.";return}
+  advBase=thin(p,500);advRev=false;advPts=advBase.slice();$("awi").textContent="";advRender(true);
+};
+$("rev").onclick=()=>{advRev=!advRev;advPts=advRev?advBase.slice().reverse():advBase.slice();advRender(false)};
+$("gpx").onclick=()=>{
+  if(advPts.length<2){$("awi").textContent="Najpierw wgraj trasę.";return}
+  const n="trasa"+(advRev?"-odwrocona":"")+".gpx";
+  $("awi").textContent=saveFile(makeGpx(advPts,advRev?"Trasa (odwrócona)":"Trasa"),n,"application/gpx+xml")?"Pobrano: "+n:"Nie udało się pobrać pliku.";
+};
+$("aw").onclick=async()=>{
+  const st=$("awi");
+  if(advPts.length<2){st.textContent="Najpierw wgraj trasę.";return}
+  st.textContent="Pobieram prognozę…";
+  try{
+    const when=$("wt").value?new Date($("wt").value):new Date();
+    const w=await getWind(advPts[0].lat,advPts[0].lon,when);
+    $("wd").value=Math.round(w.dir)%360;$("ws").value=Math.round(w.speed);
+    advRender(false);
+    st.textContent="Wiatr o "+w.time+": "+windLabel(w.dir)+", "+Math.round(w.speed)+" km/h, porywy do "+Math.round(w.gust)+" km/h (Open-Meteo).";
+  }catch(e){st.textContent=e.code==="range"?e.message:"Nie udało się pobrać prognozy (brak internetu?). Ustaw wiatr ręcznie."}
+};
+["wd","ws","bs"].forEach(i=>$(i).oninput=()=>advRender(false));
 
-function loadRides(){try{rides=JSON.parse(localStorage.getItem("wieczorynki_rides")||"[]")}catch(e){rides=[]}}
-function persist(){try{localStorage.setItem("wieczorynki_rides",JSON.stringify(rides))}catch(e){}}
-loadRides();demoRoute();drawRides();
+/* ---------- zakładki ---------- */
+function show(n){
+  $("p1").classList.toggle("hide",n!==1);$("p2").classList.toggle("hide",n!==2);
+  $("t1").classList.toggle("on",n===1);$("t2").classList.toggle("on",n===2);
+  setTimeout(()=>{if(n===1&&map1)map1.m.invalidateSize();if(n===2&&map2)map2.m.invalidateSize()},60);
+}
+$("t1").onclick=()=>show(1);$("t2").onclick=()=>show(2);
 
-$("dbnote").textContent="Wydarzenia zapisują się tylko w tej przeglądarce (brak konfiguracji wspólnej bazy).";
+/* ---------- konto ---------- */
 function setSession(s){
   session=s;uid=s?s.user.id:"";
   $("authout").classList.toggle("hide",!!s);$("authin").classList.toggle("hide",!s);
-  $("who").textContent=s?"Zalogowany: "+s.user.email:"";drawRides();
-}
-async function initRemote(){
-  if(/WKLEJ/.test(SUPABASE_URL+SUPABASE_KEY)||!window.supabase){$("authbox").classList.add("hide");return}
-  sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-  localMode=false;rides=[];uid="";drawRides();
-  try{const r=await sb.auth.getSession();setSession(r.data.session)}catch(e){}
-  sb.auth.onAuthStateChange((_ev,s)=>{setSession(s)});
-  try{await loadRemote();$("dbnote").textContent="Wydarzenia są wspólne dla wszystkich użytkowników aplikacji."}
-  catch(e){$("dbnote").textContent="Nie udało się połączyć ze wspólną bazą (sprawdź konfigurację i uprawnienia w Supabase)."}
-  setInterval(()=>{if(!document.hidden)loadRemote().catch(()=>{})},120000);
+  $("who").textContent=s?"Zalogowany: "+s.user.email:"";
+  refreshUi();
 }
 const amsg=e=>({"Invalid login credentials":"Nieprawidłowy e-mail lub hasło.","User already registered":"Konto z tym adresem już istnieje — zaloguj się."}[e.message]||e.message);
 $("login").onclick=async()=>{
+  if(!sb)return;
   const r=await sb.auth.signInWithPassword({email:$("ae").value.trim(),password:$("ap").value});
   $("ainfo").textContent=r.error?amsg(r.error):"";
 };
 $("signup").onclick=async()=>{
+  if(!sb)return;
   const r=await sb.auth.signUp({email:$("ae").value.trim(),password:$("ap").value});
   $("ainfo").textContent=r.error?amsg(r.error):(r.data.session?"Konto założone.":"Sprawdź skrzynkę i potwierdź adres e-mail.");
 };
-$("logout").onclick=()=>sb.auth.signOut();
-initRemote();
+$("logout").onclick=()=>{if(sb)sb.auth.signOut()};
+
+/* ---------- start ---------- */
+(async()=>{
+  const d=new Date();d.setDate(d.getDate()+1);d.setHours(19,0,0,0);$("rw").value=localIso(d);
+  $("wt").value=localIso(new Date(Math.ceil(Date.now()/36e5)*36e5));
+  try{$("rn").value=localStorage.getItem("wieczorynki_name")||""}catch(e){}
+  advRender(false);refreshUi();
+  if(!window.supabase){$("dbnote").textContent="Nie udało się załadować biblioteki bazy danych — sprawdź połączenie z internetem i odśwież stronę.";return}
+  sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  try{const r=await sb.auth.getSession();setSession(r.data.session)}catch(e){}
+  sb.auth.onAuthStateChange((_ev,s)=>{setSession(s)});
+  const m=/#ride=([0-9a-f-]{36})/i.exec(location.hash||"");
+  try{await loadRemote(m?m[1]:null);$("dbnote").textContent="Wieczorynki są wspólne dla wszystkich użytkowników aplikacji."}
+  catch(e){$("dbnote").textContent="Nie udało się połączyć ze wspólną bazą (sprawdź internet i konfigurację Supabase)."}
+  setInterval(()=>{if(!document.hidden)loadRemote().catch(()=>{})},120000);
+})();
 </script>
 </body>
 </html>
