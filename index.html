@@ -485,6 +485,8 @@ function renderChrome(){
   $("welcome").classList.toggle("hide",!welcome);
   $("app").classList.toggle("hide",welcome);
   renderGear();
+  $("t2").classList.toggle("hide",!session);
+  if(!session&&!$("p2").classList.contains("hide"))show(0);
   $("pwbox").classList.toggle("hide",!(pwMode&&session));
   const needNick=!!session&&(!me.nick||nickEdit)&&!pwMode;
   $("nickbox").classList.toggle("hide",!needNick);
