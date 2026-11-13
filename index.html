@@ -62,6 +62,10 @@ nav button.on{background:var(--navon);color:var(--ink);box-shadow:0 1px 3px rgba
 .sheetbox .note{font-size:16px}
 .sheetbox .seg button{padding:13px 4px;font-size:17px}
 .sleft{text-align:left;margin-top:6px}
+.nk{font-weight:700}
+.cprev{display:flex;gap:8px;margin-top:8px}.cprev div{flex:1;border-radius:10px;padding:8px 10px;font-size:15px;border:1px solid var(--line)}
+.crow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font-size:16px}
+.crow input[type=color]{width:56px;height:36px;padding:2px;border-radius:9px;cursor:pointer}
 .sdanger{display:block;margin:16px auto 0;padding:8px;border:0;background:none;color:var(--bad);font:inherit;font-size:15px;cursor:pointer;text-decoration:underline}
 .sheetbox ul{margin:6px 0 0;padding-left:20px;font-size:15px}
 .arow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);font-size:17px}
@@ -481,6 +485,16 @@ let editId=null,formRoute,wantDay="0",libFile=null;
 const routeCache={},libCache={};
 
 const nickOf=id=>nicks[id]||"ktoś";
+/* płeć i kolory nicków */
+let genders={},genderOk=false;
+const DEF_COLORS={K:"#d6337a",M:"#2f6fd6"};
+let nickColors={...DEF_COLORS};
+const HEX_RE=/^#[0-9a-fA-F]{6}$/;
+const colorOf=id=>{const g=genders[id];return g&&HEX_RE.test(nickColors[g]||"")?nickColors[g]:""};
+// nick jako kolorowy HTML (tekst zawsze przez esc)
+const nk=(id,fallback)=>{const c=colorOf(id),t=nicks[id]||fallback||"ktoś";return '<span class="nk"'+(c?' style="color:'+c+'"':'')+'>'+esc(t)+'</span>'};
+const nkList=ids=>ids.map(id=>nk(id)).join(", ");
+const needProfile=()=>!!session&&(!me.nick||(genderOk&&!genders[uid]));
 const isUpcoming=r=>new Date(r.when).getTime()>=Date.now()-3*36e5;
 const firstUpcoming=()=>sorted.findIndex(isUpcoming);
 function pickDefault(){const f=firstUpcoming();return f>=0?f:sorted.length-1}
@@ -532,47 +546,71 @@ let guestMode=false,gearOpen=false,gearView="main";
 try{guestMode=sessionStorage.getItem("guest")==="1"}catch(e){}
 const setGuest=v=>{guestMode=v;try{v?sessionStorage.setItem("guest","1"):sessionStorage.removeItem("guest")}catch(e){}};
 function adminHtml(){
-  const rows=adminIds.map(id=>'<div class="arow"><b>'+esc(nickOf(id))+'</b>'+(id===uid?'<span class="note">(Ty)</span>':'<button class="b g small" data-a="rm" data-id="'+esc(id)+'">Odbierz uprawnienia</button>')+'</div>').join("")||'<div class="note">Brak.</div>';
+  const rows=adminIds.map(id=>'<div class="arow">'+nk(id)+(id===uid?'<span class="note">(Ty)</span>':'<button class="b g small" data-a="rm" data-id="'+esc(id)+'">Odbierz uprawnienia</button>')+'</div>').join("")||'<div class="note">Brak.</div>';
   const cand=Object.keys(nicks).filter(id=>!adminIds.includes(id)).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl"));
   const add=cand.length
     ?'<select id="adminsel">'+cand.map(id=>'<option value="'+esc(id)+'">'+esc(nicks[id])+'</option>').join("")+'</select><button class="b sbtn" data-c="adminadd">Nadaj uprawnienia</button>'
     :'<div class="note">Brak użytkowników z nickiem, którym można nadać uprawnienia.</div>';
   return '<button class="sback" data-c="back">‹ Ustawienia</button>'
    +'<div class="sname" style="margin-top:26px">🛡️ Administracja</div>'
+   +(genderOk?'<button class="b sbtn g" data-c="colors">🎨 Kolory nicków</button>':'')
    +'<div class="sleft"><h3>Administratorzy</h3>'+rows
    +'<h3>Nadaj uprawnienia administratora</h3>'+add
    +'<p class="note">Administrator może edytować i usuwać każdą wieczorynkę, zgłoszenie i trasę oraz zarządzać administratorami.</p>'
    +'<h3>Użytkownicy ('+Object.keys(nicks).length+')</h3>'
-   +(Object.keys(nicks).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")).map(id=>'<div class="arow"><b>'+esc(nicks[id])+'</b>'+(id===uid?'<span class="note">(Ty)</span>':'<button class="b g small" data-a="unick" data-id="'+esc(id)+'">Zmień nick</button>')+'</div>').join("")||'<div class="note">Brak użytkowników z nickiem.</div>')
+   +(Object.keys(nicks).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")).map(id=>'<div class="arow">'+nk(id)+(id===uid?'<span class="note">(Ty)</span>':'<button class="b g small" data-a="unick" data-id="'+esc(id)+'">Zmień nick</button>')+'</div>').join("")||'<div class="note">Brak użytkowników z nickiem.</div>')
    +'</div>';
+}
+function colorsHtml(){
+  const row=(k,t)=>'<div class="crow"><span>'+t+'</span><input type="color" id="col'+k+'" value="'+(HEX_RE.test(nickColors[k]||"")?nickColors[k]:DEF_COLORS[k])+'"></div>';
+  return '<button class="sback" data-c="backadmin">‹ Administracja</button>'
+   +'<div class="sname" style="margin-top:26px">🎨 Kolory nicków</div>'
+   +'<div class="sleft">'+row("K","👩 Kobiety")+row("M","👨 Mężczyźni")
+   +'<h3>Podgląd</h3><div class="cprev"><div style="background:#fff;color:#1d1d1f" id="pvL"></div><div style="background:#2c2c2e;color:#f5f5f7" id="pvD"></div></div>'
+   +'<p class="note">Sprawdź, czy oba nicki są czytelne na jasnym i na ciemnym tle. Zmiana działa u wszystkich po odświeżeniu danych (do 1 minuty).</p>'
+   +'<div class="note" id="colinfo" style="color:var(--bad)"></div>'
+   +'<button class="b sbtn" data-c="colsave">Zapisz kolory</button>'
+   +'<button class="b sbtn g" data-c="coldef">Przywróć domyślne</button></div>';
+}
+function colorsPreview(){
+  const k=$("colK"),m=$("colM");if(!k||!m)return;
+  const s=(c,t)=>'<b style="color:'+c+'">'+t+'</b>';
+  const html=s(k.value,"Ania")+' · '+s(m.value,"GAWRON");
+  $("pvL").innerHTML=html;$("pvD").innerHTML=html;
 }
 let unickId="";
 function unickHtml(){
   return '<button class="sback" data-c="backadmin">‹ Administracja</button>'
    +'<div class="sname" style="margin-top:26px">✏️ Zmień nick użytkownika</div>'
-   +'<div class="smail">Obecny nick: <b>'+esc(nickOf(unickId))+'</b></div>'
+   +'<div class="smail">Obecny nick: '+nk(unickId)+'</div>'
    +'<div class="sleft"><label for="gunick" style="font-size:15px">Nowy nick</label>'
    +'<input id="gunick" maxlength="20" autocomplete="off" value="'+esc(nicks[unickId]||"")+'">'
    +'<p class="note">Użyj, gdy ktoś podszywa się pod inny nick albo nick jest nieodpowiedni. Wieczorynki zorganizowane przez tę osobę pokażą nowy nick.</p>'
    +'<div class="note" id="gunickinfo" style="color:var(--bad)"></div>'
    +'<button class="b sbtn" data-c="unicksave">Zapisz nick</button></div>';
 }
+let selGender="";
 function nickHtml(){
-  const first=!me.nick;
-  return (first?'<div class="sname">👋 Wybierz swój nick</div><div class="smail">Witaj w PrzylesieGo! Nick widzą inni przy zapisach na wieczorynki i zgłoszeniach.</div>'
-     :'<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">✏️ Zmień nick</div>')
-   +'<div class="sleft"><label for="gnick" style="font-size:15px">'+(first?'Twój nick':'Nowy nick')+'</label>'
+  const first=!me.nick,incomplete=needProfile();
+  const head=first?'<div class="sname">👋 Wybierz swój nick</div><div class="smail">Witaj w PrzylesieGo! Nick widzą inni przy zapisach na wieczorynki i zgłoszeniach.</div>'
+     :incomplete?'<div class="sname">👋 Uzupełnij profil</div><div class="smail">Wybierz płeć — od niej zależy kolor Twojego nicku.</div>'
+     :'<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">✏️ Nick i płeć</div>';
+  const gsel=genderOk?'<label style="font-size:15px;margin-top:14px">Płeć (obowiązkowo)</label><div class="seg" id="gsex" style="margin-top:4px">'
+     +[["K","👩 Kobieta"],["M","👨 Mężczyzna"]].map(([k,t])=>'<button type="button" data-g="'+k+'" class="'+(selGender===k?"on":"")+'">'+t+'</button>').join("")+'</div>':'';
+  return head
+   +'<div class="sleft"><label for="gnick" style="font-size:15px">'+(first?'Twój nick':'Nick')+'</label>'
    +'<input id="gnick" maxlength="20" autocomplete="off" value="'+esc(me.nick||"")+'" placeholder="np. GAWRON">'
    +'<p class="note">2–20 znaków: litery, cyfry, spacja, kropka, _ lub -. Nick musi być unikalny; widzą go inni zalogowani.</p>'
-   +'<div class="note" id="gnickinfo" style="color:var(--bad)"></div>'
-   +'<button class="b sbtn" data-c="nicksave">Zapisz nick</button></div>';
+   +gsel
+   +'<div class="note" id="gnickinfo" style="color:var(--bad);margin-top:8px"></div>'
+   +'<button class="b sbtn" data-c="nicksave">Zapisz</button></div>';
 }
 const lastAdmin=()=>isAdmin&&adminIds.length<=1;
 function delHtml(){
   const head='<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">🗑️ Usuń konto</div>';
   if(lastAdmin())return head+'<div class="sleft"><div class="changed">Jesteś jedynym administratorem, więc nie możesz usunąć konta. Najpierw nadaj komuś uprawnienia administratora (Ustawienia → 🛡️ Administracja).</div></div>';
   return head+'<div class="sleft">'
-   +'<h3>Zostanie usunięte na zawsze</h3><ul><li>konto i adres e-mail</li><li>nick</li><li>zapisy na wieczorynki</li><li>zgłoszenia „Mam ochotę pojeździć” i dołączenia</li>'+(isAdmin?'<li>uprawnienia administratora</li>':'')+'</ul>'
+   +'<h3>Zostanie usunięte na zawsze</h3><ul><li>konto i adres e-mail</li><li>nick i płeć</li><li>zapisy na wieczorynki</li><li>zgłoszenia „Mam ochotę pojeździć” i dołączenia</li>'+(isAdmin?'<li>uprawnienia administratora</li>':'')+'</ul>'
    +'<h3>Zostanie</h3><ul><li>wieczorynki, które organizujesz (z Twoim nickiem jako organizatorem)</li><li>trasy dodane do biblioteki</li></ul>'
    +'<label for="gdel" style="font-size:15px;margin-top:16px">Aby potwierdzić, wpisz <b>USUŃ</b></label>'
    +'<input id="gdel" maxlength="10" autocomplete="off" autocapitalize="characters">'
@@ -583,9 +621,11 @@ function renderGear(){
   const p=$("gearpanel");
   if(!gearOpen){p.classList.add("hide");gearView="main";return}
   p.classList.remove("hide");
-  if((gearView==="admin"||gearView==="unick")&&!(session&&isAdmin))gearView="main";
+  if((gearView==="admin"||gearView==="unick"||gearView==="colors")&&!(session&&isAdmin))gearView="main";
   if(gearView==="unick"&&!nicks[unickId])gearView="admin";
   const keepSel=$("adminsel")?$("adminsel").value:"";
+  const keepCol=gearView==="colors"&&$("colK")?{k:$("colK").value,m:$("colM").value}:null;
+  const keepNickSex=gearView==="nick";
   const keepUnick=gearView==="unick"&&$("gunick")?{v:$("gunick").value,i:$("gunickinfo").textContent}:null;
   const keepDel=gearView==="del"&&$("gdel")?{v:$("gdel").value,i:$("gdelinfo").textContent}:null;
   const keepNick=gearView==="nick"&&$("gnick")?{v:$("gnick").value,i:$("gnickinfo").textContent}:null;
@@ -593,11 +633,12 @@ function renderGear(){
   let body;
   if(gearView==="admin")body=adminHtml();
   else if(gearView==="unick")body=unickHtml();
+  else if(gearView==="colors")body=colorsHtml();
   else if(gearView==="nick"&&session)body=nickHtml();
   else if(gearView==="del"&&session)body=delHtml();
   else body=session
-    ?'<div class="sname">👤 '+esc(me.nick||"ustaw nick")+(isAdmin?' 🛡️':'')+'</div><div class="smail">'+esc(session.user.email||"")+'</div>'
-     +'<button class="b sbtn g" data-c="nick">✏️ '+(me.nick?'Zmień nick':'Ustaw nick')+'</button>'+tg
+    ?'<div class="sname">👤 '+(me.nick?nk(uid):'ustaw nick')+(isAdmin?' 🛡️':'')+'</div><div class="smail">'+esc(session.user.email||"")+'</div>'
+     +'<button class="b sbtn g" data-c="nick">✏️ '+(me.nick?'Nick i płeć':'Ustaw nick')+'</button>'+tg
      +(isAdmin?'<button class="b sbtn g" data-c="admin">🛡️ Administracja</button>':'')
      +themeHtml()
      +'<button class="b sbtn" style="background:var(--bad);margin-top:20px" data-c="out">Wyloguj</button>'
@@ -607,6 +648,8 @@ function renderGear(){
   p.innerHTML='<div class="sheetbox"><button class="sclose" data-c="close" aria-label="Zamknij">✕</button>'+body+'</div>';
   const s=$("adminsel");
   if(s&&keepSel&&[...s.options].some(o=>o.value===keepSel))s.value=keepSel;
+  if(keepCol&&$("colK")){$("colK").value=keepCol.k;$("colM").value=keepCol.m}
+  if(gearView==="colors")colorsPreview();
   if(keepUnick&&$("gunick")){$("gunick").value=keepUnick.v;$("gunickinfo").textContent=keepUnick.i}
   if(keepDel&&$("gdel")){$("gdel").value=keepDel.v;$("gdelinfo").textContent=keepDel.i}
   if(keepNick&&$("gnick")){$("gnick").value=keepNick.v;$("gnickinfo").textContent=keepNick.i}
@@ -623,6 +666,8 @@ function renderChrome(){
 }
 $("gear").onclick=()=>{gearOpen=!gearOpen;gearView="main";renderGear()};
 $("gearpanel").addEventListener("click",async e=>{
+  const gb=e.target.closest("button[data-g]");
+  if(gb){selGender=gb.dataset.g;[...$("gsex").children].forEach(x=>x.classList.toggle("on",x===gb));return}
   const th=e.target.closest("button[data-t]");
   if(th){setTheme(th.dataset.t);renderGear();return}
   if(e.target===$("gearpanel")){gearOpen=false;renderGear();return}
@@ -641,7 +686,10 @@ $("gearpanel").addEventListener("click",async e=>{
   const b=e.target.closest("button[data-c]");if(!b)return;
   const c=b.dataset.c;
   if(c==="admin"){gearView="admin";renderGear();return}
-  if(c==="nick"){gearView="nick";renderGear();const i=$("gnick");if(i){i.focus();i.select()}return}
+  if(c==="colors"){gearView="colors";renderGear();return}
+  if(c==="coldef"){$("colK").value=DEF_COLORS.K;$("colM").value=DEF_COLORS.M;colorsPreview();return}
+  if(c==="colsave"){await saveColors();return}
+  if(c==="nick"){selGender=genders[uid]||"";gearView="nick";renderGear();const i=$("gnick");if(i){i.focus();i.select()}return}
   if(c==="nicksave"){await gearSaveNick();return}
   if(c==="del"){gearView="del";renderGear();const i=$("gdel");if(i)i.focus();return}
   if(c==="delgo"){await gearDeleteAccount();return}
@@ -662,6 +710,18 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="out"){setGuest(false);if(sb)sb.auth.signOut();renderChrome()}
   else if(c==="login"){setGuest(false);renderChrome()}
 });
+$("gearpanel").addEventListener("input",e=>{if(e.target.id==="colK"||e.target.id==="colM")colorsPreview()});
+async function saveColors(){
+  if(!isAdmin)return;
+  const k=$("colK").value,m=$("colM").value,inf=$("colinfo");
+  if(!HEX_RE.test(k)||!HEX_RE.test(m)){inf.textContent="Nieprawidłowy kolor.";return}
+  try{
+    const res=await sb.from("app_settings").upsert([{key:"nick_color_K",value:k},{key:"nick_color_M",value:m}]).select("key");
+    if(res.error)throw res.error;
+    if(!res.data||res.data.length<2)throw new Error("brak uprawnień");
+    await loadRemote();gearView="admin";renderGear();say("Kolory nicków zapisane ✔");
+  }catch(err){inf.textContent="Nie udało się zapisać: "+(err&&err.message?err.message:"błąd")}
+}
 $("gearpanel").addEventListener("keydown",e=>{
   if(e.key!=="Enter")return;
   if(e.target.id==="gnick"){e.preventDefault();gearSaveNick()}
@@ -693,15 +753,17 @@ async function gearDeleteAccount(){
 async function gearSaveNick(){
   const i=$("gnick");if(!i)return;
   const n=i.value.trim();
-  if(n===me.nick){gearView="main";renderGear();return}
-  const first=!me.nick;
-  const err=await saveNick(n);
+  if(genderOk&&!selGender){$("gnickinfo").textContent="Wybierz płeć: Kobieta albo Mężczyzna.";return}
+  if(n===me.nick&&(!genderOk||selGender===genders[uid])){gearView="main";renderGear();return}
+  const first=needProfile();
+  const err=await saveNick(n,null,genderOk?selGender:null);
   if(err){$("gnickinfo").textContent=err;return}
   if(first)gearOpen=false;
-  gearView="main";renderGear();say("Nick zapisany ✔");
+  gearView="main";renderGear();say(first?"Profil zapisany ✔":"Zapisano ✔");
 }
 function askNick(){
   if(!session)return;
+  selGender=genders[uid]||"";
   gearOpen=true;gearView="nick";renderGear();
   const i=$("gnick");if(i)i.focus();
 }
@@ -711,13 +773,14 @@ function nickKey(n){
   const k=String(n||"").toLowerCase().replace(/[ąćęłńóśźż]/g,c=>({"ą":"a","ć":"c","ę":"e","ł":"l","ń":"n","ó":"o","ś":"s","ź":"z","ż":"z"}[c])).replace(/[^a-z]/g,"");
   return k||String(n||"").toLowerCase();
 }
-async function saveNick(n,target){
+async function saveNick(n,target,gender){
   const who=target||uid;
   if(!NICK_RE.test(n))return "Nick: 2–20 znaków — litery, cyfry, spacja, kropka, _ lub -.";
   const k=nickKey(n),twin=Object.keys(nicks).find(id=>id!==who&&nickKey(nicks[id])===k);
   if(twin)return "Ten nick jest zajęty albo zbyt podobny do „"+nicks[twin]+"” (różni się tylko wielkością liter, cyframi, znakami lub polskimi literami). Wybierz inny.";
+  const row={nick:n};if(gender)row.gender=gender;
   try{
-    const res=nicks[who]?await sb.from("profiles").update({nick:n}).eq("user_id",who).select("user_id"):await sb.from("profiles").insert({user_id:who,nick:n}).select("user_id");
+    const res=nicks[who]?await sb.from("profiles").update(row).eq("user_id",who).select("user_id"):await sb.from("profiles").insert(Object.assign({user_id:who},row)).select("user_id");
     if(res.error)return res.error.code==="23505"?"Ten nick jest zajęty albo zbyt podobny do istniejącego — wybierz inny.":"Nie udało się zapisać: "+res.error.message;
     if(!res.data||!res.data.length)return "Brak uprawnień do zmiany tego nicku.";
     await loadRemote();return null;
@@ -743,9 +806,9 @@ function renderWants(){
   if(!list.length){box.innerHTML='<div class="note" style="margin-top:12px">Nikt jeszcze nie zgłosił ochoty. Bądź pierwszy!</div>';return}
   box.innerHTML=list.map(w=>{
     const j=joins[w.id]||[],mine=w.user_id===uid,joined=j.includes(uid),others=j.filter(x=>x!==w.user_id);
-    return '<div class="want'+(mine?' mine':'')+'"><div><b>'+esc(nickOf(w.user_id))+'</b> · '+esc(relWhen(w.starts_at))+(mine?' <span class="note">(Twoje zgłoszenie)</span>':'')+'</div>'
+    return '<div class="want'+(mine?' mine':'')+'"><div>'+nk(w.user_id)+' · '+esc(relWhen(w.starts_at))+(mine?' <span class="note">(Twoje zgłoszenie)</span>':'')+'</div>'
      +(w.note?'<div>'+esc(w.note)+'</div>':'')
-     +'<div class="meta">'+(others.length?'Dołączyli ('+others.length+'): <b>'+esc(others.map(nickOf).join(", "))+'</b>':(mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.'))+'</div>'
+     +'<div class="meta">'+(others.length?'Dołączyli ('+others.length+'): '+nkList(others):(mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.'))+'</div>'
      +'<div class="row" style="margin-top:8px">'
      +(mine?'':'<button class="b'+(joined?' g':'')+'" data-w="join" data-id="'+esc(w.id)+'">'+(joined?'Rezygnuję':'Ja też!')+'</button>')
      +((mine||isAdmin)?'<button class="b g" data-w="del" data-id="'+esc(w.id)+'">Usuń</button>':'')
@@ -753,7 +816,7 @@ function renderWants(){
   }).join("");
 }
 $("wantbtn").onclick=()=>{
-  if(!me.nick){askNick();return}
+  if(needProfile()){askNick();return}
   $("wantform").classList.toggle("hide");
 };
 $("wcancel").onclick=()=>$("wantform").classList.add("hide");
@@ -765,7 +828,7 @@ $("wchips").addEventListener("click",e=>{
 });
 $("wsave").onclick=async()=>{
   if(!session){say("Najpierw zaloguj się.");return}
-  if(!me.nick){askNick();return}
+  if(needProfile()){askNick();return}
   const [hh,mm]=($("wtm").value||"19:00").split(":").map(Number);
   let d;
   if(wantDay==="x"){
@@ -785,7 +848,7 @@ $("wantlist").addEventListener("click",async e=>{
   const id=b.dataset.id;
   try{
     if(b.dataset.w==="join"){
-      if(!me.nick){askNick();return}
+      if(needProfile()){askNick();return}
       const joined=(joins[id]||[]).includes(uid);
       const res=joined?await sb.from("want_joins").delete().eq("want_id",id).eq("user_id",uid):await sb.from("want_joins").insert({want_id:id});
       if(res.error)throw res.error;
@@ -806,7 +869,7 @@ function renderNext(){
   box.innerHTML='<div style="font-size:18px;font-weight:700">'+esc(r.title)+'</div>'
    +'<div class="meta">🕖 '+esc(relWhen(r.when))+' · 📍 '+esc(r.place||"miejsce do ustalenia")+' · '+esc(r.pace||"")+'</div>'
    +changedHtml(r)
-   +'<div class="meta">Jedzie: <b>'+g.length+'</b>'+(session&&g.length?' — '+esc(g.map(nickOf).join(", ")):'')+'</div>'
+   +'<div class="meta">Jedzie: <b>'+g.length+'</b>'+(session&&g.length?' — '+nkList(g):'')+'</div>'
    +'<div class="row" style="margin-top:10px"><button class="b'+(goes?' g':'')+'" data-go="join" data-id="'+esc(r.id)+'">'+(goes?'Rezygnuję':'Jadę!')+'</button><button class="b g" data-go="ride" data-i="'+fu+'">Szczegóły i mapa →</button></div>';
 }
 $("nextbody").addEventListener("click",async e=>{
@@ -819,7 +882,7 @@ $("nextbody").addEventListener("click",async e=>{
 });
 async function toggleRsvp(id){
   if(!session){say("Zaloguj się, aby dołączyć.");return}
-  if(!me.nick){askNick();return}
+  if(needProfile()){askNick();return}
   const mine=(rsvps[id]||[]).includes(uid);
   const res=mine?await sb.from("rsvps").delete().eq("ride_id",id).eq("user_id",uid):await sb.from("rsvps").insert({ride_id:id});
   if(res.error)throw res.error;
@@ -851,7 +914,7 @@ function renderCard(){
    +'<div class="meta">🕖 '+esc(fmtWhen(r.when))+' · 📍 '+esc(r.place||"miejsce do ustalenia")+' · '+esc(r.pace||"")+'</div>'
    +changedHtml(r)
    +(r.note?'<div>'+esc(r.note)+'</div>':'')
-   +'<div class="meta">Organizuje: '+esc(nicks[r.creator]||r.owner||"?")+' · jedzie: <b>'+g.length+'</b>'+(session&&g.length?' — '+esc(g.map(nickOf).join(", ")):'')+'</div>'
+   +'<div class="meta">Organizuje: '+(nicks[r.creator]?nk(r.creator):esc(r.owner||"?"))+' · jedzie: <b>'+g.length+'</b>'+(session&&g.length?' — '+nkList(g):'')+'</div>'
    +'<div class="row" style="margin-top:10px">'
    +'<button class="b'+(goes?' g':'')+'" data-act="join" data-id="'+esc(r.id)+'">'+(goes?'Rezygnuję':'Jadę!')+'</button>'
    +'<a class="b g" target="_blank" rel="noopener" href="'+esc(gcalUrl(r))+'">📅 Google Kalendarz</a>'
@@ -886,7 +949,7 @@ function renderList(){
 function renderLibUi(){
   $("libbox").classList.toggle("hide",!session);
   // lista w Zaawansowane
-  $("liblist").innerHTML=lib.length?lib.map(l=>'<div class="lib"><b>'+esc(l.title)+'</b> <span class="note">· '+(l.km!=null?Number(l.km).toFixed(1)+' km · ':'')+'autor: '+esc(nickOf(l.creator))+'</span><div>'+esc(l.description)+'</div>'
+  $("liblist").innerHTML=lib.length?lib.map(l=>'<div class="lib"><b>'+esc(l.title)+'</b> <span class="note">· '+(l.km!=null?Number(l.km).toFixed(1)+' km · ':'')+'autor: '+nk(l.creator)+'</span><div>'+esc(l.description)+'</div>'
     +'<div class="row" style="margin-top:6px"><button class="b g" data-l="show" data-id="'+esc(l.id)+'">🗺 Pokaż na mapie</button><button class="b g" data-l="gpx" data-id="'+esc(l.id)+'">⬇ GPX</button>'
     +((l.creator===uid||isAdmin)?'<button class="b g" data-l="del" data-id="'+esc(l.id)+'">Usuń</button>':'')+'</div></div>').join(""):'<div class="note">Biblioteka jest pusta. Dodaj pierwszą trasę poniżej.</div>';
   // lista wyboru w formularzu
@@ -925,7 +988,7 @@ $("lf").onchange=async e=>{
 $("ladd").onclick=async()=>{
   const inf=$("linfo"),t=$("lt").value.trim(),d=$("ld").value.trim();
   if(!session){inf.textContent="Zaloguj się.";return}
-  if(!me.nick){askNick();return}
+  if(needProfile()){askNick();return}
   if(!libFile){inf.textContent="Najpierw wybierz plik GPX.";return}
   if(t.length<3){inf.textContent="Podaj nazwę trasy (min. 3 znaki).";return}
   if(d.length<10){inf.textContent="Opis trasy jest obowiązkowy (min. 10 znaków) — bez niego trasy nie można dodać.";return}
@@ -994,21 +1057,25 @@ async function loadRemote(selectId){
   rsvps=g;
   if(session){
     const ok=r=>r.error?null:r.data;
-    const [p,w,j,l,ad]=await Promise.all([
-      sb.from("profiles").select("user_id,nick").limit(1000),
+    let p=await sb.from("profiles").select("user_id,nick,gender").limit(1000);
+    genderOk=!p.error;
+    if(p.error)p=await sb.from("profiles").select("user_id,nick").limit(1000);
+    const [w,j,l,ad,st]=await Promise.all([
       sb.from("wants").select("id,user_id,starts_at,note").order("starts_at").limit(200),
       sb.from("want_joins").select("want_id,user_id").limit(1000),
       sb.from("routes").select("id,title,description,km,creator,created_at").order("created_at",{ascending:false}).limit(200),
-      sb.from("admins").select("user_id")
+      sb.from("admins").select("user_id"),
+      genderOk?sb.from("app_settings").select("key,value"):Promise.resolve({data:[]})
     ]);
-    nicks={};(ok(p)||[]).forEach(x=>{nicks[x.user_id]=x.nick});
+    nicks={};genders={};(ok(p)||[]).forEach(x=>{nicks[x.user_id]=x.nick;if(x.gender)genders[x.user_id]=x.gender});
     me.nick=nicks[uid]||null;
-    if(!p.error&&!me.nick&&!pwMode&&nickAskedFor!==uid){nickAskedFor=uid;setTimeout(askNick,0)}
+    nickColors={...DEF_COLORS};(ok(st)||[]).forEach(x=>{const m=/^nick_color_([KM])$/.exec(x.key);if(m&&HEX_RE.test(x.value))nickColors[m[1]]=x.value});
+    if(!p.error&&needProfile()&&!pwMode&&nickAskedFor!==uid){nickAskedFor=uid;setTimeout(askNick,0)}
     wants=ok(w)||[];
     joins={};(ok(j)||[]).forEach(x=>{(joins[x.want_id]=joins[x.want_id]||[]).push(x.user_id)});
     lib=ok(l)||[];
     adminIds=(ok(ad)||[]).map(x=>x.user_id);isAdmin=adminIds.includes(uid);
-  }else{nicks={};me.nick=null;wants=[];joins={};lib=[];adminIds=[];isAdmin=false}
+  }else{nicks={};genders={};me.nick=null;wants=[];joins={};lib=[];adminIds=[];isAdmin=false}
   sorted=a.data.map(r=>({id:r.id,title:r.title,when:r.starts_at,place:r.place,pace:r.pace,owner:r.owner_name,note:r.note,creator:r.creator,edited_at:r.edited_at||null,change_note:r.change_note||null,route_title:r.route_title||null,route_desc:r.route_desc||null}));
   const want=selectId||prevId;
   let idx=want?sorted.findIndex(r=>r.id===want):-1;
@@ -1100,7 +1167,7 @@ $("rlib").onchange=async e=>{
 $("add").onclick=async()=>{
   const info=$("rinfo");info.textContent="";
   if(!session){info.textContent="Zaloguj się, aby dodać wieczorynkę.";return}
-  if(!me.nick){askNick();return}
+  if(needProfile()){askNick();return}
   const t=$("rt").value.trim(),w=$("rw").value;
   if(!t||!w){info.textContent="Podaj nazwę i termin.";return}
   try{
