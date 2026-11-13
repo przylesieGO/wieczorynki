@@ -80,6 +80,15 @@ svg{width:100%;height:auto;display:block;background:var(--bg);border-radius:10px
 </section>
 
 <section id="p2" class="hide">
+ <div class="card" id="authbox">
+  <h2>Konto</h2>
+  <div id="authout">
+   <div class="grid"><div><label>E-mail</label><input id="ae" type="email" autocomplete="email"></div>
+   <div><label>Hasło (min. 6 znaków)</label><input id="ap" type="password" autocomplete="current-password"></div></div>
+   <div class="row" style="margin-top:8px"><button class="b" id="login">Zaloguj</button><button class="b g" id="signup">Załóż konto</button><span class="note" id="ainfo"></span></div>
+  </div>
+  <div id="authin" class="hide row"><span id="who"></span><button class="b g" id="logout">Wyloguj</button></div>
+ </div>
  <div class="card">
   <h2>Zaproś na wieczorynki</h2>
   <div class="grid">
@@ -98,8 +107,14 @@ svg{width:100%;height:auto;display:block;background:var(--bg);border-radius:10px
 </section>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
+/* === KONFIGURACJA SUPABASE: wklej swoje dane (klucz publishable jest jawny, to normalne) === */
+const SUPABASE_URL="https://onhdnsjtszrbvlmqfgvi.supabase.co";
+const SUPABASE_KEY="sb_publishable_ms2InCwXXoczxIqwkuAm1Q_HPS4uZv6";
+/* ============================================================================================ */
 const $=id=>document.getElementById(id);
+let sb=null,session=null;
 let pts=[],base=[],rev=false,rides=[],db=null,uid="local",localMode=true;
 const R=6371;
 const rad=x=>x*Math.PI/180;
@@ -197,7 +212,7 @@ function drawReminders(){
 setInterval(drawReminders,60000);
 
 function drawRides(){
-  persist();drawReminders();
+  if(localMode)persist();drawReminders();
   const box=$("list");
   const up=rides.slice().sort((a,b)=>String(a.when).localeCompare(String(b.when)));
   if(!up.length){box.innerHTML='<div class="card note">Na razie pusto — zaproponuj pierwsze wieczorynki!</div>';return}
@@ -209,28 +224,55 @@ function drawRides(){
    <button class="b g" data-c="${esc(r.id)}">🔔 Przypomnienie</button>
    ${r.creator===uid?`<button class="b g" data-x="${esc(r.id)}">Usuń</button>`:""}</div></div>`}).join("");
 }
+async function loadRemote(){
+  const since=new Date(Date.now()-864e5).toISOString();
+  const a=await sb.from("rides").select("*").gte("starts_at",since).order("starts_at").limit(60);
+  if(a.error)throw a.error;
+  const ids=a.data.map(r=>r.id),g={};
+  if(ids.length){const b=await sb.from("rsvps").select("ride_id,user_id").in("ride_id",ids);
+    if(b.error)throw b.error;b.data.forEach(x=>{(g[x.ride_id]=g[x.ride_id]||[]).push(x.user_id)})}
+  rides=a.data.map(r=>({id:r.id,title:r.title,when:r.starts_at,place:r.place,pace:r.pace,owner:r.owner_name,note:r.note,creator:r.creator,route:r.route,going:g[r.id]||[]}));
+  drawRides();
+}
 async function addRide(){
-  const t=$("rt").value.trim(),w=$("rw").value;
-  if(!t||!w){$("rinfo").textContent="Podaj nazwę i termin.";return}
-  const id="r"+Date.now().toString(36);
+  const t=$("rt").value.trim(),w=$("rw").value,info=$("rinfo");
+  if(!t||!w){info.textContent="Podaj nazwę i termin.";return}
   const route=pts.length>1?JSON.stringify(thin(base.length?base:pts,200).map(p=>[+p.lat.toFixed(5),+p.lon.toFixed(5),Math.round(p.ele)])):"";
-  const r={id,title:t,when:w,place:$("rp").value,pace:$("rk").value,owner:$("rn").value||"ktoś",note:$("ro").value,going:[uid],creator:uid,route};
   try{
-    if(localMode){rides.push(r);drawRides()}else await db.collection("rides").doc(id).set(r);
-    $("rinfo").textContent="Opublikowano ✔";$("rt").value="";
-  }catch(e){$("rinfo").textContent="Nie udało się zapisać (brak uprawnień do zapisu?).";}
+    if(localMode){
+      rides.push({id:"r"+Date.now().toString(36),title:t,when:w,place:$("rp").value,pace:$("rk").value,owner:$("rn").value||"ktoś",note:$("ro").value,going:[uid],creator:uid,route});drawRides();
+    }else{
+      if(!session){info.textContent="Zaloguj się, aby dodać wieczorynki.";return}
+      const row={title:t,starts_at:new Date(w).toISOString(),place:$("rp").value||null,pace:$("rk").value,owner_name:$("rn").value||null,note:$("ro").value||null,route:route||null};
+      const ins=await sb.from("rides").insert(row).select("id").single();
+      if(ins.error)throw ins.error;
+      await sb.from("rsvps").insert({ride_id:ins.data.id});
+      await loadRemote();
+    }
+    info.textContent="Opublikowano ✔";$("rt").value="";
+  }catch(e){info.textContent="Nie udało się zapisać"+(e&&e.message?": "+e.message:".")}
 }
 $("list").addEventListener("click",async e=>{
   const b=e.target.closest("button");if(!b)return;
-  const find=id=>rides.find(r=>r.id===id);
+  const find=id=>rides.find(r=>r.id===id),info=$("rinfo");
   try{
-  if(b.dataset.j){const r=find(b.dataset.j);let g=(r.going||[]).slice();g=g.includes(uid)?g.filter(x=>x!==uid):g.concat(uid);
-    if(localMode){r.going=g;drawRides()}else await db.collection("rides").doc(r.id).update({going:g})}
-  else if(b.dataset.g){const r=find(b.dataset.g);saveFile(makeGpx(JSON.parse(r.route).map(a=>({lat:a[0],lon:a[1],ele:a[2]})),r.title),slug(r.title)+".gpx","application/gpx+xml")}
-  else if(b.dataset.c){const r=find(b.dataset.c);saveFile(makeIcs(r),slug(r.title)+".ics","text/calendar")}
-  else if(b.dataset.l){const r=find(b.dataset.l);setRoute(JSON.parse(r.route).map(a=>({lat:a[0],lon:a[1],ele:a[2]})));if(r.when)$("wt").value=r.when;show(1);fetchWind()}
-  else if(b.dataset.x){if(localMode){rides=rides.filter(r=>r.id!==b.dataset.x);drawRides()}else await db.collection("rides").doc(b.dataset.x).delete()}
-  }catch(err){$("rinfo").textContent="Operacja nie powiodła się."}
+    if(b.dataset.j){
+      const r=find(b.dataset.j),me=(r.going||[]).includes(uid);
+      if(localMode){r.going=me?r.going.filter(x=>x!==uid):r.going.concat(uid);drawRides()}
+      else{
+        if(!session){info.textContent="Zaloguj się, aby dołączyć.";return}
+        const q=me?sb.from("rsvps").delete().eq("ride_id",r.id).eq("user_id",uid):sb.from("rsvps").insert({ride_id:r.id});
+        const res=await q;if(res.error)throw res.error;await loadRemote();
+      }
+    }
+    else if(b.dataset.g){const r=find(b.dataset.g);saveFile(makeGpx(JSON.parse(r.route).map(a=>({lat:a[0],lon:a[1],ele:a[2]})),r.title),slug(r.title)+".gpx","application/gpx+xml")}
+    else if(b.dataset.c){const r=find(b.dataset.c);saveFile(makeIcs(r),slug(r.title)+".ics","text/calendar")}
+    else if(b.dataset.l){const r=find(b.dataset.l);setRoute(JSON.parse(r.route).map(a=>({lat:a[0],lon:a[1],ele:a[2]})));if(r.when)$("wt").value=localIso(new Date(r.when));show(1);fetchWind()}
+    else if(b.dataset.x){
+      if(localMode){rides=rides.filter(r=>r.id!==b.dataset.x);drawRides()}
+      else{const res=await sb.from("rides").delete().eq("id",b.dataset.x);if(res.error)throw res.error;await loadRemote()}
+    }
+  }catch(err){info.textContent="Operacja nie powiodła się"+(err&&err.message?": "+err.message:".")}
 });
 
 /* ---------- UI ---------- */
@@ -270,7 +312,33 @@ function loadRides(){try{rides=JSON.parse(localStorage.getItem("wieczorynki_ride
 function persist(){try{localStorage.setItem("wieczorynki_rides",JSON.stringify(rides))}catch(e){}}
 loadRides();demoRoute();drawRides();
 
-$("dbnote").textContent="Wydarzenia zapisują się tylko w tej przeglądarce. Wspólna lista dla wszystkich wymaga bazy danych (np. Supabase).";
+$("dbnote").textContent="Wydarzenia zapisują się tylko w tej przeglądarce (brak konfiguracji wspólnej bazy).";
+function setSession(s){
+  session=s;uid=s?s.user.id:"";
+  $("authout").classList.toggle("hide",!!s);$("authin").classList.toggle("hide",!s);
+  $("who").textContent=s?"Zalogowany: "+s.user.email:"";drawRides();
+}
+async function initRemote(){
+  if(/WKLEJ/.test(SUPABASE_URL+SUPABASE_KEY)||!window.supabase){$("authbox").classList.add("hide");return}
+  sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  localMode=false;rides=[];uid="";drawRides();
+  try{const r=await sb.auth.getSession();setSession(r.data.session)}catch(e){}
+  sb.auth.onAuthStateChange((_ev,s)=>{setSession(s)});
+  try{await loadRemote();$("dbnote").textContent="Wydarzenia są wspólne dla wszystkich użytkowników aplikacji."}
+  catch(e){$("dbnote").textContent="Nie udało się połączyć ze wspólną bazą (sprawdź konfigurację i uprawnienia w Supabase)."}
+  setInterval(()=>{if(!document.hidden)loadRemote().catch(()=>{})},120000);
+}
+const amsg=e=>({"Invalid login credentials":"Nieprawidłowy e-mail lub hasło.","User already registered":"Konto z tym adresem już istnieje — zaloguj się."}[e.message]||e.message);
+$("login").onclick=async()=>{
+  const r=await sb.auth.signInWithPassword({email:$("ae").value.trim(),password:$("ap").value});
+  $("ainfo").textContent=r.error?amsg(r.error):"";
+};
+$("signup").onclick=async()=>{
+  const r=await sb.auth.signUp({email:$("ae").value.trim(),password:$("ap").value});
+  $("ainfo").textContent=r.error?amsg(r.error):(r.data.session?"Konto założone.":"Sprawdź skrzynkę i potwierdź adres e-mail.");
+};
+$("logout").onclick=()=>sb.auth.signOut();
+initRemote();
 </script>
 </body>
 </html>
