@@ -647,7 +647,7 @@ let guestMode=false,gearOpen=false,gearView="main";
 try{guestMode=sessionStorage.getItem("guest")==="1"}catch(e){}
 const setGuest=v=>{guestMode=v;try{v?sessionStorage.setItem("guest","1"):sessionStorage.removeItem("guest")}catch(e){}};
 function adminHtml(){
-  const rows=adminIds.map(id=>'<div class="arow">'+nk(id)+(id===uid?'<span class="note">(Ty)</span>':'<button class="b g small" data-a="rm" data-id="'+esc(id)+'">Odbierz uprawnienia</button>')+'</div>').join("")||'<div class="note">Brak.</div>';
+  const rows=adminIds.map(id=>'<div class="arow">'+nk(id)+(isSuper(id)?'<span class="note">👑 główny admin'+(id===uid?' (Ty)':'')+'</span>':id===uid?'<span class="note">(Ty)</span>':'<button class="b g small" data-a="rm" data-id="'+esc(id)+'">Odbierz uprawnienia</button>')+'</div>').join("")||'<div class="note">Brak.</div>';
   const cand=Object.keys(nicks).filter(id=>!adminIds.includes(id)).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl"));
   const add=cand.length
     ?'<select id="adminsel">'+cand.map(id=>'<option value="'+esc(id)+'">'+esc(nicks[id])+'</option>').join("")+'</select><button class="b sbtn" data-c="adminadd">Nadaj uprawnienia</button>'
@@ -660,7 +660,7 @@ function adminHtml(){
    +'<h3>Nadaj uprawnienia administratora</h3>'+add
    +'<p class="note">Administrator może edytować i usuwać każdą wieczorynkę, zgłoszenie i trasę oraz zarządzać administratorami.</p>'
    +'<h3>Użytkownicy ('+Object.keys(nicks).length+')</h3>'
-   +(Object.keys(nicks).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")).map(id=>'<div class="arow">'+nk(id)+(id===uid?'<span class="note">(Ty)</span>':'<button class="b g small" data-a="unick" data-id="'+esc(id)+'">Zmień nick</button>')+'</div>').join("")||'<div class="note">Brak użytkowników z nickiem.</div>')
+   +(Object.keys(nicks).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")).map(id=>'<div class="arow">'+nk(id)+(id===uid?'<span class="note">(Ty)</span>':isSuper(id)?'<span class="note">👑</span>':'<button class="b g small" data-a="unick" data-id="'+esc(id)+'">Zmień nick</button>')+'</div>').join("")||'<div class="note">Brak użytkowników z nickiem.</div>')
    +'</div>';
 }
 function colorsHtml(){
@@ -714,11 +714,13 @@ function nickHtml(){
    +'<button class="b sbtn" data-c="nicksave">Zapisz</button></div>';
 }
 const lastAdmin=()=>isAdmin&&adminIds.length<=1;
+let supers=new Set();const isSuper=id=>supers.has(id);
 function delHtml(){
   const head='<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">🗑️ Usuń konto</div>';
+  if(isSuper(uid))return head+'<div class="sleft"><div class="changed">👑 Jesteś głównym administratorem PrzylesieGo — tego konta nie można usunąć.</div></div>';
   if(lastAdmin())return head+'<div class="sleft"><div class="changed">Jesteś jedynym administratorem, więc nie możesz usunąć konta. Najpierw nadaj komuś uprawnienia administratora (Ustawienia → 🛡️ Administracja).</div></div>';
   return head+'<div class="sleft">'
-   +'<h3>Zostanie usunięte na zawsze</h3><ul><li>konto i adres e-mail</li><li>nick i płeć</li><li>zapisy na wieczorynki</li><li>zgłoszenia „Kto jedzie ze mną?” i dołączenia</li>'+(isAdmin?'<li>uprawnienia administratora</li>':'')+'</ul>'
+   +'<h3>Zostanie usunięte na zawsze</h3><ul><li>konto i adres e-mail</li><li>nick i płeć</li><li>zapisy na wieczorynki</li><li>zaproszenia „Idziemy na rower?” i dołączenia</li>'+(isAdmin?'<li>uprawnienia administratora</li>':'')+'</ul>'
    +'<h3>Zostanie</h3><ul><li>wieczorynki, które organizujesz (z Twoim nickiem jako organizatorem)</li><li>trasy dodane do biblioteki</li></ul>'
    +'<label for="gdel" style="font-size:15px;margin-top:16px">Aby potwierdzić, wpisz <b>USUŃ</b></label>'
    +'<input id="gdel" maxlength="10" autocomplete="off" autocapitalize="characters">'
@@ -726,6 +728,54 @@ function delHtml(){
    +'<button class="b sbtn" style="background:var(--bad)" data-c="delgo">Usuń konto na zawsze</button></div>';
 }
 let userId="",userBack="";
+/* potwierdzenie usuwania słowem USUŃ (zaproszenia, wieczorynki, trasy) */
+let delReq=null;
+function askDelete(kind,id){
+  let r={kind,id},own=false,joined=0;
+  if(kind==="want"){const w=wants.find(x=>x.id===id);if(!w)return;own=w.user_id===uid;joined=(joins[id]||[]).filter(x=>x!==w.user_id).length;
+    r.title=own?"Odwołać zaproszenie?":"Usunąć zaproszenie?";r.author=w.user_id;r.what=wfLabel(new Date(w.starts_at))+(w.note?" · "+w.note:"");r.extra=joined?"Dołączyło: "+joined+" — ich zgłoszenia też znikną.":"Nikt jeszcze nie dołączył.";}
+  if(kind==="ride"){const x=sorted.find(y=>y.id===id);if(!x)return;own=x.creator===uid;const g=(rsvps[id]||[]).length;
+    r.title="Usunąć wieczorynkę?";r.author=x.creator;r.what=x.title+" · "+fmtWhen(x.when);r.extra="Zapisanych: "+g+" — ich zapisy znikną. Tej operacji nie można cofnąć.";}
+  if(kind==="route"){const l=lib.find(y=>y.id===id);if(!l)return;own=l.creator===uid;
+    r.title="Usunąć trasę z biblioteki?";r.author=l.creator;r.what=l.title+(l.km!=null?" · "+Number(l.km).toFixed(1)+" km":"");r.extra="Wieczorynki, które jej użyły, zachowają swoją kopię trasy.";}
+  r.own=own;
+  // wariant B: własne zaproszenie bez dołączonych — zwykłe potwierdzenie
+  if(kind==="want"&&own&&!joined){if(confirm("Odwołać zaproszenie na "+r.what+"?"))doDelete(r);return}
+  delReq=r;gearOpen=true;gearView="confdel";renderGear();
+  const i=$("gconf");if(i)i.focus();
+}
+function confDelHtml(){
+  const r=delReq;
+  return '<div class="sname">🗑️ '+esc(r.title)+'</div>'
+   +'<div class="sleft">'
+   +(r.own?'':'<div class="changed" style="margin-top:12px">⚠️ Usuwasz cudzy wpis'+(nicks[r.author]?' — autor: '+nk(r.author):'')+'</div>')
+   +'<div class="arow" style="flex-direction:column;align-items:flex-start;gap:4px;margin-top:6px"><b>'+esc(r.what)+'</b><span class="note">'+esc(r.extra)+'</span></div>'
+   +'<label for="gconf" style="font-size:15px;margin-top:16px">Aby potwierdzić, wpisz <b>USUŃ</b></label>'
+   +'<input id="gconf" maxlength="10" autocomplete="off" autocapitalize="characters">'
+   +'<div class="note" id="gconfinfo" style="color:var(--bad)"></div>'
+   +'<button class="b sbtn" style="background:var(--bad)" data-c="confgo">'+(r.kind==="want"&&r.own?"Odwołaj zaproszenie":"Usuń na zawsze")+'</button></div>';
+}
+async function doDelete(r){
+  const tbl={want:"wants",ride:"rides",route:"routes"}[r.kind];
+  try{
+    const res=await sb.from(tbl).delete().eq("id",r.id);
+    if(res.error)throw res.error;
+    if(r.kind==="ride")delete routeCache[r.id];
+    if(r.kind==="route")delete libCache[r.id];
+    if(r.kind==="want")closeWantForm();
+    gearOpen=false;delReq=null;
+    await loadRemote();
+    say(r.kind==="want"?(r.own?"Zaproszenie odwołane.":"Zaproszenie usunięte."):r.kind==="ride"?"Wieczorynka usunięta.":"Trasa usunięta.");
+  }catch(err){
+    const i=$("gconfinfo");const m="Nie udało się: "+(err&&err.message?err.message:"błąd");
+    if(i)i.textContent=m;else say(m);
+  }
+}
+async function confirmDelete(){
+  const i=$("gconf");if(!i||!delReq)return;
+  if(i.value.trim().toUpperCase()!=="USUŃ"){$("gconfinfo").textContent="Wpisz słowo USUŃ, aby potwierdzić.";return}
+  await doDelete(delReq);
+}
 const starBtn=id=>'<button class="starb'+(isFav(id)?' on':'')+'" data-a="fav" data-id="'+esc(id)+'" title="'+(isFav(id)?'Usuń z ulubionych':'Dodaj do ulubionych')+'">'+(isFav(id)?'⭐':'☆')+'</button>';
 function favsHtml(){
   const ids=Object.keys(nicks).filter(id=>id!==uid).sort((a,b)=>((isFav(b)?1:0)-(isFav(a)?1:0))||nicks[a].localeCompare(nicks[b],"pl"));
@@ -739,7 +789,7 @@ function userHtml(){
    +'<div class="bigpill" style="margin-top:'+(userBack?'26px':'6px')+'">'+nk(userId)+'</div>'
    +'<div class="smail">'+(g==="K"?"👩 Kobieta":g==="M"?"👨 Mężczyzna":"")+(onlineIds.includes(userId)?(g?" · ":"")+"🟢 teraz w aplikacji":"")+'</div>'
    +'<button class="b sbtn'+(fav?' g':'')+'" data-a="fav" data-id="'+esc(userId)+'">'+(fav?'⭐ Usuń z ulubionych':'☆ Dodaj do ulubionych')+'</button>'
-   +(isAdmin?'<button class="b sbtn g" data-a="unick" data-id="'+esc(userId)+'">✏️ Zmień nick (admin)</button>':'');
+   +(isAdmin&&!isSuper(userId)?'<button class="b sbtn g" data-a="unick" data-id="'+esc(userId)+'">✏️ Zmień nick (admin)</button>':'');
 }
 async function toggleFav(id){
   if(!session||!favOk||!id||id===uid)return;
@@ -769,6 +819,7 @@ function renderGear(){
   const keepCol=gearView==="colors"&&$("colK")?colVals():null;
   const keepNickSex=gearView==="nick";
   const keepUnick=gearView==="unick"&&$("gunick")?{v:$("gunick").value,i:$("gunickinfo").textContent}:null;
+  const keepConf=gearView==="confdel"&&$("gconf")?$("gconf").value:null;
   const keepDel=gearView==="del"&&$("gdel")?{v:$("gdel").value,i:$("gdelinfo").textContent}:null;
   const keepNick=gearView==="nick"&&$("gnick")?{v:$("gnick").value,i:$("gnickinfo").textContent}:null;
   const tg='<a class="b sbtn g" href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">📣 Kanał na Telegramie</a>';
@@ -779,6 +830,7 @@ function renderGear(){
   else if(gearView==="stats")body=adminStatsHtml();
   else if(gearView==="favs"&&session)body=favsHtml();
   else if(gearView==="user"&&session&&nicks[userId])body=userHtml();
+  else if(gearView==="confdel"&&session&&delReq)body=confDelHtml();
   else if(gearView==="nick"&&session)body=nickHtml();
   else if(gearView==="del"&&session)body=delHtml();
   else body=session
@@ -797,6 +849,7 @@ function renderGear(){
   if(keepCol&&$("colK")){["K","M"].forEach(g=>{$("col"+g).value=keepCol["c"+g];$("nob"+g).checked=keepCol["b"+g]==="none";if(keepCol["b"+g]!=="none")$("bg"+g).value=keepCol["b"+g]})}
   if(gearView==="colors")colorsPreview();
   if(keepUnick&&$("gunick")){$("gunick").value=keepUnick.v;$("gunickinfo").textContent=keepUnick.i}
+  if(keepConf!=null&&$("gconf"))$("gconf").value=keepConf;
   if(keepDel&&$("gdel")){$("gdel").value=keepDel.v;$("gdelinfo").textContent=keepDel.i}
   if(keepNick&&$("gnick")){$("gnick").value=keepNick.v;$("gnickinfo").textContent=keepNick.i}
 }
@@ -822,6 +875,7 @@ $("gearpanel").addEventListener("click",async e=>{
     if(a.dataset.a==="fav"){await toggleFav(a.dataset.id);return}
     if(!isAdmin)return;
     if(a.dataset.a==="unick"){unickId=a.dataset.id;gearView="unick";renderGear();const i=$("gunick");if(i){i.focus();i.select()}return}
+    if(a.dataset.a==="rm"&&isSuper(a.dataset.id)){say("Głównemu administratorowi nie można odebrać uprawnień.");return}
     if(!confirm("Odebrać uprawnienia administratora użytkownikowi "+nickOf(a.dataset.id)+"?"))return;
     try{
       const res=await sb.from("admins").delete().eq("user_id",a.dataset.id);
@@ -836,6 +890,7 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="colors"){gearView="colors";renderGear();return}
   if(c==="stats"){gearView="stats";loadStats();return}
   if(c==="favs"){gearView="favs";renderGear();return}
+  if(c==="confgo"){await confirmDelete();return}
   if(c==="userback"){gearView=userBack||"main";renderGear();return}
   if(c==="coldef"){["K","M"].forEach(g=>{$("col"+g).value=DEF_COLORS[g];$("bg"+g).value=DEF_BGS[g];$("nob"+g).checked=false});colorsPreview();return}
   if(c==="colsave"){await saveColors();return}
@@ -877,11 +932,12 @@ $("gearpanel").addEventListener("keydown",e=>{
   if(e.target.id==="gnick"){e.preventDefault();gearSaveNick()}
   else if(e.target.id==="gunick"){e.preventDefault();adminSaveNick()}
   else if(e.target.id==="gdel"){e.preventDefault();gearDeleteAccount()}
+  else if(e.target.id==="gconf"){e.preventDefault();confirmDelete()}
 });
 let deleting=false;
 async function gearDeleteAccount(){
   const i=$("gdel"),inf=$("gdelinfo");if(!i||deleting||!session)return;
-  if(lastAdmin()){renderGear();return}
+  if(lastAdmin()||isSuper(uid)){renderGear();return}
   if(i.value.trim().toUpperCase()!=="USUŃ"){inf.textContent="Wpisz słowo USUŃ, aby potwierdzić.";return}
   if(!confirm("Na pewno usunąć konto? Tej operacji nie można cofnąć."))return;
   deleting=true;inf.textContent="Usuwam konto…";
@@ -889,7 +945,7 @@ async function gearDeleteAccount(){
     const r=await sb.rpc("delete_my_account");
     if(r.error){
       const m=r.error.message||"";
-      inf.textContent=/LAST_ADMIN/.test(m)?"Jesteś jedynym administratorem — najpierw nadaj komuś uprawnienia."
+      inf.textContent=/SUPERADMIN/.test(m)?"Konta głównego administratora nie można usunąć.":/LAST_ADMIN/.test(m)?"Jesteś jedynym administratorem — najpierw nadaj komuś uprawnienia."
         :(r.error.code==="PGRST202"||/delete_my_account/.test(m))?"Usuwanie kont nie jest jeszcze włączone w bazie (brak funkcji delete_my_account).":"Nie udało się usunąć konta: "+m;
       return;
     }
@@ -1002,7 +1058,7 @@ function wantHtml(w){
      +(w.note?'<div>'+esc(w.note)+'</div>':'')
      +'<div class="meta">'+(others.length?'Dołączyli ('+others.length+'):'+nkList(others):(mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.'))+'</div>'
      +'<div class="row" style="margin-top:8px">'
-     +(mine?'':'<button class="b'+(joined?' g':'')+'" data-w="join" data-id="'+esc(w.id)+'">'+(joined?'Rezygnuję':'Ja też!')+'</button>')
+     +(mine?'':'<button class="b'+(joined?' g':'')+'" data-w="join" data-id="'+esc(w.id)+'">'+(joined?'Rezygnuję':'Jadę!')+'</button>')
      +((mine||isAdmin)?'<button class="b g" data-w="del" data-id="'+esc(w.id)+'">Usuń</button>':'')
      +'</div></div>';
 }
@@ -1204,9 +1260,7 @@ $("mywant").addEventListener("click",async e=>{
     return;
   }
   if(b.dataset.my==="del"){
-    if(!confirm("Odwołać zaproszenie na "+wfLabel(new Date(w.starts_at))+"?"))return;
-    try{const res=await sb.from("wants").delete().eq("id",w.id);if(res.error)throw res.error;closeWantForm();await loadRemote();say("Zaproszenie odwołane.")}
-    catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+    askDelete("want",w.id);
   }
 });
 $("wantlist").addEventListener("click",async e=>{
@@ -1219,9 +1273,7 @@ $("wantlist").addEventListener("click",async e=>{
       const res=joined?await sb.from("want_joins").delete().eq("want_id",id).eq("user_id",uid):await sb.from("want_joins").insert({want_id:id});
       if(res.error)throw res.error;
     }else{
-      if(!confirm("Usunąć to zgłoszenie?"))return;
-      const res=await sb.from("wants").delete().eq("id",id);
-      if(res.error)throw res.error;
+      askDelete("want",id);return;
     }
     await loadRemote();
   }catch(err){say("Operacja nie powiodła się"+(err&&err.message?": "+err.message:"."))}
@@ -1340,10 +1392,7 @@ $("liblist").addEventListener("click",async e=>{
       if(!pts){say("Nie udało się wczytać trasy.");return}
       say(saveFile(makeGpx(pts,l.title),slug(l.title)+".gpx","application/gpx+xml")?"Pobrano: "+slug(l.title)+".gpx":"Nie udało się pobrać pliku.");
     }else{
-      if(!confirm("Usunąć trasę „"+l.title+"” z biblioteki? Wieczorynki, które jej użyły, zachowają swoją kopię trasy."))return;
-      const res=await sb.from("routes").delete().eq("id",id);
-      if(res.error)throw res.error;
-      delete libCache[id];await loadRemote();say("Trasa usunięta.");
+      askDelete("route",id);
     }
   }catch(err){say("Operacja nie powiodła się"+(err&&err.message?": "+err.message:"."))}
 });
@@ -1488,6 +1537,7 @@ async function loadRemote(selectId){
       genderOk?sb.from("app_settings").select("key,value"):Promise.resolve({data:[]}),
       sb.from("favorites").select("fav_id").eq("user_id",uid).limit(1000)
     ]);
+    const sp=await sb.from("superadmins").select("user_id");supers=new Set((sp&&!sp.error&&sp.data||[]).map(x=>x.user_id));
     nicks={};genders={};(ok(p)||[]).forEach(x=>{nicks[x.user_id]=x.nick;if(x.gender)genders[x.user_id]=x.gender});
     me.nick=nicks[uid]||null;
     favOk=!fv.error;favs=new Set((ok(fv)||[]).map(x=>x.fav_id));
@@ -1533,11 +1583,7 @@ $("ridecard").addEventListener("click",async e=>{
       say(saveFile(makeGpx(pts,r.title),slug(r.title)+".gpx","application/gpx+xml")?"Pobrano: "+slug(r.title)+".gpx":"Nie udało się pobrać pliku.");
     }else if(act==="edit")startEdit(id);
     else if(act==="del"){
-      if(!confirm("Usunąć wieczorynkę „"+r.title+"”? Tej operacji nie można cofnąć."))return;
-      const res=await sb.from("rides").delete().eq("id",id);
-      if(res.error)throw res.error;
-      delete routeCache[id];
-      await loadRemote();say("Wieczorynka usunięta.");
+      askDelete("ride",id);
     }
   }catch(err){say("Operacja nie powiodła się"+(err&&err.message?": "+err.message:"."))}
 });
