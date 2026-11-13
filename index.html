@@ -64,6 +64,8 @@ nav button.on{background:var(--navon);color:var(--ink);box-shadow:0 1px 3px rgba
 .sleft{text-align:left;margin-top:6px}
 .nk{display:inline-block;padding:2px 10px;margin:1px 0;border-radius:999px;font-size:16px;font-weight:700;line-height:1.4;letter-spacing:-.01em;background:var(--fill);color:var(--ink);white-space:nowrap;vertical-align:baseline}
 .nk.nobg{padding:2px 1px}
+.nk.live{box-shadow:0 0 0 2px #19e35a}
+.nk.nobg.live{padding:2px 8px}
 .nks{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .crow small{color:var(--mut);font-size:13px}
 .crow label{display:flex;align-items:center;gap:6px;margin:0;font-size:14px;color:var(--mut)}
@@ -71,7 +73,7 @@ nav button.on{background:var(--navon);color:var(--ink);box-shadow:0 1px 3px rgba
 .cprev{display:flex;flex-direction:column;gap:8px;margin-top:8px}.cprev div{display:flex;flex-wrap:wrap;gap:6px;align-items:center;border-radius:10px;padding:10px;border:1px solid var(--line)}
 .crow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font-size:16px}
 .crow input[type=color]{width:56px;height:36px;padding:2px;border-radius:9px;cursor:pointer}
-.onl{border:0;background:var(--acc2);color:var(--acc);border-radius:999px;padding:6px 12px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap}
+.onl{background:var(--acc2);color:var(--acc);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:700;white-space:nowrap}
 .sheetbox .stats{grid-template-columns:1fr 1fr}.sheetbox .st b{font-size:24px}.sheetbox .st span{font-size:14px}
 .sdanger{display:block;margin:16px auto 0;padding:8px;border:0;background:none;color:var(--bad);font:inherit;font-size:15px;cursor:pointer;text-decoration:underline}
 .sheetbox ul{margin:6px 0 0;padding-left:20px;font-size:15px}
@@ -165,8 +167,7 @@ details.card>summary{font-size:16px}
 <!-- ===== START ===== -->
 <section id="p0">
  <div class="card">
-  <div class="row between" style="margin-bottom:10px"><h2 style="margin:0">Kto chce jechać?</h2><button class="onl hide" id="onlbtn" title="Kto ma teraz otwartą aplikację"></button></div>
-  <div id="onllist" class="hide" style="margin:-4px 0 10px"></div>
+  <div class="row between" style="margin-bottom:10px"><h2 style="margin:0">Kto chce jechać?</h2><span class="onl hide" id="onlbtn" title="Tyle osób ma teraz otwartą aplikację — ich nicki mają zieloną obwódkę"></span></div>
   <div id="wantguest" class="note">Zaloguj się, aby zobaczyć chętnych i zgłosić ochotę na przejażdżkę.</div>
   <div id="wantmain" class="hide">
    <button class="roundbtn" id="wantbtn"><span class="ri">🚴</span><span>Mam ochotę<br>pojeździć</span></button>
@@ -501,8 +502,8 @@ const HEX_RE=/^#[0-9a-fA-F]{6}$/;
 const colorOf=id=>{const g=genders[id];return g&&HEX_RE.test(nickColors[g]||"")?nickColors[g]:""};
 // nick jako kolorowy HTML (tekst zawsze przez esc)
 // nick jako „pigułka”: kolor tekstu i tło zależne od płci (ustawia admin); bez płci — szara
-const pill=(t,c,bg)=>'<span class="nk'+(c&&bg==="none"?' nobg':'')+'"'+(c?' style="color:'+c+';background:'+(bg==="none"?"transparent":bg)+'"':'')+'>'+esc(t)+'</span>';
-const nk=(id,fallback)=>{const c=colorOf(id),g=genders[id];return pill(nicks[id]||fallback||"ktoś",c,c?nickBgs[g]:"")};
+const pill=(t,c,bg,live)=>'<span class="nk'+(c&&bg==="none"?' nobg':'')+(live?' live" title="teraz w aplikacji':'')+'"'+(c?' style="color:'+c+';background:'+(bg==="none"?"transparent":bg)+'"':'')+'>'+esc(t)+'</span>';
+const nk=(id,fallback)=>{const c=colorOf(id),g=genders[id];return pill(nicks[id]||fallback||"ktoś",c,c?nickBgs[g]:"",onlineIds.includes(id))};
 const nkList=ids=>'<div class="nks">'+ids.map(id=>nk(id)).join("")+'</div>';
 const needProfile=()=>!!session&&(!me.nick||(genderOk&&!genders[uid]));
 const isUpcoming=r=>new Date(r.when).getTime()>=Date.now()-3*36e5;
@@ -1020,31 +1021,31 @@ $("ladd").onclick=async()=>{
 };
 
 /* ---------- online (Supabase Realtime Presence, bez zmian w bazie) ---------- */
-let presCh=null,presUid="",onlineIds=[],onlOpen=false;
+let presCh=null,presUid="",onlineIds=[];
 function startPresence(){
   if(!sb||!session||typeof sb.channel!=="function")return;
   if(presCh&&presUid===uid)return;
   stopPresence();presUid=uid;
   try{
     presCh=sb.channel("online",{config:{presence:{key:uid}}});
-    presCh.on("presence",{event:"sync"},()=>{onlineIds=Object.keys(presCh.presenceState()||{});renderOnline()})
+    presCh.on("presence",{event:"sync"},()=>{
+      const ids=Object.keys(presCh.presenceState()||{}).sort();
+      if(ids.join()===onlineIds.join())return;
+      onlineIds=ids;renderOnline();renderWants();renderNext();renderCard();renderLibUi();
+    })
       .subscribe(async st=>{if(st==="SUBSCRIBED"){try{await presCh.track({t:Date.now()})}catch(e){}}});
   }catch(e){presCh=null}
 }
 function stopPresence(){
   if(presCh){try{sb.removeChannel(presCh)}catch(e){}}
-  presCh=null;presUid="";onlineIds=[];onlOpen=false;renderOnline();
+  presCh=null;presUid="";onlineIds=[];renderOnline();
 }
 function renderOnline(){
-  const b=$("onlbtn"),l=$("onllist");if(!b)return;
+  const b=$("onlbtn");if(!b)return;
   const show=!!session&&onlineIds.length>0;
   b.classList.toggle("hide",!show);
-  if(!show){l.classList.add("hide");return}
-  b.textContent="🟢 "+onlineIds.length+" online";
-  l.classList.toggle("hide",!onlOpen);
-  if(onlOpen)l.innerHTML=nkList(onlineIds.slice().sort((a,c)=>(nicks[a]||"~").localeCompare(nicks[c]||"~","pl")));
+  if(show)b.textContent="🟢 "+onlineIds.length+" online";
 }
-$("onlbtn").onclick=()=>{onlOpen=!onlOpen;renderOnline()};
 
 /* ---------- statystyki dla administratora ---------- */
 let statsData=null,statsErr="",seenAt=0,seenFor="";
