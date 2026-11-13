@@ -4,30 +4,27 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Wieczorynki rowerowe</title>
-<meta name="description" content="Wspólne wieczorne przejazdy rowerowe: kto chce jechać, trasa na mapie, prognoza wiatru, zapisy.">
+<meta name="description" content="Wspólne wieczorne przejazdy rowerowe: trasa na mapie, prognoza wiatru, zapisy.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="🚲 Wieczorynki rowerowe">
-<meta property="og:description" content="Dołącz do wspólnych przejazdów: kto chce jechać, trasa na mapie, prognoza wiatru, zapisy.">
+<meta property="og:description" content="Dołącz do wspólnych przejazdów: trasa na mapie, prognoza wiatru, zapisy.">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 <style>
-:root{--bg:#f6f4ef;--card:#fff;--ink:#1d2a24;--mut:#6a766f;--line:#e2ded3;--acc:#1f7a4d;--acc2:#e8f3ec;--bad:#d64545;--good:#2a9d5c;--warn:#fff4d6}
-@media (prefers-color-scheme:dark){:root{--bg:#121815;--card:#1b241f;--ink:#e8efe9;--mut:#93a39a;--line:#2b3830;--acc:#47c183;--acc2:#1f3328;--bad:#ef6b6b;--good:#4cc985;--warn:#3a321a}}
+:root{--bg:#f6f4ef;--card:#fff;--ink:#1d2a24;--mut:#6a766f;--line:#e2ded3;--acc:#1f7a4d;--acc2:#e8f3ec;--bad:#d64545;--good:#2a9d5c}
+@media (prefers-color-scheme:dark){:root{--bg:#121815;--card:#1b241f;--ink:#e8efe9;--mut:#93a39a;--line:#2b3830;--acc:#47c183;--acc2:#1f3328;--bad:#ef6b6b;--good:#4cc985}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-.wrap{max-width:900px;margin:0 auto;padding:16px}
-h1{font-size:22px;margin:4px 0}h2{font-size:17px;margin:0 0 8px}h3{font-size:14px;margin:14px 0 6px;color:var(--mut)}
+.wrap{max-width:960px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:4px 0 12px}h2{font-size:17px;margin:0 0 8px}h3{font-size:14px;margin:12px 0 6px;color:var(--mut)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
-.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 nav{display:flex;gap:6px;margin-bottom:14px}
-nav button{flex:1;padding:10px 4px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;font:inherit;font-weight:600;cursor:pointer}
+nav button{flex:1;padding:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;font:inherit;font-weight:600;cursor:pointer}
 nav button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:700px){.grid{grid-template-columns:1fr}}
 label{display:block;font-size:12px;color:var(--mut);margin:8px 0 3px}
 input,select,textarea{width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:16px}
 button.b,a.b{display:inline-block;padding:9px 14px;border:0;border-radius:9px;background:var(--acc);color:#fff;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;line-height:1.25}
-button.small{padding:5px 10px;font-size:13px}
-button.big{width:100%;padding:16px;font-size:18px;border-radius:12px}
 .g{background:var(--acc2)!important;color:var(--acc)!important}
 button:disabled{opacity:.4;cursor:default}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
@@ -36,7 +33,6 @@ button:disabled{opacity:.4;cursor:default}
 .note{font-size:12px;color:var(--mut)}
 .hide{display:none!important}
 .notice{background:var(--acc2);border-radius:10px;padding:8px 12px;margin:10px 0}
-.changed{background:var(--warn);border-left:4px solid #e0b83a;border-radius:8px;padding:8px 12px;margin:8px 0}
 .meta{color:var(--mut);font-size:13px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:10px}
 .st{background:var(--acc2);border-radius:10px;padding:8px 10px}.st b{display:block;font-size:18px}.st span{font-size:12px;color:var(--mut)}
@@ -51,67 +47,27 @@ summary{cursor:pointer;font-weight:600}
 details.card>summary{font-size:16px}
 .item{padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;cursor:pointer}
 .item.cur{border-color:var(--acc);background:var(--acc2)}
-.want,.lib{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:10px}
-.want.mine{border-color:var(--acc);background:var(--acc2)}
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 4px}
-.chip{padding:8px 14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;font:inherit;cursor:pointer}
-.chip.on{background:var(--acc);color:#fff;border-color:var(--acc)}
 .sharebox{margin-top:10px;padding:10px;border-radius:10px;background:var(--acc2)}
-.routeinfo{margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);max-width:90vw;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:3000;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+.msg{min-height:18px;margin:4px 0}
 .leaflet-container{z-index:0}
 </style>
 </head>
 <body>
 <div class="wrap">
-
-<div class="top">
- <h1>🚲 Wieczorynki rowerowe</h1>
- <div id="chip"></div>
-</div>
+<h1>🚲 Wieczorynki rowerowe</h1>
 
 <div class="card" id="authbox">
- <div class="grid"><div><label>E-mail</label><input id="ae" type="email" autocomplete="email"></div>
- <div><label>Hasło (min. 6 znaków)</label><input id="ap" type="password" autocomplete="current-password"></div></div>
- <div class="row" style="margin-top:8px"><button class="b" id="login">Zaloguj</button><button class="b g" id="signup">Załóż konto</button><span class="note" id="ainfo"></span></div>
+ <div id="authout">
+  <div class="grid"><div><label>E-mail</label><input id="ae" type="email" autocomplete="email"></div>
+  <div><label>Hasło (min. 6 znaków)</label><input id="ap" type="password" autocomplete="current-password"></div></div>
+  <div class="row" style="margin-top:8px"><button class="b" id="login">Zaloguj</button><button class="b g" id="signup">Załóż konto</button><span class="note" id="ainfo"></span></div>
+ </div>
+ <div id="authin" class="hide row"><span id="who"></span><button class="b g" id="logout">Wyloguj</button></div>
 </div>
 
-<div class="card hide" id="nickbox">
- <h2>Wybierz swój nick</h2>
- <p class="note" style="margin-top:0">Nick widzą inni zalogowani użytkownicy przy zapisach i zgłoszeniach. Musi być unikalny (2–20 znaków: litery, cyfry, spacja, kropka, _ lub -).</p>
- <div class="row"><input id="nickin" maxlength="20" style="max-width:260px" placeholder="np. GAWRON"><button class="b" id="nicksave">Zapisz nick</button><button class="b g hide" id="nickcancel">Anuluj</button></div>
- <div class="note" id="nickinfo" style="margin-top:6px"></div>
-</div>
+<nav><button id="t1" class="on">Wieczorynki</button><button id="t2">Zaawansowane</button></nav>
 
-<nav><button id="t0" class="on">Start</button><button id="t1">Wieczorynki</button><button id="t2">Zaawansowane</button></nav>
-
-<!-- ===== START ===== -->
-<section id="p0">
- <div class="card">
-  <h2>Kto chce jechać?</h2>
-  <div id="wantguest" class="note">Zaloguj się, aby zobaczyć chętnych i zgłosić ochotę na przejażdżkę.</div>
-  <div id="wantmain" class="hide">
-   <button class="b big" id="wantbtn">🚴 Mam ochotę pojeździć</button>
-   <div id="wantform" class="hide">
-    <div class="chips" id="wchips"><button class="chip on" data-d="0">Dziś</button><button class="chip" data-d="1">Jutro</button><button class="chip" data-d="2">Pojutrze</button><button class="chip" data-d="x">Inny dzień</button></div>
-    <div class="grid">
-     <div><label>Godzina</label><input type="time" id="wtm" value="19:00"></div>
-     <div id="wdwrap" class="hide"><label>Data</label><input type="date" id="wdt"></div>
-    </div>
-    <label>Notatka (opcjonalnie)</label><input id="wnote" maxlength="200" placeholder="np. szybka pętla nad Wisłą">
-    <div class="row" style="margin-top:10px"><button class="b" id="wsave">Zgłoś</button><button class="b g" id="wcancel">Anuluj</button></div>
-   </div>
-   <div id="wantlist"></div>
-  </div>
- </div>
- <div class="card">
-  <h2>Najbliższa wieczorynka</h2>
-  <div id="nextbody"></div>
- </div>
-</section>
-
-<!-- ===== WIECZORYNKI ===== -->
-<section id="p1" class="hide">
+<section id="p1">
  <div class="card" id="view">
   <div class="row between">
    <button class="b g" id="prev">← Wcześniejsza</button>
@@ -120,46 +76,37 @@ details.card>summary{font-size:16px}
   </div>
   <div class="notice hide" id="notice"></div>
   <div class="center" style="margin-top:8px"><button class="b g hide" id="nearest">Wróć do najbliższej</button></div>
+  <div class="msg note" id="msg"></div>
   <div id="ridecard"></div>
   <div class="mapwrap hide" id="mapwrap1">
    <div class="map" id="map1"></div>
    <div class="warrow hide" id="warrow1"></div>
    <div class="legend"><span><i class="dot" style="background:#d64545"></i>pod wiatr</span><span><i class="dot" style="background:#e0b83a"></i>bocznie</span><span><i class="dot" style="background:#2a9d5c"></i>z wiatrem</span></div>
   </div>
-  <div class="routeinfo hide" id="routeinfo1"></div>
   <div class="stats" id="stats1"></div>
   <div class="note" id="windinfo1" style="margin-top:8px"></div>
   <div class="tip hide" id="tip1"></div>
  </div>
 
  <details class="card" id="newbox">
-  <summary id="formsum">➕ Nowa wieczorynka</summary>
-  <div class="changed hide" id="editnote" style="margin-top:10px"></div>
+  <summary>➕ Nowa wieczorynka</summary>
   <div class="grid" style="margin-top:8px">
    <div><label>Nazwa</label><input id="rt" maxlength="80" placeholder="np. Wieczorynki nad Wisłą"></div>
    <div><label>Kiedy</label><input id="rw" type="datetime-local"></div>
    <div><label>Miejsce zbiórki</label><input id="rp" maxlength="120" placeholder="np. Pole Mokotowskie, przy fontannie"></div>
    <div><label>Tempo</label><select id="rk"><option>Spokojne (~18 km/h)</option><option selected>Średnie (~24 km/h)</option><option>Szybkie (28+ km/h)</option></select></div>
-  </div>
-  <label>Opis</label><input id="ro" maxlength="300" placeholder="Światła, kask, lody na końcu…">
-  <h3>Trasa</h3>
-  <div class="grid">
-   <div><label>Wgraj nowy plik GPX</label><input type="file" id="rf" accept=".gpx,application/gpx+xml,text/xml"></div>
-   <div><label>…albo wybierz z biblioteki tras</label><select id="rlib"></select></div>
-  </div>
-  <div class="grid hide" id="rnew">
-   <div><label>Nazwa trasy (min. 3 znaki)</label><input id="rnt" maxlength="80" placeholder="np. Pętla Wilanów–Konstancin"></div>
-   <div><label>Opis trasy (obowiązkowy, min. 10 znaków)</label><textarea id="rnd" rows="2" maxlength="600" placeholder="nawierzchnia, ruch, widoki, miejsca na postój"></textarea></div>
+   <div><label>Twoje imię</label><input id="rn" maxlength="40" placeholder="Kto organizuje"></div>
+   <div><label>Opis</label><input id="ro" maxlength="300" placeholder="Światła, kask, lody na końcu…"></div>
+   <div><label>Trasa: wgraj plik GPX</label><input type="file" id="rf" accept=".gpx,application/gpx+xml,text/xml"></div>
+   <div><label>…albo użyj trasy z poprzednich wieczorynek</label><select id="rprev"></select></div>
   </div>
   <div class="note" id="rrinfo" style="margin-top:6px"></div>
-  <div class="hide" id="chgwrap"><label>Komentarz do zmiany (widoczny dla uczestników, opcjonalnie)</label><input id="rchg" maxlength="150" placeholder="np. przesuwamy o godzinę"></div>
-  <div class="row" style="margin-top:10px"><button class="b" id="add">Opublikuj wieczorynkę</button><button class="b g hide" id="canceledit">Anuluj edycję</button><span class="note" id="rinfo"></span></div>
+  <div class="row" style="margin-top:10px"><button class="b" id="add">Opublikuj wieczorynkę</button><span class="note" id="rinfo"></span></div>
  </details>
 
  <div class="card"><h2>Wszystkie wieczorynki</h2><div id="list"></div></div>
 </section>
 
-<!-- ===== ZAAWANSOWANE ===== -->
 <section id="p2" class="hide">
  <div class="card">
   <h2>Analiza trasy GPX</h2>
@@ -174,43 +121,22 @@ details.card>summary{font-size:16px}
     <div><label>Twoje tempo bez wiatru (km/h)</label><input type="number" id="bs" value="24" min="8" max="45"></div>
    </div>
   </details>
-  <div class="mapwrap hide" id="mapwrap2" style="margin-top:14px">
+ </div>
+ <div class="card">
+  <div class="mapwrap hide" id="mapwrap2">
    <div class="map" id="map2"></div>
    <div class="warrow hide" id="warrow2"></div>
    <div class="legend"><span><i class="dot" style="background:#d64545"></i>pod wiatr</span><span><i class="dot" style="background:#e0b83a"></i>bocznie</span><span><i class="dot" style="background:#2a9d5c"></i>z wiatrem</span></div>
   </div>
-  <div class="note" id="empty2" style="margin-top:10px">Wgraj plik GPX albo wybierz trasę z biblioteki, żeby zobaczyć ją na mapie.</div>
+  <div class="note" id="empty2">Wgraj plik GPX, żeby zobaczyć trasę.</div>
   <div class="stats" id="stats2"></div>
   <div class="tip hide" id="tip2"></div>
  </div>
-
- <details class="card hide" id="libbox">
-  <summary>📚 Biblioteka tras</summary>
-  <div id="liblist"></div>
-  <h3>Dodaj trasę do biblioteki</h3>
-  <div class="grid">
-   <div><label>Plik GPX</label><input type="file" id="lf" accept=".gpx,application/gpx+xml,text/xml"></div>
-   <div><label>Nazwa trasy (min. 3 znaki)</label><input id="lt" maxlength="80"></div>
-  </div>
-  <label>Opis trasy (obowiązkowy, min. 10 znaków): nawierzchnia, ruch, widoki, miejsca na postój</label>
-  <textarea id="ld" rows="3" maxlength="600"></textarea>
-  <div class="row" style="margin-top:8px"><button class="b" id="ladd">Dodaj do biblioteki</button><span class="note" id="linfo"></span></div>
- </details>
-
- <details class="card hide" id="adminbox">
-  <summary>🛡️ Administracja</summary>
-  <h3>Administratorzy</h3>
-  <div id="adminlist"></div>
-  <label>Nadaj uprawnienia administratora</label>
-  <div class="row"><select id="adminsel" style="max-width:260px"></select><button class="b" id="adminadd">Nadaj</button></div>
-  <p class="note">Administrator może edytować i usuwać każdą wieczorynkę, zgłoszenie i trasę oraz zarządzać administratorami.</p>
- </details>
 </section>
 
 <p class="note" id="dbnote"></p>
 <p class="note">Mapa © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · prognoza wiatru: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a></p>
 </div>
-<div class="toast hide" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
@@ -226,16 +152,10 @@ function dist(a,b){const dl=rad(b.lat-a.lat),dn=rad(b.lon-a.lon);const h=Math.si
 function brg(a,b){const y=Math.sin(rad(b.lon-a.lon))*Math.cos(rad(b.lat));const x=Math.cos(rad(a.lat))*Math.sin(rad(b.lat))-Math.sin(rad(a.lat))*Math.cos(rad(b.lat))*Math.cos(rad(b.lon-a.lon));return (Math.atan2(y,x)*180/Math.PI+360)%360}
 function localIso(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"T"+pad(d.getHours())+":"+pad(d.getMinutes())}
 function fmtWhen(s){try{return new Date(s).toLocaleString("pl-PL",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}catch(e){return s}}
-const startOfDay=d=>{const x=new Date(d);x.setHours(0,0,0,0);return x};
-const dayDiff=d=>Math.round((startOfDay(d)-startOfDay(new Date()))/864e5);
-const hhmm=d=>pad(d.getHours())+":"+pad(d.getMinutes());
-function relDay(d){const n=dayDiff(d);return n===0?"Dziś":n===1?"Jutro":n===2?"Pojutrze":d.toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"})}
-function relWhen(s){const d=new Date(s);return relDay(d)+" o "+hhmm(d)}
 function slug(s){return String(s||"trasa").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/ł/g,"l").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"trasa"}
-function say(t){const m=$("toast");m.textContent=t;m.classList.remove("hide");clearTimeout(say.t);say.t=setTimeout(()=>m.classList.add("hide"),6000)}
+function say(t){const m=$("msg");m.textContent=t;clearTimeout(say.t);say.t=setTimeout(()=>{m.textContent=""},7000)}
 function routeKm(p){let s=0;for(let i=1;i<p.length;i++)s+=dist(p[i-1],p[i]);return s}
 function paceKmh(p){const m=/(\d+)/.exec(p||"");return m?+m[1]:24}
-const NICK_RE=/^[A-Za-z0-9ĄąĆćĘęŁłŃńÓóŚśŹźŻż ._-]{2,20}$/;
 
 /* ---------- GPX ---------- */
 function parseGpx(txt){
@@ -246,10 +166,6 @@ function parseGpx(txt){
   return n.map(e=>({lat:+e.getAttribute("lat"),lon:+e.getAttribute("lon"),ele:+((e.getElementsByTagName("ele")[0]||{}).textContent||0)})).filter(p=>isFinite(p.lat)&&isFinite(p.lon));
 }
 function thin(a,max){if(a.length<=max)return a;const s=(a.length-1)/(max-1);return Array.from({length:max},(_,i)=>a[Math.round(i*s)])}
-const routeJson=pts=>JSON.stringify(thin(pts,300).map(p=>[+p.lat.toFixed(5),+p.lon.toFixed(5),Math.round(p.ele||0)]));
-function parseRoute(str){
-  try{const p=JSON.parse(str).map(a=>({lat:+a[0],lon:+a[1],ele:+a[2]||0})).filter(p=>isFinite(p.lat)&&isFinite(p.lon));return p.length>=2?p:false}catch(e){return false}
-}
 function makeGpx(a,name){
   const x=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
   return '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Wieczorynki rowerowe" xmlns="http://www.topografix.com/GPX/1/1">\n<trk><name>'+x(name||"Trasa")+'</name><trkseg>\n'+a.map(p=>'<trkpt lat="'+p.lat.toFixed(6)+'" lon="'+p.lon.toFixed(6)+'"><ele>'+Math.round(p.ele||0)+'</ele></trkpt>').join("\n")+'\n</trkseg></trk>\n</gpx>\n';
@@ -264,7 +180,7 @@ function saveFile(data,filename,type){
   }catch(e){return false}
 }
 
-/* ---------- Google Calendar / udostępnianie ---------- */
+/* ---------- Google Calendar / share ---------- */
 function gcalUrl(r){
   const f=d=>d.toISOString().replace(/[-:]|\.\d{3}/g,"");
   const st=new Date(r.when),en=new Date(st.getTime()+2*36e5);
@@ -357,157 +273,26 @@ function setArrow(id,wf,ws){
 }
 
 /* ---------- stan ---------- */
-let sb=null,session=null,uid="",ready=false;
-let me={nick:null},isAdmin=false,adminIds=[],nickEdit=false;
-let nicks={},sorted=[],cur=-1,rsvps={},wants=[],joins={},lib=[];
-let viewToken=0,shareFor=null,map1=null,map2=null;
-let editId=null,formRoute,wantDay="0",libFile=null;
-const routeCache={},libCache={};
+let sb=null,session=null,uid="";
+let sorted=[],cur=-1,rsvps={},viewToken=0,shareFor=null,map1=null,map2=null,formRoute=null;
+const routeCache={};
 
-const nickOf=id=>nicks[id]||"ktoś";
 const isUpcoming=r=>new Date(r.when).getTime()>=Date.now()-3*36e5;
 const firstUpcoming=()=>sorted.findIndex(isUpcoming);
 function pickDefault(){const f=firstUpcoming();return f>=0?f:sorted.length-1}
-const canEdit=r=>!!session&&(r.creator===uid||isAdmin);
-function changedHtml(r){
-  if(!r.edited_at)return "";
-  return '<div class="changed">⚠️ Wydarzenie zostało zmienione ('+esc(fmtWhen(r.edited_at))+'). '+esc(r.change_note||"")+'</div>';
-}
 
 async function getRoute(id){
   if(id in routeCache)return routeCache[id];
   const r=await sb.from("rides").select("route").eq("id",id).single();
   if(r.error)throw r.error;
-  const pts=r.data&&r.data.route?parseRoute(r.data.route):false;
+  let pts=false;
+  if(r.data&&r.data.route){
+    try{pts=JSON.parse(r.data.route).map(a=>({lat:+a[0],lon:+a[1],ele:+a[2]||0})).filter(p=>isFinite(p.lat)&&isFinite(p.lon));if(pts.length<2)pts=false}catch(e){pts=false}
+  }
   routeCache[id]=pts;return pts;
 }
-async function getLibRoute(id){
-  if(id in libCache)return libCache[id];
-  const r=await sb.from("routes").select("route").eq("id",id).single();
-  if(r.error)throw r.error;
-  const pts=r.data&&r.data.route?parseRoute(r.data.route):false;
-  libCache[id]=pts;return pts;
-}
 
-/* ---------- góra strony: konto i nick ---------- */
-function renderChrome(){
-  $("authbox").classList.toggle("hide",!!session);
-  const needNick=!!session&&(!me.nick||nickEdit);
-  $("nickbox").classList.toggle("hide",!needNick);
-  $("nickcancel").classList.toggle("hide",!me.nick);
-  $("chip").innerHTML=session?'<span>👤 <b>'+esc(me.nick||"ustaw nick")+'</b>'+(isAdmin?' 🛡️':'')+'</span> <button class="b g small" data-c="nick">zmień nick</button> <button class="b g small" data-c="out">Wyloguj</button>':'';
-}
-$("chip").addEventListener("click",e=>{
-  const b=e.target.closest("button[data-c]");if(!b)return;
-  if(b.dataset.c==="out"){if(sb)sb.auth.signOut()}
-  else{nickEdit=true;$("nickin").value=me.nick||"";$("nickinfo").textContent="";renderChrome()}
-});
-$("nickcancel").onclick=()=>{nickEdit=false;renderChrome()};
-$("nicksave").onclick=async()=>{
-  const n=$("nickin").value.trim(),inf=$("nickinfo");
-  if(!NICK_RE.test(n)){inf.textContent="Nick: 2–20 znaków — litery, cyfry, spacja, kropka, _ lub -.";return}
-  try{
-    const res=me.nick?await sb.from("profiles").update({nick:n}).eq("user_id",uid):await sb.from("profiles").insert({user_id:uid,nick:n});
-    if(res.error){inf.textContent=res.error.code==="23505"?"Ten nick jest już zajęty — wybierz inny.":"Nie udało się zapisać: "+res.error.message;return}
-    nickEdit=false;inf.textContent="";
-    await loadRemote();say("Nick zapisany ✔");
-  }catch(e){inf.textContent="Nie udało się zapisać nicku."}
-};
-
-/* ---------- START: chętni ---------- */
-function renderWants(){
-  const guest=!session;
-  $("wantguest").classList.toggle("hide",!guest);
-  $("wantmain").classList.toggle("hide",guest);
-  if(guest)return;
-  const list=wants.filter(w=>new Date(w.starts_at).getTime()>=Date.now()-3*36e5);
-  const box=$("wantlist");
-  if(!list.length){box.innerHTML='<div class="note" style="margin-top:12px">Nikt jeszcze nie zgłosił ochoty. Bądź pierwszy!</div>';return}
-  box.innerHTML=list.map(w=>{
-    const j=joins[w.id]||[],mine=w.user_id===uid,joined=j.includes(uid),others=j.filter(x=>x!==w.user_id);
-    return '<div class="want'+(mine?' mine':'')+'"><div><b>'+esc(nickOf(w.user_id))+'</b> · '+esc(relWhen(w.starts_at))+(mine?' <span class="note">(Twoje zgłoszenie)</span>':'')+'</div>'
-     +(w.note?'<div>'+esc(w.note)+'</div>':'')
-     +'<div class="meta">'+(others.length?'Dołączyli ('+others.length+'): <b>'+esc(others.map(nickOf).join(", "))+'</b>':(mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.'))+'</div>'
-     +'<div class="row" style="margin-top:8px">'
-     +(mine?'':'<button class="b'+(joined?' g':'')+'" data-w="join" data-id="'+esc(w.id)+'">'+(joined?'Rezygnuję':'Ja też!')+'</button>')
-     +((mine||isAdmin)?'<button class="b g" data-w="del" data-id="'+esc(w.id)+'">Usuń</button>':'')
-     +'</div></div>';
-  }).join("");
-}
-$("wantbtn").onclick=()=>{
-  if(!me.nick){say("Najpierw ustaw swój nick.");return}
-  $("wantform").classList.toggle("hide");
-};
-$("wcancel").onclick=()=>$("wantform").classList.add("hide");
-$("wchips").addEventListener("click",e=>{
-  const c=e.target.closest(".chip");if(!c)return;
-  wantDay=c.dataset.d;
-  [...$("wchips").children].forEach(x=>x.classList.toggle("on",x===c));
-  $("wdwrap").classList.toggle("hide",wantDay!=="x");
-});
-$("wsave").onclick=async()=>{
-  if(!session||!me.nick){say("Najpierw zaloguj się i ustaw nick.");return}
-  const [hh,mm]=($("wtm").value||"19:00").split(":").map(Number);
-  let d;
-  if(wantDay==="x"){
-    if(!$("wdt").value){say("Wybierz datę.");return}
-    const [y,mo,da]=$("wdt").value.split("-").map(Number);d=new Date(y,mo-1,da,hh,mm);
-  }else{d=new Date();d.setDate(d.getDate()+(+wantDay));d.setHours(hh,mm,0,0)}
-  if(d.getTime()<Date.now()-5*60000){say("Ten termin już minął.");return}
-  try{
-    const res=await sb.from("wants").insert({starts_at:d.toISOString(),note:$("wnote").value.trim()||null});
-    if(res.error)throw res.error;
-    $("wnote").value="";$("wantform").classList.add("hide");
-    await loadRemote();say("Zgłoszono ✔ — inni zalogowani zobaczą Twoją ochotę.");
-  }catch(e){say("Nie udało się zgłosić: "+(e&&e.message?e.message:"błąd"))}
-};
-$("wantlist").addEventListener("click",async e=>{
-  const b=e.target.closest("button[data-w]");if(!b)return;
-  const id=b.dataset.id;
-  try{
-    if(b.dataset.w==="join"){
-      if(!me.nick){say("Najpierw ustaw swój nick.");return}
-      const joined=(joins[id]||[]).includes(uid);
-      const res=joined?await sb.from("want_joins").delete().eq("want_id",id).eq("user_id",uid):await sb.from("want_joins").insert({want_id:id});
-      if(res.error)throw res.error;
-    }else{
-      if(!confirm("Usunąć to zgłoszenie?"))return;
-      const res=await sb.from("wants").delete().eq("id",id);
-      if(res.error)throw res.error;
-    }
-    await loadRemote();
-  }catch(err){say("Operacja nie powiodła się"+(err&&err.message?": "+err.message:"."))}
-});
-
-/* ---------- START: najbliższa wieczorynka ---------- */
-function renderNext(){
-  const box=$("nextbody"),fu=firstUpcoming();
-  if(fu<0){box.innerHTML='<div class="note">Brak zaplanowanych wieczorynek.</div><div style="margin-top:8px"><button class="b g" data-go="new">➕ Zaplanuj wieczorynkę</button></div>';return}
-  const r=sorted[fu],g=rsvps[r.id]||[],goes=!!session&&g.includes(uid);
-  box.innerHTML='<div style="font-size:18px;font-weight:700">'+esc(r.title)+'</div>'
-   +'<div class="meta">🕖 '+esc(relWhen(r.when))+' · 📍 '+esc(r.place||"miejsce do ustalenia")+' · '+esc(r.pace||"")+'</div>'
-   +changedHtml(r)
-   +'<div class="meta">Jedzie: <b>'+g.length+'</b>'+(session&&g.length?' — '+esc(g.map(nickOf).join(", ")):'')+'</div>'
-   +'<div class="row" style="margin-top:10px"><button class="b'+(goes?' g':'')+'" data-go="join" data-id="'+esc(r.id)+'">'+(goes?'Rezygnuję':'Jadę!')+'</button><button class="b g" data-go="ride" data-i="'+fu+'">Szczegóły i mapa →</button></div>';
-}
-$("nextbody").addEventListener("click",async e=>{
-  const b=e.target.closest("button[data-go]");if(!b)return;
-  try{
-    if(b.dataset.go==="join")await toggleRsvp(b.dataset.id);
-    else if(b.dataset.go==="ride"){show(1);showRide(+b.dataset.i)}
-    else if(b.dataset.go==="new"){show(1);$("newbox").open=true;$("newbox").scrollIntoView({behavior:"smooth"})}
-  }catch(err){say("Operacja nie powiodła się"+(err&&err.message?": "+err.message:"."))}
-});
-async function toggleRsvp(id){
-  if(!session){say("Zaloguj się, aby dołączyć.");return}
-  if(!me.nick){say("Najpierw ustaw swój nick.");return}
-  const mine=(rsvps[id]||[]).includes(uid);
-  const res=mine?await sb.from("rsvps").delete().eq("ride_id",id).eq("user_id",uid):await sb.from("rsvps").insert({ride_id:id});
-  if(res.error)throw res.error;
-  await loadRemote();
-}
-
-/* ---------- WIECZORYNKI: widok ---------- */
+/* ---------- widok wieczorynki ---------- */
 function renderNav(){
   const n=sorted.length;
   $("prev").disabled=!(cur>0);
@@ -527,18 +312,17 @@ function renderNav(){
 function renderCard(){
   const box=$("ridecard"),r=sorted[cur];
   if(!r){box.innerHTML='<div class="notice">Brak zaplanowanych wieczorynek. '+(session?'Dodaj pierwszą w sekcji „➕ Nowa wieczorynka”.':'Zaloguj się, aby dodać pierwszą.')+'</div>';return}
-  const g=rsvps[r.id]||[],goes=!!session&&g.includes(uid);
+  const g=rsvps[r.id]||[],me=!!session&&g.includes(uid);
   let h='<h2 style="margin-top:10px">'+esc(r.title)+'</h2>'
    +'<div class="meta">🕖 '+esc(fmtWhen(r.when))+' · 📍 '+esc(r.place||"miejsce do ustalenia")+' · '+esc(r.pace||"")+'</div>'
-   +changedHtml(r)
    +(r.note?'<div>'+esc(r.note)+'</div>':'')
-   +'<div class="meta">Organizuje: '+esc(nicks[r.creator]||r.owner||"?")+' · jedzie: <b>'+g.length+'</b>'+(session&&g.length?' — '+esc(g.map(nickOf).join(", ")):'')+'</div>'
+   +'<div class="meta">Organizuje: '+esc(r.owner||"?")+' · jedzie: <b>'+g.length+'</b></div>'
    +'<div class="row" style="margin-top:10px">'
-   +'<button class="b'+(goes?' g':'')+'" data-act="join" data-id="'+esc(r.id)+'">'+(goes?'Rezygnuję':'Jadę!')+'</button>'
+   +'<button class="b'+(me?' g':'')+'" data-act="join" data-id="'+esc(r.id)+'">'+(me?'Rezygnuję':'Jadę!')+'</button>'
    +'<a class="b g" target="_blank" rel="noopener" href="'+esc(gcalUrl(r))+'">📅 Google Kalendarz</a>'
    +'<button class="b g" data-act="share" data-id="'+esc(r.id)+'">📤 Udostępnij</button>'
    +(routeCache[r.id]?'<button class="b g" data-act="gpx" data-id="'+esc(r.id)+'">⬇ GPX</button>':'')
-   +(canEdit(r)?'<button class="b g" data-act="edit" data-id="'+esc(r.id)+'">✏️ Edytuj</button><button class="b g" data-act="del" data-id="'+esc(r.id)+'">Usuń</button>':'')
+   +(session&&r.creator===uid?'<button class="b g" data-act="del" data-id="'+esc(r.id)+'">Usuń</button>':'')
    +'</div>';
   if(shareFor===r.id){
     const u=shareUrl(r),t=shareText(r);
@@ -554,7 +338,7 @@ function renderList(){
   const box=$("list");
   if(!sorted.length){box.innerHTML='<div class="note">Na razie pusto.</div>';return}
   const was=box.querySelector("details"),wasOpen=was?was.open:false;
-  const item=(r,i)=>'<div class="item'+(i===cur?' cur':'')+'" data-i="'+i+'"><b>'+esc(r.title)+'</b>'+(r.edited_at?' <span title="zmieniono">⚠️</span>':'')+'<span class="note"> · '+esc(fmtWhen(r.when))+' · jedzie: '+(rsvps[r.id]||[]).length+'</span></div>';
+  const item=(r,i)=>'<div class="item'+(i===cur?' cur':'')+'" data-i="'+i+'"><b>'+esc(r.title)+'</b><span class="note"> · '+esc(fmtWhen(r.when))+' · jedzie: '+(rsvps[r.id]||[]).length+'</span></div>';
   const up=[],old=[];
   sorted.forEach((r,i)=>(isUpcoming(r)?up:old).push(item(r,i)));
   old.reverse();
@@ -562,92 +346,18 @@ function renderList(){
   box.innerHTML=(up.length?'<h3>Nadchodzące</h3>'+up.join(""):'<div class="note">Brak nadchodzących wieczorynek.</div>')
    +(old.length?'<details'+(open?' open':'')+' style="margin-top:8px"><summary>Archiwalne ('+old.length+')</summary><div style="margin-top:6px">'+old.join("")+'</div></details>':"");
 }
-
-/* ---------- biblioteka tras i administracja (UI) ---------- */
-function renderLibUi(){
-  $("libbox").classList.toggle("hide",!session);
-  $("adminbox").classList.toggle("hide",!isAdmin);
-  // lista w Zaawansowane
-  $("liblist").innerHTML=lib.length?lib.map(l=>'<div class="lib"><b>'+esc(l.title)+'</b> <span class="note">· '+(l.km!=null?Number(l.km).toFixed(1)+' km · ':'')+'autor: '+esc(nickOf(l.creator))+'</span><div>'+esc(l.description)+'</div>'
-    +'<div class="row" style="margin-top:6px"><button class="b g" data-l="show" data-id="'+esc(l.id)+'">🗺 Pokaż na mapie</button><button class="b g" data-l="gpx" data-id="'+esc(l.id)+'">⬇ GPX</button>'
-    +((l.creator===uid||isAdmin)?'<button class="b g" data-l="del" data-id="'+esc(l.id)+'">Usuń</button>':'')+'</div></div>').join(""):'<div class="note">Biblioteka jest pusta. Dodaj pierwszą trasę poniżej.</div>';
-  // lista wyboru w formularzu
-  const s=$("rlib"),v=s.value;
-  s.innerHTML='<option value="">— nie wybrano —</option>'+lib.map(l=>'<option value="'+esc(l.id)+'">'+esc(l.title)+(l.km!=null?' — '+Number(l.km).toFixed(1)+' km':'')+'</option>').join("");
+function renderPrevSelect(){
+  const s=$("rprev"),v=s.value;
+  s.innerHTML='<option value="">— brak —</option>'+sorted.slice().reverse().map(r=>'<option value="'+esc(r.id)+'">'+esc(r.title)+' — '+esc(fmtWhen(r.when))+'</option>').join("");
   s.value=v;
-  // administracja
-  if(isAdmin){
-    $("adminlist").innerHTML=adminIds.map(id=>'<div class="row" style="margin-bottom:6px"><b>'+esc(nickOf(id))+'</b>'+(id===uid?' <span class="note">(Ty)</span>':'<button class="b g small" data-a="rm" data-id="'+esc(id)+'">Odbierz uprawnienia</button>')+'</div>').join("")||'<div class="note">Brak.</div>';
-    const cand=Object.keys(nicks).filter(id=>!adminIds.includes(id));
-    $("adminsel").innerHTML=cand.length?cand.map(id=>'<option value="'+esc(id)+'">'+esc(nicks[id])+'</option>').join(""):'<option value="">(brak użytkowników z nickiem)</option>';
-  }
 }
-$("liblist").addEventListener("click",async e=>{
-  const b=e.target.closest("button[data-l]");if(!b)return;
-  const id=b.dataset.id,l=lib.find(x=>x.id===id);if(!l)return;
-  try{
-    if(b.dataset.l==="show"){
-      const pts=await getLibRoute(id);
-      if(!pts){say("Nie udało się wczytać trasy.");return}
-      advBase=thin(pts,500);advRev=false;advPts=advBase.slice();advRender(true);
-      $("awi").textContent="Wczytano trasę z biblioteki: "+l.title+".";
-      $("map2").scrollIntoView({behavior:"smooth",block:"center"});
-    }else if(b.dataset.l==="gpx"){
-      const pts=await getLibRoute(id);
-      if(!pts){say("Nie udało się wczytać trasy.");return}
-      say(saveFile(makeGpx(pts,l.title),slug(l.title)+".gpx","application/gpx+xml")?"Pobrano: "+slug(l.title)+".gpx":"Nie udało się pobrać pliku.");
-    }else{
-      if(!confirm("Usunąć trasę „"+l.title+"” z biblioteki? Wieczorynki, które jej użyły, zachowają swoją kopię trasy."))return;
-      const res=await sb.from("routes").delete().eq("id",id);
-      if(res.error)throw res.error;
-      delete libCache[id];await loadRemote();say("Trasa usunięta.");
-    }
-  }catch(err){say("Operacja nie powiodła się"+(err&&err.message?": "+err.message:"."))}
-});
-$("lf").onchange=async e=>{
-  const f=e.target.files[0];if(!f)return;
-  const p=parseGpx(await f.text());
-  if(p.length<2){libFile=null;$("linfo").textContent="Nie znaleziono punktów trasy w pliku GPX.";return}
-  libFile=p;$("linfo").textContent="Wczytano: "+routeKm(p).toFixed(1)+" km. Uzupełnij nazwę i opis.";
-};
-$("ladd").onclick=async()=>{
-  const inf=$("linfo"),t=$("lt").value.trim(),d=$("ld").value.trim();
-  if(!session||!me.nick){inf.textContent="Zaloguj się i ustaw nick.";return}
-  if(!libFile){inf.textContent="Najpierw wybierz plik GPX.";return}
-  if(t.length<3){inf.textContent="Podaj nazwę trasy (min. 3 znaki).";return}
-  if(d.length<10){inf.textContent="Opis trasy jest obowiązkowy (min. 10 znaków) — bez niego trasy nie można dodać.";return}
-  try{
-    const res=await sb.from("routes").insert({title:t,description:d,km:+routeKm(libFile).toFixed(1),route:routeJson(libFile)});
-    if(res.error)throw res.error;
-    libFile=null;$("lf").value="";$("lt").value="";$("ld").value="";inf.textContent="";
-    await loadRemote();say("Trasa dodana do biblioteki ✔");
-  }catch(e){inf.textContent="Nie udało się dodać: "+(e&&e.message?e.message:"błąd")}
-};
-$("adminadd").onclick=async()=>{
-  const id=$("adminsel").value;if(!id||!isAdmin)return;
-  try{
-    const res=await sb.from("admins").insert({user_id:id});
-    if(res.error)throw res.error;
-    await loadRemote();say("Nadano uprawnienia: "+nickOf(id));
-  }catch(e){say("Nie udało się: "+(e&&e.message?e.message:"błąd"))}
-};
-$("adminlist").addEventListener("click",async e=>{
-  const b=e.target.closest("button[data-a]");if(!b||!isAdmin)return;
-  if(!confirm("Odebrać uprawnienia administratora użytkownikowi "+nickOf(b.dataset.id)+"?"))return;
-  try{
-    const res=await sb.from("admins").delete().eq("user_id",b.dataset.id);
-    if(res.error)throw res.error;
-    await loadRemote();say("Uprawnienia odebrane.");
-  }catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
-});
-
-function refreshUi(){renderChrome();renderWants();renderNext();renderNav();renderCard();renderList();renderLibUi()}
+function refreshUi(){renderNav();renderCard();renderList();renderPrevSelect()}
 
 async function showRide(idx){
   cur=idx;const token=++viewToken;
   refreshUi();
   const r=sorted[cur],wrap=$("mapwrap1");
-  const clear=msg=>{wrap.classList.add("hide");$("stats1").innerHTML="";$("tip1").classList.add("hide");$("routeinfo1").classList.add("hide");$("windinfo1").textContent=msg||""};
+  const clear=msg=>{wrap.classList.add("hide");$("stats1").innerHTML="";$("tip1").classList.add("hide");$("windinfo1").textContent=msg||""};
   if(!r){clear();return}
   $("windinfo1").textContent="Ładuję trasę…";
   let pts;
@@ -656,11 +366,8 @@ async function showRide(idx){
   renderCard();
   if(!pts){clear("Ta wieczorynka nie ma dołączonej trasy.");return}
   wrap.classList.remove("hide");
-  const ri=$("routeinfo1");
-  if(r.route_title||r.route_desc){ri.innerHTML='<b>Trasa: '+esc(r.route_title||"")+'</b>'+(r.route_desc?'<div>'+esc(r.route_desc)+'</div>':'');ri.classList.remove("hide")}
-  else ri.classList.add("hide");
   if(!map1)map1=makeMap("map1");
-  if(!map1){wrap.classList.add("hide");$("windinfo1").textContent="Nie udało się załadować mapy (sprawdź połączenie z internetem).";return}
+  if(!map1){clear("Nie udało się załadować mapy (sprawdź połączenie z internetem).");return}
   const bs=paceKmh(r.pace);
   let an=analyze(pts,0,0,bs,false);
   map1.m.invalidateSize();
@@ -681,36 +388,17 @@ async function showRide(idx){
   }
 }
 
-/* ---------- baza: ładowanie ---------- */
+/* ---------- baza ---------- */
 async function loadRemote(selectId){
   const prevId=sorted[cur]&&sorted[cur].id;
   const since=new Date(Date.now()-120*864e5).toISOString();
-  const NEW="id,title,starts_at,place,pace,owner_name,note,creator,edited_at,change_note,route_title,route_desc";
-  const OLD="id,title,starts_at,place,pace,owner_name,note,creator";
-  let a=await sb.from("rides").select(NEW).gte("starts_at",since).order("starts_at").limit(300);
-  if(a.error)a=await sb.from("rides").select(OLD).gte("starts_at",since).order("starts_at").limit(300);
+  const a=await sb.from("rides").select("id,title,starts_at,place,pace,owner_name,note,creator").gte("starts_at",since).order("starts_at").limit(300);
   if(a.error)throw a.error;
   const b=await sb.from("rsvps").select("ride_id,user_id,rides!inner(starts_at)").gte("rides.starts_at",since).limit(1000);
   const g={};
   if(!b.error)b.data.forEach(x=>{(g[x.ride_id]=g[x.ride_id]||[]).push(x.user_id)});
   rsvps=g;
-  if(session){
-    const ok=r=>r.error?null:r.data;
-    const [p,w,j,l,ad]=await Promise.all([
-      sb.from("profiles").select("user_id,nick").limit(1000),
-      sb.from("wants").select("id,user_id,starts_at,note").order("starts_at").limit(200),
-      sb.from("want_joins").select("want_id,user_id").limit(1000),
-      sb.from("routes").select("id,title,description,km,creator,created_at").order("created_at",{ascending:false}).limit(200),
-      sb.from("admins").select("user_id")
-    ]);
-    nicks={};(ok(p)||[]).forEach(x=>{nicks[x.user_id]=x.nick});
-    me.nick=nicks[uid]||null;
-    wants=ok(w)||[];
-    joins={};(ok(j)||[]).forEach(x=>{(joins[x.want_id]=joins[x.want_id]||[]).push(x.user_id)});
-    lib=ok(l)||[];
-    adminIds=(ok(ad)||[]).map(x=>x.user_id);isAdmin=adminIds.includes(uid);
-  }else{nicks={};me.nick=null;wants=[];joins={};lib=[];adminIds=[];isAdmin=false}
-  sorted=a.data.map(r=>({id:r.id,title:r.title,when:r.starts_at,place:r.place,pace:r.pace,owner:r.owner_name,note:r.note,creator:r.creator,edited_at:r.edited_at||null,change_note:r.change_note||null,route_title:r.route_title||null,route_desc:r.route_desc||null}));
+  sorted=a.data.map(r=>({id:r.id,title:r.title,when:r.starts_at,place:r.place,pace:r.pace,owner:r.owner_name,note:r.note,creator:r.creator}));
   const want=selectId||prevId;
   let idx=want?sorted.findIndex(r=>r.id===want):-1;
   if(idx<0)idx=pickDefault();
@@ -718,32 +406,35 @@ async function loadRemote(selectId){
   else showRide(idx);
 }
 
-/* ---------- WIECZORYNKI: akcje na karcie ---------- */
+/* ---------- akcje na wieczorynce ---------- */
 $("ridecard").addEventListener("click",async e=>{
   const b=e.target.closest("button[data-act]");if(!b)return;
   const id=b.dataset.id,r=sorted.find(x=>x.id===id);if(!r)return;
   try{
-    const act=b.dataset.act;
-    if(act==="join")await toggleRsvp(id);
-    else if(act==="share"){
+    if(b.dataset.act==="join"){
+      if(!session){say("Zaloguj się, aby dołączyć.");return}
+      const me=(rsvps[id]||[]).includes(uid);
+      const res=me?await sb.from("rsvps").delete().eq("ride_id",id).eq("user_id",uid):await sb.from("rsvps").insert({ride_id:id});
+      if(res.error)throw res.error;
+      await loadRemote();
+    }else if(b.dataset.act==="share"){
       if(navigator.share){
         try{await navigator.share({title:r.title,text:shareText(r),url:shareUrl(r)});return}
         catch(err){if(err&&err.name==="AbortError")return}
       }
       shareFor=shareFor===id?null:id;renderCard();
-    }else if(act==="copy"){
-      try{await navigator.clipboard.writeText(shareUrl(r));say("Link skopiowany.")}catch(err){say("Nie udało się skopiować: "+shareUrl(r))}
-    }else if(act==="gpx"){
+    }else if(b.dataset.act==="copy"){
+      try{await navigator.clipboard.writeText(shareUrl(r));say("Link skopiowany.")}catch(err){say("Nie udało się skopiować — zaznacz link ręcznie: "+shareUrl(r))}
+    }else if(b.dataset.act==="gpx"){
       const pts=await getRoute(id);
       if(!pts){say("Ta wieczorynka nie ma trasy.");return}
-      say(saveFile(makeGpx(pts,r.title),slug(r.title)+".gpx","application/gpx+xml")?"Pobrano: "+slug(r.title)+".gpx":"Nie udało się pobrać pliku.");
-    }else if(act==="edit")startEdit(id);
-    else if(act==="del"){
+      if(saveFile(makeGpx(pts,r.title),slug(r.title)+".gpx","application/gpx+xml"))say("Pobrano: "+slug(r.title)+".gpx");else say("Nie udało się pobrać pliku.");
+    }else if(b.dataset.act==="del"){
       if(!confirm("Usunąć wieczorynkę „"+r.title+"”? Tej operacji nie można cofnąć."))return;
       const res=await sb.from("rides").delete().eq("id",id);
       if(res.error)throw res.error;
       delete routeCache[id];
-      await loadRemote();say("Wieczorynka usunięta.");
+      await loadRemote();
     }
   }catch(err){say("Operacja nie powiodła się"+(err&&err.message?": "+err.message:"."))}
 });
@@ -756,103 +447,49 @@ $("prev").onclick=()=>{if(cur>0)showRide(cur-1)};
 $("next").onclick=()=>{if(cur<sorted.length-1)showRide(cur+1)};
 $("nearest").onclick=()=>showRide(pickDefault());
 
-/* ---------- formularz: nowa / edycja ---------- */
-function defaultWhen(){const d=new Date();d.setDate(d.getDate()+1);d.setHours(19,0,0,0);return localIso(d)}
-function resetForm(){
-  editId=null;formRoute=undefined;
-  $("rt").value="";$("ro").value="";$("rp").value="";$("rw").value=defaultWhen();
-  $("rf").value="";$("rlib").value="";$("rnt").value="";$("rnd").value="";$("rchg").value="";
-  $("rnew").classList.add("hide");$("chgwrap").classList.add("hide");$("editnote").classList.add("hide");$("canceledit").classList.add("hide");
-  $("rrinfo").textContent="";$("rinfo").textContent="";
-  $("formsum").textContent="➕ Nowa wieczorynka";$("add").textContent="Opublikuj wieczorynkę";
-}
-function startEdit(id){
-  const r=sorted.find(x=>x.id===id);if(!r)return;
-  resetForm();
-  editId=id;
-  $("rt").value=r.title;$("rw").value=localIso(new Date(r.when));$("rp").value=r.place||"";$("ro").value=r.note||"";
-  if([...$("rk").options].some(o=>o.value===r.pace))$("rk").value=r.pace;
-  $("chgwrap").classList.remove("hide");$("canceledit").classList.remove("hide");
-  const en=$("editnote");en.textContent="Edytujesz: „"+r.title+"”. Po zapisaniu wydarzenie dostanie widoczny komunikat o zmianie.";en.classList.remove("hide");
-  $("rrinfo").textContent="Obecna trasa zostaje, dopóki nie wgrasz nowej albo nie wybierzesz innej z biblioteki.";
-  $("formsum").textContent="✏️ Edycja wieczorynki";$("add").textContent="Zapisz zmiany";
-  $("newbox").open=true;$("newbox").scrollIntoView({behavior:"smooth",block:"start"});
-}
-$("canceledit").onclick=()=>{resetForm();$("newbox").open=false};
+/* ---------- formularz nowej wieczorynki ---------- */
 $("rf").onchange=async e=>{
   const f=e.target.files[0];if(!f)return;
   const p=parseGpx(await f.text());
-  if(p.length<2){formRoute=undefined;$("rnew").classList.add("hide");$("rrinfo").textContent="Nie znaleziono punktów trasy w pliku GPX.";return}
-  formRoute={pts:thin(p,500)};$("rlib").value="";$("rnew").classList.remove("hide");
-  $("rrinfo").textContent="Wczytano trasę z pliku: "+routeKm(p).toFixed(1)+" km. Nowa trasa trafi do biblioteki — podaj jej nazwę i opis (obowiązkowe).";
+  if(p.length<2){formRoute=null;$("rrinfo").textContent="Nie znaleziono punktów trasy w pliku GPX.";return}
+  formRoute=thin(p,500);$("rprev").value="";
+  $("rrinfo").textContent="Wczytano trasę z pliku: "+routeKm(p).toFixed(1)+" km.";
 };
-$("rlib").onchange=async e=>{
+$("rprev").onchange=async e=>{
   const id=e.target.value;
-  if(!id){formRoute=undefined;$("rrinfo").textContent="";return}
-  const l=lib.find(x=>x.id===id);
+  if(!id){formRoute=null;$("rrinfo").textContent="";return}
   try{
-    const pts=await getLibRoute(id);
-    if(!pts){formRoute=undefined;$("rrinfo").textContent="Nie udało się wczytać tej trasy.";return}
-    formRoute={pts,libId:id,title:l.title,desc:l.description};
-    $("rf").value="";$("rnew").classList.add("hide");
-    $("rrinfo").textContent="Trasa z biblioteki: "+l.title+" ("+routeKm(pts).toFixed(1)+" km). "+l.description;
-  }catch(err){$("rrinfo").textContent="Nie udało się wczytać trasy."}
+    const pts=await getRoute(id);
+    if(!pts){formRoute=null;$("rrinfo").textContent="Ta wieczorynka nie ma trasy — wybierz inną albo wgraj plik GPX.";return}
+    formRoute=pts;$("rf").value="";
+    $("rrinfo").textContent="Użyto trasy z poprzedniej wieczorynki: "+routeKm(pts).toFixed(1)+" km.";
+  }catch(err){$("rrinfo").textContent="Nie udało się pobrać trasy."}
 };
 $("add").onclick=async()=>{
-  const info=$("rinfo");info.textContent="";
+  const info=$("rinfo"),t=$("rt").value.trim(),w=$("rw").value;
   if(!session){info.textContent="Zaloguj się, aby dodać wieczorynkę.";return}
-  if(!me.nick){info.textContent="Najpierw ustaw swój nick.";return}
-  const t=$("rt").value.trim(),w=$("rw").value;
   if(!t||!w){info.textContent="Podaj nazwę i termin.";return}
+  const route=formRoute&&formRoute.length>1?JSON.stringify(thin(formRoute,300).map(p=>[+p.lat.toFixed(5),+p.lon.toFixed(5),Math.round(p.ele||0)])):null;
+  const name=$("rn").value.trim();
+  try{localStorage.setItem("wieczorynki_name",name)}catch(e){}
   try{
-    let rJson=null,rTitle=null,rDesc=null;
-    if(formRoute){
-      rJson=routeJson(formRoute.pts);
-      if(formRoute.libId){rTitle=formRoute.title;rDesc=formRoute.desc}
-      else{
-        const nt=$("rnt").value.trim(),nd=$("rnd").value.trim();
-        if(nt.length<3||nd.length<10){info.textContent="Podaj nazwę trasy (min. 3 znaki) i opis (min. 10 znaków) — bez opisu trasy nie można jej dodać.";return}
-        const lr=await sb.from("routes").insert({title:nt,description:nd,km:+routeKm(formRoute.pts).toFixed(1),route:rJson});
-        if(lr.error)throw lr.error;
-        rTitle=nt;rDesc=nd;
-      }
-    }
-    const base={title:t,starts_at:new Date(w).toISOString(),place:$("rp").value.trim()||null,pace:$("rk").value,note:$("ro").value.trim()||null};
-    if(editId){
-      const old=sorted.find(x=>x.id===editId);
-      const ch=[];
-      if(t!==old.title)ch.push("nazwa");
-      if(new Date(old.when).getTime()!==new Date(w).getTime())ch.push("termin");
-      if((base.place||"")!==(old.place||""))ch.push("miejsce");
-      if(base.pace!==old.pace)ch.push("tempo");
-      if((base.note||"")!==(old.note||""))ch.push("opis");
-      if(formRoute)ch.push("trasa");
-      if(!ch.length){info.textContent="Nic nie zmieniono.";return}
-      const cm=$("rchg").value.trim();
-      const upd=Object.assign({},base,{change_note:("Zmieniono: "+ch.join(", ")+(cm?" — "+cm:"")).slice(0,300)});
-      if(formRoute){upd.route=rJson;upd.route_title=rTitle;upd.route_desc=rDesc}
-      const res=await sb.from("rides").update(upd).eq("id",editId).select("id");
-      if(res.error)throw res.error;
-      if(!res.data||!res.data.length)throw new Error("brak uprawnień do edycji tej wieczorynki");
-      const id=editId;delete routeCache[id];
-      resetForm();$("newbox").open=false;
-      await loadRemote(id);say("Zapisano zmiany ✔ — wydarzenie ma komunikat o zmianie.");
-    }else{
-      const row=Object.assign({},base,{owner_name:me.nick,route:rJson,route_title:rTitle,route_desc:rDesc});
-      const ins=await sb.from("rides").insert(row).select("id").single();
-      if(ins.error)throw ins.error;
-      await sb.from("rsvps").insert({ride_id:ins.data.id});
-      resetForm();$("newbox").open=false;
-      await loadRemote(ins.data.id);say("Opublikowano ✔");
-      $("view").scrollIntoView({behavior:"smooth",block:"start"});
-    }
+    const row={title:t,starts_at:new Date(w).toISOString(),place:$("rp").value.trim()||null,pace:$("rk").value,owner_name:name||null,note:$("ro").value.trim()||null,route};
+    const ins=await sb.from("rides").insert(row).select("id").single();
+    if(ins.error)throw ins.error;
+    await sb.from("rsvps").insert({ride_id:ins.data.id});
+    $("rt").value="";$("ro").value="";$("rf").value="";$("rprev").value="";formRoute=null;$("rrinfo").textContent="";info.textContent="";
+    $("newbox").open=false;
+    await loadRemote(ins.data.id);
+    say("Opublikowano ✔");
+    $("view").scrollIntoView({behavior:"smooth",block:"start"});
   }catch(e){info.textContent="Nie udało się zapisać"+(e&&e.message?": "+e.message:".")}
 };
 
-/* ---------- Zaawansowane: analiza GPX ---------- */
+/* ---------- zakładka Zaawansowane ---------- */
 let advBase=[],advPts=[],advRev=false;
 function advRender(fit){
-  const wrap=$("mapwrap2"),wf=+$("wd").value;
+  const wrap=$("mapwrap2");
+  const wf=+$("wd").value;
   $("wdv").textContent=windLabel(wf);
   if(advPts.length<2){wrap.classList.add("hide");$("empty2").classList.remove("hide");$("stats2").innerHTML="";$("tip2").classList.add("hide");return}
   $("empty2").classList.add("hide");wrap.classList.remove("hide");
@@ -893,15 +530,18 @@ $("aw").onclick=async()=>{
 
 /* ---------- zakładki ---------- */
 function show(n){
-  [0,1,2].forEach(i=>{$("p"+i).classList.toggle("hide",i!==n);$("t"+i).classList.toggle("on",i===n)});
+  $("p1").classList.toggle("hide",n!==1);$("p2").classList.toggle("hide",n!==2);
+  $("t1").classList.toggle("on",n===1);$("t2").classList.toggle("on",n===2);
   setTimeout(()=>{if(n===1&&map1)map1.m.invalidateSize();if(n===2&&map2)map2.m.invalidateSize()},60);
 }
-[0,1,2].forEach(i=>{$("t"+i).onclick=()=>show(i)});
+$("t1").onclick=()=>show(1);$("t2").onclick=()=>show(2);
 
-/* ---------- logowanie ---------- */
+/* ---------- konto ---------- */
 function setSession(s){
   session=s;uid=s?s.user.id:"";
-  if(!s){me.nick=null;isAdmin=false;adminIds=[];nickEdit=false}
+  $("authout").classList.toggle("hide",!!s);$("authin").classList.toggle("hide",!s);
+  $("who").textContent=s?"Zalogowany: "+s.user.email:"";
+  refreshUi();
 }
 const amsg=e=>({"Invalid login credentials":"Nieprawidłowy e-mail lub hasło.","User already registered":"Konto z tym adresem już istnieje — zaloguj się."}[e.message]||e.message);
 $("login").onclick=async()=>{
@@ -914,27 +554,22 @@ $("signup").onclick=async()=>{
   const r=await sb.auth.signUp({email:$("ae").value.trim(),password:$("ap").value});
   $("ainfo").textContent=r.error?amsg(r.error):(r.data.session?"Konto założone.":"Sprawdź skrzynkę i potwierdź adres e-mail.");
 };
+$("logout").onclick=()=>{if(sb)sb.auth.signOut()};
 
-/* ---------- start aplikacji ---------- */
+/* ---------- start ---------- */
 (async()=>{
-  $("rw").value=defaultWhen();
+  const d=new Date();d.setDate(d.getDate()+1);d.setHours(19,0,0,0);$("rw").value=localIso(d);
   $("wt").value=localIso(new Date(Math.ceil(Date.now()/36e5)*36e5));
-  $("wdt").value=localIso(new Date()).slice(0,10);
+  try{$("rn").value=localStorage.getItem("wieczorynki_name")||""}catch(e){}
   advRender(false);refreshUi();
   if(!window.supabase){$("dbnote").textContent="Nie udało się załadować biblioteki bazy danych — sprawdź połączenie z internetem i odśwież stronę.";return}
   sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
   try{const r=await sb.auth.getSession();setSession(r.data.session)}catch(e){}
-  sb.auth.onAuthStateChange((_ev,s)=>{
-    const nid=s?s.user.id:"";
-    if(nid===uid){session=s;return}
-    setSession(s);
-    if(ready)setTimeout(()=>loadRemote().catch(()=>{}),0);
-  });
+  sb.auth.onAuthStateChange((_ev,s)=>{setSession(s)});
   const m=/#ride=([0-9a-f-]{36})/i.exec(location.hash||"");
-  try{await loadRemote(m?m[1]:null);$("dbnote").textContent=""}
+  try{await loadRemote(m?m[1]:null);$("dbnote").textContent="Wieczorynki są wspólne dla wszystkich użytkowników aplikacji."}
   catch(e){$("dbnote").textContent="Nie udało się połączyć ze wspólną bazą (sprawdź internet i konfigurację Supabase)."}
-  ready=true;
-  setInterval(()=>{if(!document.hidden)loadRemote().catch(()=>{})},60000);
+  setInterval(()=>{if(!document.hidden)loadRemote().catch(()=>{})},120000);
 })();
 </script>
 </body>
