@@ -84,13 +84,37 @@ html[data-theme=dark] .starb.on{background:#4a3f12}
 .bigpill .nk{font-size:22px;padding:4px 16px}
 details.wday{border:1px solid var(--line);border-radius:14px;margin-top:10px;background:var(--card)}
 details.wday[open]{border-color:var(--acc)}
-details.wday>summary{list-style:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:12px 14px;cursor:pointer;-webkit-user-select:none;user-select:none}
+details.wday>summary{list-style:none;display:flex;align-items:center;gap:12px;padding:10px 12px;cursor:pointer;-webkit-user-select:none;user-select:none}
 details.wday>summary::-webkit-details-marker{display:none}
-details.wday>summary::after{content:"›";margin-left:auto;font-size:22px;line-height:1;color:var(--mut);transition:transform .15s}
+details.wday>summary::after{content:"›";flex:none;font-size:22px;line-height:1;color:var(--mut);transition:transform .15s}
 details.wday[open]>summary::after{transform:rotate(90deg)}
-.wdl{font-size:17px;font-weight:700}.wdd{font-size:13px;color:var(--mut);font-weight:500}
-.wdc{font-size:13px;color:var(--mut);font-weight:500;white-space:nowrap}
-.wme{font-size:12px;font-weight:700;color:var(--acc);background:var(--acc2);border-radius:999px;padding:2px 8px;white-space:nowrap}
+/* kafelek daty w stylu zegara klapkowego */
+.ftile{position:relative;flex:none;width:52px;height:58px;border-radius:9px;overflow:visible;perspective:220px;box-shadow:0 2px 4px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.12)}
+.ftile .ft,.ftile .fu,.ftile .fb{position:absolute;left:0;right:0;display:flex;align-items:center;justify-content:center;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-weight:700;color:#f4f4f6}
+.ftile .ft,.ftile .fu{top:0;height:34px;border-radius:9px 9px 0 0;font-size:25px;line-height:1;padding-top:3px;background:linear-gradient(180deg,#48484d 0%,#3a3a3e 55%,#26262a 100%);transform-origin:50% 100%;backface-visibility:hidden}
+.ftile .ft{z-index:1}.ftile .fu{z-index:0}
+.ftile .ft::after{content:"";position:absolute;left:0;right:0;top:0;height:40%;border-radius:9px 9px 0 0;background:linear-gradient(rgba(255,255,255,.10),transparent);pointer-events:none}
+.ftile .fb{bottom:0;height:24px;border-radius:0 0 9px 9px;font-size:11px;letter-spacing:.14em;padding-left:.14em;color:#d0d0d6;background:linear-gradient(180deg,#1c1c1f 0%,#2a2a2d 40%,#333337 100%)}
+.ftile .fs{position:absolute;left:0;right:0;top:34px;height:1.5px;margin-top:-.75px;background:rgba(255,255,255,.42);box-shadow:0 1px 1px rgba(0,0,0,.35);z-index:2}
+.ftile .fh,.ftile .fh2{position:absolute;top:31px;width:3px;height:7px;border-radius:1px;background:#8e8e94;z-index:3}
+.ftile .fh{left:0}.ftile .fh2{right:0}
+.ftile.today .ft,.ftile.today .fu{background:linear-gradient(180deg,#3cb55e 0%,#2e9e4e 55%,#1f7a37 100%)}
+.ftile.today .fb{color:#e2f7e8;background:linear-gradient(180deg,#1a6a30 0%,#248a3d 40%,#2b9646 100%)}
+html[data-theme=dark] .ftile{box-shadow:0 2px 6px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.5)}
+html[data-theme=dark] .ftile:not(.today) .ft,html[data-theme=dark] .ftile:not(.today) .fu{color:#1d1d1f;background:linear-gradient(180deg,#fff 0%,#f1f1f4 55%,#d6d6dc 100%)}
+html[data-theme=dark] .ftile:not(.today) .fb{color:#4a4a50;background:linear-gradient(180deg,#c4c4cb 0%,#dfdfe4 40%,#ececf0 100%)}
+html[data-theme=dark] .ftile .fs{background:rgba(0,0,0,.7);box-shadow:0 1px 0 rgba(255,255,255,.07)}
+html[data-theme=dark] .ftile:not(.today) .fs{background:rgba(0,0,0,.25);box-shadow:0 1px 0 rgba(255,255,255,.6)}
+html[data-theme=dark] .ftile .fh,html[data-theme=dark] .ftile .fh2{background:#111}
+html[data-theme=dark] .ftile:not(.today) .fh,html[data-theme=dark] .ftile:not(.today) .fh2{background:#8a8a90}
+.ftile.flipping .ft{animation:ftflip .5s cubic-bezier(.4,0,.2,1)}
+@keyframes ftflip{0%{transform:rotateX(0)}45%{transform:rotateX(-90deg);filter:brightness(.6)}55%{transform:rotateX(-90deg);filter:brightness(.6)}100%{transform:rotateX(0)}}
+@media (prefers-reduced-motion:reduce){.ftile.flipping .ft{animation:none}}
+.wtx{flex:1;min-width:0}
+.wl1{font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wl1 i{font-style:normal;font-weight:500;color:var(--mut)}
+.wl2{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut);margin-top:2px;white-space:nowrap}
+.wme{font-size:12px;font-weight:700;color:var(--acc);background:var(--acc2);border-radius:999px;padding:1px 8px;white-space:nowrap}
+.wl3{font-size:13px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 details.wday .want{margin:0 10px 10px}
 .sdanger{display:block;margin:16px auto 0;padding:8px;border:0;background:none;color:var(--bad);font:inherit;font-size:15px;cursor:pointer;text-decoration:underline}
 .sheetbox ul{margin:6px 0 0;padding-left:20px;font-size:15px}
@@ -894,22 +918,32 @@ function renderWants(){
     d.ws.push(w);
   });
   box.innerHTML=days.map((d,i)=>{
-    const dt=new Date(d.ws[0].starts_at),rel=relDay(dt),n=dayDiff(dt);
-    const full=dt.toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"});
+    const dt=new Date(d.ws[0].starts_at),n=dayDiff(dt);
     const ppl=new Set();let me=false;
     d.ws.forEach(w=>{ppl.add(w.user_id);(joins[w.id]||[]).forEach(x=>ppl.add(x));if(w.user_id===uid||(joins[w.id]||[]).includes(uid))me=true});
     const open=d.k in wantOpen?wantOpen[d.k]:i===0;
     const cnt=d.ws.length,zg=cnt===1?"zgłoszenie":(cnt%10>=2&&cnt%10<=4&&(cnt%100<10||cnt%100>=20))?"zgłoszenia":"zgłoszeń";
     const os=ppl.size===1?"osoba":(ppl.size%10>=2&&ppl.size%10<=4&&(ppl.size%100<10||ppl.size%100>=20))?"osoby":"osób";
+    const wd=dt.toLocaleDateString("pl-PL",{weekday:"long"}),fn=favNames([...ppl]);
+    const l1=n>=0&&n<=2?esc(["Dziś","Jutro","Pojutrze"][n])+' <i>· '+esc(wd)+'</i>':esc(wd.charAt(0).toUpperCase()+wd.slice(1));
     return '<details class="wday" data-day="'+d.k+'"'+(open?' open':'')+'><summary>'
-     +'<span><span class="wdl">'+esc(rel)+'</span>'+(n>=0&&n<=2?' <span class="wdd">'+esc(full)+'</span>':'')+'</span>'
-     +'<span class="wdc">'+cnt+' '+zg+' · '+ppl.size+' '+os+'</span>'+(me?'<span class="wme">Ty</span>':'')
-     +(favNames([...ppl]).length?'<span class="wfav">⭐ '+esc(favNames([...ppl]).join(", "))+'</span>':'')
+     +'<div class="ftile'+(n===0?' today':'')+'"><div class="fu">'+pad(dt.getDate())+'</div><div class="ft">'+pad(dt.getDate())+'</div><div class="fb">'+MON3[dt.getMonth()]+'</div><div class="fs"></div><div class="fh"></div><div class="fh2"></div></div>'
+     +'<div class="wtx"><div class="wl1">'+l1+'</div>'
+     +'<div class="wl2">'+cnt+' '+zg+' · '+ppl.size+' '+os+(me?'<span class="wme">Ty</span>':'')+'</div>'
+     +(fn.length?'<div class="wl3">⭐ '+esc(fn.join(", "))+'</div>':'')+'</div>'
      +'</summary>'+d.ws.map(wantHtml).join("")+'</details>';
   }).join("");
 }
 let wantOpen={};
-$("wantlist").addEventListener("toggle",e=>{const d=e.target;if(d.classList&&d.classList.contains("wday"))wantOpen[d.dataset.day]=d.open},true);
+const MON3=["STY","LUT","MAR","KWI","MAJ","CZE","LIP","SIE","WRZ","PAŹ","LIS","GRU"];
+$("wantlist").addEventListener("toggle",e=>{
+  const d=e.target;if(!(d.classList&&d.classList.contains("wday")))return;
+  wantOpen[d.dataset.day]=d.open;
+  // animacja przewracania kartki tylko przy ręcznym rozwinięciu
+  const byUser=d.dataset.user==="1";delete d.dataset.user;
+  if(d.open&&byUser){const t=d.querySelector(".ftile");if(t){t.classList.remove("flipping");void t.offsetWidth;t.classList.add("flipping");setTimeout(()=>t.classList.remove("flipping"),600)}}
+},true);
+$("wantlist").addEventListener("click",e=>{const s=e.target.closest("details.wday>summary");if(s)s.parentElement.dataset.user="1"});
 function wantHtml(w){
     const j=joins[w.id]||[],mine=w.user_id===uid,joined=j.includes(uid),others=j.filter(x=>x!==w.user_id);
     return '<div class="want'+(mine?' mine':'')+'"><div>'+nk(w.user_id)+' · 🕖 '+esc(hhmm(new Date(w.starts_at)))+(mine?' <span class="note">(Twoje zgłoszenie)</span>':'')+'</div>'
