@@ -36,6 +36,7 @@ svg{width:100%;height:auto;display:block;background:var(--bg);border-radius:10px
 .legend{display:flex;gap:10px;font-size:12px;color:var(--mut);margin-top:6px;flex-wrap:wrap}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
 .hide{display:none}
+a.b{display:inline-block;text-decoration:none;line-height:1.2;font-size:15px}
 #rem .tip{margin:0 0 12px;border:1px solid var(--acc)}
 .note{font-size:12px;color:var(--mut)}
 </style>
@@ -185,6 +186,12 @@ function makeGpx(a,name){
   const x=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
   return '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Wieczorynki rowerowe" xmlns="http://www.topografix.com/GPX/1/1">\n<trk><name>'+x(name||"Trasa")+'</name><trkseg>\n'+a.map(p=>'<trkpt lat="'+p.lat.toFixed(6)+'" lon="'+p.lon.toFixed(6)+'"><ele>'+Math.round(p.ele||0)+'</ele></trkpt>').join("\n")+'\n</trkseg></trk>\n</gpx>\n';
 }
+function gcalUrl(r){
+  const f=d=>d.toISOString().replace(/[-:]|\.\d{3}/g,"");
+  const st=new Date(r.when),en=new Date(st.getTime()+2*36e5);
+  const q=new URLSearchParams({action:"TEMPLATE",text:"🚲 "+(r.title||"Wieczorynki"),dates:f(st)+"/"+f(en),details:((r.pace||"")+(r.note?". "+r.note:"")).trim(),location:r.place||""});
+  return "https://calendar.google.com/calendar/render?"+q.toString();
+}
 function icsDate(d){const p=n=>String(n).padStart(2,"0");return d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"T"+p(d.getHours())+p(d.getMinutes())+"00"}
 function makeIcs(r){
   const s=new Date(r.when),e=new Date(s.getTime()+2*36e5);
@@ -221,7 +228,7 @@ function drawRides(){
    <div>${esc(r.note||"")}</div><div class="meta">Organizuje: ${esc(r.owner||"?")} · jedzie: <b>${g.length}</b></div>
    <div class="row" style="margin-top:8px"><button class="b${me?" g":""}" data-j="${esc(r.id)}">${me?"Rezygnuję":"Jadę!"}</button>
    ${r.route?`<button class="b g" data-l="${esc(r.id)}">Pokaż trasę</button><button class="b g" data-g="${esc(r.id)}">⬇ GPX</button>`:""}
-   <button class="b g" data-c="${esc(r.id)}">🔔 Przypomnienie</button>
+   <button class="b g" data-c="${esc(r.id)}">🔔 Przypomnienie</button><a class="b g" target="_blank" rel="noopener" href="${esc(gcalUrl(r))}">📅 Google Kalendarz</a>
    ${r.creator===uid?`<button class="b g" data-x="${esc(r.id)}">Usuń</button>`:""}</div></div>`}).join("");
 }
 async function loadRemote(){
