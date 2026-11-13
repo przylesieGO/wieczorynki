@@ -17,34 +17,52 @@
 <meta property="og:description" content="Dołącz do wspólnych przejazdów: kto chce jechać, trasa na mapie, prognoza wiatru, zapisy.">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 <style>
-:root{color-scheme:light;--bg:#f5f5f7;--card:#fff;--fill:#f2f2f7;--ink:#1d1d1f;--mut:#6e6e73;--line:#e5e5ea;--acc:#248a3d;--accbtn:#248a3d;--acc2:#e8f5ec;--navbg:#e4e4e9;--navon:#fff;--bad:#d64545;--good:#2a9d5c;--warn:#fff6dc;--shadow:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.05)}
-html[data-theme=dark]{color-scheme:dark;--bg:#1c1c1e;--card:#2c2c2e;--fill:#3a3a3c;--ink:#f5f5f7;--mut:#a1a1a6;--line:#3a3a3c;--acc:#4cd964;--accbtn:#2e9e4e;--acc2:#1f3a29;--navbg:#3a3a3c;--navon:#636366;--warn:#3d3519;--shadow:0 1px 2px rgba(0,0,0,.4)}
+:root{color-scheme:light;--bg:#f5f5f7;--card:#fff;--fill:#f2f2f7;--ink:#1d1d1f;--mut:#6e6e73;--line:#e5e5ea;--acc:#248a3d;--accbtn:#248a3d;--acc2:#e8f5ec;--navbg:#e4e4e9;--navon:#fff;--bad:#d64545;--good:#2a9d5c;--warn:#fff6dc;--hdrbg:rgba(245,245,247,.82);--shadow:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.05)}
+html[data-theme=dark]{color-scheme:dark;--bg:#1c1c1e;--card:#2c2c2e;--fill:#3a3a3c;--ink:#f5f5f7;--mut:#a1a1a6;--line:#3a3a3c;--acc:#4cd964;--accbtn:#2e9e4e;--acc2:#1f3a29;--navbg:#3a3a3c;--navon:#636366;--warn:#3d3519;--hdrbg:rgba(28,28,30,.82);--shadow:0 1px 2px rgba(0,0,0,.4)}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 76px)}
 a{color:var(--acc)}
 .seg{display:flex;gap:2px;padding:3px;background:var(--navbg);border-radius:10px;margin-top:12px}
 .seg button{flex:1;padding:7px 4px;border:0;background:transparent;color:var(--mut);border-radius:8px;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
 .seg button.on{background:var(--navon);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.2)}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:env(safe-area-inset-bottom,0px)}
 .wrap{max-width:900px;margin:0 auto;padding:16px}
 h1{font-size:24px;margin:4px 0;letter-spacing:-.02em}h2{font-size:19px;margin:0 0 10px;letter-spacing:-.01em}h3{font-size:13px;margin:16px 0 6px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
 .card{background:var(--card);border:1px solid rgba(0,0,0,.05);border-radius:18px;padding:18px;margin-bottom:16px;box-shadow:var(--shadow)}
-.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
-.apptitle{font-size:20px;line-height:1.2}.wsub2{display:block;font-size:13px;font-weight:500;color:var(--mut)}
-.welcome{max-width:420px;margin:8vh auto 0}
+.welcome{max-width:420px;margin:calc(8vh + env(safe-area-inset-top,0px)) auto 0}
 .wtitle{font-size:34px;margin:6px 0 0}.wsub{font-size:18px;color:var(--acc);font-weight:600}
-.gear{flex:none;width:44px;height:44px;border-radius:50%;border:1px solid rgba(0,0,0,.06);background:var(--card);color:var(--ink);font-size:21px;line-height:1;cursor:pointer;box-shadow:var(--shadow)}
+.gear{flex:none;width:44px;height:44px;border-radius:50%;border:1px solid rgba(0,0,0,.06);background:var(--card);color:var(--ink);font-size:21px;line-height:1;cursor:pointer;box-shadow:var(--shadow);transition:width .2s,height .2s,font-size .2s}
 nav{display:flex;gap:2px;padding:3px;background:var(--navbg);border-radius:12px;margin-bottom:16px}
-nav button{flex:1;padding:9px 4px;border:0;background:transparent;color:var(--mut);border-radius:9px;font:inherit;font-weight:600;font-size:15px;cursor:pointer}
+nav button{flex:1;padding:9px 4px;border:0;background:transparent;color:var(--mut);border-radius:9px;font:inherit;font-weight:600;font-size:15px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;transition:padding .2s,font-size .2s}
 nav button.on{background:var(--navon);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.18)}
+/* ---- nagłówek przyklejony u góry ---- */
+.hdr{position:sticky;top:0;z-index:1000;background:var(--hdrbg);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);padding-top:env(safe-area-inset-top,0px);border-bottom:1px solid transparent;transition:border-color .2s}
+.hin{max-width:900px;margin:0 auto;padding:14px 16px 10px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;transition:padding .2s}
+.apptitle{flex:1;margin:0;font-size:22px;line-height:1.2;white-space:nowrap;transition:font-size .2s}
+.wsub2{display:block;font-size:13px;font-weight:500;color:var(--mut)}
+.hdr .gear{order:2}
+.hdr nav{order:3;flex:1 0 100%;margin:0}
+.hdr.compact{border-bottom-color:var(--line)}
+.hdr.compact .hin{padding:8px 16px;flex-wrap:nowrap;gap:10px}
+.hdr.compact .apptitle{flex:none;font-size:17px}
+.hdr.compact .wsub2{display:none}
+.hdr.compact nav{order:2;flex:1 1 auto;min-width:0}
+.hdr.compact nav button{padding:6px 4px;font-size:14px}
+.hdr.compact .gear{order:3;width:36px;height:36px;font-size:18px}
+@media(max-width:560px){.hdr.compact .tname{display:none}}
+@media(max-width:400px){.hdr.compact .hin{gap:8px;padding:8px 12px}.hdr.compact nav button{font-size:13px;padding:6px 2px}}
 .roundbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:164px;height:164px;margin:8px auto 4px;border:0;border-radius:50%;background:linear-gradient(160deg,#3ecf62,#248a3d);color:#fff;font:inherit;font-weight:700;font-size:17px;line-height:1.2;cursor:pointer;box-shadow:0 10px 24px rgba(36,138,61,.35),inset 0 1px 0 rgba(255,255,255,.35);transition:transform .12s}
 .sheet{position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .sheetbox{position:relative;width:100%;max-width:400px;max-height:92vh;overflow:auto;background:var(--card);border-radius:26px;padding:30px 22px 22px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.35)}
 .sclose{position:absolute;top:10px;right:10px;width:40px;height:40px;border-radius:50%;border:0;background:var(--fill);color:var(--ink);font-size:18px;cursor:pointer}
+.sback{position:absolute;top:10px;left:10px;height:40px;padding:0 14px;border-radius:20px;border:0;background:var(--fill);color:var(--acc);font:inherit;font-size:16px;font-weight:600;cursor:pointer}
 .sname{font-size:23px;font-weight:700;letter-spacing:-.01em}
 .smail{font-size:16px;color:var(--mut);margin:4px 0 18px;word-break:break-word}
 .sheetbox .sbtn{display:block;width:100%;padding:16px;margin-top:12px;font-size:18px;border-radius:15px;text-align:center}
 .sheetbox .note{font-size:16px}
 .sheetbox .seg button{padding:13px 4px;font-size:17px}
+.sleft{text-align:left;margin-top:6px}
+.arow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);font-size:17px}
 .roundbtn:active{transform:scale(.96)}.roundbtn .ri{font-size:48px;line-height:1}
 .pw{position:relative}.pw input{padding-right:46px}
 .eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:38px;height:38px;border:0;background:transparent;font-size:19px;cursor:pointer;border-radius:50%}
@@ -89,9 +107,18 @@ details.card>summary{font-size:16px}
 .routeinfo{margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);max-width:90vw;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:3000;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.25)}
 .leaflet-container{z-index:0}
+.foot{text-align:center;margin-top:8px}.foot .note:empty{display:none}
 </style>
 </head>
 <body>
+
+<!-- ===== NAGŁÓWEK (przyklejony, zwija się przy przewijaniu) ===== -->
+<header class="hdr" id="hdr"><div class="hin">
+ <h1 class="apptitle"><span class="tlogo">🚲</span><span class="tname"> PrzylesieGo!</span><span class="wsub2">Ustawki rowerowe</span></h1>
+ <nav><button id="t0" class="on">Start</button><button id="t1">Wieczorynki</button><button id="t2">Zaawansowane</button></nav>
+ <button class="gear" id="gear" aria-label="Ustawienia" title="Ustawienia">⚙️</button>
+</div></header>
+
 <div class="wrap">
 
 <!-- ===== PLANSZA POWITALNA ===== -->
@@ -114,10 +141,6 @@ details.card>summary{font-size:16px}
 </div>
 
 <div id="app">
-<div class="top">
- <h1 class="apptitle">🚲 PrzylesieGo! <span class="wsub2">Ustawki rowerowe</span></h1>
- <button class="gear" id="gear" aria-label="Ustawienia" title="Ustawienia">⚙️</button>
-</div>
 <div class="sheet hide" id="gearpanel"></div>
 
 <div class="card hide" id="pwbox">
@@ -132,8 +155,6 @@ details.card>summary{font-size:16px}
  <div class="row"><input id="nickin" maxlength="20" style="max-width:260px" placeholder="np. GAWRON"><button class="b" id="nicksave">Zapisz nick</button><button class="b g hide" id="nickcancel">Anuluj</button></div>
  <div class="note" id="nickinfo" style="margin-top:6px"></div>
 </div>
-
-<nav><button id="t0" class="on">Start</button><button id="t1">Wieczorynki</button><button id="t2">Zaawansowane</button></nav>
 
 <!-- ===== START ===== -->
 <section id="p0">
@@ -248,21 +269,14 @@ details.card>summary{font-size:16px}
   <textarea id="ld" rows="3" maxlength="600"></textarea>
   <div class="row" style="margin-top:8px"><button class="b" id="ladd">Dodaj do biblioteki</button><span class="note" id="linfo"></span></div>
  </details>
-
- <details class="card hide" id="adminbox">
-  <summary>🛡️ Administracja</summary>
-  <h3>Administratorzy</h3>
-  <div id="adminlist"></div>
-  <label>Nadaj uprawnienia administratora</label>
-  <div class="row"><select id="adminsel" style="max-width:260px"></select><button class="b" id="adminadd">Nadaj</button></div>
-  <p class="note">Administrator może edytować i usuwać każdą wieczorynkę, zgłoszenie i trasę oraz zarządzać administratorami.</p>
- </details>
 </section>
 
 </div><!-- /app -->
 
+<footer class="foot">
 <p class="note" id="dbnote"></p>
 <p class="note">Mapa © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · prognoza wiatru: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a></p>
+</footer>
 </div>
 <div class="toast hide" id="toast"></div>
 
@@ -496,7 +510,17 @@ async function getLibRoute(id){
   libCache[id]=pts;return pts;
 }
 
-/* ---------- góra strony: konto i nick ---------- */
+/* ---------- nagłówek: zwijanie przy przewijaniu ---------- */
+let hdrCompact=false;
+function onScroll(){
+  const y=window.scrollY||document.documentElement.scrollTop||0;
+  const c=hdrCompact?y>4:y>56;
+  if(c!==hdrCompact){hdrCompact=c;$("hdr").classList.toggle("compact",c)}
+}
+window.addEventListener("scroll",onScroll,{passive:true});
+onScroll();
+
+/* ---------- ustawienia: konto, nick, wygląd, administracja ---------- */
 let themeMode="light";
 try{themeMode=localStorage.getItem("theme")||"light"}catch(e){}
 const darkMq=window.matchMedia?matchMedia("(prefers-color-scheme: dark)"):null;
@@ -509,26 +533,47 @@ function setTheme(t){themeMode=t;try{localStorage.setItem("theme",t)}catch(e){}a
 if(darkMq&&darkMq.addEventListener)darkMq.addEventListener("change",applyTheme);
 applyTheme();
 const themeHtml=()=>'<div class="note" style="margin-top:14px">Wygląd</div><div class="seg">'+[["light","☀️ Jasny"],["dark","🌙 Ciemny"],["auto","Auto"]].map(([k,n])=>'<button data-t="'+k+'" class="'+(themeMode===k?"on":"")+'">'+n+'</button>').join("")+'</div>';
-let guestMode=false,gearOpen=false;
+let guestMode=false,gearOpen=false,gearView="main";
 try{guestMode=sessionStorage.getItem("guest")==="1"}catch(e){}
 const setGuest=v=>{guestMode=v;try{v?sessionStorage.setItem("guest","1"):sessionStorage.removeItem("guest")}catch(e){}};
+function adminHtml(){
+  const rows=adminIds.map(id=>'<div class="arow"><b>'+esc(nickOf(id))+'</b>'+(id===uid?'<span class="note">(Ty)</span>':'<button class="b g small" data-a="rm" data-id="'+esc(id)+'">Odbierz uprawnienia</button>')+'</div>').join("")||'<div class="note">Brak.</div>';
+  const cand=Object.keys(nicks).filter(id=>!adminIds.includes(id)).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl"));
+  const add=cand.length
+    ?'<select id="adminsel">'+cand.map(id=>'<option value="'+esc(id)+'">'+esc(nicks[id])+'</option>').join("")+'</select><button class="b sbtn" data-c="adminadd">Nadaj uprawnienia</button>'
+    :'<div class="note">Brak użytkowników z nickiem, którym można nadać uprawnienia.</div>';
+  return '<button class="sback" data-c="back">‹ Ustawienia</button>'
+   +'<div class="sname" style="margin-top:26px">🛡️ Administracja</div>'
+   +'<div class="sleft"><h3>Administratorzy</h3>'+rows
+   +'<h3>Nadaj uprawnienia administratora</h3>'+add
+   +'<p class="note">Administrator może edytować i usuwać każdą wieczorynkę, zgłoszenie i trasę oraz zarządzać administratorami.</p></div>';
+}
 function renderGear(){
   const p=$("gearpanel");
-  if(!gearOpen){p.classList.add("hide");return}
+  if(!gearOpen){p.classList.add("hide");gearView="main";return}
   p.classList.remove("hide");
+  if(gearView==="admin"&&!(session&&isAdmin))gearView="main";
+  const keepSel=$("adminsel")?$("adminsel").value:"";
   const tg='<a class="b sbtn g" href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">📣 Kanał na Telegramie</a>';
-  const body=session
+  let body;
+  if(gearView==="admin")body=adminHtml();
+  else body=session
     ?'<div class="sname">👤 '+esc(me.nick||"ustaw nick")+(isAdmin?' 🛡️':'')+'</div><div class="smail">'+esc(session.user.email||"")+'</div>'
-     +'<button class="b sbtn g" data-c="nick">✏️ Zmień nick</button>'+tg+themeHtml()
+     +'<button class="b sbtn g" data-c="nick">✏️ Zmień nick</button>'+tg
+     +(isAdmin?'<button class="b sbtn g" data-c="admin">🛡️ Administracja</button>':'')
+     +themeHtml()
      +'<button class="b sbtn" style="background:var(--bad);margin-top:20px" data-c="out">Wyloguj</button>'
     :'<div class="sname">Przeglądasz jako gość</div><div class="smail">Zaloguj się, żeby zapisywać się na wieczorynki i zgłaszać ochotę na jazdę.</div>'
      +'<button class="b sbtn" data-c="login">Zaloguj się / załóż konto</button>'+tg+themeHtml();
   p.innerHTML='<div class="sheetbox"><button class="sclose" data-c="close" aria-label="Zamknij">✕</button>'+body+'</div>';
+  const s=$("adminsel");
+  if(s&&keepSel&&[...s.options].some(o=>o.value===keepSel))s.value=keepSel;
 }
 function renderChrome(){
   const welcome=!session&&!guestMode;
   $("welcome").classList.toggle("hide",!welcome);
   $("app").classList.toggle("hide",welcome);
+  $("hdr").classList.toggle("hide",welcome);
   renderGear();
   $("t2").classList.toggle("hide",!session);
   if(!session&&!$("p2").classList.contains("hide"))show(0);
@@ -537,17 +582,40 @@ function renderChrome(){
   $("nickbox").classList.toggle("hide",!needNick);
   $("nickcancel").classList.toggle("hide",!me.nick);
 }
-$("gear").onclick=()=>{gearOpen=!gearOpen;renderGear()};
-$("gearpanel").addEventListener("click",e=>{
+$("gear").onclick=()=>{gearOpen=!gearOpen;gearView="main";renderGear()};
+$("gearpanel").addEventListener("click",async e=>{
   const th=e.target.closest("button[data-t]");
   if(th){setTheme(th.dataset.t);renderGear();return}
   if(e.target===$("gearpanel")){gearOpen=false;renderGear();return}
+  const a=e.target.closest("button[data-a]");
+  if(a){
+    if(!isAdmin)return;
+    if(!confirm("Odebrać uprawnienia administratora użytkownikowi "+nickOf(a.dataset.id)+"?"))return;
+    try{
+      const res=await sb.from("admins").delete().eq("user_id",a.dataset.id);
+      if(res.error)throw res.error;
+      await loadRemote();say("Uprawnienia odebrane.");
+    }catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+    return;
+  }
   const b=e.target.closest("button[data-c]");if(!b)return;
+  const c=b.dataset.c;
+  if(c==="admin"){gearView="admin";renderGear();return}
+  if(c==="back"){gearView="main";renderGear();return}
+  if(c==="adminadd"){
+    const s=$("adminsel"),id=s?s.value:"";if(!id||!isAdmin)return;
+    try{
+      const res=await sb.from("admins").insert({user_id:id});
+      if(res.error)throw res.error;
+      await loadRemote();say("Nadano uprawnienia: "+nickOf(id));
+    }catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+    return;
+  }
   gearOpen=false;
-  if(b.dataset.c==="close"){renderGear();return}
-  if(b.dataset.c==="out"){setGuest(false);if(sb)sb.auth.signOut();renderChrome()}
-  else if(b.dataset.c==="login"){setGuest(false);renderChrome()}
-  else{nickEdit=true;$("nickin").value=me.nick||"";$("nickinfo").textContent="";renderChrome()}
+  if(c==="close"){renderGear();return}
+  if(c==="out"){setGuest(false);if(sb)sb.auth.signOut();renderChrome()}
+  else if(c==="login"){setGuest(false);renderChrome()}
+  else{nickEdit=true;$("nickin").value=me.nick||"";$("nickinfo").textContent="";renderChrome();window.scrollTo({top:0})}
 });
 $("guestbtn").onclick=()=>{setGuest(true);renderChrome()};
 $("nickcancel").onclick=()=>{nickEdit=false;renderChrome()};
@@ -711,10 +779,9 @@ function renderList(){
    +(old.length?'<details'+(open?' open':'')+' style="margin-top:8px"><summary>Archiwalne ('+old.length+')</summary><div style="margin-top:6px">'+old.join("")+'</div></details>':"");
 }
 
-/* ---------- biblioteka tras i administracja (UI) ---------- */
+/* ---------- biblioteka tras (UI) ---------- */
 function renderLibUi(){
   $("libbox").classList.toggle("hide",!session);
-  $("adminbox").classList.toggle("hide",!isAdmin);
   // lista w Zaawansowane
   $("liblist").innerHTML=lib.length?lib.map(l=>'<div class="lib"><b>'+esc(l.title)+'</b> <span class="note">· '+(l.km!=null?Number(l.km).toFixed(1)+' km · ':'')+'autor: '+esc(nickOf(l.creator))+'</span><div>'+esc(l.description)+'</div>'
     +'<div class="row" style="margin-top:6px"><button class="b g" data-l="show" data-id="'+esc(l.id)+'">🗺 Pokaż na mapie</button><button class="b g" data-l="gpx" data-id="'+esc(l.id)+'">⬇ GPX</button>'
@@ -723,12 +790,6 @@ function renderLibUi(){
   const s=$("rlib"),v=s.value;
   s.innerHTML='<option value="">— nie wybrano —</option>'+lib.map(l=>'<option value="'+esc(l.id)+'">'+esc(l.title)+(l.km!=null?' — '+Number(l.km).toFixed(1)+' km':'')+'</option>').join("");
   s.value=v;
-  // administracja
-  if(isAdmin){
-    $("adminlist").innerHTML=adminIds.map(id=>'<div class="row" style="margin-bottom:6px"><b>'+esc(nickOf(id))+'</b>'+(id===uid?' <span class="note">(Ty)</span>':'<button class="b g small" data-a="rm" data-id="'+esc(id)+'">Odbierz uprawnienia</button>')+'</div>').join("")||'<div class="note">Brak.</div>';
-    const cand=Object.keys(nicks).filter(id=>!adminIds.includes(id));
-    $("adminsel").innerHTML=cand.length?cand.map(id=>'<option value="'+esc(id)+'">'+esc(nicks[id])+'</option>').join(""):'<option value="">(brak użytkowników z nickiem)</option>';
-  }
 }
 $("liblist").addEventListener("click",async e=>{
   const b=e.target.closest("button[data-l]");if(!b)return;
@@ -771,23 +832,6 @@ $("ladd").onclick=async()=>{
     await loadRemote();say("Trasa dodana do biblioteki ✔");
   }catch(e){inf.textContent="Nie udało się dodać: "+(e&&e.message?e.message:"błąd")}
 };
-$("adminadd").onclick=async()=>{
-  const id=$("adminsel").value;if(!id||!isAdmin)return;
-  try{
-    const res=await sb.from("admins").insert({user_id:id});
-    if(res.error)throw res.error;
-    await loadRemote();say("Nadano uprawnienia: "+nickOf(id));
-  }catch(e){say("Nie udało się: "+(e&&e.message?e.message:"błąd"))}
-};
-$("adminlist").addEventListener("click",async e=>{
-  const b=e.target.closest("button[data-a]");if(!b||!isAdmin)return;
-  if(!confirm("Odebrać uprawnienia administratora użytkownikowi "+nickOf(b.dataset.id)+"?"))return;
-  try{
-    const res=await sb.from("admins").delete().eq("user_id",b.dataset.id);
-    if(res.error)throw res.error;
-    await loadRemote();say("Uprawnienia odebrane.");
-  }catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
-});
 
 function refreshUi(){renderChrome();renderWants();renderNext();renderNav();renderCard();renderList();renderLibUi()}
 
@@ -1053,6 +1097,7 @@ $("aw").onclick=async()=>{
 /* ---------- zakładki ---------- */
 function show(n){
   [0,1,2].forEach(i=>{$("p"+i).classList.toggle("hide",i!==n);$("t"+i).classList.toggle("on",i===n)});
+  window.scrollTo({top:0});
   setTimeout(()=>{if(n===1&&map1)map1.m.invalidateSize();if(n===2&&map2)map2.m.invalidateSize()},60);
 }
 [0,1,2].forEach(i=>{$("t"+i).onclick=()=>show(i)});
