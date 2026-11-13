@@ -152,7 +152,7 @@ details.card>summary{font-size:16px}
 <div class="card hide" id="nickbox">
  <h2>Wybierz swój nick</h2>
  <p class="note" style="margin-top:0">Nick widzą inni zalogowani użytkownicy przy zapisach i zgłoszeniach. Musi być unikalny (2–20 znaków: litery, cyfry, spacja, kropka, _ lub -).</p>
- <div class="row"><input id="nickin" maxlength="20" style="max-width:260px" placeholder="np. GAWRON"><button class="b" id="nicksave">Zapisz nick</button><button class="b g hide" id="nickcancel">Anuluj</button></div>
+ <div class="row"><input id="nickin" maxlength="20" style="max-width:260px" placeholder="np. GAWRON"><button class="b" id="nicksave">Zapisz nick</button></div>
  <div class="note" id="nickinfo" style="margin-top:6px"></div>
 </div>
 
@@ -479,7 +479,7 @@ document.addEventListener("click",e=>{
 const RECOVERY=/type=recovery/.test(location.hash||""),HASH_EXPIRED=/error_code=otp_expired/.test(location.hash||"");
 let pwMode=false;
 let sb=null,session=null,uid="",ready=false;
-let me={nick:null},isAdmin=false,adminIds=[],nickEdit=false;
+let me={nick:null},isAdmin=false,adminIds=[];
 let nicks={},sorted=[],cur=-1,rsvps={},wants=[],joins={},lib=[];
 let viewToken=0,shareFor=null,map1=null,map2=null;
 let editId=null,formRoute,wantDay="0",libFile=null;
@@ -548,15 +548,26 @@ function adminHtml(){
    +'<h3>Nadaj uprawnienia administratora</h3>'+add
    +'<p class="note">Administrator może edytować i usuwać każdą wieczorynkę, zgłoszenie i trasę oraz zarządzać administratorami.</p></div>';
 }
+function nickHtml(){
+  return '<button class="sback" data-c="back">‹ Ustawienia</button>'
+   +'<div class="sname" style="margin-top:26px">✏️ Zmień nick</div>'
+   +'<div class="sleft"><label for="gnick" style="font-size:15px">Nowy nick</label>'
+   +'<input id="gnick" maxlength="20" autocomplete="off" value="'+esc(me.nick||"")+'" placeholder="np. GAWRON">'
+   +'<p class="note">2–20 znaków: litery, cyfry, spacja, kropka, _ lub -. Nick musi być unikalny; widzą go inni zalogowani.</p>'
+   +'<div class="note" id="gnickinfo" style="color:var(--bad)"></div>'
+   +'<button class="b sbtn" data-c="nicksave">Zapisz nick</button></div>';
+}
 function renderGear(){
   const p=$("gearpanel");
   if(!gearOpen){p.classList.add("hide");gearView="main";return}
   p.classList.remove("hide");
   if(gearView==="admin"&&!(session&&isAdmin))gearView="main";
   const keepSel=$("adminsel")?$("adminsel").value:"";
+  const keepNick=gearView==="nick"&&$("gnick")?{v:$("gnick").value,i:$("gnickinfo").textContent}:null;
   const tg='<a class="b sbtn g" href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">📣 Kanał na Telegramie</a>';
   let body;
   if(gearView==="admin")body=adminHtml();
+  else if(gearView==="nick"&&session)body=nickHtml();
   else body=session
     ?'<div class="sname">👤 '+esc(me.nick||"ustaw nick")+(isAdmin?' 🛡️':'')+'</div><div class="smail">'+esc(session.user.email||"")+'</div>'
      +'<button class="b sbtn g" data-c="nick">✏️ Zmień nick</button>'+tg
@@ -568,6 +579,7 @@ function renderGear(){
   p.innerHTML='<div class="sheetbox"><button class="sclose" data-c="close" aria-label="Zamknij">✕</button>'+body+'</div>';
   const s=$("adminsel");
   if(s&&keepSel&&[...s.options].some(o=>o.value===keepSel))s.value=keepSel;
+  if(keepNick&&$("gnick")){$("gnick").value=keepNick.v;$("gnickinfo").textContent=keepNick.i}
 }
 function renderChrome(){
   const welcome=!session&&!guestMode;
@@ -578,9 +590,8 @@ function renderChrome(){
   $("t2").classList.toggle("hide",!session);
   if(!session&&!$("p2").classList.contains("hide"))show(0);
   $("pwbox").classList.toggle("hide",!(pwMode&&session));
-  const needNick=!!session&&(!me.nick||nickEdit)&&!pwMode;
+  const needNick=!!session&&!me.nick&&!pwMode;
   $("nickbox").classList.toggle("hide",!needNick);
-  $("nickcancel").classList.toggle("hide",!me.nick);
 }
 $("gear").onclick=()=>{gearOpen=!gearOpen;gearView="main";renderGear()};
 $("gearpanel").addEventListener("click",async e=>{
@@ -601,6 +612,8 @@ $("gearpanel").addEventListener("click",async e=>{
   const b=e.target.closest("button[data-c]");if(!b)return;
   const c=b.dataset.c;
   if(c==="admin"){gearView="admin";renderGear();return}
+  if(c==="nick"){gearView="nick";renderGear();const i=$("gnick");if(i){i.focus();i.select()}return}
+  if(c==="nicksave"){await gearSaveNick();return}
   if(c==="back"){gearView="main";renderGear();return}
   if(c==="adminadd"){
     const s=$("adminsel"),id=s?s.value:"";if(!id||!isAdmin)return;
@@ -615,19 +628,29 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="close"){renderGear();return}
   if(c==="out"){setGuest(false);if(sb)sb.auth.signOut();renderChrome()}
   else if(c==="login"){setGuest(false);renderChrome()}
-  else{nickEdit=true;$("nickin").value=me.nick||"";$("nickinfo").textContent="";renderChrome();window.scrollTo({top:0})}
 });
+$("gearpanel").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="gnick"){e.preventDefault();gearSaveNick()}});
+async function gearSaveNick(){
+  const i=$("gnick");if(!i)return;
+  const n=i.value.trim();
+  if(n===me.nick){gearView="main";renderGear();return}
+  const err=await saveNick(n);
+  if(err){$("gnickinfo").textContent=err;return}
+  gearView="main";renderGear();say("Nick zapisany ✔");
+}
 $("guestbtn").onclick=()=>{setGuest(true);renderChrome()};
-$("nickcancel").onclick=()=>{nickEdit=false;renderChrome()};
-$("nicksave").onclick=async()=>{
-  const n=$("nickin").value.trim(),inf=$("nickinfo");
-  if(!NICK_RE.test(n)){inf.textContent="Nick: 2–20 znaków — litery, cyfry, spacja, kropka, _ lub -.";return}
+async function saveNick(n){
+  if(!NICK_RE.test(n))return "Nick: 2–20 znaków — litery, cyfry, spacja, kropka, _ lub -.";
   try{
     const res=me.nick?await sb.from("profiles").update({nick:n}).eq("user_id",uid):await sb.from("profiles").insert({user_id:uid,nick:n});
-    if(res.error){inf.textContent=res.error.code==="23505"?"Ten nick jest już zajęty — wybierz inny.":"Nie udało się zapisać: "+res.error.message;return}
-    nickEdit=false;inf.textContent="";
-    await loadRemote();say("Nick zapisany ✔");
-  }catch(e){inf.textContent="Nie udało się zapisać nicku."}
+    if(res.error)return res.error.code==="23505"?"Ten nick jest już zajęty — wybierz inny.":"Nie udało się zapisać: "+res.error.message;
+    await loadRemote();return null;
+  }catch(e){return "Nie udało się zapisać nicku."}
+}
+$("nicksave").onclick=async()=>{
+  const inf=$("nickinfo"),err=await saveNick($("nickin").value.trim());
+  inf.textContent=err||"";
+  if(!err)say("Nick zapisany ✔");
 };
 
 /* ---------- START: chętni ---------- */
@@ -1105,7 +1128,7 @@ function show(n){
 /* ---------- logowanie ---------- */
 function setSession(s){
   session=s;uid=s?s.user.id:"";
-  if(!s){me.nick=null;isAdmin=false;adminIds=[];nickEdit=false}
+  if(!s){me.nick=null;isAdmin=false;adminIds=[]}
 }
 const amsg=e=>({"Invalid login credentials":"Nieprawidłowy e-mail lub hasło.","User already registered":"Konto z tym adresem już istnieje — zaloguj się."}[e.message]||e.message);
 $("login").onclick=async()=>{
