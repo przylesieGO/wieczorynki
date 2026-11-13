@@ -6,7 +6,7 @@
 <title>PrzylesieGo! Ustawki rowerowe</title>
 <meta name="description" content="Wspólne wieczorne przejazdy rowerowe: kto chce jechać, trasa na mapie, prognoza wiatru, zapisy.">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1f7a4d">
+<meta name="theme-color" content="#f5f5f7">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
@@ -17,27 +17,32 @@
 <meta property="og:description" content="Dołącz do wspólnych przejazdów: kto chce jechać, trasa na mapie, prognoza wiatru, zapisy.">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 <style>
-:root{--bg:#f6f4ef;--card:#fff;--ink:#1d2a24;--mut:#6a766f;--line:#e2ded3;--acc:#1f7a4d;--acc2:#e8f3ec;--bad:#d64545;--good:#2a9d5c;--warn:#fff4d6}
-@media (prefers-color-scheme:dark){:root{--bg:#121815;--card:#1b241f;--ink:#e8efe9;--mut:#93a39a;--line:#2b3830;--acc:#47c183;--acc2:#1f3328;--bad:#ef6b6b;--good:#4cc985;--warn:#3a321a}}
+:root{color-scheme:light;--bg:#f5f5f7;--card:#fff;--fill:#f2f2f7;--ink:#1d1d1f;--mut:#6e6e73;--line:#e5e5ea;--acc:#248a3d;--acc2:#e8f5ec;--bad:#d64545;--good:#2a9d5c;--warn:#fff6dc;--shadow:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.05)}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 .wrap{max-width:900px;margin:0 auto;padding:16px}
-h1{font-size:22px;margin:4px 0}h2{font-size:17px;margin:0 0 8px}h3{font-size:14px;margin:14px 0 6px;color:var(--mut)}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+h1{font-size:24px;margin:4px 0;letter-spacing:-.02em}h2{font-size:19px;margin:0 0 10px;letter-spacing:-.01em}h3{font-size:13px;margin:16px 0 6px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.card{background:var(--card);border:1px solid rgba(0,0,0,.05);border-radius:18px;padding:18px;margin-bottom:16px;box-shadow:var(--shadow)}
 .top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
 .apptitle{font-size:20px;line-height:1.2}.wsub2{display:block;font-size:13px;font-weight:500;color:var(--mut)}
 .welcome{max-width:420px;margin:8vh auto 0}
 .wtitle{font-size:34px;margin:6px 0 0}.wsub{font-size:18px;color:var(--acc);font-weight:600}
-.gear{flex:none;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:21px;line-height:1;cursor:pointer}
-nav{display:flex;gap:6px;margin-bottom:14px}
-nav button{flex:1;padding:10px 4px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;font:inherit;font-weight:600;cursor:pointer}
-nav button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.gear{flex:none;width:44px;height:44px;border-radius:50%;border:1px solid rgba(0,0,0,.06);background:var(--card);color:var(--ink);font-size:21px;line-height:1;cursor:pointer;box-shadow:var(--shadow)}
+nav{display:flex;gap:2px;padding:3px;background:#e4e4e9;border-radius:12px;margin-bottom:16px}
+nav button{flex:1;padding:9px 4px;border:0;background:transparent;color:var(--mut);border-radius:9px;font:inherit;font-weight:600;font-size:15px;cursor:pointer}
+nav button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.roundbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:164px;height:164px;margin:8px auto 4px;border:0;border-radius:50%;background:linear-gradient(160deg,#3ecf62,#248a3d);color:#fff;font:inherit;font-weight:700;font-size:17px;line-height:1.2;cursor:pointer;box-shadow:0 10px 24px rgba(36,138,61,.35),inset 0 1px 0 rgba(255,255,255,.35);transition:transform .12s}
+.roundbtn:active{transform:scale(.96)}.roundbtn .ri{font-size:48px;line-height:1}
+.pw{position:relative}.pw input{padding-right:46px}
+.eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:38px;height:38px;border:0;background:transparent;font-size:19px;cursor:pointer;border-radius:50%}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:700px){.grid{grid-template-columns:1fr}}
-label{display:block;font-size:12px;color:var(--mut);margin:8px 0 3px}
-input,select,textarea{width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:16px}
-button.b,a.b{display:inline-block;padding:9px 14px;border:0;border-radius:9px;background:var(--acc);color:#fff;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;line-height:1.25}
-button.small{padding:5px 10px;font-size:13px}
+label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid transparent;border-radius:11px;background:var(--fill);color:var(--ink);font:inherit;font-size:16px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--acc);background:#fff;box-shadow:0 0 0 3px rgba(36,138,61,.18)}
+button.b,a.b{display:inline-block;padding:10px 16px;border:0;border-radius:11px;background:var(--acc);color:#fff;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;line-height:1.25}
+button.b:active,a.b:active{opacity:.8}
+button.small{padding:6px 12px;font-size:14px}
 button.big{width:100%;padding:16px;font-size:18px;border-radius:12px}
 .g{background:var(--acc2)!important;color:var(--acc)!important}
 button:disabled{opacity:.4;cursor:default}
@@ -60,12 +65,12 @@ button:disabled{opacity:.4;cursor:default}
 .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
 summary{cursor:pointer;font-weight:600}
 details.card>summary{font-size:16px}
-.item{padding:8px 10px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;cursor:pointer}
+.item{padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:6px;cursor:pointer}
 .item.cur{border-color:var(--acc);background:var(--acc2)}
 .want,.lib{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:10px}
 .want.mine{border-color:var(--acc);background:var(--acc2)}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 4px}
-.chip{padding:8px 14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;font:inherit;cursor:pointer}
+.chip{padding:8px 16px;border:0;background:var(--fill);color:var(--ink);border-radius:999px;font:inherit;cursor:pointer}
 .chip.on{background:var(--acc);color:#fff;border-color:var(--acc)}
 .sharebox{margin-top:10px;padding:10px;border-radius:10px;background:var(--acc2)}
 .routeinfo{margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px}
@@ -86,7 +91,7 @@ details.card>summary{font-size:16px}
  </div>
  <div class="card">
   <label>E-mail</label><input id="ae" type="email" autocomplete="email">
-  <label>Hasło (min. 6 znaków)</label><input id="ap" type="password" autocomplete="current-password">
+  <label>Hasło (min. 6 znaków)</label><div class="pw"><input id="ap" type="password" autocomplete="current-password"><button type="button" class="eye" data-eye="ap" aria-label="Pokaż hasło" title="Pokaż / ukryj hasło">👁️</button></div>
   <div class="row" style="margin-top:12px"><button class="b" id="login">Zaloguj</button><button class="b g" id="signup">Załóż konto</button></div>
   <div style="margin-top:10px"><button class="b g small" id="forgot">Nie pamiętam hasła</button></div>
   <div class="note" id="ainfo" style="margin-top:8px"></div>
@@ -104,7 +109,7 @@ details.card>summary{font-size:16px}
 
 <div class="card hide" id="pwbox">
  <h2>Ustaw nowe hasło</h2>
- <div class="row"><input id="pw1" type="password" autocomplete="new-password" placeholder="Nowe hasło (min. 6 znaków)" style="max-width:280px"><button class="b" id="pwsave">Zapisz hasło</button></div>
+ <div class="row"><div class="pw" style="flex:1;min-width:200px;max-width:320px"><input id="pw1" type="password" autocomplete="new-password" placeholder="Nowe hasło (min. 6 znaków)"><button type="button" class="eye" data-eye="pw1" aria-label="Pokaż hasło" title="Pokaż / ukryj hasło">👁️</button></div><button class="b" id="pwsave">Zapisz hasło</button></div>
  <div class="note" id="pwinfo" style="margin-top:6px"></div>
 </div>
 
@@ -123,7 +128,7 @@ details.card>summary{font-size:16px}
   <h2>Kto chce jechać?</h2>
   <div id="wantguest" class="note">Zaloguj się, aby zobaczyć chętnych i zgłosić ochotę na przejażdżkę.</div>
   <div id="wantmain" class="hide">
-   <button class="b big" id="wantbtn">🚴 Mam ochotę pojeździć</button>
+   <button class="roundbtn" id="wantbtn"><span class="ri">🚴</span><span>Mam ochotę<br>pojeździć</span></button>
    <div id="wantform" class="hide">
     <div class="chips" id="wchips"><button class="chip on" data-d="0">Dziś</button><button class="chip" data-d="1">Jutro</button><button class="chip" data-d="2">Pojutrze</button><button class="chip" data-d="x">Inny dzień</button></div>
     <div class="grid">
@@ -426,10 +431,22 @@ function renderPlaces(boxId,mp,list,err){
   if(err){box.innerHTML='<b>Miejscowości na trasie</b><div class="note">Nie udało się pobrać danych z OpenStreetMap. Spróbuj za chwilę.</div>';box.classList.remove("hide");return}
   if(!list.length){box.classList.add("hide");return}
   const kmt=k=>k<10?k.toFixed(1):String(Math.round(k));
-  box.innerHTML='<b>Trasa prowadzi przez</b><div style="margin-top:4px">'+list.map(p=>'<span style="white-space:nowrap">'+(PICON[p.type]||"📍")+' '+esc(p.name)+' <span class="note">'+kmt(p.km)+' km</span></span>').join(' → ')+'</div><div class="note" style="margin-top:4px">Odległości od startu wzdłuż trasy. Dane: OpenStreetMap.</div>';
+  box.innerHTML='<details><summary>📍 Miejscowości na trasie ('+list.length+')</summary><div style="margin-top:8px">'+list.map(p=>'<span style="white-space:nowrap">'+(PICON[p.type]||"📍")+' '+esc(p.name)+' <span class="note">'+kmt(p.km)+' km</span></span>').join(' → ')+'</div><div class="note" style="margin-top:6px">Odległości od startu wzdłuż trasy. Dane: OpenStreetMap.</div></details>';
   box.classList.remove("hide");
-  if(mp)list.forEach(p=>L.circleMarker([p.lat,p.lon],{radius:5,color:"#fff",weight:1.5,fillColor:"#7a4fd1",fillOpacity:1}).addTo(mp.p).bindTooltip(p.name+" · "+kmt(p.km)+" km"));
+  const d=box.querySelector("details");
+  d.addEventListener("toggle",()=>{
+    if(!mp)return;
+    mp.p.clearLayers();
+    if(d.open)list.forEach(p=>L.circleMarker([p.lat,p.lon],{radius:5,color:"#fff",weight:1.5,fillColor:"#7a4fd1",fillOpacity:1}).addTo(mp.p).bindTooltip(p.name+" · "+kmt(p.km)+" km"));
+  });
 }
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-eye]");if(!b)return;
+  const i=$(b.dataset.eye),show=i.type==="password";
+  i.type=show?"text":"password";
+  b.textContent=show?"🙈":"👁️";
+  b.setAttribute("aria-label",show?"Ukryj hasło":"Pokaż hasło");
+});
 
 /* ---------- stan ---------- */
 const RECOVERY=/type=recovery/.test(location.hash||""),HASH_EXPIRED=/error_code=otp_expired/.test(location.hash||"");
