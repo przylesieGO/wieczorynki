@@ -82,6 +82,8 @@ nav button.on{background:var(--accbtn);color:#fff;box-shadow:0 1px 4px rgba(36,1
 .hdr.compact .hin{padding:8px 16px;flex-wrap:nowrap;gap:10px}
 .hdr.compact .apptitle{flex:none;font-size:17px}
 .hdr.compact .wsub2{display:none}
+.menick{display:block;margin-top:4px;font-size:13px;font-weight:600;color:var(--mut);cursor:pointer;line-height:1.2}.menick .nk{font-size:14px;padding:1px 9px}
+.hdr.compact .menick{display:inline-block;margin:0 0 0 6px;vertical-align:2px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hdr.compact .menick i{display:none}.hdr.compact .menick .nk{font-size:13px;padding:1px 7px}
 .hdr.compact nav{order:2;flex:1 1 auto;min-width:0}
 .hdr.compact nav button{padding:6px 4px;font-size:14px}
 .hdr.compact .gear{order:3;width:36px;height:36px;font-size:18px}
@@ -395,7 +397,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 
 <!-- ===== NAGŁÓWEK (przyklejony, zwija się przy przewijaniu) ===== -->
 <header class="hdr" id="hdr"><div class="hin">
- <h1 class="apptitle"><span class="tlogo"><svg class="blogo" viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="27" fill="#1f9d55"/><circle cx="44" cy="62" r="25" fill="none" stroke="#fff" stroke-width="9"/><circle cx="76" cy="62" r="25" fill="none" stroke="#fbbf24" stroke-width="9"/><circle cx="44" cy="62" r="4" fill="#fff"/><circle cx="76" cy="62" r="4" fill="#fbbf24"/></svg></span><span class="tname"> PrzylesieGo!</span><span class="wsub2">Ustawki rowerowe</span></h1>
+ <h1 class="apptitle"><span class="tlogo"><svg class="blogo" viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="27" fill="#1f9d55"/><circle cx="44" cy="62" r="25" fill="none" stroke="#fff" stroke-width="9"/><circle cx="76" cy="62" r="25" fill="none" stroke="#fbbf24" stroke-width="9"/><circle cx="44" cy="62" r="4" fill="#fff"/><circle cx="76" cy="62" r="4" fill="#fbbf24"/></svg></span><span class="tname"> PrzylesieGo!</span><span class="wsub2">Ustawki rowerowe</span><span class="menick hide" id="menick" title="Jesteś zalogowany jako — kliknij, żeby otworzyć Ustawienia"></span></h1>
  <nav><button id="t0" class="on">Start</button><button id="t1">Wieczorynki</button><button id="t2">Zaawansowane</button></nav>
  <button class="gear bell hide" id="bellbtn" aria-label="Powiadomienia" title="Powiadomienia">🔔<b class="bbadge hide" id="bellbadge"></b></button>
  <button class="gear help" id="helpbtn" aria-label="Pomoc — co potrafi aplikacja" title="Pomoc">❓</button>
@@ -865,6 +867,10 @@ if(darkMq&&darkMq.addEventListener)darkMq.addEventListener("change",applyTheme);
 applyTheme();
 const themeHtml=()=>'<div class="note" style="margin-top:14px">Wygląd</div><div class="seg">'+[["light","☀️ Jasny"],["dark","🌙 Ciemny"],["auto","Auto"]].map(([k,n])=>'<button data-t="'+k+'" class="'+(themeMode===k?"on":"")+'">'+n+'</button>').join("")+'</div>'+(themeMode==="auto"?'<div class="note" style="margin-top:6px">Auto — jak w telefonie. Wieczorem ciemny, jeśli masz w telefonie włączone automatyczne przełączanie.</div>':'');
 let guestMode=false,gearOpen=false,gearView="main";
+// nick zalogowanego na górze ekranu (pomaga przy kilku kontach) — domyślnie widoczny, zapamiętane w telefonie
+let showNick=true;try{showNick=localStorage.getItem("showNick")!=="0"}catch(e){}
+const showNickHtml=()=>'<div class="note" style="margin-top:14px">Nick na górze ekranu</div><div class="seg">'+[["1","Pokaż"],["0","Ukryj"]].map(([k,t])=>'<button data-sn="'+k+'" class="'+((showNick?"1":"0")===k?"on":"")+'">'+t+'</button>').join("")+'</div><div class="note" style="margin-top:6px">Przydatne, gdy masz kilka kont — od razu widać, na którym jesteś.</div>';
+function renderMeNick(){const el=$("menick");if(!el)return;const on=showNick&&!!session&&!!me.nick;el.classList.toggle("hide",!on);el.innerHTML=on?'<i>👤 Zalogowany: </i>'+nk(uid):''}
 try{guestMode=sessionStorage.getItem("guest")==="1"}catch(e){}
 const setGuest=v=>{guestMode=v;try{v?sessionStorage.setItem("guest","1"):sessionStorage.removeItem("guest")}catch(e){}};
 function adminHtml(){
@@ -1106,7 +1112,7 @@ function renderGear(){
      +(isAdmin?'<button class="b sbtn g" data-c="admin">🛡️ Administracja</button>':'')
      +(meTester()?'<div class="note" style="margin-top:14px">🧪 Funkcje testowe (jesteś testerem)</div><div class="seg">'+[["1","Pokaż"],["0","Ukryj"]].map(([k,t])=>'<button data-beta="'+k+'" class="'+((betaOn?"1":"0")===k?"on":"")+'">'+t+'</button>').join("")+'</div><div class="note" style="margin-top:6px">„Ukryj” — widzisz aplikację tak jak wszyscy.</div>':'')
      +'<button class="b sbtn g" data-c="help">❓ Pomoc — co potrafi aplikacja</button>'
-     +themeHtml()+helpPrefHtml()
+     +themeHtml()+showNickHtml()+helpPrefHtml()
      +'<button class="b sbtn" style="background:var(--bad);margin-top:20px" data-c="out">Wyloguj</button>'
      +'<button class="sdanger" data-c="del">Usuń konto…</button>'
     :'<div class="sname">Przeglądasz jako gość</div><div class="smail">Zaloguj się, żeby zapisywać się na wieczorynki i zgłaszać ochotę na jazdę.</div>'
@@ -1175,6 +1181,8 @@ $("gearpanel").addEventListener("click",async e=>{
   if(gb){selGender=gb.dataset.g;[...$("gsex").children].forEach(x=>x.classList.toggle("on",x===gb));return}
   const th=e.target.closest("button[data-t]");
   if(th){setTheme(th.dataset.t);renderGear();return}
+  const sn=e.target.closest("button[data-sn]");
+  if(sn){showNick=sn.dataset.sn==="1";try{localStorage.setItem("showNick",showNick?"1":"0")}catch(err){}renderMeNick();renderGear();return}
   const hs=e.target.closest("button[data-hs]");
   if(hs){setHelpOff(hs.dataset.hs==="0");renderGear();return}
   const bt=e.target.closest("button[data-beta]");
@@ -2126,6 +2134,7 @@ function goToWant(w){
   if(!el){say("To zaproszenie już minęło albo zostało usunięte.");return}
   setTimeout(()=>{el.scrollIntoView({behavior:"smooth",block:"center"});el.classList.remove("flash");void el.offsetWidth;el.classList.add("flash")},80);
 }
+$("menick").onclick=()=>{gearOpen=true;gearView="main";renderGear()};
 $("bellbtn").onclick=()=>{if(!session)return;renderBellSheet()};
 $("bellsheet").addEventListener("click",async e=>{
   const p=$("bellsheet");
@@ -2566,7 +2575,7 @@ function adminStatsHtml(){
    +'<button class="b sbtn g" data-c="stats">↻ Odśwież</button></div>';
 }
 
-function refreshUi(){renderBell();renderChrome();renderWants();renderNext();renderCountdown();renderNav();renderCard();renderList();renderLibUi();renderOnline()}
+function refreshUi(){renderBell();renderMeNick();renderChrome();renderWants();renderNext();renderCountdown();renderNav();renderCard();renderList();renderLibUi();renderOnline()}
 
 async function showRide(idx){
   cur=idx;const token=++viewToken;
