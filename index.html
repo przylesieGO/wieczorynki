@@ -349,6 +349,20 @@ html,body{overscroll-behavior-x:none}
 .foot{text-align:center;margin-top:8px}.foot .note:empty{display:none}
 /* zaproszenia dla wybranych (KROK 13): pole „Kto zobaczy”, okno „Kogo zapraszasz?”, popup */
 .toast{z-index:5000}
+/* ➕ pływający przycisk nowego zaproszenia */
+.fab{position:fixed;right:max(calc(16px + env(safe-area-inset-right,0px)),calc((100vw - 900px)/2 + 16px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:1500;height:58px;min-width:58px;padding:0 22px 0 17px;border:0;border-radius:29px;display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(160deg,#3ecf62,#248a3d);color:#fff;font:inherit;font-size:17px;font-weight:700;letter-spacing:-.01em;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 8px 22px rgba(36,138,61,.38),0 2px 6px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.3);transition:padding .25s,gap .25s,transform .12s,opacity .2s}
+.fab svg{width:26px;height:26px;flex:none}
+.fab .fabt{white-space:nowrap;overflow:hidden;max-width:190px;transition:max-width .25s,opacity .2s}
+.fab.mini{padding:0 16px;gap:0}.fab.mini .fabt{max-width:0;opacity:0}
+.fab:active{transform:scale(.94)}
+.fab.off{background:#c7c7cc;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+html[data-theme=dark] .fab{box-shadow:0 8px 22px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.25)}
+html[data-theme=dark] .fab.off{background:#48484a;color:#a1a1a6}
+.fbadge{position:absolute;bottom:calc(100% + 7px);right:4px;background:#fff;color:#248a3d;border-radius:999px;font-size:13px;font-weight:800;padding:3px 10px;box-shadow:0 2px 8px rgba(0,0,0,.2);white-space:nowrap;pointer-events:none}
+html[data-theme=dark] .fbadge{background:#2c2c2e;color:#4cd964}
+body.hasfab .wrap{padding-bottom:110px}
+body.hasfab .toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+@media (prefers-reduced-motion:reduce){.fab,.fab .fabt{transition:none}}
 .who{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;border-radius:12px;background:var(--fill);border:2px solid transparent;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
 .who.priv{border-color:var(--acc)}
 .who .wic{font-size:20px;flex:none}.who .wtx{flex:1;min-width:0}.who .wtx b{display:block;font-size:16px}
@@ -473,10 +487,8 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
  <div class="card">
   <div class="row between"><h2 style="margin:0">Umów się na rower</h2><span class="onl hide" id="onlbtn" title="Tyle osób ma teraz otwartą aplikację — ich nicki mają zieloną obwódkę"></span></div>
   <div id="wantguest" class="note">Zaloguj się, aby zobaczyć chętnych i zgłosić ochotę na przejażdżkę.</div>
-  <p class="wsubc">Kliknij i wyślij zaproszenie do wspólnej jazdy — pojawi się też na naszym <a href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">kanale 📣 Telegram</a>.</p>
   <div id="wantmain" class="hide">
    <div id="mywant"></div>
-   <div class="rbwrap" id="rbwrap"><button class="roundbtn" id="wantbtn"><span class="ri"><svg viewBox="16 36 88 52" aria-hidden="true"><circle cx="44" cy="62" r="25" fill="none" stroke="#fff" stroke-width="9"/><circle cx="76" cy="62" r="25" fill="none" stroke="#fbbf24" stroke-width="9"/><circle cx="44" cy="62" r="4" fill="#fff"/><circle cx="76" cy="62" r="4" fill="#fbbf24"/></svg></span><span class="rb1">Idziemy<br>na rower?</span></button><b class="rbadge hide" id="wbadge"></b></div>
    <div id="wantform" class="hide">
     <div class="wlbl" id="wftitle">Kiedy jedziesz?</div>
     <div class="seg" id="wdays"><button type="button" data-d="0" class="on">Dziś</button><button type="button" data-d="1">Jutro</button><button type="button" data-d="2">Pojutrze</button><button type="button" data-d="x">Inny dzień</button></div>
@@ -618,6 +630,8 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 </footer>
 </div>
 <div class="sheet hide" id="helpsheet"></div>
+<!-- ➕ pływający przycisk „Zaproś na rower” (zwija się przy przewijaniu w dół) -->
+<button type="button" class="fab hide" id="fab" aria-label="Zaproś na rower — nowe zaproszenie"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5v15M4.5 12h15" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span class="fabt">Zaproś na rower</span><b class="fbadge hide" id="wbadge"></b></button>
 <div class="toast hide" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
@@ -1566,7 +1580,7 @@ function renderWants(){
   renderMyWant();
   const list=wants.filter(w=>new Date(w.starts_at).getTime()>=Date.now()-3*36e5);
   const box=$("wantlist");
-  if(!list.length){box.innerHTML='<div class="note" style="margin-top:12px">Nikt jeszcze nie zgłosił ochoty. Bądź pierwszy!</div>';return}
+  if(!list.length){box.innerHTML='<div class="note" style="margin-top:12px">Nikt jeszcze nie zaprasza. Bądź pierwszy — kliknij <b>➕ Zaproś na rower</b> w prawym dolnym rogu.</div>';return}
   // grupowanie po dniu: jedna rozwijana karta na dzień
   const days=[];
   list.slice().sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at)).forEach(w=>{
@@ -1808,7 +1822,27 @@ async function getWantRoute(id){
   wRouteCache[id]=pts;return pts;
 }
 function closeWantForm(){$("wantform").classList.add("hide");wf.editId=null}
-$("wantbtn").onclick=()=>{$("wantform").classList.contains("hide")||wf.editId?openWantForm(null):closeWantForm()};
+/* ➕ pływający przycisk: widoczny na Starcie, chowa się przy formularzu i okienkach; gość — wyszarzony */
+function updateFab(){
+  const f=$("fab");if(!f)return;
+  const anySheet=[...document.querySelectorAll(".sheet")].some(x=>!x.classList.contains("hide"));
+  const on=(!!session||guestMode)&&curTab===0&&!pwMode&&!anySheet&&$("wantform").classList.contains("hide");
+  f.classList.toggle("hide",!on);f.classList.toggle("off",!session);
+  f.setAttribute("aria-disabled",session?"false":"true");
+  document.body.classList.toggle("hasfab",on);
+}
+let fabY=0;
+window.addEventListener("scroll",()=>{
+  const y=window.scrollY||document.documentElement.scrollTop||0,f=$("fab");
+  if(y<80)f.classList.remove("mini");else if(y>fabY+6)f.classList.add("mini");else if(y<fabY-6)f.classList.remove("mini");
+  fabY=y;
+},{passive:true});
+$("fab").onclick=()=>{
+  if(!session){say("Zaloguj się, żeby zaprosić na rower.");return}
+  openWantForm(null);
+};
+// okienka i formularz otwierają się w wielu miejscach — pilnujemy zmian klasy „hide”
+{const mo=new MutationObserver(updateFab);document.querySelectorAll(".sheet,#wantform,#welcome").forEach(el=>mo.observe(el,{attributes:true,attributeFilter:["class"]}))}
 $("wcancel").onclick=closeWantForm;
 $("wrfile").addEventListener("change",async e=>{
   const f=e.target.files[0];if(!f)return;
@@ -1921,7 +1955,6 @@ function renderMyWant(){
   const mine=wants.filter(w=>w.user_id===uid&&act(w)).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
   const others=wants.filter(w=>w.user_id!==uid&&act(w)&&dayDiff(new Date(w.starts_at))===0).length;
   const bd=$("wbadge");bd.textContent=others+" dziś";bd.classList.toggle("hide",!others);
-  $("rbwrap").classList.toggle("hide",!!mine.length);
   if(!mine.length){box.innerHTML="";return}
   // kilka zaproszeń: karuzela przewijana w bok (z kropkami)
   const card=(w,i)=>{
@@ -2792,7 +2825,7 @@ function adminStatsHtml(){
    +'<button class="b sbtn g" data-c="stats">↻ Odśwież</button></div>';
 }
 
-function refreshUi(){renderBell();renderMeNick();renderChrome();renderWants();renderNext();renderCountdown();renderNav();renderCard();renderList();renderLibUi();renderOnline()}
+function refreshUi(){updateFab();renderBell();renderMeNick();renderChrome();renderWants();renderNext();renderCountdown();renderNav();renderCard();renderList();renderLibUi();renderOnline()}
 
 async function showRide(idx){
   cur=idx;const token=++viewToken;
@@ -3108,6 +3141,7 @@ function show(n,dir){
   if(dir){p.classList.remove("slin-l","slin-r");void p.offsetWidth;p.classList.add(dir>0?"slin-r":"slin-l");setTimeout(()=>p.classList.remove("slin-l","slin-r"),300)}
   curTab=n;
   window.scrollTo({top:0});
+  updateFab();
   if(n===0)renderCountdown();
   if(n===1)requestAnimationFrame(()=>rcarScrollTo(cur,false));
   setTimeout(()=>{if(n===1&&map1)map1.m.invalidateSize();if(n===2&&map2)map2.m.invalidateSize()},60);
