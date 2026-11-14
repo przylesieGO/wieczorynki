@@ -60,6 +60,14 @@ nav button.on{background:var(--accbtn);color:#fff;box-shadow:0 1px 4px rgba(36,1
 .bsbox .bsempty{padding:8px 4px;font-size:14px}.bsempty .lnk{font-size:14px;padding:0}
 .wlab{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.04em;border-radius:999px;padding:2px 10px;margin-bottom:6px;background:var(--acc2);color:var(--acc)}
 .wlab.me{background:#fff3c4;color:#8a5a00}html[data-theme=dark] .wlab.me{background:#4a3f12;color:#ffd666}
+.ttag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.05em;color:#7a4fd1;background:rgba(122,79,209,.13);border-radius:999px;padding:2px 9px;margin:0 0 6px 6px;vertical-align:1px;text-transform:none}
+html[data-theme=dark] .ttag{color:#c4a8ff;background:rgba(196,168,255,.18)}
+.nit .tx>.ttag,.want>.ttag{margin-left:0}
+.want.test,.mywant.test{border-style:dashed;border-color:#b9a3e8;background:repeating-linear-gradient(135deg,transparent 0 10px,rgba(122,79,209,.04) 10px 20px)}
+.want.test>*:not(.acts):not(.ttag):not(.wlab),.mywant.test>*:not(.acts):not(.myh){opacity:.6;filter:grayscale(.55)}
+.nit.test .tx>*:not(.ttag):not(.sb),.nit.test .ic{opacity:.6;filter:grayscale(.55)}
+#wtest button.on[data-test="1"]{background:#7a4fd1;color:#fff}
+.b.big.tbtn{background:#7a4fd1}
 .wlab.all{background:var(--fill);color:var(--mut)}
 .want.flash,.mywant.flash{animation:wflash 1.6s ease-out}
 @keyframes wflash{0%,30%{box-shadow:0 0 0 3px var(--acc)}100%{box-shadow:0 0 0 0 transparent}}
@@ -478,6 +486,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
     </div>
     <div class="qchips" id="wquick"><button type="button" data-q="30">Za 30 min</button><button type="button" data-q="17:30">17:30</button><button type="button" data-q="18:00">18:00</button><button type="button" data-q="19:00">19:00</button></div>
     <div class="wx hide" id="wwx"></div>
+    <div id="wtestwrap" class="hide"><div class="wlbl">Rodzaj zaproszenia</div><div class="seg" id="wtest"><button type="button" data-test="1" class="on">🧪 Testowe</button><button type="button" data-test="0">🚴 Prawdziwe</button></div><div class="note" id="wtestnote" style="margin-top:6px"></div></div>
     <div id="wwhowrap" class="hide"><div class="wlbl">Kto zobaczy zaproszenie?</div><button type="button" class="who" id="wwho"></button></div>
     <div class="wlbl">Notatka</div>
     <select id="wnotesel"><option value="">— bez notatki —</option><option>Na godzinkę +/- :)</option><option>Trochę po mieście</option><option>Może do lasu</option><option>Nad rzekę</option><option>Nocna Wataha</option><option value="*">✏️ Własna…</option></select>
@@ -894,6 +903,7 @@ function adminHtml(){
    +'<h3>Nadaj uprawnienia administratora</h3>'+add
    +'<p class="note">Administrator może edytować i usuwać każdą wieczorynkę, zgłoszenie i trasę oraz zarządzać administratorami.</p>'
    +testersHtml()
+   +(isSuper(uid)&&testOk?'<h3>🧪 Zaproszenia testowe</h3><button class="b sbtn" style="background:var(--bad)" data-c="testdel">🧹 Usuń wszystkie testowe zaproszenia…</button><p class="note">Usuwa tylko zaproszenia oznaczone 🧪 TEST (z dołączeniami i powiadomieniami). Prawdziwe zostają.</p>':'')
    +'<h3>Użytkownicy ('+Object.keys(nicks).length+')</h3>'
    +(Object.keys(nicks).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")).map(id=>'<div class="arow">'+nk(id)+(id===uid?'<span class="note">(Ty)</span>':isSuper(id)?'<span class="note">👑</span>':'<button class="b g small" data-a="unick" data-id="'+esc(id)+'">Zmień nick</button>')+'</div>').join("")||'<div class="note">Brak użytkowników z nickiem.</div>')
    +'</div>';
@@ -912,6 +922,15 @@ function testersHtml(){
    +'<p class="note">Tester widzi funkcje w fazie testów (z plakietką 🧪 BETA), zanim dostaną je wszyscy. 🧪 przy nicku oznacza testera.</p>';
 }
 const FSTATE=[["off","Wyłączona"],["testers","Tylko testerzy"],["all","Wszyscy"]];
+let testDelN=null;
+function testDelHtml(){
+  return '<button class="sback" data-c="backadmin">‹ Administracja</button><div class="sname" style="margin-top:26px">🧹 Usuń testowe zaproszenia</div>'
+   +'<div class="sleft"><div class="arow" style="flex-direction:column;align-items:flex-start;gap:4px"><b>'+(testDelN==null?'Liczę…':'Testowych zaproszeń: '+testDelN)+'</b>'
+   +'<span class="note">Znikną na zawsze razem z dołączeniami, zaproszonymi, odpowiedziami i powiadomieniami. Prawdziwe zaproszenia (bez 🧪) zostają. Dziennik aktywności zostaje.</span></div>'
+   +'<label for="gtdel" style="font-size:15px;margin-top:16px">Aby potwierdzić, wpisz <b>USUŃ</b></label><input id="gtdel" maxlength="10" autocomplete="off" autocapitalize="characters">'
+   +'<div class="note" id="gtdelinfo" style="color:var(--bad)"></div>'
+   +'<button class="b sbtn" style="background:var(--bad)" data-c="testdelgo"'+(testDelN?'':' disabled')+'>Usuń testowe zaproszenia</button></div>';
+}
 function flagsHtml(){
   const L=Object.values(flags).sort((a,b)=>a.name.localeCompare(b.name,"pl"));
   return '<button class="sback" data-c="backadmin">‹ Administracja</button>'
@@ -1090,7 +1109,7 @@ function renderGear(){
   const p=$("gearpanel");
   if(!gearOpen){p.classList.add("hide");gearView="main";return}
   p.classList.remove("hide");
-  if((gearView==="admin"||gearView==="unick"||gearView==="colors"||gearView==="stats"||gearView==="flags")&&!(session&&isAdmin))gearView="main";
+  if((gearView==="admin"||gearView==="unick"||gearView==="colors"||gearView==="stats"||gearView==="flags"||gearView==="testdel")&&!(session&&isAdmin))gearView="main";
   if(gearView==="flags"&&!isSuper(uid))gearView="admin";
   if(gearView==="unick"&&!nicks[unickId])gearView="admin";
   const keepSel=$("adminsel")?$("adminsel").value:"";
@@ -1107,6 +1126,7 @@ function renderGear(){
   else if(gearView==="colors")body=colorsHtml();
   else if(gearView==="stats")body=adminStatsHtml();
   else if(gearView==="flags")body=flagsHtml();
+  else if(gearView==="testdel"&&isSuper(uid))body=testDelHtml();
   else if(gearView==="favs"&&session)body=favsHtml();
   else if(gearView==="tg"&&tgOn())body=tgHtml();
   else if(gearView==="user"&&session&&nicks[userId])body=userHtml();
@@ -1238,6 +1258,15 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="colors"){gearView="colors";renderGear();return}
   if(c==="stats"){gearView="stats";loadStats();return}
   if(c==="flags"){gearView="flags";renderGear();return}
+  if(c==="testdel"){testDelN=null;gearView="testdel";renderGear();try{const r=await sb.rpc("admin_test_wants",{do_delete:false});if(r.error)throw r.error;testDelN=+r.data||0}catch(err){testDelN=0;say("Nie udało się policzyć: "+(err&&err.message?err.message:"błąd"))}if(gearView==="testdel")renderGear();return}
+  if(c==="testdelgo"){
+    const i=$("gtdel");if(!i)return;
+    if(i.value.trim().toUpperCase()!=="USUŃ"){$("gtdelinfo").textContent="Wpisz słowo USUŃ, aby potwierdzić.";return}
+    b.disabled=true;
+    try{const r=await sb.rpc("admin_test_wants",{do_delete:true});if(r.error)throw r.error;gearView="admin";await loadRemote();renderGear();say("🧹 Usunięto testowe zaproszenia: "+(+r.data||0))}
+    catch(err){b.disabled=false;$("gtdelinfo").textContent="Nie udało się: "+(err&&err.message?err.message:"błąd")}
+    return;
+  }
   if(c==="help"){gearOpen=false;renderGear();openHelp();return}
   if(c==="testeradd"){
     const sel=$("testersel"),id=sel?sel.value:"";if(!id||!isSuper(uid))return;
@@ -1526,7 +1555,7 @@ function wantHtml(w){
     // admin widzi cudze prywatne zaproszenie tylko podglądowo (bez „Jadę!”), chyba że jest zaproszony
     const peek=priv&&!mine&&!invIds(w).includes(uid)&&!joined;
     const open=isOpen(w),myp=(prefs[w.id]||{})[uid],dec=(decls[w.id]||[]).includes(uid);
-    return '<div class="want'+(mine?' mine':'')+'" data-wid="'+esc(w.id)+'">'+(peek?'':'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>')+'<div class="wtop">'+nk(w.user_id)+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="lockt">do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?'<span class="lockt">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>':'')+(mine?'<span class="note">(Twoje zgłoszenie)</span>':'')+'</div>'
+    return '<div class="want'+(mine?' mine':'')+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'">'+(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+'<div class="wtop">'+nk(w.user_id)+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="lockt">do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?'<span class="lockt">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>':'')+(mine?'<span class="note">(Twoje zgłoszenie)</span>':'')+'</div>'
      +(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')
      +invitedHtml(w)
      +(open?tallyHtml(w):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w))
@@ -1591,10 +1620,16 @@ function wfStep(unit,dir){
   }
   two?wfSetTime2(hh,mm):wfSetTime(hh,mm);
 }
+function wfTestSync(){
+  [...$("wtest").children].forEach(b=>b.classList.toggle("on",(b.dataset.test==="1")===wf.test));
+  $("wtestnote").textContent=wf.test?"🧪 Na próbę — będzie przygaszone i z plakietką TEST; nie trafi na kanał Telegram. Testowe zostaną kiedyś usunięte.":"🚴 Prawdziwa jazda — zaproszenie zobaczą wszyscy bez plakietki TEST.";
+}
 let wxTimer=null;
 function wfUpdate(){
   const d=wfDate(),btn=$("wsave");
-  btn.textContent=(wf.editId?"Zapisz zmianę":wfPriv()?"🔒 Wyślij":"Wyślij zaproszenie")+(d?" · "+wfLabel(d)+(wfRange()?"–"+pad(wf.h2)+":"+pad(wf.m2):""):"");
+  const tst=!wf.editId&&testOk&&wf.test;
+  btn.classList.toggle("tbtn",tst);
+  btn.textContent=(wf.editId?"Zapisz zmianę":(tst?"🧪 ":"")+(wfPriv()?"🔒 Wyślij":tst?"Wyślij testowe":"Wyślij zaproszenie"))+(d?" · "+wfLabel(d)+(wfRange()?"–"+pad(wf.h2)+":"+pad(wf.m2):""):"");
   clearTimeout(wxTimer);
   const box=$("wwx");
   if(!d){box.classList.add("hide");return}
@@ -1622,6 +1657,7 @@ function openWantForm(w,preset){
   if(needProfile()){askNick();return}
   wf.editId=w?w.id:null;
   wf.vis="all";wf.pick=new Set();
+  wf.test=true;$("wtestwrap").classList.toggle("hide",!!w||!testOk);wfTestSync();
   if(preset&&preset.pick){wf.vis="pick";wf.pick=new Set(preset.pick)}
   $("wwhowrap").classList.toggle("hide",!!w||!visOk);
   renderWhoBtn();
@@ -1654,6 +1690,7 @@ function openWantForm(w,preset){
 function closeWantForm(){$("wantform").classList.add("hide");wf.editId=null}
 $("wantbtn").onclick=()=>{$("wantform").classList.contains("hide")||wf.editId?openWantForm(null):closeWantForm()};
 $("wcancel").onclick=closeWantForm;
+$("wtest").addEventListener("click",e=>{const b=e.target.closest("button[data-test]");if(!b)return;wf.test=b.dataset.test==="1";wfTestSync();wfUpdate()});
 $("wdays").addEventListener("click",e=>{const b=e.target.closest("button[data-d]");if(!b)return;wfSetDay(b.dataset.d);wfUpdate()});
 $("wdt").addEventListener("change",wfUpdate);
 ["fclock","fclock2"].forEach(id=>$(id).addEventListener("click",e=>{const b=e.target.closest(".farr");if(!b)return;wfStep(b.closest(".fcol").dataset.u,+b.dataset.s)}));
@@ -1730,7 +1767,7 @@ $("wsave").onclick=async()=>{
       if(res.error||!res.data||!res.data.length)throw new Error(res.error?res.error.message:"zmiana terminu wymaga KROKU 11 w bazie");
       const ow=wants.find(x=>x.id===wf.editId);editedPriv=!!ow&&((invs[ow.id]||[]).length>0||(joins[ow.id]||[]).some(x=>x!==uid));
     }else{
-      const row={starts_at:d.toISOString(),note};if(priv)row.visibility="private";
+      const row={starts_at:d.toISOString(),note};if(priv)row.visibility="private";if(testOk)row.is_test=!!wf.test;
       if(rng){row.range_from=d.toISOString();row.range_to=d2.toISOString()}
       const res=await sb.from("wants").insert(row).select("id").single();
       if(res.error)throw res.error;
@@ -1746,7 +1783,7 @@ $("wsave").onclick=async()=>{
     await loadRemote();
     const lbl=wfLabel(d)+(rng?"–"+hhmm(d2):"");
     say(wasEdit?"Zmieniono termin ✔ "+lbl+(editedPriv&&visOk?" — zaproszeni dostaną powiadomienie.":"")
-      :priv?"Wysłane 🔒 do "+ids.length+" "+osob(ids.length)+" ✔ Dostaną powiadomienie w aplikacji.":"Wysłane ✔ Zaproszenie na "+lbl+" jest też na kanale Telegram.");
+      :priv?"Wysłane 🔒 do "+ids.length+" "+osob(ids.length)+" ✔ Dostaną powiadomienie w aplikacji.":testOk&&wf.test?"Wysłane 🧪 testowe zaproszenie na "+lbl+" ✔":"Wysłane ✔ Zaproszenie na "+lbl+" jest też na kanale Telegram.");
   }catch(e){say("Nie udało się: "+(e&&e.message?e.message:"błąd"))}
 };
 /* ---------- Twoje zaproszenie (zamiast dużego przycisku) ---------- */
@@ -1763,7 +1800,7 @@ function renderMyWant(){
     const d=new Date(w.starts_at),j=(joins[w.id]||[]).filter(x=>x!==uid);
     const wd=d.toLocaleDateString("pl-PL",{weekday:"long"}),n=dayDiff(d);
     const priv=isPriv(w),ni=(invs[w.id]||[]).length;
-    return '<div class="mywant" data-i="'+i+'" data-wid="'+esc(w.id)+'"><div class="myh">🙋 Ty zapraszasz'+(mine.length>1?' · '+(i+1)+' z '+mine.length:'')+(priv?'<span class="lockt">🔒 dla '+ni+' '+osob(ni)+'</span>':'')+'</div>'
+    return '<div class="mywant'+(isTest(w)?' test':'')+'" data-i="'+i+'" data-wid="'+esc(w.id)+'"><div class="myh">🙋 Ty zapraszasz'+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+(mine.length>1?' · '+(i+1)+' z '+mine.length:'')+(priv?'<span class="lockt">🔒 dla '+ni+' '+osob(ni)+'</span>':'')+'</div>'
      +'<div class="myt'+(isOpen(w)?' rng':'')+'">'+esc(n>=0&&n<=2?["Dziś","Jutro","Pojutrze"][n]+" "+wTime(w):wd.charAt(0).toUpperCase()+wd.slice(1)+" "+wTime(w))+(n>=0&&n<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
      +(isOpen(w)?'<div class="mym">🕖 Godzina do ustalenia'+(new Date(w.range_from).getTime()>Date.now()+36e5?' — ustali się sama '+esc(hhmm(new Date(new Date(w.range_from).getTime()-36e5)))+', jeśli jej nie wybierzesz':'')+'</div>':fromRange(w)?'<div class="mym">✅ Godzina ustalona</div>':'')
      +(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')
@@ -1842,6 +1879,9 @@ $("wantlist").addEventListener("click",async e=>{
 
 /* ---------- zaproszenia dla wybranych osób (KROK 13) ---------- */
 let visOk=false,invs={},notifs=[];
+/* 🧪 zaproszenia testowe (KROK 22) */
+let testOk=false;const isTest=w=>!!w&&!!w.is_test;
+const testTag=w=>isTest(w)?'<span class="ttag">🧪 TEST</span>':'';
 const CHECK='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const plf=(n,f)=>n===1?f[0]:(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20))?f[1]:f[2];
 const osob=n=>n===1?"osoby":"osób"; // „dla 1 osoby”, „dla 5 osób”
@@ -2095,8 +2135,8 @@ function bellRowHtml(w){
   const btns=act?'<div class="sb">'+(isOpen(w)?'<button type="button" class="b" data-na="pref" data-wid="'+esc(w.id)+'">Pasuje mi o…</button>'
       :'<button type="button" class="b" data-na="join" data-wid="'+esc(w.id)+'">Jadę! · '+esc(hhmm(new Date(w.starts_at)))+'</button>')
     +'<button type="button" class="b w" data-na="no" data-wid="'+esc(w.id)+'">Nie dam rady</button></div>':'';
-  return '<div class="nit'+(mine?' mine':'')+(un.length?' new':'')+'" data-wid="'+esc(w.id)+'"><div class="ic">'+(mine?'🙋':isPriv(w)?'📩':'🌍')+'</div>'
-   +'<div class="tx">'+title+'<div class="w">'+sub+'</div>'+news+btns+'</div>'+(un.length?'<span class="dot"></span>':'')+'</div>';
+  return '<div class="nit'+(mine?' mine':'')+(un.length?' new':'')+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'"><div class="ic">'+(mine?'🙋':isPriv(w)?'📩':'🌍')+'</div>'
+   +'<div class="tx">'+testTag(w)+title+'<div class="w">'+sub+'</div>'+news+btns+'</div>'+(un.length?'<span class="dot"></span>':'')+'</div>';
 }
 const bellUnread=()=>notifs.filter(n=>!n.read_at&&nWant(n)&&(ME_KINDS.includes(n.kind)||OWN_KINDS.includes(n.kind)));
 function renderBell(){
@@ -2242,7 +2282,7 @@ function renderPop(){
   else btns=joined?big("read","OK 👍")+'<div class="pbtns">'+sm("leave","Rezygnuję","w")+'</div>'
     :big("join","Jadę! · "+hhmm(d))+'<div class="pbtns">'+sm("read","OK","w")+'</div>';
   p.innerHTML='<div class="sheetbox popbox" role="dialog" aria-modal="true"><button class="sclose" data-q="later" aria-label="Później">✕</button>'
-   +'<span class="ptag">'+(set?'✅ GODZINA USTALONA':time?'🕖 ZMIANA GODZINY':'📩 NOWE ZAPROSZENIE'+(priv?' · 🔒 PRYWATNE':''))+'</span>'
+   +(isTest(w)?'<span class="ttag" style="margin-right:6px">🧪 TEST</span>':'')+'<span class="ptag">'+(set?'✅ GODZINA USTALONA':time?'🕖 ZMIANA GODZINY':'📩 NOWE ZAPROSZENIE'+(priv?' · 🔒 PRYWATNE':''))+'</span>'
    +'<div class="ph">'+nk(actor,"Ktoś")+(set?' '+(genders[actor]==="K"?"ustaliła":"ustalił")+' godzinę':time?' '+(genders[actor]==="K"?"zmieniła":"zmienił")+' godzinę':' zaprasza Cię na rower')+'</div>'
    +'<div class="pwhen">'+esc(day+" "+wTime(w))+(dd>=0&&dd<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
    +(open?'<div class="pmeta">🕖 Zakres godzin — wybierz, kiedy możesz; godzinę ustali '+esc(nickOf(w.user_id))+'.</div>':'')
@@ -2686,7 +2726,9 @@ async function loadRemote(selectId){
     let p=await sb.from("profiles").select("user_id,nick,gender").limit(1000);
     genderOk=!p.error;
     if(p.error)p=await sb.from("profiles").select("user_id,nick").limit(1000);
-    let w=await sb.from("wants").select("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at").order("starts_at").limit(200);
+    let w=await sb.from("wants").select("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test").order("starts_at").limit(200);
+    testOk=!w.error;
+    if(w.error)w=await sb.from("wants").select("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at").order("starts_at").limit(200);
     rangeOk=!w.error;visOk=rangeOk;
     if(w.error){w=await sb.from("wants").select("id,user_id,starts_at,note,visibility").order("starts_at").limit(200);visOk=!w.error}
     if(w.error)w=await sb.from("wants").select("id,user_id,starts_at,note").order("starts_at").limit(200);
