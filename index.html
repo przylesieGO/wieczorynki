@@ -145,7 +145,7 @@ html[data-theme=dark] .fcard::after{background:rgba(0,0,0,.25);box-shadow:0 1px 
 .mywant{border:2px solid var(--acc);border-radius:16px;padding:14px;margin-top:14px;background:linear-gradient(180deg,var(--acc2),transparent 75%)}
 .myh{font-size:13px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.04em}
 .myt{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.15;margin-top:2px}.myt span{font-size:17px;font-weight:600;color:var(--mut);margin-left:6px;letter-spacing:0}
-.mym{font-size:15px;color:var(--mut);margin-top:6px}
+.mym{font-size:15px;color:var(--mut);margin-top:6px}.mym .meta{font-size:16px;color:inherit;margin:0}.mym .nk{font-size:17px}
 .mybtns{display:flex;gap:8px;margin-top:12px}.mybtns .b{flex:1;padding:12px 8px;font-size:15px}
 .mydel{display:block;margin:6px auto 0;border:0;background:none;color:var(--bad);font:inherit;font-size:15px;font-weight:600;cursor:pointer;padding:6px}
 .mynew{display:block;margin:10px auto 0}
@@ -208,6 +208,19 @@ details.card>summary{font-size:16px}
 .item.cur{border-color:var(--acc);background:var(--acc2)}
 .want,.lib{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:10px}
 .want.mine{border-color:var(--acc);background:var(--acc2)}
+.wtop{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:19px}.wtop b{font-size:21px}.wtop .note{font-size:14px}
+.wnt{font-size:17px;margin-top:4px}
+.want .meta{font-size:16px;margin-top:6px}.want .nk{font-size:17px}
+details.jlist{margin-top:8px}
+details.jlist>summary{list-style:none;display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:11px;background:var(--fill);font-size:16px;font-weight:600;cursor:pointer;-webkit-user-select:none;user-select:none}
+details.jlist>summary::-webkit-details-marker{display:none}
+details.jlist .jc{flex:none}details.jlist .jf{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+details.jlist>summary::after{content:"›";flex:none;margin-left:auto;font-size:20px;line-height:1;color:var(--mut);transition:transform .15s}
+details.jlist[open]>summary::after{transform:rotate(90deg)}
+details.jlist[open]>summary{border-radius:11px 11px 0 0}
+.jv{border:1px solid var(--line);border-top:0;border-radius:0 0 11px 11px;padding:4px 12px}
+.jv>div{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}.jv>div:last-child{border-bottom:0}
+.jv .note{font-size:13px}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 4px}
 .chip{padding:8px 16px;border:0;background:var(--fill);color:var(--ink);border-radius:999px;font:inherit;cursor:pointer}
 .chip.on{background:var(--accbtn);color:#fff}
@@ -1077,11 +1090,25 @@ $("wantlist").addEventListener("toggle",e=>{
   if(d.open&&byUser){const t=d.querySelector(".ftile");if(t){t.classList.remove("flipping");void t.offsetWidth;t.classList.add("flipping");setTimeout(()=>t.classList.remove("flipping"),600)}}
 },true);
 $("wantlist").addEventListener("click",e=>{const s=e.target.closest("details.wday>summary");if(s)s.parentElement.dataset.user="1"});
+/* dołączeni: do 2 osób pigułki, od 3 — zwinięta lista (ulubieni na początku) */
+const joinOpen=new Set();
+function joinedHtml(wid,ids,empty){
+  if(!ids.length)return '<div class="meta">'+empty+'</div>';
+  if(ids.length<=2)return '<div class="meta">Dołączyli ('+ids.length+'):'+nkList(ids)+'</div>';
+  const fn=favNames(ids);
+  return '<details class="jlist" data-j="'+esc(wid)+'"'+(joinOpen.has(wid)?' open':'')+'><summary><span class="jc">👥 Dołączyło '+ids.length+'</span>'
+   +(fn.length?'<span class="jf">· ⭐ '+esc(fn.join(", "))+'</span>':'')+'</summary>'
+   +'<div class="jv">'+favFirst(ids).map(id=>'<div>'+nk(id)+(onlineIds.includes(id)?'<span class="note">🟢 teraz</span>':'')+'</div>').join("")+'</div></details>';
+}
+document.addEventListener("toggle",e=>{
+  const d=e.target;if(!(d.classList&&d.classList.contains("jlist")))return;
+  d.open?joinOpen.add(d.dataset.j):joinOpen.delete(d.dataset.j);
+},true);
 function wantHtml(w){
     const j=joins[w.id]||[],mine=w.user_id===uid,joined=j.includes(uid),others=j.filter(x=>x!==w.user_id);
-    return '<div class="want'+(mine?' mine':'')+'"><div>'+nk(w.user_id)+' · 🕖 '+esc(hhmm(new Date(w.starts_at)))+(mine?' <span class="note">(Twoje zgłoszenie)</span>':'')+'</div>'
-     +(w.note?'<div>'+esc(w.note)+'</div>':'')
-     +'<div class="meta">'+(others.length?'Dołączyli ('+others.length+'):'+nkList(others):(mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.'))+'</div>'
+    return '<div class="want'+(mine?' mine':'')+'"><div class="wtop">'+nk(w.user_id)+'<span>🕖 <b>'+esc(hhmm(new Date(w.starts_at)))+'</b></span>'+(mine?'<span class="note">(Twoje zgłoszenie)</span>':'')+'</div>'
+     +(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')
+     +joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')
      +'<div class="row" style="margin-top:8px">'
      +(mine?'':'<button class="b'+(joined?' g':'')+'" data-w="join" data-id="'+esc(w.id)+'">'+(joined?'Rezygnuję':'Jadę!')+'</button>')
      +((mine||isAdmin)?'<button class="b g" data-w="del" data-id="'+esc(w.id)+'">Usuń</button>':'')
@@ -1268,7 +1295,7 @@ function renderMyWant(){
     return '<div class="mywant" data-i="'+i+'"><div class="myh">Twoje zaproszenie'+(mine.length>1?' · '+(i+1)+' z '+mine.length:'')+'</div>'
      +'<div class="myt">'+esc(n>=0&&n<=2?["Dziś","Jutro","Pojutrze"][n]+" "+hhmm(d):wd.charAt(0).toUpperCase()+wd.slice(1)+" "+hhmm(d))+(n>=0&&n<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
      +(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')
-     +'<div class="mym">'+(j.length?'Dołączyli ('+j.length+'):'+nkList(j):'Na razie nikt nie dołączył.')+'</div>'
+     +'<div class="mym">'+joinedHtml("my"+w.id,j,'Na razie nikt nie dołączył.')+'</div>'
      +'<div class="mybtns"><button class="b g" data-my="edit" data-id="'+esc(w.id)+'">✏️ Zmień godzinę</button><button class="b g" data-my="share" data-id="'+esc(w.id)+'">📤 Udostępnij</button></div>'
      +'<button class="mydel" data-my="del" data-id="'+esc(w.id)+'">Odwołaj zaproszenie</button></div>';
   };
