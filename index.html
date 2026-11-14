@@ -99,6 +99,7 @@ nav button.on{background:var(--accbtn);color:#fff;box-shadow:0 1px 4px rgba(36,1
 .hdr.compact .apptitle{flex:none;font-size:17px}
 .hdr.compact .wsub2{display:none}
 .nsug{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px;align-items:center}.nsug .note{flex-basis:100%;margin:2px 0}.nsug .chip{padding:7px 12px;font-size:15px;font-weight:600}
+.staz{font-size:14px;color:var(--mut);margin:-10px 0 14px}.smail .staz{display:inline-block;margin:4px 0 0}
 .menick{display:block;margin-top:4px;font-size:13px;font-weight:600;color:var(--mut);cursor:pointer;line-height:1.2}.menick .nk{font-size:14px;padding:1px 9px}
 .hdr.compact .menick{display:inline-block;margin:0 0 0 6px;vertical-align:2px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hdr.compact .menick i{display:none}.hdr.compact .menick .nk{font-size:13px;padding:1px 7px}
 .hdr.compact nav{order:2;flex:1 1 auto;min-width:0}
@@ -917,7 +918,7 @@ function adminHtml(){
    +testersHtml()
    +(isSuper(uid)&&testOk?'<h3>🧪 Zaproszenia testowe</h3><button class="b sbtn" style="background:var(--bad)" data-c="testdel">🧹 Usuń wszystkie testowe zaproszenia…</button><p class="note">Usuwa tylko zaproszenia oznaczone 🧪 TEST (z dołączeniami i powiadomieniami). Prawdziwe zostają.</p>':'')
    +'<h3>Użytkownicy ('+Object.keys(nicks).length+')</h3>'
-   +(Object.keys(nicks).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")).map(id=>'<div class="arow">'+nk(id)+(id===uid?'<span class="note">(Ty)</span>':isSuper(id)?'<span class="note">👑</span>':'<button class="b g small" data-a="unick" data-id="'+esc(id)+'">Zmień nick</button>')+'</div>').join("")||'<div class="note">Brak użytkowników z nickiem.</div>')
+   +(Object.keys(nicks).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")).map(id=>'<div class="arow"><span>'+nk(id)+(joinedAt[id]?'<br><span class="note">od '+esc(new Date(joinedAt[id]).toLocaleDateString("pl-PL",{day:"numeric",month:"short",year:"numeric"}))+'</span>':'')+'</span>'+(id===uid?'<span class="note">(Ty)</span>':isSuper(id)?'<span class="note">👑</span>':'<button class="b g small" data-a="unick" data-id="'+esc(id)+'">Zmień nick</button>')+'</div>').join("")||'<div class="note">Brak użytkowników z nickiem.</div>')
    +'</div>';
 }
 /* 🧪 testerzy i funkcje testowe (KROK 16) — nadaje/odbiera i przełącza tylko 👑 */
@@ -1090,11 +1091,24 @@ function favsHtml(){
    +'<div class="smail">Tylko Ty widzisz, kogo masz w ulubionych. Ulubieni są na początku list i widać ich w nagłówkach dni.</div>'
    +'<div class="sleft">'+(ids.map(id=>'<div class="arow">'+nk(id)+starBtn(id)+'</div>').join("")||'<div class="note">Brak innych użytkowników z nickiem.</div>')+'</div>';
 }
+/* 🗓 data dołączenia (KROK 25): „Z nami od 12 marca 2026 · 245 dni” */
+let joinedAt={};
+function stazTxt(id){
+  const ts=joinedAt[id];if(!ts)return "";
+  const d=new Date(ts),days=Math.floor((Date.now()-d.getTime())/864e5);
+  if(days<1)return "🆕 nowy w ekipie · z nami od dziś";
+  const od=d.toLocaleDateString("pl-PL",{day:"numeric",month:"long",year:"numeric"});
+  let ile;
+  if(days<=30)ile=days+" "+(days===1?"dzień":"dni");
+  else if(days<365)ile=Math.floor(days/30.44)+" mies.";
+  else{const y=Math.floor(days/365);ile=(y===1?"od roku":"od "+y+" lat")+" ("+days+" dni)"}
+  return "🗓 Z nami od "+od+" · "+ile;
+}
 function userHtml(){
   const g=genders[userId],fav=isFav(userId);
   return (userBack?'<button class="sback" data-c="userback">‹ '+(userBack==="favs"?'Ulubieni':'Ustawienia')+'</button>':'')
    +'<div class="bigpill" style="margin-top:'+(userBack?'26px':'6px')+'">'+nk(userId)+'</div>'
-   +'<div class="smail">'+(g==="K"?"👩 Kobieta":g==="M"?"👨 Mężczyzna":"")+(onlineIds.includes(userId)?(g?" · ":"")+"🟢 teraz w aplikacji":"")+'</div>'
+   +'<div class="smail">'+(g==="K"?"👩 Kobieta":g==="M"?"👨 Mężczyzna":"")+(onlineIds.includes(userId)?(g?" · ":"")+"🟢 teraz w aplikacji":"")+'</div>'+(stazTxt(userId)?'<div class="staz">'+esc(stazTxt(userId))+'</div>':'')
    +(visOk?'<button class="b sbtn" data-a="invite" data-id="'+esc(userId)+'">🚴 Zaproś na rower</button>':'')
    +'<button class="b sbtn'+(fav?' g':'')+'" data-a="fav" data-id="'+esc(userId)+'">'+(fav?'⭐ Usuń z ulubionych':'☆ Dodaj do ulubionych')+'</button>'
    +(isAdmin&&!isSuper(userId)?'<button class="b sbtn g" data-a="unick" data-id="'+esc(userId)+'">✏️ Zmień nick (admin)</button>':'');
@@ -1146,7 +1160,7 @@ function renderGear(){
   else if(gearView==="nick"&&session)body=nickHtml();
   else if(gearView==="del"&&session)body=delHtml();
   else body=session
-    ?'<div class="sname">👤 '+(me.nick?nk(uid):'ustaw nick')+(isAdmin?' 🛡️':'')+'</div><div class="smail">'+esc(session.user.email||"")+'</div>'
+    ?'<div class="sname">👤 '+(me.nick?nk(uid):'ustaw nick')+(isAdmin?' 🛡️':'')+'</div><div class="smail">'+esc(session.user.email||"")+(stazTxt(uid)?'<br><span class="staz">'+esc(stazTxt(uid))+'</span>':'')+'</div>'
      +'<button class="b sbtn g" data-c="nick">✏️ '+(me.nick?'Nick i płeć':'Ustaw nick')+'</button>'
      +(favOk?'<button class="b sbtn g" data-c="favs">⭐ Ulubieni'+(favs.size?' ('+favs.size+')':'')+'</button>':'')
      +(tgOn()?'<button class="b sbtn'+(tgLink?' g':'')+'" data-c="tg">'+(tgLink?'🔔 Telegram: połączony ✅':'🔔 Połącz z Telegramem')+betaTag("telegram_dm")+'</button>':'')+tg
@@ -2771,6 +2785,7 @@ function adminStatsHtml(){
   const since=d.since?new Date(d.since).toLocaleDateString("pl-PL",{day:"numeric",month:"long",year:"numeric"}):"";
   return head+'<div class="sleft">'
    +'<h3>Konta</h3><div class="stats">'+t(d.accounts,"założone konta")+t(d.profiles,"z nickiem")+'</div>'
+   +(Object.keys(joinedAt).length?'<h3>Nowi (z nickiem)</h3><div class="stats">'+t(Object.values(joinedAt).filter(x=>Date.now()-new Date(x)<7*864e5).length,"ostatnie 7 dni")+t(Object.values(joinedAt).filter(x=>Date.now()-new Date(x)<30*864e5).length,"ostatnie 30 dni")+'</div>':'')
    +'<h3>Aktywność</h3><div class="stats">'+t(onlineIds.length,"teraz online")+t(d.active7,"aktywni 7 dni")+t(d.active30,"aktywni 30 dni")+'</div>'
    +'<h3>Płeć</h3><div class="stats">'+t(d.women,"👩 kobiety")+t(d.men,"👨 mężczyźni")+(d.nogender?t(d.nogender,"bez płci"):"")+'</div>'
    +'<p class="note">Aktywny = otworzył aplikację zalogowany w danym okresie.'+(since?' Aktywność zapisywana od '+esc(since)+'.':'')+' Konta bez nicku liczą się tylko w „założone konta”.</p>'
@@ -2838,7 +2853,8 @@ async function loadRemote(selectId){
   flags={};if(!ff.error)(ff.data||[]).forEach(f=>{flags[f.key]=f});
   if(session){
     const ok=r=>r.error?null:r.data;
-    let p=await sb.from("profiles").select("user_id,nick,gender").limit(1000);
+    let p=await sb.from("profiles").select("user_id,nick,gender,joined_at").limit(1000);
+    if(p.error)p=await sb.from("profiles").select("user_id,nick,gender").limit(1000);
     genderOk=!p.error;
     if(p.error)p=await sb.from("profiles").select("user_id,nick").limit(1000);
     // zaproszenia tylko z ostatnich 7 dni i przyszłe (wcześniej: 200 najstarszych — nowe by znikały)
@@ -2875,7 +2891,7 @@ async function loadRemote(selectId){
     const sp=await sb.from("superadmins").select("user_id");supers=new Set((sp&&!sp.error&&sp.data||[]).map(x=>x.user_id));
     const ts=await sb.from("testers").select("user_id");testerOk=!ts.error;testerIds=new Set((!ts.error&&ts.data||[]).map(x=>x.user_id));
     const tl=await sb.from("telegram_links").select("tg_name,linked_at").eq("user_id",uid).limit(1);tgOk=!tl.error;tgLink=tgOk&&tl.data&&tl.data[0]||null;
-    nicks={};genders={};(ok(p)||[]).forEach(x=>{nicks[x.user_id]=x.nick;if(x.gender)genders[x.user_id]=x.gender});
+    nicks={};genders={};joinedAt={};(ok(p)||[]).forEach(x=>{nicks[x.user_id]=x.nick;if(x.gender)genders[x.user_id]=x.gender;if(x.joined_at)joinedAt[x.user_id]=x.joined_at});
     me.nick=nicks[uid]||null;
     favOk=!fv.error;favs=new Set((ok(fv)||[]).map(x=>x.fav_id));
     nickColors={...DEF_COLORS};nickBgs={...DEF_BGS};
