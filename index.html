@@ -327,6 +327,7 @@ html,body{overscroll-behavior-x:none}
 .pnav button{width:8px;height:8px;padding:0;border:0;border-radius:50%;background:var(--line);cursor:pointer}.pnav button.on{width:20px;border-radius:4px;background:var(--acc)}
 .ptg{font-size:12px;color:var(--mut);text-align:center;margin-top:8px}
 .b.w{background:var(--fill);color:var(--ink)}
+nav button.tbeta{position:relative}nav button.tbeta::after{content:"";position:absolute;top:4px;right:6px;width:7px;height:7px;border-radius:50%;background:#8b5cf6;box-shadow:0 0 0 2px var(--navbg)}
 .beta{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.04em;color:#7a4fd1;background:rgba(122,79,209,.12);border-radius:999px;padding:1px 8px;vertical-align:2px;margin-left:6px}
 html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 /* zakres godzin (KROK 15) */
@@ -924,6 +925,10 @@ const meTester=()=>!!session&&(testerIds.has(uid)||isSuper(uid));
 const feat=k=>{const f=flags[k];return !!f&&(f.state==="all"||(f.state==="testers"&&meTester()&&betaOn))};
 // plakietka 🧪 BETA przy funkcji, która nie jest jeszcze dla wszystkich
 const betaTag=k=>flags[k]&&flags[k].state!=="all"?'<span class="beta">🧪 BETA</span>':'';
+// zakładki pod przełącznikiem (KROK 17): brak wpisu w bazie = widoczna dla wszystkich (jak dotąd)
+const TAB_FLAG={1:"tab_rides",2:"tab_advanced"};
+const tabOk=i=>{const k=TAB_FLAG[i];if(i===2&&!session)return false;return !k||!flags[k]||feat(k)};
+const visTabs=()=>[0,1,2].filter(tabOk);
 function delHtml(){
   const head='<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">🗑️ Usuń konto</div>';
   if(isSuper(uid))return head+'<div class="sleft"><div class="changed">👑 Jesteś głównym administratorem PrzylesieGo — tego konta nie można usunąć.</div></div>';
@@ -1072,8 +1077,13 @@ function renderChrome(){
   $("app").classList.toggle("hide",welcome);
   $("hdr").classList.toggle("hide",welcome);
   renderGear();
-  $("t2").classList.toggle("hide",!session);
-  if(!session&&!$("p2").classList.contains("hide"))show(0);
+  // zakładki: Wieczorynki / Zaawansowane mogą być tylko dla testerów (🚦 Funkcje testowe)
+  [1,2].forEach(i=>{
+    const b=$("t"+i),k=TAB_FLAG[i],beta=tabOk(i)&&flags[k]&&flags[k].state!=="all";
+    b.classList.toggle("hide",!tabOk(i));
+    b.classList.toggle("tbeta",!!beta);b.title=beta?"🧪 BETA — widzą tylko testerzy":"";
+    if(!tabOk(i)&&!$("p"+i).classList.contains("hide"))show(0);
+  });
   $("pwbox").classList.toggle("hide",!(pwMode&&session));
 }
 $("gear").onclick=()=>{gearOpen=!gearOpen;gearView="main";renderGear()};
@@ -1990,13 +2000,14 @@ function cdDigits(st){
 }
 function renderCountdown(){
   const box=$("cdbody");if(!box)return;
-  const st=cdState(),key=st.mode+(st.r?st.r.id+(st.r.when)+(rsvps[st.r.id]||[]).length+st.r.title+(st.r.place||""):"");
+  const st=cdState(),key=(tabOk(1)?"T":"F")+st.mode+(st.r?st.r.id+(st.r.when)+(rsvps[st.r.id]||[]).length+st.r.title+(st.r.place||""):"");
   if(key!==cdKey){
     cdKey=key;
     if(st.mode==="go"){
       const r=st.r;
       box.innerHTML='<div class="cdlab">🚴 Jedziemy!</div><div class="cdev"><b>'+esc(r.title)+'</b><div>wystartowała o '+esc(hhmm(new Date(r.when)))+(r.place?' · '+esc(r.place):'')+'</div></div>'
         +'<button class="b g cdbtn" data-go="ride" data-i="'+st.i+'">Szczegóły i mapa ›</button>';
+      box.querySelectorAll(".cdbtn").forEach(b=>b.classList.toggle("hide",!tabOk(1)));
       return;
     }
     const lbls=st.mode==="far"||st.mode==="none"?["DNI","GODZ","MIN"]:["GODZ","MIN","SEK"];
@@ -2016,6 +2027,7 @@ function renderCountdown(){
       btn='<button class="b g cdbtn" data-go="ride" data-i="'+st.i+'">Szczegóły i mapa ›</button>';
     }
     box.innerHTML=lab+'<div class="cdclock'+(st.mode==="soon"?' soon':'')+'">'+d.map((x,i)=>(i?'<div class="cdcol">:</div>':'')+'<div class="cdu"><div class="fcard cdt">'+x+'</div><small>'+lbls[i]+'</small></div>').join("")+'</div>'+ev+btn;
+    box.querySelectorAll(".cdbtn").forEach(b=>b.classList.toggle("hide",!tabOk(1)));
     return;
   }
   if(st.mode==="go"||st.mode==="none")return;
@@ -2572,7 +2584,7 @@ function show(n,dir){
 /* przesuwanie palcem w bok przełącza zakładki (poza mapą, karuzelą zaproszeń, kartkami zegara i polami) */
 (()=>{
   let x0=0,y0=0,lock=0,dx=0,sec=null;
-  const tabs=()=>session?[0,1,2]:[0,1];
+  const tabs=visTabs;
   const skip=t=>!!t.closest(".leaflet-container,.mycar.multi,.dcar,.rstrip,#fclock,#fclock2,input,select,textarea,.sheet,#welcome");
   document.addEventListener("touchstart",e=>{
     lock=0;dx=0;sec=null;
