@@ -327,6 +327,8 @@ html,body{overscroll-behavior-x:none}
 .pnav button{width:8px;height:8px;padding:0;border:0;border-radius:50%;background:var(--line);cursor:pointer}.pnav button.on{width:20px;border-radius:4px;background:var(--acc)}
 .ptg{font-size:12px;color:var(--mut);text-align:center;margin-top:8px}
 .b.w{background:var(--fill);color:var(--ink)}
+.beta{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.04em;color:#7a4fd1;background:rgba(122,79,209,.12);border-radius:999px;padding:1px 8px;vertical-align:2px;margin-left:6px}
+html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 /* zakres godzin (KROK 15) */
 .flbl{text-align:center;font-size:12px;font-weight:800;color:var(--mut);letter-spacing:.1em;margin:12px 0 -6px}
 .fclock.sm{gap:8px;margin:10px 0 2px}.fclock.sm .fcard{width:66px;height:74px;font-size:42px;border-radius:10px}
@@ -763,7 +765,7 @@ const pill=(t,c,bg,live,uid_)=>'<span'+(uid_?' data-u="'+esc(uid_)+'"':'')+' cla
 /* ulubieni (prywatni: każdy widzi tylko swoich) */
 let favs=new Set(),favOk=false;
 const isFav=id=>favs.has(id);
-const nk=(id,fallback)=>{const c=colorOf(id),g=genders[id],t=nicks[id]||fallback||"ktoś";return pill((isFav(id)?"⭐ ":"")+t,c,c?nickBgs[g]:"",onlineIds.includes(id),nicks[id]&&favOk&&id!==uid?id:"")};
+const nk=(id,fallback)=>{const c=colorOf(id),g=genders[id],t=nicks[id]||fallback||"ktoś";return pill((isFav(id)?"⭐ ":"")+t+(testerIds.has(id)?" 🧪":""),c,c?nickBgs[g]:"",onlineIds.includes(id),nicks[id]&&favOk&&id!==uid?id:"")};
 const favFirst=ids=>ids.slice().sort((a,b)=>(isFav(b)?1:0)-(isFav(a)?1:0));
 const nkList=ids=>'<div class="nks">'+favFirst(ids).map(id=>nk(id)).join("")+'</div>';
 const favNames=ids=>favFirst(ids).filter(isFav).map(id=>nicks[id]).filter(Boolean);
@@ -833,9 +835,34 @@ function adminHtml(){
    +'<div class="sleft"><h3>Administratorzy</h3>'+rows
    +'<h3>Nadaj uprawnienia administratora</h3>'+add
    +'<p class="note">Administrator może edytować i usuwać każdą wieczorynkę, zgłoszenie i trasę oraz zarządzać administratorami.</p>'
+   +testersHtml()
    +'<h3>Użytkownicy ('+Object.keys(nicks).length+')</h3>'
    +(Object.keys(nicks).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")).map(id=>'<div class="arow">'+nk(id)+(id===uid?'<span class="note">(Ty)</span>':isSuper(id)?'<span class="note">👑</span>':'<button class="b g small" data-a="unick" data-id="'+esc(id)+'">Zmień nick</button>')+'</div>').join("")||'<div class="note">Brak użytkowników z nickiem.</div>')
    +'</div>';
+}
+/* 🧪 testerzy i funkcje testowe (KROK 16) — nadaje/odbiera i przełącza tylko 👑 */
+function testersHtml(){
+  if(!testerOk)return "";
+  const king=isSuper(uid),ids=[...testerIds].filter(id=>nicks[id]).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl"));
+  const rows=[...supers].filter(id=>nicks[id]&&!testerIds.has(id)).map(id=>'<div class="arow">'+nk(id)+'<span class="note">👑 automatycznie</span></div>').join("")
+    +ids.map(id=>'<div class="arow">'+nk(id)+(king?'<button class="b g small" data-a="trm" data-id="'+esc(id)+'">Odbierz</button>':'')+'</div>').join("");
+  const cand=Object.keys(nicks).filter(id=>!testerIds.has(id)&&!isSuper(id)).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl"));
+  return '<h3>🧪 Testerzy ('+ids.length+')</h3>'+(rows||'<div class="note">Brak testerów.</div>')
+   +(king?(cand.length?'<select id="testersel">'+cand.map(id=>'<option value="'+esc(id)+'">'+esc(nicks[id])+'</option>').join("")+'</select><button class="b sbtn" data-c="testeradd">Nadaj prawa testera</button>':'')
+     +'<button class="b sbtn g" data-c="flags">🚦 Funkcje testowe</button>'
+     :'<p class="note">Prawa testera nadaje i odbiera tylko 👑 główny administrator.</p>')
+   +'<p class="note">Tester widzi funkcje w fazie testów (z plakietką 🧪 BETA), zanim dostaną je wszyscy. 🧪 przy nicku oznacza testera.</p>';
+}
+const FSTATE=[["off","Wyłączona"],["testers","Tylko testerzy"],["all","Wszyscy"]];
+function flagsHtml(){
+  const L=Object.values(flags).sort((a,b)=>a.name.localeCompare(b.name,"pl"));
+  return '<button class="sback" data-c="backadmin">‹ Administracja</button>'
+   +'<div class="sname" style="margin-top:26px">🚦 Funkcje testowe</div>'
+   +'<div class="smail">Dla każdej funkcji: wyłączona, tylko dla testerów (🧪 BETA) albo dla wszystkich. Zmiana działa od razu, bez nowej wersji aplikacji.</div>'
+   +'<div class="sleft">'+(L.length?L.map(f=>'<div class="arow" style="flex-direction:column;align-items:stretch;gap:6px"><b>'+esc(f.name)+'</b>'
+     +(f.description?'<span class="note">'+esc(f.description)+'</span>':'')
+     +'<div class="seg" style="margin-top:2px">'+FSTATE.map(([k,t])=>'<button type="button" data-f="'+esc(f.key)+'" data-fs="'+k+'" class="'+(f.state===k?'on':'')+'">'+t+'</button>').join("")+'</div></div>').join("")
+     :'<div class="note">Na razie brak funkcji testowych. Każda nowa funkcja dopisuje się tutaj w swoim kroku SQL.</div>')+'</div>';
 }
 function colorsHtml(){
   const v=(m,d,k)=>HEX_RE.test(m[k]||"")?m[k]:d[k];
@@ -889,6 +916,14 @@ function nickHtml(){
 }
 const lastAdmin=()=>isAdmin&&adminIds.length<=1;
 let supers=new Set();const isSuper=id=>supers.has(id);
+/* 🧪 testerzy i funkcje testowe (KROK 16) */
+let testerIds=new Set(),testerOk=false,flags={},betaOn=true;
+try{betaOn=localStorage.getItem("betaOn")!=="0"}catch(e){}
+const meTester=()=>!!session&&(testerIds.has(uid)||isSuper(uid));
+// czy pokazać funkcję o danym kluczu: „Wszyscy” albo „Tylko testerzy” + tester z włączonym podglądem
+const feat=k=>{const f=flags[k];return !!f&&(f.state==="all"||(f.state==="testers"&&meTester()&&betaOn))};
+// plakietka 🧪 BETA przy funkcji, która nie jest jeszcze dla wszystkich
+const betaTag=k=>flags[k]&&flags[k].state!=="all"?'<span class="beta">🧪 BETA</span>':'';
 function delHtml(){
   const head='<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">🗑️ Usuń konto</div>';
   if(isSuper(uid))return head+'<div class="sleft"><div class="changed">👑 Jesteś głównym administratorem PrzylesieGo — tego konta nie można usunąć.</div></div>';
@@ -988,7 +1023,8 @@ function renderGear(){
   const p=$("gearpanel");
   if(!gearOpen){p.classList.add("hide");gearView="main";return}
   p.classList.remove("hide");
-  if((gearView==="admin"||gearView==="unick"||gearView==="colors"||gearView==="stats")&&!(session&&isAdmin))gearView="main";
+  if((gearView==="admin"||gearView==="unick"||gearView==="colors"||gearView==="stats"||gearView==="flags")&&!(session&&isAdmin))gearView="main";
+  if(gearView==="flags"&&!isSuper(uid))gearView="admin";
   if(gearView==="unick"&&!nicks[unickId])gearView="admin";
   const keepSel=$("adminsel")?$("adminsel").value:"";
   const keepCol=gearView==="colors"&&$("colK")?colVals():null;
@@ -1003,6 +1039,7 @@ function renderGear(){
   else if(gearView==="unick")body=unickHtml();
   else if(gearView==="colors")body=colorsHtml();
   else if(gearView==="stats")body=adminStatsHtml();
+  else if(gearView==="flags")body=flagsHtml();
   else if(gearView==="favs"&&session)body=favsHtml();
   else if(gearView==="user"&&session&&nicks[userId])body=userHtml();
   else if(gearView==="confdel"&&session&&delReq)body=confDelHtml();
@@ -1013,6 +1050,7 @@ function renderGear(){
      +'<button class="b sbtn g" data-c="nick">✏️ '+(me.nick?'Nick i płeć':'Ustaw nick')+'</button>'
      +(favOk?'<button class="b sbtn g" data-c="favs">⭐ Ulubieni'+(favs.size?' ('+favs.size+')':'')+'</button>':'')+tg
      +(isAdmin?'<button class="b sbtn g" data-c="admin">🛡️ Administracja</button>':'')
+     +(meTester()?'<div class="note" style="margin-top:14px">🧪 Funkcje testowe (jesteś testerem)</div><div class="seg">'+[["1","Pokaż"],["0","Ukryj"]].map(([k,t])=>'<button data-beta="'+k+'" class="'+((betaOn?"1":"0")===k?"on":"")+'">'+t+'</button>').join("")+'</div><div class="note" style="margin-top:6px">„Ukryj” — widzisz aplikację tak jak wszyscy.</div>':'')
      +themeHtml()
      +'<button class="b sbtn" style="background:var(--bad);margin-top:20px" data-c="out">Wyloguj</button>'
      +'<button class="sdanger" data-c="del">Usuń konto…</button>'
@@ -1044,11 +1082,31 @@ $("gearpanel").addEventListener("click",async e=>{
   if(gb){selGender=gb.dataset.g;[...$("gsex").children].forEach(x=>x.classList.toggle("on",x===gb));return}
   const th=e.target.closest("button[data-t]");
   if(th){setTheme(th.dataset.t);renderGear();return}
+  const bt=e.target.closest("button[data-beta]");
+  if(bt){betaOn=bt.dataset.beta==="1";try{localStorage.setItem("betaOn",betaOn?"1":"0")}catch(err){}renderGear();refreshUi();return}
+  const fb=e.target.closest("button[data-f]");
+  if(fb){
+    if(!isSuper(uid))return;
+    const k=fb.dataset.f,st=fb.dataset.fs;
+    try{
+      const r=await sb.from("feature_flags").update({state:st,updated_at:new Date().toISOString(),updated_by:uid}).eq("key",k).select("key");
+      if(r.error)throw r.error;if(!r.data||!r.data.length)throw new Error("brak uprawnień");
+      await loadRemote();say("🚦 "+(flags[k]?flags[k].name:k)+": "+FSTATE.find(x=>x[0]===st)[1]);
+    }catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+    return;
+  }
   if(e.target===$("gearpanel")){gearOpen=false;renderGear();return}
   const a=e.target.closest("button[data-a]");
   if(a){
     if(a.dataset.a==="fav"){await toggleFav(a.dataset.id);return}
     if(a.dataset.a==="invite"){const id=a.dataset.id;gearOpen=false;renderGear();show(0);openWantForm(null,{pick:[id]});return}
+    if(a.dataset.a==="trm"){
+      if(!isSuper(uid))return;
+      if(!confirm("Odebrać prawa testera użytkownikowi "+nickOf(a.dataset.id)+"?"))return;
+      try{const r=await sb.from("testers").delete().eq("user_id",a.dataset.id);if(r.error)throw r.error;await loadRemote();say("Odebrano prawa testera.")}
+      catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+      return;
+    }
     if(!isAdmin)return;
     if(a.dataset.a==="unick"){unickId=a.dataset.id;gearView="unick";renderGear();const i=$("gunick");if(i){i.focus();i.select()}return}
     if(a.dataset.a==="rm"&&isSuper(a.dataset.id)){say("Głównemu administratorowi nie można odebrać uprawnień.");return}
@@ -1065,6 +1123,13 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="admin"){gearView="admin";renderGear();return}
   if(c==="colors"){gearView="colors";renderGear();return}
   if(c==="stats"){gearView="stats";loadStats();return}
+  if(c==="flags"){gearView="flags";renderGear();return}
+  if(c==="testeradd"){
+    const sel=$("testersel"),id=sel?sel.value:"";if(!id||!isSuper(uid))return;
+    try{const r=await sb.from("testers").insert({user_id:id,added_by:uid});if(r.error)throw r.error;await loadRemote();say("🧪 Nadano prawa testera: "+nickOf(id))}
+    catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+    return;
+  }
   if(c==="favs"){gearView="favs";renderGear();return}
   if(c==="confgo"){await confirmDelete();return}
   if(c==="userback"){gearView=userBack||"main";renderGear();return}
@@ -2254,6 +2319,9 @@ async function loadRemote(selectId){
   const g={};
   if(!b.error)b.data.forEach(x=>{(g[x.ride_id]=g[x.ride_id]||[]).push(x.user_id)});
   rsvps=g;
+  // funkcje testowe — czytają wszyscy, także goście (KROK 16)
+  const ff=await sb.from("feature_flags").select("key,name,description,state");
+  flags={};if(!ff.error)(ff.data||[]).forEach(f=>{flags[f.key]=f});
   if(session){
     const ok=r=>r.error?null:r.data;
     let p=await sb.from("profiles").select("user_id,nick,gender").limit(1000);
@@ -2279,6 +2347,7 @@ async function loadRemote(selectId){
       sb.from("favorites").select("fav_id").eq("user_id",uid).limit(1000)
     ]);
     const sp=await sb.from("superadmins").select("user_id");supers=new Set((sp&&!sp.error&&sp.data||[]).map(x=>x.user_id));
+    const ts=await sb.from("testers").select("user_id");testerOk=!ts.error;testerIds=new Set((!ts.error&&ts.data||[]).map(x=>x.user_id));
     nicks={};genders={};(ok(p)||[]).forEach(x=>{nicks[x.user_id]=x.nick;if(x.gender)genders[x.user_id]=x.gender});
     me.nick=nicks[uid]||null;
     favOk=!fv.error;favs=new Set((ok(fv)||[]).map(x=>x.fav_id));
@@ -2294,7 +2363,7 @@ async function loadRemote(selectId){
     startPresence();
     if(seenFor!==uid||Date.now()-seenAt>15*60000){seenFor=uid;seenAt=Date.now();Promise.resolve(sb.rpc("touch_seen")).catch(()=>{})}
     adminIds=(ok(ad)||[]).map(x=>x.user_id);isAdmin=adminIds.includes(uid);
-  }else{favs=new Set();favOk=false;nicks={};genders={};me.nick=null;wants=[];joins={};prefs={};decls={};invs={};notifs=[];lib=[];adminIds=[];isAdmin=false;stopPresence()}
+  }else{favs=new Set();favOk=false;nicks={};genders={};me.nick=null;wants=[];joins={};prefs={};decls={};invs={};notifs=[];testerIds=new Set();testerOk=false;lib=[];adminIds=[];isAdmin=false;stopPresence()}
   sorted=a.data.map(r=>({id:r.id,title:r.title,when:r.starts_at,place:r.place,pace:r.pace,owner:r.owner_name,note:r.note,creator:r.creator,edited_at:r.edited_at||null,change_note:r.change_note||null,route_title:r.route_title||null,route_desc:r.route_desc||null}));
   const want=selectId||prevId;
   let idx=want?sorted.findIndex(r=>r.id===want):-1;
