@@ -1350,8 +1350,9 @@ function renderMyWant(){
      +'<div class="myt">'+esc(n>=0&&n<=2?["Dziś","Jutro","Pojutrze"][n]+" "+hhmm(d):wd.charAt(0).toUpperCase()+wd.slice(1)+" "+hhmm(d))+(n>=0&&n<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
      +(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')
      +'<div class="mym">'+joinedHtml("my"+w.id,j,'Na razie nikt nie dołączył.')+'</div>'
-     +'<div class="mybtns"><button class="b g" data-my="edit" data-id="'+esc(w.id)+'">✏️ Zmień godzinę</button><button class="b g" data-my="share" data-id="'+esc(w.id)+'">📤 Udostępnij</button></div>'
-     +'<button class="mydel" data-my="del" data-id="'+esc(w.id)+'">Odwołaj zaproszenie</button></div>';
+     +'<div class="acts"><button class="b g join" data-my="edit" data-id="'+esc(w.id)+'">Zmień godzinę</button>'
+     +'<button class="ib" data-my="share" data-id="'+esc(w.id)+'" title="Udostępnij" aria-label="Udostępnij">'+ICON.share+'</button>'
+     +'<button class="ib del" data-my="del" data-id="'+esc(w.id)+'" title="Odwołaj zaproszenie" aria-label="Odwołaj zaproszenie">'+ICON.del+'</button></div></div>';
   };
   const multi=mine.length>1,keep=multi?Math.min(myIdx,mine.length-1):0;
   box.innerHTML='<div class="mycar'+(multi?' multi':'')+'" id="mycar">'+mine.map(card).join("")+'</div>'
