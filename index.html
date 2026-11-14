@@ -60,6 +60,11 @@ nav button.on{background:var(--accbtn);color:#fff;box-shadow:0 1px 4px rgba(36,1
 .bsbox .bsempty{padding:8px 4px;font-size:14px}.bsempty .lnk{font-size:14px;padding:0}
 .wlab{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.04em;border-radius:999px;padding:2px 10px;margin-bottom:6px;background:var(--acc2);color:var(--acc)}
 .wlab.me{background:#fff3c4;color:#8a5a00}html[data-theme=dark] .wlab.me{background:#4a3f12;color:#ffd666}
+.wwx{font-size:14px;color:var(--mut);margin-top:6px}
+.wroute{margin-top:8px;padding:9px 11px;border-radius:12px;background:var(--acc2);font-size:15px}
+.wroute .wrb{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.wroute .wrb{flex-wrap:nowrap}.wroute .wrb .b{background:var(--card)!important;flex:1;padding:8px 6px;white-space:nowrap}
+.wrfile{display:block;margin:0;cursor:pointer}.wrfile input{display:none}.wrfile span{display:block;padding:11px 12px;border-radius:12px;background:var(--fill);color:var(--acc);font-weight:700;font-size:16px;text-align:center}
+.rsbox{max-width:560px;text-align:left}.rsmap{height:300px}
 .ttag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.05em;color:#7a4fd1;background:rgba(122,79,209,.13);border-radius:999px;padding:2px 9px;margin:0 0 6px 6px;vertical-align:1px;text-transform:none}
 html[data-theme=dark] .ttag{color:#c4a8ff;background:rgba(196,168,255,.18)}
 .nit .tx>.ttag,.want>.ttag{margin-left:0}
@@ -451,6 +456,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 <div class="sheet hide" id="popsheet"></div>
 <div class="sheet hide" id="picksheet"></div>
 <div class="sheet bsh hide" id="bellsheet"></div>
+<div class="sheet hide" id="routesheet"></div>
 
 <div class="card hide" id="pwbox">
  <h2>Ustaw nowe hasło</h2>
@@ -488,6 +494,9 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
     <div class="wx hide" id="wwx"></div>
     <div id="wtestwrap" class="hide"><div class="wlbl">Rodzaj zaproszenia</div><div class="seg" id="wtest"><button type="button" data-test="1" class="on">🧪 Testowe</button><button type="button" data-test="0">🚴 Prawdziwe</button></div><div class="note" id="wtestnote" style="margin-top:6px"></div></div>
     <div id="wwhowrap" class="hide"><div class="wlbl">Kto zobaczy zaproszenie?</div><button type="button" class="who" id="wwho"></button></div>
+    <div id="wroutewrap" class="hide"><div class="wlbl">Proponowana trasa (opcjonalnie)</div>
+     <label class="wrfile"><input type="file" id="wrfile" accept=".gpx,application/gpx+xml,text/xml"><span id="wrlbl">🗺️ Dodaj plik GPX</span></label>
+     <div class="row" id="wrinfo" style="margin-top:6px;gap:10px"></div></div>
     <div class="wlbl">Notatka</div>
     <select id="wnotesel"><option value="">— bez notatki —</option><option>Na godzinkę +/- :)</option><option>Trochę po mieście</option><option>Może do lasu</option><option>Nad rzekę</option><option>Nocna Wataha</option><option value="*">✏️ Własna…</option></select>
     <input id="wnote" class="hide" maxlength="200" placeholder="Napisz własną notatkę">
@@ -703,7 +712,7 @@ const windCache={};
 async function getWind(lat,lon,when){
   const key=lat.toFixed(2)+","+lon.toFixed(2);
   if(!windCache[key]||Date.now()-windCache[key].t>6e5){
-    const u="https://api.open-meteo.com/v1/forecast?latitude="+lat.toFixed(3)+"&longitude="+lon.toFixed(3)+"&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_2m&wind_speed_unit=kmh&timezone=auto&past_days=30&forecast_days=16";
+    const u="https://api.open-meteo.com/v1/forecast?latitude="+lat.toFixed(3)+"&longitude="+lon.toFixed(3)+"&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_2m,precipitation_probability&wind_speed_unit=kmh&timezone=auto&past_days=30&forecast_days=16";
     windCache[key]={t:Date.now(),p:fetch(u).then(r=>{if(!r.ok)throw new Error("http "+r.status);return r.json()})};
   }
   let J;
@@ -715,7 +724,7 @@ async function getWind(lat,lon,when){
     const err=new Error(k<H.time[0]?"Brak danych o wietrze dla tak dawnego terminu (dostępne ok. 30 dni wstecz).":"Prognoza wiatru jest dostępna do 16 dni naprzód — wróć bliżej terminu.");
     err.code="range";throw err;
   }
-  return {dir:H.wind_direction_10m[i],speed:H.wind_speed_10m[i],gust:H.wind_gusts_10m[i],temp:H.temperature_2m?H.temperature_2m[i]:null,time:H.time[i].slice(11,16)};
+  return {dir:H.wind_direction_10m[i],speed:H.wind_speed_10m[i],gust:H.wind_gusts_10m[i],temp:H.temperature_2m?H.temperature_2m[i]:null,rain:H.precipitation_probability?H.precipitation_probability[i]:null,time:H.time[i].slice(11,16)};
 }
 
 /* ---------- mapa (Leaflet + OpenStreetMap) ---------- */
@@ -1461,6 +1470,77 @@ function maybeHelp(){
 }
 
 /* ---------- START: chętni ---------- */
+/* 🌡 pogoda na karcie zaproszenia (Open-Meteo, Warszawa albo start trasy; godzina startu / początek zakresu) */
+const wxTxt={};
+function wxWhen(w){return new Date(isOpen(w)?w.range_from:w.starts_at)}
+function wxHtml(w){
+  const t=wxWhen(w).getTime();if(t<Date.now()-36e5||t>Date.now()+15.5*864e5)return "";
+  const k=w.id+"|"+t;
+  return '<div class="wwx" data-wxk="'+esc(k)+'">'+(wxTxt[k]||'🌡 …')+'</div>';
+}
+function fillWx(){
+  document.querySelectorAll(".wwx[data-wxk]").forEach(el=>{
+    const k=el.dataset.wxk;if(wxTxt[k]){el.innerHTML=wxTxt[k];return}
+    if(el.dataset.busy)return;el.dataset.busy="1";
+    const [id,t]=k.split("|"),w=wants.find(x=>x.id===id);
+    getWind(WX_LAT,WX_LON,new Date(+t)).then(x=>{
+      wxTxt[k]=(x.temp!=null?'🌡 '+Math.round(x.temp)+'°C · ':'')+'🌬 '+Math.round(x.speed)+' km/h z '+NAMES[Math.round(x.dir/45)%8]+(x.rain!=null?' · 🌧 '+Math.round(x.rain)+'%':'')
+        +(w&&isOpen(w)?' <span class="note">(o '+hhmm(new Date(+t))+')</span>':'');
+      document.querySelectorAll('.wwx[data-wxk="'+k+'"]').forEach(e=>{e.innerHTML=wxTxt[k]});
+    }).catch(()=>{document.querySelectorAll('.wwx[data-wxk="'+k+'"]').forEach(e=>e.remove())});
+  });
+}
+function routeBoxHtml(w){
+  if(!hasRoute(w))return "";
+  return '<div class="wroute"><div>🗺️ <b>Proponowana trasa</b> · 📏 '+kmTxt(w.route_km)+' km · ⏱ ≈ '+esc(durTxt(w.route_km/WANT_PACE*60))+'</div>'
+   +'<div class="wrb"><button type="button" class="b g small" data-rt="gpx" data-id="'+esc(w.id)+'">⬇ Pobierz GPX</button><button type="button" class="b g small" data-rt="show" data-id="'+esc(w.id)+'">🗺️ Szczegóły</button></div></div>';
+}
+/* okienko „Szczegóły trasy”: mapa z wiatrem, statystyki, miejscowości */
+let rsMap=null,rsTok=0;
+function closeRouteSheet(){const p=$("routesheet");if(rsMap){try{rsMap.m.remove()}catch(e){}rsMap=null}p.classList.add("hide");p.innerHTML="";rsTok++}
+async function openRouteSheet(w){
+  const tok=++rsTok,p=$("routesheet"),d=new Date(w.starts_at);
+  p.innerHTML='<div class="sheetbox rsbox" role="dialog" aria-modal="true"><button class="sclose" data-rk="close" aria-label="Zamknij">✕</button>'
+   +'<div class="ph" style="margin-top:0">🗺️ Proponowana trasa</div>'
+   +'<div class="pmeta" style="margin-top:4px">'+nk(w.user_id)+' · '+esc(relDay(d)+" "+wTime(w))+(w.note?' · 💬 '+esc(w.note):'')+'</div>'
+   +'<div class="mapwrap"><div class="map rsmap" id="map3"></div><div class="warrow hide" id="warrow3"></div></div>'
+   +'<div class="legend"><span><i class="dot" style="background:#d64545"></i>pod wiatr</span><span><i class="dot" style="background:#e0b83a"></i>bocznie</span><span><i class="dot" style="background:#2a9d5c"></i>z wiatrem</span></div>'
+   +'<div class="stats" id="stats3"></div><div class="note" id="windinfo3" style="margin-top:8px">Ładuję trasę…</div><div class="tip hide" id="tip3"></div><div class="routeinfo hide" id="placesbox3"></div>'
+   +'<div class="pbtns" style="margin-top:14px"><button type="button" class="b" data-rt="gpx" data-id="'+esc(w.id)+'">⬇ Pobierz GPX</button><button type="button" class="b w" data-rk="close">Zamknij</button></div>'
+   +'<div class="ptg">Czas przy tempie ok. '+WANT_PACE+' km/h, z uwzględnieniem wiatru. Mapa © OpenStreetMap · pogoda: Open-Meteo.</div></div>';
+  p.classList.remove("hide");
+  let pts;
+  try{pts=await getWantRoute(w.id)}catch(e){if(tok===rsTok)$("windinfo3").textContent="Nie udało się pobrać trasy.";return}
+  if(tok!==rsTok)return;
+  if(!pts){$("windinfo3").textContent="To zaproszenie nie ma już trasy.";return}
+  let an=analyze(pts,0,0,WANT_PACE,false);$("stats3").innerHTML=statsHtml(an);
+  rsMap=makeMap("map3");
+  if(rsMap){setTimeout(()=>{if(rsMap){rsMap.m.invalidateSize();drawRoute(rsMap,pts,null,true)}},60)}
+  else $("map3").outerHTML='<div class="note">Nie udało się załadować mapy (sprawdź internet).</div>';
+  placesAlong(pts,"w"+w.id+":"+w.route_km).then(l=>{if(tok===rsTok)renderPlaces("placesbox3",rsMap,l)}).catch(()=>{});
+  $("windinfo3").textContent="Sprawdzam prognozę wiatru…";
+  try{
+    const x=await getWind(pts[0].lat,pts[0].lon,wxWhen(w));if(tok!==rsTok)return;
+    an=analyze(pts,x.dir,x.speed,WANT_PACE,false);$("stats3").innerHTML=statsHtml(an);
+    if(rsMap){drawRoute(rsMap,pts,an.segs,false);setArrow("warrow3",x.dir,x.speed)}
+    $("tip3").textContent=an.tip;$("tip3").classList.remove("hide");
+    $("windinfo3").textContent="Wiatr o "+x.time+": "+windLabel(x.dir)+", "+Math.round(x.speed)+" km/h, porywy do "+Math.round(x.gust)+" km/h"+(x.temp!=null?" · "+Math.round(x.temp)+"°C":"")+(x.rain!=null?" · deszcz "+Math.round(x.rain)+"%":"")+" (Open-Meteo).";
+  }catch(e){if(tok===rsTok)$("windinfo3").textContent=e.code==="range"?e.message:"Nie udało się pobrać prognozy wiatru."}
+}
+document.addEventListener("click",async e=>{
+  const b=e.target.closest("[data-rt]");
+  if(b){
+    e.stopPropagation();
+    const w=wants.find(x=>x.id===b.dataset.id);if(!w)return;
+    if(b.dataset.rt==="show"){openRouteSheet(w);return}
+    try{const pts=await getWantRoute(w.id);if(!pts){say("To zaproszenie nie ma trasy.");return}
+      const nm="trasa-"+slug(nickOf(w.user_id))+"-"+localIso(new Date(w.starts_at)).slice(0,10)+".gpx";
+      say(saveFile(makeGpx(pts,"Trasa — "+nickOf(w.user_id)+", "+wfLabel(new Date(w.starts_at))),nm,"application/gpx+xml")?"Pobrano: "+nm:"Nie udało się pobrać pliku.")}
+    catch(err){say("Nie udało się pobrać trasy.")}
+    return;
+  }
+  const p=$("routesheet");if(p&&!p.classList.contains("hide")&&(e.target===p||e.target.closest("[data-rk='close']")))closeRouteSheet();
+},true);
 function renderWants(){
   const guest=!session;
   $("wantguest").classList.toggle("hide",!guest);
@@ -1500,6 +1580,7 @@ function renderWants(){
        :wantHtml(ord[0]))+'</details>';
   }).join("");
   box.querySelectorAll(".dcar").forEach(dcarRestore);
+  fillWx();
 }
 /* karuzela zaproszeń w karcie dnia */
 const dayIdx={};
@@ -1556,7 +1637,7 @@ function wantHtml(w){
     const peek=priv&&!mine&&!invIds(w).includes(uid)&&!joined;
     const open=isOpen(w),myp=(prefs[w.id]||{})[uid],dec=(decls[w.id]||[]).includes(uid);
     return '<div class="want'+(mine?' mine':'')+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'">'+(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+'<div class="wtop">'+nk(w.user_id)+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="lockt">do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?'<span class="lockt">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>':'')+(mine?'<span class="note">(Twoje zgłoszenie)</span>':'')+'</div>'
-     +(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')
+     +(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+wxHtml(w)+routeBoxHtml(w)
      +invitedHtml(w)
      +(open?tallyHtml(w):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w))
      +((!mine||isAdmin)?'<div class="acts">'
@@ -1658,6 +1739,10 @@ function openWantForm(w,preset){
   wf.editId=w?w.id:null;
   wf.vis="all";wf.pick=new Set();
   wf.test=true;$("wtestwrap").classList.toggle("hide",!!w||!testOk);wfTestSync();
+  wf.route=null;wf.routeName="";wf.routeHad=hasRoute(w);wf.routeTouched=false;$("wrfile").value="";
+  $("wroutewrap").classList.toggle("hide",!wRouteOk);
+  if(w&&hasRoute(w)){getWantRoute(w.id).then(p=>{if(wf.editId===w.id&&!wf.routeTouched){wf.route=p||null;wfRouteSync()}}).catch(()=>{})}
+  wfRouteSync();
   if(preset&&preset.pick){wf.vis="pick";wf.pick=new Set(preset.pick)}
   $("wwhowrap").classList.toggle("hide",!!w||!visOk);
   renderWhoBtn();
@@ -1687,9 +1772,34 @@ function openWantForm(w,preset){
   wfUpdate();
   $("wantform").scrollIntoView({behavior:"smooth",block:"nearest"});
 }
+/* 🗺️ trasa w zaproszeniu (KROK 23) */
+let wRouteOk=false;const wRouteCache={};
+const hasRoute=w=>!!w&&w.route_km!=null;
+const WANT_PACE=22; // km/h — szacunek czasu dla zaproszeń
+const kmTxt=k=>Number(k).toFixed(1).replace(".",",");
+function wfRouteSync(){
+  const i=$("wrinfo"),R=wf.route;
+  $("wrlbl").textContent=R?"🗺️ Zmień plik GPX":"🗺️ Dodaj plik GPX";
+  i.innerHTML=R?'<span>✅ '+kmTxt(routeKm(R))+' km · ⏱ ≈ '+esc(durTxt(routeKm(R)/WANT_PACE*60))+(wf.routeName?' · '+esc(wf.routeName):'')+'</span><button type="button" class="lnk" id="wrdel" style="color:var(--bad)">Usuń trasę</button>'
+    :(wf.editId&&wf.routeHad?'<span class="note">Trasa zostanie usunięta po zapisaniu.</span>':'<span class="note">Inni zobaczą długość, mapę z wiatrem i pobiorą GPX.</span>');
+}
+async function getWantRoute(id){
+  if(id in wRouteCache)return wRouteCache[id];
+  const r=await sb.from("wants").select("route").eq("id",id).single();
+  if(r.error)throw r.error;
+  const pts=r.data&&r.data.route?parseRoute(r.data.route):false;
+  wRouteCache[id]=pts;return pts;
+}
 function closeWantForm(){$("wantform").classList.add("hide");wf.editId=null}
 $("wantbtn").onclick=()=>{$("wantform").classList.contains("hide")||wf.editId?openWantForm(null):closeWantForm()};
 $("wcancel").onclick=closeWantForm;
+$("wrfile").addEventListener("change",async e=>{
+  const f=e.target.files[0];if(!f)return;
+  const p=parseGpx(await f.text());
+  if(p.length<2){say("Nie znaleziono punktów trasy w pliku GPX.");e.target.value="";return}
+  wf.route=thin(p,500);wf.routeName=f.name.replace(/\.gpx$/i,"");wf.routeTouched=true;wfRouteSync();
+});
+$("wrinfo").addEventListener("click",e=>{if(e.target.id!=="wrdel")return;wf.route=null;wf.routeName="";wf.routeTouched=true;$("wrfile").value="";wfRouteSync()});
 $("wtest").addEventListener("click",e=>{const b=e.target.closest("button[data-test]");if(!b)return;wf.test=b.dataset.test==="1";wfTestSync();wfUpdate()});
 $("wdays").addEventListener("click",e=>{const b=e.target.closest("button[data-d]");if(!b)return;wfSetDay(b.dataset.d);wfUpdate()});
 $("wdt").addEventListener("change",wfUpdate);
@@ -1761,13 +1871,14 @@ $("wsave").onclick=async()=>{
   try{
     if(wf.editId){
       const ow0=wants.find(x=>x.id===wf.editId),upd={starts_at:d.toISOString(),note};
+      if(wRouteOk&&wf.routeTouched){upd.route=wf.route?routeJson(wf.route):null;upd.route_km=wf.route?+routeKm(wf.route).toFixed(1):null;delete wRouteCache[wf.editId]}
       if(rng){upd.range_from=d.toISOString();upd.range_to=d2.toISOString();upd.settled_at=null}
       else if(isOpen(ow0)){upd.range_from=null;upd.range_to=null}
       const res=await sb.from("wants").update(upd).eq("id",wf.editId).select("id");
       if(res.error||!res.data||!res.data.length)throw new Error(res.error?res.error.message:"zmiana terminu wymaga KROKU 11 w bazie");
       const ow=wants.find(x=>x.id===wf.editId);editedPriv=!!ow&&((invs[ow.id]||[]).length>0||(joins[ow.id]||[]).some(x=>x!==uid));
     }else{
-      const row={starts_at:d.toISOString(),note};if(priv)row.visibility="private";if(testOk)row.is_test=!!wf.test;
+      const row={starts_at:d.toISOString(),note};if(priv)row.visibility="private";if(testOk)row.is_test=!!wf.test;if(wRouteOk&&wf.route){row.route=routeJson(wf.route);row.route_km=+routeKm(wf.route).toFixed(1)}
       if(rng){row.range_from=d.toISOString();row.range_to=d2.toISOString()}
       const res=await sb.from("wants").insert(row).select("id").single();
       if(res.error)throw res.error;
@@ -1803,7 +1914,7 @@ function renderMyWant(){
     return '<div class="mywant'+(isTest(w)?' test':'')+'" data-i="'+i+'" data-wid="'+esc(w.id)+'"><div class="myh">🙋 Ty zapraszasz'+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+(mine.length>1?' · '+(i+1)+' z '+mine.length:'')+(priv?'<span class="lockt">🔒 dla '+ni+' '+osob(ni)+'</span>':'')+'</div>'
      +'<div class="myt'+(isOpen(w)?' rng':'')+'">'+esc(n>=0&&n<=2?["Dziś","Jutro","Pojutrze"][n]+" "+wTime(w):wd.charAt(0).toUpperCase()+wd.slice(1)+" "+wTime(w))+(n>=0&&n<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
      +(isOpen(w)?'<div class="mym">🕖 Godzina do ustalenia'+(new Date(w.range_from).getTime()>Date.now()+36e5?' — ustali się sama '+esc(hhmm(new Date(new Date(w.range_from).getTime()-36e5)))+', jeśli jej nie wybierzesz':'')+'</div>':fromRange(w)?'<div class="mym">✅ Godzina ustalona</div>':'')
-     +(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')
+     +(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')+wxHtml(w)+routeBoxHtml(w)
      +(priv?'<div class="mym">'+invitedHtml(w)+'</div>':'')
      +(isOpen(w)?'<div class="mym">'+tallyHtml(w)+'</div>'+(wTally(w).length?'<div class="prop">✨ Propozycja: <b>'+esc(hhmm(new Date(wBest(w))))+'</b> — pasuje '+wTally(w)[0].ids.length+' '+plf(wTally(w)[0].ids.length,["osobie","osobom","osobom"])+'</div>':'')
        :'<div class="mym">'+joinedHtml("my"+w.id,j,'Na razie nikt nie dołączył.')+declHtml(w)+'</div>')
@@ -1818,6 +1929,7 @@ function renderMyWant(){
    +(multi?'<div class="mydots" id="mydots">'+mine.map((_,i)=>'<button type="button" data-dot="'+i+'" class="'+(i===keep?'on':'')+'" aria-label="Zaproszenie '+(i+1)+'"></button>').join("")+'</div>':'')
    +'<button class="lnk mynew" data-my="new">+ Zaproś na inny dzień</button>';
   if(multi){const c=$("mycar");const it=c.children[keep];if(it)c.scrollLeft=it.offsetLeft-c.offsetLeft}
+  fillWx();
 }
 let myIdx=0;
 function myCarIdx(){
@@ -2726,7 +2838,9 @@ async function loadRemote(selectId){
     let p=await sb.from("profiles").select("user_id,nick,gender").limit(1000);
     genderOk=!p.error;
     if(p.error)p=await sb.from("profiles").select("user_id,nick").limit(1000);
-    let w=await sb.from("wants").select("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test").order("starts_at").limit(200);
+    let w=await sb.from("wants").select("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km").order("starts_at").limit(200);
+    wRouteOk=!w.error;
+    if(w.error)w=await sb.from("wants").select("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test").order("starts_at").limit(200);
     testOk=!w.error;
     if(w.error)w=await sb.from("wants").select("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at").order("starts_at").limit(200);
     rangeOk=!w.error;visOk=rangeOk;
