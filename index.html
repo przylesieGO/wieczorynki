@@ -514,7 +514,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
    <div id="mywant"></div>
    <div id="wantform" class="hide">
     <div class="wlbl" id="wftitle">Kiedy jedziesz?</div>
-    <div class="seg" id="wdays"><button type="button" data-d="0" class="on">Dziś</button><button type="button" data-d="1">Jutro</button><button type="button" data-d="2">Pojutrze</button><button type="button" data-d="x">Inny dzień</button></div>
+    <div class="seg" id="wdays"><button type="button" data-d="0" class="on">Dziś</button><button type="button" data-d="1">Jutro</button><button type="button" data-d="x">Inny dzień</button></div>
     <div id="wdwrap" class="hide" style="margin-top:8px"><input type="date" id="wdt"></div>
     <div class="seg hide" id="wmode" style="margin-top:8px"><button type="button" data-mode="one" class="on">🕖 Godzina</button><button type="button" data-mode="range">↔ Zakres godzin</button></div>
     <div class="flbl hide" id="flbl1">OD</div>
@@ -2005,7 +2005,7 @@ function openWantForm(w,preset){
     if(d.getTime()<Date.now()+15*60000)d.setDate(d.getDate()+1);
   }
   const n=dayDiff(d);
-  if(n>=0&&n<=2)wfSetDay(String(n));else{$("wdt").value=localIso(d).slice(0,10);wfSetDay("x",true)}
+  if(n>=0&&n<=1)wfSetDay(String(n));else{$("wdt").value=localIso(d).slice(0,10);wfSetDay("x",true)}
   $("fch").textContent=pad(d.getHours());$("fcm").textContent=pad(d.getMinutes());
   wf.h=d.getHours();wf.m=d.getMinutes();
   // zakres godzin: przy edycji otwartego zakresu — jego koniec; inaczej domyślnie +2 h
@@ -2109,7 +2109,7 @@ $("wquick").addEventListener("click",e=>{
     d.setHours(hh,mm,0,0);
     if(d.getTime()<Date.now()+5*60000&&wf.day==="0")d.setDate(d.getDate()+1);
   }
-  if(wf.day!=="x"||b.dataset.q==="30"){const n=dayDiff(d);if(n>=0&&n<=2)wfSetDay(String(n))}
+  if(wf.day!=="x"||b.dataset.q==="30"){const n=dayDiff(d);if(n>=0&&n<=1)wfSetDay(String(n));else{$("wdt").value=localIso(d).slice(0,10);wfSetDay("x",true)}}
   wfSetTime(d.getHours(),d.getMinutes());
   if(wfRange()&&wf.h2*60+wf.m2<=wf.h*60+wf.m){const e=new Date(d.getTime()+2*36e5);if(e.getDate()===d.getDate())wfSetTime2(e.getHours(),e.getMinutes());else wfSetTime2(23,45)}
 });
