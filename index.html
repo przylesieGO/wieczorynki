@@ -945,11 +945,11 @@ const HEX_RE=/^#[0-9a-fA-F]{6}$/;
 const colorOf=id=>{const g=genders[id];return g&&HEX_RE.test(nickColors[g]||"")?nickColors[g]:""};
 // nick jako kolorowy HTML (tekst zawsze przez esc)
 // nick jako „pigułka”: kolor tekstu i tło zależne od płci (ustawia admin); bez płci — szara
-const pill=(t,c,bg,live,uid_)=>'<span'+(uid_?' data-u="'+esc(uid_)+'"':'')+' class="nk'+(c&&bg==="none"?' nobg':'')+(live?' live" title="teraz w aplikacji':'')+'"'+(c?' style="color:'+c+';background:'+(bg==="none"?"transparent":bg)+'"':'')+'>'+esc(t)+'</span>';
+const pill=(t,c,bg,live,uid_,extra)=>'<span'+(uid_?' data-u="'+esc(uid_)+'"':'')+' class="nk'+(c&&bg==="none"?' nobg':'')+(live?' live" title="teraz w aplikacji':'')+'"'+(c?' style="color:'+c+';background:'+(bg==="none"?"transparent":bg)+'"':'')+'>'+esc(t)+(extra||'')+'</span>';
 /* ulubieni (prywatni: każdy widzi tylko swoich) */
 let favs=new Set(),favOk=false;
 const isFav=id=>favs.has(id);
-const nk=(id,fallback)=>{const c=colorOf(id),g=genders[id],t=nicks[id]||fallback||"ktoś";return pill((isFav(id)?"⭐ ":"")+t+(testerIds.has(id)?" 🧪":"")+(fbBulb(id)?" 💡":""),c,c?nickBgs[g]:"",onlineIds.includes(id),nicks[id]&&favOk&&id!==uid?id:"")};
+const nk=(id,fallback)=>{const c=colorOf(id),g=genders[id],t=nicks[id]||fallback||"ktoś";return pill((isFav(id)?"⭐ ":"")+t+(testerIds.has(id)?" 🧪":""),c,c?nickBgs[g]:"",onlineIds.includes(id),nicks[id]&&favOk&&id!==uid?id:"",fbBulb(id)?' '+uiIcon("bulb"):"")};
 const favFirst=ids=>ids.slice().sort((a,b)=>(isFav(b)?1:0)-(isFav(a)?1:0));
 const nkList=ids=>'<div class="nks">'+favFirst(ids).map(id=>nk(id)).join("")+'</div>';
 const favNames=ids=>favFirst(ids).filter(isFav).map(id=>nicks[id]).filter(Boolean);
