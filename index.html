@@ -82,6 +82,7 @@ nav button.on{background:var(--accbtn);color:#fff;box-shadow:0 1px 4px rgba(36,1
 .hdr.compact .hin{padding:8px 16px;flex-wrap:nowrap;gap:10px}
 .hdr.compact .apptitle{flex:none;font-size:17px}
 .hdr.compact .wsub2{display:none}
+.nsug{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px;align-items:center}.nsug .note{flex-basis:100%;margin:2px 0}.nsug .chip{padding:7px 12px;font-size:15px;font-weight:600}
 .menick{display:block;margin-top:4px;font-size:13px;font-weight:600;color:var(--mut);cursor:pointer;line-height:1.2}.menick .nk{font-size:14px;padding:1px 9px}
 .hdr.compact .menick{display:inline-block;margin:0 0 0 6px;vertical-align:2px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hdr.compact .menick i{display:none}.hdr.compact .menick .nk{font-size:13px;padding:1px 7px}
 .hdr.compact nav{order:2;flex:1 1 auto;min-width:0}
@@ -816,7 +817,10 @@ const nk=(id,fallback)=>{const c=colorOf(id),g=genders[id],t=nicks[id]||fallback
 const favFirst=ids=>ids.slice().sort((a,b)=>(isFav(b)?1:0)-(isFav(a)?1:0));
 const nkList=ids=>'<div class="nks">'+favFirst(ids).map(id=>nk(id)).join("")+'</div>';
 const favNames=ids=>favFirst(ids).filter(isFav).map(id=>nicks[id]).filter(Boolean);
-const needProfile=()=>!!session&&(!me.nick||(genderOk&&!genders[uid]));
+// nick: min. 3 litery (KROK 20) — cyfry, spacje i znaki się nie liczą
+const nickLetters=n=>String(n||"").replace(/[^A-Za-zĄąĆćĘęŁłŃńÓóŚśŹźŻż]/g,"").length;
+const nickShort=()=>!!me.nick&&nickLetters(me.nick)<3&&!isSuper(uid);
+const needProfile=()=>!!session&&(!me.nick||(genderOk&&!genders[uid])||nickShort());
 const isUpcoming=r=>new Date(r.when).getTime()>=Date.now()-3*36e5;
 const firstUpcoming=()=>sorted.findIndex(isUpcoming);
 function pickDefault(){const f=firstUpcoming();return f>=0?f:sorted.length-1}
@@ -951,8 +955,9 @@ function unickHtml(){
 }
 let selGender="";
 function nickHtml(){
-  const first=!me.nick,incomplete=needProfile();
-  const head=first?'<div class="sname">👋 Wybierz swój nick</div><div class="smail">Witaj w PrzylesieGo! Nick widzą inni przy zapisach na wieczorynki i zgłoszeniach.</div>'
+  const first=!me.nick,incomplete=needProfile(),short=nickShort();
+  const head=short?'<div class="sname">✏️ Wybierz nowy nick</div><div class="smail">Nick „'+esc(me.nick)+'” jest za krótki. Wybierz taki, który ma co najmniej 3 litery — żeby inni wiedzieli, kto jedzie.</div>'
+     :first?'<div class="sname">👋 Wybierz swój nick</div><div class="smail">Witaj w PrzylesieGo! Nick widzą inni przy zapisach na wieczorynki i zgłoszeniach.</div>'
      :incomplete?'<div class="sname">👋 Uzupełnij profil</div><div class="smail">Wybierz płeć — od niej zależy kolor Twojego nicku.</div>'
      :'<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">✏️ Nick i płeć</div>';
   const gsel=genderOk?'<label style="font-size:15px;margin-top:14px">Płeć (obowiązkowo)</label><div class="seg" id="gsex" style="margin-top:4px">'
@@ -960,7 +965,8 @@ function nickHtml(){
   return head
    +'<div class="sleft"><label for="gnick" style="font-size:15px">'+(first?'Twój nick':'Nick')+'</label>'
    +'<input id="gnick" maxlength="20" autocomplete="off" value="'+esc(me.nick||"")+'" placeholder="np. GAWRON">'
-   +'<p class="note">2–20 znaków: litery, cyfry, spacja, kropka, _ lub -. Nick musi być unikalny; widzą go inni zalogowani.</p>'
+   +'<p class="note">Najlepiej <b>imię + litera nazwiska</b> albo ksywka, np. <i>Ania K</i>, <i>Marek z Bielan</i>. Co najmniej 3 litery (bez inicjałów typu „AK”), do 20 znaków: litery, cyfry, spacja, kropka, _ lub -. Nick musi być unikalny; widzą go inni zalogowani.</p>'
+   +'<div class="nsug hide" id="gnicksug"></div>'
    +gsel
    +'<div class="note" id="gnickinfo" style="color:var(--bad);margin-top:8px"></div>'
    +'<button class="b sbtn" data-c="nicksave">Zapisz</button></div>';
@@ -1181,6 +1187,8 @@ $("gearpanel").addEventListener("click",async e=>{
   if(gb){selGender=gb.dataset.g;[...$("gsex").children].forEach(x=>x.classList.toggle("on",x===gb));return}
   const th=e.target.closest("button[data-t]");
   if(th){setTheme(th.dataset.t);renderGear();return}
+  const ns=e.target.closest("button[data-ns]");
+  if(ns){const i=$("gnick");if(i){i.value=ns.dataset.ns;i.focus()}return}
   const sn=e.target.closest("button[data-sn]");
   if(sn){showNick=sn.dataset.sn==="1";try{localStorage.setItem("showNick",showNick?"1":"0")}catch(err){}renderMeNick();renderGear();return}
   const hs=e.target.closest("button[data-hs]");
@@ -1315,14 +1323,26 @@ async function gearDeleteAccount(){
   }catch(e){inf.textContent="Nie udało się usunąć konta."}
   finally{deleting=false}
 }
+// gdy nick zajęty: 2–3 wolne warianty do kliknięcia
+function nickSuggest(n){
+  let base=n.replace(/\s+/g," ").trim().slice(0,14);base=base.charAt(0).toUpperCase()+base.slice(1);
+  const K=(selGender||genders[uid])==="K";
+  const taken=k=>Object.keys(nicks).some(id=>id!==uid&&nickKey(nicks[id])===k);
+  const c=[base+(K?" Rowerowa":" Rowerowy"),base+" z Lasu",base+" Szosa",base+" Przygoda"].filter(x=>x.length<=20&&NICK_RE.test(x)&&!taken(nickKey(x)));
+  return c.slice(0,3);
+}
 async function gearSaveNick(){
   const i=$("gnick");if(!i)return;
   const n=i.value.trim();
+  const sg=$("gnicksug");if(sg){sg.classList.add("hide");sg.innerHTML=""}
   if(genderOk&&!selGender){$("gnickinfo").textContent="Wybierz płeć: Kobieta albo Mężczyzna.";return}
+  if(nickShort()&&n===me.nick){$("gnickinfo").textContent="Wybierz nowy nick — co najmniej 3 litery.";return}
   if(n===me.nick&&(!genderOk||selGender===genders[uid])){gearView="main";renderGear();return}
   const first=needProfile();
   const err=await saveNick(n,null,genderOk?selGender:null);
-  if(err){$("gnickinfo").textContent=err;return}
+  if(err){$("gnickinfo").textContent=err;
+    if(/zajęty/.test(err)&&sg){const L=nickSuggest(n);if(L.length){sg.innerHTML='<div class="note">Wolne, np.:</div>'+L.map(x=>'<button type="button" class="chip" data-ns="'+esc(x)+'">'+esc(x)+'</button>').join("")+'<div class="note">…albo dopisz pierwszą literę nazwiska, np. „'+esc((w=>w.charAt(0).toUpperCase()+w.slice(1))(n.split(" ")[0]))+' K”.</div>';sg.classList.remove("hide")}}
+    return}
   if(first)gearOpen=false;
   gearView="main";renderGear();say(first?"Profil zapisany ✔":"Zapisano ✔");
 }
@@ -1340,12 +1360,14 @@ function nickKey(n){
 }
 async function saveNick(n,target,gender){
   const who=target||uid;
-  if(!NICK_RE.test(n))return "Nick: 2–20 znaków — litery, cyfry, spacja, kropka, _ lub -.";
+  if(!NICK_RE.test(n))return "Nick: do 20 znaków — litery, cyfry, spacja, kropka, _ lub -.";
+  if(nickLetters(n)<3&&!isSuper(who))return "Nick musi mieć co najmniej 3 litery (np. imię albo ksywka) — inicjały typu „AK” nie przejdą.";
   const k=nickKey(n),twin=Object.keys(nicks).find(id=>id!==who&&nickKey(nicks[id])===k);
   if(twin)return "Ten nick jest zajęty albo zbyt podobny do „"+nicks[twin]+"” (różni się tylko wielkością liter, cyframi, znakami lub polskimi literami). Wybierz inny.";
   const row={nick:n};if(gender)row.gender=gender;
   try{
     const res=nicks[who]?await sb.from("profiles").update(row).eq("user_id",who).select("user_id"):await sb.from("profiles").insert(Object.assign({user_id:who},row)).select("user_id");
+    if(res.error&&/NICK_SHORT/.test(res.error.message||""))return "Nick musi mieć co najmniej 3 litery.";
     if(res.error)return res.error.code==="23505"?"Ten nick jest zajęty albo zbyt podobny do istniejącego — wybierz inny.":"Nie udało się zapisać: "+res.error.message;
     if(!res.data||!res.data.length)return "Brak uprawnień do zmiany tego nicku.";
     await loadRemote();return null;
