@@ -228,6 +228,22 @@ details.jlist[open]>summary{border-radius:11px 11px 0 0}
 .routeinfo{margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);max-width:90vw;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:3000;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.25)}
 .leaflet-container{z-index:0}
+/* pasek wieczorynek */
+.rstrip{position:relative;margin:0 -18px}
+.rcar{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:4px 0 6px}
+.rcar::before,.rcar::after{content:"";flex:0 0 24px}
+.rcar::-webkit-scrollbar{display:none}
+.rchip{flex:0 0 calc(100% - 68px);min-width:0;scroll-snap-align:center;box-sizing:border-box;border:1px solid var(--line);border-radius:16px;padding:12px 16px 12px;background:var(--card);cursor:pointer;transition:border-color .2s,box-shadow .2s,opacity .2s;opacity:.55}
+.rchip.on{opacity:1;border-color:var(--acc);box-shadow:0 0 0 1px var(--acc),0 6px 18px rgba(36,138,61,.14);cursor:default}
+.rtag{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--acc)}.rtag.old{color:var(--mut)}
+.rname{font-size:20px;font-weight:800;letter-spacing:-.01em;line-height:1.2;margin-top:2px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.rwhen{font-size:15px;color:var(--mut);margin-top:2px}
+.rsts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;min-height:30px}
+.rst{display:inline-flex;align-items:center;gap:4px;background:var(--fill);border-radius:999px;padding:4px 11px;font-size:15px;font-weight:700}
+.rst.mut,.rst.ld{color:var(--mut);font-weight:600}
+.redge{position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--hdrbg);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--ink);font-size:24px;line-height:1;padding:0 0 3px;cursor:pointer;opacity:.6;box-shadow:0 2px 8px rgba(0,0,0,.12);transition:opacity .2s;z-index:2}
+.redge:hover{opacity:1}.redge.l{left:1px}.redge.r{right:1px}.redge.off{opacity:0;pointer-events:none}
+.rpos{display:flex;justify-content:center;align-items:center;gap:12px;font-size:13px;color:var(--mut);margin-top:6px}.rpos .lnk{font-size:14px;padding:2px}
 /* odliczanie do wieczorynki */
 html,body{overscroll-behavior-x:none}
 #app{overflow-x:clip}
@@ -336,13 +352,14 @@ html,body{overscroll-behavior-x:none}
 <!-- ===== WIECZORYNKI ===== -->
 <section id="p1" class="hide">
  <div class="card" id="view">
-  <div class="row between">
-   <button class="b g" id="prev">← Wcześniejsza</button>
-   <div class="center" id="pos"></div>
-   <button class="b g" id="next">Późniejsza →</button>
+  <!-- pasek wieczorynek: przesuwanie palcem po nazwach, strzałki na brzegach -->
+  <div class="rstrip">
+   <div class="rcar" id="rcar"></div>
+   <button class="redge l" id="prev" aria-label="Wcześniejsza wieczorynka">‹</button>
+   <button class="redge r" id="next" aria-label="Późniejsza wieczorynka">›</button>
   </div>
+  <div class="rpos"><span id="pos"></span><button class="lnk hide" id="nearest">↺ Wróć do najbliższej</button></div>
   <div class="notice hide" id="notice"></div>
-  <div class="center" style="margin-top:8px"><button class="b g hide" id="nearest">Wróć do najbliższej</button></div>
   <div id="ridecard"></div>
   <div class="mapwrap hide" id="mapwrap1">
    <div class="map" id="map1"></div>
@@ -690,8 +707,8 @@ window.addEventListener("scroll",onScroll,{passive:true});
 onScroll();
 
 /* ---------- ustawienia: konto, nick, wygląd, administracja ---------- */
-let themeMode="light";
-try{themeMode=localStorage.getItem("theme")||"light"}catch(e){}
+let themeMode="auto";
+try{themeMode=localStorage.getItem("theme")||"auto"}catch(e){}
 const darkMq=window.matchMedia?matchMedia("(prefers-color-scheme: dark)"):null;
 function applyTheme(){
   const dark=themeMode==="dark"||(themeMode==="auto"&&darkMq&&darkMq.matches);
@@ -701,7 +718,7 @@ function applyTheme(){
 function setTheme(t){themeMode=t;try{localStorage.setItem("theme",t)}catch(e){}applyTheme()}
 if(darkMq&&darkMq.addEventListener)darkMq.addEventListener("change",applyTheme);
 applyTheme();
-const themeHtml=()=>'<div class="note" style="margin-top:14px">Wygląd</div><div class="seg">'+[["light","☀️ Jasny"],["dark","🌙 Ciemny"],["auto","Auto"]].map(([k,n])=>'<button data-t="'+k+'" class="'+(themeMode===k?"on":"")+'">'+n+'</button>').join("")+'</div>';
+const themeHtml=()=>'<div class="note" style="margin-top:14px">Wygląd</div><div class="seg">'+[["light","☀️ Jasny"],["dark","🌙 Ciemny"],["auto","Auto"]].map(([k,n])=>'<button data-t="'+k+'" class="'+(themeMode===k?"on":"")+'">'+n+'</button>').join("")+'</div>'+(themeMode==="auto"?'<div class="note" style="margin-top:6px">Auto — jak w telefonie. Wieczorem ciemny, jeśli masz w telefonie włączone automatyczne przełączanie.</div>':'');
 let guestMode=false,gearOpen=false,gearView="main";
 try{guestMode=sessionStorage.getItem("guest")==="1"}catch(e){}
 const setGuest=v=>{guestMode=v;try{v?sessionStorage.setItem("guest","1"):sessionStorage.removeItem("guest")}catch(e){}};
@@ -1462,28 +1479,73 @@ async function toggleRsvp(id){
 }
 
 /* ---------- WIECZORYNKI: widok ---------- */
+/* pasek wieczorynek (karuzela nazw z dystansem i czasem) */
+let rcarKey="",rcarProg=false,rcarT=null;
+const rideTag=(r,i)=>isUpcoming(r)?(i===firstUpcoming()?["Najbliższa","up"]:["Nadchodząca","up"]):["Archiwalna","old"];
+function durTxt(min){min=Math.max(5,Math.round(min/5)*5);const h=Math.floor(min/60),m=min%60;return h?(h+" h"+(m?" "+m+" min":"")):m+" min"}
+function rideStatsHtml(r){
+  const pts=routeCache[r.id];
+  if(pts===undefined)return '<span class="rst ld">📏 …</span>';
+  if(!pts)return '<span class="rst mut">bez trasy</span>';
+  const km=routeKm(pts);
+  return '<span class="rst">📏 '+km.toFixed(1).replace(".",",")+' km</span><span class="rst">⏱ ≈ '+durTxt(km/paceKmh(r.pace)*60)+'</span>';
+}
+function ensureStats(i){
+  const r=sorted[i];if(!r||!sb||(r.id in routeCache))return;
+  getRoute(r.id).catch(()=>{routeCache[r.id]=false}).then(()=>{
+    const el=document.querySelector('#rcar .rchip[data-id="'+r.id+'"] .rsts');if(el)el.innerHTML=rideStatsHtml(r);
+  });
+}
+function rcarScrollTo(i,smooth){
+  const c=$("rcar"),it=c&&c.children[i];if(!it)return;
+  rcarProg=true;clearTimeout(rcarT);
+  c.scrollTo({left:it.offsetLeft-c.offsetLeft-(c.clientWidth-it.offsetWidth)/2,behavior:smooth?"smooth":"auto"});
+  rcarT=setTimeout(()=>{rcarProg=false},smooth?450:60);
+}
 function renderNav(){
-  const n=sorted.length;
-  $("prev").disabled=!(cur>0);
-  $("next").disabled=!(cur>=0&&cur<n-1);
-  if(!n){$("pos").innerHTML="";$("notice").classList.add("hide");$("nearest").classList.add("hide");return}
-  const r=sorted[cur],fu=firstUpcoming(),up=isUpcoming(r);
-  const tag=up?(cur===fu?"Najbliższa wieczorynka":"Nadchodząca wieczorynka"):"Archiwalna wieczorynka";
-  $("pos").innerHTML="<b>"+tag+"</b><br><span class='note'>"+(cur+1)+" z "+n+"</span>";
-  const nt=$("notice");
+  const n=sorted.length,c=$("rcar");
+  $("prev").classList.toggle("off",!(cur>0));
+  $("next").classList.toggle("off",!(cur>=0&&cur<n-1));
+  if(!n){c.innerHTML="";rcarKey="";$("pos").textContent="";$("notice").classList.add("hide");$("nearest").classList.add("hide");return}
+  const key=sorted.map(r=>r.id+r.when+r.title+(r.pace||"")+(r.edited_at||"")).join("|")+firstUpcoming();
+  if(key!==rcarKey){
+    rcarKey=key;
+    c.innerHTML=sorted.map((r,i)=>{const [t,k]=rideTag(r,i),d=new Date(r.when);
+      return '<div class="rchip'+(i===cur?' on':'')+'" data-i="'+i+'" data-id="'+esc(r.id)+'"><div class="rtag '+k+'">'+t+(r.edited_at?' · ⚠️ zmieniona':'')+'</div>'
+       +'<div class="rname">'+esc(r.title)+'</div>'
+       +'<div class="rwhen">'+esc(relDay(d)+" · "+hhmm(d))+'</div>'
+       +'<div class="rsts">'+rideStatsHtml(r)+'</div></div>'}).join("");
+    rcarScrollTo(cur,false);
+  }else{
+    [...c.children].forEach((x,i)=>x.classList.toggle("on",i===cur));
+    if(!rcarProg){const it=c.children[cur];if(it&&Math.abs((it.offsetLeft-c.offsetLeft-(c.clientWidth-it.offsetWidth)/2)-c.scrollLeft)>4)rcarScrollTo(cur,true)}
+  }
+  for(let k=cur-2;k<=cur+2;k++)ensureStats(k);
+  $("pos").textContent=(cur+1)+" z "+n;
+  const fu=firstUpcoming(),nt=$("notice");
   if(fu<0){nt.textContent="Brak nadchodzących wieczorynek — pokazuję ostatnią archiwalną.";nt.classList.remove("hide")}
-  else if(!up){nt.textContent="To wieczorynka archiwalna.";nt.classList.remove("hide")}
   else nt.classList.add("hide");
   const target=fu>=0?fu:n-1;
   $("nearest").classList.toggle("hide",cur===target);
-  $("nearest").textContent=fu>=0?"Wróć do najbliższej":"Wróć do ostatniej";
+  $("nearest").textContent=fu>=0?"↺ Wróć do najbliższej":"↺ Wróć do ostatniej";
 }
+$("rcar").addEventListener("scroll",()=>{
+  if(rcarProg)return;
+  clearTimeout(rcarT);
+  rcarT=setTimeout(()=>{
+    const c=$("rcar");if(!c.children.length)return;
+    const mid=c.scrollLeft+c.clientWidth/2;let best=0,bd=1e9;
+    [...c.children].forEach((x,i)=>{const d=Math.abs(x.offsetLeft-c.offsetLeft+x.offsetWidth/2-mid);if(d<bd){bd=d;best=i}});
+    if(best!==cur)showRide(best);
+  },140);
+},{passive:true});
+window.addEventListener("resize",()=>{if(curTab===1)rcarScrollTo(cur,false)});
+$("rcar").addEventListener("click",e=>{const ch=e.target.closest(".rchip");if(ch&&+ch.dataset.i!==cur)showRide(+ch.dataset.i)});
 function renderCard(){
   const box=$("ridecard"),r=sorted[cur];
   if(!r){box.innerHTML='<div class="notice">Brak zaplanowanych wieczorynek. '+(session?'Dodaj pierwszą w sekcji „➕ Nowa wieczorynka”.':'Zaloguj się, aby dodać pierwszą.')+'</div>';return}
   const g=rsvps[r.id]||[],goes=!!session&&g.includes(uid);
-  let h='<h2 style="margin-top:10px">'+esc(r.title)+'</h2>'
-   +'<div class="meta">🕖 '+esc(fmtWhen(r.when))+' · 📍 '+esc(r.place||"miejsce do ustalenia")+' · '+esc(r.pace||"")+'</div>'
+  let h='<div class="meta" style="margin-top:10px">🕖 '+esc(fmtWhen(r.when))+' · 📍 '+esc(r.place||"miejsce do ustalenia")+' · '+esc(r.pace||"")+'</div>'
    +changedHtml(r)
    +(r.note?'<div>'+esc(r.note)+'</div>':'')
    +'<div class="meta">Organizuje: '+(nicks[r.creator]?nk(r.creator):esc(r.owner||"?"))+' · jedzie: <b>'+g.length+'</b>'+(session&&g.length?nkList(g):'')+'</div>'
@@ -1902,6 +1964,7 @@ function show(n,dir){
   curTab=n;
   window.scrollTo({top:0});
   if(n===0)renderCountdown();
+  if(n===1)requestAnimationFrame(()=>rcarScrollTo(cur,false));
   setTimeout(()=>{if(n===1&&map1)map1.m.invalidateSize();if(n===2&&map2)map2.m.invalidateSize()},60);
 }
 [0,1,2].forEach(i=>{$("t"+i).onclick=()=>show(i)});
@@ -1909,7 +1972,7 @@ function show(n,dir){
 (()=>{
   let x0=0,y0=0,lock=0,dx=0,sec=null;
   const tabs=()=>session?[0,1,2]:[0,1];
-  const skip=t=>!!t.closest(".leaflet-container,.mycar.multi,#fclock,input,select,textarea,.sheet,#welcome");
+  const skip=t=>!!t.closest(".leaflet-container,.mycar.multi,.rstrip,#fclock,input,select,textarea,.sheet,#welcome");
   document.addEventListener("touchstart",e=>{
     lock=0;dx=0;sec=null;
     if(e.touches.length!==1||gearOpen||skip(e.target))return;
