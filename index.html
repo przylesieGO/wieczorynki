@@ -1014,6 +1014,9 @@ let guestMode=false,gearOpen=false,gearView="main";
 // nick zalogowanego na górze ekranu (pomaga przy kilku kontach) — domyślnie widoczny, zapamiętane w telefonie
 let showNick=true;try{showNick=localStorage.getItem("showNick")!=="0"}catch(e){}
 const showNickHtml=()=>'<div class="note" style="margin-top:14px">Nick na górze ekranu</div><div class="seg">'+[["1","Pokaż"],["0","Ukryj"]].map(([k,t])=>'<button data-sn="'+k+'" class="'+((showNick?"1":"0")===k?"on":"")+'">'+t+'</button>').join("")+'</div>';
+// 🧪 testowe zaproszenia: Pokaż / Ukryj (zapamiętane w telefonie; swoje i te, do których dołączyłeś, zostają)
+let hideTest=false;try{hideTest=localStorage.getItem("hideTest")==="1"}catch(e){}
+const hideTestHtml=()=>testOk?'<div class="note" style="margin-top:14px">Testowe zaproszenia 🧪</div><div class="seg">'+[["0","Pokaż"],["1","Ukryj"]].map(([k,t])=>'<button data-ht="'+k+'" class="'+((hideTest?"1":"0")===k?"on":"")+'">'+t+'</button>').join("")+'</div><div class="note" style="margin-top:6px">„Ukryj” — widzisz tylko prawdziwe jazdy. Twoje testowe i te, do których dołączyłeś, zostają.</div>':'';
 function renderMeNick(){const el=$("menick");if(!el)return;const on=showNick&&!!session&&!!me.nick;el.classList.toggle("hide",!on);el.innerHTML=on?'<i title="Zalogowany">👤 </i>'+nk(uid):''}
 try{guestMode=sessionStorage.getItem("guest")==="1"}catch(e){}
 const setGuest=v=>{guestMode=v;try{v?sessionStorage.setItem("guest","1"):sessionStorage.removeItem("guest")}catch(e){}};
@@ -1478,7 +1481,7 @@ function renderGear(){
      +(isAdmin?'<button class="b sbtn g" data-c="admin">🛡️ Administracja'+(fbAdmUnread().length?' <span class="fbcnt">'+fbAdmUnread().length+'</span>':'')+'</button>':'')
      +(meTester()?'<div class="note" style="margin-top:14px">🧪 Funkcje testowe (jesteś testerem)</div><div class="seg">'+[["1","Pokaż"],["0","Ukryj"]].map(([k,t])=>'<button data-beta="'+k+'" class="'+((betaOn?"1":"0")===k?"on":"")+'">'+t+'</button>').join("")+'</div><div class="note" style="margin-top:6px">„Ukryj” — widzisz aplikację tak jak wszyscy.</div>':'')
      +'<button class="b sbtn g" data-c="help">❓ Pomoc — co potrafi aplikacja</button>'
-     +themeHtml()+showNickHtml()+helpPrefHtml()
+     +themeHtml()+showNickHtml()+hideTestHtml()+helpPrefHtml()
      +'<button class="b sbtn" style="background:var(--bad);margin-top:20px" data-c="out">Wyloguj</button>'
      +'<button class="sdanger" data-c="del">Usuń konto…</button>'
     :'<div class="sname">Przeglądasz jako gość</div><div class="smail">Zaloguj się, żeby zapisywać się na wieczorynki i zgłaszać ochotę na jazdę.</div>'
@@ -1550,6 +1553,8 @@ $("gearpanel").addEventListener("click",async e=>{
   const ns=e.target.closest("button[data-ns]");
   if(ns){const i=$("gnick");if(i){i.value=ns.dataset.ns;i.focus()}return}
   const sn=e.target.closest("button[data-sn]");
+  const ht=e.target.closest("button[data-ht]");
+  if(ht){hideTest=ht.dataset.ht==="1";try{localStorage.setItem("hideTest",hideTest?"1":"0")}catch(err){}renderGear();await loadRemote();say(hideTest?"Testowe zaproszenia ukryte.":"Testowe zaproszenia widoczne.");return}
   if(sn){showNick=sn.dataset.sn==="1";try{localStorage.setItem("showNick",showNick?"1":"0")}catch(err){}renderMeNick();renderGear();return}
   const hs=e.target.closest("button[data-hs]");
   if(hs){setHelpOff(hs.dataset.hs==="0");renderGear();return}
@@ -3260,6 +3265,7 @@ async function loadRemote(selectId){
     if(!p.error&&needProfile()&&!pwMode&&nickAskedFor!==uid){nickAskedFor=uid;setTimeout(askNick,0)}
     wants=ok(w)||[];
     joins={};prefs={};(ok(j)||[]).forEach(x=>{(joins[x.want_id]=joins[x.want_id]||[]).push(x.user_id);if(x.pref_at)(prefs[x.want_id]=prefs[x.want_id]||{})[x.user_id]=x.pref_at});
+    if(hideTest)wants=wants.filter(x=>!x.is_test||x.user_id===uid||(joins[x.id]||[]).includes(uid));
     lib=ok(l)||[];
     startPresence();
     if(seenFor!==uid||Date.now()-seenAt>15*60000){seenFor=uid;seenAt=Date.now();Promise.resolve(sb.rpc("touch_seen")).catch(()=>{})}
