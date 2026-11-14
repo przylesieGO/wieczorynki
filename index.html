@@ -7,8 +7,8 @@
 <meta name="description" content="Wspólne wieczorne przejazdy rowerowe: kto chce jechać, trasa na mapie, prognoza wiatru, zapisy.">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#f5f5f7">
-<link rel="icon" type="image/png" href="icon-192.png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png?v=3">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=3">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="PrzylesieGo!">
@@ -170,7 +170,7 @@ html[data-theme=dark] .fcard::after{background:rgba(0,0,0,.25);box-shadow:0 1px 
 .sdanger{display:block;margin:16px auto 0;padding:8px;border:0;background:none;color:var(--bad);font:inherit;font-size:15px;cursor:pointer;text-decoration:underline}
 .sheetbox ul{margin:6px 0 0;padding-left:20px;font-size:15px}
 .arow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);font-size:17px}
-.roundbtn:active{transform:scale(.96)}.roundbtn .ri{font-size:48px;line-height:1;margin-bottom:12px}
+.roundbtn:active{transform:scale(.96)}.roundbtn .ri{display:flex;align-items:center;justify-content:center;width:86px;height:58px;border-radius:29px;background:rgba(255,255,255,.16);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22);margin-bottom:10px}.roundbtn .ri svg{width:66px;height:39px}
 .roundbtn .rb1{font-size:21px;font-weight:800;line-height:1.15;letter-spacing:-.01em;margin-top:4px}.roundbtn .rb2{font-size:14px;font-weight:600;opacity:.92}
 .pw{position:relative}.pw input{padding-right:46px}
 .eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:38px;height:38px;border:0;background:transparent;font-size:19px;cursor:pointer;border-radius:50%}
@@ -228,6 +228,17 @@ details.jlist[open]>summary{border-radius:11px 11px 0 0}
 .routeinfo{margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);max-width:90vw;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:3000;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.25)}
 .leaflet-container{z-index:0}
+/* godziny w karcie dnia, karuzela zaproszeń dnia, kosz admina, logo */
+.wl2{flex-wrap:wrap;row-gap:2px}.whrs{display:inline-flex;gap:4px;flex:none}.whrs b{font-size:13px;font-weight:800;color:var(--ink);background:var(--fill);border-radius:7px;padding:1px 7px}
+.dcar{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:0 10px 4px}
+.dcar::-webkit-scrollbar{display:none}
+details.wday .dcar .want{flex:0 0 calc(100% - 26px);min-width:0;margin:0;scroll-snap-align:center;box-sizing:border-box}
+.ddots{align-items:center;margin:6px 0 10px}.ddots span{font-size:12px;color:var(--mut);margin-left:4px}
+.ib.del.adm{background:var(--bad);color:#fff;box-shadow:0 2px 6px rgba(214,69,69,.35)}
+html[data-theme=dark] .ib.del.adm{background:#e5484d;color:#fff}
+.want .acts{margin-top:10px}
+.blogo{display:inline-block;width:1.15em;height:1.15em;vertical-align:-.2em;border-radius:24%}
+.wlogo .blogo{width:76px;height:76px;box-shadow:0 8px 22px rgba(31,157,85,.35)}
 /* karta wieczorynki: zwijany komunikat o zmianie, przyciski-ikony */
 details.chg{margin:10px 0 4px;border-radius:11px;background:var(--warn);border-left:4px solid #e0b83a}
 details.chg>summary{list-style:none;display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:15px;font-weight:700;cursor:pointer}
@@ -283,7 +294,7 @@ html,body{overscroll-behavior-x:none}
 
 <!-- ===== NAGŁÓWEK (przyklejony, zwija się przy przewijaniu) ===== -->
 <header class="hdr" id="hdr"><div class="hin">
- <h1 class="apptitle"><span class="tlogo">🚲</span><span class="tname"> PrzylesieGo!</span><span class="wsub2">Ustawki rowerowe</span></h1>
+ <h1 class="apptitle"><span class="tlogo"><svg class="blogo" viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="27" fill="#1f9d55"/><circle cx="44" cy="62" r="25" fill="none" stroke="#fff" stroke-width="9"/><circle cx="76" cy="62" r="25" fill="none" stroke="#fbbf24" stroke-width="9"/><circle cx="44" cy="62" r="4" fill="#fff"/><circle cx="76" cy="62" r="4" fill="#fbbf24"/></svg></span><span class="tname"> PrzylesieGo!</span><span class="wsub2">Ustawki rowerowe</span></h1>
  <nav><button id="t0" class="on">Start</button><button id="t1">Wieczorynki</button><button id="t2">Zaawansowane</button></nav>
  <button class="gear" id="gear" aria-label="Ustawienia" title="Ustawienia">⚙️</button>
 </div></header>
@@ -293,7 +304,7 @@ html,body{overscroll-behavior-x:none}
 <!-- ===== PLANSZA POWITALNA ===== -->
 <div class="welcome hide" id="welcome">
  <div class="center">
-  <div style="font-size:54px;line-height:1">🚲</div>
+  <div class="wlogo"><svg class="blogo" viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="27" fill="#1f9d55"/><circle cx="44" cy="62" r="25" fill="none" stroke="#fff" stroke-width="9"/><circle cx="76" cy="62" r="25" fill="none" stroke="#fbbf24" stroke-width="9"/><circle cx="44" cy="62" r="4" fill="#fff"/><circle cx="76" cy="62" r="4" fill="#fbbf24"/></svg></div>
   <h1 class="wtitle">PrzylesieGo!</h1>
   <div class="wsub">Ustawki rowerowe</div>
   <p class="wlead">Umawiaj się ze znajomymi na wspólną jazdę — zobacz, kto jedzie, i dołącz jednym kliknięciem.</p>
@@ -333,7 +344,7 @@ html,body{overscroll-behavior-x:none}
   <p class="wsubc">Kliknij i wyślij zaproszenie do wspólnej jazdy — pojawi się też na naszym <a href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">kanale 📣 Telegram</a>.</p>
   <div id="wantmain" class="hide">
    <div id="mywant"></div>
-   <div class="rbwrap" id="rbwrap"><button class="roundbtn" id="wantbtn"><span class="ri">🚴</span><span class="rb1">Idziemy<br>na rower?</span></button><b class="rbadge hide" id="wbadge"></b></div>
+   <div class="rbwrap" id="rbwrap"><button class="roundbtn" id="wantbtn"><span class="ri"><svg viewBox="16 36 88 52" aria-hidden="true"><circle cx="44" cy="62" r="25" fill="none" stroke="#fff" stroke-width="9"/><circle cx="76" cy="62" r="25" fill="none" stroke="#fbbf24" stroke-width="9"/><circle cx="44" cy="62" r="4" fill="#fff"/><circle cx="76" cy="62" r="4" fill="#fbbf24"/></svg></span><span class="rb1">Idziemy<br>na rower?</span></button><b class="rbadge hide" id="wbadge"></b></div>
    <div id="wantform" class="hide">
     <div class="wlbl" id="wftitle">Kiedy jedziesz?</div>
     <div class="seg" id="wdays"><button type="button" data-d="0" class="on">Dziś</button><button type="button" data-d="1">Jutro</button><button type="button" data-d="2">Pojutrze</button><button type="button" data-d="x">Inny dzień</button></div>
@@ -1120,15 +1131,38 @@ function renderWants(){
     const cnt=d.ws.length,zg=cnt===1?"zgłoszenie":(cnt%10>=2&&cnt%10<=4&&(cnt%100<10||cnt%100>=20))?"zgłoszenia":"zgłoszeń";
     const os=ppl.size===1?"osoba":(ppl.size%10>=2&&ppl.size%10<=4&&(ppl.size%100<10||ppl.size%100>=20))?"osoby":"osób";
     const wd=dt.toLocaleDateString("pl-PL",{weekday:"long"}),fn=favNames([...ppl]);
+    const hrs=d.ws.map(w=>hhmm(new Date(w.starts_at)));
+    const ord=d.ws.slice().sort((a,b)=>((isFav(b.user_id)?1:0)-(isFav(a.user_id)?1:0))||(new Date(a.starts_at)-new Date(b.starts_at)));
     const l1=n>=0&&n<=2?esc(["Dziś","Jutro","Pojutrze"][n])+' <i>· '+esc(wd)+'</i>':esc(wd.charAt(0).toUpperCase()+wd.slice(1));
     return '<details class="wday" data-day="'+d.k+'"'+(open?' open':'')+'><summary>'
      +'<div class="ftile'+(n===0?' today':'')+'"><div class="fu">'+pad(dt.getDate())+'</div><div class="ft">'+pad(dt.getDate())+'</div><div class="fb">'+MON3[dt.getMonth()]+'</div><div class="fs"></div><div class="fh"></div><div class="fh2"></div></div>'
      +'<div class="wtx"><div class="wl1">'+l1+'</div>'
-     +'<div class="wl2">'+cnt+' '+zg+' · '+ppl.size+' '+os+(me?'<span class="wme">Ty</span>':'')+'</div>'
+     +'<div class="wl2"><span class="whrs">'+hrs.slice(0,4).map(h=>'<b>'+h+'</b>').join("")+(hrs.length>4?'<b>+'+(hrs.length-4)+'</b>':'')+'</span>· '+ppl.size+' '+os+(me?'<span class="wme">Ty</span>':'')+'</div>'
      +(fn.length?'<div class="wl3">⭐ '+esc(fn.join(", "))+'</div>':'')+'</div>'
-     +'</summary>'+d.ws.map(wantHtml).join("")+'</details>';
+     +'</summary>'+(ord.length>1
+       ?'<div class="dcar" data-day="'+d.k+'">'+ord.map(wantHtml).join("")+'</div><div class="mydots ddots">'+ord.map((_,i)=>'<button type="button" data-ddot="'+i+'" class="'+(i===(dayIdx[d.k]||0)?'on':'')+'" aria-label="Zaproszenie '+(i+1)+'"></button>').join("")+'<span>'+(Math.min(dayIdx[d.k]||0,ord.length-1)+1)+' z '+ord.length+'</span></div>'
+       :wantHtml(ord[0]))+'</details>';
   }).join("");
+  box.querySelectorAll(".dcar").forEach(dcarRestore);
 }
+/* karuzela zaproszeń w karcie dnia */
+const dayIdx={};
+function dcarRestore(c){
+  const n=c.children.length,i=Math.min(dayIdx[c.dataset.day]||0,n-1),it=c.children[i];
+  if(it&&c.clientWidth)c.scrollLeft=it.offsetLeft-c.offsetLeft-(c.clientWidth-it.offsetWidth)/2;
+}
+$("wantlist").addEventListener("scroll",e=>{
+  const c=e.target;if(!(c.classList&&c.classList.contains("dcar")))return;
+  const mid=c.scrollLeft+c.clientWidth/2;let best=0,bd=1e9;
+  [...c.children].forEach((x,i)=>{const d=Math.abs(x.offsetLeft-c.offsetLeft+x.offsetWidth/2-mid);if(d<bd){bd=d;best=i}});
+  dayIdx[c.dataset.day]=best;
+  const dots=c.nextElementSibling;if(dots){[...dots.querySelectorAll("button")].forEach((b,i)=>b.classList.toggle("on",i===best));const sp=dots.querySelector("span");if(sp)sp.textContent=(best+1)+" z "+c.children.length}
+},true);
+$("wantlist").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-ddot]");if(!b)return;
+  const c=b.closest(".ddots").previousElementSibling,it=c&&c.children[+b.dataset.ddot];
+  if(it)c.scrollTo({left:it.offsetLeft-c.offsetLeft-(c.clientWidth-it.offsetWidth)/2,behavior:"smooth"});
+});
 let wantOpenDay;// undefined = domyślnie najbliższy dzień, null = wszystkie zwinięte
 const MON3=["STY","LUT","MAR","KWI","MAJ","CZE","LIP","SIE","WRZ","PAŹ","LIS","GRU"];
 $("wantlist").addEventListener("toggle",e=>{
@@ -1136,6 +1170,7 @@ $("wantlist").addEventListener("toggle",e=>{
   const byUser=d.dataset.user==="1";delete d.dataset.user;
   if(d.open){
     wantOpenDay=d.dataset.day;
+    const dc=d.querySelector(".dcar");if(dc)requestAnimationFrame(()=>dcarRestore(dc));
     // zwiń pozostałe karty
     $("wantlist").querySelectorAll("details.wday[open]").forEach(x=>{if(x!==d)x.open=false});
     if(byUser)requestAnimationFrame(()=>{const s=d.querySelector("summary");if(s)s.scrollIntoView({block:"nearest",behavior:"smooth"})});
@@ -1163,10 +1198,11 @@ function wantHtml(w){
     return '<div class="want'+(mine?' mine':'')+'"><div class="wtop">'+nk(w.user_id)+'<span>🕖 <b>'+esc(hhmm(new Date(w.starts_at)))+'</b></span>'+(mine?'<span class="note">(Twoje zgłoszenie)</span>':'')+'</div>'
      +(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')
      +joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')
-     +'<div class="row" style="margin-top:8px">'
-     +(mine?'':'<button class="b'+(joined?' g':'')+'" data-w="join" data-id="'+esc(w.id)+'">'+(joined?'Rezygnuję':'Jadę!')+'</button>')
-     +((mine||isAdmin)?'<button class="b g" data-w="del" data-id="'+esc(w.id)+'">Usuń</button>':'')
-     +'</div></div>';
+     +((!mine||isAdmin)?'<div class="acts">'
+     +(mine?'':'<button class="b join'+(joined?' g':'')+'" data-w="join" data-id="'+esc(w.id)+'">'+(joined?'Rezygnuję':'Jadę!')+'</button>')
+     +((mine||isAdmin)?'<button class="ib del'+(mine?'':' adm')+'" data-w="del" data-id="'+esc(w.id)+'" title="'+(mine?'Odwołaj zaproszenie':'Usuń (admin)')+'" aria-label="'+(mine?'Odwołaj zaproszenie':'Usuń (admin)')+'">'+ICON.del+'</button>':'')
+     +'</div>':'')
+     +'</div>';
 }
 /* ---------- formularz zaproszenia: dzień + zegar klapkowy + notatka ---------- */
 const wf={day:"0",h:19,m:0,editId:null};
@@ -1581,7 +1617,7 @@ function renderCard(){
    +'<a class="ib" target="_blank" rel="noopener" href="'+esc(gcalUrl(r))+'" title="Dodaj do Google Kalendarza" aria-label="Dodaj do Google Kalendarza">'+ICON.gcal+'</a>'
    +'<button class="ib" data-act="share" data-id="'+esc(r.id)+'" title="Udostępnij" aria-label="Udostępnij">'+ICON.share+'</button>'
    +(routeCache[r.id]?'<button class="ib" data-act="gpx" data-id="'+esc(r.id)+'" title="Pobierz trasę GPX" aria-label="Pobierz trasę GPX">'+ICON.gpx+'</button>':'')
-   +(canEdit(r)?'<button class="ib" data-act="edit" data-id="'+esc(r.id)+'" title="Edytuj" aria-label="Edytuj">'+ICON.edit+'</button><button class="ib del" data-act="del" data-id="'+esc(r.id)+'" title="Usuń" aria-label="Usuń">'+ICON.del+'</button>':'')
+   +(canEdit(r)?'<button class="ib" data-act="edit" data-id="'+esc(r.id)+'" title="Edytuj" aria-label="Edytuj">'+ICON.edit+'</button><button class="ib del'+(r.creator===uid?'':' adm')+'" data-act="del" data-id="'+esc(r.id)+'" title="Usuń" aria-label="Usuń">'+ICON.del+'</button>':'')
    +'</div>';
   if(shareFor===r.id){
     const u=shareUrl(r),t=shareText(r);
@@ -1998,7 +2034,7 @@ function show(n,dir){
 (()=>{
   let x0=0,y0=0,lock=0,dx=0,sec=null;
   const tabs=()=>session?[0,1,2]:[0,1];
-  const skip=t=>!!t.closest(".leaflet-container,.mycar.multi,.rstrip,#fclock,input,select,textarea,.sheet,#welcome");
+  const skip=t=>!!t.closest(".leaflet-container,.mycar.multi,.dcar,.rstrip,#fclock,input,select,textarea,.sheet,#welcome");
   document.addEventListener("touchstart",e=>{
     lock=0;dx=0;sec=null;
     if(e.touches.length!==1||gearOpen||skip(e.target))return;
