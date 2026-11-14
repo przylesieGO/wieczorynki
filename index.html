@@ -392,6 +392,8 @@ html[data-theme=dark] .fbs.s-accepted{background:#1d2c45;color:#8fb5ff}
 .fbm{max-width:88%;margin-top:8px;padding:8px 11px;border-radius:14px 14px 14px 4px;background:var(--fill);font-size:15px}
 .fbm.me{margin-left:auto;border-radius:14px 14px 4px 14px;background:var(--acc2)}
 .fbmh{font-size:12px;margin-bottom:2px}.fbmh .nk{font-size:13px;padding:0 7px}.fbmb{white-space:pre-wrap;word-break:break-word}
+.tcard{border:1.5px solid rgba(122,79,209,.35);background:rgba(122,79,209,.07);border-radius:16px;padding:12px 14px;margin:24px 0 16px;text-align:left}
+.tcard b{font-size:16px}.tcard .note{font-size:14px;margin-top:4px;line-height:1.4}.tcard .sbtn{background:#7a4fd1;margin-top:10px;padding:12px;font-size:16px}
 #fbstat{margin-top:8px}#fbstat button{font-size:13px;padding:9px 2px}
 .who{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;border-radius:12px;background:var(--fill);border:2px solid transparent;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
 .who.priv{border-color:var(--acc)}
@@ -1251,7 +1253,7 @@ document.addEventListener("click",e=>{
 let fbOk=false,fbList=[],fbDone={},fbMsgs={},fbId="",fbBack="fb",fbAdmFilter="new",fbTo="",fbBusy=false;
 const fbf={kind:"bug",rating:0,text:"",dev:true};let fbReplyTxt="",fbMsgTxt="";
 const APP_VER="2026-11-14";
-const FB_KIND={bug:"🐞 Błąd",idea:"💡 Pomysł",rating:"⭐ Ocena",msg:"✉️ Wiadomość"};
+const FB_KIND={bug:"🐞 Błąd",idea:"💡 Pomysł",rating:"⭐ Ocena",msg:"✉️ Wiadomość",tester:"🧪 Chce testować"};
 const FB_ST={new:"nowe",accepted:"przyjęte",done:"zrobione",rejected:"odrzucone"};
 const fbMineUnread=()=>fbList.filter(f=>f.user_id===uid&&f.user_unread);
 const fbAdmUnread=()=>isAdmin?fbList.filter(f=>f.user_id!==uid&&f.admin_unread):[];
@@ -1264,7 +1266,7 @@ function fbDevice(){
 }
 const fbAgo=ts=>{const d=new Date(ts);return dayDiff(d)===0?"dziś "+hhmm(d):relDay(d)+" "+hhmm(d)};
 function fbRow(f,adm){
-  const un=adm?f.admin_unread:f.user_unread,snip=f.kind==="rating"?starsTxt(f.rating)+(f.body?" "+esc(f.body.slice(0,60)):""):esc((f.body||"").slice(0,90));
+  const un=adm?f.admin_unread:f.user_unread,snip=f.kind==="tester"?esc(f.body||"Prośba o zostanie testerem"):f.kind==="rating"?starsTxt(f.rating)+(f.body?" "+esc(f.body.slice(0,60)):""):esc((f.body||"").slice(0,90));
   return '<button type="button" class="fbrow'+(un?' new':'')+'" data-fb="'+esc(f.id)+'"><span class="fbk">'+FB_KIND[f.kind]+'</span>'
    +(f.kind!=="msg"?'<span class="fbs s-'+f.status+'">'+FB_ST[f.status]+'</span>':'')+(adm?' '+nk(f.user_id):'')
    +'<span class="fbsn">'+snip+'</span><span class="note">'+esc(fbAgo(f.updated_at))+'</span>'+(un?'<span class="dot"></span>':'')+'</button>';
@@ -1278,6 +1280,25 @@ function fbFormHtml(){
    +'<div class="note" id="fbinfo" style="color:var(--bad)"></div>'
    +'<button class="b sbtn" data-c="fbsend"'+(fbBusy?' disabled':'')+'>Wyślij</button>'
    +'<p class="note">Zgłoszenie trafia do administratora pod Twoim nickiem — może odpisać (zobaczysz pod 🔔). Za 3 zrealizowane zgłoszenia dostajesz 💡 przy nicku.</p>';
+}
+/* 🧪 prośba o zostanie testerem (karta na górze Ustawień) */
+function testerCardHtml(){
+  if(!session||!fbOk||!testerOk||meTester())return "";
+  const r=fbList.find(f=>f.user_id===uid&&f.kind==="tester");
+  if(r&&(r.status==="new"||r.status==="accepted"))return '<div class="tcard"><b>🧪 Zgłosiłeś się na testera</b><div class="note">Dzięki! Liczba miejsc jest ograniczona — odezwiemy się, gdy zwolni się miejsce w grupie testerów.</div></div>';
+  if(r&&r.status==="rejected")return "";
+  return '<div class="tcard"><b>🧪 Zostań testerem</b><div class="note">Testerzy widzą nowe funkcje przed wszystkimi i pomagają je dopracować. Liczba miejsc jest ograniczona — jeśli grupa będzie pełna, możemy się nie odezwać, ale Twoje zgłoszenie zostanie na liście.</div>'
+   +'<button class="b sbtn" data-c="testerreq">Chcę testować</button></div>';
+}
+async function testerReq(b){
+  if(b)b.disabled=true;
+  try{const r=await sb.rpc("fb_send",{k:"tester",r:null,b:null,dev:fbDevice()});if(r.error)throw r.error;await loadRemote();say("🧪 Zgłoszenie wysłane — dzięki! Odezwiemy się, gdy będzie miejsce.")}
+  catch(e){if(b)b.disabled=false;say(fbErr(e))}
+}
+async function testerGrant(f){
+  try{const r=await sb.from("testers").insert({user_id:f.user_id,added_by:uid});if(r.error&&r.error.code!=="23505")throw r.error;
+    const s=await sb.rpc("fb_status",{f:f.id,s:"done"});if(s.error)throw s.error;await loadRemote();say("🧪 Nadano prawa testera: "+nickOf(f.user_id))}
+  catch(e){say("Nie udało się: "+(e&&e.message?e.message:"błąd"))}
 }
 function fbHubHtml(){
   const mine=fbList.filter(f=>f.user_id===uid),done=fbDone[uid]||0;
@@ -1302,13 +1323,15 @@ function fbThreadHtml(){
   const back='<button class="sback" data-c="fbback">‹ '+(fbBack==="fbadmin"?'Zgłoszenia':fbBack==="bell"?'Zamknij':'Zgłoszenia')+'</button>';
   if(!f)return back+'<div class="sname" style="margin-top:26px">Nie znaleziono</div>';
   const adm=isAdmin&&f.user_id!==uid,M=fbMsgs[f.id];
-  const first=f.kind==="msg"?{sender:f.started_by,body:f.body,created_at:f.created_at}:{sender:f.user_id,body:(f.kind==="rating"?starsTxt(f.rating)+(f.body?"<br>":""):"")+esc(f.body||""),created_at:f.created_at,html:true};
+  const first=f.kind==="msg"?{sender:f.started_by,body:f.body,created_at:f.created_at}:{sender:f.user_id,body:(f.kind==="rating"?starsTxt(f.rating)+(f.body?"<br>":""):"")+(f.kind==="tester"&&!f.body?"Chcę zostać testerem 🧪":esc(f.body||"")),created_at:f.created_at,html:true};
   const bub=m=>{const mine=m.sender===uid;return '<div class="fbm'+(mine?' me':'')+'"><div class="fbmh">'+(m.sender?nk(m.sender):'<span class="note">usunięte konto</span>')+' <span class="note">'+esc(fbAgo(m.created_at))+'</span></div><div class="fbmb">'+(m.html?m.body:esc(m.body))+'</div></div>'};
   return back+'<div class="sname" style="margin-top:26px">'+FB_KIND[f.kind]+'</div>'
    +'<div class="smail">'+(adm?'od '+nk(f.user_id)+' · ':f.kind==="msg"?'od administratora · ':'')+(f.kind!=="msg"?'<span class="fbs s-'+f.status+'">'+FB_ST[f.status]+'</span>':'')+'</div>'
    +(adm&&f.kind!=="msg"?'<div class="seg" id="fbstat">'+[["new","Nowe"],["accepted","Przyjęte"],["done","Zrobione"],["rejected","Odrzucone"]].map(([k,t])=>'<button type="button" data-fs2="'+k+'" class="'+(f.status===k?'on':'')+'">'+t+'</button>').join("")+'</div>':'')
    +'<div class="sleft fbthread">'+bub(first)+(M?M.map(bub).join(""):'<div class="note">Ładuję…</div>')
    +(adm&&f.device?'<div class="note" style="margin-top:6px">📱 '+esc(f.device)+'</div>':'')
+   +(adm&&f.kind==="tester"&&isSuper(uid)&&!testerIds.has(f.user_id)?'<button class="b sbtn" data-c="fbgrant">🧪 Nadaj prawa testera</button><p class="note">Albo ustaw status: „Przyjęte” = odezwiemy się, „Odrzucone” = komplet testerów.</p>':'')
+   +(adm&&f.kind==="tester"&&testerIds.has(f.user_id)?'<div class="note" style="margin-top:6px">🧪 Już jest testerem.</div>':'')
    +'<textarea id="fbreply" rows="3" maxlength="1000" placeholder="'+(adm?'Odpowiedz '+esc(nickOf(f.user_id)):'Odpisz administratorowi')+'…">'+esc(fbReplyTxt)+'</textarea>'
    +'<div class="note" id="fbrinfo" style="color:var(--bad)"></div>'
    +'<button class="b sbtn" data-c="fbreply"'+(fbBusy?' disabled':'')+'>Wyślij odpowiedź</button>'
@@ -1336,7 +1359,7 @@ async function fbOpen(id,back){
   }
   if(gearView==="fbt"&&fbId===id)renderGear();
 }
-const fbErr=e=>{const m=e&&e.message||"";return /FB_LIMIT/.test(m)?"Dzisiejszy limit wyczerpany — spróbuj jutro.":/check/.test(m)?"Za krótki tekst (min. 3 znaki).":"Nie udało się: "+(m||"błąd")};
+const fbErr=e=>{const m=e&&e.message||"";return /FB_DUP/.test(m)?"Twoja prośba już czeka — odezwiemy się.":/FB_TESTER/.test(m)?"Już jesteś testerem 🧪":/FB_LIMIT/.test(m)?"Dzisiejszy limit wyczerpany — spróbuj jutro.":/check/.test(m)?"Za krótki tekst (min. 3 znaki).":"Nie udało się: "+(m||"błąd")};
 async function fbSend(){
   const t=fbf.text.trim(),k=fbf.kind,inf=$("fbinfo");
   if(k==="rating"&&!fbf.rating){inf.textContent="Zaznacz gwiazdki — przesuń palcem.";return}
@@ -1447,7 +1470,7 @@ function renderGear(){
   else if(gearView==="nick"&&session)body=nickHtml();
   else if(gearView==="del"&&session)body=delHtml();
   else body=session
-    ?'<div class="sname">👤 '+(me.nick?nk(uid):'ustaw nick')+(isAdmin?' 🛡️':'')+'</div><div class="smail">'+esc(session.user.email||"")+(stazTxt(uid)?'<br><span class="staz">'+esc(stazTxt(uid))+'</span>':'')+'</div>'
+    ?testerCardHtml()+'<div class="sname">👤 '+(me.nick?nk(uid):'ustaw nick')+(isAdmin?' 🛡️':'')+'</div><div class="smail">'+esc(session.user.email||"")+(stazTxt(uid)?'<br><span class="staz">'+esc(stazTxt(uid))+'</span>':'')+'</div>'
      +'<button class="b sbtn g" data-c="nick">✏️ '+(me.nick?'Nick i płeć':'Ustaw nick')+'</button>'
      +(favOk?'<button class="b sbtn g" data-c="favs">⭐ Ulubieni'+(favs.size?' ('+favs.size+')':'')+'</button>':'')
      +(tgOn()?'<button class="b sbtn'+(tgLink?' g':'')+'" data-c="tg">'+(tgLink?'🔔 Telegram: połączony ✅':'🔔 Połącz z Telegramem')+betaTag("telegram_dm")+'</button>':'')+tg
@@ -1593,6 +1616,8 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="fb"){gearView="fb";renderGear();return}
   if(c==="fbadmin"){gearView="fbadmin";renderGear();return}
   if(c==="fbsend"){await fbSend();return}
+  if(c==="testerreq"){await testerReq(b);return}
+  if(c==="fbgrant"){const f=fbList.find(x=>x.id===fbId);if(f&&isSuper(uid))await testerGrant(f);return}
   if(c==="fbreply"){await fbReply();return}
   if(c==="fbmsgsend"){await fbMsgSend();return}
   if(c==="fbback"){if(fbBack==="bell"){gearOpen=false;renderGear()}else{gearView=fbBack;renderGear()}return}
