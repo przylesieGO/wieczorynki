@@ -1628,7 +1628,17 @@ $("whosheet").addEventListener("input",e=>{if(e.target.id==="wsq"){ws.q=e.target
 let popList=[],popIdx=0,popBusy=false;
 const popSnooze=new Set((()=>{try{return JSON.parse(sessionStorage.getItem("popSnooze")||"[]")}catch(e){return []}})());
 const saveSnooze=()=>{try{sessionStorage.setItem("popSnooze",JSON.stringify([...popSnooze]))}catch(e){}};
-const popPending=()=>notifs.filter(n=>!popSnooze.has(n.id)).map(n=>({n,w:wants.find(x=>x.id===n.want_id)})).filter(x=>x.w&&new Date(x.w.starts_at).getTime()>=Date.now()-36e5);
+// jedno okienko na zaproszenie: „zaprasza Cię” + ewentualna zmiana godziny łączą się w jedno
+function popPending(){
+  const by={};
+  notifs.filter(n=>!popSnooze.has(n.id)).forEach(n=>{(by[n.want_id]=by[n.want_id]||[]).push(n)});
+  return Object.keys(by).map(id=>{
+    const ns=by[id],inv=ns.find(n=>n.kind==="invite");
+    return {ns,n:inv||ns[ns.length-1],moved:!!inv&&ns.some(n=>n.kind==="time"),w:wants.find(x=>x.id===id)};
+  }).filter(x=>x.w&&new Date(x.w.starts_at).getTime()>=Date.now()-36e5)
+    .sort((a,b)=>String(a.n.created_at).localeCompare(String(b.n.created_at)));
+}
+const popIds=it=>it.ns.map(n=>n.id);
 const popOpen=()=>!$("popsheet").classList.contains("hide");
 function closePop(){$("popsheet").classList.add("hide");$("popsheet").innerHTML=""}
 function maybePopup(){
@@ -1641,21 +1651,22 @@ function maybePopup(){
 }
 function renderPop(){
   const p=$("popsheet"),it=popList[popIdx];if(!it){closePop();return}
-  const {n,w}=it,d=new Date(w.starts_at),wd=d.toLocaleDateString("pl-PL",{weekday:"long"}),dd=dayDiff(d);
+  const {n,w,moved}=it,d=new Date(w.starts_at),wd=d.toLocaleDateString("pl-PL",{weekday:"long"}),dd=dayDiff(d);
   const day=dd>=0&&dd<=2?["Dziś","Jutro","Pojutrze"][dd]:wd.charAt(0).toUpperCase()+wd.slice(1)+" "+d.getDate()+" "+MON3[d.getMonth()].toLowerCase();
   const joined=(joins[w.id]||[]).includes(uid),priv=isPriv(w),actor=n.actor||w.user_id,time=n.kind==="time";
   const inv=priv?invIds(w).filter(x=>x!==uid):[],going=(joins[w.id]||[]).filter(x=>x!==uid&&x!==w.user_id);
   const big=(q,t)=>'<button type="button" class="b big" data-q="'+q+'">'+t+'</button>';
   const sm=(q,t,c)=>'<button type="button" class="b '+c+'" data-q="'+q+'">'+t+'</button>';
   let btns;
-  if(!time)btns=joined?big("read","OK 👍 Już jedziesz")+'<div class="pbtns">'+sm("later","Później","g")+'</div>'
-    :big("join","Jadę! · "+hhmm(d))+'<div class="pbtns">'+sm("no","Nie dam rady","w")+sm("later","Później","g")+'</div>';
+  if(!time)btns=joined?big("read","OK 👍 Już jedziesz")+'<div class="pbtns">'+sm("later","Przypomnij później","g")+'</div>'
+    :big("join","Jadę! · "+hhmm(d))+'<div class="pbtns">'+sm("no","Nie dam rady","w")+sm("later","Przypomnij później","g")+'</div>';
   else btns=joined?big("read","OK 👍")+'<div class="pbtns">'+sm("leave","Rezygnuję","w")+'</div>'
     :big("join","Jadę! · "+hhmm(d))+'<div class="pbtns">'+sm("read","OK","w")+'</div>';
   p.innerHTML='<div class="sheetbox popbox" role="dialog" aria-modal="true"><button class="sclose" data-q="later" aria-label="Później">✕</button>'
    +'<span class="ptag">'+(time?'🕖 ZMIANA GODZINY':'📩 NOWE ZAPROSZENIE'+(priv?' · 🔒 PRYWATNE':''))+'</span>'
    +'<div class="ph">'+nk(actor,"Ktoś")+(time?' '+(genders[actor]==="K"?"zmieniła":"zmienił")+' godzinę':' zaprasza Cię na rower')+'</div>'
    +'<div class="pwhen">'+esc(day+" "+hhmm(d))+(dd>=0&&dd<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
+   +(moved?'<div class="pmeta">🕖 Godzina była już zmieniana — powyżej aktualna.</div>':'')
    +(w.note?'<div class="pnote">💬 '+esc(w.note)+'</div>':'')
    +(w.user_id!==actor&&!time?'<div class="pmeta">Zaproszenie od '+nk(w.user_id)+'</div>':'')
    +(inv.length?'<div class="pmeta">Zaproszeni też:</div><div class="nks">'+favFirst(inv).map(id=>nk(id)).join("")+'</div>':'')
@@ -1668,11 +1679,11 @@ function renderPop(){
 function popNext(){popList=popPending();if(!popList.length){closePop();return}popIdx=Math.min(popIdx,popList.length-1);renderPop()}
 $("popsheet").addEventListener("click",async e=>{
   const it=popList[popIdx];
-  if(e.target===$("popsheet")){if(it){popSnooze.add(it.n.id);saveSnooze()}popNext();return}
+  if(e.target===$("popsheet")){if(it){popIds(it).forEach(i=>popSnooze.add(i));saveSnooze()}popNext();return}
   const dot=e.target.closest("button[data-pi]");if(dot){popIdx=+dot.dataset.pi;renderPop();return}
   const b=e.target.closest("button[data-q]");if(!b||!it||popBusy)return;
   const q=b.dataset.q;
-  if(q==="later"){popSnooze.add(it.n.id);saveSnooze();popNext();return}
+  if(q==="later"){popIds(it).forEach(i=>popSnooze.add(i));saveSnooze();popNext();say("Przypomnę przy następnym wejściu. Zaproszenie jest też na Starcie.");return}
   popBusy=true;
   try{
     if(q==="join"&&!(joins[it.w.id]||[]).includes(uid)){
@@ -1680,9 +1691,9 @@ $("popsheet").addEventListener("click",async e=>{
       try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}
     }
     if(q==="leave"){const r=await sb.from("want_joins").delete().eq("want_id",it.w.id).eq("user_id",uid);if(r.error)throw r.error}
-    const r=await sb.from("notifications").update({read_at:new Date().toISOString()}).eq("id",it.n.id);
+    const ids=popIds(it),r=await sb.from("notifications").update({read_at:new Date().toISOString()}).in("id",ids);
     if(r.error)throw r.error;
-    notifs=notifs.filter(x=>x.id!==it.n.id);
+    notifs=notifs.filter(x=>!ids.includes(x.id));
     popNext();
     if(q==="join")say("Jedziesz ✔ "+wfLabel(new Date(it.w.starts_at)));
     else if(q==="no")say("OK. Zaproszenie zostaje na Starcie, gdybyś zmienił zdanie.");
