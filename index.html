@@ -41,6 +41,16 @@ nav button.on{background:var(--accbtn);color:#fff;box-shadow:0 1px 4px rgba(36,1
 .apptitle{flex:1;margin:0;font-size:22px;line-height:1.2;white-space:nowrap;transition:font-size .2s}
 .wsub2{display:block;font-size:13px;font-weight:500;color:var(--mut)}
 .hdr .gear{order:2}
+.hdr .gear.help{margin-right:-4px}
+.whelp{display:block;margin:-6px auto 12px;font-size:16px}
+.hlist{list-style:none;margin:10px 0 0;padding:0;text-align:left}
+.hlist li{display:flex;gap:10px;align-items:flex-start;padding:7px 0;font-size:16px;line-height:1.35;border-bottom:1px solid var(--line)}
+.hlist li:last-child{border-bottom:0}.hlist .hi{flex:none;width:26px;text-align:center;font-size:19px}
+.hsoon{margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--fill);font-size:15px;text-align:left;line-height:1.4}
+.htg{margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--acc2);font-size:15px;text-align:left;line-height:1.4}
+.htg a{font-weight:700}
+.hlog{margin-top:12px;font-size:14px;color:var(--mut);text-align:left;line-height:1.4}.hlog b{color:var(--ink)}
+.hoff{display:flex;align-items:center;justify-content:center;gap:8px;margin:14px 0 0;font-size:14px;color:var(--mut)}.hoff input{width:auto;margin:0}
 .hdr nav{order:3;flex:1 0 100%;margin:0}
 .hdr.compact{border-bottom-color:var(--line)}
 .hdr.compact .hin{padding:8px 16px;flex-wrap:nowrap;gap:10px}
@@ -358,6 +368,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 <header class="hdr" id="hdr"><div class="hin">
  <h1 class="apptitle"><span class="tlogo"><svg class="blogo" viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="27" fill="#1f9d55"/><circle cx="44" cy="62" r="25" fill="none" stroke="#fff" stroke-width="9"/><circle cx="76" cy="62" r="25" fill="none" stroke="#fbbf24" stroke-width="9"/><circle cx="44" cy="62" r="4" fill="#fff"/><circle cx="76" cy="62" r="4" fill="#fbbf24"/></svg></span><span class="tname"> PrzylesieGo!</span><span class="wsub2">Ustawki rowerowe</span></h1>
  <nav><button id="t0" class="on">Start</button><button id="t1">Wieczorynki</button><button id="t2">Zaawansowane</button></nav>
+ <button class="gear help" id="helpbtn" aria-label="Pomoc — co potrafi aplikacja" title="Pomoc">❓</button>
  <button class="gear" id="gear" aria-label="Ustawienia" title="Ustawienia">⚙️</button>
 </div></header>
 
@@ -371,6 +382,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
   <div class="wsub">Ustawki rowerowe</div>
   <p class="wlead">Umawiaj się ze znajomymi na wspólną jazdę — zobacz, kto jedzie, i dołącz jednym kliknięciem.</p>
   <div class="wpts"><span>🚴 Zaproszenia do jazdy</span><span>🗺️ Trasy na mapie</span><span>🌬 Wiatr i pogoda</span></div>
+  <button type="button" class="lnk whelp" id="welhelp">❓ Co potrafi aplikacja? ›</button>
  </div>
  <div class="card wcard">
   <div class="wch">Zaloguj się</div>
@@ -546,6 +558,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 <p class="note">Mapa © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · pogoda: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a></p>
 </footer>
 </div>
+<div class="sheet hide" id="helpsheet"></div>
 <div class="toast hide" id="toast"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
@@ -1056,11 +1069,12 @@ function renderGear(){
      +(favOk?'<button class="b sbtn g" data-c="favs">⭐ Ulubieni'+(favs.size?' ('+favs.size+')':'')+'</button>':'')+tg
      +(isAdmin?'<button class="b sbtn g" data-c="admin">🛡️ Administracja</button>':'')
      +(meTester()?'<div class="note" style="margin-top:14px">🧪 Funkcje testowe (jesteś testerem)</div><div class="seg">'+[["1","Pokaż"],["0","Ukryj"]].map(([k,t])=>'<button data-beta="'+k+'" class="'+((betaOn?"1":"0")===k?"on":"")+'">'+t+'</button>').join("")+'</div><div class="note" style="margin-top:6px">„Ukryj” — widzisz aplikację tak jak wszyscy.</div>':'')
-     +themeHtml()
+     +'<button class="b sbtn g" data-c="help">❓ Pomoc — co potrafi aplikacja</button>'
+     +themeHtml()+helpPrefHtml()
      +'<button class="b sbtn" style="background:var(--bad);margin-top:20px" data-c="out">Wyloguj</button>'
      +'<button class="sdanger" data-c="del">Usuń konto…</button>'
     :'<div class="sname">Przeglądasz jako gość</div><div class="smail">Zaloguj się, żeby zapisywać się na wieczorynki i zgłaszać ochotę na jazdę.</div>'
-     +'<button class="b sbtn" data-c="login">Zaloguj się / załóż konto</button>'+tg+themeHtml();
+     +'<button class="b sbtn" data-c="login">Zaloguj się / załóż konto</button>'+tg+'<button class="b sbtn g" data-c="help">❓ Pomoc — co potrafi aplikacja</button>'+themeHtml()+helpPrefHtml();
   p.innerHTML='<div class="sheetbox"><button class="sclose" data-c="close" aria-label="Zamknij">✕</button>'+body+'</div>';
   const s=$("adminsel");
   if(s&&keepSel&&[...s.options].some(o=>o.value===keepSel))s.value=keepSel;
@@ -1092,6 +1106,8 @@ $("gearpanel").addEventListener("click",async e=>{
   if(gb){selGender=gb.dataset.g;[...$("gsex").children].forEach(x=>x.classList.toggle("on",x===gb));return}
   const th=e.target.closest("button[data-t]");
   if(th){setTheme(th.dataset.t);renderGear();return}
+  const hs=e.target.closest("button[data-hs]");
+  if(hs){setHelpOff(hs.dataset.hs==="0");renderGear();return}
   const bt=e.target.closest("button[data-beta]");
   if(bt){betaOn=bt.dataset.beta==="1";try{localStorage.setItem("betaOn",betaOn?"1":"0")}catch(err){}renderGear();refreshUi();return}
   const fb=e.target.closest("button[data-f]");
@@ -1134,6 +1150,7 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="colors"){gearView="colors";renderGear();return}
   if(c==="stats"){gearView="stats";loadStats();return}
   if(c==="flags"){gearView="flags";renderGear();return}
+  if(c==="help"){gearOpen=false;renderGear();openHelp();return}
   if(c==="testeradd"){
     const sel=$("testersel"),id=sel?sel.value:"";if(!id||!isSuper(uid))return;
     try{const r=await sb.from("testers").insert({user_id:id,added_by:uid});if(r.error)throw r.error;await loadRemote();say("🧪 Nadano prawa testera: "+nickOf(id))}
@@ -1250,6 +1267,44 @@ async function adminSaveNick(){
   const err=await saveNick(n,unickId);
   if(err){$("gunickinfo").textContent=err;return}
   gearView="admin";renderGear();say("Zmieniono nick: "+old+" → "+n);
+}
+
+/* ---------- ❓ Pomoc: „Co potrafi PrzylesieGo?” ---------- */
+let helpOff=false;
+try{helpOff=localStorage.getItem("helpOff")==="1"}catch(e){}
+function setHelpOff(v){helpOff=!!v;try{localStorage.setItem("helpOff",helpOff?"1":"0")}catch(e){}}
+const helpPrefHtml=()=>'<div class="note" style="margin-top:14px">Pokazuj pomoc przy starcie</div><div class="seg">'
+  +[["1","Tak"],["0","Nie"]].map(([k,t])=>'<button data-hs="'+k+'" class="'+((helpOff?"0":"1")===k?"on":"")+'">'+t+'</button>').join("")+'</div>';
+function helpHtml(){
+  const rides=tabOk(1),li=(i,b,t)=>'<li><span class="hi">'+i+'</span><span><b>'+b+'</b>'+(t?' '+t:'')+'</span></li>';
+  return '<div class="sheetbox popbox" role="dialog" aria-modal="true" aria-label="Pomoc"><button class="sclose" data-h="close" aria-label="Zamknij">✕</button>'
+   +'<div class="ph" style="margin-top:0">🚲 Co potrafi PrzylesieGo?</div>'
+   +'<ul class="hlist">'
+   +li("🙋","Zaproś na rower:","podaj godzinę albo zakres, np. 17:30–19:30.")
+   +li("🕖","Każdy wybiera, kiedy może,","a Ty jednym kliknięciem ustalasz start.")
+   +li("🔒","Zaproszenie dla wybranych:","tylko dla ulubionych albo konkretnych osób.")
+   +li("⭐","Ulubieni:","Twoi znajomi zawsze na górze list.")
+   +li("📩","Powiadomienia:","po wejściu od razu widzisz, kto Cię zaprasza.")
+   +(rides?li("🗺️","Wieczorynki:","zaplanowane jazdy z trasą, mapą i wiatrem."):'')
+   +'</ul>'
+   +'<div class="hsoon"><b>Wkrótce:</b> 🔔 powiadomienia prosto na Telegram'+(rides?'':', 🗺️ wieczorynki z trasą i wiatrem')+', 📈 statystyki i punkty za jazdę.</div>'
+   +'<div class="htg">📣 <b>Zainstaluj Telegram</b> i dołącz do kanału PrzylesieGo, żeby nie przegapić żadnej jazdy. <a href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">Otwórz kanał ›</a></div>'
+   +'<div class="hlog"><b>Bez logowania</b> zobaczysz najbliższą wieczorynkę. <b>Po zalogowaniu</b> (wystarczą e-mail i hasło) zapraszasz, dołączasz i dostajesz powiadomienia.</div>'
+   +'<label class="hoff"><input type="checkbox" id="helpoff"'+(helpOff?' checked':'')+'> Nie pokazuj więcej (pomoc znajdziesz pod ❓)</label>'
+   +'<button type="button" class="b big" data-h="close">Zaczynamy!</button></div>';
+}
+function openHelp(){const p=$("helpsheet");p.innerHTML=helpHtml();p.classList.remove("hide")}
+function closeHelp(){const p=$("helpsheet");p.classList.add("hide");p.innerHTML=""}
+$("helpsheet").addEventListener("click",e=>{if(e.target===$("helpsheet")||e.target.closest("[data-h='close']"))closeHelp()});
+$("helpsheet").addEventListener("change",e=>{if(e.target.id==="helpoff")setHelpOff(e.target.checked)});
+$("helpbtn").onclick=openHelp;
+$("welhelp").onclick=openHelp;
+// samo się pokazuje raz na uruchomienie aplikacji (po zalogowaniu), dopóki ktoś nie wyłączy
+function maybeHelp(){
+  if(helpOff||!session||needProfile()||gearOpen||pwMode)return;
+  try{if(sessionStorage.getItem("helpShown")==="1")return;sessionStorage.setItem("helpShown","1")}catch(e){}
+  if(popOpen()||!$("whosheet").classList.contains("hide"))return; // powiadomienia mają pierwszeństwo
+  openHelp();
 }
 
 /* ---------- START: chętni ---------- */
@@ -2383,6 +2438,7 @@ async function loadRemote(selectId){
   if(!selectId&&idx>=0&&sorted[idx].id===prevId){cur=idx;refreshUi()}
   else showRide(idx);
   maybePopup();
+  maybeHelp();
   // 1 h przed początkiem zakresu godzina ustala się sama (KROK 15) — robi to baza, wywołuje pierwszy, kto odświeży
   if(session&&rangeOk&&Date.now()-autoAt>60000&&wants.some(w=>isOpen(w)&&new Date(w.range_from).getTime()<=Date.now()+36e5)){
     autoAt=Date.now();
