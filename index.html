@@ -321,6 +321,9 @@ html,body{overscroll-behavior-x:none}
 .cdcol{font:700 30px/74px "SF Mono",ui-monospace,Menlo,monospace;color:var(--mut)}
 .cdclock.soon .fcard.cdt{color:#fff;background:linear-gradient(180deg,#3cb55e 0%,#2e9e4e 27%,#1f7a37 50%,#1a6a30 50%,#248a3d 70%,#2b9646 100%)}
 .cdev{margin-top:10px}.cdev b{font-size:18px}.cdev div{font-size:15px;color:var(--mut)}
+.cdlive{display:block;width:100%;margin:-4px 0 12px;padding:9px 12px;border:0;border-radius:12px;background:var(--acc2);color:var(--acc);font:inherit;font-size:15px;cursor:pointer;text-align:center}.cdlive:disabled{cursor:default;opacity:1}
+.cdwho{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 8px;margin-top:10px}.cdn{background:var(--fill);border-radius:999px;padding:5px 12px;font-size:15px}.cdn b{font-size:16px}.cdfav{flex-basis:100%;font-size:14px;font-weight:600}
+.cdacts{display:flex;gap:8px;margin-top:12px}.cdacts .cdjoin{flex:1;padding:13px 8px;font-size:17px}.cdacts .cdmore{flex:none;padding:13px 14px;font-size:15px}.cdnote{margin-top:8px;font-size:13px}.cdnote .lnk{font-size:13px;padding:0}
 .cdbtn{display:block;width:100%;margin-top:12px;padding:12px!important;font-size:16px}
 .slin-r{animation:slinr .25s ease-out}.slin-l{animation:slinl .25s ease-out}
 @keyframes slinr{from{transform:translateX(60px);opacity:.3}to{transform:none;opacity:1}}
@@ -2304,14 +2307,20 @@ function renderNext(){
 }
 /* ---------- START: odliczanie do najbliższej wieczorynki ---------- */
 let cdKey="";
+/* 👀 obserwujący goście (KROK 21) — licznik bez logowania, raz na urządzenie */
+let watchOk=false,watchN={};
+const devId=(()=>{try{let d=localStorage.getItem("devId");if(!d){d=(crypto.randomUUID?crypto.randomUUID():"10000000-1000-4000-8000-100000000000".replace(/[018]/g,c=>(c^Math.random()*16>>c/4).toString(16)));localStorage.setItem("devId",d)}return d}catch(e){return ""}})();
+const myWatch=new Set((()=>{try{return JSON.parse(localStorage.getItem("watched")||"[]")}catch(e){return []}})());
+const saveWatch=()=>{try{localStorage.setItem("watched",JSON.stringify([...myWatch].slice(-50)))}catch(e){}};
+// najbliższa wieczorynka, która jeszcze się NIE zaczęła, i ta, która właśnie trwa (do 3 h po starcie)
 function cdState(){
-  const now=Date.now(),fu=firstUpcoming();
-  if(fu<0)return {mode:"none"};
-  // wystartowała (do 3 h po starcie) — „Jedziemy!”, a odliczanie do następnej nie znika
-  const r=sorted[fu],t=new Date(r.when).getTime();
-  if(t<=now)return {mode:"go",r,i:fu};
-  const s=Math.floor((t-now)/1000);
-  return {mode:s<86400?(s<=900?"soon":"day"):"far",r,i:fu,s};
+  const now=Date.now();
+  const ni=sorted.findIndex(r=>new Date(r.when).getTime()>now);
+  let li=-1;sorted.forEach((r,i)=>{const t=new Date(r.when).getTime();if(t<=now&&t>=now-3*36e5)li=i});
+  const live=li>=0?{r:sorted[li],i:li}:null;
+  if(ni<0)return {mode:"none",live};
+  const r=sorted[ni],s=Math.floor((new Date(r.when).getTime()-now)/1000);
+  return {mode:s<86400?(s<=900?"soon":"day"):"far",r,i:ni,s,live};
 }
 function cdDigits(st){
   if(st.mode==="none")return ["--","--","--"];
@@ -2321,48 +2330,64 @@ function cdDigits(st){
 }
 function renderCountdown(){
   const box=$("cdbody");if(!box)return;
-  const st=cdState(),key=(tabOk(1)?"T":"F")+st.mode+(st.r?st.r.id+(st.r.when)+(rsvps[st.r.id]||[]).length+st.r.title+(st.r.place||""):"");
+  const st=cdState(),r=st.r,g=r?(rsvps[r.id]||[]):[],goes=!!session&&g.includes(uid),wn=r?(watchN[r.id]||0):0,wme=!!r&&myWatch.has(r.id);
+  const key=[tabOk(1),st.mode,st.live?st.live.r.id+st.live.r.title:"",r?r.id+r.when+r.title+(r.place||""):"",g.length,goes,wn,wme,favNames(g).join(),!!session].join("|");
   if(key!==cdKey){
     cdKey=key;
-    if(st.mode==="go"){
-      const r=st.r;
-      box.innerHTML='<div class="cdlab">🚴 Jedziemy!</div><div class="cdev"><b>'+esc(r.title)+'</b><div>wystartowała o '+esc(hhmm(new Date(r.when)))+(r.place?' · '+esc(r.place):'')+'</div></div>'
-        +'<button class="b g cdbtn" data-go="ride" data-i="'+st.i+'">Szczegóły i mapa ›</button>';
-      box.querySelectorAll(".cdbtn").forEach(b=>b.classList.toggle("hide",!tabOk(1)));
-      return;
-    }
+    const liveHtml=st.live?'<button type="button" class="cdlive" data-go="ride" data-i="'+st.live.i+'">🚴 Teraz jedzie: <b>'+esc(st.live.r.title)+'</b> · start '+esc(hhmm(new Date(st.live.r.when)))+(tabOk(1)?' ›':'')+'</button>':'';
     const lbls=st.mode==="far"||st.mode==="none"?["DNI","GODZ","MIN"]:["GODZ","MIN","SEK"];
-    const d=cdDigits(st);
-    let lab,ev,btn;
+    let lab,ev,btn,who="";
     if(st.mode==="none"){
       lab='<div class="cdlab mut">⏳ Do najbliższej wieczorynki</div>';
       ev='<div class="cdev"><div>Brak zaplanowanych wieczorynek</div></div>';
       btn='<button class="b g cdbtn" data-go="new">➕ Zaplanuj wieczorynkę</button>';
     }else{
-      const r=st.r,w=new Date(r.when),n=dayDiff(w),g=(rsvps[r.id]||[]).length;
+      const w=new Date(r.when),n=dayDiff(w);
       const badge=n===0?' <span class="cdbadge">DZIŚ</span>':n===1&&st.mode!=="far"?' <span class="cdbadge">JUTRO</span>':'';
       lab=st.mode==="soon"?'<div class="cdlab">🚴 Start za chwilę!</div>':'<div class="cdlab">⏳ Do '+(badge?'wieczorynki':'najbliższej wieczorynki')+badge+'</div>';
       const wd=w.toLocaleDateString("pl-PL",{weekday:"long"});
       const day=n>=0&&n<=1?relDay(w):wd.charAt(0).toUpperCase()+wd.slice(1)+" "+w.getDate()+" "+MON3[w.getMonth()].toLowerCase();
-      ev='<div class="cdev"><b>'+esc(r.title)+'</b><div>'+esc(day+" · "+hhmm(w)+(r.place?" · "+r.place:"")+" · jedzie "+g)+'</div></div>';
-      btn='<button class="b g cdbtn" data-go="ride" data-i="'+st.i+'">Szczegóły i mapa ›</button>';
+      ev='<div class="cdev"><b>'+esc(r.title)+'</b><div>'+esc(day+" · "+hhmm(w)+(r.place?" · "+r.place:"")+(r.pace?" · "+r.pace:""))+'</div></div>';
+      const fn=session?favNames(g):[];
+      who='<div class="cdwho"><span class="cdn">🚴 Jedzie <b>'+g.length+'</b></span>'+(wn?'<span class="cdn">👀 '+wn+' '+plf(wn,["gość obserwuje","gości obserwuje","gości obserwuje"])+'</span>':'')
+        +(fn.length?'<div class="cdfav">⭐ '+esc(fn.join(", "))+'</div>':'')+'</div>';
+      btn=session
+        ?'<div class="cdacts"><button class="b join cdjoin'+(goes?' g':'')+'" data-go="join" data-id="'+esc(r.id)+'">'+(goes?'✓ Jedziesz · Rezygnuję':'Jadę!')+'</button>'
+          +(tabOk(1)?'<button class="b g cdmore" data-go="ride" data-i="'+st.i+'">Szczegóły ›</button>':'')+'</div>'
+        :'<div class="cdacts"><button class="b join cdjoin'+(wme?' g':'')+'" data-go="watch" data-id="'+esc(r.id)+'"'+(watchOk?'':' disabled')+'>'+(wme?'✓ Obserwujesz':'👀 Obserwuję')+'</button>'
+          +(tabOk(1)?'<button class="b g cdmore" data-go="ride" data-i="'+st.i+'">Szczegóły ›</button>':'')+'</div>'
+          +'<div class="note cdnote">Żeby się zapisać („Jadę!”) i dostawać powiadomienia, <button type="button" class="lnk" data-go="login">zaloguj się ›</button></div>';
     }
-    box.innerHTML=lab+'<div class="cdclock'+(st.mode==="soon"?' soon':'')+'">'+d.map((x,i)=>(i?'<div class="cdcol">:</div>':'')+'<div class="cdu"><div class="fcard cdt">'+x+'</div><small>'+lbls[i]+'</small></div>').join("")+'</div>'+ev+btn;
-    box.querySelectorAll(".cdbtn").forEach(b=>b.classList.toggle("hide",!tabOk(1)));
+    box.innerHTML=liveHtml+lab+'<div class="cdclock'+(st.mode==="soon"?' soon':'')+'">'+cdDigits(st).map((x,i)=>(i?'<div class="cdcol">:</div>':'')+'<div class="cdu"><div class="fcard cdt">'+x+'</div><small>'+lbls[i]+'</small></div>').join("")+'</div>'+ev+who+btn;
+    if(!tabOk(1))box.querySelectorAll(".cdlive").forEach(b=>b.disabled=true);
     return;
   }
-  if(st.mode==="go"||st.mode==="none")return;
+  if(st.mode==="none")return;
   const d=cdDigits(st);
   box.querySelectorAll(".cdt").forEach((el,i)=>flipCard(el,d[i]));
 }
 setInterval(()=>{if(!document.hidden&&!$("p0").classList.contains("hide"))renderCountdown()},1000);
-$("cdbody").addEventListener("click",e=>{
+$("cdbody").addEventListener("click",async e=>{
   const b=e.target.closest("button[data-go]");if(!b)return;
-  if(b.dataset.go==="ride"){show(1);showRide(+b.dataset.i)}
-  else if(b.dataset.go==="new"){
+  const go=b.dataset.go;
+  if(go==="ride"){if(!tabOk(1))return;show(1);showRide(+b.dataset.i);return}
+  if(go==="login"){setGuest(false);renderChrome();return}
+  if(go==="new"){
     if(!session){say("Zaloguj się, aby zaplanować wieczorynkę.");return}
-    show(1);$("newbox").open=true;$("newbox").scrollIntoView({behavior:"smooth"})
+    if(!tabOk(1)){say("Planowanie wieczorynek jest jeszcze w testach.");return}
+    show(1);$("newbox").open=true;$("newbox").scrollIntoView({behavior:"smooth"});return;
   }
+  b.disabled=true;
+  try{
+    if(go==="join"){await toggleRsvp(b.dataset.id);try{navigator.vibrate&&navigator.vibrate(30)}catch(err){}}
+    else if(go==="watch"){
+      const id=b.dataset.id,on=!myWatch.has(id);
+      const r=await sb.rpc("ride_watch",{r:id,dev:devId,on_:on});if(r.error)throw r.error;
+      on?myWatch.add(id):myWatch.delete(id);saveWatch();watchN[id]=+r.data||0;cdKey="";renderCountdown();
+      say(on?"👀 Obserwujesz — organizator widzi, że ktoś jeszcze może przyjechać.":"Cofnięto obserwowanie.");
+    }
+  }catch(err){say("Operacja nie powiodła się"+(err&&err.message?": "+err.message:"."))}
+  finally{b.disabled=false}
 });
 $("nextbody").addEventListener("click",async e=>{
   const b=e.target.closest("button[data-go]");if(!b)return;
@@ -2653,6 +2678,7 @@ async function loadRemote(selectId){
   if(!b.error)b.data.forEach(x=>{(g[x.ride_id]=g[x.ride_id]||[]).push(x.user_id)});
   rsvps=g;
   // funkcje testowe — czytają wszyscy, także goście (KROK 16)
+  const wc=await sb.rpc("ride_watch_counts");watchOk=!wc.error;watchN={};if(!wc.error)(wc.data||[]).forEach(x=>{watchN[x.ride_id]=+x.n||0});
   const ff=await sb.from("feature_flags").select("key,name,description,state");
   flags={};if(!ff.error)(ff.data||[]).forEach(f=>{flags[f.key]=f});
   if(session){
