@@ -363,6 +363,30 @@ html[data-theme=dark] .fbadge{background:#2c2c2e;color:#4cd964}
 body.hasfab .wrap{padding-bottom:110px}
 body.hasfab .toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
 @media (prefers-reduced-motion:reduce){.fab,.fab .fabt{transition:none}}
+/* 💬 zgłoszenia i ⭐ ocena (KROK 26) */
+.fbcnt{display:inline-block;background:#ff3b30;color:#fff;border-radius:999px;font-size:12px;font-weight:800;padding:1px 8px;margin-left:6px;vertical-align:2px}
+.stars{display:flex;justify-content:center;gap:4px;touch-action:none;-webkit-user-select:none;user-select:none;cursor:pointer;padding:4px 0}
+.stars i{font-style:normal;font-size:30px;line-height:1;color:var(--line);transition:color .15s,transform .15s,text-shadow .15s}
+.stars.big i{font-size:46px}
+.stars i.on{color:#ffb800;transform:scale(1.12);text-shadow:0 0 12px rgba(255,184,0,.55)}
+html[data-theme=dark] .stars i{color:#48484a}html[data-theme=dark] .stars i.on{color:#ffc933}
+.fbstars{text-align:center;margin:10px 0 4px}.fbstars .note{font-size:13px}
+.fbst{color:#ffb800;letter-spacing:1px}.fbst s{text-decoration:none;color:var(--line)}
+#fbkind{margin-top:4px}
+.sheetbox textarea,#ratesheet textarea{margin-top:10px;font-size:16px;resize:vertical}
+.fbdev{display:flex;align-items:flex-start;gap:8px;font-size:13px;margin-top:8px}.fbdev input{width:auto;margin-top:2px}
+.fbrow{position:relative;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;width:100%;padding:10px 26px 10px 10px;margin-top:6px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:inherit;font-size:14px;text-align:left;cursor:pointer}
+.fbrow.new{background:var(--acc2);border-color:transparent}
+.fbrow .fbk{font-weight:700}.fbrow .fbsn{flex-basis:100%;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fbrow .nk{font-size:14px;padding:1px 8px}
+.fbrow .dot{position:absolute;top:12px;right:10px;width:9px;height:9px;border-radius:50%;background:#ff3b30}
+.fbs{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:1px 8px;background:var(--fill);color:var(--mut)}
+.fbs.s-accepted{background:#e3edfc;color:#1f56b3}.fbs.s-done{background:var(--acc2);color:var(--acc)}.fbs.s-rejected{background:rgba(214,69,69,.12);color:var(--bad)}
+html[data-theme=dark] .fbs.s-accepted{background:#1d2c45;color:#8fb5ff}
+.fbthread{margin-top:10px}
+.fbm{max-width:88%;margin-top:8px;padding:8px 11px;border-radius:14px 14px 14px 4px;background:var(--fill);font-size:15px}
+.fbm.me{margin-left:auto;border-radius:14px 14px 4px 14px;background:var(--acc2)}
+.fbmh{font-size:12px;margin-bottom:2px}.fbmh .nk{font-size:13px;padding:0 7px}.fbmb{white-space:pre-wrap;word-break:break-word}
+#fbstat{margin-top:8px}#fbstat button{font-size:13px;padding:9px 2px}
 .who{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;border-radius:12px;background:var(--fill);border:2px solid transparent;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
 .who.priv{border-color:var(--acc)}
 .who .wic{font-size:20px;flex:none}.who .wtx{flex:1;min-width:0}.who .wtx b{display:block;font-size:16px}
@@ -630,6 +654,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 </footer>
 </div>
 <div class="sheet hide" id="helpsheet"></div>
+<div class="sheet hide" id="ratesheet"></div>
 <!-- ➕ pływający przycisk „Zaproś na rower” (zwija się przy przewijaniu w dół) -->
 <button type="button" class="fab hide" id="fab" aria-label="Zaproś na rower — nowe zaproszenie"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5v15M4.5 12h15" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span class="fabt">Zaproś na rower</span><b class="fbadge hide" id="wbadge"></b></button>
 <div class="toast hide" id="toast"></div>
@@ -852,7 +877,7 @@ const pill=(t,c,bg,live,uid_)=>'<span'+(uid_?' data-u="'+esc(uid_)+'"':'')+' cla
 /* ulubieni (prywatni: każdy widzi tylko swoich) */
 let favs=new Set(),favOk=false;
 const isFav=id=>favs.has(id);
-const nk=(id,fallback)=>{const c=colorOf(id),g=genders[id],t=nicks[id]||fallback||"ktoś";return pill((isFav(id)?"⭐ ":"")+t+(testerIds.has(id)?" 🧪":""),c,c?nickBgs[g]:"",onlineIds.includes(id),nicks[id]&&favOk&&id!==uid?id:"")};
+const nk=(id,fallback)=>{const c=colorOf(id),g=genders[id],t=nicks[id]||fallback||"ktoś";return pill((isFav(id)?"⭐ ":"")+t+(testerIds.has(id)?" 🧪":"")+(fbBulb(id)?" 💡":""),c,c?nickBgs[g]:"",onlineIds.includes(id),nicks[id]&&favOk&&id!==uid?id:"")};
 const favFirst=ids=>ids.slice().sort((a,b)=>(isFav(b)?1:0)-(isFav(a)?1:0));
 const nkList=ids=>'<div class="nks">'+favFirst(ids).map(id=>nk(id)).join("")+'</div>';
 const favNames=ids=>favFirst(ids).filter(isFav).map(id=>nicks[id]).filter(Boolean);
@@ -912,7 +937,7 @@ const themeHtml=()=>'<div class="note" style="margin-top:14px">Wygląd</div><div
 let guestMode=false,gearOpen=false,gearView="main";
 // nick zalogowanego na górze ekranu (pomaga przy kilku kontach) — domyślnie widoczny, zapamiętane w telefonie
 let showNick=true;try{showNick=localStorage.getItem("showNick")!=="0"}catch(e){}
-const showNickHtml=()=>'<div class="note" style="margin-top:14px">Nick na górze ekranu</div><div class="seg">'+[["1","Pokaż"],["0","Ukryj"]].map(([k,t])=>'<button data-sn="'+k+'" class="'+((showNick?"1":"0")===k?"on":"")+'">'+t+'</button>').join("")+'</div><div class="note" style="margin-top:6px">Przydatne, gdy masz kilka kont — od razu widać, na którym jesteś.</div>';
+const showNickHtml=()=>'<div class="note" style="margin-top:14px">Nick na górze ekranu</div><div class="seg">'+[["1","Pokaż"],["0","Ukryj"]].map(([k,t])=>'<button data-sn="'+k+'" class="'+((showNick?"1":"0")===k?"on":"")+'">'+t+'</button>').join("")+'</div>';
 function renderMeNick(){const el=$("menick");if(!el)return;const on=showNick&&!!session&&!!me.nick;el.classList.toggle("hide",!on);el.innerHTML=on?'<i>👤 Zalogowany: </i>'+nk(uid):''}
 try{guestMode=sessionStorage.getItem("guest")==="1"}catch(e){}
 const setGuest=v=>{guestMode=v;try{v?sessionStorage.setItem("guest","1"):sessionStorage.removeItem("guest")}catch(e){}};
@@ -925,6 +950,7 @@ function adminHtml(){
   return '<button class="sback" data-c="back">‹ Ustawienia</button>'
    +'<div class="sname" style="margin-top:26px">🛡️ Administracja</div>'
    +'<button class="b sbtn g" data-c="stats">📊 Statystyki</button>'
+   +(fbOk?'<button class="b sbtn g" data-c="fbadmin">💬 Zgłoszenia'+(fbAdmUnread().length?' <span class="fbcnt">'+fbAdmUnread().length+' nowe</span>':'')+'</button>':'')
    +(genderOk?'<button class="b sbtn g" data-c="colors">🎨 Kolory nicków</button>':'')
    +'<div class="sleft"><h3>Administratorzy</h3>'+rows
    +'<h3>Nadaj uprawnienia administratora</h3>'+add
@@ -1042,7 +1068,7 @@ function delHtml(){
   if(isSuper(uid))return head+'<div class="sleft"><div class="changed">👑 Jesteś głównym administratorem PrzylesieGo — tego konta nie można usunąć.</div></div>';
   if(lastAdmin())return head+'<div class="sleft"><div class="changed">Jesteś jedynym administratorem, więc nie możesz usunąć konta. Najpierw nadaj komuś uprawnienia administratora (Ustawienia → 🛡️ Administracja).</div></div>';
   return head+'<div class="sleft">'
-   +'<h3>Zostanie usunięte na zawsze</h3><ul><li>konto i adres e-mail</li><li>nick i płeć</li><li>zapisy na wieczorynki</li><li>zaproszenia „Idziemy na rower?” i dołączenia</li>'+(tgLink?'<li>połączenie z Telegramem</li>':'')+(isAdmin?'<li>uprawnienia administratora</li>':'')+'</ul>'
+   +'<h3>Zostanie usunięte na zawsze</h3><ul><li>konto i adres e-mail</li><li>nick i płeć</li><li>zapisy na wieczorynki</li><li>zaproszenia „Idziemy na rower?” i dołączenia</li>'+(fbOk?'<li>Twoje zgłoszenia, oceny i wiadomości</li>':'')+''+(tgLink?'<li>połączenie z Telegramem</li>':'')+(isAdmin?'<li>uprawnienia administratora</li>':'')+'</ul>'
    +'<h3>Zostanie</h3><ul><li>wieczorynki, które organizujesz (z Twoim nickiem jako organizatorem)</li><li>trasy dodane do biblioteki</li></ul>'
    +'<label for="gdel" style="font-size:15px;margin-top:16px">Aby potwierdzić, wpisz <b>USUŃ</b></label>'
    +'<input id="gdel" maxlength="10" autocomplete="off" autocapitalize="characters">'
@@ -1125,6 +1151,8 @@ function userHtml(){
    +'<div class="smail">'+(g==="K"?"👩 Kobieta":g==="M"?"👨 Mężczyzna":"")+(onlineIds.includes(userId)?(g?" · ":"")+"🟢 teraz w aplikacji":"")+'</div>'+(stazTxt(userId)?'<div class="staz">'+esc(stazTxt(userId))+'</div>':'')
    +(visOk?'<button class="b sbtn" data-a="invite" data-id="'+esc(userId)+'">🚴 Zaproś na rower</button>':'')
    +'<button class="b sbtn'+(fav?' g':'')+'" data-a="fav" data-id="'+esc(userId)+'">'+(fav?'⭐ Usuń z ulubionych':'☆ Dodaj do ulubionych')+'</button>'
+   +((fbDone[userId]||0)?'<div class="staz">💡 Zrealizowane zgłoszenia: '+fbDone[userId]+(fbBulb(userId)?' — współtwórca aplikacji':'')+'</div>':'')
+   +(isAdmin&&fbOk?'<button class="b sbtn g" data-a="fbmsg" data-id="'+esc(userId)+'">✉️ Napisz wiadomość</button>':'')
    +(isAdmin&&!isSuper(userId)?'<button class="b sbtn g" data-a="unick" data-id="'+esc(userId)+'">✏️ Zmień nick (admin)</button>':'');
 }
 async function toggleFav(id){
@@ -1145,6 +1173,173 @@ document.addEventListener("click",e=>{
   if(inPanel&&gearView!=="favs")return;
   userBack=inPanel?"favs":"";userId=p.dataset.u;gearOpen=true;gearView="user";renderGear();
 });
+/* ---------- 💬 Oceń aplikację / zgłoś błąd / pomysł + wiadomości od admina (KROK 26) ---------- */
+let fbOk=false,fbList=[],fbDone={},fbMsgs={},fbId="",fbBack="fb",fbAdmFilter="new",fbTo="",fbBusy=false;
+const fbf={kind:"bug",rating:0,text:"",dev:true};let fbReplyTxt="",fbMsgTxt="";
+const APP_VER="2026-11-14";
+const FB_KIND={bug:"🐞 Błąd",idea:"💡 Pomysł",rating:"⭐ Ocena",msg:"✉️ Wiadomość"};
+const FB_ST={new:"🆕 nowe",accepted:"👍 przyjęte",done:"✅ zrobione",rejected:"🙅 odrzucone"};
+const fbMineUnread=()=>fbList.filter(f=>f.user_id===uid&&f.user_unread);
+const fbAdmUnread=()=>isAdmin?fbList.filter(f=>f.user_id!==uid&&f.admin_unread):[];
+const fbBulb=id=>(fbDone[id]||0)>=3;
+const starsHtml=(v,big)=>'<div class="stars'+(big?' big':'')+'" data-v="'+(v||0)+'" role="slider" aria-label="Ocena od 1 do 5" aria-valuemin="1" aria-valuemax="5" aria-valuenow="'+(v||0)+'">'+[1,2,3,4,5].map(i=>'<i class="'+(i<=v?'on':'')+'">★</i>').join("")+'</div>';
+const starsTxt=v=>'<span class="fbst">'+"★".repeat(v)+'<s>'+"★".repeat(5-v)+'</s></span>';
+function fbDevice(){
+  const s=window.screen||{},sa=(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone;
+  return (navigator.userAgent||"").replace(/\s+/g," ").slice(0,220)+" · "+(s.width||"?")+"×"+(s.height||"?")+(sa?" · z ikony":" · przeglądarka")+" · wersja "+APP_VER;
+}
+const fbAgo=ts=>{const d=new Date(ts);return dayDiff(d)===0?"dziś "+hhmm(d):relDay(d)+" "+hhmm(d)};
+function fbRow(f,adm){
+  const un=adm?f.admin_unread:f.user_unread,snip=f.kind==="rating"?starsTxt(f.rating)+(f.body?" "+esc(f.body.slice(0,60)):""):esc((f.body||"").slice(0,90));
+  return '<button type="button" class="fbrow'+(un?' new':'')+'" data-fb="'+esc(f.id)+'"><span class="fbk">'+FB_KIND[f.kind]+'</span>'
+   +(f.kind!=="msg"?'<span class="fbs s-'+f.status+'">'+FB_ST[f.status]+'</span>':'')+(adm?' '+nk(f.user_id):'')
+   +'<span class="fbsn">'+snip+'</span><span class="note">'+esc(fbAgo(f.updated_at))+'</span>'+(un?'<span class="dot"></span>':'')+'</button>';
+}
+function fbFormHtml(){
+  const k=fbf.kind,ph=k==="bug"?"Co nie działa? Gdzie to się stało i co klikałeś?":k==="idea"?"Co by się przydało? Opisz pomysł.":fbf.rating&&fbf.rating<=3?"Co poprawić? (przy 1–3 ★ obowiązkowo)":"Dodaj uwagi (opcjonalnie)";
+  return '<div class="seg" id="fbkind">'+[["bug","🐞 Błąd"],["idea","💡 Pomysł"],["rating","⭐ Ocena"]].map(([x,t])=>'<button type="button" data-fk="'+x+'" class="'+(k===x?'on':'')+'">'+t+'</button>').join("")+'</div>'
+   +(k==="rating"?'<div class="fbstars">'+starsHtml(fbf.rating,true)+'<div class="note">Przesuń palcem po gwiazdkach</div></div>':'')
+   +'<textarea id="fbtext" rows="4" maxlength="2000" placeholder="'+esc(ph)+'">'+esc(fbf.text)+'</textarea>'
+   +'<label class="fbdev"><input type="checkbox" id="fbdev"'+(fbf.dev?' checked':'')+'> Dołącz info o telefonie (model, przeglądarka) — pomaga przy błędach</label>'
+   +'<div class="note" id="fbinfo" style="color:var(--bad)"></div>'
+   +'<button class="b sbtn" data-c="fbsend"'+(fbBusy?' disabled':'')+'>Wyślij</button>'
+   +'<p class="note">Zgłoszenie trafia do administratora pod Twoim nickiem — może odpisać (zobaczysz pod 🔔). Za 3 zrealizowane zgłoszenia dostajesz 💡 przy nicku.</p>';
+}
+function fbHubHtml(){
+  const mine=fbList.filter(f=>f.user_id===uid),done=fbDone[uid]||0;
+  return '<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">💬 Oceń / zgłoś błąd / pomysł</div>'
+   +(done?'<div class="smail">💡 Zrealizowane Twoje zgłoszenia: <b>'+done+'</b>'+(done>=3?' — masz żarówkę przy nicku!':' (żarówka od 3)')+'</div>':'<div class="smail">Pomóż rozwijać PrzylesieGo!</div>')
+   +'<div class="sleft">'+fbFormHtml()
+   +(mine.length?'<h3>Twoje zgłoszenia i wiadomości ('+mine.length+')</h3>'+mine.map(f=>fbRow(f,false)).join(""):'')+'</div>';
+}
+function fbAdminHtml(){
+  const todo=f=>(f.kind!=="msg"&&(f.status==="new"||f.status==="accepted"))||f.admin_unread;
+  const L=fbList.filter(f=>fbAdmFilter==="all"||todo(f)),nNew=fbList.filter(todo).length;
+  const rs=fbList.filter(f=>f.kind==="rating");
+  const avg=rs.length?(rs.reduce((a,f)=>a+f.rating,0)/rs.length).toFixed(1).replace(".",","):null;
+  return '<button class="sback" data-c="backadmin">‹ Administracja</button><div class="sname" style="margin-top:26px">💬 Zgłoszenia</div>'
+   +(avg?'<div class="smail">Średnia ocena: '+starsTxt(Math.round(+avg.replace(",",".")))+' <b>'+avg+'</b> ('+rs.length+')</div>':'<div class="smail">Zgłoszenia, oceny i wiadomości.</div>')
+   +'<div class="seg" id="fbfilt">'+[["new","Do zrobienia ("+nNew+")"],["all","Wszystkie ("+fbList.length+")"]].map(([k,t])=>'<button type="button" data-ff="'+k+'" class="'+(fbAdmFilter===k?'on':'')+'">'+t+'</button>').join("")+'</div>'
+   +'<div class="sleft">'+(L.length?L.map(f=>fbRow(f,true)).join(""):'<div class="note" style="margin-top:12px">Pusto 🎉</div>')+'</div>'
+   +'<p class="note">✉️ Wiadomość do dowolnej osoby: kliknij jej nick → „✉️ Napisz wiadomość”.</p>';
+}
+function fbThreadHtml(){
+  const f=fbList.find(x=>x.id===fbId);
+  const back='<button class="sback" data-c="fbback">‹ '+(fbBack==="fbadmin"?'Zgłoszenia':fbBack==="bell"?'Zamknij':'Zgłoszenia')+'</button>';
+  if(!f)return back+'<div class="sname" style="margin-top:26px">Nie znaleziono</div>';
+  const adm=isAdmin&&f.user_id!==uid,M=fbMsgs[f.id];
+  const first=f.kind==="msg"?{sender:f.started_by,body:f.body,created_at:f.created_at}:{sender:f.user_id,body:(f.kind==="rating"?starsTxt(f.rating)+(f.body?"<br>":""):"")+esc(f.body||""),created_at:f.created_at,html:true};
+  const bub=m=>{const mine=m.sender===uid;return '<div class="fbm'+(mine?' me':'')+'"><div class="fbmh">'+(m.sender?nk(m.sender):'<span class="note">usunięte konto</span>')+' <span class="note">'+esc(fbAgo(m.created_at))+'</span></div><div class="fbmb">'+(m.html?m.body:esc(m.body))+'</div></div>'};
+  return back+'<div class="sname" style="margin-top:26px">'+FB_KIND[f.kind]+'</div>'
+   +'<div class="smail">'+(adm?'od '+nk(f.user_id)+' · ':f.kind==="msg"?'od administratora · ':'')+(f.kind!=="msg"?'<span class="fbs s-'+f.status+'">'+FB_ST[f.status]+'</span>':'')+'</div>'
+   +(adm&&f.kind!=="msg"?'<div class="seg" id="fbstat">'+[["new","Nowe"],["accepted","Przyjęte"],["done","Zrobione"],["rejected","Odrzucone"]].map(([k,t])=>'<button type="button" data-fs2="'+k+'" class="'+(f.status===k?'on':'')+'">'+t+'</button>').join("")+'</div>':'')
+   +'<div class="sleft fbthread">'+bub(first)+(M?M.map(bub).join(""):'<div class="note">Ładuję…</div>')
+   +(adm&&f.device?'<div class="note" style="margin-top:6px">📱 '+esc(f.device)+'</div>':'')
+   +'<textarea id="fbreply" rows="3" maxlength="1000" placeholder="'+(adm?'Odpowiedz '+esc(nickOf(f.user_id)):'Odpisz administratorowi')+'…">'+esc(fbReplyTxt)+'</textarea>'
+   +'<div class="note" id="fbrinfo" style="color:var(--bad)"></div>'
+   +'<button class="b sbtn" data-c="fbreply"'+(fbBusy?' disabled':'')+'>Wyślij odpowiedź</button>'
+   +'<p class="note">'+(adm?'Odpowiedź zobaczy pod 🔔 (i na Telegramie, jeśli połączył bota).':'Odpowiedź trafi do administratora.')+'</p></div>';
+}
+function fbMsgHtml(){
+  return '<button class="sback" data-c="userback2">‹ '+esc(nickOf(fbTo))+'</button><div class="sname" style="margin-top:26px">✉️ Wiadomość do '+nk(fbTo)+'</div>'
+   +'<div class="sleft"><textarea id="fbmsgtext" rows="5" maxlength="2000" placeholder="Treść wiadomości…">'+esc(fbMsgTxt)+'</textarea>'
+   +'<div class="note" id="fbminfo" style="color:var(--bad)"></div>'
+   +'<button class="b sbtn" data-c="fbmsgsend"'+(fbBusy?' disabled':'')+'>Wyślij wiadomość</button>'
+   +'<p class="note">Odbiorca zobaczy ją w aplikacji pod 🔔 (i na Telegramie, jeśli połączył bota) i może odpisać.</p></div>';
+}
+async function fbLoadMsgs(id){
+  const r=await sb.from("feedback_msgs").select("id,sender,body,created_at").eq("feedback_id",id).order("created_at").limit(500);
+  fbMsgs[id]=r.error?[]:r.data||[];
+}
+async function fbOpen(id,back){
+  fbId=id;fbBack=back||fbBack;fbReplyTxt="";gearOpen=true;gearView="fbt";renderGear();
+  const f=fbList.find(x=>x.id===id);
+  await fbLoadMsgs(id);
+  if(f&&((f.user_id===uid&&f.user_unread)||(isAdmin&&f.user_id!==uid&&f.admin_unread))){
+    if(f.user_id===uid)f.user_unread=false;else f.admin_unread=false;
+    try{await sb.rpc("fb_read",{f:id})}catch(e){}
+    renderBell();
+  }
+  if(gearView==="fbt"&&fbId===id)renderGear();
+}
+const fbErr=e=>{const m=e&&e.message||"";return /FB_LIMIT/.test(m)?"Dzisiejszy limit wyczerpany — spróbuj jutro.":/check/.test(m)?"Za krótki tekst (min. 3 znaki).":"Nie udało się: "+(m||"błąd")};
+async function fbSend(){
+  const t=fbf.text.trim(),k=fbf.kind,inf=$("fbinfo");
+  if(k==="rating"&&!fbf.rating){inf.textContent="Zaznacz gwiazdki — przesuń palcem.";return}
+  if(k==="rating"&&fbf.rating<=3&&t.length<3){inf.textContent="Napisz, co poprawić (przy 1–3 ★).";return}
+  if(k!=="rating"&&t.length<3){inf.textContent="Opisz zgłoszenie (min. 3 znaki).";return}
+  fbBusy=true;renderGear();
+  try{const r=await sb.rpc("fb_send",{k,r:k==="rating"?fbf.rating:null,b:t||null,dev:fbf.dev?fbDevice():null});if(r.error)throw r.error;
+    fbf.text="";fbf.rating=0;fbBusy=false;await loadRemote();say(k==="rating"?"⭐ Dzięki za ocenę!":"💬 Wysłane — dzięki! Odpowiedź zobaczysz pod 🔔.")}
+  catch(e){fbBusy=false;renderGear();const i=$("fbinfo");if(i)i.textContent=fbErr(e)}
+}
+async function fbReply(){
+  const t=fbReplyTxt.trim();if(t.length<1){$("fbrinfo").textContent="Wpisz odpowiedź.";return}
+  fbBusy=true;renderGear();
+  try{const r=await sb.rpc("fb_reply",{f:fbId,b:t});if(r.error)throw r.error;fbReplyTxt="";fbBusy=false;await fbLoadMsgs(fbId);await loadRemote();say("Wysłano ✔")}
+  catch(e){fbBusy=false;renderGear();const i=$("fbrinfo");if(i)i.textContent=fbErr(e)}
+}
+async function fbMsgSend(){
+  const t=fbMsgTxt.trim();if(t.length<3){$("fbminfo").textContent="Wpisz wiadomość (min. 3 znaki).";return}
+  fbBusy=true;renderGear();
+  try{const r=await sb.rpc("fb_admin_msg",{u:fbTo,b:t});if(r.error)throw r.error;fbMsgTxt="";fbBusy=false;await loadRemote();say("✉️ Wysłano do "+nickOf(fbTo));fbOpen(r.data,"fbadmin")}
+  catch(e){fbBusy=false;renderGear();const i=$("fbminfo");if(i)i.textContent=fbErr(e)}
+}
+/* gwiazdki: przesuwanie palcem / myszą zapala kolejne */
+function starsSet(el,v){
+  v=Math.max(1,Math.min(5,v));if(+el.dataset.v===v)return;
+  el.dataset.v=v;el.setAttribute("aria-valuenow",v);[...el.children].forEach((s,i)=>s.classList.toggle("on",i<v));
+  try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}
+  if(el.closest("#ratesheet"))rateV=v;else{const need=fbf.rating<=3!==(v<=3)||!fbf.rating;fbf.rating=v;const ta=$("fbtext");if(ta&&need)ta.placeholder=v<=3?"Co poprawić? (przy 1–3 ★ obowiązkowo)":"Dodaj uwagi (opcjonalnie)"}
+  const rt=$("ratetxt");if(rt&&el.closest("#ratesheet"))rt.placeholder=v<=3?"Co poprawić? (przy 1–3 ★ obowiązkowo)":"Dodaj uwagi (opcjonalnie)";
+}
+let starDrag=null;
+const starAt=(el,x)=>{const r=el.getBoundingClientRect();return Math.ceil((x-r.left)/r.width*5)};
+document.addEventListener("pointerdown",e=>{const el=e.target.closest(".stars");if(!el)return;e.preventDefault();starDrag=el;starsSet(el,starAt(el,e.clientX))});
+document.addEventListener("pointermove",e=>{if(starDrag)starsSet(starDrag,starAt(starDrag,e.clientX))});
+document.addEventListener("pointerup",()=>{starDrag=null});
+document.addEventListener("pointercancel",()=>{starDrag=null});
+/* okienko „Oceń aplikację” — samo co jakiś czas (od 7 dni po założeniu konta, nie częściej niż co 60 dni po ocenie) */
+let rateV=0;
+function rateHtml(){
+  return '<div class="sheetbox popbox" role="dialog" aria-modal="true" aria-label="Oceń aplikację"><button class="sclose" data-r="close" aria-label="Zamknij">✕</button>'
+   +'<span class="ptag">⭐ OCEŃ APLIKACJĘ</span><div class="ph">Jak Ci się podoba PrzylesieGo?</div>'
+   +'<div class="fbstars" style="margin-top:14px">'+starsHtml(rateV,true)+'<div class="note">Przesuń palcem po gwiazdkach</div></div>'
+   +'<textarea id="ratetxt" rows="3" maxlength="2000" placeholder="Dodaj uwagi (opcjonalnie)"></textarea>'
+   +'<div class="note" id="rateinfo" style="color:var(--bad)"></div>'
+   +'<button type="button" class="b big" data-r="send">Wyślij ocenę</button>'
+   +'<div class="pbtns"><button type="button" class="b w" data-r="later">Przypomnij później</button></div>'
+   +'<div class="ptg">Ocena trafia do administratora pod Twoim nickiem. Błąd albo pomysł zgłosisz też w ⚙️ Ustawieniach.</div></div>';
+}
+function openRate(){rateV=0;const p=$("ratesheet");p.innerHTML=rateHtml();p.classList.remove("hide")}
+function closeRate(days){const p=$("ratesheet");p.classList.add("hide");p.innerHTML="";if(days){try{localStorage.setItem("rateSnooze",String(Date.now()+days*864e5))}catch(e){}}}
+$("ratesheet").addEventListener("click",async e=>{
+  if(e.target===$("ratesheet")){closeRate(3);return}
+  const b=e.target.closest("[data-r]");if(!b)return;
+  const r=b.dataset.r;
+  if(r==="close"){closeRate(30);return}
+  if(r==="later"){closeRate(3);say("OK — przypomnę za kilka dni.");return}
+  const t=($("ratetxt").value||"").trim(),inf=$("rateinfo");
+  if(!rateV){inf.textContent="Zaznacz gwiazdki — przesuń palcem.";return}
+  if(rateV<=3&&t.length<3){inf.textContent="Napisz, co poprawić (przy 1–3 ★).";return}
+  b.disabled=true;
+  try{const x=await sb.rpc("fb_send",{k:"rating",r:rateV,b:t||null,dev:fbDevice()});if(x.error)throw x.error;closeRate(0);await loadRemote();say("⭐ Dzięki za ocenę!")}
+  catch(err){b.disabled=false;inf.textContent=fbErr(err)}
+});
+const anySheetOpen=()=>[...document.querySelectorAll(".sheet")].some(x=>!x.classList.contains("hide"));
+function maybeFb(){
+  if(!session||!fbOk||needProfile()||pwMode||anySheetOpen())return;
+  // nieprzeczytana wiadomość / odpowiedź od admina — raz na wejście otwórz wątek
+  const un=fbMineUnread()[0];
+  let seen=[];try{seen=JSON.parse(sessionStorage.getItem("fbShown")||"[]")}catch(e){}
+  if(un&&!seen.includes(un.id+un.updated_at)){seen.push(un.id+un.updated_at);try{sessionStorage.setItem("fbShown",JSON.stringify(seen))}catch(e){}fbOpen(un.id,"bell");return}
+  const j=joinedAt[uid];if(!j||Date.now()-new Date(j).getTime()<7*864e5)return;
+  const last=fbList.filter(f=>f.user_id===uid&&f.kind==="rating").reduce((a,f)=>Math.max(a,new Date(f.created_at).getTime()),0);
+  if(last&&Date.now()-last<60*864e5)return;
+  let sn=0;try{sn=+localStorage.getItem("rateSnooze")||0;if(sessionStorage.getItem("rateShown"))return;sessionStorage.setItem("rateShown","1")}catch(e){}
+  if(Date.now()<sn)return;
+  openRate();
+}
 function renderGear(){
   const p=$("gearpanel");
   if(!gearOpen){p.classList.add("hide");gearView="main";return}
@@ -1171,6 +1366,10 @@ function renderGear(){
   else if(gearView==="tg"&&tgOn())body=tgHtml();
   else if(gearView==="user"&&session&&nicks[userId])body=userHtml();
   else if(gearView==="confdel"&&session&&delReq)body=confDelHtml();
+  else if(gearView==="fb"&&session&&fbOk)body=fbHubHtml();
+  else if(gearView==="fbt"&&session&&fbOk)body=fbThreadHtml();
+  else if(gearView==="fbadmin"&&session&&isAdmin&&fbOk)body=fbAdminHtml();
+  else if(gearView==="fbmsg"&&session&&isAdmin&&nicks[fbTo])body=fbMsgHtml();
   else if(gearView==="nick"&&session)body=nickHtml();
   else if(gearView==="del"&&session)body=delHtml();
   else body=session
@@ -1178,7 +1377,8 @@ function renderGear(){
      +'<button class="b sbtn g" data-c="nick">✏️ '+(me.nick?'Nick i płeć':'Ustaw nick')+'</button>'
      +(favOk?'<button class="b sbtn g" data-c="favs">⭐ Ulubieni'+(favs.size?' ('+favs.size+')':'')+'</button>':'')
      +(tgOn()?'<button class="b sbtn'+(tgLink?' g':'')+'" data-c="tg">'+(tgLink?'🔔 Telegram: połączony ✅':'🔔 Połącz z Telegramem')+betaTag("telegram_dm")+'</button>':'')+tg
-     +(isAdmin?'<button class="b sbtn g" data-c="admin">🛡️ Administracja</button>':'')
+     +(fbOk?'<button class="b sbtn g" data-c="fb">💬 Oceń aplikację / zgłoś błąd'+(fbMineUnread().length?' <span class="fbcnt">'+fbMineUnread().length+'</span>':'')+'</button>':'')
+     +(isAdmin?'<button class="b sbtn g" data-c="admin">🛡️ Administracja'+(fbAdmUnread().length?' <span class="fbcnt">'+fbAdmUnread().length+'</span>':'')+'</button>':'')
      +(meTester()?'<div class="note" style="margin-top:14px">🧪 Funkcje testowe (jesteś testerem)</div><div class="seg">'+[["1","Pokaż"],["0","Ukryj"]].map(([k,t])=>'<button data-beta="'+k+'" class="'+((betaOn?"1":"0")===k?"on":"")+'">'+t+'</button>').join("")+'</div><div class="note" style="margin-top:6px">„Ukryj” — widzisz aplikację tak jak wszyscy.</div>':'')
      +'<button class="b sbtn g" data-c="help">❓ Pomoc — co potrafi aplikacja</button>'
      +themeHtml()+showNickHtml()+helpPrefHtml()
@@ -1273,6 +1473,7 @@ $("gearpanel").addEventListener("click",async e=>{
   const a=e.target.closest("button[data-a]");
   if(a){
     if(a.dataset.a==="fav"){await toggleFav(a.dataset.id);return}
+    if(a.dataset.a==="fbmsg"&&isAdmin){fbTo=a.dataset.id;fbMsgTxt="";gearView="fbmsg";renderGear();const i=$("fbmsgtext");if(i)i.focus();return}
     if(a.dataset.a==="invite"){const id=a.dataset.id;gearOpen=false;renderGear();show(0);openWantForm(null,{pick:[id]});return}
     if(a.dataset.a==="trm"){
       if(!isSuper(uid))return;
@@ -1315,6 +1516,13 @@ $("gearpanel").addEventListener("click",async e=>{
     return;
   }
   if(c==="favs"){gearView="favs";renderGear();return}
+  if(c==="fb"){gearView="fb";renderGear();return}
+  if(c==="fbadmin"){gearView="fbadmin";renderGear();return}
+  if(c==="fbsend"){await fbSend();return}
+  if(c==="fbreply"){await fbReply();return}
+  if(c==="fbmsgsend"){await fbMsgSend();return}
+  if(c==="fbback"){if(fbBack==="bell"){gearOpen=false;renderGear()}else{gearView=fbBack;renderGear()}return}
+  if(c==="userback2"){gearView="user";renderGear();return}
   if(c==="tg"){gearView="tg";renderGear();return}
   if(c==="tgcheck"){await tgCheck(true);return}
   if(c==="tgcode"){
@@ -1355,6 +1563,16 @@ $("gearpanel").addEventListener("click",async e=>{
   else if(c==="login"){setGuest(false);renderChrome()}
 });
 $("gearpanel").addEventListener("input",e=>{if(/^(col|bg|nob)[KM]$/.test(e.target.id))colorsPreview()});
+/* 💬 zgłoszenia: stan formularzy (przetrwa odświeżenie panelu co minutę) */
+$("gearpanel").addEventListener("input",e=>{const id=e.target.id;if(id==="fbtext")fbf.text=e.target.value;else if(id==="fbreply")fbReplyTxt=e.target.value;else if(id==="fbmsgtext")fbMsgTxt=e.target.value});
+$("gearpanel").addEventListener("change",e=>{if(e.target.id==="fbdev")fbf.dev=e.target.checked});
+$("gearpanel").addEventListener("click",async e=>{
+  const k=e.target.closest("button[data-fk]");if(k){fbf.kind=k.dataset.fk;renderGear();return}
+  const ff=e.target.closest("button[data-ff]");if(ff){fbAdmFilter=ff.dataset.ff;renderGear();return}
+  const row=e.target.closest("button[data-fb]");if(row){fbOpen(row.dataset.fb,gearView==="fbadmin"?"fbadmin":"fb");return}
+  const st=e.target.closest("button[data-fs2]");
+  if(st&&isAdmin){try{const r=await sb.rpc("fb_status",{f:fbId,s:st.dataset.fs2});if(r.error)throw r.error;await loadRemote();say("Status: "+FB_ST[st.dataset.fs2])}catch(err){say(fbErr(err))}}
+});
 async function saveColors(){
   if(!isAdmin)return;
   const x=colVals(),inf=$("colinfo"),okBg=b=>b==="none"||HEX_RE.test(b);
@@ -1480,6 +1698,7 @@ function helpHtml(){
    +'<div class="hsoon"><b>Wkrótce:</b> '+(tg?'':'🔔 powiadomienia prosto na Telegram, ')+(rides?'':'🗺️ wieczorynki z trasą i wiatrem, ')+'📈 statystyki i punkty za jazdę.</div>'
    +'<div class="htg">📣 <b>Zainstaluj Telegram</b> i dołącz do kanału PrzylesieGo, żeby nie przegapić żadnej jazdy. <a href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">Otwórz kanał ›</a></div>'
    +'<div class="hlog"><b>Bez logowania</b> zobaczysz najbliższą wieczorynkę. <b>Po zalogowaniu</b> (wystarczą e-mail i hasło) zapraszasz, dołączasz i dostajesz powiadomienia.</div>'
+   +(session&&fbOk?'<button type="button" class="lnk" data-h="fb" style="display:block;margin:10px auto 0">💬 Oceń aplikację / zgłoś błąd lub pomysł ›</button>':'')
    +'<label class="hoff"><input type="checkbox" id="helpoff"'+(helpOff?' checked':'')+'> Nie pokazuj więcej (pomoc znajdziesz pod ❓)</label>'
    +'<button type="button" class="b big" data-h="close">Zaczynamy!</button></div>';
 }
@@ -1487,6 +1706,7 @@ function openHelp(){const p=$("helpsheet");p.innerHTML=helpHtml();p.classList.re
 function closeHelp(){const p=$("helpsheet");p.classList.add("hide");p.innerHTML=""}
 $("helpsheet").addEventListener("click",e=>{
   if(e.target.closest("[data-h='tg']")){closeHelp();gearOpen=true;gearView="tg";renderGear();return}
+  if(e.target.closest("[data-h='fb']")){closeHelp();gearOpen=true;gearView="fb";renderGear();return}
   if(e.target===$("helpsheet")||e.target.closest("[data-h='close']"))closeHelp();
 });
 $("helpsheet").addEventListener("change",e=>{if(e.target.id==="helpoff")setHelpOff(e.target.checked)});
@@ -2303,7 +2523,7 @@ function bellRowHtml(w){
 const bellUnread=()=>notifs.filter(n=>!n.read_at&&nWant(n)&&(ME_KINDS.includes(n.kind)||OWN_KINDS.includes(n.kind)));
 function renderBell(){
   const b=$("bellbtn");if(!b)return;
-  const on=!!session&&visOk,n=on?bellUnread().length:0,bd=$("bellbadge");
+  const on=!!session&&visOk,n=on?bellUnread().length+fbMineUnread().length+fbAdmUnread().length:0,bd=$("bellbadge");
   b.classList.toggle("hide",!on);
   bd.textContent=n>9?"9+":String(n);bd.classList.toggle("hide",!n);
   b.setAttribute("aria-label",n?"Zaproszenia i powiadomienia — nowe: "+n:"Zaproszenia i powiadomienia");
@@ -2322,6 +2542,8 @@ function renderBellSheet(){
    +'<div class="bshead"><button type="button" class="lnk" data-bk="close">Zamknij</button><b>🔔 Zaproszenia</b>'
    +(nu?'<button type="button" class="lnk" data-bk="all" style="text-align:right">✓ Przeczytane</button>':'<span style="min-width:64px"></span>')+'</div>'
    +'<div class="bslist">'
+   +(fbMineUnread().length?'<div class="bsec">💬 Wiadomości <span class="cnt">'+fbMineUnread().length+'</span></div>'+fbMineUnread().map(f=>fbRow(f,false)).join(""):'')
+   +(fbAdmUnread().length?'<div class="bsec">🛡️ Zgłoszenia <span class="cnt">'+fbAdmUnread().length+'</span></div>'+fbAdmUnread().slice(0,5).map(f=>fbRow(f,true)).join(""):'')
    +'<div class="bsec">📩 Do Ciebie'+cnt(forMe)+'</div>'
    +(forMe.length?forMe.map(bellRowHtml).join(""):'<div class="bsempty">Na razie nikt nie zaprasza.</div>')
    +'<div class="bsec">🙋 Twoje zaproszenia'+cnt(mine)+'</div>'
@@ -2365,6 +2587,8 @@ $("menick").onclick=()=>{gearOpen=true;gearView="main";renderGear()};
 $("bellbtn").onclick=()=>{if(!session)return;renderBellSheet()};
 $("bellsheet").addEventListener("click",async e=>{
   const p=$("bellsheet");
+  const fr=e.target.closest("button[data-fb]");
+  if(fr){const f=fbList.find(x=>x.id===fr.dataset.fb);closeBell();fbOpen(fr.dataset.fb,f&&f.user_id!==uid&&isAdmin?"fbadmin":"bell");return}
   if(e.target===p){closeBell();return}
   const k=e.target.closest("[data-bk]");
   if(k){
@@ -2923,6 +3147,8 @@ async function loadRemote(selectId){
     ]);
     const sp=await sb.from("superadmins").select("user_id");supers=new Set((sp&&!sp.error&&sp.data||[]).map(x=>x.user_id));
     const ts=await sb.from("testers").select("user_id");testerOk=!ts.error;testerIds=new Set((!ts.error&&ts.data||[]).map(x=>x.user_id));
+    const fq=await sb.from("feedback").select("id,user_id,kind,rating,body,device,status,started_by,user_unread,admin_unread,created_at,updated_at").order("updated_at",{ascending:false}).limit(300);fbOk=!fq.error;fbList=fbOk?fq.data||[]:[];
+    fbDone={};if(fbOk){const fc=await sb.rpc("fb_done_counts");if(!fc.error)(fc.data||[]).forEach(x=>{fbDone[x.user_id]=+x.n||0})}
     const tl=await sb.from("telegram_links").select("tg_name,linked_at").eq("user_id",uid).limit(1);tgOk=!tl.error;tgLink=tgOk&&tl.data&&tl.data[0]||null;
     nicks={};genders={};joinedAt={};(ok(p)||[]).forEach(x=>{nicks[x.user_id]=x.nick;if(x.gender)genders[x.user_id]=x.gender;if(x.joined_at)joinedAt[x.user_id]=x.joined_at});
     me.nick=nicks[uid]||null;
@@ -2939,7 +3165,7 @@ async function loadRemote(selectId){
     startPresence();
     if(seenFor!==uid||Date.now()-seenAt>15*60000){seenFor=uid;seenAt=Date.now();Promise.resolve(sb.rpc("touch_seen")).catch(()=>{})}
     adminIds=(ok(ad)||[]).map(x=>x.user_id);isAdmin=adminIds.includes(uid);
-  }else{favs=new Set();favOk=false;nicks={};genders={};me.nick=null;wants=[];joins={};prefs={};decls={};invs={};notifs=[];testerIds=new Set();testerOk=false;tgOk=false;tgLink=null;tgCode="";lib=[];adminIds=[];isAdmin=false;stopPresence()}
+  }else{favs=new Set();favOk=false;nicks={};genders={};me.nick=null;wants=[];joins={};prefs={};decls={};invs={};notifs=[];testerIds=new Set();testerOk=false;tgOk=false;tgLink=null;tgCode="";fbOk=false;fbList=[];fbDone={};lib=[];adminIds=[];isAdmin=false;stopPresence()}
   sorted=a.data.map(r=>({id:r.id,title:r.title,when:r.starts_at,place:r.place,pace:r.pace,owner:r.owner_name,note:r.note,creator:r.creator,edited_at:r.edited_at||null,change_note:r.change_note||null,route_title:r.route_title||null,route_desc:r.route_desc||null}));
   const want=selectId||prevId;
   let idx=want?sorted.findIndex(r=>r.id===want):-1;
@@ -2948,6 +3174,7 @@ async function loadRemote(selectId){
   else showRide(idx);
   maybePopup();
   maybeHelp();
+  maybeFb();
   // 1 h przed początkiem zakresu godzina ustala się sama (KROK 15) — robi to baza, wywołuje pierwszy, kto odświeży
   if(session&&rangeOk&&Date.now()-autoAt>60000&&wants.some(w=>isOpen(w)&&new Date(w.range_from).getTime()<=Date.now()+36e5)){
     autoAt=Date.now();
