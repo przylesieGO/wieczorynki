@@ -65,14 +65,17 @@ nav button.on{background:var(--accbtn);color:#fff;box-shadow:0 1px 4px rgba(36,1
 .wroute .wrb{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.wroute .wrb{flex-wrap:nowrap}.wroute .wrb .b{background:var(--card)!important;flex:1;padding:8px 6px;white-space:nowrap}
 .wrfile{display:block;margin:0;cursor:pointer}.wrfile input{display:none}.wrfile span{display:block;padding:11px 12px;border-radius:12px;background:var(--fill);color:var(--acc);font-weight:700;font-size:16px;text-align:center}
 .rsbox{max-width:560px;text-align:left}.rsmap{height:300px}
-.ttag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.05em;color:#7a4fd1;background:rgba(122,79,209,.13);border-radius:999px;padding:2px 9px;margin:0 0 6px 6px;vertical-align:1px;text-transform:none}
-html[data-theme=dark] .ttag{color:#c4a8ff;background:rgba(196,168,255,.18)}
+.ttag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.05em;color:#fff;background:#e5484d;border-radius:999px;padding:2px 9px;margin:0 0 6px 6px;vertical-align:1px;text-transform:none;box-shadow:0 0 0 0 rgba(229,72,77,.5);animation:tblink 1.3s ease-in-out infinite}
+@keyframes tblink{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(229,72,77,.55)}50%{opacity:.55;box-shadow:0 0 0 4px rgba(229,72,77,0)}}
+@keyframes tpulse{0%,100%{border-color:#e5484d;box-shadow:0 0 0 0 rgba(229,72,77,0)}50%{border-color:#ff9a9d;box-shadow:0 0 0 4px rgba(229,72,77,.28)}}
+@media (prefers-reduced-motion:reduce){.ttag,.want.test,.mywant.test,.nit.test{animation:none!important}}
 .nit .tx>.ttag,.want>.ttag{margin-left:0}
-.want.test,.mywant.test{border-style:dashed;border-color:#b9a3e8;background:repeating-linear-gradient(135deg,transparent 0 10px,rgba(122,79,209,.04) 10px 20px)}
+.want.test,.mywant.test{border:2px dashed #e5484d;background:repeating-linear-gradient(135deg,transparent 0 10px,rgba(229,72,77,.05) 10px 20px);animation:tpulse 1.6s ease-in-out infinite}
+.nit.test{border:2px dashed #e5484d;animation:tpulse 1.6s ease-in-out infinite}
 .want.test>*:not(.acts):not(.ttag):not(.wlab),.mywant.test>*:not(.acts):not(.myh){opacity:.6;filter:grayscale(.55)}
 .nit.test .tx>*:not(.ttag):not(.sb),.nit.test .ic{opacity:.6;filter:grayscale(.55)}
-#wtest button.on[data-test="1"]{background:#7a4fd1;color:#fff}
-.b.big.tbtn{background:#7a4fd1}
+#wtest button.on[data-test="1"]{background:#e5484d;color:#fff}
+.b.big.tbtn{background:#e5484d}
 .wlab.all{background:var(--fill);color:var(--mut)}
 .want.flash,.mywant.flash{animation:wflash 1.6s ease-out}
 @keyframes wflash{0%,30%{box-shadow:0 0 0 3px var(--acc)}100%{box-shadow:0 0 0 0 transparent}}
@@ -1703,7 +1706,7 @@ function wfStep(unit,dir){
 }
 function wfTestSync(){
   [...$("wtest").children].forEach(b=>b.classList.toggle("on",(b.dataset.test==="1")===wf.test));
-  $("wtestnote").textContent=wf.test?"🧪 Na próbę — będzie przygaszone i z plakietką TEST; nie trafi na kanał Telegram. Testowe zostaną kiedyś usunięte.":"🚴 Prawdziwa jazda — zaproszenie zobaczą wszyscy bez plakietki TEST.";
+  $("wtestnote").textContent=wf.test?"🧪 Na próbę — będzie przygaszone, z czerwoną migającą plakietką TEST; na kanale Telegram z oznaczeniem 🔴 TESTOWE. Testowe zostaną kiedyś usunięte.":"🚴 Prawdziwa jazda — zaproszenie zobaczą wszyscy bez plakietki TEST.";
 }
 let wxTimer=null;
 function wfUpdate(){
@@ -1894,7 +1897,7 @@ $("wsave").onclick=async()=>{
     await loadRemote();
     const lbl=wfLabel(d)+(rng?"–"+hhmm(d2):"");
     say(wasEdit?"Zmieniono termin ✔ "+lbl+(editedPriv&&visOk?" — zaproszeni dostaną powiadomienie.":"")
-      :priv?"Wysłane 🔒 do "+ids.length+" "+osob(ids.length)+" ✔ Dostaną powiadomienie w aplikacji.":testOk&&wf.test?"Wysłane 🧪 testowe zaproszenie na "+lbl+" ✔":"Wysłane ✔ Zaproszenie na "+lbl+" jest też na kanale Telegram.");
+      :priv?"Wysłane 🔒 do "+ids.length+" "+osob(ids.length)+" ✔ Dostaną powiadomienie w aplikacji.":testOk&&wf.test?"Wysłane 🧪 testowe zaproszenie na "+lbl+" ✔ (na kanale Telegram z oznaczeniem TESTOWE)":"Wysłane ✔ Zaproszenie na "+lbl+" jest też na kanale Telegram.");
   }catch(e){say("Nie udało się: "+(e&&e.message?e.message:"błąd"))}
 };
 /* ---------- Twoje zaproszenie (zamiast dużego przycisku) ---------- */
