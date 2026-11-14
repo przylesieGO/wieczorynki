@@ -34,7 +34,7 @@ h1{font-size:24px;margin:4px 0;letter-spacing:-.02em}h2{font-size:19px;margin:0 
 .gear{flex:none;width:44px;height:44px;border-radius:50%;border:1px solid rgba(0,0,0,.06);background:var(--card);color:var(--ink);font-size:21px;line-height:1;cursor:pointer;box-shadow:var(--shadow);transition:width .2s,height .2s,font-size .2s}
 nav{display:flex;gap:2px;padding:3px;background:var(--navbg);border-radius:12px;margin-bottom:16px}
 nav button{flex:1;padding:9px 4px;border:0;background:transparent;color:var(--mut);border-radius:9px;font:inherit;font-weight:600;font-size:15px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;transition:padding .2s,font-size .2s}
-nav button.on{background:var(--navon);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.18)}
+nav button.on{background:var(--accbtn);color:#fff;box-shadow:0 1px 4px rgba(36,138,61,.45)}
 /* ---- nagłówek przyklejony u góry ---- */
 .hdr{position:sticky;top:0;z-index:1000;background:var(--hdrbg);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);padding-top:env(safe-area-inset-top,0px);border-bottom:1px solid transparent;transition:border-color .2s}
 .hin{max-width:900px;margin:0 auto;padding:14px 16px 10px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;transition:padding .2s}
@@ -228,6 +228,24 @@ details.jlist[open]>summary{border-radius:11px 11px 0 0}
 .routeinfo{margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);max-width:90vw;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:3000;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.25)}
 .leaflet-container{z-index:0}
+/* odliczanie do wieczorynki */
+html,body{overscroll-behavior-x:none}
+#app{overflow-x:clip}
+.cdcard{text-align:center}
+.cdlab{font-size:13px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.05em}.cdlab.mut{color:var(--mut)}
+.cdbadge{display:inline-block;background:var(--accbtn);color:#fff;font-size:12px;font-weight:800;border-radius:999px;padding:1px 9px;margin-left:4px;vertical-align:1px;letter-spacing:.03em}
+.cdclock{display:flex;justify-content:center;align-items:flex-start;gap:6px;margin:12px 0 4px}
+.cdu{display:flex;flex-direction:column;align-items:center;gap:5px}.cdu small{font-size:11px;font-weight:700;color:var(--mut);letter-spacing:.08em}
+.fcard.cdt{width:66px;height:74px;border-radius:10px;font-size:40px;cursor:default;touch-action:auto}
+.fcard.cdt::before{margin-top:-4px;height:8px}
+.cdcol{font:700 30px/74px "SF Mono",ui-monospace,Menlo,monospace;color:var(--mut)}
+.cdclock.soon .fcard.cdt{color:#fff;background:linear-gradient(180deg,#3cb55e 0%,#2e9e4e 27%,#1f7a37 50%,#1a6a30 50%,#248a3d 70%,#2b9646 100%)}
+.cdev{margin-top:10px}.cdev b{font-size:18px}.cdev div{font-size:15px;color:var(--mut)}
+.cdbtn{display:block;width:100%;margin-top:12px;padding:12px!important;font-size:16px}
+.slin-r{animation:slinr .25s ease-out}.slin-l{animation:slinl .25s ease-out}
+@keyframes slinr{from{transform:translateX(60px);opacity:.3}to{transform:none;opacity:1}}
+@keyframes slinl{from{transform:translateX(-60px);opacity:.3}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.slin-r,.slin-l{animation:none}}
 .foot{text-align:center;margin-top:8px}.foot .note:empty{display:none}
 </style>
 </head>
@@ -306,10 +324,13 @@ details.jlist[open]>summary{border-radius:11px 11px 0 0}
    <div id="wantlist"></div>
   </div>
  </div>
- <div class="card">
+ <!-- „Najbliższa wieczorynka” ukryta (2026-11-14) — do ewentualnego powrotu w uproszczonej formie -->
+ <div class="card hide" id="nextcard">
   <h2>Najbliższa wieczorynka</h2>
   <div id="nextbody"></div>
  </div>
+ <!-- odliczanie do najbliższej wieczorynki (zegar klapkowy) -->
+ <div class="card cdcard" id="cdbody"></div>
 </section>
 
 <!-- ===== WIECZORYNKI ===== -->
@@ -1363,6 +1384,66 @@ function renderNext(){
    +(session&&favNames(g).length?'<div class="favline">⭐ Jadą Twoi ulubieni: '+esc(favNames(g).join(", "))+'</div>':'')
    +'<div class="row" style="margin-top:10px"><button class="b'+(goes?' g':'')+'" data-go="join" data-id="'+esc(r.id)+'">'+(goes?'Rezygnuję':'Jadę!')+'</button><button class="b g" data-go="ride" data-i="'+fu+'">Szczegóły i mapa →</button></div>';
 }
+/* ---------- START: odliczanie do najbliższej wieczorynki ---------- */
+let cdKey="";
+function cdState(){
+  const now=Date.now(),fu=firstUpcoming();
+  if(fu<0)return {mode:"none"};
+  // wystartowała (do 3 h po starcie) — „Jedziemy!”, a odliczanie do następnej nie znika
+  const r=sorted[fu],t=new Date(r.when).getTime();
+  if(t<=now)return {mode:"go",r,i:fu};
+  const s=Math.floor((t-now)/1000);
+  return {mode:s<86400?(s<=900?"soon":"day"):"far",r,i:fu,s};
+}
+function cdDigits(st){
+  if(st.mode==="none")return ["--","--","--"];
+  const s=st.s;
+  if(st.mode==="far")return [pad(Math.min(99,Math.floor(s/86400))),pad(Math.floor(s%86400/3600)),pad(Math.floor(s%3600/60))];
+  return [pad(Math.floor(s/3600)),pad(Math.floor(s%3600/60)),pad(s%60)];
+}
+function renderCountdown(){
+  const box=$("cdbody");if(!box)return;
+  const st=cdState(),key=st.mode+(st.r?st.r.id+(st.r.when)+(rsvps[st.r.id]||[]).length+st.r.title+(st.r.place||""):"");
+  if(key!==cdKey){
+    cdKey=key;
+    if(st.mode==="go"){
+      const r=st.r;
+      box.innerHTML='<div class="cdlab">🚴 Jedziemy!</div><div class="cdev"><b>'+esc(r.title)+'</b><div>wystartowała o '+esc(hhmm(new Date(r.when)))+(r.place?' · '+esc(r.place):'')+'</div></div>'
+        +'<button class="b g cdbtn" data-go="ride" data-i="'+st.i+'">Szczegóły i mapa ›</button>';
+      return;
+    }
+    const lbls=st.mode==="far"||st.mode==="none"?["DNI","GODZ","MIN"]:["GODZ","MIN","SEK"];
+    const d=cdDigits(st);
+    let lab,ev,btn;
+    if(st.mode==="none"){
+      lab='<div class="cdlab mut">⏳ Do najbliższej wieczorynki</div>';
+      ev='<div class="cdev"><div>Brak zaplanowanych wieczorynek</div></div>';
+      btn='<button class="b g cdbtn" data-go="new">➕ Zaplanuj wieczorynkę</button>';
+    }else{
+      const r=st.r,w=new Date(r.when),n=dayDiff(w),g=(rsvps[r.id]||[]).length;
+      const badge=n===0?' <span class="cdbadge">DZIŚ</span>':n===1&&st.mode!=="far"?' <span class="cdbadge">JUTRO</span>':'';
+      lab=st.mode==="soon"?'<div class="cdlab">🚴 Start za chwilę!</div>':'<div class="cdlab">⏳ Do '+(badge?'wieczorynki':'najbliższej wieczorynki')+badge+'</div>';
+      const wd=w.toLocaleDateString("pl-PL",{weekday:"long"});
+      const day=n>=0&&n<=1?relDay(w):wd.charAt(0).toUpperCase()+wd.slice(1)+" "+w.getDate()+" "+MON3[w.getMonth()].toLowerCase();
+      ev='<div class="cdev"><b>'+esc(r.title)+'</b><div>'+esc(day+" · "+hhmm(w)+(r.place?" · "+r.place:"")+" · jedzie "+g)+'</div></div>';
+      btn='<button class="b g cdbtn" data-go="ride" data-i="'+st.i+'">Szczegóły i mapa ›</button>';
+    }
+    box.innerHTML=lab+'<div class="cdclock'+(st.mode==="soon"?' soon':'')+'">'+d.map((x,i)=>(i?'<div class="cdcol">:</div>':'')+'<div class="cdu"><div class="fcard cdt">'+x+'</div><small>'+lbls[i]+'</small></div>').join("")+'</div>'+ev+btn;
+    return;
+  }
+  if(st.mode==="go"||st.mode==="none")return;
+  const d=cdDigits(st);
+  box.querySelectorAll(".cdt").forEach((el,i)=>flipCard(el,d[i]));
+}
+setInterval(()=>{if(!document.hidden&&!$("p0").classList.contains("hide"))renderCountdown()},1000);
+$("cdbody").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-go]");if(!b)return;
+  if(b.dataset.go==="ride"){show(1);showRide(+b.dataset.i)}
+  else if(b.dataset.go==="new"){
+    if(!session){say("Zaloguj się, aby zaplanować wieczorynkę.");return}
+    show(1);$("newbox").open=true;$("newbox").scrollIntoView({behavior:"smooth"})
+  }
+});
 $("nextbody").addEventListener("click",async e=>{
   const b=e.target.closest("button[data-go]");if(!b)return;
   try{
@@ -1541,7 +1622,7 @@ function adminStatsHtml(){
    +'<button class="b sbtn g" data-c="stats">↻ Odśwież</button></div>';
 }
 
-function refreshUi(){renderChrome();renderWants();renderNext();renderNav();renderCard();renderList();renderLibUi();renderOnline()}
+function refreshUi(){renderChrome();renderWants();renderNext();renderCountdown();renderNav();renderCard();renderList();renderLibUi();renderOnline()}
 
 async function showRide(idx){
   cur=idx;const token=++viewToken;
@@ -1813,12 +1894,47 @@ $("aw").onclick=async()=>{
 ["wd","ws","bs"].forEach(i=>$(i).oninput=()=>advRender(false));
 
 /* ---------- zakładki ---------- */
-function show(n){
+let curTab=0;
+function show(n,dir){
   [0,1,2].forEach(i=>{$("p"+i).classList.toggle("hide",i!==n);$("t"+i).classList.toggle("on",i===n)});
+  const p=$("p"+n);p.style.transition="";p.style.transform="";p.style.opacity="";
+  if(dir){p.classList.remove("slin-l","slin-r");void p.offsetWidth;p.classList.add(dir>0?"slin-r":"slin-l");setTimeout(()=>p.classList.remove("slin-l","slin-r"),300)}
+  curTab=n;
   window.scrollTo({top:0});
+  if(n===0)renderCountdown();
   setTimeout(()=>{if(n===1&&map1)map1.m.invalidateSize();if(n===2&&map2)map2.m.invalidateSize()},60);
 }
 [0,1,2].forEach(i=>{$("t"+i).onclick=()=>show(i)});
+/* przesuwanie palcem w bok przełącza zakładki (poza mapą, karuzelą zaproszeń, kartkami zegara i polami) */
+(()=>{
+  let x0=0,y0=0,lock=0,dx=0,sec=null;
+  const tabs=()=>session?[0,1,2]:[0,1];
+  const skip=t=>!!t.closest(".leaflet-container,.mycar.multi,#fclock,input,select,textarea,.sheet,#welcome");
+  document.addEventListener("touchstart",e=>{
+    lock=0;dx=0;sec=null;
+    if(e.touches.length!==1||gearOpen||skip(e.target))return;
+    x0=e.touches[0].clientX;y0=e.touches[0].clientY;sec=$("p"+curTab);lock=-1;
+  },{passive:true});
+  document.addEventListener("touchmove",e=>{
+    if(!lock||!sec)return;
+    const mx=e.touches[0].clientX-x0,my=e.touches[0].clientY-y0;
+    if(lock===-1){
+      if(Math.abs(mx)<10&&Math.abs(my)<10)return;
+      lock=Math.abs(mx)>Math.abs(my)*1.4?1:0;
+      if(!lock)return;
+    }
+    const t=tabs(),i=t.indexOf(curTab),edge=(mx>0&&i===0)||(mx<0&&i===t.length-1);
+    dx=mx;sec.style.transition="none";sec.style.transform="translateX("+(edge?mx*.25:mx*.9)+"px)";sec.style.opacity=String(1-Math.min(.4,Math.abs(mx)/900));
+  },{passive:true});
+  document.addEventListener("touchend",()=>{
+    if(lock!==1||!sec){lock=0;return}
+    const t=tabs(),i=t.indexOf(curTab),go=Math.abs(dx)>70?(dx<0?1:-1):0,ni=i+go;
+    lock=0;
+    if(go&&ni>=0&&ni<t.length){show(t[ni],go)}
+    else{sec.style.transition="transform .2s,opacity .2s";sec.style.transform="";sec.style.opacity=""}
+  },{passive:true});
+  document.addEventListener("touchcancel",()=>{if(sec){sec.style.transform="";sec.style.opacity=""}lock=0},{passive:true});
+})();
 
 /* ---------- logowanie ---------- */
 let nickAskedFor="";
