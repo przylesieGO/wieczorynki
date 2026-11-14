@@ -2838,24 +2838,32 @@ async function loadRemote(selectId){
     let p=await sb.from("profiles").select("user_id,nick,gender").limit(1000);
     genderOk=!p.error;
     if(p.error)p=await sb.from("profiles").select("user_id,nick").limit(1000);
-    let w=await sb.from("wants").select("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km").order("starts_at").limit(200);
+    // zaproszenia tylko z ostatnich 7 dni i przyszłe (wcześniej: 200 najstarszych — nowe by znikały)
+    const wSince=new Date(Date.now()-7*864e5).toISOString();
+    const wq=cols=>sb.from("wants").select(cols).gte("starts_at",wSince).order("starts_at").limit(1000);
+    let w=await wq("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km");
     wRouteOk=!w.error;
-    if(w.error)w=await sb.from("wants").select("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test").order("starts_at").limit(200);
+    if(w.error)w=await wq("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test");
     testOk=!w.error;
-    if(w.error)w=await sb.from("wants").select("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at").order("starts_at").limit(200);
+    if(w.error)w=await wq("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at");
     rangeOk=!w.error;visOk=rangeOk;
-    if(w.error){w=await sb.from("wants").select("id,user_id,starts_at,note,visibility").order("starts_at").limit(200);visOk=!w.error}
-    if(w.error)w=await sb.from("wants").select("id,user_id,starts_at,note").order("starts_at").limit(200);
+    if(w.error){w=await wq("id,user_id,starts_at,note,visibility");visOk=!w.error}
+    if(w.error)w=await wq("id,user_id,starts_at,note");
+    // dane powiązane tylko dla wczytanych zaproszeń (paczki po 100, żeby adres nie był za długi)
+    const wIds=(w.error?[]:w.data||[]).map(x=>x.id);
+    const byWant=async(tbl,cols)=>{if(!wIds.length)return {data:[]};const out=[];
+      for(let i=0;i<wIds.length;i+=100){const r=await sb.from(tbl).select(cols).in("want_id",wIds.slice(i,i+100)).limit(5000);if(r.error)return r;out.push(...(r.data||[]))}
+      return {data:out}};
     const [iv,nt,dc]=visOk?await Promise.all([
-      sb.from("want_invitees").select("want_id,user_id,added_by").limit(2000),
+      byWant("want_invitees","want_id,user_id,added_by"),
       sb.from("notifications").select("id,kind,want_id,actor,created_at,read_at").eq("user_id",uid).gte("created_at",new Date(Date.now()-30*864e5).toISOString()).order("created_at",{ascending:false}).limit(80),
-      rangeOk?sb.from("want_declines").select("want_id,user_id").limit(2000):Promise.resolve({data:[]})
+      rangeOk?byWant("want_declines","want_id,user_id"):Promise.resolve({data:[]})
     ]):[{data:[]},{data:[]},{data:[]}];
     decls={};((dc&&!dc.error&&dc.data)||[]).forEach(x=>{(decls[x.want_id]=decls[x.want_id]||[]).push(x.user_id)});
     invs={};((iv&&!iv.error&&iv.data)||[]).forEach(x=>{(invs[x.want_id]=invs[x.want_id]||[]).push({u:x.user_id,by:x.added_by})});
     notifs=(nt&&!nt.error&&nt.data)||[];
     const [j,l,ad,st,fv]=await Promise.all([
-      sb.from("want_joins").select(rangeOk?"want_id,user_id,pref_at":"want_id,user_id").limit(1000),
+      byWant("want_joins",rangeOk?"want_id,user_id,pref_at":"want_id,user_id"),
       sb.from("routes").select("id,title,description,km,creator,created_at").order("created_at",{ascending:false}).limit(200),
       sb.from("admins").select("user_id"),
       genderOk?sb.from("app_settings").select("key,value"):Promise.resolve({data:[]}),
