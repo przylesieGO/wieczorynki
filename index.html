@@ -50,6 +50,11 @@ nav button.on{background:var(--accbtn);color:#fff;box-shadow:0 1px 4px rgba(36,1
 .htg{margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--acc2);font-size:15px;text-align:left;line-height:1.4}
 .htg a{font-weight:700}
 .hlog{margin-top:12px;font-size:14px;color:var(--mut);text-align:left;line-height:1.4}.hlog b{color:var(--ink)}
+.hsteps{margin:6px 0 4px;padding-left:22px}.hsteps li{margin:3px 0}
+.htgdm{margin-top:12px;padding:12px;border-radius:12px;border:2px solid var(--acc);font-size:15px;text-align:left;line-height:1.4}
+.htgdm .sbtn{margin-top:10px;padding:12px;font-size:16px}
+.tgsteps{text-align:left;margin:12px 0 4px;padding-left:24px;font-size:16px;line-height:1.4}.tgsteps li{margin:6px 0}
+.tgok{display:inline-block;background:var(--acc2);color:var(--acc);border-radius:999px;padding:4px 12px;font-weight:700;font-size:15px}
 .hoff{display:flex;align-items:center;justify-content:center;gap:8px;margin:14px 0 0;font-size:14px;color:var(--mut)}.hoff input{width:auto;margin:0}
 .hdr nav{order:3;flex:1 0 100%;margin:0}
 .hdr.compact{border-bottom-color:var(--line)}
@@ -339,6 +344,9 @@ html,body{overscroll-behavior-x:none}
 .b.w{background:var(--fill);color:var(--ink)}
 nav button.tbeta{position:relative}nav button.tbeta::after{content:"";position:absolute;top:4px;right:6px;width:7px;height:7px;border-radius:50%;background:#8b5cf6;box-shadow:0 0 0 2px var(--navbg)}
 .beta{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.04em;color:#7a4fd1;background:rgba(122,79,209,.12);border-radius:999px;padding:1px 8px;vertical-align:2px;margin-left:6px}
+.b .beta,.sbtn .beta{color:#fff;background:rgba(255,255,255,.24);white-space:nowrap}
+.b.g .beta{color:#7a4fd1;background:rgba(122,79,209,.12)}
+html[data-theme=dark] .b:not(.g) .beta{color:#fff;background:rgba(255,255,255,.24)}
 html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 /* zakres godzin (KROK 15) */
 .flbl{text-align:center;font-size:12px;font-weight:800;color:var(--mut);letter-spacing:.1em;margin:12px 0 -6px}
@@ -930,6 +938,9 @@ function nickHtml(){
 }
 const lastAdmin=()=>isAdmin&&adminIds.length<=1;
 let supers=new Set();const isSuper=id=>supers.has(id);
+/* 🔔 Telegram w prywatnej wiadomości (KROK 18, funkcja testowa telegram_dm) */
+let tgOk=false,tgLink=null,tgCode="",tgPoll=null,tgPollEnd=0;
+const tgOn=()=>!!session&&tgOk&&feat("telegram_dm");
 /* 🧪 testerzy i funkcje testowe (KROK 16) */
 let testerIds=new Set(),testerOk=false,flags={},betaOn=true;
 try{betaOn=localStorage.getItem("betaOn")!=="0"}catch(e){}
@@ -947,7 +958,7 @@ function delHtml(){
   if(isSuper(uid))return head+'<div class="sleft"><div class="changed">👑 Jesteś głównym administratorem PrzylesieGo — tego konta nie można usunąć.</div></div>';
   if(lastAdmin())return head+'<div class="sleft"><div class="changed">Jesteś jedynym administratorem, więc nie możesz usunąć konta. Najpierw nadaj komuś uprawnienia administratora (Ustawienia → 🛡️ Administracja).</div></div>';
   return head+'<div class="sleft">'
-   +'<h3>Zostanie usunięte na zawsze</h3><ul><li>konto i adres e-mail</li><li>nick i płeć</li><li>zapisy na wieczorynki</li><li>zaproszenia „Idziemy na rower?” i dołączenia</li>'+(isAdmin?'<li>uprawnienia administratora</li>':'')+'</ul>'
+   +'<h3>Zostanie usunięte na zawsze</h3><ul><li>konto i adres e-mail</li><li>nick i płeć</li><li>zapisy na wieczorynki</li><li>zaproszenia „Idziemy na rower?” i dołączenia</li>'+(tgLink?'<li>połączenie z Telegramem</li>':'')+(isAdmin?'<li>uprawnienia administratora</li>':'')+'</ul>'
    +'<h3>Zostanie</h3><ul><li>wieczorynki, które organizujesz (z Twoim nickiem jako organizatorem)</li><li>trasy dodane do biblioteki</li></ul>'
    +'<label for="gdel" style="font-size:15px;margin-top:16px">Aby potwierdzić, wpisz <b>USUŃ</b></label>'
    +'<input id="gdel" maxlength="10" autocomplete="off" autocapitalize="characters">'
@@ -1059,6 +1070,7 @@ function renderGear(){
   else if(gearView==="stats")body=adminStatsHtml();
   else if(gearView==="flags")body=flagsHtml();
   else if(gearView==="favs"&&session)body=favsHtml();
+  else if(gearView==="tg"&&tgOn())body=tgHtml();
   else if(gearView==="user"&&session&&nicks[userId])body=userHtml();
   else if(gearView==="confdel"&&session&&delReq)body=confDelHtml();
   else if(gearView==="nick"&&session)body=nickHtml();
@@ -1066,7 +1078,8 @@ function renderGear(){
   else body=session
     ?'<div class="sname">👤 '+(me.nick?nk(uid):'ustaw nick')+(isAdmin?' 🛡️':'')+'</div><div class="smail">'+esc(session.user.email||"")+'</div>'
      +'<button class="b sbtn g" data-c="nick">✏️ '+(me.nick?'Nick i płeć':'Ustaw nick')+'</button>'
-     +(favOk?'<button class="b sbtn g" data-c="favs">⭐ Ulubieni'+(favs.size?' ('+favs.size+')':'')+'</button>':'')+tg
+     +(favOk?'<button class="b sbtn g" data-c="favs">⭐ Ulubieni'+(favs.size?' ('+favs.size+')':'')+'</button>':'')
+     +(tgOn()?'<button class="b sbtn'+(tgLink?' g':'')+'" data-c="tg">'+(tgLink?'🔔 Telegram: połączony ✅':'🔔 Połącz z Telegramem')+betaTag("telegram_dm")+'</button>':'')+tg
      +(isAdmin?'<button class="b sbtn g" data-c="admin">🛡️ Administracja</button>':'')
      +(meTester()?'<div class="note" style="margin-top:14px">🧪 Funkcje testowe (jesteś testerem)</div><div class="seg">'+[["1","Pokaż"],["0","Ukryj"]].map(([k,t])=>'<button data-beta="'+k+'" class="'+((betaOn?"1":"0")===k?"on":"")+'">'+t+'</button>').join("")+'</div><div class="note" style="margin-top:6px">„Ukryj” — widzisz aplikację tak jak wszyscy.</div>':'')
      +'<button class="b sbtn g" data-c="help">❓ Pomoc — co potrafi aplikacja</button>'
@@ -1085,6 +1098,39 @@ function renderGear(){
   if(keepDel&&$("gdel")){$("gdel").value=keepDel.v;$("gdelinfo").textContent=keepDel.i}
   if(keepNick&&$("gnick")){$("gnick").value=keepNick.v;$("gnickinfo").textContent=keepNick.i}
 }
+function tgHtml(){
+  const head='<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">🔔 Telegram'+betaTag("telegram_dm")+'</div>';
+  const what='<ul><li>ktoś Cię zaprosi na rower,</li><li>zmieni albo ustali godzinę,</li><li>ktoś dołączy do Twojego zaproszenia albo zrezygnuje,</li><li>za godzinę jedziesz (przypomnienie — też na wieczorynki).</li></ul>';
+  if(tgLink)return head+'<div class="smail"><span class="tgok">✅ Połączono'+(tgLink.tg_name?' · '+esc(tgLink.tg_name):'')+'</span></div>'
+    +'<div class="sleft"><div class="note" style="font-size:15px">Bot <b>@PrzylesieGo_bot</b> napisze do Ciebie, gdy:</div>'+what+'</div>'
+    +'<a class="b sbtn g" href="https://t.me/PrzylesieGo_bot" target="_blank" rel="noopener">💬 Otwórz rozmowę z botem</a>'
+    +'<button class="b sbtn" style="background:var(--bad)" data-c="tgoff">Rozłącz</button>'
+    +'<p class="note" style="margin-top:10px">Okienko z zaproszeniami w aplikacji działa dalej — Telegram to dodatek.</p>';
+  return head+'<div class="smail">Powiadomienia o zaproszeniach prosto na Telegram.</div>'
+   +'<ol class="tgsteps"><li>Zainstaluj <b>Telegram</b> (App Store / Google Play) i załóż konto.</li>'
+   +'<li>Kliknij <b>„Połącz z Telegramem”</b> poniżej.</li><li>Kliknij <b>„Otwórz Telegram”</b> — w rozmowie z @PrzylesieGo_bot naciśnij <b>START</b>.</li>'
+   +'<li>Wróć tutaj — zobaczysz „✅ Połączono”.</li></ol>'
+   +(tgCode?'<a class="b sbtn" href="https://t.me/PrzylesieGo_bot?start='+encodeURIComponent(tgCode)+'" target="_blank" rel="noopener">📲 Otwórz Telegram i naciśnij START</a>'
+     +'<div class="note" style="margin-top:8px;font-size:14px">⏳ Czekam na połączenie… Kod jest jednorazowy i ważny 15 minut.</div>'
+     +'<button class="lnk" data-c="tgcheck">↻ Sprawdź połączenie</button>'
+    :'<button class="b sbtn" data-c="tgcode">🔔 Połącz z Telegramem</button>')
+   +'<div class="sleft"><div class="note" style="font-size:15px;margin-top:14px">Bot napisze, gdy:</div>'+what+'</div>'
+   +'<p class="note">Kanał @PrzylesieGo to ogłoszenia dla wszystkich, a bot pisze tylko do Ciebie. Wyłączysz tutaj (Rozłącz) albo wpisując botowi /stop.</p>';
+}
+async function tgCheck(manual){
+  if(!session||!tgOk)return;
+  const r=await sb.from("telegram_links").select("tg_name,linked_at").eq("user_id",uid).limit(1);
+  const l=!r.error&&r.data&&r.data[0]||null;
+  if(l){tgLink=l;tgCode="";tgStopPoll();if(gearOpen&&gearView==="tg")renderGear();try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}say("✅ Telegram połączony — bot @PrzylesieGo_bot będzie pisać do Ciebie.")}
+  else if(manual)say("Jeszcze nie połączono — w Telegramie naciśnij START w rozmowie z @PrzylesieGo_bot.");
+}
+function tgStopPoll(){clearInterval(tgPoll);tgPoll=null}
+function tgStartPoll(){
+  tgStopPoll();tgPollEnd=Date.now()+15*60000;
+  tgPoll=setInterval(()=>{if(!tgCode||Date.now()>tgPollEnd){tgStopPoll();return}if(!document.hidden)tgCheck(false)},3000);
+}
+// po powrocie z Telegrama do aplikacji — od razu sprawdź
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&tgCode)tgCheck(false)});
 function renderChrome(){
   const welcome=!session&&!guestMode;
   $("welcome").classList.toggle("hide",!welcome);
@@ -1158,6 +1204,20 @@ $("gearpanel").addEventListener("click",async e=>{
     return;
   }
   if(c==="favs"){gearView="favs";renderGear();return}
+  if(c==="tg"){gearView="tg";renderGear();return}
+  if(c==="tgcheck"){await tgCheck(true);return}
+  if(c==="tgcode"){
+    b.disabled=true;
+    try{const r=await sb.rpc("tg_link_code");if(r.error)throw r.error;tgCode=String(r.data||"");renderGear();tgStartPoll()}
+    catch(err){b.disabled=false;say(/TG_OFF/.test(err&&err.message||"")?"Powiadomienia na Telegramie nie są jeszcze dla Ciebie włączone.":"Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+    return;
+  }
+  if(c==="tgoff"){
+    if(!confirm("Rozłączyć Telegram? Bot przestanie wysyłać Ci powiadomienia."))return;
+    try{const r=await sb.from("telegram_links").delete().eq("user_id",uid);if(r.error)throw r.error;tgLink=null;tgCode="";renderGear();say("🔕 Telegram rozłączony.")}
+    catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+    return;
+  }
   if(c==="confgo"){await confirmDelete();return}
   if(c==="userback"){gearView=userBack||"main";renderGear();return}
   if(c==="coldef"){["K","M"].forEach(g=>{$("col"+g).value=DEF_COLORS[g];$("bg"+g).value=DEF_BGS[g];$("nob"+g).checked=false});colorsPreview();return}
@@ -1276,7 +1336,7 @@ function setHelpOff(v){helpOff=!!v;try{localStorage.setItem("helpOff",helpOff?"1
 const helpPrefHtml=()=>'<div class="note" style="margin-top:14px">Pokazuj pomoc przy starcie</div><div class="seg">'
   +[["1","Tak"],["0","Nie"]].map(([k,t])=>'<button data-hs="'+k+'" class="'+((helpOff?"0":"1")===k?"on":"")+'">'+t+'</button>').join("")+'</div>';
 function helpHtml(){
-  const rides=tabOk(1),li=(i,b,t)=>'<li><span class="hi">'+i+'</span><span><b>'+b+'</b>'+(t?' '+t:'')+'</span></li>';
+  const rides=tabOk(1),tg=feat("telegram_dm"),li=(i,b,t)=>'<li><span class="hi">'+i+'</span><span><b>'+b+'</b>'+(t?' '+t:'')+'</span></li>';
   return '<div class="sheetbox popbox" role="dialog" aria-modal="true" aria-label="Pomoc"><button class="sclose" data-h="close" aria-label="Zamknij">✕</button>'
    +'<div class="ph" style="margin-top:0">🚲 Co potrafi PrzylesieGo?</div>'
    +'<ul class="hlist">'
@@ -1284,10 +1344,15 @@ function helpHtml(){
    +li("🕖","Każdy wybiera, kiedy może,","a Ty jednym kliknięciem ustalasz start.")
    +li("🔒","Zaproszenie dla wybranych:","tylko dla ulubionych albo konkretnych osób.")
    +li("⭐","Ulubieni:","Twoi znajomi zawsze na górze list.")
-   +li("📩","Powiadomienia:","po wejściu od razu widzisz, kto Cię zaprasza.")
+   +li("📩","Powiadomienia:","po wejściu od razu widzisz, kto Cię zaprasza"+(tg?" — a bot napisze też na Telegramie.":"."))
    +(rides?li("🗺️","Wieczorynki:","zaplanowane jazdy z trasą, mapą i wiatrem."):'')
    +'</ul>'
-   +'<div class="hsoon"><b>Wkrótce:</b> 🔔 powiadomienia prosto na Telegram'+(rides?'':', 🗺️ wieczorynki z trasą i wiatrem')+', 📈 statystyki i punkty za jazdę.</div>'
+   +(tg?'<div class="htgdm"><b>🔔 Powiadomienia na Telegramie — jak włączyć</b>'+betaTag("telegram_dm")
+     +'<ol class="hsteps"><li>Zainstaluj Telegram (App Store / Google Play) i załóż konto.</li><li>Tutaj: ⚙️ Ustawienia → 🔔 Połącz z Telegramem.</li>'
+     +'<li>W Telegramie otworzy się rozmowa z @PrzylesieGo_bot — naciśnij <b>START</b>.</li><li>Gotowe ✅ Bot napisze, gdy ktoś Cię zaprosi albo ustali godzinę.</li></ol>'
+     +'Wyłączysz w tym samym miejscu (Rozłącz). Kanał @PrzylesieGo to ogłoszenia dla wszystkich, a bot pisze tylko do Ciebie.'
+     +(tgOn()&&!tgLink?'<button type="button" class="b sbtn" data-h="tg">🔔 Połącz teraz</button>':tgLink?'<div style="margin-top:8px"><span class="tgok">✅ Twój Telegram jest połączony</span></div>':'')+'</div>':'')
+   +'<div class="hsoon"><b>Wkrótce:</b> '+(tg?'':'🔔 powiadomienia prosto na Telegram, ')+(rides?'':'🗺️ wieczorynki z trasą i wiatrem, ')+'📈 statystyki i punkty za jazdę.</div>'
    +'<div class="htg">📣 <b>Zainstaluj Telegram</b> i dołącz do kanału PrzylesieGo, żeby nie przegapić żadnej jazdy. <a href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">Otwórz kanał ›</a></div>'
    +'<div class="hlog"><b>Bez logowania</b> zobaczysz najbliższą wieczorynkę. <b>Po zalogowaniu</b> (wystarczą e-mail i hasło) zapraszasz, dołączasz i dostajesz powiadomienia.</div>'
    +'<label class="hoff"><input type="checkbox" id="helpoff"'+(helpOff?' checked':'')+'> Nie pokazuj więcej (pomoc znajdziesz pod ❓)</label>'
@@ -1295,7 +1360,10 @@ function helpHtml(){
 }
 function openHelp(){const p=$("helpsheet");p.innerHTML=helpHtml();p.classList.remove("hide")}
 function closeHelp(){const p=$("helpsheet");p.classList.add("hide");p.innerHTML=""}
-$("helpsheet").addEventListener("click",e=>{if(e.target===$("helpsheet")||e.target.closest("[data-h='close']"))closeHelp()});
+$("helpsheet").addEventListener("click",e=>{
+  if(e.target.closest("[data-h='tg']")){closeHelp();gearOpen=true;gearView="tg";renderGear();return}
+  if(e.target===$("helpsheet")||e.target.closest("[data-h='close']"))closeHelp();
+});
 $("helpsheet").addEventListener("change",e=>{if(e.target.id==="helpoff")setHelpOff(e.target.checked)});
 $("helpbtn").onclick=openHelp;
 $("welhelp").onclick=openHelp;
@@ -1860,8 +1928,9 @@ async function setPref(w,t){
   if((decls[w.id]||[]).includes(uid))await sb.from("want_declines").delete().eq("want_id",w.id).eq("user_id",uid);
 }
 async function declineWant(w){
-  if((joins[w.id]||[]).includes(uid)){const r=await sb.from("want_joins").delete().eq("want_id",w.id).eq("user_id",uid);if(r.error)throw r.error}
+  // najpierw „Nie dam rady”, potem wypisanie — autor dostaje na Telegramie jedną wiadomość zamiast dwóch
   if(rangeOk&&!(decls[w.id]||[]).includes(uid)){const r=await sb.from("want_declines").insert({want_id:w.id});if(r.error&&r.error.code!=="23505")throw r.error}
+  if((joins[w.id]||[]).includes(uid)){const r=await sb.from("want_joins").delete().eq("want_id",w.id).eq("user_id",uid);if(r.error)throw r.error}
 }
 async function settleWant(w,t){
   const r=await sb.from("wants").update({starts_at:new Date(t).toISOString(),settled_at:new Date().toISOString()}).eq("id",w.id).select("id");
@@ -2415,6 +2484,7 @@ async function loadRemote(selectId){
     ]);
     const sp=await sb.from("superadmins").select("user_id");supers=new Set((sp&&!sp.error&&sp.data||[]).map(x=>x.user_id));
     const ts=await sb.from("testers").select("user_id");testerOk=!ts.error;testerIds=new Set((!ts.error&&ts.data||[]).map(x=>x.user_id));
+    const tl=await sb.from("telegram_links").select("tg_name,linked_at").eq("user_id",uid).limit(1);tgOk=!tl.error;tgLink=tgOk&&tl.data&&tl.data[0]||null;
     nicks={};genders={};(ok(p)||[]).forEach(x=>{nicks[x.user_id]=x.nick;if(x.gender)genders[x.user_id]=x.gender});
     me.nick=nicks[uid]||null;
     favOk=!fv.error;favs=new Set((ok(fv)||[]).map(x=>x.fav_id));
@@ -2430,7 +2500,7 @@ async function loadRemote(selectId){
     startPresence();
     if(seenFor!==uid||Date.now()-seenAt>15*60000){seenFor=uid;seenAt=Date.now();Promise.resolve(sb.rpc("touch_seen")).catch(()=>{})}
     adminIds=(ok(ad)||[]).map(x=>x.user_id);isAdmin=adminIds.includes(uid);
-  }else{favs=new Set();favOk=false;nicks={};genders={};me.nick=null;wants=[];joins={};prefs={};decls={};invs={};notifs=[];testerIds=new Set();testerOk=false;lib=[];adminIds=[];isAdmin=false;stopPresence()}
+  }else{favs=new Set();favOk=false;nicks={};genders={};me.nick=null;wants=[];joins={};prefs={};decls={};invs={};notifs=[];testerIds=new Set();testerOk=false;tgOk=false;tgLink=null;tgCode="";lib=[];adminIds=[];isAdmin=false;stopPresence()}
   sorted=a.data.map(r=>({id:r.id,title:r.title,when:r.starts_at,place:r.place,pace:r.pace,owner:r.owner_name,note:r.note,creator:r.creator,edited_at:r.edited_at||null,change_note:r.change_note||null,route_title:r.route_title||null,route_desc:r.route_desc||null}));
   const want=selectId||prevId;
   let idx=want?sorted.findIndex(r=>r.id===want):-1;
