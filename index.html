@@ -42,6 +42,27 @@ nav button.on{background:var(--accbtn);color:#fff;box-shadow:0 1px 4px rgba(36,1
 .wsub2{display:block;font-size:13px;font-weight:500;color:var(--mut)}
 .hdr .gear{order:2}
 .hdr .gear.help{margin-right:-4px}
+/* 🔔 dzwonek i lista powiadomień */
+.gear.bell{position:relative}
+.bbadge{position:absolute;top:-4px;right:-6px;min-width:21px;height:21px;border-radius:11px;background:#ff3b30;color:#fff;font:800 12px/17px -apple-system,system-ui,sans-serif;text-align:center;padding:0 5px;border:2px solid var(--bg);box-sizing:border-box}
+.hdr.compact .bbadge{top:-5px;right:-7px}
+.bsbox .bsec{display:flex;align-items:center;gap:8px;margin:16px 0 4px;font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--mut)}
+.bsec .cnt{background:#ff3b30;color:#fff;border-radius:9px;padding:0 7px;font-size:12px;letter-spacing:0}
+.nit{display:flex;gap:10px;padding:10px;border-radius:14px;margin-top:6px;position:relative;cursor:pointer;text-align:left}
+.nit.new{background:var(--acc2)}.nit.mine.new{background:#fff3c4}html[data-theme=dark] .nit.mine.new{background:#4a3f12}
+.nit.old{opacity:.62}
+.nit .ic{width:38px;height:38px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:19px;flex:none;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.nit .tx{flex:1;min-width:0;font-size:15px;line-height:1.35;padding-right:12px}.nit .tx .nk{font-size:15px;padding:1px 8px}
+.nit .w{font-size:13px;color:var(--mut);margin-top:2px}
+.nit .dot{position:absolute;top:14px;right:10px;width:9px;height:9px;border-radius:50%;background:#ff3b30}
+.nit .sb{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.nit .sb .b{padding:8px 12px;font-size:14px;border-radius:10px}
+.nit .nnews{font-size:14px;margin-top:6px;padding:6px 9px;border-radius:9px;background:var(--card)}.nit .nmore{color:var(--mut);font-weight:700}
+.bsbox .bsempty{padding:8px 4px;font-size:14px}.bsempty .lnk{font-size:14px;padding:0}
+.wlab{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.04em;border-radius:999px;padding:2px 10px;margin-bottom:6px;background:var(--acc2);color:var(--acc)}
+.wlab.me{background:#fff3c4;color:#8a5a00}html[data-theme=dark] .wlab.me{background:#4a3f12;color:#ffd666}
+.wlab.all{background:var(--fill);color:var(--mut)}
+.want.flash,.mywant.flash{animation:wflash 1.6s ease-out}
+@keyframes wflash{0%,30%{box-shadow:0 0 0 3px var(--acc)}100%{box-shadow:0 0 0 0 transparent}}
 .whelp{display:block;margin:-6px auto 12px;font-size:16px}
 .hlist{list-style:none;margin:10px 0 0;padding:0;text-align:left}
 .hlist li{display:flex;gap:10px;align-items:flex-start;padding:7px 0;font-size:16px;line-height:1.35;border-bottom:1px solid var(--line)}
@@ -376,6 +397,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 <header class="hdr" id="hdr"><div class="hin">
  <h1 class="apptitle"><span class="tlogo"><svg class="blogo" viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="27" fill="#1f9d55"/><circle cx="44" cy="62" r="25" fill="none" stroke="#fff" stroke-width="9"/><circle cx="76" cy="62" r="25" fill="none" stroke="#fbbf24" stroke-width="9"/><circle cx="44" cy="62" r="4" fill="#fff"/><circle cx="76" cy="62" r="4" fill="#fbbf24"/></svg></span><span class="tname"> PrzylesieGo!</span><span class="wsub2">Ustawki rowerowe</span></h1>
  <nav><button id="t0" class="on">Start</button><button id="t1">Wieczorynki</button><button id="t2">Zaawansowane</button></nav>
+ <button class="gear bell hide" id="bellbtn" aria-label="Powiadomienia" title="Powiadomienia">🔔<b class="bbadge hide" id="bellbadge"></b></button>
  <button class="gear help" id="helpbtn" aria-label="Pomoc — co potrafi aplikacja" title="Pomoc">❓</button>
  <button class="gear" id="gear" aria-label="Ustawienia" title="Ustawienia">⚙️</button>
 </div></header>
@@ -414,6 +436,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 <div class="sheet bsh hide" id="whosheet"></div>
 <div class="sheet hide" id="popsheet"></div>
 <div class="sheet hide" id="picksheet"></div>
+<div class="sheet bsh hide" id="bellsheet"></div>
 
 <div class="card hide" id="pwbox">
  <h2>Ustaw nowe hasło</h2>
@@ -1344,7 +1367,7 @@ function helpHtml(){
    +li("🕖","Każdy wybiera, kiedy może,","a Ty jednym kliknięciem ustalasz start.")
    +li("🔒","Zaproszenie dla wybranych:","tylko dla ulubionych albo konkretnych osób.")
    +li("⭐","Ulubieni:","Twoi znajomi zawsze na górze list.")
-   +li("📩","Powiadomienia:","po wejściu od razu widzisz, kto Cię zaprasza"+(tg?" — a bot napisze też na Telegramie.":"."))
+   +li("📩","Powiadomienia:","po wejściu od razu widzisz, kto Cię zaprasza, a pod 🔔 — kto odpowiedział na Twoje zaproszenie i co się zmieniło"+(tg?". Bot napisze też na Telegramie.":"."))
    +(rides?li("🗺️","Wieczorynki:","zaplanowane jazdy z trasą, mapą i wiatrem."):'')
    +'</ul>'
    +(tg?'<div class="htgdm"><b>🔔 Powiadomienia na Telegramie — jak włączyć</b>'+betaTag("telegram_dm")
@@ -1470,7 +1493,7 @@ function wantHtml(w){
     // admin widzi cudze prywatne zaproszenie tylko podglądowo (bez „Jadę!”), chyba że jest zaproszony
     const peek=priv&&!mine&&!invIds(w).includes(uid)&&!joined;
     const open=isOpen(w),myp=(prefs[w.id]||{})[uid],dec=(decls[w.id]||[]).includes(uid);
-    return '<div class="want'+(mine?' mine':'')+'"><div class="wtop">'+nk(w.user_id)+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="lockt">do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?'<span class="lockt">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>':'')+(mine?'<span class="note">(Twoje zgłoszenie)</span>':'')+'</div>'
+    return '<div class="want'+(mine?' mine':'')+'" data-wid="'+esc(w.id)+'">'+(peek?'':'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>')+'<div class="wtop">'+nk(w.user_id)+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="lockt">do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?'<span class="lockt">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>':'')+(mine?'<span class="note">(Twoje zgłoszenie)</span>':'')+'</div>'
      +(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')
      +invitedHtml(w)
      +(open?tallyHtml(w):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w))
@@ -1707,7 +1730,7 @@ function renderMyWant(){
     const d=new Date(w.starts_at),j=(joins[w.id]||[]).filter(x=>x!==uid);
     const wd=d.toLocaleDateString("pl-PL",{weekday:"long"}),n=dayDiff(d);
     const priv=isPriv(w),ni=(invs[w.id]||[]).length;
-    return '<div class="mywant" data-i="'+i+'"><div class="myh">Twoje zaproszenie'+(mine.length>1?' · '+(i+1)+' z '+mine.length:'')+(priv?'<span class="lockt">🔒 dla '+ni+' '+osob(ni)+'</span>':'')+'</div>'
+    return '<div class="mywant" data-i="'+i+'" data-wid="'+esc(w.id)+'"><div class="myh">🙋 Ty zapraszasz'+(mine.length>1?' · '+(i+1)+' z '+mine.length:'')+(priv?'<span class="lockt">🔒 dla '+ni+' '+osob(ni)+'</span>':'')+'</div>'
      +'<div class="myt'+(isOpen(w)?' rng':'')+'">'+esc(n>=0&&n<=2?["Dziś","Jutro","Pojutrze"][n]+" "+wTime(w):wd.charAt(0).toUpperCase()+wd.slice(1)+" "+wTime(w))+(n>=0&&n<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
      +(isOpen(w)?'<div class="mym">🕖 Godzina do ustalenia'+(new Date(w.range_from).getTime()>Date.now()+36e5?' — ustali się sama '+esc(hhmm(new Date(new Date(w.range_from).getTime()-36e5)))+', jeśli jej nie wybierzesz':'')+'</div>':fromRange(w)?'<div class="mym">✅ Godzina ustalona</div>':'')
      +(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')
@@ -1996,18 +2019,161 @@ $("picksheet").addEventListener("click",async e=>{
   }catch(err){k.disabled=false;say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
 });
 
-/* popup po wejściu: nowe zaproszenia i zmiany godziny (tabela notifications) */
+/* ---------- 🔔 dzwonek: lista powiadomień (do Ciebie / Twoje zaproszenia) ---------- */
+const ME_KINDS=["invite","time","set"],OWN_KINDS=["join","pref","leave","decline"];
+const N_ICON={invite:"📩",time:"🕖",set:"✅",join:"🙋",pref:"🕖",leave:"👋",decline:"🙅"};
+const nWant=n=>wants.find(w=>w.id===n.want_id);
+// czy zaproszenie czeka na Twoją odpowiedź (skierowane do Ciebie, a Ty jeszcze nie odpowiedziałeś)
+function wNeedsAct(w){
+  if(!w||w.user_id===uid||new Date(w.starts_at).getTime()<Date.now()-15*60000)return false;
+  if((joins[w.id]||[]).includes(uid)||(decls[w.id]||[]).includes(uid))return false;
+  return invIds(w).includes(uid)||notifs.some(n=>n.want_id===w.id&&!n.read_at&&(n.kind==="invite"||n.kind==="set"));
+}
+const nNeedsAct=n=>(n.kind==="invite"||n.kind==="set")&&wNeedsAct(nWant(n));
+function agoTxt(ts){
+  const m=Math.round((Date.now()-new Date(ts).getTime())/60000);
+  if(m<1)return "przed chwilą";if(m<60)return m+" min temu";
+  const h=Math.round(m/60);if(h<24)return h+" h temu";
+  return dayDiff(new Date(ts))===-1?"wczoraj":new Date(ts).toLocaleDateString("pl-PL",{day:"numeric",month:"short"});
+}
+// krótki opis nowości (najświeższe nieprzeczytane powiadomienie przy zaproszeniu)
+function newsTxt(n,w){
+  const a=n.actor||w.user_id,K=genders[a]==="K",v=(m,k)=>K?k:m,who='<b>'+esc(nickOf(a))+'</b>',pf=(prefs[w.id]||{})[a];
+  switch(n.kind){
+    case "invite":return a!==w.user_id?who+' '+v("doprosił","doprosiła")+' Cię':'nowe zaproszenie';
+    case "time":return who+' '+v("zmienił","zmieniła")+' godzinę';
+    case "set":return who+' '+v("ustalił","ustaliła")+' godzinę: <b>'+esc(hhmm(new Date(w.starts_at)))+'</b>';
+    case "join":return who+' '+v("dołączył","dołączyła")+(pf&&isOpen(w)?' · pasuje <b>'+esc(hhmm(new Date(pf)))+'</b>':'');
+    case "pref":return who+' '+v("zmienił","zmieniła")+' godzinę'+(pf?' · pasuje <b>'+esc(hhmm(new Date(pf)))+'</b>':'');
+    case "leave":return who+' '+v("zrezygnował","zrezygnowała");
+    default:return who+' nie da rady';
+  }
+}
+const wUnread=w=>notifs.filter(n=>n.want_id===w.id&&!n.read_at&&(w.user_id===uid?OWN_KINDS:ME_KINDS).includes(n.kind)).sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));
+function bellRowHtml(w){
+  const mine=w.user_id===uid,un=wUnread(w),joined=(joins[w.id]||[]).includes(uid),dec=(decls[w.id]||[]).includes(uid);
+  const when=esc(relDay(new Date(isOpen(w)?w.range_from:w.starts_at))+" "+wTime(w));
+  const jn=(joins[w.id]||[]).filter(x=>x!==w.user_id).length,dn=(decls[w.id]||[]).filter(x=>x!==w.user_id).length,act=wNeedsAct(w);
+  const title=mine?'<b>'+when+'</b>'+(isPriv(w)?' 🔒':'')
+    :nk(w.user_id)+' '+(isPriv(w)?'zaprasza Cię 🔒':'zaprasza wszystkich');
+  const sub=mine?[w.note?esc(w.note):'',isOpen(w)?'🕖 do ustalenia':'','🚴 jedzie '+(jn+1),dn?'🙅 '+dn:''].filter(Boolean).join(' · ')
+    :[when,w.note?esc(w.note):'',joined?'🚴 Jedziesz':dec?'Nie dasz rady':act?'⏳ czeka na Twoją odpowiedź':''].filter(Boolean).join(' · ');
+  const news=un.length?'<div class="nnews">'+N_ICON[un[0].kind]+' '+newsTxt(un[0],w)+' · '+agoTxt(un[0].created_at)+(un.length>1?' <span class="nmore">+'+(un.length-1)+'</span>':'')+'</div>':'';
+  const btns=act?'<div class="sb">'+(isOpen(w)?'<button type="button" class="b" data-na="pref" data-wid="'+esc(w.id)+'">Pasuje mi o…</button>'
+      :'<button type="button" class="b" data-na="join" data-wid="'+esc(w.id)+'">Jadę! · '+esc(hhmm(new Date(w.starts_at)))+'</button>')
+    +'<button type="button" class="b w" data-na="no" data-wid="'+esc(w.id)+'">Nie dam rady</button></div>':'';
+  return '<div class="nit'+(mine?' mine':'')+(un.length?' new':'')+'" data-wid="'+esc(w.id)+'"><div class="ic">'+(mine?'🙋':isPriv(w)?'📩':'🌍')+'</div>'
+   +'<div class="tx">'+title+'<div class="w">'+sub+'</div>'+news+btns+'</div>'+(un.length?'<span class="dot"></span>':'')+'</div>';
+}
+const bellUnread=()=>notifs.filter(n=>!n.read_at&&nWant(n)&&(ME_KINDS.includes(n.kind)||OWN_KINDS.includes(n.kind)));
+function renderBell(){
+  const b=$("bellbtn");if(!b)return;
+  const on=!!session&&visOk,n=on?bellUnread().length:0,bd=$("bellbadge");
+  b.classList.toggle("hide",!on);
+  bd.textContent=n>9?"9+":String(n);bd.classList.toggle("hide",!n);
+  b.setAttribute("aria-label",n?"Zaproszenia i powiadomienia — nowe: "+n:"Zaproszenia i powiadomienia");
+  // liczba na ikonie aplikacji w telefonie (gdy aplikacja jest na ekranie głównym)
+  try{if(navigator.setAppBadge){(n?navigator.setAppBadge(n):navigator.clearAppBadge()).catch(()=>{})}}catch(e){}
+  if(!$("bellsheet").classList.contains("hide"))renderBellSheet();
+}
+function renderBellSheet(){
+  const p=$("bellsheet"),act=w=>new Date(w.starts_at).getTime()>=Date.now()-3*36e5;
+  const ord=(a,b)=>((wUnread(b).length?1:0)-(wUnread(a).length?1:0))||((wNeedsAct(b)?1:0)-(wNeedsAct(a)?1:0))||(new Date(a.starts_at)-new Date(b.starts_at));
+  const forMe=wants.filter(w=>w.user_id!==uid&&act(w)&&(w.visibility!=="private"||invIds(w).includes(uid)||(joins[w.id]||[]).includes(uid))).sort(ord);
+  const mine=wants.filter(w=>w.user_id===uid&&act(w)).sort(ord);
+  const cnt=L=>{const n=L.filter(w=>wUnread(w).length).length;return n?' <span class="cnt">'+n+'</span>':''};
+  const keep=p.querySelector(".bslist"),st=keep?keep.scrollTop:0,nu=bellUnread().length;
+  p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Zaproszenia i powiadomienia"><div class="bsgrab"></div>'
+   +'<div class="bshead"><button type="button" class="lnk" data-bk="close">Zamknij</button><b>🔔 Zaproszenia</b>'
+   +(nu?'<button type="button" class="lnk" data-bk="all" style="text-align:right">✓ Przeczytane</button>':'<span style="min-width:64px"></span>')+'</div>'
+   +'<div class="bslist">'
+   +'<div class="bsec">📩 Do Ciebie'+cnt(forMe)+'</div>'
+   +(forMe.length?forMe.map(bellRowHtml).join(""):'<div class="bsempty">Na razie nikt nie zaprasza.</div>')
+   +'<div class="bsec">🙋 Twoje zaproszenia'+cnt(mine)+'</div>'
+   +(mine.length?mine.map(bellRowHtml).join(""):'<div class="bsempty">Nie masz aktywnych zaproszeń. <button type="button" class="lnk" data-bk="new">Idziemy na rower? ›</button></div>')
+   +'</div><div class="bshint">Czerwona kropka = coś nowego. Kliknij zaproszenie, żeby przejść do jego karty.</div></div>';
+  p.classList.remove("hide");
+  const nl=p.querySelector(".bslist");if(nl)nl.scrollTop=st;
+}
+async function markRead(ids){
+  ids=ids.filter(Boolean);if(!ids.length)return;
+  const now=new Date().toISOString();
+  notifs.forEach(n=>{if(ids.includes(n.id))n.read_at=now});
+  renderBell();
+  try{await sb.from("notifications").update({read_at:now}).in("id",ids)}catch(e){}
+}
+function closeBell(){
+  // informacje (bez potrzeby odpowiedzi) uznajemy za przeczytane po obejrzeniu listy
+  const ids=bellUnread().filter(n=>!nNeedsAct(n)).map(n=>n.id);
+  $("bellsheet").classList.add("hide");$("bellsheet").innerHTML="";
+  markRead(ids);
+}
+// przejście do karty zaproszenia (Start: Twoje zaproszenie albo karta dnia)
+function goToWant(w){
+  show(0);
+  let el;
+  if(w.user_id===uid){
+    const mine=wants.filter(x=>x.user_id===uid&&new Date(x.starts_at).getTime()>=Date.now()-3*36e5).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
+    myIdx=Math.max(0,mine.findIndex(x=>x.id===w.id));renderWants();
+    el=document.querySelector('#mywant .mywant[data-wid="'+w.id+'"]');
+  }else{
+    const k=localIso(new Date(w.starts_at)).slice(0,10);wantOpenDay=k;
+    const ord=wants.filter(x=>localIso(new Date(x.starts_at)).slice(0,10)===k&&new Date(x.starts_at).getTime()>=Date.now()-3*36e5)
+      .sort((a,b)=>((isFav(b.user_id)?1:0)-(isFav(a.user_id)?1:0))||(new Date(a.starts_at)-new Date(b.starts_at)));
+    dayIdx[k]=Math.max(0,ord.findIndex(x=>x.id===w.id));renderWants();
+    el=document.querySelector('#wantlist .want[data-wid="'+w.id+'"]');
+  }
+  if(!el){say("To zaproszenie już minęło albo zostało usunięte.");return}
+  setTimeout(()=>{el.scrollIntoView({behavior:"smooth",block:"center"});el.classList.remove("flash");void el.offsetWidth;el.classList.add("flash")},80);
+}
+$("bellbtn").onclick=()=>{if(!session)return;renderBellSheet()};
+$("bellsheet").addEventListener("click",async e=>{
+  const p=$("bellsheet");
+  if(e.target===p){closeBell();return}
+  const k=e.target.closest("[data-bk]");
+  if(k){
+    if(k.dataset.bk==="close")closeBell();
+    else if(k.dataset.bk==="new"){closeBell();show(0);openWantForm(null)}
+    else{await markRead(bellUnread().map(n=>n.id));renderBellSheet()}
+    return;
+  }
+  const a=e.target.closest("button[data-na]");
+  if(a){
+    const w=wants.find(x=>x.id===a.dataset.wid);if(!w)return;
+    const ids=wUnread(w).map(x=>x.id);
+    if(a.dataset.na==="pref"){closeBell();await markRead(ids);openPick("pref",w.id);return}
+    a.disabled=true;
+    try{
+      if(a.dataset.na==="join"){
+        const r=await sb.from("want_joins").insert({want_id:w.id});if(r.error&&r.error.code!=="23505")throw r.error;
+        if((decls[w.id]||[]).includes(uid))await sb.from("want_declines").delete().eq("want_id",w.id).eq("user_id",uid);
+        try{navigator.vibrate&&navigator.vibrate(30)}catch(err){}
+        say("Jedziesz ✔ "+wfLabel(new Date(w.starts_at)));
+      }else{await declineWant(w);say("OK — zapisano „Nie dam rady”.")}
+      await markRead(ids);await loadRemote();
+    }catch(err){a.disabled=false;say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+    return;
+  }
+  const it=e.target.closest(".nit[data-wid]");
+  if(it){
+    const w=wants.find(x=>x.id===it.dataset.wid);if(!w)return;
+    const ids=wNeedsAct(w)?[]:wUnread(w).map(x=>x.id);
+    closeBell();markRead(ids);goToWant(w);
+  }
+});
+
+/* popup po wejściu: tylko NOWE zaproszenia do Ciebie (zmiany i ustalenia godziny — pod 🔔) */
 let popList=[],popIdx=0,popBusy=false,popSel=null,popSelFor=null,popOther=false;
 const popSnooze=new Set((()=>{try{return JSON.parse(sessionStorage.getItem("popSnooze")||"[]")}catch(e){return []}})());
 const saveSnooze=()=>{try{sessionStorage.setItem("popSnooze",JSON.stringify([...popSnooze]))}catch(e){}};
 // jedno okienko na zaproszenie: „zaprasza Cię” + ewentualna zmiana godziny łączą się w jedno
 function popPending(){
   const by={};
-  notifs.filter(n=>!popSnooze.has(n.id)).forEach(n=>{(by[n.want_id]=by[n.want_id]||[]).push(n)});
+  notifs.filter(n=>!n.read_at&&ME_KINDS.includes(n.kind)&&!popSnooze.has(n.id)).forEach(n=>{(by[n.want_id]=by[n.want_id]||[]).push(n)});
   return Object.keys(by).map(id=>{
     const ns=by[id],inv=ns.find(n=>n.kind==="invite"),set=ns.find(n=>n.kind==="set");
     return {ns,n:inv||set||ns[ns.length-1],moved:!!inv&&ns.some(n=>n.kind!=="invite"),w:wants.find(x=>x.id===id)};
-  }).filter(x=>x.w&&new Date(x.w.starts_at).getTime()>=Date.now()-36e5)
+  }).filter(x=>x.w&&x.ns.some(n=>n.kind==="invite")&&new Date(x.w.starts_at).getTime()>=Date.now()-36e5)
     .sort((a,b)=>String(a.n.created_at).localeCompare(String(b.n.created_at)));
 }
 const popIds=it=>it.ns.map(n=>n.id);
@@ -2082,7 +2248,7 @@ $("popsheet").addEventListener("click",async e=>{
     if(q==="leave"){const r=await sb.from("want_joins").delete().eq("want_id",it.w.id).eq("user_id",uid);if(r.error)throw r.error}
     const ids=popIds(it),r=await sb.from("notifications").update({read_at:new Date().toISOString()}).in("id",ids);
     if(r.error)throw r.error;
-    notifs=notifs.filter(x=>!ids.includes(x.id));
+    notifs.forEach(x=>{if(ids.includes(x.id))x.read_at=new Date().toISOString()});renderBell();
     popNext();
     if(q==="join")say("Jedziesz ✔ "+wfLabel(new Date(it.w.starts_at)));
     else if(q==="pref")say("✔ Pasuje Ci "+hhmm(new Date(chosen))+" — "+nickOf(it.w.user_id)+" to zobaczy.");
@@ -2400,7 +2566,7 @@ function adminStatsHtml(){
    +'<button class="b sbtn g" data-c="stats">↻ Odśwież</button></div>';
 }
 
-function refreshUi(){renderChrome();renderWants();renderNext();renderCountdown();renderNav();renderCard();renderList();renderLibUi();renderOnline()}
+function refreshUi(){renderBell();renderChrome();renderWants();renderNext();renderCountdown();renderNav();renderCard();renderList();renderLibUi();renderOnline()}
 
 async function showRide(idx){
   cur=idx;const token=++viewToken;
@@ -2469,7 +2635,7 @@ async function loadRemote(selectId){
     if(w.error)w=await sb.from("wants").select("id,user_id,starts_at,note").order("starts_at").limit(200);
     const [iv,nt,dc]=visOk?await Promise.all([
       sb.from("want_invitees").select("want_id,user_id,added_by").limit(2000),
-      sb.from("notifications").select("id,kind,want_id,actor,created_at").eq("user_id",uid).is("read_at",null).order("created_at").limit(50),
+      sb.from("notifications").select("id,kind,want_id,actor,created_at,read_at").eq("user_id",uid).gte("created_at",new Date(Date.now()-30*864e5).toISOString()).order("created_at",{ascending:false}).limit(80),
       rangeOk?sb.from("want_declines").select("want_id,user_id").limit(2000):Promise.resolve({data:[]})
     ]):[{data:[]},{data:[]},{data:[]}];
     decls={};((dc&&!dc.error&&dc.data)||[]).forEach(x=>{(decls[x.want_id]=decls[x.want_id]||[]).push(x.user_id)});
