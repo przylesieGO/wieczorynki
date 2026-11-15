@@ -461,6 +461,9 @@ ol.inst{margin:6px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:
 .admbox{margin-top:16px;padding:12px;border-radius:14px;background:var(--fill);text-align:left}.admbox>b{display:block;margin-bottom:6px}
 .admln{font-size:14.5px;margin:3px 0}.admst{margin:10px 0}.admrec{display:flex;flex-direction:column;gap:4px;font-size:14px}.admrec>div{display:flex;justify-content:space-between;gap:8px}
 .tgm{font-size:13px}
+#banscreen{position:fixed;inset:0;z-index:3500;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
+.banbox{max-width:380px;text-align:center}.banbox h2{margin:6px 0 10px}.banbox p{color:var(--mut);line-height:1.45}
+.modbox .sbtn{margin-top:8px}.changed ul{margin:6px 0 6px 18px;padding:0}
 .hmorebtn{display:block;margin:12px auto 0;font-weight:700;color:var(--acc)}
 .hfull{margin-top:10px;text-align:left;display:flex;flex-direction:column;gap:12px}
 .hfs b{font-size:15px}.hfs ul{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:6px}.hfs li{font-size:14px;line-height:1.45}.hfs li b{font-size:inherit}
@@ -1132,7 +1135,7 @@ function adminHtml(){
    +testersHtml()
    +(isSuper(uid)&&testOk?'<h3>🧪 Zaproszenia testowe</h3><button class="b sbtn" style="background:var(--bad)" data-c="testdel">🧹 Usuń wszystkie testowe zaproszenia…</button><p class="note">Usuwa tylko zaproszenia oznaczone 🧪 TEST (z dołączeniami i powiadomieniami). Prawdziwe zostają.</p>':'')
    +'<h3>Użytkownicy ('+Object.keys(nicks).length+')</h3>'+(tgLinks?'<p class="note">✈️ = połączony bot Telegram ('+tgLinks.size+'). Dotknij nicku — karta osoby z aktywnością.</p>':'')
-   +(Object.keys(nicks).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")).map(id=>'<div class="arow"><span>'+nk(id)+(tgLinks&&tgLinks.has(id)?' <span class="tgm" title="Telegram połączony">✈️</span>':'')+(joinedAt[id]?'<br><span class="note">od '+esc(new Date(joinedAt[id]).toLocaleDateString("pl-PL",{day:"numeric",month:"short",year:"numeric"}))+'</span>':'')+'</span>'+(id===uid?'<span class="note">(Ty)</span>':isSuper(id)?'<span class="note">👑</span>':'<button class="b g small" data-a="unick" data-id="'+esc(id)+'">Zmień nick</button>')+'</div>').join("")||'<div class="note">Brak użytkowników z nickiem.</div>')
+   +(Object.keys(nicks).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")).map(id=>'<div class="arow"><span>'+nk(id)+(tgLinks&&tgLinks.has(id)?' <span class="tgm" title="Telegram połączony">✈️</span>':'')+(modBanned.has(id)?' <span class="tgm" title="Zablokowany">⛔</span>':'')+(modHidden.has(id)?' <span class="tgm" title="Ukryty">👻</span>':'')+(joinedAt[id]?'<br><span class="note">od '+esc(new Date(joinedAt[id]).toLocaleDateString("pl-PL",{day:"numeric",month:"short",year:"numeric"}))+'</span>':'')+'</span>'+(id===uid?'<span class="note">(Ty)</span>':isSuper(id)?'<span class="note">👑</span>':'<button class="b g small" data-a="unick" data-id="'+esc(id)+'">Zmień nick</button>')+'</div>').join("")||'<div class="note">Brak użytkowników z nickiem.</div>')
    +'</div>';
 }
 /* 🧪 testerzy i funkcje testowe (KROK 16) — nadaje/odbiera i przełącza tylko 👑 */
@@ -1309,6 +1312,8 @@ function favsHtml(){
 let joinedAt={};
 // 🟢 kto jest teraz w aplikacji (dotknięcie „N online”)
 // 🛡️ admin: kto połączył Telegram (KROK 32) i aktywność osoby
+let modDelId="",modOk=false,modBanned=new Set(),modHidden=new Set(),modPrev=null,modBusy=false;
+const modGone=id=>id!==uid&&(modBanned.has(id)||modHidden.has(id));
 let tgLinks=null,admInfo={},tgLoading=false;
 async function loadTgLinks(){if(!isAdmin)return;try{const r=await sb.rpc("admin_tg_links");tgLinks=r.error?null:new Map((r.data||[]).map(x=>[x.user_id,x.linked_at]))}catch(e){tgLinks=null}}
 async function loadAdmInfo(id){
@@ -1329,8 +1334,33 @@ function admInfoHtml(id){
    +'</div>';
 }
 document.addEventListener("click",e=>{if(!e.target.closest("#onlbtn,#honl")||!session)return;e.preventDefault();e.stopPropagation();gearOpen=true;gearView="online";renderGear()},true);
+function modDelHtml(){
+  const p=modPrev,li=(n,t)=>n?'<li>'+t+'</li>':'';
+  return '<button class="sback" data-c="userback2m">‹ '+esc(nickOf(modDelId))+'</button><div class="sname" style="margin-top:26px">🗑 Usuń konto</div>'
+   +'<div class="bigpill">'+nk(modDelId)+'</div><div class="sleft">'
+   +(!p?'<div class="note">Sprawdzam, co zniknie…</div>':p.err?'<div class="changed">'+esc(p.err)+'</div>'
+     :'<div class="changed">⚠️ Tego nie da się cofnąć. Zniknie:<ul>'+'<li>konto, nick i dane logowania</li>'
+       +li(p.wants,'zaproszenia: '+p.wants)+li(p.joins,'dołączenia do jazd: '+p.joins)+li(p.notifications,'powiadomienia: '+p.notifications)
+       +li(p.feedback,'zgłoszenia i wiadomości: '+p.feedback)+li(p.telegram,'połączenie z Telegramem')+'<li>wpisy w dzienniku aktywności, ulubieni</li></ul>'
+       +'Wieczorynki i trasy zostają (bez autora).</div>')
+   +(p&&p.admin?'<p class="note">To administrator — najpierw odbierz mu uprawnienia.</p>'
+     :'<input id="moddelw" placeholder="wpisz USUŃ" autocomplete="off" style="margin-top:12px"><button class="b sbtn" style="background:var(--bad)" data-a="moddelgo" data-id="'+esc(modDelId)+'"'+(modBusy||!p||p.err?' disabled':'')+'>🗑 Usuń konto na zawsze</button>')
+   +'</div>';
+}
+// ⛔ ekran dla zablokowanego konta
+function renderBan(){
+  let b=$("banscreen");const on=!!session&&modOk&&modBanned.has(uid);
+  if(!on){if(b)b.remove();return}
+  if(!b){b=document.createElement("div");b.id="banscreen";document.body.appendChild(b);
+    b.addEventListener("click",e=>{const k=e.target.closest("[data-ban]");if(!k)return;
+      if(k.dataset.ban==="fb"){gearOpen=true;gearView=fbOk?"fb":"main";renderGear()}
+      if(k.dataset.ban==="out"){setGuest(false);if(sb)sb.auth.signOut();renderChrome()}})}
+  b.innerHTML='<div class="banbox"><div style="font-size:44px">⛔</div><h2>Konto zablokowane</h2><p>Administrator zablokował to konto. Nie możesz teraz zapraszać ani dołączać do jazd.</p><p>Jeśli to pomyłka — napisz do administratora.</p>'
+   +(fbOk?'<button class="b big" data-ban="fb">💬 Napisz do administratora</button>':'')
+   +'<button class="lnk" data-ban="out" style="display:block;margin:14px auto 0">Wyloguj</button></div>';
+}
 function onlineHtml(){
-  const ids=favFirst(onlineIds.filter(id=>nicks[id]));
+  const ids=favFirst(onlineIds.filter(id=>nicks[id]&&(isAdmin||!modGone(id))));
   return '<div class="sname" style="margin-top:6px">🟢 Teraz w aplikacji ('+ids.length+')</div>'
    +'<div class="sleft">'+(ids.length?ids.map(id=>'<div class="arow"><span>'+nk(id)+'</span>'+(id===uid?'<span class="note">(Ty)</span>':'')+'</div>').join(""):'<div class="note">Nikogo poza Tobą.</div>')
    +'<p class="note">Dotknij nicku, żeby zobaczyć kartę osoby i zaprosić ją na rower. Lista odświeża się na bieżąco.</p></div>';
@@ -1356,7 +1386,14 @@ function userHtml(){
    +'<button class="b sbtn'+(fav?' g':'')+'" data-a="fav" data-id="'+esc(userId)+'">'+(fav?'⭐ Usuń z ulubionych':'☆ Dodaj do ulubionych')+'</button>'
    +(isAdmin&&fbOk?'<button class="b sbtn g" data-a="fbmsg" data-id="'+esc(userId)+'">✉️ Napisz wiadomość</button>':'')
    +(isAdmin&&!isSuper(userId)?'<button class="b sbtn g" data-a="unick" data-id="'+esc(userId)+'">✏️ Zmień nick (admin)</button>':'')
-   +(isAdmin?admInfoHtml(userId):'');
+   +(isAdmin?admInfoHtml(userId):'')
+   +(modOk&&isSuper(uid)&&userId!==uid&&!isSuper(userId)?'<div class="admbox modbox"><b>👑 Moderacja</b>'
+      +(modBanned.has(userId)?'<div class="admln">⛔ <b>Zablokowany</b> — widzi tylko komunikat o blokadzie.</div>':'')
+      +(modHidden.has(userId)?'<div class="admln">👻 <b>Ukryty</b> — inni go nie widzą ani jego zaproszeń.</div>':'')
+      +'<button class="b sbtn g" data-a="modhide" data-id="'+esc(userId)+'"'+(modBusy?' disabled':'')+'>'+(modHidden.has(userId)?'👁 Pokaż konto innym':'👻 Ukryj konto (np. testowe)')+'</button>'
+      +'<button class="b sbtn g" data-a="modban" data-id="'+esc(userId)+'"'+(modBusy?' disabled':'')+'>'+(modBanned.has(userId)?'✅ Odblokuj konto':'⛔ Zablokuj konto')+'</button>'
+      +(adminIds.includes(userId)?'<p class="note">Administratora nie można usunąć — najpierw odbierz mu uprawnienia.</p>':'<button class="b sbtn" style="background:var(--bad)" data-a="moddel" data-id="'+esc(userId)+'">🗑 Usuń konto…</button>')
+      +'</div>':'');
 }
 async function toggleFav(id){
   if(!session||!favOk||!id||id===uid)return;
@@ -1609,6 +1646,7 @@ function renderGear(){
   else if(gearView==="tg"&&tgOn())body=tgHtml();
   else if(gearView==="user"&&session&&nicks[userId])body=userHtml();
   else if(gearView==="online"&&session)body=onlineHtml();
+  else if(gearView==="moddel"&&session&&isSuper(uid)&&modDelId)body=modDelHtml();
   else if(gearView==="confdel"&&session&&delReq)body=confDelHtml();
   else if(gearView==="fb"&&session&&fbOk)body=fbHubHtml();
   else if(gearView==="fbt"&&session&&fbOk)body=fbThreadHtml();
@@ -1730,6 +1768,25 @@ $("gearpanel").addEventListener("click",async e=>{
       catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
       return;
     }
+    if(["modhide","modban"].includes(a.dataset.a)&&isSuper(uid)){
+      const id=a.dataset.id,ban=modBanned.has(id),hid=modHidden.has(id),nb=a.dataset.a==="modban"?!ban:ban,nh=a.dataset.a==="modhide"?!hid:hid;
+      if(a.dataset.a==="modban"&&nb&&!confirm("Zablokować konto "+nickOf(id)+"?\n\nOsoba zobaczy komunikat „Konto zablokowane — napisz do administratora”, nie będzie mogła zapraszać ani dołączać, a jej zaproszenia znikną innym. Możesz to cofnąć."))return;
+      modBusy=true;renderGear();
+      try{const r=await sb.rpc("mod_set",{u:id,ban:nb,hide:nh});if(r.error)throw r.error;
+        nb?modBanned.add(id):modBanned.delete(id);nh?modHidden.add(id):modHidden.delete(id);
+        say(a.dataset.a==="modban"?(nb?"⛔ Zablokowano: ":"✅ Odblokowano: ")+nickOf(id):(nh?"👻 Ukryto: ":"👁 Widoczne znowu: ")+nickOf(id))}
+      catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+      modBusy=false;renderGear();loadRemote();return}
+    if(a.dataset.a==="moddel"&&isSuper(uid)){modDelId=a.dataset.id;modPrev=null;gearView="moddel";renderGear();
+      try{const r=await sb.rpc("mod_preview",{u:modDelId});modPrev=r.error?{err:r.error.message}:r.data}catch(e){modPrev={err:"błąd"}}
+      if(gearView==="moddel")renderGear();return}
+    if(a.dataset.a==="moddelgo"&&isSuper(uid)){
+      const v=($("moddelw")||{}).value||"";if(v.trim().toUpperCase()!=="USUŃ"){say("Wpisz USUŃ, żeby potwierdzić.");return}
+      const id=modDelId,nm=nickOf(id);modBusy=true;renderGear();
+      try{const r=await sb.rpc("admin_delete_user",{u:id});if(r.error)throw r.error;
+        say("🗑 Usunięto konto "+nm);gearView="admin";modDelId="";await loadRemote()}
+      catch(err){say(/ADMIN/.test(err&&err.message||"")?"Najpierw odbierz uprawnienia administratora.":"Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+      modBusy=false;renderGear();return}
     if(!isAdmin)return;
     if(a.dataset.a==="unick"){unickId=a.dataset.id;gearView="unick";renderGear();const i=$("gunick");if(i){i.focus();i.select()}return}
     if(a.dataset.a==="rm"&&isSuper(a.dataset.id)){say("Głównemu administratorowi nie można odebrać uprawnień.");return}
@@ -1746,6 +1803,7 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="admin"){gearView="admin";renderGear();return}
   if(c==="colors"){gearView="colors";renderGear();return}
   if(c==="stats"){gearView="stats";loadStats();return}
+  if(c==="userback2m"){gearView="user";renderGear();return}
   if(c==="online"){if(!session)return;gearOpen=true;gearView="online";renderGear();return}
   if(c==="flags"){gearView="flags";renderGear();return}
   if(c==="testdel"){testDelN=null;gearView="testdel";renderGear();try{const r=await sb.rpc("admin_test_wants",{do_delete:false});if(r.error)throw r.error;testDelN=+r.data||0}catch(err){testDelN=0;say("Nie udało się policzyć: "+(err&&err.message?err.message:"błąd"))}if(gearView==="testdel")renderGear();return}
@@ -2791,7 +2849,7 @@ function openWho(mode,wantId){
 }
 function closeWho(){const p=$("whosheet");p.classList.add("hide");p.innerHTML=""}
 function whoPeople(){
-  let ids=Object.keys(nicks).filter(id=>id!==uid);
+  let ids=Object.keys(nicks).filter(id=>id!==uid&&!modGone(id));
   if(ws.mode==="add"){const w=wants.find(x=>x.id===ws.want),ex=new Set(w?[w.user_id,...invIds(w)]:[]);ids=ids.filter(id=>!ex.has(id))}
   return ids.sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl"));
 }
@@ -3504,8 +3562,9 @@ function renderOnline(){
   const b=$("onlbtn");if(!b)return;
   const show=!!session&&onlineIds.length>0;
   b.classList.toggle("hide",!show);
-  if(show)b.textContent="🟢 "+onlineIds.length+" online ›";
-  const h=$("honl");if(h){h.classList.toggle("hide",!show);if(show)h.textContent="🟢 "+onlineIds.length}
+  const n=onlineIds.filter(id=>isAdmin||!modGone(id)).length;
+  if(show)b.textContent="🟢 "+n+" online ›";
+  const h=$("honl");if(h){h.classList.toggle("hide",!show);if(show)h.textContent="🟢 "+n}
   if(gearOpen&&gearView==="online")renderGear();
 }
 
@@ -3657,6 +3716,11 @@ async function loadRemote(selectId){
     startPresence();
     if(seenFor!==uid||Date.now()-seenAt>15*60000){seenFor=uid;seenAt=Date.now();Promise.resolve(sb.rpc("touch_seen")).catch(()=>{})}
     adminIds=(ok(ad)||[]).map(x=>x.user_id);isAdmin=adminIds.includes(uid);
+    // 👑 moderacja (KROK 33): ⛔ zablokowani i 👻 ukryci — inni ich nie widzą (admin widzi)
+    const md=await sb.from("moderation").select("user_id,banned_at,hidden");modOk=!md.error;
+    modBanned=new Set((ok(md)||[]).filter(x=>x.banned_at).map(x=>x.user_id));modHidden=new Set((ok(md)||[]).filter(x=>x.hidden).map(x=>x.user_id));
+    if(!isAdmin)wants=wants.filter(x=>x.user_id===uid||!modGone(x.user_id));
+    renderBan();
   }else{favs=new Set();favOk=false;nicks={};genders={};me.nick=null;wants=[];joins={};prefs={};decls={};invs={};notifs=[];testerIds=new Set();testerOk=false;tgOk=false;tgLink=null;tgCode="";fbOk=false;fbList=[];fbDone={};lib=[];adminIds=[];isAdmin=false;stopPresence()}
   sorted=a.data.map(r=>({id:r.id,title:r.title,when:r.starts_at,place:r.place,pace:r.pace,owner:r.owner_name,note:r.note,creator:r.creator,edited_at:r.edited_at||null,change_note:r.change_note||null,route_title:r.route_title||null,route_desc:r.route_desc||null}));
   const want=selectId||prevId;
