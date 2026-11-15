@@ -572,7 +572,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 <!-- ===== NAGŁÓWEK (przyklejony, zwija się przy przewijaniu) ===== -->
 <header class="hdr" id="hdr"><button type="button" class="betabar" data-betafb="1">🧪 Wersja testowa (BETA) · <u>zgłoś uwagi ›</u></button><div class="hin">
  <h1 class="apptitle"><button type="button" class="honl hide" id="honl" aria-label="Kto jest online"></button><span class="tlogo"><svg class="blogo" viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="27" fill="#1f9d55"/><circle cx="44" cy="62" r="25" fill="none" stroke="#fff" stroke-width="9"/><circle cx="76" cy="62" r="25" fill="none" stroke="#fbbf24" stroke-width="9"/><circle cx="44" cy="62" r="4" fill="#fff"/><circle cx="76" cy="62" r="4" fill="#fbbf24"/></svg></span><span class="tname"> PrzylesieGo!</span><span class="menick hide" id="menick" title="Jesteś zalogowany jako — kliknij, żeby otworzyć Ustawienia"></span></h1>
- <nav><button id="t0" class="on">ZAPROSZENIA</button><button id="t1">Wieczorynki</button><button id="t2">Zaawansowane</button></nav>
+ <nav><button id="t0" class="on">ZAPROSZENIA</button><button id="t1" class="hide">Wieczorynki</button><button id="t2" class="hide">Zaawansowane</button></nav>
  <button class="gear bell hide" id="bellbtn" aria-label="Powiadomienia" title="Powiadomienia"><svg class="ui-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><b class="bbadge hide" id="bellbadge"></b></button>
  <button class="gear help" id="helpbtn" aria-label="Pomoc — co potrafi aplikacja" title="Pomoc"><svg class="ui-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></button>
  <button class="gear" id="gear" aria-label="Ustawienia" title="Ustawienia"><svg class="ui-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
@@ -683,7 +683,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
   <div id="nextbody"></div>
  </div>
  <!-- odliczanie do najbliższej wieczorynki (zegar klapkowy) -->
- <div class="card cdcard" id="cdbody"></div>
+ <div class="card cdcard hide" id="cdbody"></div>
 </section>
 
 <!-- ===== WIECZORYNKI ===== -->
@@ -1261,7 +1261,7 @@ let supers=new Set();const isSuper=id=>supers.has(id);
 let tgOk=false,tgLink=null,tgCode="",tgPoll=null,tgPollEnd=0;
 const tgOn=()=>!!session&&tgOk&&feat("telegram_dm");
 /* 🧪 testerzy i funkcje testowe (KROK 16) */
-let testerIds=new Set(),testerOk=false,flags={},betaOn=true;
+let testerIds=new Set(),testerOk=false,flags={},flagsReady=false,betaOn=true;
 try{betaOn=localStorage.getItem("betaOn")!=="0"}catch(e){}
 const meTester=()=>!!session&&(testerIds.has(uid)||isSuper(uid));
 // czy pokazać funkcję o danym kluczu: „Wszyscy” albo „Tylko testerzy” + tester z włączonym podglądem
@@ -1270,7 +1270,8 @@ const feat=k=>{const f=flags[k];return !!f&&(f.state==="all"||(f.state==="tester
 const betaTag=k=>flags[k]&&flags[k].state!=="all"?'<span class="beta">🧪 BETA</span>':'';
 // zakładki pod przełącznikiem (KROK 17): brak wpisu w bazie = widoczna dla wszystkich (jak dotąd)
 const TAB_FLAG={1:"tab_rides",2:"tab_advanced"};
-const tabOk=i=>{const k=TAB_FLAG[i];if(i===2&&!session)return false;return !k||!flags[k]||feat(k)};
+// do czasu wczytania przełączników zakładki pod przełącznikiem są ukryte (bez mignięcia przy odświeżaniu)
+const tabOk=i=>{const k=TAB_FLAG[i];if(k&&!flagsReady)return false;if(i===2&&!session)return false;return !k||!flags[k]||feat(k)};
 const visTabs=()=>[0,1,2].filter(tabOk);
 function delHtml(){
   const head='<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">🗑️ Usuń konto</div>';
@@ -3479,6 +3480,8 @@ function cdDigits(st){
 }
 function renderCountdown(){
   const box=$("cdbody");if(!box)return;
+  // odliczanie tylko, gdy wieczorynki są dla tej osoby dostępne (KROK 36 — inaczej baza i tak ich nie odda)
+  box.classList.toggle("hide",!tabOk(1));if(!tabOk(1))return;
   const st=cdState(),r=st.r,g=r?(rsvps[r.id]||[]):[],goes=!!session&&g.includes(uid),wn=r?(watchN[r.id]||0):0,wme=!!r&&myWatch.has(r.id);
   const key=[tabOk(1),st.mode,st.live?st.live.r.id+st.live.r.title:"",r?r.id+r.when+r.title+(r.place||""):"",g.length,goes,wn,wme,favNames(g).join(),!!session].join("|");
   if(key!==cdKey){
@@ -3852,7 +3855,7 @@ async function loadRemote(selectId){
   // funkcje testowe — czytają wszyscy, także goście (KROK 16)
   const wc=await sb.rpc("ride_watch_counts");watchOk=!wc.error;watchN={};if(!wc.error)(wc.data||[]).forEach(x=>{watchN[x.ride_id]=+x.n||0});
   const ff=await sb.from("feature_flags").select("key,name,description,state");
-  flags={};if(!ff.error)(ff.data||[]).forEach(f=>{flags[f.key]=f});
+  flags={};if(!ff.error)(ff.data||[]).forEach(f=>{flags[f.key]=f});flagsReady=true;
   if(session){
     const ok=r=>r.error?null:r.data;
     let p=await sb.from("profiles").select("user_id,nick,gender,joined_at").limit(1000);
