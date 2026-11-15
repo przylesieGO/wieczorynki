@@ -465,6 +465,22 @@ ol.inst{margin:6px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:
 .banbox{max-width:380px;text-align:center}.banbox h2{margin:6px 0 10px}.banbox p{color:var(--mut);line-height:1.45}
 .modbox .sbtn{margin-top:8px}.changed ul{margin:6px 0 6px 18px;padding:0}
 .arbtns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.b.small.on{background:var(--accbtn);color:#fff}
+.ios{margin-top:4px;text-align:left}.ios-gh{font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--mut);margin:18px 0 6px 14px}
+.ios-grp{background:var(--fill);border-radius:14px;overflow:hidden}
+.ios-it{display:flex;align-items:center;gap:11px;padding:10px 12px 10px 14px;min-height:50px;font-size:16px}.ios-it+.ios-it{border-top:.5px solid var(--line)}
+.ios-ic{width:29px;height:29px;border-radius:7px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff}.ios-ic .ui-i{width:17px;height:17px;stroke:#fff}
+.ios-t{flex:1;min-width:0;line-height:1.25}.ios-t small{display:block;font-size:12.5px;color:var(--mut);margin-top:2px}
+.ios-sw{flex:none;width:51px;height:31px;border-radius:999px;border:0;padding:0;position:relative;cursor:pointer;background:rgba(120,120,128,.32);transition:background .2s;-webkit-tap-highlight-color:transparent}
+.ios-sw::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.18),0 1px 1px rgba(0,0,0,.12);transition:left .22s cubic-bezier(.3,.7,.4,1)}
+.ios-sw.on{background:#34c759}.ios-sw.on::after{left:22px}
+.ios-seg{display:inline-flex;flex:none;background:rgba(120,120,128,.18);border-radius:9px;padding:2px}
+.ios-seg button{border:0;background:none;font:inherit;font-size:13px;font-weight:600;color:var(--mut);padding:5px 9px;border-radius:7px;cursor:pointer}
+.ios-seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.18)}html[data-theme=dark] .ios-seg button.on{background:#636366;color:#fff}
+@media (prefers-reduced-motion:reduce){.ios-sw,.ios-sw::after{transition:none}}
+.nbars{display:flex;align-items:flex-end;gap:6px;height:70px;padding:16px 4px 0;border-radius:12px;background:var(--fill)}.nbars i{flex:1;position:relative;background:linear-gradient(#34c759,#1f9d55);border-radius:4px 4px 0 0;min-height:3px}.nbars b{position:absolute;top:-16px;left:0;right:0;text-align:center;font-size:11px;color:var(--mut);font-weight:600}
+.nbl{display:flex;justify-content:space-between;font-size:12px;color:var(--mut);margin:4px 2px 0}
+.naccs{background:var(--fill);border-radius:12px;overflow:hidden}.nacc{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px}.nacc+.nacc{border-top:.5px solid var(--line)}.nacc .note{text-align:right;margin:0}
+.nnew{font-size:10.5px;font-weight:800;color:#30a14e;margin-left:6px}
 .hmorebtn{display:block;margin:12px auto 0;font-weight:700;color:var(--acc)}
 .hfull{margin-top:10px;text-align:left;display:flex;flex-direction:column;gap:12px}
 .hfs b{font-size:15px}.hfs ul{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:6px}.hfs li{font-size:14px;line-height:1.45}.hfs li b{font-size:inherit}
@@ -1672,11 +1688,11 @@ function renderGear(){
      +(isAdmin?'<button class="b sbtn g" data-c="admin">🛡️ Administracja'+(fbAdmUnread().length?' <span class="fbcnt">'+fbAdmUnread().length+'</span>':'')+'</button>':'')
      +(meTester()?'<div class="note" style="margin-top:14px">🧪 Funkcje testowe (jesteś testerem)</div><div class="seg">'+[["1","Pokaż"],["0","Ukryj"]].map(([k,t])=>'<button data-beta="'+k+'" class="'+((betaOn?"1":"0")===k?"on":"")+'">'+t+'</button>').join("")+'</div><div class="note" style="margin-top:6px">„Ukryj” — widzisz aplikację tak jak wszyscy.</div>':'')
      +'<button class="b sbtn g" data-c="help">❓ Pomoc — co potrafi aplikacja</button>'+instBtnHtml()
-     +themeHtml()+showNickHtml()+stealthHtml()+hideTestHtml()+helpPrefHtml()
+     +setGroupsHtml(false)
      +'<button class="b sbtn" style="background:var(--bad);margin-top:20px" data-c="out">Wyloguj</button>'
      +'<button class="sdanger" data-c="del">Usuń konto…</button>'
     :'<div class="sname">Przeglądasz jako gość</div><div class="smail">Zaloguj się, żeby zapisywać się na wieczorynki i zgłaszać ochotę na jazdę.</div>'
-     +'<button class="b sbtn" data-c="login">Zaloguj się / załóż konto</button>'+tg+'<button class="b sbtn g" data-c="help">❓ Pomoc — co potrafi aplikacja</button>'+instBtnHtml()+themeHtml()+helpPrefHtml();
+     +'<button class="b sbtn" data-c="login">Zaloguj się / załóż konto</button>'+tg+'<button class="b sbtn g" data-c="help">❓ Pomoc — co potrafi aplikacja</button>'+instBtnHtml()+setGroupsHtml(true);
   p.innerHTML='<div class="sheetbox"><button class="sclose" data-c="close" aria-label="Zamknij">✕</button>'+body+'</div>';
   const s=$("adminsel");
   if(s&&keepSel&&[...s.options].some(o=>o.value===keepSel))s.value=keepSel;
@@ -1819,6 +1835,7 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="colors"){gearView="colors";renderGear();return}
   if(c==="stats"){gearView="stats";loadStats();return}
   if(c==="userback2m"){gearView="user";renderGear();return}
+  if(c==="accall"){statsAllAcc=!statsAllAcc;renderGear();return}
   if(c==="online"){if(!session)return;gearOpen=true;gearView="online";renderGear();return}
   if(c==="flags"){gearView="flags";renderGear();return}
   if(c==="testdel"){testDelN=null;gearView="testdel";renderGear();try{const r=await sb.rpc("admin_test_wants",{do_delete:false});if(r.error)throw r.error;testDelN=+r.data||0}catch(err){testDelN=0;say("Nie udało się policzyć: "+(err&&err.message?err.message:"błąd"))}if(gearView==="testdel")renderGear();return}
@@ -2005,6 +2022,21 @@ function setHelpOff(v){helpOff=!!v;try{localStorage.setItem("helpOff",helpOff?"1
 const helpPrefHtml=()=>'<div class="note" style="margin-top:14px">Pokazuj pomoc przy starcie</div><div class="seg">'
   +[["1","Tak"],["0","Nie"]].map(([k,t])=>'<button data-hs="'+k+'" class="'+((helpOff?"0":"1")===k?"on":"")+'">'+t+'</button>').join("")+'</div>';
 let helpMore=false;
+// ⚙️ ustawienia w stylu Ustawień iPhone'a (Apple HIG): grupy, ikonka, przełącznik / mały segment
+function setGroupsHtml(guest){
+  const sw=(on,attr,val)=>'<button type="button" class="ios-sw'+(on?' on':'')+'" role="switch" aria-checked="'+on+'" '+attr+'="'+val+'"></button>';
+  const it=(col,ico,t,sub,ctrl)=>'<div class="ios-it"><span class="ios-ic" style="background:'+col+'">'+uiIcon(ico)+'</span><span class="ios-t">'+t+(sub?'<small>'+sub+'</small>':'')+'</span>'+ctrl+'</div>';
+  const grp=(h,rows)=>rows.filter(Boolean).length?'<div class="ios-gh">'+h+'</div><div class="ios-grp">'+rows.filter(Boolean).join("")+'</div>':'';
+  const theme='<span class="ios-seg">'+[["light","Jasny"],["dark","Ciemny"],["auto","Auto"]].map(([k,n])=>'<button type="button" data-t="'+k+'" class="'+(themeMode===k?"on":"")+'">'+n+'</button>').join("")+'</span>';
+  return '<div class="ios">'
+   +grp("Wygląd i ekran",[
+     it("#5e5ce6","moon","Motyw",themeMode==="auto"?"Jak w telefonie":"",theme),
+     guest?"":it("#0a84ff","user","Nick na górze ekranu","",sw(showNick,"data-sn",showNick?"0":"1")),
+     it("#30d158","help","Pomoc przy starcie","",sw(!helpOff,"data-hs",helpOff?"1":"0"))])
+   +(guest?'':grp("Zaproszenia",[testOk?it("#ff453a","flask","Testowe zaproszenia",hideTest?"Ukryte — widzisz tylko prawdziwe (Twoje zostają)":"Widoczne — wyłącz, żeby widzieć tylko prawdziwe",sw(!hideTest,"data-ht",hideTest?"0":"1")):""]))
+   +(guest||!canStealth()?'':grp("🛡️ Administrator",[it("#636366","eye","Widoczny online",hideOnline?"Wyłączony: nikt nie widzi Cię w „online”. Ty widzisz wszystkich.":"Inni widzą Cię jako online",sw(!hideOnline,"data-ho",hideOnline?"0":"1"))]))
+   +'</div>';
+}
 // pełny opis (rozwijany pod krótką pomocą)
 // 📲 instalacja jako aplikacja (PWA): Android/Chrome — systemowe okienko; iPhone — instrukcja
 let instPrompt=null;
@@ -3594,6 +3626,23 @@ async function loadStats(){
   }catch(e){statsErr="Nie udało się pobrać statystyk."}
   if(gearView==="stats")renderGear();
 }
+// 📊 nowe konta: 8 tygodni + kto i kiedy (z profiles.joined_at — KROK 25)
+let statsAllAcc=false;
+function newAccHtml(){
+  const L=Object.entries(joinedAt).filter(([id])=>nicks[id]).sort((a,b)=>new Date(b[1])-new Date(a[1]));
+  if(!L.length)return "";
+  const wk=d=>{const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return x.getTime()};
+  const now=wk(new Date()),bins=[...Array(8)].map((_,i)=>({t:now-(7-i)*7*864e5,n:0}));
+  L.forEach(([,t])=>{const b=bins.find(x=>x.t===wk(t));if(b)b.n++});
+  const mx=Math.max(1,...bins.map(b=>b.n));
+  const when=t=>{const d=new Date(t),dd=dayDiff(d);return dd===0?"dziś "+hhmm(d):dd===-1?"wczoraj "+hhmm(d):d.toLocaleDateString("pl-PL",{day:"numeric",month:"short",year:"numeric"})};
+  const ago=t=>{const n=Math.floor((Date.now()-new Date(t))/864e5);return n<1?"":n+" "+(n===1?"dzień":"dni")};
+  const rows=(statsAllAcc?L:L.slice(0,8)).map(([id,t])=>'<div class="nacc"><span>'+nk(id)+(Date.now()-new Date(t)<864e5?'<span class="nnew">'+(genders[id]==="K"?"NOWA":"NOWY")+'</span>':'')+'</span><span class="note">'+esc(when(t))+(ago(t)?'<br>'+esc(ago(t)):'')+'</span></div>').join("");
+  return '<h3>Nowe konta — 8 tygodni</h3><div class="nbars">'+bins.map(b=>'<i title="'+b.n+'" style="height:'+Math.max(4,Math.round(100*b.n/mx))+'%"><b>'+(b.n||'')+'</b></i>').join("")+'</div>'
+   +'<div class="nbl"><span>'+esc(new Date(bins[0].t).toLocaleDateString("pl-PL",{day:"numeric",month:"short"}))+'</span><span>ten tydzień: '+bins[7].n+'</span></div>'
+   +'<h3>Kto i kiedy założył konto ('+L.length+')</h3><div class="naccs">'+rows+'</div>'
+   +(L.length>8?'<button class="lnk" data-c="accall" style="display:block;margin:8px auto 0">'+(statsAllAcc?'Zwiń ▴':'Pokaż wszystkich ('+L.length+') ›')+'</button>':'');
+}
 function adminStatsHtml(){
   const head='<button class="sback" data-c="backadmin">‹ Administracja</button><div class="sname" style="margin-top:26px">📊 Statystyki</div>';
   if(statsErr)return head+'<div class="sleft"><div class="changed">'+esc(statsErr)+'</div></div>';
@@ -3603,6 +3652,7 @@ function adminStatsHtml(){
   return head+'<div class="sleft">'
    +'<h3>Konta</h3><div class="stats">'+t(d.accounts,"założone konta")+t(d.profiles,"z nickiem")+'</div>'
    +(Object.keys(joinedAt).length?'<h3>Nowi (z nickiem)</h3><div class="stats">'+t(Object.values(joinedAt).filter(x=>Date.now()-new Date(x)<7*864e5).length,"ostatnie 7 dni")+t(Object.values(joinedAt).filter(x=>Date.now()-new Date(x)<30*864e5).length,"ostatnie 30 dni")+'</div>':'')
+   +newAccHtml()
    +'<h3>Aktywność</h3><div class="stats">'+t(onlineIds.length,"teraz online")+t(d.active7,"aktywni 7 dni")+t(d.active30,"aktywni 30 dni")+'</div>'
    +(tgLinks?'<h3>Telegram</h3><div class="stats">'+t(tgLinks.size,"połączony bot")+t(Math.max(0,(d.profiles||0)-tgLinks.size),"bez bota")+'</div>':'')
    +'<h3>Płeć</h3><div class="stats">'+t(d.women,"👩 kobiety")+t(d.men,"👨 mężczyźni")+(d.nogender?t(d.nogender,"bez płci"):"")+'</div>'
