@@ -73,6 +73,7 @@ nav button.on{background:var(--accbtn);color:#fff;box-shadow:0 1px 4px rgba(36,1
 .wrrow{display:flex;gap:8px;align-items:stretch}.wrrow .wrfile{flex:1;min-width:0}.wrrow .ib{height:auto;min-height:44px;width:48px}
 #wpacesel,#wkmsel,#wdursel{font-size:16px;font-weight:600}#wkmown,#wdurown{margin-top:8px}
 .wdurinfo.bad{background:#fff3c4;color:#6b4a00}html[data-theme=dark] .wdurinfo.bad{background:#4a3f12;color:#ffe08a}.wclash{margin-top:6px;font-size:14px;font-weight:600;line-height:1.35}.wclash .lnk{font-weight:700;color:var(--acc);margin-left:4px}
+.wfclash{margin:0 0 8px;padding:8px 12px;border-radius:12px;background:#fff3c4;color:#6b4a00;font-size:14px;font-weight:600;text-align:center;line-height:1.35}html[data-theme=dark] .wfclash{background:#4a3f12;color:#ffe08a}.wfclash .lnk{font-weight:700;color:var(--acc)}
 .wdurinfo{margin-top:10px;padding:9px 12px;border-radius:12px;background:var(--fill);font-size:14.5px;text-align:center}
 .wdur{margin-top:5px;font-size:14px;color:var(--mut)}.popbox .wdur{text-align:center}#wpaceown{margin-top:8px}
 .wpc-own{background:var(--fill);color:var(--ink)}
@@ -573,6 +574,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
      <div class="fcol" data-u="m2"><button type="button" class="farr" data-s="1" aria-label="Koniec zakresu: minuty później">▲</button><div class="fcard" id="fcm2" title="Przeciągnij w górę/dół albo przewiń">00</div><button type="button" class="farr" data-s="-1" aria-label="Koniec zakresu: minuty wcześniej">▼</button></div>
     </div>
     <div class="qchips" id="wquick"><button type="button" data-q="30">Za 30 min</button><button type="button" data-q="17:30">17:30</button><button type="button" data-q="18:00">18:00</button><button type="button" data-q="19:00">19:00</button></div>
+    <div class="wdurinfo hide" id="wdurinfo"></div>
     <div class="wx hide" id="wwx"></div>
     <div id="wroutewrap" class="hide"><div class="wlbl">Proponowana trasa (opcjonalnie)</div>
      <div class="wrrow"><label class="wrfile"><input type="file" id="wrfile" accept=".gpx,application/gpx+xml,text/xml"><span id="wrlbl">🗺️ Dodaj plik GPX</span></label><button type="button" class="ib del hide" id="wrdel" aria-label="Usuń trasę" title="Usuń trasę"></button></div>
@@ -580,7 +582,6 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
     <div id="wpacewrap" class="hide"><div class="wlbl">Tempo</div><select id="wpacesel"><option value="">— tempo dowolne —</option><option value="senior">🐢 Senior Adventure · 15–18 km/h</option><option value="tour">🚴 Turystycznie · 18–24 km/h</option><option value="speed">⚡ SPEEDAY · 26+ km/h</option><option value="*">✏️ Inne…</option></select><input id="wpaceown" class="hide" maxlength="30" placeholder="np. 20–22 km/h, bez pośpiechu"></div>
     <div id="wdistwrap" class="hide"><div class="wlbl">Dystans</div><select id="wkmsel"><option value="">— nie wiem —</option><option value="20">20 km</option><option value="30">30 km</option><option value="50">50 km</option><option value="80">80 km</option><option value="100">100 km</option><option value="*">✏️ Inny…</option></select><input id="wkmown" class="hide" inputmode="decimal" maxlength="5" placeholder="ile km, np. 42"></div>
     <div id="wdurwrap" class="hide"><div class="wlbl">Na ile jedziesz?</div><select id="wdursel"><option value="60">1 h</option><option value="90">1,5 h</option><option value="120">2 h</option><option value="150">2,5 h</option><option value="180">3 h</option><option value="240">4 h</option><option value="300">5 h</option><option value="360">6 h</option><option value="*">✏️ Inny…</option></select><input id="wdurown" class="hide" inputmode="decimal" maxlength="4" placeholder="ile godzin, np. 3,5"></div>
-    <div class="wdurinfo hide" id="wdurinfo"></div>
     <div id="wtestwrap" class="hide"><div class="wlbl">Rodzaj zaproszenia</div><div class="seg" id="wtest"><button type="button" data-test="1" class="on">🧪 Testowe</button><button type="button" data-test="0">🚴 Prawdziwe</button></div><div class="note" id="wtestnote" style="margin-top:6px"></div></div>
     <div id="wwhowrap" class="hide"><div class="wlbl">Kto zobaczy zaproszenie?</div><button type="button" class="who" id="wwho"></button></div>
     <div class="wlbl">Notatka</div>
@@ -588,6 +589,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
     <input id="wnote" class="hide" maxlength="200" placeholder="Napisz własną notatkę">
   </div>
   <div class="wffoot">
+    <div class="wfclash hide" id="wfclash"></div>
     <button type="button" class="b big" id="wsave" >Wyślij zaproszenie</button>
     <div class="row between" style="margin-top:6px"><button type="button" class="lnk" id="wlast"></button><button type="button" class="lnk" id="wcancel">Anuluj</button></div>
   </div>
@@ -2073,7 +2075,7 @@ function wantHtml(w){
     // admin widzi cudze prywatne zaproszenie tylko podglądowo (bez „Jadę!”), chyba że jest zaproszony
     const peek=priv&&!mine&&!invIds(w).includes(uid)&&!joined;
     const open=isOpen(w),myp=(prefs[w.id]||{})[uid],dec=(decls[w.id]||[]).includes(uid);
-    return '<div class="want'+(mine?' mine':'')+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'">'+(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+'<div class="wtop">'+nk(w.user_id)+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="lockt">do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?'<span class="lockt">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>':'')+(mine?'<span class="note">(Twoje zgłoszenie)</span>':'')+'</div>'
+    return '<div class="want'+(mine?' mine':'')+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'">'+(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+'<div class="wtop">'+nk(w.user_id)+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="lockt">do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?'<span class="lockt">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>':'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
      +paceHtml(w)+durLineHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+wxHtml(w)+routeBoxHtml(w)
      +invitedHtml(w)
      +(open?tallyHtml(w):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w))
@@ -2245,7 +2247,7 @@ function wfPaceSync(){
 function wfKm(){return wf.route?routeKm(wf.route):wf.km||null}
 function wfDurMin(){const k=wfKm();return k?Math.round(k/wPaceKmh(wf.pace)*60):wf.dur||DUR_DEF}
 function wfDurSync(){
-  if(!distOk){["wdistwrap","wdurwrap","wdurinfo"].forEach(x=>$(x).classList.add("hide"));return}
+  if(!distOk){["wdistwrap","wdurwrap","wdurinfo","wfclash"].forEach(x=>$(x).classList.add("hide"));return}
   const R=!!wf.route;$("wdistwrap").classList.toggle("hide",R);$("wdurwrap").classList.toggle("hide",R||!!wf.km);
   const ks=$("wkmsel"),kp=wf.km&&[...ks.options].some(o=>o.value===String(wf.km));
   if(wf.km&&!kp)wf.kmOwn=true;
@@ -2256,7 +2258,7 @@ function wfDurSync(){
   ds.value=wf.durOwn?"*":String(wf.dur||DUR_DEF);$("wdurown").classList.toggle("hide",!wf.durOwn);
   if(wf.durOwn&&wf.dur&&document.activeElement!==$("wdurown"))$("wdurown").value=String(wf.dur/60).replace(".",",");
   const d=wfDate(),i=$("wdurinfo"),k=wfKm(),m=wfDurMin();
-  if(!d){i.classList.add("hide");return}
+  if(!d){i.classList.add("hide");$("wfclash").classList.add("hide");return}
   const st=d,en=new Date((wfRange()?wfDate2():d).getTime()+m*60000);
   i.innerHTML='⏱ '+(wfRange()?'Jazda ok. '+durTxt(m)+' → koniec najpóźniej ok. '+hhmm(en):'Jazda ok. '+hhmm(st)+'–'+hhmm(en)+' ('+durTxt(m)+')')
     +(k?' <span class="note">· '+kmTxt(k).replace(",0","")+' km przy '+String(Math.round(wPaceKmh(wf.pace)*10)/10).replace(".",",")+' km/h</span>':'');
@@ -2265,9 +2267,13 @@ function wfDurSync(){
   if(cl){const cs=wantStart(cl),ce=wantEnd(cl);
     if(cs<=st){const nx=ceil5(ce.getTime()+RIDE_GAP*60000);
       wf.jump=localIso(nx).slice(0,10)===localIso(st).slice(0,10)?nx:null;
-      i.innerHTML+='<div class="wclash">⚠️ Nachodzi na Twoją jazdę '+esc(relDay(cs).toLowerCase())+' '+hhmm(cs)+'–'+hhmm(ce)+'. Najwcześniej o <b>'+hhmm(nx)+'</b>.'+(wf.jump?' <button type="button" class="lnk" id="wjump">Ustaw '+hhmm(nx)+'</button>':'')+'</div>'}
+      i.innerHTML+='<div class="wclash">⚠️ Nachodzi na Twoją jazdę '+esc(relDay(cs).toLowerCase())+' '+hhmm(cs)+'–'+hhmm(ce)+'. Najwcześniej o <b>'+hhmm(nx)+'</b>.'+(wf.jump?' <button type="button" class="lnk wjump">Ustaw '+hhmm(nx)+'</button>':'')+'</div>'}
     else i.innerHTML+='<div class="wclash">⚠️ '+esc(relDay(cs))+' o '+hhmm(cs)+' masz już jazdę — ta skończyłaby się ok. '+hhmm(en)+'. Wybierz wcześniejszą godzinę albo krótszą jazdę.</div>'}
   i.classList.toggle("bad",!!cl);
+  const fb=$("wfclash");
+  if(cl){const cs=wantStart(cl),ce=wantEnd(cl);
+    fb.innerHTML='⚠️ Nachodzi na jazdę '+esc(relDay(cs).toLowerCase())+' '+hhmm(cs)+'–'+hhmm(ce)+(wf.jump?' · <button type="button" class="lnk wjump">Ustaw '+hhmm(wf.jump)+'</button>':cs>st?' · wybierz wcześniejszą godzinę':'');
+    fb.classList.remove("hide")}else fb.classList.add("hide");
   i.classList.remove("hide");
 }
 // czy nowe zaproszenie nachodzi na inne moje (z zapasem 15 min)
@@ -2310,10 +2316,11 @@ $("wpacesel").addEventListener("change",()=>{const v=$("wpacesel").value;
   else{wf.pace=v||null;$("wpaceown").classList.add("hide")}
   wfRouteSync()});
 $("wpaceown").addEventListener("input",()=>{wf.pace=$("wpaceown").value.trim().slice(0,30)||null;wfRouteSync()});
-$("wdurinfo").addEventListener("click",e=>{if(e.target.id!=="wjump"||!wf.jump)return;
+const wfJump=e=>{if(!e.target.closest(".wjump")||!wf.jump)return;
   const j=wf.jump,len=wfRange()?(wf.h2*60+wf.m2)-(wf.h*60+wf.m):0;wfSetTime(j.getHours(),j.getMinutes());
   if(len>0){const e2=new Date(j.getTime()+len*60000);if(e2.getDate()===j.getDate())wfSetTime2(e2.getHours(),e2.getMinutes())}
-  wfUpdate();try{navigator.vibrate&&navigator.vibrate(8)}catch(x){}});
+  wfUpdate();try{navigator.vibrate&&navigator.vibrate(8)}catch(x){}};
+$("wdurinfo").addEventListener("click",wfJump);$("wfclash").addEventListener("click",wfJump);
 $("wkmsel").addEventListener("change",()=>{const v=$("wkmsel").value;
   if(v==="*"){wf.km=null;wf.kmOwn=true;$("wkmown").value="";wfDurSync();$("wkmown").focus();return}wf.kmOwn=false;wf.km=v?+v:null;
   wfDurSync()});
