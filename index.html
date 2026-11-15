@@ -392,6 +392,11 @@ html[data-theme=dark] .fbs.s-accepted{background:#1d2c45;color:#8fb5ff}
 .fbm{max-width:88%;margin-top:8px;padding:8px 11px;border-radius:14px 14px 14px 4px;background:var(--fill);font-size:15px}
 .fbm.me{margin-left:auto;border-radius:14px 14px 4px 14px;background:var(--acc2)}
 .fbmh{font-size:12px;margin-bottom:2px}.fbmh .nk{font-size:13px;padding:0 7px}.fbmb{white-space:pre-wrap;word-break:break-word}
+/* „Połącz z Telegramem” — niebieski, pulsujący (wariant A), do czasu połączenia */
+.sbtn.tgx{background:linear-gradient(135deg,#2AABEE,#1E8FD0);color:#fff;padding:13px 14px;line-height:1.2;animation:tgpulse 1.8s ease-out infinite}
+.sbtn.tgx small{display:block;font-size:13px;font-weight:500;opacity:.92;margin-top:3px}
+@keyframes tgpulse{0%{box-shadow:0 0 0 0 rgba(42,171,238,.65)}70%{box-shadow:0 0 0 14px rgba(42,171,238,0)}100%{box-shadow:0 0 0 0 rgba(42,171,238,0)}}
+@media (prefers-reduced-motion:reduce){.sbtn.tgx{animation:none}}
 .tcard{border:1.5px solid rgba(122,79,209,.35);background:rgba(122,79,209,.07);border-radius:16px;padding:12px 14px;margin:24px 0 16px;text-align:left}
 .tcard b{font-size:16px}.tcard .note{font-size:14px;margin-top:4px;line-height:1.4}.tcard .sbtn{background:#7a4fd1;margin-top:10px;padding:12px;font-size:16px}
 #fbstat{margin-top:8px}#fbstat button{font-size:13px;padding:9px 2px}
@@ -908,6 +913,7 @@ sparkles:'<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><
 belloff:'<path d="M8.7 3A6 6 0 0 1 18 8a21.3 21.3 0 0 0 .6 5M17 17H3s3-2 3-9a4.67 4.67 0 0 1 .3-1.7M10.3 21a1.94 1.94 0 0 0 3.4 0M2 2l20 20"/>',
 trend:'<path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>',
 plus:'<path d="M12 5v14M5 12h14"/>',
+send:'<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/>',
 sliders:'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>'
 };
 const uiIcon=k=>'<svg class="ui-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+UI_P[k]+'</svg>';
@@ -1476,7 +1482,8 @@ function renderGear(){
     ?testerCardHtml()+'<div class="sname">👤 '+(me.nick?nk(uid):'ustaw nick')+(isAdmin?' 🛡️':'')+'</div><div class="smail">'+esc(session.user.email||"")+(stazTxt(uid)?'<br><span class="staz">'+esc(stazTxt(uid))+'</span>':'')+'</div>'
      +'<button class="b sbtn g" data-c="nick">✏️ '+(me.nick?'Nick i płeć':'Ustaw nick')+'</button>'
      +(favOk?'<button class="b sbtn g" data-c="favs">⭐ Ulubieni'+(favs.size?' ('+favs.size+')':'')+'</button>':'')
-     +(tgOn()?'<button class="b sbtn'+(tgLink?' g':'')+'" data-c="tg">'+(tgLink?'🔔 Telegram: połączony ✅':'🔔 Połącz z Telegramem')+betaTag("telegram_dm")+'</button>':'')+tg
+     +(tgOn()?(tgLink?'<button class="b sbtn g" data-c="tg">🔔 Telegram: połączony ✅'+betaTag("telegram_dm")+'</button>'
+       :'<button class="b sbtn tgx" data-c="tg">'+uiIcon("send")+' Połącz z Telegramem'+betaTag("telegram_dm")+'<small>Powiadomienia prosto na telefon</small></button>'):'')+tg
      +(fbOk?'<button class="b sbtn g" data-c="fb">💬 Oceń aplikację / zgłoś błąd'+(fbMineUnread().length?' <span class="fbcnt">'+fbMineUnread().length+'</span>':'')+'</button>':'')
      +(isAdmin?'<button class="b sbtn g" data-c="admin">🛡️ Administracja'+(fbAdmUnread().length?' <span class="fbcnt">'+fbAdmUnread().length+'</span>':'')+'</button>':'')
      +(meTester()?'<div class="note" style="margin-top:14px">🧪 Funkcje testowe (jesteś testerem)</div><div class="seg">'+[["1","Pokaż"],["0","Ukryj"]].map(([k,t])=>'<button data-beta="'+k+'" class="'+((betaOn?"1":"0")===k?"on":"")+'">'+t+'</button>').join("")+'</div><div class="note" style="margin-top:6px">„Ukryj” — widzisz aplikację tak jak wszyscy.</div>':'')
