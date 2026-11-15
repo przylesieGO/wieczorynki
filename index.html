@@ -353,6 +353,9 @@ html,body{overscroll-behavior-x:none}
 /* zaproszenia dla wybranych (KROK 13): pole „Kto zobaczy”, okno „Kogo zapraszasz?”, popup */
 .toast{z-index:5000}
 /* ➕ pływający przycisk nowego zaproszenia */
+.totop{position:fixed;left:max(calc(16px + env(safe-area-inset-left,0px)),calc((100vw - 900px)/2 + 16px));bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:1490;width:46px;height:46px;border-radius:50%;border:1px solid rgba(0,0,0,.08);background:rgba(255,255,255,.62);color:var(--ink);-webkit-backdrop-filter:blur(14px) saturate(1.6);backdrop-filter:blur(14px) saturate(1.6);box-shadow:0 4px 14px rgba(0,0,0,.14);display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;opacity:0;transform:translateY(14px) scale(.9);pointer-events:none;transition:opacity .22s,transform .22s}
+.totop svg{width:24px;height:24px}.totop.on{opacity:1;transform:none;pointer-events:auto}.totop:active{transform:scale(.92)}
+html[data-theme=dark] .totop{background:rgba(58,58,60,.6);border-color:rgba(255,255,255,.1);box-shadow:0 4px 14px rgba(0,0,0,.4)}
 .fab{position:fixed;right:max(calc(16px + env(safe-area-inset-right,0px)),calc((100vw - 900px)/2 + 16px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:1500;height:58px;min-width:58px;padding:0 22px 0 17px;border:0;border-radius:29px;display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(160deg,#3ecf62,#248a3d);color:#fff;font:inherit;font-size:17px;font-weight:700;letter-spacing:-.01em;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 8px 22px rgba(36,138,61,.38),0 2px 6px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.3);transition:padding .25s,gap .25s,transform .12s,opacity .2s}
 .fab svg{width:26px;height:26px;flex:none}
 .ui-i .gold{fill:#f5b301;stroke:#e0a100}
@@ -708,6 +711,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 <div class="sheet hide" id="helpsheet"></div>
 <div class="sheet hide" id="ratesheet"></div>
 <!-- ➕ pływający przycisk „Zaproś na rower” (zwija się przy przewijaniu w dół) -->
+<button type="button" class="totop" id="totop" aria-label="Przewiń na górę" title="Na górę"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 14.5l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 <button type="button" class="fab hide" id="fab" aria-label="Zaproś na rower — nowe zaproszenie"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5v15M4.5 12h15" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span class="fabt">Zaproś na rower</span><b class="fbadge hide" id="wbadge"></b></button>
 <div class="toast hide" id="toast"></div>
 
@@ -2253,12 +2257,21 @@ function updateFab(){
   f.classList.toggle("hide",!on);f.classList.toggle("off",!session);
   f.setAttribute("aria-disabled",session?"false":"true");
   document.body.classList.toggle("hasfab",on);
+  updateTop();
 }
+// ⬆ „Na górę”: po przewinięciu ponad ok. 1 ekran; chowa się przy okienkach
+function updateTop(){
+  const t=$("totop");if(!t)return;
+  const y=window.scrollY||document.documentElement.scrollTop||0;
+  const anySheet=[...document.querySelectorAll(".sheet")].some(x=>!x.classList.contains("hide"));
+  t.classList.toggle("on",y>Math.min(500,window.innerHeight*.6)&&!anySheet&&$("wantform").classList.contains("hide"));
+}
+$("totop").onclick=()=>{window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}};
 let fabY=0;
 window.addEventListener("scroll",()=>{
   const y=window.scrollY||document.documentElement.scrollTop||0,f=$("fab");
   if(y<80)f.classList.remove("mini");else if(y>fabY+6)f.classList.add("mini");else if(y<fabY-6)f.classList.remove("mini");
-  fabY=y;
+  fabY=y;updateTop();
 },{passive:true});
 $("fab").onclick=()=>{
   if(!session){say("Zaloguj się, żeby zaprosić na rower.");return}
