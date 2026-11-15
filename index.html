@@ -536,6 +536,24 @@ html[data-theme=dark] .aex{color:#ffd666}
 html[data-theme=dark] .rpb{background:#4a3f12;color:#ffd666}
 .rpt{display:inline-block;background:var(--fill);color:var(--ink);border-radius:999px;padding:2px 9px;font-size:13px;margin:2px 4px 2px 0}
 .rbtn{margin-top:8px}.ai .b.rbtn{width:100%;padding:9px}.rpend{font-style:normal;background:#ff9f0a;color:#fff;border-radius:999px;padding:1px 8px;font-size:13px;margin-left:6px}
+.evadd{padding:8px 12px;font-size:14px;white-space:nowrap;flex:none}#p3 h2{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.evchips{display:flex;gap:7px;overflow-x:auto;margin-top:10px;padding-bottom:2px;scrollbar-width:none}.evchips .fch{white-space:nowrap;padding:7px 12px;font-size:14px}
+.evmon{font-size:12px;font-weight:800;letter-spacing:.06em;color:var(--mut);text-transform:uppercase;margin:16px 0 6px}
+.ev{border:1px solid var(--line);border-radius:16px;margin-top:8px;overflow:hidden}.ev.mine{border:2px solid var(--acc)}.ev.past{opacity:.85}
+.evh{display:flex;gap:11px;align-items:flex-start;width:100%;border:0;background:none;color:var(--ink);font:inherit;text-align:left;padding:10px 12px;cursor:pointer}
+.evdt{flex:none;width:50px;height:56px;border-radius:9px;background:#2c2c2e;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+html[data-theme=dark] .evdt{background:#e5e5ea;color:#1d1d1f}.evdt b{font-size:22px;line-height:1}.evdt i{font-style:normal;font-size:10px;letter-spacing:.1em;margin-top:4px;font-weight:700}
+.evm{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.evn{font-weight:800;font-size:17px;line-height:1.25}.evl{color:var(--mut);font-size:14px}.evch{color:var(--mut);font-size:18px}
+.evps{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}.evp{border-radius:999px;padding:2px 9px;font-size:12.5px;font-weight:800}
+.evp-u{background:var(--acc2);color:var(--acc)}.evp-t{background:#fff3c4;color:#8a5a00}.evp-r{background:#e3eefc;color:#1d4ed8}.evp-x{background:var(--fill);color:var(--mut)}.evp-m{background:var(--accbtn);color:#fff}
+html[data-theme=dark] .evp-t{background:#4a3f12;color:#ffd666}html[data-theme=dark] .evp-r{background:#1e2c45;color:#8fb6ff}
+.evb{padding:0 12px 12px}.evl2{margin-top:6px;font-size:14.5px;line-height:1.5;word-break:break-word}
+.evd{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}.evd.me .evdl b{color:var(--acc)}
+.evdl{flex:1;min-width:0}.evdl b{display:block;font-size:15.5px}.evdl span{color:var(--mut);font-size:13.5px}.evdn{margin-top:4px;line-height:1.8}
+.evj{flex:none;padding:8px 14px;font-size:14.5px}.evlv{display:block;margin:10px auto 0;color:var(--bad)}.evacts{margin-top:10px}
+.evtwo{display:flex;gap:10px}.evtwo>div{flex:1;min-width:0}.evfbox textarea{width:100%;box-sizing:border-box}
+.evdr{display:flex;gap:6px;align-items:center;margin-top:6px}.evdr select{flex:0 0 38%}.evdr input[data-efd="km"]{flex:0 0 64px;text-align:right}.evdr input[data-efd="name"]{flex:1;min-width:0}
+.evdx{border:0;background:var(--fill);color:var(--bad);border-radius:10px;width:34px;height:34px;font-weight:800;cursor:pointer}
+.evsim{margin-top:6px;border:1px dashed var(--acc);border-radius:10px;padding:7px 10px;font-size:13.5px;color:var(--acc)}
 .hmorebtn{display:block;margin:12px auto 0;font-weight:700;color:var(--acc)}
 .hfull{margin-top:10px;text-align:left;display:flex;flex-direction:column;gap:12px}
 .hfs b{font-size:15px}.hfs ul{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:6px}.hfs li{font-size:14px;line-height:1.45}.hfs li b{font-size:inherit}
@@ -625,7 +643,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 <!-- ===== NAGŁÓWEK (przyklejony, zwija się przy przewijaniu) ===== -->
 <header class="hdr" id="hdr"><button type="button" class="betabar" data-betafb="1">🧪 Wersja testowa (BETA) · <u>zgłoś uwagi ›</u></button><div class="hin">
  <h1 class="apptitle"><button type="button" class="honl hide" id="honl" aria-label="Kto jest online"></button><span class="tlogo"><svg class="blogo" viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="27" fill="#1f9d55"/><circle cx="44" cy="62" r="25" fill="none" stroke="#fff" stroke-width="9"/><circle cx="76" cy="62" r="25" fill="none" stroke="#fbbf24" stroke-width="9"/><circle cx="44" cy="62" r="4" fill="#fff"/><circle cx="76" cy="62" r="4" fill="#fbbf24"/></svg></span><span class="tname"> PrzylesieGo!</span><span class="menick hide" id="menick" title="Jesteś zalogowany jako — kliknij, żeby otworzyć Ustawienia"></span></h1>
- <nav><button id="t0" class="on">ZAPROSZENIA</button><button id="t1" class="hide">Wieczorynki</button><button id="t2" class="hide">Zaawansowane</button></nav>
+ <nav><button id="t0" class="on">ZAPROSZENIA</button><button id="t3" class="hide">Imprezy</button><button id="t1" class="hide">Wieczorynki</button><button id="t2" class="hide">Zaawansowane</button></nav>
  <button class="gear bell hide" id="bellbtn" aria-label="Powiadomienia" title="Powiadomienia"><svg class="ui-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><b class="bbadge hide" id="bellbadge"></b></button>
  <button class="gear help" id="helpbtn" aria-label="Pomoc — co potrafi aplikacja" title="Pomoc"><svg class="ui-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></button>
  <button class="gear" id="gear" aria-label="Ustawienia" title="Ustawienia"><svg class="ui-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
@@ -711,6 +729,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 <div class="sheet bsh hide" id="whosheet"></div>
 <div class="sheet bsh hide" id="fltsheet"></div>
 <div class="sheet bsh hide" id="repsheet"></div>
+<div class="sheet bsh hide" id="evsheet"></div>
 <div class="sheet hide" id="popsheet"></div>
 <div class="sheet hide" id="picksheet"></div>
 <div class="sheet bsh hide" id="bellsheet"></div>
@@ -742,6 +761,16 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
  </div>
  <!-- odliczanie do najbliższej wieczorynki (zegar klapkowy) -->
  <div class="card cdcard hide" id="cdbody"></div>
+</section>
+
+<!-- ===== IMPREZY MASOWE (KROK 40, opcja testowa) ===== -->
+<section id="p3" class="hide">
+ <div class="card">
+  <div class="row between"><h2 style="margin:0">🏁 Imprezy <span id="evbeta"></span></h2><button type="button" class="b evadd" id="evadd">＋ Dodaj imprezę</button></div>
+  <div class="evchips" id="evchips"></div>
+  <div id="evlist"></div>
+  <div id="evarch"></div>
+ </div>
 </section>
 
 <!-- ===== WIECZORYNKI ===== -->
@@ -1330,10 +1359,10 @@ const feat=k=>{const f=flags[k];return !!f&&(f.state==="all"||(f.state==="tester
 // plakietka 🧪 BETA przy funkcji, która nie jest jeszcze dla wszystkich
 const betaTag=k=>flags[k]&&flags[k].state!=="all"?'<span class="beta">🧪 BETA</span>':'';
 // zakładki pod przełącznikiem (KROK 17): brak wpisu w bazie = widoczna dla wszystkich (jak dotąd)
-const TAB_FLAG={1:"tab_rides",2:"tab_advanced"};
+const TAB_FLAG={1:"tab_rides",2:"tab_advanced",3:"tab_events"};
 // do czasu wczytania przełączników zakładki pod przełącznikiem są ukryte (bez mignięcia przy odświeżaniu)
-const tabOk=i=>{const k=TAB_FLAG[i];if(k&&!flagsReady)return false;if(i===2&&!session)return false;return !k||!flags[k]||feat(k)};
-const visTabs=()=>[0,1,2].filter(tabOk);
+const tabOk=i=>{const k=TAB_FLAG[i];if(k&&!flagsReady)return false;if((i===2||i===3)&&!session)return false;if(i===3&&!flags[k])return false;return !k||!flags[k]||feat(k)};
+const visTabs=()=>[0,3,1,2].filter(tabOk);
 function delHtml(){
   const head='<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">🗑️ Usuń konto</div>';
   if(isSuper(uid))return head+'<div class="sleft"><div class="changed">👑 Jesteś głównym administratorem PrzylesieGo — tego konta nie można usunąć.</div></div>';
@@ -1890,7 +1919,7 @@ function renderChrome(){
   $("hdr").classList.toggle("hide",welcome);
   renderGear();
   // zakładki: Wieczorynki / Zaawansowane mogą być tylko dla testerów (🚦 Funkcje testowe)
-  [1,2].forEach(i=>{
+  [1,2,3].forEach(i=>{
     const b=$("t"+i),k=TAB_FLAG[i],beta=tabOk(i)&&flags[k]&&flags[k].state!=="all";
     b.classList.toggle("hide",!tabOk(i));
     b.classList.toggle("tbeta",!!beta);b.title=beta?"🧪 BETA — widzą tylko testerzy":"";
@@ -2434,6 +2463,167 @@ document.addEventListener("click",async e=>{
 
 
 
+
+/* ---------- 🏁 imprezy masowe — MVP (KROK 40; założenia właściciela 2026-11-15 20:58) ---------- */
+let evOk=false,evs=[],evDist={},evPart={},evOpen="",evFlt="",evArchOpen=false,ef=null;
+const EV_BIKE={gravel:["🪨","Gravel"],road:["🛣","Szosa"],mtb:["⛰","MTB"],any:["🚲","Dowolny"]};
+const todayIso=()=>localIso(new Date()).slice(0,10);
+const evEnd=e=>e.date_to||e.date_from;
+const evPast=e=>evEnd(e)<todayIso();
+const evDays=e=>Math.round((new Date(e.date_from+"T12:00")-new Date(todayIso()+"T12:00"))/864e5);
+const evMine=e=>(evPart[e.id]||[]).find(x=>x.user_id===uid);
+const evCanEdit=e=>!!session&&(e.created_by===uid||isAdmin);
+function evDates(e){const a=new Date(e.date_from+"T12:00"),b=e.date_to&&e.date_to!==e.date_from?new Date(e.date_to+"T12:00"):null;
+  const f=d=>d.toLocaleDateString("pl-PL",{day:"numeric",month:"numeric"});
+  return b?(f(a)+"–"+f(b)+"."+b.getFullYear()):a.toLocaleDateString("pl-PL",{day:"numeric",month:"numeric",year:"numeric"})}
+function evReg(e){
+  if(evPast(e))return "";
+  if(e.reg_closed||(e.reg_until&&e.reg_until<todayIso()))return '<span class="evp evp-x">🔒 zapisy zakończone</span>';
+  if(e.reg_until){const n=Math.round((new Date(e.reg_until+"T12:00")-new Date(todayIso()+"T12:00"))/864e5);
+    return '<span class="evp evp-r">📝 zapisy do '+esc(new Date(e.reg_until+"T12:00").toLocaleDateString("pl-PL",{day:"numeric",month:"numeric"}))+(n<=14?' (za '+n+' '+plf(n,["dzień","dni","dni"])+')':'')+'</span>'}
+  return '<span class="evp evp-r">📝 zapisy trwają</span>';
+}
+function evKmLine(e){const g={};(evDist[e.id]||[]).forEach(d=>{(g[d.bike]=g[d.bike]||[]).push(String(+d.km).replace(".",","))});
+  return Object.keys(EV_BIKE).filter(k=>g[k]).map(k=>EV_BIKE[k][0]+" "+g[k].join(" / ")).join(" · ")+(Object.keys(g).length?" km":"")}
+function evWhen(e){const n=evDays(e);if(n>0)return "⏳ za "+n+" "+plf(n,["dzień","dni","dni"]);if(!evPast(e))return "🚴 trwa";return ""}
+function evCard(e){
+  const P=evPart[e.id]||[],D=evDist[e.id]||[],mine=evMine(e),open=evOpen===e.id,past=evPast(e),d=new Date(e.date_from+"T12:00");
+  const head='<button type="button" class="evh" data-ev="tog" data-id="'+esc(e.id)+'"><span class="evdt"><b>'+d.getDate()+'</b><i>'+esc(d.toLocaleDateString("pl-PL",{month:"short"}).replace(".","").toUpperCase())+'</i></span><span class="evm"><span class="evn">'+esc(e.name)+'</span>'
+   +'<span class="evl">'+(e.place?'📍 '+esc(e.place)+' · ':'')+esc(evDates(e))+'</span>'+(D.length?'<span class="evl">'+esc(evKmLine(e))+'</span>':'')
+   +'<span class="evps">'+(P.length?'<span class="evp evp-u">👥 '+P.length+' z nas</span>':'')+(evWhen(e)&&!past?'<span class="evp evp-t">'+evWhen(e)+'</span>':'')+evReg(e)+(mine?'<span class="evp evp-m">✓ jadę</span>':'')+'</span></span><span class="evch">'+(open?'⌃':'⌄')+'</span></button>';
+  if(!open)return '<div class="ev'+(mine?' mine':'')+(past?' past':'')+'">'+head+'</div>';
+  const rows=D.map(x=>{const on=P.filter(p=>p.distance_id===x.id).map(p=>p.user_id),me=mine&&mine.distance_id===x.id;
+    return '<div class="evd'+(me?' me':'')+'"><div class="evdl"><b>'+EV_BIKE[x.bike][0]+' '+esc(x.name||EV_BIKE[x.bike][1]+' '+String(+x.km).replace(".",","))+'</b><span>'+String(+x.km).replace(".",",")+' km'+(on.length?' · '+on.length+' z nas':'')+'</span>'
+     +(on.length?'<div class="evdn">'+favFirst(on).map(id=>nk(id)).join(" ")+'</div>':'')+'</div>'
+     +(past?'':'<button type="button" class="b '+(me?'g':'')+' evj" data-ev="'+(me?'leave':'join')+'" data-id="'+esc(e.id)+'" data-d="'+esc(x.id)+'">'+(me?'✓ Jadę':'Jadę')+'</button>')+'</div>'}).join("");
+  const noD=P.filter(p=>!p.distance_id||!D.some(x=>x.id===p.distance_id)).map(p=>p.user_id);
+  return '<div class="ev open'+(mine?' mine':'')+(past?' past':'')+'">'+head+'<div class="evb">'
+   +(e.url?'<div class="evl2">🌐 <a href="'+esc(e.url)+'" target="_blank" rel="noopener">'+esc(e.url.replace(/^https?:\/\/(www\.)?/i,"").replace(/\/$/,"").slice(0,48))+'</a></div>':'')
+   +(e.note?'<div class="evl2">💬 '+esc(e.note)+'</div>':'')
+   +'<div class="bsgrp">Dystanse'+(past?'':' — wybierz i kliknij „Jadę”')+'</div>'+(rows||'<div class="note">Brak dystansów.</div>')
+   +(noD.length?'<div class="evl2">👥 Bez dystansu: '+noD.map(id=>nk(id)).join(" ")+'</div>':'')
+   +(mine&&!past?'<button type="button" class="lnk evlv" data-ev="leave" data-id="'+esc(e.id)+'">Rezygnuję</button>':'')
+   +'<div class="acts evacts"><button class="ib" data-ev="gcal" data-id="'+esc(e.id)+'" title="Google Kalendarz" aria-label="Google Kalendarz">'+ICON.gcal+'</button><button class="ib" data-ev="share" data-id="'+esc(e.id)+'" title="Udostępnij" aria-label="Udostępnij">'+ICON.share+'</button>'
+   +(evCanEdit(e)?'<button class="ib" data-ev="edit" data-id="'+esc(e.id)+'" title="Edytuj" aria-label="Edytuj">'+ICON.edit+'</button><button class="ib del'+(e.created_by===uid?'':' adm')+'" data-ev="del" data-id="'+esc(e.id)+'" title="Usuń" aria-label="Usuń">'+ICON.del+'</button>':'')+'</div>'
+   +(e.created_by&&nicks[e.created_by]?'<div class="note" style="margin-top:6px">Dodał(a): '+esc(nicks[e.created_by])+'</div>':'')+'</div></div>';
+}
+function evMatch(e){
+  if(!evFlt)return true;
+  if(evFlt==="mine")return !!evMine(e)||e.created_by===uid;
+  return (evDist[e.id]||[]).some(d=>d.bike===evFlt||d.bike==="any");
+}
+function renderEvents(){
+  const box=$("evlist");if(!box)return;
+  $("evbeta").innerHTML=betaTag("tab_events");
+  $("evchips").innerHTML=[["","Wszystkie"],["gravel","🪨 Gravel"],["road","🛣 Szosa"],["mtb","⛰ MTB"],["mine","🙋 Moje"]].map(([v,t])=>'<button type="button" class="fch'+(evFlt===v?' on':'')+'" data-evf="'+v+'">'+t+'</button>').join("");
+  if(!evOk){box.innerHTML='<div class="note" style="margin-top:12px">Imprezy jeszcze niedostępne (KROK 40 w bazie).</div>';$("evarch").innerHTML="";return}
+  const up=evs.filter(e=>!evPast(e)&&evMatch(e)),past=evs.filter(e=>evPast(e)&&evMatch(e)).sort((a,b)=>b.date_from.localeCompare(a.date_from));
+  let m="",h="";
+  up.forEach(e=>{const d=new Date(e.date_from+"T12:00"),k=d.toLocaleDateString("pl-PL",{month:"long",year:"numeric"});if(k!==m){m=k;h+='<div class="evmon">'+esc(k)+'</div>'}h+=evCard(e)});
+  box.innerHTML=h||'<div class="note" style="margin-top:12px">'+(evFlt?'Brak imprez dla tego filtra.':'Nie ma jeszcze imprez. Dodaj pierwszą — „＋ Dodaj imprezę”.')+'</div>';
+  $("evarch").innerHTML=past.length?'<div class="arch"><button type="button" class="ah" data-ev="arch">🗄 Minione imprezy<span>'+past.length+' '+(evArchOpen?'⌃':'⌄')+'</span></button>'+(evArchOpen?past.map(evCard).join(""):'')+'</div>':'';
+}
+async function evJoin(e,did){
+  try{const mine=evMine(e);
+    const r=mine?await sb.from("event_participants").update({distance_id:did}).eq("event_id",e.id).eq("user_id",uid):await sb.from("event_participants").insert({event_id:e.id,distance_id:did});
+    if(r.error)throw r.error;
+    const P=evPart[e.id]=(evPart[e.id]||[]).filter(x=>x.user_id!==uid);P.push({event_id:e.id,user_id:uid,distance_id:did});
+    renderEvents();try{navigator.vibrate&&navigator.vibrate(15)}catch(err){}say("🏁 Jedziesz: "+e.name)}
+  catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+}
+async function evLeave(e){
+  if(!confirm("Rezygnujesz z „"+e.name+"”?"))return;
+  try{const r=await sb.from("event_participants").delete().eq("event_id",e.id).eq("user_id",uid);if(r.error)throw r.error;
+    evPart[e.id]=(evPart[e.id]||[]).filter(x=>x.user_id!==uid);renderEvents();say("Zrezygnowano.")}catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+}
+$("p3").addEventListener("click",async e=>{
+  const f=e.target.closest("[data-evf]");if(f){evFlt=evFlt===f.dataset.evf?"":f.dataset.evf;renderEvents();return}
+  if(e.target.closest("#evadd")){openEvForm(null);return}
+  const b=e.target.closest("[data-ev]");if(!b)return;
+  if(b.dataset.ev==="arch"){evArchOpen=!evArchOpen;renderEvents();return}
+  const ev=evs.find(x=>x.id===b.dataset.id);if(!ev)return;
+  const a=b.dataset.ev;
+  if(a==="tog"){evOpen=evOpen===ev.id?"":ev.id;renderEvents();return}
+  if(a==="join"){evJoin(ev,b.dataset.d);return}
+  if(a==="leave"){if(b.dataset.d&&evMine(ev)&&evMine(ev).distance_id!==b.dataset.d){evJoin(ev,b.dataset.d);return}evLeave(ev);return}
+  if(a==="edit"){openEvForm(ev);return}
+  if(a==="gcal"){const end=new Date(evEnd(ev)+"T12:00");end.setDate(end.getDate()+1);const q=new URLSearchParams({action:"TEMPLATE",text:ev.name,dates:ev.date_from.replace(/-/g,"")+"/"+localIso(end).slice(0,10).replace(/-/g,""),location:ev.place||"",details:(ev.url||"")+(ev.note?"\n"+ev.note:"")});
+    window.open("https://calendar.google.com/calendar/render?"+q.toString(),"_blank","noopener");return}
+  if(a==="share"){const t="🏁 "+ev.name+" · "+evDates(ev)+(ev.place?" · "+ev.place:"")+(evKmLine(ev)?"\n"+evKmLine(ev):"");
+    if(navigator.share){try{await navigator.share({title:ev.name,text:t,url:ev.url||location.href.split("#")[0]});return}catch(err){if(err&&err.name==="AbortError")return}}
+    try{await navigator.clipboard.writeText(t+(ev.url?"\n"+ev.url:""));say("Skopiowano opis imprezy.")}catch(err){say(t)}return}
+  if(a==="del"){
+    const n=(evPart[ev.id]||[]).length,t=prompt("Usunąć imprezę „"+ev.name+"”"+(n?" (zapisanych: "+n+")":"")+"?\nWpisz USUŃ, żeby potwierdzić:");
+    if((t||"").trim().toUpperCase()!=="USUŃ"){if(t!==null)say("Nie usunięto — trzeba wpisać USUŃ.");return}
+    try{const r=await sb.from("events").delete().eq("id",ev.id);if(r.error)throw r.error;evs=evs.filter(x=>x.id!==ev.id);renderEvents();say("Usunięto imprezę.")}catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+  }
+});
+// formularz imprezy (okienko od dołu)
+function openEvForm(e){
+  ef={id:e?e.id:null,name:e?e.name:"",from:e?e.date_from:"",to:e&&e.date_to||"",place:e&&e.place||"",url:e&&e.url||"",note:e&&e.note||"",reg:e&&e.reg_closed?"closed":"open",regUntil:e&&e.reg_until||"",
+    dist:e?(evDist[e.id]||[]).map(d=>({id:d.id,bike:d.bike,km:String(+d.km),name:d.name||""})):[{bike:"gravel",km:"",name:""}],join:""};
+  renderEvForm();
+}
+function renderEvForm(){
+  const p=$("evsheet");p.classList.remove("hide");
+  const sim=ef.name.trim().length>=3?evs.filter(x=>x.id!==ef.id&&lc(x.name).includes(lc(ef.name.trim().slice(0,12)))).slice(0,3):[];
+  p.innerHTML='<div class="bsbox evfbox" role="dialog" aria-modal="true" aria-label="Impreza"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-ef="close">Anuluj</button><b>'+(ef.id?'Edytuj imprezę':'Dodaj imprezę')+'</b><span style="min-width:64px"></span></div><div class="bslist">'
+   +'<div class="bsgrp">Nazwa</div><input id="efname" maxlength="80" placeholder="np. Ultra Duch Puszczy 2027" value="'+esc(ef.name)+'">'
+   +'<div id="efsim">'+(sim.length?'<div class="evsim">Już są: '+sim.map(x=>'<b>'+esc(x.name)+'</b> ('+esc(evDates(x))+')').join(", ")+' — sprawdź, czy to nie ta sama.</div>':'')+'</div>'
+   +'<div class="evtwo"><div><div class="bsgrp">Od</div><input type="date" id="effrom" value="'+esc(ef.from)+'"></div><div><div class="bsgrp">Do <span class="note">(opcj.)</span></div><input type="date" id="efto" value="'+esc(ef.to)+'"></div></div>'
+   +'<div class="bsgrp">Gdzie (start / meta)</div><input id="efplace" maxlength="80" placeholder="np. Pułtusk, Przystań Miejska" value="'+esc(ef.place)+'">'
+   +'<div class="bsgrp">Dystanse (rower + km)</div><div id="efdist">'+efDistHtml()+'</div><button type="button" class="lnk" data-ef="adddist">＋ dodaj dystans</button>'
+   +'<div class="bsgrp">Zapisy</div><div class="seg" id="efreg"><button type="button" data-ef="reg" data-v="open" class="'+(ef.reg==="open"?'on':'')+'">📝 Trwają</button><button type="button" data-ef="reg" data-v="closed" class="'+(ef.reg==="closed"?'on':'')+'">🔒 Zakończone</button></div>'
+   +(ef.reg==="open"?'<div class="evtwo"><div><div class="bsgrp">Zapisy do <span class="note">(opcj.)</span></div><input type="date" id="efregu" value="'+esc(ef.regUntil)+'"></div><div></div></div>':'')
+   +'<div class="bsgrp">Strona imprezy <span class="note">(opcj.)</span></div><input id="efurl" type="url" maxlength="300" placeholder="https://…" value="'+esc(ef.url)+'">'
+   +'<div class="bsgrp">Krótki komentarz <span class="note">(opcj.)</span></div><textarea id="efnote" maxlength="300" rows="2" placeholder="np. zapisy przez competit.pl, start grupami">'+esc(ef.note)+'</textarea>'
+   +(ef.id?'':'<div class="bsgrp">Biorę udział</div><select id="efjoin"><option value="">— nie teraz —</option>'+ef.dist.map((d,i)=>'<option value="'+i+'"'+(ef.join===String(i)?' selected':'')+'>'+EV_BIKE[d.bike][0]+' '+esc(d.name||EV_BIKE[d.bike][1])+(d.km?' · '+esc(d.km)+' km':'')+'</option>').join("")+'</select>')
+   +'</div><button type="button" class="b big" data-ef="save">'+(ef.id?'Zapisz zmiany':'Dodaj imprezę')+'</button></div>';
+}
+function efDistHtml(){return ef.dist.map((d,i)=>'<div class="evdr"><select data-efd="bike" data-i="'+i+'">'+Object.entries(EV_BIKE).map(([k,v])=>'<option value="'+k+'"'+(d.bike===k?' selected':'')+'>'+v[0]+' '+v[1]+'</option>').join("")+'</select>'
+  +'<input data-efd="km" data-i="'+i+'" inputmode="decimal" maxlength="6" placeholder="km" value="'+esc(d.km)+'"><input data-efd="name" data-i="'+i+'" maxlength="40" placeholder="nazwa (opcj.)" value="'+esc(d.name)+'">'
+  +(ef.dist.length>1?'<button type="button" class="evdx" data-ef="rmdist" data-i="'+i+'" aria-label="Usuń dystans">✕</button>':'')+'</div>').join("")}
+function efRead(){const v=id=>{const x=$(id);return x?x.value:""};ef.name=v("efname");ef.from=v("effrom");ef.to=v("efto");ef.place=v("efplace");ef.url=v("efurl");ef.note=v("efnote");if($("efregu"))ef.regUntil=v("efregu");if($("efjoin"))ef.join=v("efjoin")}
+function closeEvForm(){const p=$("evsheet");p.classList.add("hide");p.innerHTML="";ef=null}
+$("evsheet").addEventListener("input",e=>{if(!ef)return;const t=e.target;
+  if(t.dataset.efd){const d=ef.dist[+t.dataset.i];if(d)d[t.dataset.efd]=t.value;return}
+  if(t.id==="efname"){ef.name=t.value;const sim=ef.name.trim().length>=3?evs.filter(x=>x.id!==ef.id&&lc(x.name).includes(lc(ef.name.trim().slice(0,12)))).slice(0,3):[];
+    $("efsim").innerHTML=sim.length?'<div class="evsim">Już są: '+sim.map(x=>'<b>'+esc(x.name)+'</b> ('+esc(evDates(x))+')').join(", ")+' — sprawdź, czy to nie ta sama.</div>':''}});
+$("evsheet").addEventListener("change",e=>{if(!ef)return;const t=e.target;if(t.dataset.efd==="bike"){const d=ef.dist[+t.dataset.i];if(d)d.bike=t.value}});
+$("evsheet").addEventListener("click",async e=>{
+  if(e.target===$("evsheet")){closeEvForm();return}
+  const b=e.target.closest("[data-ef]");if(!b||!ef)return;const k=b.dataset.ef;
+  if(k==="close"){closeEvForm();return}
+  efRead();
+  if(k==="adddist"){ef.dist.push({bike:ef.dist.length?ef.dist[ef.dist.length-1].bike:"gravel",km:"",name:""});renderEvForm();return}
+  if(k==="rmdist"){ef.dist.splice(+b.dataset.i,1);renderEvForm();return}
+  if(k==="reg"){ef.reg=b.dataset.v;renderEvForm();return}
+  if(k==="save")saveEvent();
+});
+async function saveEvent(){
+  const name=ef.name.trim(),url=ef.url.trim();
+  if(name.length<3){say("Podaj nazwę (min. 3 znaki).");return}
+  if(!ef.from){say("Podaj datę imprezy.");return}
+  if(ef.to&&ef.to<ef.from){say("Data „do” jest wcześniejsza niż „od”.");return}
+  if(url&&!/^https?:\/\//i.test(url)){say("Link musi zaczynać się od http:// albo https://");return}
+  const D=ef.dist.map(d=>({...d,k:parseFloat(String(d.km).replace(",","."))})).filter(d=>d.k>0);
+  if(!D.length){say("Dodaj co najmniej jeden dystans z km.");return}
+  const row={name,date_from:ef.from,date_to:ef.to&&ef.to!==ef.from?ef.to:null,place:ef.place.trim()||null,url:url||null,note:ef.note.trim()||null,reg_closed:ef.reg==="closed",reg_until:ef.reg==="open"&&ef.regUntil?ef.regUntil:null};
+  try{
+    let id=ef.id;
+    if(id){const r=await sb.from("events").update(row).eq("id",id).select("id");if(r.error||!r.data||!r.data.length)throw r.error||new Error("brak uprawnień")}
+    else{const r=await sb.from("events").insert(row).select("id").single();if(r.error)throw r.error;id=r.data.id}
+    const old=evDist[id]||[],keep=new Set(D.filter(d=>d.id).map(d=>d.id));
+    for(const o of old)if(!keep.has(o.id)){const r=await sb.from("event_distances").delete().eq("id",o.id);if(r.error)throw r.error}
+    const ids=[];
+    for(let i=0;i<D.length;i++){const d=D[i],dr={bike:d.bike,km:+d.k.toFixed(1),name:d.name.trim()||null,sort:i};
+      if(d.id){const r=await sb.from("event_distances").update(dr).eq("id",d.id);if(r.error)throw r.error;ids.push(d.id)}
+      else{const r=await sb.from("event_distances").insert(Object.assign({event_id:id},dr)).select("id").single();if(r.error)throw r.error;ids.push(r.data.id)}}
+    if(!ef.id&&ef.join!==""){const j=ef.dist[+ef.join],ix=j?D.indexOf(D.find(d=>d===j||(d.bike===j.bike&&d.km===j.km&&d.name===j.name))):-1;
+      if(ix>=0)await sb.from("event_participants").insert({event_id:id,distance_id:ids[ix]})}
+    closeEvForm();say(ef===null?"🏁 Zapisano imprezę.":"🏁 Zapisano.");evOpen=id;await loadRemote();show(3);
+  }catch(err){say("Nie udało się zapisać: "+(err&&err.message?err.message:"błąd"))}
+}
 /* ---------- 🚴 „Jak poszło?” po jeździe (KROK 39; decyzje właściciela 2026-11-15 20:08) ---------- */
 // wszystkie pytania + ocena trasy GPX; odpowiedzi widzą wszyscy; autor potwierdza obecność innych
 let reportOk=false,reports={},repHash="",rs=null,repShown=false,userRides={};
@@ -4360,6 +4550,14 @@ async function loadRemote(selectId){
     ]);
     const sp=await sb.from("superadmins").select("user_id");supers=new Set((sp&&!sp.error&&sp.data||[]).map(x=>x.user_id));
     const ts=await sb.from("testers").select("user_id");testerOk=!ts.error;testerIds=new Set((!ts.error&&ts.data||[]).map(x=>x.user_id));
+    // 🏁 imprezy masowe (KROK 40) — tylko gdy zakładka dostępna
+    if(flags.tab_events&&tabOk(3)){
+      const [e1,e2,e3]=await Promise.all([sb.from("events").select("id,created_by,name,date_from,date_to,place,url,note,reg_until,reg_closed").order("date_from").limit(1000),
+        sb.from("event_distances").select("id,event_id,bike,km,name,sort").limit(5000),sb.from("event_participants").select("event_id,user_id,distance_id").limit(10000)]);
+      evOk=!e1.error;evs=(e1.data||[]);evDist={};evPart={};
+      (e2.data||[]).forEach(x=>{(evDist[x.event_id]=evDist[x.event_id]||[]).push(x)});Object.values(evDist).forEach(a=>a.sort((p,q)=>p.sort-q.sort||p.km-q.km));
+      (e3.data||[]).forEach(x=>{(evPart[x.event_id]=evPart[x.event_id]||[]).push(x)});
+    }
     const fq=await sb.from("feedback").select("id,user_id,kind,rating,body,device,status,started_by,user_unread,admin_unread,created_at,updated_at").order("updated_at",{ascending:false}).limit(300);fbOk=!fq.error;fbList=fbOk?fq.data||[]:[];
     fbDone={};if(fbOk){const fc=await sb.rpc("fb_done_counts");if(!fc.error)(fc.data||[]).forEach(x=>{fbDone[x.user_id]=+x.n||0})}
     const tl=await sb.from("telegram_links").select("tg_name,linked_at").eq("user_id",uid).limit(1);tgOk=!tl.error;tgLink=tgOk&&tl.data&&tl.data[0]||null;
@@ -4402,6 +4600,7 @@ async function loadRemote(selectId){
   maybeHelp();
   maybeFb();
   maybeReport();
+  if(curTab===3)renderEvents();
   // 1 h przed początkiem zakresu godzina ustala się sama (KROK 15) — robi to baza, wywołuje pierwszy, kto odświeży
   if(session&&rangeOk&&Date.now()-autoAt>60000&&wants.some(w=>isOpen(w)&&new Date(w.range_from).getTime()<=Date.now()+36e5)){
     autoAt=Date.now();
@@ -4590,17 +4789,18 @@ $("aw").onclick=async()=>{
 /* ---------- zakładki ---------- */
 let curTab=0;
 function show(n,dir){
-  [0,1,2].forEach(i=>{$("p"+i).classList.toggle("hide",i!==n);$("t"+i).classList.toggle("on",i===n)});
+  [0,1,2,3].forEach(i=>{$("p"+i).classList.toggle("hide",i!==n);$("t"+i).classList.toggle("on",i===n)});
   const p=$("p"+n);p.style.transition="";p.style.transform="";p.style.opacity="";
   if(dir){p.classList.remove("slin-l","slin-r");void p.offsetWidth;p.classList.add(dir>0?"slin-r":"slin-l");setTimeout(()=>p.classList.remove("slin-l","slin-r"),300)}
   curTab=n;
   window.scrollTo({top:0});
   updateFab();
   if(n===0)renderCountdown();
+  if(n===3)renderEvents();
   if(n===1)requestAnimationFrame(()=>rcarScrollTo(cur,false));
   setTimeout(()=>{if(n===1&&map1)map1.m.invalidateSize();if(n===2&&map2)map2.m.invalidateSize()},60);
 }
-[0,1,2].forEach(i=>{$("t"+i).onclick=()=>show(i)});
+[0,1,2,3].forEach(i=>{$("t"+i).onclick=()=>show(i)});
 /* przesuwanie palcem w bok przełącza zakładki (poza mapą, karuzelą zaproszeń, kartkami zegara i polami) */
 (()=>{
   let x0=0,y0=0,lock=0,dx=0,sec=null;
