@@ -63,6 +63,9 @@ nav button.on{background:var(--accbtn);color:#fff;box-shadow:0 1px 4px rgba(36,1
 .wwx{font-size:14px;color:var(--mut);margin-top:6px}
 .wroute{margin-top:8px;padding:9px 11px;border-radius:12px;background:var(--acc2);font-size:15px}
 .wroute .wrb{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.wroute .wrb{flex-wrap:nowrap}.wroute .wrb .b{background:var(--card)!important;flex:1;padding:8px 6px;white-space:nowrap}
+.wrrow{display:flex;gap:8px;align-items:stretch}.wrrow .wrfile{flex:1;min-width:0}.wrrow .ib{height:auto;min-height:44px;width:48px}
+#wpacesel{font-size:16px;font-weight:600}#wpaceown{margin-top:8px}
+.wpc-own{background:var(--fill);color:var(--ink)}
 .wrfile{display:block;margin:0;cursor:pointer}.wrfile input{display:none}.wrfile span{display:block;padding:11px 12px;border-radius:12px;background:var(--fill);color:var(--acc);font-weight:700;font-size:16px;text-align:center}
 .rsbox{max-width:560px;text-align:left}.rsmap{height:300px}
 .ttag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.05em;color:#fff;background:#e5484d;border-radius:999px;padding:2px 9px;margin:0 0 6px 6px;vertical-align:1px;text-transform:none;box-shadow:0 0 0 0 rgba(229,72,77,.5);animation:tblink 1.3s ease-in-out infinite}
@@ -557,11 +560,11 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
     </div>
     <div class="qchips" id="wquick"><button type="button" data-q="30">Za 30 min</button><button type="button" data-q="17:30">17:30</button><button type="button" data-q="18:00">18:00</button><button type="button" data-q="19:00">19:00</button></div>
     <div class="wx hide" id="wwx"></div>
-    <div id="wpacewrap" class="hide"><div class="wlbl">Tempo</div><div class="wpace" id="wpace"></div><div class="note" id="wpacenote" style="margin-top:6px;text-align:center">Nic nie zaznaczone = tempo dowolne</div></div>
+    <div id="wpacewrap" class="hide"><div class="wlbl">Tempo</div><select id="wpacesel"><option value="">— tempo dowolne —</option><option value="senior">🐢 Senior Adventure · 15–18 km/h</option><option value="tour">🚴 Turystycznie · 18–24 km/h</option><option value="speed">⚡ SPEEDAY · 26+ km/h</option><option value="*">✏️ Inne…</option></select><input id="wpaceown" class="hide" maxlength="30" placeholder="np. 20–22 km/h, bez pośpiechu"></div>
     <div id="wtestwrap" class="hide"><div class="wlbl">Rodzaj zaproszenia</div><div class="seg" id="wtest"><button type="button" data-test="1" class="on">🧪 Testowe</button><button type="button" data-test="0">🚴 Prawdziwe</button></div><div class="note" id="wtestnote" style="margin-top:6px"></div></div>
     <div id="wwhowrap" class="hide"><div class="wlbl">Kto zobaczy zaproszenie?</div><button type="button" class="who" id="wwho"></button></div>
     <div id="wroutewrap" class="hide"><div class="wlbl">Proponowana trasa (opcjonalnie)</div>
-     <label class="wrfile"><input type="file" id="wrfile" accept=".gpx,application/gpx+xml,text/xml"><span id="wrlbl">🗺️ Dodaj plik GPX</span></label>
+     <div class="wrrow"><label class="wrfile"><input type="file" id="wrfile" accept=".gpx,application/gpx+xml,text/xml"><span id="wrlbl">🗺️ Dodaj plik GPX</span></label><button type="button" class="ib del hide" id="wrdel" aria-label="Usuń trasę" title="Usuń trasę"></button></div>
      <div class="row" id="wrinfo" style="margin-top:6px;gap:10px"></div></div>
     <div class="wlbl">Notatka</div>
     <select id="wnotesel"><option value="">— bez notatki —</option><option>W słusznej sprawie</option><option>Kebab RIDE</option><option>Na lody i pizza</option><option>SPEEDAY</option><option>Coffee Ride ☕</option><option>Na godzinkę +/- :)</option><option>Trochę po mieście</option><option>Może do lasu</option><option>Nad rzekę</option><option>Nocna Wataha</option><option value="*">✏️ Własna…</option></select>
@@ -1923,7 +1926,7 @@ async function openRouteSheet(w){
    +'<div class="legend"><span><i class="dot" style="background:#d64545"></i>pod wiatr</span><span><i class="dot" style="background:#e0b83a"></i>bocznie</span><span><i class="dot" style="background:#2a9d5c"></i>z wiatrem</span></div>'
    +'<div class="stats" id="stats3"></div><div class="note" id="windinfo3" style="margin-top:8px">Ładuję trasę…</div><div class="tip hide" id="tip3"></div><div class="routeinfo hide" id="placesbox3"></div>'
    +'<div class="pbtns" style="margin-top:14px"><button type="button" class="b" data-rt="gpx" data-id="'+esc(w.id)+'">⬇ Pobierz GPX</button><button type="button" class="b w" data-rk="close">Zamknij</button></div>'
-   +'<div class="ptg">Czas przy tempie ok. '+String(wPaceKmh(w.pace)).replace(".",",")+' km/h, z uwzględnieniem wiatru. Mapa © OpenStreetMap · pogoda: Open-Meteo.</div></div>';
+   +'<div class="ptg">Czas przy tempie ok. '+String(Math.round(wPaceKmh(w.pace)*10)/10).replace(".",",")+' km/h, z uwzględnieniem wiatru. Mapa © OpenStreetMap · pogoda: Open-Meteo.</div></div>';
   p.classList.remove("hide");
   let pts;
   try{pts=await getWantRoute(w.id)}catch(e){if(tok===rsTok)$("windinfo3").textContent="Nie udało się pobrać trasy.";return}
@@ -2199,17 +2202,20 @@ const WANT_PACE=22; // km/h — szacunek czasu dla zaproszeń bez wybranego temp
 // ⏱ tempo zaproszenia (KROK 28): brak = dowolne
 const PACES={senior:{e:"🐢",n:"Senior Adventure",r:"15–18 km/h",d:"spokojnie, z przerwami",v:16.5},tour:{e:"🚴",n:"Turystycznie",r:"18–24 km/h",d:"równo, bez ścigania",v:21},speed:{e:"⚡",n:"SPEEDAY",r:"26+ km/h",d:"szybko, dla wyjeżdżonych",v:27}};
 let paceOk=false;
-const wPaceKmh=p=>PACES[p]?PACES[p].v:WANT_PACE;
-const paceHtml=w=>w&&PACES[w.pace]?'<div class="wpcw"><span class="wpc wpc-'+w.pace+'">'+PACES[w.pace].e+' '+PACES[w.pace].n+' · '+PACES[w.pace].r+'</span></div>':'';
+// własne tempo (tekst): średnia z liczb w tekście, np. „20–22 km/h” → 21
+const wPaceKmh=p=>{if(PACES[p])return PACES[p].v;const n=String(p||"").match(/\d+(?:[.,]\d+)?/g);if(!n)return WANT_PACE;const v=n.map(x=>+x.replace(",",".")).filter(x=>x>=5&&x<=60);return v.length?v.reduce((a,b)=>a+b,0)/v.length:WANT_PACE};
+const paceTxt=p=>PACES[p]?PACES[p].e+' '+PACES[p].n+' · '+PACES[p].r:'⏱ '+p;
+const paceHtml=w=>w&&w.pace?'<div class="wpcw"><span class="wpc wpc-'+(PACES[w.pace]?w.pace:'own')+'">'+esc(paceTxt(w.pace))+'</span></div>':'';
 function wfPaceSync(){
-  $("wpace").innerHTML=Object.entries(PACES).map(([k,x])=>'<button type="button" data-pace="'+k+'" class="wpt'+(wf.pace===k?' on':'')+'"><span class="e">'+x.e+'</span><span class="t"><b>'+x.n+'</b><small>'+x.d+'</small></span><span class="k">'+x.r+'</span></button>').join("");
-  $("wpacenote").textContent=wf.pace?"Dotknij jeszcze raz, żeby odznaczyć (tempo dowolne).":"Nic nie zaznaczone = tempo dowolne";
+  const p=wf.pace||"",s=$("wpacesel"),own=!!p&&!PACES[p];
+  s.value=own?"*":p;$("wpaceown").classList.toggle("hide",!own);if(own)$("wpaceown").value=p;
 }
 const kmTxt=k=>Number(k).toFixed(1).replace(".",",");
 function wfRouteSync(){
   const i=$("wrinfo"),R=wf.route;
   $("wrlbl").textContent=R?"🗺️ Zmień plik GPX":"🗺️ Dodaj plik GPX";
-  i.innerHTML=R?'<span>✅ '+kmTxt(routeKm(R))+' km · ⏱ ≈ '+esc(durTxt(routeKm(R)/wPaceKmh(wf.pace)*60))+(wf.pace?' <span class="note">('+PACES[wf.pace].r+')</span>':'')+(wf.routeName?' · '+esc(wf.routeName):'')+'</span><button type="button" class="lnk" id="wrdel" style="color:var(--bad)">Usuń trasę</button>'
+  const dl=$("wrdel");if(!dl.innerHTML)dl.innerHTML=ICON.del;dl.classList.toggle("hide",!R);
+  i.innerHTML=R?'<span>✅ '+kmTxt(routeKm(R))+' km · ⏱ ≈ '+esc(durTxt(routeKm(R)/wPaceKmh(wf.pace)*60))+(wf.pace?' <span class="note">('+esc(PACES[wf.pace]?PACES[wf.pace].r:wf.pace)+')</span>':'')+(wf.routeName?' · '+esc(wf.routeName):'')+'</span>'
     :(wf.editId&&wf.routeHad?'<span class="note">Trasa zostanie usunięta po zapisaniu.</span>':'<span class="note">Inni zobaczą długość, mapę z wiatrem i pobiorą GPX.</span>');
 }
 async function getWantRoute(id){
@@ -2231,7 +2237,11 @@ function wfTryClose(){
   closeWantForm();
 }
 $("wfx").onclick=wfTryClose;
-$("wpace").addEventListener("click",e=>{const b=e.target.closest("button[data-pace]");if(!b)return;wf.pace=wf.pace===b.dataset.pace?null:b.dataset.pace;wfPaceSync();wfRouteSync();try{navigator.vibrate&&navigator.vibrate(8)}catch(x){}});
+$("wpacesel").addEventListener("change",()=>{const v=$("wpacesel").value;
+  if(v==="*"){wf.pace=null;$("wpaceown").value="";$("wpaceown").classList.remove("hide");$("wpaceown").focus()}
+  else{wf.pace=v||null;$("wpaceown").classList.add("hide")}
+  wfRouteSync()});
+$("wpaceown").addEventListener("input",()=>{wf.pace=$("wpaceown").value.trim().slice(0,30)||null;wfRouteSync()});
 $("wfaskno").onclick=closeWantForm;
 $("wfaskback").onclick=()=>$("wfask").classList.add("hide");
 $("wantform").addEventListener("click",e=>{if(e.target.id==="wantform")wfTryClose()});
@@ -2263,7 +2273,7 @@ $("wrfile").addEventListener("change",async e=>{
   if(p.length<2){say("Nie znaleziono punktów trasy w pliku GPX.");e.target.value="";return}
   wf.route=thin(p,500);wf.routeName=f.name.replace(/\.gpx$/i,"");wf.routeTouched=true;wfRouteSync();
 });
-$("wrinfo").addEventListener("click",e=>{if(e.target.id!=="wrdel")return;wf.route=null;wf.routeName="";wf.routeTouched=true;$("wrfile").value="";wfRouteSync()});
+$("wrdel").addEventListener("click",()=>{wf.route=null;wf.routeName="";wf.routeTouched=true;$("wrfile").value="";wfRouteSync()});
 $("wtest").addEventListener("click",e=>{const b=e.target.closest("button[data-test]");if(!b)return;wf.test=b.dataset.test==="1";wfTestSync();wfUpdate()});
 $("wdays").addEventListener("click",e=>{const b=e.target.closest("button[data-d]");if(!b)return;wfSetDay(b.dataset.d);wfUpdate()});
 $("wdt").addEventListener("change",wfUpdate);
