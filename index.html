@@ -481,6 +481,13 @@ ol.inst{margin:6px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:
 .nbl{display:flex;justify-content:space-between;font-size:12px;color:var(--mut);margin:4px 2px 0}
 .naccs{background:var(--fill);border-radius:12px;overflow:hidden}.nacc{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px}.nacc+.nacc{border-top:.5px solid var(--line)}.nacc .note{text-align:right;margin:0}
 .nnew{font-size:10.5px;font-weight:800;color:#30a14e;margin-left:6px}
+.wplace{margin-top:5px;font-size:14.5px}.wplace a{color:var(--acc);font-weight:600}
+.wpladd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;font-size:14px;color:var(--mut)}#wplacename{margin-top:8px}
+.wplinfo{margin-top:8px;font-size:13.5px}.wplinfo .lnk{font-size:13.5px;font-weight:600;color:var(--acc)}
+.pickmap{height:min(52vh,420px);border-radius:14px;overflow:hidden;margin:10px 0}.mapbox{max-width:560px;width:100%}.mapbox input{margin-top:4px}.mpbtns{text-align:center;margin-top:6px}
+.aws{display:flex;flex-direction:column;gap:10px;margin-top:12px;text-align:left}.aw{background:var(--fill);border-radius:14px;padding:10px 12px}
+.awtags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px}.awt{font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 8px;background:var(--card)}.awt.p{color:#6b3fd1}.awt.t{color:#d64545}.awt.h{color:var(--mut)}.awt.b{color:#d64545}
+.awh{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.awl{margin-top:6px;font-size:14px;line-height:1.7}
 .hmorebtn{display:block;margin:12px auto 0;font-weight:700;color:var(--acc)}
 .hfull{margin-top:10px;text-align:left;display:flex;flex-direction:column;gap:12px}
 .hfs b{font-size:15px}.hfs ul{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:6px}.hfs li{font-size:14px;line-height:1.45}.hfs li b{font-size:inherit}
@@ -630,6 +637,10 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
     <div id="wpacewrap" class="hide"><div class="wlbl">Tempo</div><select id="wpacesel"><option value="">— tempo dowolne —</option><option value="senior">🐢 Senior Adventure · 15–18 km/h</option><option value="tour">🚴 Turystycznie · 18–24 km/h</option><option value="speed">⚡ SPEEDAY · 26+ km/h</option><option value="*">✏️ Inne…</option></select><input id="wpaceown" class="hide" maxlength="30" placeholder="np. 20–22 km/h, bez pośpiechu"></div>
     <div id="wdistwrap" class="hide"><div class="wlbl">Dystans</div><select id="wkmsel"><option value="">— nie wiem —</option><option value="20">20 km</option><option value="30">30 km</option><option value="50">50 km</option><option value="80">80 km</option><option value="100">100 km</option><option value="*">✏️ Inny…</option></select><input id="wkmown" class="hide" inputmode="decimal" maxlength="5" placeholder="ile km, np. 42"></div>
     <div id="wdurwrap" class="hide"><div class="wlbl">Na ile jedziesz?</div><select id="wdursel"><option value="60">1 h</option><option value="90">1,5 h</option><option value="120">2 h</option><option value="150">2,5 h</option><option value="180">3 h</option><option value="240">4 h</option><option value="300">5 h</option><option value="360">6 h</option><option value="*">✏️ Inny…</option></select><input id="wdurown" class="hide" inputmode="decimal" maxlength="4" placeholder="ile godzin, np. 3,5"></div>
+    <div id="wplacewrap" class="hide"><div class="wlbl">📍 Punkt zbiórki</div><select id="wplacesel"></select>
+      <div id="wplaceown" class="hide"><input id="wplacename" maxlength="40" placeholder="Nazwa miejsca, np. Pod ratuszem">
+        <label class="wpladd"><span>Dodaj do listy miejsc — zobaczą ją inni</span><button type="button" class="ios-sw" id="wpladd" role="switch" aria-checked="false"></button></label></div>
+      <div class="wplinfo hide" id="wplinfo"></div></div>
     <div id="wtestwrap" class="hide"><div class="wlbl">Rodzaj zaproszenia</div><div class="seg" id="wtest"><button type="button" data-test="1" class="on">🧪 Testowe</button><button type="button" data-test="0">🚴 Prawdziwe</button></div><div class="note" id="wtestnote" style="margin-top:6px"></div></div>
     <div id="wwhowrap" class="hide"><div class="wlbl">Kto zobaczy zaproszenie?</div><button type="button" class="who" id="wwho"></button></div>
     <div class="wlbl">Notatka</div>
@@ -648,6 +659,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 <div class="sheet hide" id="picksheet"></div>
 <div class="sheet bsh hide" id="bellsheet"></div>
 <div class="sheet hide" id="routesheet"></div>
+<div class="sheet hide" id="mapsheet"></div>
 
 <div class="card hide" id="pwbox">
  <h2>Ustaw nowe hasło</h2>
@@ -1146,6 +1158,8 @@ function adminHtml(){
    +'<button class="b sbtn g" data-c="stats">📊 Statystyki</button>'
    +(fbOk?'<button class="b sbtn g" data-c="fbadmin">💬 Zgłoszenia'+(fbAdmUnread().length?' <span class="fbcnt">'+fbAdmUnread().length+' nowe</span>':'')+'</button>':'')
    +(genderOk?'<button class="b sbtn g" data-c="colors">🎨 Kolory nicków</button>':'')
+   +(isSuper(uid)?'<button class="b sbtn g" data-c="allw">👁 Wszystkie zaproszenia ('+wantsAll.filter(w=>wantEnd(w).getTime()>Date.now()).length+')</button>':'')
+   +(placeOk?'<button class="b sbtn g" data-c="places">📍 Miejsca zbiórki ('+places.length+')</button>':'')
    +'<div class="sleft"><h3>Administratorzy</h3>'+rows
    +(stealthOk&&isSuper(uid)?'<p class="note">👻 = admin może w Ustawieniach wyłączyć widoczność online (domyślnie każdy jest widoczny). Ty jako 👑 masz to zawsze.</p>':'')
    +'<h3>Nadaj uprawnienia administratora</h3>'+add
@@ -1381,6 +1395,31 @@ function renderBan(){
   b.innerHTML='<div class="banbox"><div style="font-size:44px">⛔</div><h2>Konto zablokowane</h2><p>Administrator zablokował to konto. Nie możesz teraz zapraszać ani dołączać do jazd.</p><p>Jeśli to pomyłka — napisz do administratora.</p>'
    +(fbOk?'<button class="b big" data-ban="fb">💬 Napisz do administratora</button>':'')
    +'<button class="lnk" data-ban="out" style="display:block;margin:14px auto 0">Wyloguj</button></div>';
+}
+// 👁 wszystkie aktualne zaproszenia — tylko podgląd dla 👑 (także prywatne, testowe, ukrytych i zablokowanych)
+function allWantsHtml(){
+  const L=wantsAll.filter(w=>wantEnd(w).getTime()>Date.now()).sort((a,b)=>wantStart(a)-wantStart(b));
+  const n=f=>L.filter(f).length,tag=(c,t)=>'<span class="awt '+c+'">'+t+'</span>';
+  const head='<button class="sback" data-c="backadm">‹ Administracja</button><div class="sname" style="margin-top:26px">👁 Wszystkie zaproszenia</div>'
+   +'<div class="note" style="text-align:center">'+L.length+' aktualnych · 🔒 '+n(w=>w.visibility==="private")+' prywatnych · 🧪 '+n(w=>w.is_test)+' testowych'+(n(w=>modGone(w.user_id))?' · 👻⛔ '+n(w=>modGone(w.user_id)):'')+'</div>'
+   +'<div class="note" style="text-align:center;margin-top:4px">Tylko podgląd — dołączyć możesz tylko tam, gdzie jesteś zaproszony.</div>';
+  if(!L.length)return head+'<div class="note" style="margin-top:14px;text-align:center">Brak aktualnych zaproszeń.</div>';
+  return head+'<div class="aws">'+L.map(w=>{
+    const iv=(invs[w.id]||[]).map(x=>x.u),jn=(joins[w.id]||[]).filter(x=>x!==w.user_id),dc=(decls[w.id]||[]),pr=prefs[w.id]||{};
+    return '<div class="aw"><div class="awtags">'+(w.visibility==="private"?tag("p","🔒 prywatne"):tag("a","🌍 wszyscy"))+(w.is_test?tag("t","🧪 test"):'')+(modHidden.has(w.user_id)?tag("h","👻 ukryty"):'')+(modBanned.has(w.user_id)?tag("b","⛔ zablokowany"):'')+'</div>'
+     +'<div class="awh">'+nk(w.user_id)+' <b>'+esc(relDay(wantStart(w))+" "+wTime(w))+'</b></div>'
+     +paceHtml(w)+durLineHtml(w)+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')
+     +(iv.length?'<div class="awl">🔒 Zaproszeni ('+iv.length+'): '+iv.map(id=>nk(id)).join(" ")+'</div>':'')
+     +'<div class="awl">🙋 Dołączyli ('+jn.length+'): '+(jn.length?jn.map(id=>nk(id)+(pr[id]?'<span class="note"> '+hhmm(new Date(pr[id]))+'</span>':'')).join(" "):'<span class="note">nikt</span>')+'</div>'
+     +(dc.length?'<div class="awl">🙅 Nie da rady: '+dc.map(id=>nk(id)).join(" ")+'</div>':'')+'</div>'}).join("")+'</div>';
+}
+// 📍 miejsca zbiórki — lista wspólna; 👑 ustawia pinezki i usuwa
+function placesHtml(){
+  const su=isSuper(uid);
+  return '<button class="sback" data-c="backadm">‹ Administracja</button><div class="sname" style="margin-top:26px">📍 Miejsca zbiórki</div>'
+   +'<div class="sleft">'+(places.length?places.map(x=>'<div class="arow"><span><b>'+esc(x.name)+'</b><br><span class="note">'+(x.lat!=null?'📌 '+(+x.lat).toFixed(4)+', '+(+x.lon).toFixed(4)+' · <a href="'+esc(mapUrl(x.lat,x.lon))+'" target="_blank" rel="noopener">Mapa ›</a>':'bez pinezki')+(x.created_by&&nicks[x.created_by]?' · dodał(a) '+esc(nicks[x.created_by]):'')+'</span></span>'
+     +(su||x.created_by===uid?'<span class="arbtns" style="flex-direction:row;flex-wrap:nowrap;white-space:nowrap"><button class="b g small" data-a="plpin" data-id="'+esc(x.id)+'">📌 '+(x.lat!=null?'Zmień':'Pinezka')+'</button><button class="b g small" data-a="pldel" data-id="'+esc(x.id)+'">🗑</button></span>':'')+'</div>').join(""):'<div class="note">Brak miejsc.</div>')
+   +'<p class="note">Miejsca dodaje każdy przy tworzeniu zaproszenia („✏️ Inne miejsce…” albo „🗺️ Wskaż na mapie…” + „Dodaj do listy miejsc”). Pinezkę ustawia i miejsce usuwa autor albo 👑.</p></div>';
 }
 function onlineHtml(){
   const ids=favFirst(onlineIds.filter(id=>nicks[id]&&(isAdmin||!modGone(id))));
@@ -1669,6 +1708,8 @@ function renderGear(){
   else if(gearView==="tg"&&tgOn())body=tgHtml();
   else if(gearView==="user"&&session&&nicks[userId])body=userHtml();
   else if(gearView==="online"&&session)body=onlineHtml();
+  else if(gearView==="allw"&&session&&isSuper(uid))body=allWantsHtml();
+  else if(gearView==="places"&&session&&isAdmin)body=placesHtml();
   else if(gearView==="moddel"&&session&&isSuper(uid)&&modDelId)body=modDelHtml();
   else if(gearView==="confdel"&&session&&delReq)body=confDelHtml();
   else if(gearView==="fb"&&session&&fbOk)body=fbHubHtml();
@@ -1801,6 +1842,16 @@ $("gearpanel").addEventListener("click",async e=>{
         say(a.dataset.a==="modban"?(nb?"⛔ Zablokowano: ":"✅ Odblokowano: ")+nickOf(id):(nh?"👻 Ukryto: ":"👁 Widoczne znowu: ")+nickOf(id))}
       catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
       modBusy=false;renderGear();loadRemote();return}
+    if(a.dataset.a==="plpin"||a.dataset.a==="pldel"){
+      const x=places.find(y=>y.id===a.dataset.id);if(!x)return;
+      if(a.dataset.a==="pldel"){if(!confirm("Usunąć miejsce „"+x.name+"” z listy? Zaproszenia, które już je mają, zostaną bez zmian."))return;
+        try{const r=await sb.from("places").delete().eq("id",x.id);if(r.error)throw r.error;places=places.filter(y=>y.id!==x.id);renderGear();say("Usunięto miejsce: "+x.name)}catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}return}
+      gearOpen=false;renderGear();
+      openPlaceMap({name:x.name,lat:x.lat,lon:x.lon,onOk:async(la,lo)=>{
+        try{const r=await sb.from("places").update({lat:la,lon:lo}).eq("id",x.id).select("id");if(r.error||!r.data||!r.data.length)throw new Error(r.error?r.error.message:"brak uprawnień");x.lat=la;x.lon=lo;say("📌 Zapisano pinezkę: "+x.name)}
+        catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+        gearOpen=true;gearView="places";renderGear()}});
+      return}
     if(a.dataset.a==="stealth"&&isSuper(uid)){
       const id=a.dataset.id,on=stealthIds.has(id);
       try{const r=on?await sb.from("admin_stealth").delete().eq("user_id",id):await sb.from("admin_stealth").insert({user_id:id});if(r.error)throw r.error;
@@ -1834,6 +1885,9 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="colors"){gearView="colors";renderGear();return}
   if(c==="stats"){gearView="stats";loadStats();return}
   if(c==="userback2m"){gearView="user";renderGear();return}
+  if(c==="allw"){gearView="allw";renderGear();return}
+  if(c==="places"){gearView="places";renderGear();return}
+  if(c==="backadm"){gearView="admin";renderGear();return}
   if(c==="accall"){statsAllAcc=!statsAllAcc;renderGear();return}
   if(c==="online"){if(!session)return;gearOpen=true;gearView="online";renderGear();return}
   if(c==="flags"){gearView="flags";renderGear();return}
@@ -2114,8 +2168,9 @@ function helpFullHtml(){
      "<b>Kilka zaproszeń dziennie</b> — ale nie mogą na siebie nachodzić (+15 min zapasu). Gdy nachodzą, okienko pod zegarem i pasek nad „Wyślij” robią się żółte, a „Ustaw 11:55” podpowiada najwcześniejszą wolną godzinę.",
      "<b>🧪 Testowe / 🚴 Prawdziwe:</b> testowe są na próbę (czerwona migająca plakietka TEST, na kanale z oznaczeniem). Możesz je ukryć: ⚙️ → „Testowe zaproszenia: Ukryj”.",
      "<b>Kto zobaczy?</b> 🌍 Wszyscy (także kanał Telegram) albo 🔒 ⭐ Ulubieni / 👥 wybrane osoby. Prywatne widzą tylko zaproszeni; mogą doprosić kolejne osoby.",
+     "<b>📍 Punkt zbiórki</b> (opcjonalnie): wybierz z listy, „✏️ Inne miejsce…” albo „🗺️ Wskaż na mapie…”. Przełącznik „Dodaj do listy miejsc” zapisze miejsce dla wszystkich. Na karcie „Mapa ›” otwiera nawigację.",
      "<b>Notatka:</b> gotowe (Kebab RIDE, Coffee Ride ☕, SPEEDAY…) albo własna. „↺ Jak ostatnio” ustawia godzinę z poprzedniego razu.",
-     "<b>Zmień godzinę</b> na karcie „Ty zapraszasz” — zmienisz też tempo, dystans i trasę; zaproszeni dostaną powiadomienie."])
+     "<b>✏️ Edytuj</b> na karcie „Ty zapraszasz” — zmienisz godzinę, tempo, dystans, trasę i punkt zbiórki; zaproszeni dostaną powiadomienie."])
    +sec("🙋 Odpowiadanie",[
      "Na karcie zaproszenia: <b>„Jadę!”</b>, <b>„Nie dam rady”</b>, a przy zakresie <b>„Pasuje mi o…”</b>. „Rezygnuję” — gdy zmienisz zdanie.",
      "Na karcie: godzina, 🌡 pogoda (temperatura, wiatr, deszcz), tempo, „📏 50 km · ⏱ ok. 18:00–20:40”, kto dołączył i kto nie da rady.",
@@ -2132,6 +2187,9 @@ function helpFullHtml(){
    +sec("⚙️ Ustawienia",[
      "Nick i płeć, ⭐ ulubieni, 💬 oceń aplikację / zgłoś błąd lub pomysł (admin odpisuje — odpowiedź pod 🔔), 🧪 zostań testerem, wygląd ☀️ / 🌙 / Auto, nick na górze ekranu, pokazywanie pomocy, wyloguj, usuń konto.",
      "<b>⬆</b> w lewym dolnym rogu wraca na górę strony."])
+   +sec("🔒 Prywatność",[
+     "Prywatne zaproszenia widzą tylko autor i zaproszeni — oraz administratorzy, wyłącznie do moderacji (np. usunięcia spamu). Administrator nie może dołączyć ani doprosić się do cudzego prywatnego zaproszenia.",
+     "Nie zapisujemy Twojej lokalizacji — „Moja lokalizacja” na mapie działa tylko w telefonie, gdy sam ją wskażesz."])
    +(rides?sec("🗺️ Wieczorynki",["Zaplanowane jazdy z trasą, mapą, wiatrem i odliczaniem — zakładka Wieczorynki."]):'')
    +'</div>';
 }
@@ -2346,7 +2404,7 @@ function wantHtml(w){
     const peek=priv&&!mine&&!invIds(w).includes(uid)&&!joined;
     const open=isOpen(w),myp=(prefs[w.id]||{})[uid],dec=(decls[w.id]||[]).includes(uid);
     return '<div class="want'+(mine?' mine':'')+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'">'+(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+'<div class="wtop">'+nk(w.user_id)+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="lockt">do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?'<span class="lockt">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>':'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
-     +paceHtml(w)+durLineHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+wxHtml(w)+routeBoxHtml(w)
+     +paceHtml(w)+durLineHtml(w)+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+wxHtml(w)+routeBoxHtml(w)
      +invitedHtml(w)
      +(open?tallyHtml(w):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w))
      +((!mine||isAdmin)?'<div class="acts">'
@@ -2452,12 +2510,12 @@ function openWantForm(w,preset){
   wf.route=null;wf.routeName="";wf.routeHad=hasRoute(w);wf.routeTouched=false;$("wrfile").value="";
   $("wroutewrap").classList.toggle("hide",!wRouteOk);
   if(w&&hasRoute(w)){getWantRoute(w.id).then(p=>{if(wf.editId===w.id&&!wf.routeTouched){wf.route=p||null;wfRouteSync()}}).catch(()=>{})}
-  wf.pace=w&&w.pace||null;wf.km=w&&w.km!=null?+w.km:null;wf.dur=w&&w.dur_min||null;wf.kmOwn=false;wf.durOwn=false;$("wpacewrap").classList.toggle("hide",!paceOk);wfPaceSync();
+  wf.pace=w&&w.pace||null;wf.km=w&&w.km!=null?+w.km:null;wf.dur=w&&w.dur_min||null;wf.kmOwn=false;wf.durOwn=false;wf.place=w&&w.place||null;wf.plat=w&&w.place_lat!=null?+w.place_lat:null;wf.plon=w&&w.place_lon!=null?+w.place_lon:null;wf.placeOwn=false;wf.placeMap=false;wf.placeAdd=false;wfPlaceSync();$("wpacewrap").classList.toggle("hide",!paceOk);wfPaceSync();
   wfRouteSync();
   if(preset&&preset.pick){wf.vis="pick";wf.pick=new Set(preset.pick)}
   $("wwhowrap").classList.toggle("hide",!!w||!visOk);
   renderWhoBtn();
-  $("wftitle").textContent=w?"Zmień termin zaproszenia":"Kiedy jedziesz?";
+  $("wftitle").textContent="Kiedy jedziesz?";
   let d;
   if(w)d=new Date(w.starts_at);
   else{
@@ -2479,7 +2537,7 @@ function openWantForm(w,preset){
   const L=lastWant();
   $("wlast").classList.toggle("hide",!L||!!w);
   if(L)$("wlast").textContent="↺ Jak ostatnio: "+pad(L.h)+":"+pad(L.m)+(L.note?" · "+L.note:"");
-  $("wfhtitle").textContent=w?"🕖 Zmień termin":"🚲 Zaproś na rower";
+  $("wfhtitle").textContent=w?"✏️ Edytuj zaproszenie":"🚲 Zaproś na rower";
   $("wfask").classList.add("hide");
   $("wantform").classList.remove("hide");document.body.classList.add("wfopen");
   $("wfscroll").scrollTop=0;
@@ -2580,7 +2638,73 @@ async function getWantRoute(id){
 }
 function closeWantForm(){$("wantform").classList.add("hide");$("wfask").classList.add("hide");document.body.classList.remove("wfopen");wf.editId=null}
 // czy w formularzu coś zmieniono od otwarcia (wtedy ✕ / Anuluj pytają)
-function wfSnap(){return JSON.stringify([wf.day,$("wdt").value,wf.mode,wf.h,wf.m,wf.h2,wf.m2,wf.vis,[...wf.pick].sort(),wf.test,wf.pace,wf.km,wf.dur,$("wnote").value.trim(),!!wf.route,wf.routeTouched])}
+// 📍 punkt zbiórki (KROK 35): wspólna lista miejsc + własne + pinezka z mapy
+let placeOk=false,places=[],wantsAll=[];
+const mapUrl=(lat,lon,name)=>"https://www.google.com/maps/search/?api=1&query="+(lat!=null?lat+","+lon:encodeURIComponent(name||""));
+function placeHtml(w){
+  if(!w||!w.place)return "";
+  const g=w.place_lat!=null;
+  return '<div class="wplace">📍 <b>'+esc(w.place)+'</b>'+(g?' · <a href="'+esc(mapUrl(w.place_lat,w.place_lon))+'" target="_blank" rel="noopener">Mapa ›</a>':'')+'</div>';
+}
+function wfPlaceSync(){
+  if(!placeOk){$("wplacewrap").classList.add("hide");return}
+  $("wplacewrap").classList.remove("hide");
+  const s=$("wplacesel"),cur=wf.place||"",known=places.find(x=>x.name.toLowerCase()===cur.toLowerCase());
+  s.innerHTML='<option value="">— bez punktu zbiórki —</option>'+places.map(x=>'<option value="p:'+esc(x.id)+'">'+esc(x.name)+(x.lat!=null?' 📌':'')+'</option>').join("")
+    +'<option value="own">✏️ Inne miejsce…</option><option value="map">🗺️ Wskaż na mapie…</option>';
+  s.value=wf.placeOwn?"own":!cur?"":known&&!wf.placeMap?"p:"+known.id:"own";
+  $("wplaceown").classList.toggle("hide",!(wf.placeOwn||(cur&&!known)));
+  if(!$("wplaceown").classList.contains("hide")&&document.activeElement!==$("wplacename"))$("wplacename").value=cur;
+  const sw=$("wpladd");sw.classList.toggle("on",!!wf.placeAdd);sw.setAttribute("aria-checked",!!wf.placeAdd);
+  $("wpladd").closest(".wpladd").classList.toggle("hide",!!known);
+  const inf=$("wplinfo");
+  if(cur&&wf.plat!=null){inf.innerHTML='📌 Pinezka: '+wf.plat.toFixed(4)+', '+wf.plon.toFixed(4)+' · <button type="button" class="lnk" id="wplmap">zmień na mapie</button> · <button type="button" class="lnk" id="wplnopin" style="color:var(--bad)">usuń pinezkę</button>';inf.classList.remove("hide")}
+  else if(cur){inf.innerHTML='<button type="button" class="lnk" id="wplmap">📌 Dodaj pinezkę na mapie</button> <span class="note">— łatwiej trafić</span>';inf.classList.remove("hide")}
+  else inf.classList.add("hide");
+}
+// mapa do wskazania miejsca (Leaflet / OpenStreetMap)
+let pickMap=null,pickMk=null,pickCtx=null;
+function openPlaceMap(ctx){
+  pickCtx=ctx||null;const nm=ctx?ctx.name:wf.place,la=ctx?ctx.lat:wf.plat,lo=ctx?ctx.lon:wf.plon;
+  const p=$("mapsheet");
+  p.innerHTML='<div class="sheetbox popbox mapbox" role="dialog" aria-modal="true"><button class="sclose" data-mp="close" aria-label="Zamknij">✕</button>'
+   +'<div class="ph" style="margin-top:0">📍 Wskaż punkt zbiórki</div><div class="note" style="text-align:center">Dotknij mapy albo przesuń pinezkę. Przybliżaj dwoma palcami.</div>'
+   +'<div id="pickmap" class="pickmap"></div>'
+   +'<input id="mapname" maxlength="40" placeholder="Nazwa miejsca, np. Pod ratuszem" value="'+esc(nm||"")+'"'+(ctx?' disabled':'')+'>'
+   +'<div class="mpbtns"><button type="button" class="lnk" data-mp="me">📍 Moja lokalizacja</button></div>'
+   +'<button type="button" class="b big" data-mp="ok">Gotowe</button></div>';
+  p.classList.remove("hide");
+  const c=la!=null?[+la,+lo]:(()=>{const k=places.find(x=>x.lat!=null);return k?[+k.lat,+k.lon]:[52.7031,21.0838]})();
+  setTimeout(()=>{
+    try{pickMap=L.map("pickmap",{zoomControl:true}).setView(c,la!=null?17:15);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(pickMap);
+      pickMk=L.marker(c,{draggable:true}).addTo(pickMap);
+      pickMap.on("click",e=>pickMk.setLatLng(e.latlng));
+    }catch(e){$("pickmap").innerHTML='<div class="note" style="padding:20px">Nie udało się wczytać mapy.</div>'}
+  },60);
+}
+function closePlaceMap(){const p=$("mapsheet");try{pickMap&&pickMap.remove()}catch(e){}pickMap=null;pickMk=null;p.classList.add("hide");p.innerHTML=""}
+$("mapsheet").addEventListener("click",e=>{
+  const b=e.target.closest("[data-mp]");
+  if(e.target===$("mapsheet")||(b&&b.dataset.mp==="close")){const c=pickCtx;closePlaceMap();if(!c)wfPlaceSync();return}
+  if(!b)return;
+  if(b.dataset.mp==="me"){if(!navigator.geolocation){say("Telefon nie podaje lokalizacji.");return}
+    navigator.geolocation.getCurrentPosition(x=>{const ll=[x.coords.latitude,x.coords.longitude];if(pickMap){pickMap.setView(ll,17);pickMk.setLatLng(ll)}},()=>say("Brak zgody na lokalizację — wskaż miejsce palcem."),{timeout:8000});return}
+  if(b.dataset.mp==="ok"){
+    const n=$("mapname").value.trim();if(n.length<2){say("Wpisz nazwę miejsca (min. 2 znaki).");$("mapname").focus();return}
+    const ll=pickMk?pickMk.getLatLng():null;if(!ll){closePlaceMap();return}
+    if(pickCtx&&pickCtx.onOk){const cb=pickCtx.onOk;closePlaceMap();cb(+ll.lat.toFixed(6),+ll.lng.toFixed(6));return}
+    const known=places.find(x=>x.name.toLowerCase()===n.toLowerCase());
+    wf.place=n;wf.plat=+ll.lat.toFixed(6);wf.plon=+ll.lng.toFixed(6);wf.placeOwn=!known;wf.placeMap=!!known;if(!known)wf.placeAdd=true;
+    closePlaceMap();wfPlaceSync();
+  }
+});
+async function savePlaceToList(){
+  if(!placeOk||!wf.placeAdd||!wf.place)return;
+  if(places.some(x=>x.name.toLowerCase()===wf.place.toLowerCase()))return;
+  try{const r=await sb.from("places").insert({name:wf.place,lat:wf.plat,lon:wf.plon}).select("id,name,lat,lon,created_by").single();if(!r.error&&r.data)places.push(r.data)}catch(e){}
+}
+function wfSnap(){return JSON.stringify([wf.day,$("wdt").value,wf.mode,wf.h,wf.m,wf.h2,wf.m2,wf.vis,[...wf.pick].sort(),wf.test,wf.pace,wf.km,wf.dur,wf.place,wf.plat,$("wnote").value.trim(),!!wf.route,wf.routeTouched])}
 function wfTryClose(){
   if($("wantform").classList.contains("hide"))return;
   if(wf.snap0&&wfSnap()!==wf.snap0){
@@ -2602,6 +2726,15 @@ const wfJump=e=>{
   if(len>0){const e2=new Date(j.getTime()+len*60000);if(e2.getDate()===j.getDate())wfSetTime2(e2.getHours(),e2.getMinutes())}
   wfUpdate();try{navigator.vibrate&&navigator.vibrate(8)}catch(x){}};
 $("wdurinfo").addEventListener("click",wfJump);$("wfclash").addEventListener("click",wfJump);
+$("wplacesel").addEventListener("change",()=>{const v=$("wplacesel").value;
+  if(v==="map"){openPlaceMap();return}
+  if(v==="own"){wf.placeOwn=true;wf.placeMap=false;wf.place="";wf.plat=wf.plon=null;wf.placeAdd=false;wfPlaceSync();$("wplacename").value="";$("wplacename").focus();return}
+  wf.placeOwn=false;wf.placeMap=false;wf.placeAdd=false;
+  if(!v){wf.place=null;wf.plat=wf.plon=null}else{const x=places.find(y=>"p:"+y.id===v);wf.place=x?x.name:null;wf.plat=x&&x.lat!=null?+x.lat:null;wf.plon=x&&x.lon!=null?+x.lon:null}
+  wfPlaceSync()});
+$("wplacename").addEventListener("input",()=>{wf.place=$("wplacename").value.trim().slice(0,40)||null;if(!wf.place)wf.plat=wf.plon=null;const i=$("wplinfo");if(wf.place&&wf.plat==null){i.innerHTML='<button type="button" class="lnk" id="wplmap">📌 Dodaj pinezkę na mapie</button> <span class="note">— łatwiej trafić</span>';i.classList.remove("hide")}else if(!wf.place)i.classList.add("hide")});
+$("wpladd").addEventListener("click",()=>{wf.placeAdd=!wf.placeAdd;wfPlaceSync()});
+$("wplinfo").addEventListener("click",e=>{if(e.target.id==="wplmap")openPlaceMap();if(e.target.id==="wplnopin"){wf.plat=wf.plon=null;wfPlaceSync()}});
 $("wkmsel").addEventListener("change",()=>{const v=$("wkmsel").value;
   if(v==="*"){wf.km=null;wf.kmOwn=true;$("wkmown").value="";wfDurSync();$("wkmown").focus();return}wf.kmOwn=false;wf.km=v?+v:null;
   wfDurSync()});
@@ -2728,8 +2861,9 @@ $("wsave").onclick=async()=>{
   if(priv&&!ids.length){say(wf.vis==="fav"?"Nie masz jeszcze ulubionych — wybierz osoby w „Kto zobaczy”.":"Wybierz co najmniej jedną osobę w „Kto zobaczy”.");return}
   let editedPriv=false;
   try{
+    await savePlaceToList();
     if(wf.editId){
-      const ow0=wants.find(x=>x.id===wf.editId),upd={starts_at:d.toISOString(),note};if(paceOk)upd.pace=wf.pace||null;if(distOk){const R=wf.route||(!wf.routeTouched&&hasRoute(ow0));upd.km=R?null:wf.km||null;upd.dur_min=R||wf.km?null:wf.dur||DUR_DEF}
+      const ow0=wants.find(x=>x.id===wf.editId),upd={starts_at:d.toISOString(),note};if(paceOk)upd.pace=wf.pace||null;if(placeOk){upd.place=wf.place||null;upd.place_lat=wf.place?wf.plat:null;upd.place_lon=wf.place?wf.plon:null}if(distOk){const R=wf.route||(!wf.routeTouched&&hasRoute(ow0));upd.km=R?null:wf.km||null;upd.dur_min=R||wf.km?null:wf.dur||DUR_DEF}
       if(wRouteOk&&wf.routeTouched){upd.route=wf.route?routeJson(wf.route):null;upd.route_km=wf.route?+routeKm(wf.route).toFixed(1):null;delete wRouteCache[wf.editId]}
       if(rng){upd.range_from=d.toISOString();upd.range_to=d2.toISOString();upd.settled_at=null}
       else if(isOpen(ow0)){upd.range_from=null;upd.range_to=null}
@@ -2737,7 +2871,7 @@ $("wsave").onclick=async()=>{
       if(res.error||!res.data||!res.data.length)throw new Error(res.error?res.error.message:"zmiana terminu wymaga KROKU 11 w bazie");
       const ow=wants.find(x=>x.id===wf.editId);editedPriv=!!ow&&((invs[ow.id]||[]).length>0||(joins[ow.id]||[]).some(x=>x!==uid));
     }else{
-      const row={starts_at:d.toISOString(),note};if(paceOk&&wf.pace)row.pace=wf.pace;if(distOk&&!wf.route){if(wf.km)row.km=wf.km;else row.dur_min=wf.dur||DUR_DEF}if(priv)row.visibility="private";if(testOk)row.is_test=!!wf.test;if(wRouteOk&&wf.route){row.route=routeJson(wf.route);row.route_km=+routeKm(wf.route).toFixed(1)}
+      const row={starts_at:d.toISOString(),note};if(paceOk&&wf.pace)row.pace=wf.pace;if(placeOk&&wf.place){row.place=wf.place;if(wf.plat!=null){row.place_lat=wf.plat;row.place_lon=wf.plon}}if(distOk&&!wf.route){if(wf.km)row.km=wf.km;else row.dur_min=wf.dur||DUR_DEF}if(priv)row.visibility="private";if(testOk)row.is_test=!!wf.test;if(wRouteOk&&wf.route){row.route=routeJson(wf.route);row.route_km=+routeKm(wf.route).toFixed(1)}
       if(rng){row.range_from=d.toISOString();row.range_to=d2.toISOString()}
       const res=await sb.from("wants").insert(row).select("id").single();
       if(res.error)throw res.error;
@@ -2772,11 +2906,11 @@ function renderMyWant(){
     return '<div class="mywant'+(isTest(w)?' test':'')+'" data-i="'+i+'" data-wid="'+esc(w.id)+'"><div class="myh">🙋 Ty zapraszasz'+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+(mine.length>1?' · '+(i+1)+' z '+mine.length:'')+(priv?'<span class="lockt">🔒 dla '+ni+' '+osob(ni)+'</span>':'')+'</div>'
      +'<div class="myt'+(isOpen(w)?' rng':'')+'">'+esc(n>=0&&n<=2?["Dziś","Jutro","Pojutrze"][n]+" "+wTime(w):wd.charAt(0).toUpperCase()+wd.slice(1)+" "+wTime(w))+(n>=0&&n<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
      +(isOpen(w)?'<div class="mym">🕖 Godzina do ustalenia'+(new Date(w.range_from).getTime()>Date.now()+36e5?' — ustali się sama '+esc(hhmm(new Date(new Date(w.range_from).getTime()-36e5)))+', jeśli jej nie wybierzesz':'')+'</div>':fromRange(w)?'<div class="mym">✅ Godzina ustalona</div>':'')
-     +paceHtml(w)+durLineHtml(w)+(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')+wxHtml(w)+routeBoxHtml(w)
+     +paceHtml(w)+durLineHtml(w)+placeHtml(w)+(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')+wxHtml(w)+routeBoxHtml(w)
      +(priv?'<div class="mym">'+invitedHtml(w)+'</div>':'')
      +(isOpen(w)?'<div class="mym">'+tallyHtml(w)+'</div>'+(wTally(w).length?'<div class="prop">✨ Propozycja: <b>'+esc(hhmm(new Date(wBest(w))))+'</b> — pasuje '+wTally(w)[0].ids.length+' '+plf(wTally(w)[0].ids.length,["osobie","osobom","osobom"])+'</div>':'')
        :'<div class="mym">'+joinedHtml("my"+w.id,j,'Na razie nikt nie dołączył.')+declHtml(w)+'</div>')
-     +'<div class="acts">'+(isOpen(w)?'<button class="b join" data-my="settle" data-id="'+esc(w.id)+'" title="Ustal godzinę">✅ Ustal '+esc(hhmm(new Date(wBest(w))))+'</button>':'<button class="b g join" data-my="edit" data-id="'+esc(w.id)+'">Zmień godzinę</button>')
+     +'<div class="acts">'+(isOpen(w)?'<button class="b join" data-my="settle" data-id="'+esc(w.id)+'" title="Ustal godzinę">✅ Ustal '+esc(hhmm(new Date(wBest(w))))+'</button>':'<button class="b g join" data-my="edit" data-id="'+esc(w.id)+'">✏️ Edytuj</button>')
      +(priv?'<button class="ib" data-my="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
      +'<button class="ib" data-my="share" data-id="'+esc(w.id)+'" title="Udostępnij" aria-label="Udostępnij">'+ICON.share+'</button>'
      +'<button class="ib del" data-my="del" data-id="'+esc(w.id)+'" title="Odwołaj zaproszenie" aria-label="Odwołaj zaproszenie">'+ICON.del+'</button></div>'
@@ -3262,7 +3396,7 @@ function renderPop(){
    +'<div class="pwhen">'+esc(day+" "+wTime(w))+(dd>=0&&dd<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
    +(open?'<div class="pmeta">🕖 Zakres godzin — wybierz, kiedy możesz; godzinę ustali '+esc(nickOf(w.user_id))+'.</div>':'')
    +(moved&&!open?'<div class="pmeta">'+(fromRange(w)?'✅ Godzina jest już ustalona — powyżej.':'🕖 Godzina była już zmieniana — powyżej aktualna.')+'</div>':'')
-   +paceHtml(w)+durLineHtml(w)+(w.note?'<div class="pnote">💬 '+esc(w.note)+'</div>':'')
+   +paceHtml(w)+durLineHtml(w)+placeHtml(w)+(w.note?'<div class="pnote">💬 '+esc(w.note)+'</div>':'')
    +(w.user_id!==actor&&!time?'<div class="pmeta">Zaproszenie od '+nk(w.user_id)+'</div>':'')
    +(inv.length?'<div class="pmeta">Zaproszeni też:</div><div class="nks">'+favFirst(inv).map(id=>nk(id)).join("")+'</div>':'')
    +(going.length&&!open?'<div class="pmeta">Jadą już ('+going.length+'):</div><div class="nks">'+favFirst(going).map(id=>nk(id)).join("")+'</div>':'')
@@ -3728,7 +3862,9 @@ async function loadRemote(selectId){
     // zaproszenia tylko z ostatnich 7 dni i przyszłe (wcześniej: 200 najstarszych — nowe by znikały)
     const wSince=new Date(Date.now()-7*864e5).toISOString();
     const wq=cols=>sb.from("wants").select(cols).gte("starts_at",wSince).order("starts_at").limit(1000);
-    let w=await wq("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min");
+    let w=await wq("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min,place,place_lat,place_lon");
+    placeOk=!w.error;
+    if(w.error)w=await wq("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min");
     distOk=!w.error;
     if(w.error)w=await wq("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace");
     paceOk=!w.error;
@@ -3784,7 +3920,9 @@ async function loadRemote(selectId){
     // 👑 moderacja (KROK 33): ⛔ zablokowani i 👻 ukryci — inni ich nie widzą (admin widzi)
     const md=await sb.from("moderation").select("user_id,banned_at,hidden");modOk=!md.error;
     modBanned=new Set((ok(md)||[]).filter(x=>x.banned_at).map(x=>x.user_id));modHidden=new Set((ok(md)||[]).filter(x=>x.hidden).map(x=>x.user_id));
+    wantsAll=wants.slice();
     if(!isAdmin)wants=wants.filter(x=>x.user_id===uid||!modGone(x.user_id));
+    if(placeOk){const pl=await sb.from("places").select("id,name,lat,lon,created_by").order("name").limit(500);places=(ok(pl)||[]).sort((a,b)=>a.name.localeCompare(b.name,"pl"))}
     if(isAdmin){const sq=await sb.from("admin_stealth").select("user_id");stealthOk=!sq.error;stealthIds=new Set((ok(sq)||[]).map(x=>x.user_id))}else{stealthOk=false;stealthIds=new Set()}
     applyPresence();
     renderBan();
