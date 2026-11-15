@@ -573,15 +573,15 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
     </div>
     <div class="qchips" id="wquick"><button type="button" data-q="30">Za 30 min</button><button type="button" data-q="17:30">17:30</button><button type="button" data-q="18:00">18:00</button><button type="button" data-q="19:00">19:00</button></div>
     <div class="wx hide" id="wwx"></div>
+    <div id="wroutewrap" class="hide"><div class="wlbl">Proponowana trasa (opcjonalnie)</div>
+     <div class="wrrow"><label class="wrfile"><input type="file" id="wrfile" accept=".gpx,application/gpx+xml,text/xml"><span id="wrlbl">🗺️ Dodaj plik GPX</span></label><button type="button" class="ib del hide" id="wrdel" aria-label="Usuń trasę" title="Usuń trasę"></button></div>
+     <div class="row" id="wrinfo" style="margin-top:6px;gap:10px"></div></div>
     <div id="wpacewrap" class="hide"><div class="wlbl">Tempo</div><select id="wpacesel"><option value="">— tempo dowolne —</option><option value="senior">🐢 Senior Adventure · 15–18 km/h</option><option value="tour">🚴 Turystycznie · 18–24 km/h</option><option value="speed">⚡ SPEEDAY · 26+ km/h</option><option value="*">✏️ Inne…</option></select><input id="wpaceown" class="hide" maxlength="30" placeholder="np. 20–22 km/h, bez pośpiechu"></div>
     <div id="wdistwrap" class="hide"><div class="wlbl">Dystans</div><select id="wkmsel"><option value="">— nie wiem —</option><option value="20">20 km</option><option value="30">30 km</option><option value="50">50 km</option><option value="80">80 km</option><option value="100">100 km</option><option value="*">✏️ Inny…</option></select><input id="wkmown" class="hide" inputmode="decimal" maxlength="5" placeholder="ile km, np. 42"></div>
     <div id="wdurwrap" class="hide"><div class="wlbl">Na ile jedziesz?</div><select id="wdursel"><option value="60">1 h</option><option value="90">1,5 h</option><option value="120">2 h</option><option value="150">2,5 h</option><option value="180">3 h</option><option value="240">4 h</option><option value="300">5 h</option><option value="360">6 h</option><option value="*">✏️ Inny…</option></select><input id="wdurown" class="hide" inputmode="decimal" maxlength="4" placeholder="ile godzin, np. 3,5"></div>
     <div class="wdurinfo hide" id="wdurinfo"></div>
     <div id="wtestwrap" class="hide"><div class="wlbl">Rodzaj zaproszenia</div><div class="seg" id="wtest"><button type="button" data-test="1" class="on">🧪 Testowe</button><button type="button" data-test="0">🚴 Prawdziwe</button></div><div class="note" id="wtestnote" style="margin-top:6px"></div></div>
     <div id="wwhowrap" class="hide"><div class="wlbl">Kto zobaczy zaproszenie?</div><button type="button" class="who" id="wwho"></button></div>
-    <div id="wroutewrap" class="hide"><div class="wlbl">Proponowana trasa (opcjonalnie)</div>
-     <div class="wrrow"><label class="wrfile"><input type="file" id="wrfile" accept=".gpx,application/gpx+xml,text/xml"><span id="wrlbl">🗺️ Dodaj plik GPX</span></label><button type="button" class="ib del hide" id="wrdel" aria-label="Usuń trasę" title="Usuń trasę"></button></div>
-     <div class="row" id="wrinfo" style="margin-top:6px;gap:10px"></div></div>
     <div class="wlbl">Notatka</div>
     <select id="wnotesel"><option value="">— bez notatki —</option><option>W słusznej sprawie</option><option>Kebab RIDE</option><option>Na lody i pizza</option><option>SPEEDAY</option><option>Coffee Ride ☕</option><option>Na godzinkę +/- :)</option><option>Trochę po mieście</option><option>Może do lasu</option><option>Nad rzekę</option><option>Nocna Wataha</option><option value="*">✏️ Własna…</option></select>
     <input id="wnote" class="hide" maxlength="200" placeholder="Napisz własną notatkę">
