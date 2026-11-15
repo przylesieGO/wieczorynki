@@ -1051,6 +1051,8 @@ palette:'<circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><c
 venus:'<circle cx="12" cy="9" r="5"/><path d="M12 14v8M9 19h6"/>',
 mars:'<circle cx="10" cy="14" r="5"/><path d="M14 10l6-6M15 4h5v5"/>',
 pin:'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>',
+pushpin:'<path d="M12 17v5"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/>',
+city:'<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/>',
 ruler:'<path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0z"/><path d="m14.5 12.5 2-2M11.5 9.5l2-2M8.5 6.5l2-2M17.5 15.5l2-2"/>',
 timer:'<path d="M10 2h4M12 14l3-3"/><circle cx="12" cy="14" r="8"/>',
 alarm:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3 2 6M22 6l-3-3"/>',
@@ -1068,7 +1070,7 @@ send:'<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/>',
 sliders:'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>'
 };
 const uiIcon=k=>'<svg class="ui-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+UI_P[k]+'</svg>';
-const UI_MAP=[["⚙️","gear"],["⚙","gear"],["🔔","bell"],["🔕","belloff"],["❓","help"],["✏️","pencil"],["⭐","starf"],["☆","star"],["💬","msg"],["🛡️","shield"],["🛡","shield"],["📣","mega"],["☀️","sun"],["🌙","moon"],["👤","user"],["🕖","clock"],["🌡","therm"],["🌬","wind"],["🌧","rain"],["📩","mail"],["✉️","mail"],["🌍","globe"],["🔒","lock"],["🙋","hand"],["🚴","bike"],["🚲","bike"],["👥","users"],["🐞","bug"],["💡","bulb"],["🗺️","map"],["🗺","map"],["🧪","flask"],["⏳","hourglass"],["👀","eye"],["📅","cal"],["🗓","cal"],["📊","chart"],["🎨","palette"],["👩","venus"],["👨","mars"],["📍","pin"],["📏","ruler"],["⏱","timer"],["⏰","alarm"],["🙅","xcircle"],["✅","check"],["⚠️","alert"],["🗑️","trash"],["👋","logout"],["📲","phone"],["🆕","sparkles"],["✨","sparkles"],["📈","trend"],["➕","plus"],["🚦","sliders"],["🧹","trash"]];
+const UI_MAP=[["⚙️","gear"],["⚙","gear"],["🔔","bell"],["🔕","belloff"],["❓","help"],["✏️","pencil"],["⭐","starf"],["☆","star"],["💬","msg"],["🛡️","shield"],["🛡","shield"],["📣","mega"],["☀️","sun"],["🌙","moon"],["👤","user"],["🕖","clock"],["🌡","therm"],["🌬","wind"],["🌧","rain"],["📩","mail"],["✉️","mail"],["🌍","globe"],["🔒","lock"],["🙋","hand"],["🚴","bike"],["🚲","bike"],["👥","users"],["🐞","bug"],["💡","bulb"],["🗺️","map"],["🗺","map"],["🧪","flask"],["⏳","hourglass"],["👀","eye"],["📅","cal"],["🗓","cal"],["📊","chart"],["🎨","palette"],["👩","venus"],["👨","mars"],["📍","pin"],["📌","pushpin"],["🏙️","city"],["🏙","city"],["📏","ruler"],["⏱","timer"],["⏰","alarm"],["🙅","xcircle"],["✅","check"],["⚠️","alert"],["🗑️","trash"],["👋","logout"],["📲","phone"],["🆕","sparkles"],["✨","sparkles"],["📈","trend"],["➕","plus"],["🚦","sliders"],["🧹","trash"]];
 const UI_RE=new RegExp("("+UI_MAP.map(([e])=>e.replace(/[\u{FE0F}]/gu,"")).sort((a,b)=>b.length-a.length).map(e=>e.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")\uFE0F?","gu");
 const UI_K=Object.fromEntries(UI_MAP.map(([e,k])=>[e.replace(/\uFE0F/g,""),k]));
 const UI_SKIP=".wpc,.wpace .e,.nk,.stars,.fbst,.ttag,.beta,#toast,.fbcnt,.cdbadge,.ui-i";
