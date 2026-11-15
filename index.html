@@ -452,6 +452,7 @@ html[data-theme=dark] .dmtag{background:rgba(196,168,255,.18);color:#c4a8ff}
 .dmcap{display:flex;gap:10px;align-items:flex-start;margin:16px 0 8px;font-size:14.5px;line-height:1.4}.dmcap span{flex:none;width:24px;height:24px;border-radius:50%;background:var(--accbtn);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:13px}
 .dmbox .want{margin:0}.dmbox .big{margin-top:18px}
 ol.inst{margin:6px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:16px;line-height:1.45}.warnbox{background:#fff3c4;color:#6b4a00;padding:10px 12px;border-radius:12px;margin-bottom:8px}html[data-theme=dark] .warnbox{background:#4a3f12;color:#ffe08a}
+.hdemo{margin:2px 0 14px;padding:10px 12px;border-radius:12px;background:#ffe9e9;color:#8a1f1f;font-size:14px;line-height:1.45;text-align:left}html[data-theme=dark] .hdemo{background:rgba(255,99,99,.14);color:#ffb3b3}
 .hmorebtn{display:block;margin:12px auto 0;font-weight:700;color:var(--acc)}
 .hfull{margin-top:10px;text-align:left;display:flex;flex-direction:column;gap:12px}
 .hfs b{font-size:15px}.hfs ul{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:6px}.hfs li{font-size:14px;line-height:1.45}.hfs li b{font-size:inherit}
@@ -1987,13 +1988,14 @@ function helpHtml(){
   const tg=feat("telegram_dm"),st=(n,b,t)=>'<li><span class="hn">'+n+'</span><span><b>'+b+'</b> '+t+'</span></li>';
   return '<div class="sheetbox popbox hbox" role="dialog" aria-modal="true" aria-label="Pomoc"><button class="sclose" data-h="close" aria-label="Zamknij">✕</button>'
    +'<div class="ph" style="margin-top:0">Jak to działa?</div>'
+   +'<div class="hdemo">🧪 W aplikacji jest kilka <b>zaproszeń testowych</b> (czerwona plakietka TEST) — śmiało klikaj, to na próbę. Wyłączysz je w <b>⚙️ Ustawienia → „Testowe zaproszenia: Ukryj”</b>.</div>'
    +'<ol class="hst">'
    +st(1,"Zaproś — ➕ w prawym dolnym rogu.","Dzień, godzina, a jeśli chcesz: tempo, dystans albo trasa GPX. Dla wszystkich albo 🔒 tylko dla wybranych.")
    +st(2,"Odpowiadaj — „Jadę!” albo „Nie dam rady”.","Pod 🔔 widzisz, kto Cię zaprasza i kto dołączył do Twojej jazdy.")
    +st(3,"Nie wiesz, o której?","Daj zakres godzin (np. 17–19) — każdy wybierze, kiedy może, a Ty ustalisz start.")
    +'</ol>'
    +'<div class="htips"><div>⭐ Dotknij nicku, żeby dodać kogoś do ulubionych.</div>'
-   +'<div>🧪 <b>Testowe</b> = próba aplikacji, <b>Prawdziwe</b> = jedziemy naprawdę.</div>'
+   +'<div>🚴 Wysyłając zaproszenie wybierasz <b>Testowe</b> (na próbę) albo <b>Prawdziwe</b> (jedziemy naprawdę).</div>'
    +'<div>🔴 Liczba na ➕ = ile osób <b>innych niż Ty</b> zaprasza na dziś.</div>'
    +(session?'':'<div>👤 Żeby zapraszać i dołączać, zaloguj się — wystarczą e-mail i hasło.</div>')+'</div>'
    +'<button type="button" class="lnk hmorebtn" data-h="more">'+(helpMore?'Zwiń opis ▴':'📖 Wszystkie funkcje — dokładny opis ▾')+'</button>'
