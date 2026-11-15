@@ -369,6 +369,7 @@ html[data-theme=dark] .fab.off{background:#48484a;color:#a1a1a6}
 .fab.mini .fbadge .fbd{display:none}.fab.mini .fbadge{top:-5px;right:-5px;padding:0 6px}
 body.hasfab .wrap{padding-bottom:110px}
 body.hasfab .toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+body.wfopen .toast{bottom:calc(var(--wffh,130px) + 12px);width:max-content;max-width:min(88vw,520px);text-align:center;font-weight:600;padding:12px 18px;box-shadow:0 8px 28px rgba(0,0,0,.35)}
 @media (prefers-reduced-motion:reduce){.fab,.fab .fabt{transition:none}}
 /* ikony konturowe (styl App Store / SF Symbols) */
 .ui-i{width:1.05em;height:1.05em;vertical-align:-.17em;display:inline-block;flex:none}
@@ -735,7 +736,7 @@ const hhmm=d=>pad(d.getHours())+":"+pad(d.getMinutes());
 function relDay(d){const n=dayDiff(d);return n===0?"Dziś":n===1?"Jutro":n===2?"Pojutrze":d.toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"})}
 function relWhen(s){const d=new Date(s);return relDay(d)+" o "+hhmm(d)}
 function slug(s){return String(s||"trasa").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/ł/g,"l").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"trasa"}
-function say(t){const m=$("toast");m.textContent=t;m.classList.remove("hide");clearTimeout(say.t);say.t=setTimeout(()=>m.classList.add("hide"),6000)}
+function say(t){const m=$("toast");if(document.body.classList.contains("wfopen")){const f=document.querySelector(".wffoot");if(f)document.body.style.setProperty("--wffh",f.offsetHeight+"px")}m.textContent=t;m.classList.remove("hide");clearTimeout(say.t);say.t=setTimeout(()=>m.classList.add("hide"),6000)}
 function routeKm(p){let s=0;for(let i=1;i<p.length;i++)s+=dist(p[i-1],p[i]);return s}
 function paceKmh(p){const m=/(\d+)/.exec(p||"");return m?+m[1]:24}
 const NICK_RE=/^[A-Za-z0-9ĄąĆćĘęŁłŃńÓóŚśŹźŻż ._-]{2,20}$/;
@@ -2350,8 +2351,9 @@ $("wsave").onclick=async()=>{
   const rng=wfRange(),d2=rng?wfDate2():null;
   if(rng&&(d2<=d||d2-d>12*36e5)){say("Koniec zakresu musi być później niż początek (tego samego dnia, maks. 12 h).");return}
   const note=$("wnote").value.trim()||null,k=localIso(d).slice(0,10);
-  const same=wants.find(w=>w.user_id===uid&&w.id!==wf.editId&&localIso(new Date(w.starts_at)).slice(0,10)===k&&new Date(w.starts_at).getTime()>=Date.now()-3*36e5);
-  if(same){say("Masz już zaproszenie na ten dzień ("+hhmm(new Date(same.starts_at))+") — zmień w nim godzinę.");return}
+  // kilka zaproszeń dziennie wolno (decyzja 2026-11-15) — blokada tylko dla tej samej godziny startu
+  const same=wants.find(w=>w.user_id===uid&&w.id!==wf.editId&&Math.abs(new Date(w.starts_at).getTime()-d.getTime())<60000);
+  if(same){say("Masz już zaproszenie na "+wfLabel(d).toLowerCase()+" — wybierz inną godzinę albo zmień tamto.");return}
   const priv=!wf.editId&&wfPriv(),ids=priv?wfInvIds():[];
   if(priv&&!ids.length){say(wf.vis==="fav"?"Nie masz jeszcze ulubionych — wybierz osoby w „Kto zobaczy”.":"Wybierz co najmniej jedną osobę w „Kto zobaczy”.");return}
   let editedPriv=false;
@@ -2413,7 +2415,7 @@ function renderMyWant(){
   const multi=mine.length>1,keep=multi?Math.min(myIdx,mine.length-1):0;
   box.innerHTML='<div class="mycar'+(multi?' multi':'')+'" id="mycar">'+mine.map(card).join("")+'</div>'
    +(multi?'<div class="mydots" id="mydots">'+mine.map((_,i)=>'<button type="button" data-dot="'+i+'" class="'+(i===keep?'on':'')+'" aria-label="Zaproszenie '+(i+1)+'"></button>').join("")+'</div>':'')
-   +'<button class="lnk mynew" data-my="new">+ Zaproś na inny dzień</button>';
+   +'<button class="lnk mynew" data-my="new">+ Zaproś na kolejną jazdę</button>';
   if(multi){const c=$("mycar");const it=c.children[keep];if(it)c.scrollLeft=it.offsetLeft-c.offsetLeft}
   fillWx();
 }
