@@ -1536,11 +1536,11 @@ function stazTxt(id){
 function userRidesHtml(id){
   if(!reportOk)return "";
   const s=userRides[id];
-  if(s===undefined){userRides[id]=null;sb.from("ride_reports").select("went,km,ride_at").eq("user_id",id).eq("went",true).limit(2000).then(r=>{
-    const L=(r&&r.data)||[],m=Date.now()-30*864e5;userRides[id]={n:L.length,km:Math.round(L.reduce((a,x)=>a+(+x.km||0),0)),n30:L.filter(x=>x.ride_at&&new Date(x.ride_at).getTime()>m).length,km30:Math.round(L.filter(x=>x.ride_at&&new Date(x.ride_at).getTime()>m).reduce((a,x)=>a+(+x.km||0),0))};
+  if(s===undefined){userRides[id]=null;sb.from("ride_reports").select("went,km,avg_kmh,ride_at").eq("user_id",id).eq("went",true).limit(2000).then(r=>{
+    const L=(r&&r.data)||[],m=Date.now()-30*864e5;userRides[id]={n:L.length,km:Math.round(L.reduce((a,x)=>a+(+x.km||0),0)),n30:L.filter(x=>x.ride_at&&new Date(x.ride_at).getTime()>m).length,km30:Math.round(L.filter(x=>x.ride_at&&new Date(x.ride_at).getTime()>m).reduce((a,x)=>a+(+x.km||0),0)),kmh:(()=>{const v=L.filter(x=>x.avg_kmh!=null).map(x=>+x.avg_kmh);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null})()};
     if(gearOpen&&gearView==="user"&&userId===id)renderGear()});return ""}
   if(!s||!s.n)return "";
-  return '<div class="staz">🚴 Potwierdzone jazdy: '+s.n+(s.km?' · 📏 '+s.km.toLocaleString("pl-PL")+' km':'')+(s.n30?' (30 dni: '+s.n30+(s.km30?' · '+s.km30+' km':'')+')':'')+'</div>';
+  return '<div class="staz">🚴 Potwierdzone jazdy: '+s.n+(s.km?' · 📏 '+s.km.toLocaleString("pl-PL")+' km':'')+(s.n30?' (30 dni: '+s.n30+(s.km30?' · '+s.km30+' km':'')+')':'')+(s.kmh!=null?' · ⚡ śr. '+fmt1(s.kmh)+' km/h':'')+'</div>';
 }
 function userHtml(){
   const g=genders[userId],fav=isFav(userId);
@@ -2523,9 +2523,9 @@ function repLaterAdd(){if(!rs)return;const lt=repLater();lt.add(rs.id);try{sessi
 // podsumowanie odpowiedzi do archiwum
 function repSum(w){
   const R=reports[w.id]||[];if(!R.length)return null;
-  const yes=R.filter(r=>r.went),sk=yes.filter(r=>r.self&&r.km!=null).map(r=>+r.km),rt=R.filter(r=>r.rating).map(r=>r.rating),rr=R.filter(r=>r.route_rating).map(r=>r.route_rating);
+  const yes=R.filter(r=>r.went),sp=yes.filter(r=>r.self&&r.avg_kmh!=null).map(r=>+r.avg_kmh),sk=yes.filter(r=>r.self&&r.km!=null).map(r=>+r.km),rt=R.filter(r=>r.rating).map(r=>r.rating),rr=R.filter(r=>r.route_rating).map(r=>r.route_rating);
   const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null,tc={};R.forEach(r=>(r.tags||[]).forEach(t=>tc[t]=(tc[t]||0)+1));
-  return {yes:yes.map(r=>r.user_id),n:R.length,km:avg(sk),rating:avg(rt),rn:rt.length,route:avg(rr),tags:tc};
+  return {yes:yes.map(r=>r.user_id),n:R.length,km:avg(sk),kmh:avg(sp),kmhN:sp.length,rating:avg(rt),rn:rt.length,route:avg(rr),tags:tc};
 }
 const fmt1=x=>(Math.round(x*10)/10).toString().replace(".",",");
 /* ---------- 🗄 archiwum zakończonych zaproszeń (30 dni; KROK 38) ---------- */
@@ -2534,8 +2534,8 @@ const wPeople=w=>[w.user_id,...(joins[w.id]||[]).filter(x=>x!==w.user_id)];
 const wExpired=w=>isOpen(w)&&!(joins[w.id]||[]).some(x=>x!==w.user_id);
 function archSum(L){
   const R=L.filter(w=>!wExpired(w)),ppl=new Set();let km=0,real=0;
-  R.forEach(w=>{const s=repSum(w);(s?s.yes:wPeople(w)).forEach(x=>ppl.add(x));if(s&&s.km!=null){km+=s.km;real++}else km+=kmOf(w)||0});
-  return {n:R.length,p:ppl.size,km:Math.round(km),real};
+  const sp=[];R.forEach(w=>{const s=repSum(w);(s?s.yes:wPeople(w)).forEach(x=>ppl.add(x));if(s&&s.km!=null){km+=s.km;real++}else km+=kmOf(w)||0;if(s&&s.kmh!=null)sp.push(s.kmh)});
+  return {n:R.length,p:ppl.size,km:Math.round(km),real,kmh:sp.length?sp.reduce((a,b)=>a+b,0)/sp.length:null};
 }
 function archItem(w){
   const d=new Date(w.starts_at),ex=wExpired(w),pp=wPeople(w),k=kmOf(w);
@@ -2547,6 +2547,7 @@ function archItem(w){
         :'<div class="ail">🚴 Pojechało '+pp.length+': '+pp.map(id=>nk(id)).join(" ")+'</div>')
       +'<div class="ail note">'+[S&&S.km!=null?'📏 '+fmt1(S.km)+' km (z odpowiedzi)':w.route_km!=null?'🗺️ trasa '+String(w.route_km).replace(".",",")+' km':k?'📏 ok. '+k+' km':'',
          S&&S.km!=null&&w.route_km!=null?'🗺️ plan '+String(w.route_km).replace(".",",")+' km':'',
+         S&&S.kmh!=null?'⚡ śr. '+fmt1(S.kmh)+' km/h'+(S.kmhN>1?' ('+S.kmhN+' os.)':''):'',
          '⏱ '+durTxt(wantDur(w)),w.pace?paceTxt(w.pace):''].filter(Boolean).map(esc).join(" · ")+'</div>'
       +(S&&(S.rating||S.route||Object.keys(S.tags).length)?'<div class="ail">'+(S.rating?'<span class="rpb">★ '+fmt1(S.rating)+' <small>jazda ('+S.rn+')</small></span> ':'')+(S.route?'<span class="rpb">★ '+fmt1(S.route)+' <small>trasa</small></span> ':'')
          +Object.entries(S.tags).sort((a,b)=>b[1]-a[1]).map(([t,c])=>{const x=REP_TAGS.find(y=>y[0]===t);return x?'<span class="rpt">'+esc(x[1])+(c>1?' ×'+c:'')+'</span>':''}).join("")+'</div>':'')
@@ -2559,7 +2560,7 @@ function renderArch(all){
   if(!L.length){box.innerHTML="";return}
   const S=archSum(L),show=archAll?L:L.slice(0,3);
   box.innerHTML='<div class="arch"><button type="button" class="ah" data-arch="t">🗄 Archiwum · 30 dni'+(repPending().length?' <em class="rpend">✍️ '+repPending().length+'</em>':'')+'<span>'+L.length+' '+(archOpen?'⌃':'⌄')+'</span></button>'
-   +(archOpen?'<div class="asum">📊 Ostatnie 30 dni: '+S.n+' '+plf(S.n,["jazda","jazdy","jazd"])+' · '+S.p+' '+plf(S.p,["osoba","osoby","osób"])+(S.km?' · ok. '+S.km+' km'+(S.real?(S.real===S.n?'':' (część z planu)'):' (plan)'):'')+'</div>'
+   +(archOpen?'<div class="asum">📊 Ostatnie 30 dni: '+S.n+' '+plf(S.n,["jazda","jazdy","jazd"])+' · '+S.p+' '+plf(S.p,["osoba","osoby","osób"])+(S.km?' · ok. '+S.km+' km'+(S.real?(S.real===S.n?'':' (część z planu)'):' (plan)'):'')+(S.kmh!=null?' · ⚡ śr. '+fmt1(S.kmh)+' km/h':'')+'</div>'
      +show.map(archItem).join("")
      +(L.length>3?'<button type="button" class="lnk amore" data-arch="all">'+(archAll?'Zwiń ⌃':'Pokaż wszystkie ('+L.length+') ›')+'</button>':'')
      +'<div class="note anote">„Pojechało” = autor i osoby z „Jadę!”; „Potwierdziło” i km — z odpowiedzi „🚴 Jak poszło?”.</div>':'')+'</div>';
@@ -4224,11 +4225,11 @@ function newAccHtml(){
 let repStats=null;
 function repStatsHtml(t){
   if(!reportOk)return "";
-  if(!repStats){repStats={loading:1};sb.from("ride_reports").select("want_id,user_id,went,km,rating,route_rating,self").limit(10000).then(r=>{repStats={L:(r&&r.data)||[]};if(gearOpen&&gearView==="stats")renderGear()});return ""}
+  if(!repStats){repStats={loading:1};sb.from("ride_reports").select("want_id,user_id,went,km,avg_kmh,rating,route_rating,self").limit(10000).then(r=>{repStats={L:(r&&r.data)||[]};if(gearOpen&&gearView==="stats")renderGear()});return ""}
   if(repStats.loading)return '<h3>🚴 Jak poszło?</h3><div class="smail">Ładuję…</div>';
   const L=repStats.L;if(!L.length)return '<h3>🚴 Jak poszło?</h3><p class="note">Jeszcze nikt nie odpowiedział po jeździe.</p>';
   const yes=L.filter(r=>r.went),rides=new Set(yes.map(r=>r.want_id)),km=Math.round(yes.reduce((a,r)=>a+(+r.km||0),0)),rt=L.filter(r=>r.rating).map(r=>r.rating);
-  return '<h3>🚴 Jak poszło? (odpowiedzi)</h3><div class="stats">'+t(rides.size,"jazd z potwierdzeniem")+t(km.toLocaleString("pl-PL")+" km","przejechane (deklaracje)")+t(Math.round(yes.length/L.length*100)+"%","frekwencja")+t(rt.length?fmt1(rt.reduce((a,b)=>a+b,0)/rt.length)+" ★":"—","średnia ocena jazd")+'</div>';
+  return '<h3>🚴 Jak poszło? (odpowiedzi)</h3><div class="stats">'+t(rides.size,"jazd z potwierdzeniem")+t(km.toLocaleString("pl-PL")+" km","przejechane (deklaracje)")+t(Math.round(yes.length/L.length*100)+"%","frekwencja")+t(rt.length?fmt1(rt.reduce((a,b)=>a+b,0)/rt.length)+" ★":"—","średnia ocena jazd")+(()=>{const v=yes.filter(r=>r.avg_kmh!=null).map(r=>+r.avg_kmh);return t(v.length?fmt1(v.reduce((a,b)=>a+b,0)/v.length)+" km/h":"—","średnia prędkość")})()+'</div>';
 }
 function adminStatsHtml(){
   const head='<button class="sback" data-c="backadmin">‹ Administracja</button><div class="sname" style="margin-top:26px">📊 Statystyki</div>';
