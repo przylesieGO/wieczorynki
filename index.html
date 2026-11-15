@@ -113,13 +113,13 @@ nav button.on{background:var(--accbtn);color:#fff;box-shadow:0 1px 4px rgba(36,1
 .hdr nav{order:3;flex:1 0 100%;margin:0}
 .hdr.compact{border-bottom-color:var(--line)}
 .hdr.compact .hin{padding:8px 16px;flex-wrap:nowrap;gap:10px}
-.hdr.compact .apptitle{flex:none;font-size:17px}
+.hdr.compact .apptitle{flex:1 1 auto;min-width:0;font-size:17px}
 .hdr.compact .wsub2{display:none}
 .nsug{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 2px;align-items:center}.nsug .note{flex-basis:100%;margin:2px 0}.nsug .chip{padding:7px 12px;font-size:15px;font-weight:600}
 .staz{font-size:14px;color:var(--mut);margin:-10px 0 14px}.smail .staz{display:inline-block;margin:4px 0 0}
 .menick{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:4px;font-size:13px;font-weight:600;color:var(--mut);cursor:pointer;line-height:1.2}.menick .nk{font-size:14px;padding:1px 9px}
 .hdr.compact .menick{display:inline-block;margin:0 0 0 6px;vertical-align:2px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hdr.compact .menick i{display:none}.hdr.compact .menick .nk{font-size:13px;padding:1px 7px}
-.hdr.compact nav{order:2;flex:1 1 auto;min-width:0}
+.hdr.compact nav{display:none!important}
 .hdr.compact nav button{padding:6px 4px;font-size:14px}
 .hdr.compact .gear{order:3;width:36px;height:36px;font-size:18px}
 @media(max-width:560px){.hdr.compact .tname{display:none}}
@@ -499,6 +499,17 @@ ol.inst{margin:6px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:
 .bootmsg{background:var(--fill);border-radius:14px;padding:10px 16px;font-size:15px;text-align:center;max-width:260px;line-height:1.4}
 .booterr .b{padding:10px 20px}.bootbeta{position:absolute;bottom:calc(22px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;font-size:12px;color:var(--mut);opacity:.8}
 button.onl.off{background:var(--fill);color:var(--mut)}
+.hdbtns{display:inline-flex;gap:6px;align-items:center;flex:none}
+.fbtn{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:var(--fill);color:var(--ink);border-radius:999px;padding:6px 11px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.fbtn .fico{width:14px;height:14px}.fbtn.on{background:var(--accbtn);border-color:var(--accbtn);color:#fff}.fbtn .fn{background:#fff;color:var(--accbtn);border-radius:999px;padding:0 6px;font-size:12px}
+.fltbar{margin-top:10px}.fltchips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.fac{border:0;background:var(--acc2);color:var(--acc);border-radius:999px;padding:5px 10px;font:inherit;font-size:13.5px;font-weight:700;cursor:pointer}
+.fclr{color:var(--bad);font-size:14px;margin-left:auto}.fcnt{margin-top:6px}
+.fltbox .bslist{padding-bottom:6px}.fsec{margin-top:4px}.fsec .bsq{margin:4px 0 6px}
+.fchips{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px}
+.fch{border:0;background:var(--fill);color:var(--ink);border-radius:999px;padding:8px 13px;font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+.fch.on{background:var(--accbtn);color:#fff}.fdate{display:inline-flex;align-items:center;gap:4px;padding:4px 10px}.fdate input{border:0;background:none;color:inherit;font:inherit;font-size:14px;padding:2px;width:auto;min-height:0}
+.wpc.wbk{background:#efe7d6;color:#7a5a1e}html[data-theme=dark] .wpc.wbk{background:#3d3220;color:#e8c98a}
 .hmorebtn{display:block;margin:12px auto 0;font-weight:700;color:var(--acc)}
 .hfull{margin-top:10px;text-align:left;display:flex;flex-direction:column;gap:12px}
 .hfs b{font-size:15px}.hfs ul{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:6px}.hfs li{font-size:14px;line-height:1.45}.hfs li b{font-size:inherit}
@@ -651,6 +662,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
      <div class="wrrow"><label class="wrfile"><input type="file" id="wrfile" accept=".gpx,application/gpx+xml,text/xml"><span id="wrlbl">🗺️ Dodaj plik GPX</span></label><button type="button" class="ib del hide" id="wrdel" aria-label="Usuń trasę" title="Usuń trasę"></button></div>
      <div class="row" id="wrinfo" style="margin-top:6px;gap:10px"></div></div>
     <div id="wpacewrap" class="hide"><div class="wlbl">Tempo</div><select id="wpacesel"><option value="">— tempo dowolne —</option><option value="senior">🐢 Senior Adventure · 15–18 km/h</option><option value="tour">🚴 Turystycznie · 18–24 km/h</option><option value="speed">⚡ SPEEDAY · 26+ km/h</option><option value="*">✏️ Inne…</option></select><input id="wpaceown" class="hide" maxlength="30" placeholder="np. 20–22 km/h, bez pośpiechu"></div>
+    <div id="wbikewrap" class="hide"><div class="wlbl">Rower / teren</div><select id="wbikesel"><option value="">🚲 Dla wszystkich rowerów</option><option value="road">🛣 Szosa</option><option value="gravel">🪨 Gravel</option><option value="mtb">⛰ MTB</option><option value="trekking">🌳 Trekking</option></select></div>
     <div id="wdistwrap" class="hide"><div class="wlbl">Dystans</div><select id="wkmsel"><option value="">— nie wiem —</option><option value="20">20 km</option><option value="30">30 km</option><option value="50">50 km</option><option value="80">80 km</option><option value="100">100 km</option><option value="*">✏️ Inny…</option></select><input id="wkmown" class="hide" inputmode="decimal" maxlength="5" placeholder="ile km, np. 42"></div>
     <div id="wdurwrap" class="hide"><div class="wlbl">Na ile jedziesz?</div><select id="wdursel"><option value="60">1 h</option><option value="90">1,5 h</option><option value="120">2 h</option><option value="150">2,5 h</option><option value="180">3 h</option><option value="240">4 h</option><option value="300">5 h</option><option value="360">6 h</option><option value="*">✏️ Inny…</option></select><input id="wdurown" class="hide" inputmode="decimal" maxlength="4" placeholder="ile godzin, np. 3,5"></div>
     <div id="wplacewrap" class="hide"><div class="wlbl">📍 Punkt zbiórki</div><select id="wplacesel"></select>
@@ -671,6 +683,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
   <div class="wfask hide" id="wfask"><div class="wfaskbox"><b>Odrzucić zaproszenie?</b><p id="wfasktxt">Ustawienia nie zostaną zapisane.</p><button type="button" id="wfaskno" class="wfdrop">Odrzuć</button><button type="button" id="wfaskback">Wróć do edycji</button></div></div>
 </div></div>
 <div class="sheet bsh hide" id="whosheet"></div>
+<div class="sheet bsh hide" id="fltsheet"></div>
 <div class="sheet hide" id="popsheet"></div>
 <div class="sheet hide" id="picksheet"></div>
 <div class="sheet bsh hide" id="bellsheet"></div>
@@ -686,7 +699,8 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 <!-- ===== START ===== -->
 <section id="p0">
  <div class="card">
-  <div class="row between"><h2 style="margin:0">Umów się na rower</h2><button type="button" class="onl hide" id="onlbtn" title="Kto jest teraz w aplikacji"></button></div>
+  <div class="row between"><h2 style="margin:0">Umów się na rower</h2><span class="hdbtns"><button type="button" class="fbtn hide" id="fltbtn" aria-label="Filtry"><svg class="fico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg> Filtry<span class="fn hide" id="fltn"></span></button><button type="button" class="onl hide" id="onlbtn" title="Kto jest teraz w aplikacji"></button></span></div>
+  <div id="fltbar" class="fltbar hide"></div>
   <div id="wantguest" class="note">Zaloguj się, aby zobaczyć chętnych i zgłosić ochotę na przejażdżkę.<div style="margin-top:10px"><button type="button" class="b wdemo" data-demo="1">👀 Zobacz przykład</button></div></div>
   <div id="wantmain" class="hide">
    <div id="mywant"></div>
@@ -1425,7 +1439,7 @@ function allWantsHtml(){
     const iv=(invs[w.id]||[]).map(x=>x.u),jn=(joins[w.id]||[]).filter(x=>x!==w.user_id),dc=(decls[w.id]||[]),pr=prefs[w.id]||{};
     return '<div class="aw"><div class="awtags">'+(w.visibility==="private"?tag("p","🔒 prywatne"):tag("a","🌍 wszyscy"))+(w.is_test?tag("t","🧪 test"):'')+(modHidden.has(w.user_id)?tag("h","👻 ukryty"):'')+(modBanned.has(w.user_id)?tag("b","⛔ zablokowany"):'')+'</div>'
      +'<div class="awh">'+nk(w.user_id)+' <b>'+esc(relDay(wantStart(w))+" "+wTime(w))+'</b></div>'
-     +paceHtml(w)+durLineHtml(w)+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')
+     +paceHtml(w)+bikeHtml(w)+durLineHtml(w)+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')
      +(iv.length?'<div class="awl">🔒 Zaproszeni ('+iv.length+'): '+iv.map(id=>nk(id)).join(" ")+'</div>':'')
      +'<div class="awl">🙋 Dołączyli ('+jn.length+'): '+(jn.length?jn.map(id=>nk(id)+(pr[id]?'<span class="note"> '+hhmm(new Date(pr[id]))+'</span>':'')).join(" "):'<span class="note">nikt</span>')+'</div>'
      +(dc.length?'<div class="awl">🙅 Nie da rady: '+dc.map(id=>nk(id)).join(" ")+'</div>':'')+'</div>'}).join("")+'</div>';
@@ -1434,7 +1448,7 @@ function allWantsHtml(){
 function placesHtml(){
   const su=isSuper(uid);
   return '<button class="sback" data-c="backadm">‹ Administracja</button><div class="sname" style="margin-top:26px">📍 Miejsca zbiórki</div>'
-   +'<div class="sleft">'+(places.length?places.map(x=>'<div class="arow"><span><b>'+esc(x.name)+'</b><br><span class="note">'+(x.lat!=null?'📌 '+(+x.lat).toFixed(4)+', '+(+x.lon).toFixed(4)+' · <a href="'+esc(mapUrl(x.lat,x.lon))+'" target="_blank" rel="noopener">Mapa ›</a>':'bez pinezki')+(x.created_by&&nicks[x.created_by]?' · dodał(a) '+esc(nicks[x.created_by]):'')+'</span></span>'
+   +'<div class="sleft">'+(places.length?places.map(x=>'<div class="arow"><span><b>'+esc(x.name)+'</b><br><span class="note">'+(x.lat!=null?'📌 '+(+x.lat).toFixed(4)+', '+(+x.lon).toFixed(4)+' · <a href="'+esc(mapUrl(x.lat,x.lon))+'" target="_blank" rel="noopener">Mapa ›</a>':'bez pinezki')+(x.city?' · '+esc(x.city+(x.area?' · '+x.area:'')):'')+(x.created_by&&nicks[x.created_by]?' · dodał(a) '+esc(nicks[x.created_by]):'')+'</span></span>'
      +(su||x.created_by===uid?'<span class="arbtns" style="flex-direction:row;flex-wrap:nowrap;white-space:nowrap"><button class="b g small" data-a="plpin" data-id="'+esc(x.id)+'">📌 '+(x.lat!=null?'Zmień':'Pinezka')+'</button><button class="b g small" data-a="pldel" data-id="'+esc(x.id)+'">🗑</button></span>':'')+'</div>').join(""):'<div class="note">Brak miejsc.</div>')
    +'<p class="note">Miejsca dodaje każdy przy tworzeniu zaproszenia („✏️ Inne miejsce…” albo „🗺️ Wskaż na mapie…” + „Dodaj do listy miejsc”). Pinezkę ustawia i miejsce usuwa autor albo 👑.</p></div>';
 }
@@ -1464,6 +1478,7 @@ function userHtml(){
    +'<div class="smail">'+(g==="K"?"👩 Kobieta":g==="M"?"👨 Mężczyzna":"")+(onlineIds.includes(userId)?(g?" · ":"")+"🟢 teraz w aplikacji":"")+'</div>'+(stazTxt(userId)?'<div class="staz">'+esc(stazTxt(userId))+'</div>':'')
    +((fbDone[userId]||0)?'<div class="staz">💡 Zrealizowane zgłoszenia: '+fbDone[userId]+(fbBulb(userId)?' — współtwórca aplikacji':'')+'</div>':'')
    +(visOk?'<button class="b sbtn" data-a="invite" data-id="'+esc(userId)+'">🚴 Zaproś na rower</button>':'')
+   +(session?'<button class="b sbtn g" data-a="fltuser" data-id="'+esc(userId)+'">🔍 Pokaż zaproszenia z '+esc(nicks[userId]||"tą osobą")+'</button>':'')
    +'<button class="b sbtn'+(fav?' g':'')+'" data-a="fav" data-id="'+esc(userId)+'">'+(fav?'⭐ Usuń z ulubionych':'☆ Dodaj do ulubionych')+'</button>'
    +(isAdmin&&fbOk?'<button class="b sbtn g" data-a="fbmsg" data-id="'+esc(userId)+'">✉️ Napisz wiadomość</button>':'')
    +(isAdmin&&!isSuper(userId)?'<button class="b sbtn g" data-a="unick" data-id="'+esc(userId)+'">✏️ Zmień nick (admin)</button>':'')
@@ -1808,6 +1823,8 @@ function renderChrome(){
     b.classList.toggle("tbeta",!!beta);b.title=beta?"🧪 BETA — widzą tylko testerzy":"";
     if(!tabOk(i)&&!$("p"+i).classList.contains("hide"))show(0);
   });
+  // jedna widoczna zakładka = bez paska zakładek (nie zabiera miejsca)
+  const nv=document.querySelector(".hdr nav");if(nv)nv.classList.toggle("hide",visTabs().length<2);
   $("pwbox").classList.toggle("hide",!(pwMode&&session));
 }
 $("gear").onclick=()=>{gearOpen=!gearOpen;gearView="main";renderGear()};
@@ -1844,6 +1861,7 @@ $("gearpanel").addEventListener("click",async e=>{
   if(a){
     if(a.dataset.a==="fav"){await toggleFav(a.dataset.id);return}
     if(a.dataset.a==="fbmsg"&&isAdmin){fbTo=a.dataset.id;fbMsgTxt="";gearView="fbmsg";renderGear();const i=$("fbmsgtext");if(i)i.focus();return}
+    if(a.dataset.a==="fltuser"){const id=a.dataset.id;flt=fltEmpty();flt.user=id;fltSave();gearOpen=false;renderGear();show(0);renderWants();setTimeout(()=>{const c=$("fltbar");if(c)c.scrollIntoView({behavior:"smooth",block:"center"})},80);return}
     if(a.dataset.a==="invite"){const id=a.dataset.id;gearOpen=false;renderGear();show(0);openWantForm(null,{pick:[id]});return}
     if(a.dataset.a==="trm"){
       if(!isSuper(uid))return;
@@ -1867,7 +1885,7 @@ $("gearpanel").addEventListener("click",async e=>{
         try{const r=await sb.from("places").delete().eq("id",x.id);if(r.error)throw r.error;places=places.filter(y=>y.id!==x.id);renderGear();say("Usunięto miejsce: "+x.name)}catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}return}
       gearOpen=false;renderGear();
       openPlaceMap({name:x.name,lat:x.lat,lon:x.lon,onOk:async(la,lo)=>{
-        try{const r=await sb.from("places").update({lat:la,lon:lo}).eq("id",x.id).select("id");if(r.error||!r.data||!r.data.length)throw new Error(r.error?r.error.message:"brak uprawnień");x.lat=la;x.lon=lo;say("📌 Zapisano pinezkę: "+x.name)}
+        try{const r=await sb.from("places").update({lat:la,lon:lo}).eq("id",x.id).select("id");if(r.error||!r.data||!r.data.length)throw new Error(r.error?r.error.message:"brak uprawnień");x.lat=la;x.lon=lo;if(bikeOk)revGeo(la,lo).then(async g=>{if(!g.city)return;const u=await sb.from("places").update({city:g.city,area:g.area||null}).eq("id",x.id);if(!u.error){x.city=g.city;x.area=g.area||null;if(gearOpen&&gearView==="places")renderGear()}});say("📌 Zapisano pinezkę: "+x.name)}
         catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
         gearOpen=true;gearView="places";renderGear()}});
       return}
@@ -2187,13 +2205,15 @@ function helpFullHtml(){
      "<b>Kilka zaproszeń dziennie</b> — ale nie mogą na siebie nachodzić (+15 min zapasu). Gdy nachodzą, okienko pod zegarem i pasek nad „Wyślij” robią się żółte, a „Ustaw 11:55” podpowiada najwcześniejszą wolną godzinę.",
      "<b>🧪 Testowe / 🚴 Prawdziwe:</b> testowe są na próbę (czerwona migająca plakietka TEST, na kanale z oznaczeniem). Możesz je ukryć: ⚙️ → „Testowe zaproszenia: Ukryj”.",
      "<b>Kto zobaczy?</b> 🌍 Wszyscy (także kanał Telegram) albo 🔒 ⭐ Ulubieni / 👥 wybrane osoby. Prywatne widzą tylko zaproszeni; mogą doprosić kolejne osoby.",
+     "<b>🚲 Rower / teren</b>: dla wszystkich (domyślnie), szosa, gravel, MTB, trekking.",
      "<b>📍 Punkt zbiórki</b> (opcjonalnie): wybierz z listy, „✏️ Inne miejsce…” albo „🗺️ Wskaż na mapie…”. Przełącznik „Dodaj do listy miejsc” zapisze miejsce dla wszystkich. Na karcie „Mapa ›” otwiera nawigację.",
      "<b>Notatka:</b> gotowe (Kebab RIDE, Coffee Ride ☕, SPEEDAY…) albo własna. „↺ Jak ostatnio” ustawia godzinę z poprzedniego razu.",
      "<b>✏️ Edytuj</b> na karcie „Ty zapraszasz” — zmienisz godzinę, tempo, dystans, trasę i punkt zbiórki; zaproszeni dostaną powiadomienie."])
    +sec("🙋 Odpowiadanie",[
      "Na karcie zaproszenia: <b>„Jadę!”</b>, <b>„Nie dam rady”</b>, a przy zakresie <b>„Pasuje mi o…”</b>. „Rezygnuję” — gdy zmienisz zdanie.",
      "Na karcie: godzina, 🌡 pogoda (temperatura, wiatr, deszcz), tempo, „📏 50 km · ⏱ ok. 18:00–20:40”, kto dołączył i kto nie da rady.",
-     "Zaproszenia są pogrupowane w <b>karty dni</b>; kilka w jednym dniu — przewijasz w bok."])
+     "Zaproszenia są pogrupowane w <b>karty dni</b>; kilka w jednym dniu — przewijasz w bok.",
+     "<b>🔍 Filtry</b> (przycisk obok „online”): czyje, kiedy, gdzie (miasto, dzielnica, miejsce), rower / teren, tempo, osoba. Włączone filtry widać w pasku pod nagłówkiem — ✕ usuwa jeden, „Wyczyść” wszystkie. Z karty osoby: „🔍 Pokaż zaproszenia z …”."])
    +sec("🔔 Powiadomienia",[
      "<b>🔔 w nagłówku</b> — wszystkie aktualne zaproszenia w jednym miejscu: <b>📩 Do Ciebie</b> (od innych, prywatne i dla wszystkich) i <b>🙋 Twoje</b> (kto dołączył, zmiany). Czerwona liczba = nieprzeczytane (też na ikonie aplikacji).",
      "Po wejściu wyskakuje okienko, gdy ktoś zaprosił Cię prywatnie.",
@@ -2327,7 +2347,134 @@ document.addEventListener("click",async e=>{
   }
   const p=$("routesheet");if(p&&!p.classList.contains("hide")&&(e.target===p||e.target.closest("[data-rk='close']")))closeRouteSheet();
 },true);
+
+/* ---------- 🔍 filtry zaproszeń (decyzje właściciela 2026-11-15 18:58: jak w makiecie filtry.png + z karty osoby) ---------- */
+// zapamiętane w telefonie; działają na listę zaproszeń (karty dni i Twoje zaproszenia), nie na 🔔
+const fltEmpty=()=>({who:"",when:"",date:"",where:"",bike:"",pace:"",user:""});
+let flt=(()=>{try{return Object.assign(fltEmpty(),JSON.parse(localStorage.getItem("flt")||"{}"))}catch(e){return fltEmpty()}})(),fltQ="",fltUQ="";
+function fltSave(){try{localStorage.setItem("flt",JSON.stringify(flt))}catch(e){}}
+const fltKeys=()=>Object.keys(fltEmpty()).filter(k=>k!=="date"&&flt[k]);
+const fltActive=()=>fltKeys().length>0;
+const wUpcoming=w=>new Date(w.starts_at).getTime()>=Date.now()-3*36e5;
+const lc=t=>(t||"").toLocaleLowerCase("pl");
+// najbliższy weekend; w niedzielę: dziś + następny weekend
+function fltWknd(){const d=new Date().getDay();return d===6?[0,1]:d===0?[0,6,7]:[6-d,7-d]}
+function fltOk(w){
+  const j=joins[w.id]||[],dd=dayDiff(new Date(w.starts_at));
+  if(flt.who==="mine"&&w.user_id!==uid)return false;
+  if(flt.who==="going"&&(w.user_id===uid||!j.includes(uid)))return false;
+  if(flt.who==="fav"&&!(isFav(w.user_id)||j.some(isFav)))return false;
+  if(flt.who==="priv"&&w.visibility!=="private")return false;
+  if(flt.when==="today"&&dd!==0)return false;
+  if(flt.when==="tom"&&dd!==1)return false;
+  if(flt.when==="wknd"&&!fltWknd().includes(dd))return false;
+  if(flt.when==="7d"&&(dd<0||dd>6))return false;
+  if(flt.when==="date"&&flt.date&&localIso(new Date(w.starts_at)).slice(0,10)!==flt.date)return false;
+  if(flt.where){const [t,v]=[flt.where.slice(0,1),flt.where.slice(2)];
+    if(t==="c"&&w.place_city!==v)return false;
+    if(t==="a"&&(w.place_city+"|"+w.place_area)!==v)return false;
+    if(t==="p"&&lc(w.place)!==lc(v))return false;
+    if(t==="q"&&![w.place,w.place_city,w.place_area].some(x=>lc(x).includes(lc(v))))return false}
+  if(flt.bike==="all"&&w.bike)return false;
+  if(flt.bike&&flt.bike!=="all"&&w.bike&&w.bike!==flt.bike)return false;
+  if(flt.pace&&w.pace!==flt.pace)return false;
+  if(flt.user&&w.user_id!==flt.user&&!j.includes(flt.user))return false;
+  return true;
+}
+const FLT_WHO=[["mine","🙋 Moje"],["going","✅ Jadę"],["fav","⭐ Ulubieni"],["priv","🔒 Prywatne"]];
+const FLT_WHEN=[["today","Dziś"],["tom","Jutro"],["wknd","Weekend"],["7d","7 dni"]];
+const FLT_BIKE=()=>[["all","🚲 Dla wszystkich"]].concat(Object.entries(BIKES));
+const FLT_PACE=()=>Object.entries(PACES).map(([k,x])=>[k,x.e+" "+x.r.replace(" km/h","")]);
+function fltLabel(k){
+  const v=flt[k],f=a=>(a.find(x=>x[0]===v)||[,v])[1];
+  if(k==="who")return f(FLT_WHO);
+  if(k==="when")return v==="date"?(flt.date?new Date(flt.date+"T12:00").toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"}):"Data"):f(FLT_WHEN);
+  if(k==="where"){const t=v.slice(0,1),x=v.slice(2);return t==="a"?x.replace("|"," · "):t==="q"?"„"+x+"”":t==="p"?"📍 "+x:x}
+  if(k==="bike")return f(FLT_BIKE());
+  if(k==="pace")return f(FLT_PACE());
+  if(k==="user")return "👤 "+(nicks[v]||"osoba");
+  return v;
+}
 function renderWants(){
+  const all=wants,on=!!session&&fltActive();
+  if(on)wants=all.filter(fltOk);
+  try{renderWants0()}finally{wants=all}
+  const b=$("fltbtn"),bar=$("fltbar");if(!b)return;
+  b.classList.toggle("hide",!session);b.classList.toggle("on",on);
+  const n=fltKeys().length;$("fltn").textContent=n;$("fltn").classList.toggle("hide",!on);
+  if(!on){bar.classList.add("hide");bar.innerHTML="";return}
+  const up=all.filter(wUpcoming),shown=up.filter(fltOk).length;
+  bar.classList.remove("hide");
+  bar.innerHTML='<div class="fltchips">'+fltKeys().map(k=>'<button type="button" class="fac" data-fx="'+k+'">'+esc(fltLabel(k))+' ✕</button>').join("")+'<button type="button" class="lnk fclr" data-fx="*">Wyczyść</button></div>'
+   +'<div class="note fcnt">'+shown+' z '+up.length+' zaproszeń</div>';
+  if(!shown){const l=$("wantlist");if(l)l.innerHTML='<div class="note" style="margin-top:12px">Brak zaproszeń dla tych filtrów. <button type="button" class="lnk" data-fx="*">Wyczyść filtry</button></div>'}
+}
+document.addEventListener("click",e=>{const x=e.target.closest("[data-fx]");if(!x||!x.closest("#fltbar,#wantlist"))return;
+  if(x.dataset.fx==="*")flt=fltEmpty();else{flt[x.dataset.fx]="";if(x.dataset.fx==="when")flt.date=""}
+  fltSave();renderWants()});
+$("fltbtn").addEventListener("click",()=>openFlt());
+function fltChip(k,v,t){return '<button type="button" class="fch'+(flt[k]===v?' on':'')+'" data-fk="'+k+'" data-fv="'+esc(v)+'">'+esc(t)+'</button>'}
+function fltWhereChips(){
+  const up=wants.filter(wUpcoming),q=lc(fltQ.trim()),seen=new Set(),out=[];
+  const add=(v,t)=>{if(seen.has(v))return;seen.add(v);if(!q||lc(t).includes(q))out.push([v,t])};
+  up.forEach(w=>{if(w.place_city)add("c:"+w.place_city,w.place_city)});places.forEach(x=>{if(x.city)add("c:"+x.city,x.city)});
+  up.forEach(w=>{if(w.place_city&&w.place_area)add("a:"+w.place_city+"|"+w.place_area,w.place_city+" · "+w.place_area)});
+  up.forEach(w=>{if(w.place)add("p:"+w.place,"📍 "+w.place)});places.forEach(x=>add("p:"+x.name,"📍 "+x.name));
+  let h=(q?fltChip("where","q:"+fltQ.trim(),"🔍 „"+fltQ.trim()+"”"):'')+out.slice(0,14).map(([v,t])=>fltChip("where",v,t)).join("");
+  if(flt.where&&!seen.has(flt.where)&&flt.where.slice(0,2)!=="q:")h=fltChip("where",flt.where,fltLabel("where"))+h;
+  return h||'<span class="note">Brak miejsc w zaproszeniach.</span>';
+}
+function fltUserChips(){
+  const ids=new Set();wants.filter(wUpcoming).forEach(w=>{ids.add(w.user_id);(joins[w.id]||[]).forEach(x=>ids.add(x))});
+  if(flt.user)ids.add(flt.user);
+  const q=nickKey(fltUQ.trim());
+  const L=[...ids].filter(id=>nicks[id]&&id!==uid&&!modGone(id)&&(!q||nickKey(nicks[id]).includes(q)||id===flt.user)).sort((a,b)=>(b===flt.user)-(a===flt.user)||nicks[a].localeCompare(nicks[b],"pl")).slice(0,12);
+  return L.map(id=>fltChip("user",id,nicks[id])).join("")||'<span class="note">Nikogo nie znaleziono.</span>';
+}
+function fltSecs(){
+  return {who:'<button type="button" class="fch'+(!flt.who?' on':'')+'" data-fk="who" data-fv="">Wszystkie</button>'+FLT_WHO.map(([v,t])=>fltChip("who",v,t)).join(""),
+    when:FLT_WHEN.map(([v,t])=>fltChip("when",v,t)).join("")+'<label class="fch fdate'+(flt.when==="date"?' on':'')+'">📅 <input type="date" id="fltdate" value="'+esc(flt.when==="date"?flt.date:"")+'"></label>',
+    where:fltWhereChips(),bike:FLT_BIKE().map(([v,t])=>fltChip("bike",v,t)).join(""),
+    pace:FLT_PACE().map(([v,t])=>fltChip("pace",v,t)).join(""),user:fltUserChips()};
+}
+function fltRefresh(){
+  const S=fltSecs();Object.keys(S).forEach(k=>{const el=$("flt_"+k);if(el)el.innerHTML=S[k]});
+  const n=wants.filter(wUpcoming).filter(fltOk).length;$("fltok").textContent=fltActive()?"Pokaż "+n+" "+(n===1?"zaproszenie":n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"zaproszenia":"zaproszeń"):"Gotowe";
+  renderWants();
+}
+function openFlt(){
+  const p=$("fltsheet");p.classList.remove("hide");fltQ="";fltUQ="";
+  const sec=(k,t,extra)=>'<div class="fsec"><div class="bsgrp">'+t+'</div>'+(extra||'')+'<div class="fchips" id="flt_'+k+'"></div></div>';
+  p.innerHTML='<div class="bsbox fltbox" role="dialog" aria-modal="true" aria-label="Filtry"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="close">Zamknij</button><b>Filtry</b><button type="button" class="lnk" data-fk="clear" style="color:var(--bad);text-align:right">Wyczyść</button></div>'
+   +'<div class="bslist">'+sec("who","Czyje")+sec("when","Kiedy")
+   +(placeOk?sec("where","Gdzie",'<input class="bsq" id="fltwq" type="search" placeholder="🔍 Miasto, dzielnica, miejsce…" autocomplete="off">'):'')
+   +(bikeOk?sec("bike","Rower / teren"):'')+(paceOk?sec("pace","Tempo"):'')
+   +sec("user","Osoba",'<input class="bsq" id="fltuq" type="search" placeholder="🔍 Nick…" autocomplete="off">')+'</div>'
+   +'<button type="button" class="b big" id="fltok" data-fk="close">Gotowe</button></div>';
+  fltRefresh();
+}
+function closeFlt(){const p=$("fltsheet");p.classList.add("hide");p.innerHTML=""}
+$("fltsheet").addEventListener("click",e=>{
+  if(e.target===$("fltsheet")){closeFlt();return}
+  const b=e.target.closest("[data-fk]");if(!b||b.tagName==="LABEL")return;
+  const k=b.dataset.fk;
+  if(k==="close"){closeFlt();return}
+  if(k==="clear"){flt=fltEmpty();fltQ="";fltUQ="";const a=$("fltwq"),c=$("fltuq");if(a)a.value="";if(c)c.value="";fltSave();fltRefresh();return}
+  const v=b.dataset.fv;flt[k]=flt[k]===v?"":v;if(k==="when")flt.date="";
+  fltSave();fltRefresh();
+});
+$("fltsheet").addEventListener("input",e=>{
+  if(e.target.id==="fltwq"){fltQ=e.target.value;$("flt_where").innerHTML=fltWhereChips()}
+  if(e.target.id==="fltuq"){fltUQ=e.target.value;$("flt_user").innerHTML=fltUserChips()}
+});
+$("fltsheet").addEventListener("change",e=>{if(e.target.id==="fltdate"){flt.date=e.target.value;flt.when=flt.date?"date":"";fltSave();fltRefresh()}});
+// miasto i dzielnica z pinezki — OpenStreetMap (Nominatim), bez klucza
+async function revGeo(la,lo){
+  try{const r=await fetch("https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=16&accept-language=pl&lat="+la+"&lon="+lo);if(!r.ok)return {};
+    const a=(await r.json()).address||{},city=a.city||a.town||a.village||a.municipality||null;let area=a.city_district||a.suburb||a.borough||a.quarter||null;
+    if(area&&city&&area===city)area=null;return {city:city?city.slice(0,60):null,area:area?area.slice(0,60):null}}catch(e){return {}}
+}
+function renderWants0(){
   const guest=!session;
   $("wantguest").classList.toggle("hide",!guest);
   $("wantmain").classList.toggle("hide",guest);
@@ -2423,7 +2570,7 @@ function wantHtml(w){
     const peek=priv&&!mine&&!invIds(w).includes(uid)&&!joined;
     const open=isOpen(w),myp=(prefs[w.id]||{})[uid],dec=(decls[w.id]||[]).includes(uid);
     return '<div class="want'+(mine?' mine':'')+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'">'+(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+'<div class="wtop">'+nk(w.user_id)+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="lockt">do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?'<span class="lockt">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>':'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
-     +paceHtml(w)+durLineHtml(w)+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+wxHtml(w)+routeBoxHtml(w)
+     +paceHtml(w)+bikeHtml(w)+durLineHtml(w)+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+wxHtml(w)+routeBoxHtml(w)
      +invitedHtml(w)
      +(open?tallyHtml(w):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w))
      +((!mine||isAdmin)?'<div class="acts">'
@@ -2529,7 +2676,7 @@ function openWantForm(w,preset){
   wf.route=null;wf.routeName="";wf.routeHad=hasRoute(w);wf.routeTouched=false;$("wrfile").value="";
   $("wroutewrap").classList.toggle("hide",!wRouteOk);
   if(w&&hasRoute(w)){getWantRoute(w.id).then(p=>{if(wf.editId===w.id&&!wf.routeTouched){wf.route=p||null;wfRouteSync()}}).catch(()=>{})}
-  wf.pace=w&&w.pace||null;wf.km=w&&w.km!=null?+w.km:null;wf.dur=w&&w.dur_min||null;wf.kmOwn=false;wf.durOwn=false;wf.place=w&&w.place||null;wf.plat=w&&w.place_lat!=null?+w.place_lat:null;wf.plon=w&&w.place_lon!=null?+w.place_lon:null;wf.placeOwn=false;wf.placeMap=false;wf.placeAdd=false;wfPlaceSync();$("wpacewrap").classList.toggle("hide",!paceOk);wfPaceSync();
+  wf.pace=w&&w.pace||null;wf.bike=w&&w.bike||null;$("wbikesel").value=wf.bike||"";$("wbikewrap").classList.toggle("hide",!bikeOk);wf.pcity=w&&w.place_city||null;wf.parea=w&&w.place_area||null;wf.km=w&&w.km!=null?+w.km:null;wf.dur=w&&w.dur_min||null;wf.kmOwn=false;wf.durOwn=false;wf.place=w&&w.place||null;wf.plat=w&&w.place_lat!=null?+w.place_lat:null;wf.plon=w&&w.place_lon!=null?+w.place_lon:null;wf.placeOwn=false;wf.placeMap=false;wf.placeAdd=false;wfPlaceSync();$("wpacewrap").classList.toggle("hide",!paceOk);wfPaceSync();
   wfRouteSync();
   if(preset&&preset.pick){wf.vis="pick";wf.pick=new Set(preset.pick)}
   $("wwhowrap").classList.toggle("hide",!!w||!visOk);
@@ -2585,6 +2732,8 @@ function durLineHtml(w){
   return '<div class="wdur">'+(k!=null&&!hasRoute(w)?'📏 '+kmTxt(k).replace(",0","")+' km · ':'')+'⏱ '+(open?'jazda ok. '+durTxt(wantDur(w)):'ok. '+hhmm(wantStart(w))+'–'+hhmm(wantEnd(w)))+'</div>';
 }
 const paceTxt=p=>PACES[p]?PACES[p].e+' '+PACES[p].n+' · '+PACES[p].r:'⏱ '+p;
+const BIKES={road:"🛣 Szosa",gravel:"🪨 Gravel",mtb:"⛰ MTB",trekking:"🌳 Trekking"};
+const bikeHtml=w=>w&&w.bike&&BIKES[w.bike]?'<div class="wpcw"><span class="wpc wbk">'+BIKES[w.bike]+'</span></div>':'';
 const paceHtml=w=>w&&w.pace?'<div class="wpcw"><span class="wpc wpc-'+(PACES[w.pace]?w.pace:'own')+'">'+esc(paceTxt(w.pace))+'</span></div>':'';
 function wfPaceSync(){
   const p=wf.pace||"",s=$("wpacesel"),own=!!p&&!PACES[p];
@@ -2658,12 +2807,12 @@ async function getWantRoute(id){
 function closeWantForm(){$("wantform").classList.add("hide");$("wfask").classList.add("hide");document.body.classList.remove("wfopen");wf.editId=null}
 // czy w formularzu coś zmieniono od otwarcia (wtedy ✕ / Anuluj pytają)
 // 📍 punkt zbiórki (KROK 35): wspólna lista miejsc + własne + pinezka z mapy
-let placeOk=false,places=[],wantsAll=[];
+let placeOk=false,bikeOk=false,places=[],wantsAll=[];
 const mapUrl=(lat,lon,name)=>"https://www.google.com/maps/search/?api=1&query="+(lat!=null?lat+","+lon:encodeURIComponent(name||""));
 function placeHtml(w){
   if(!w||!w.place)return "";
   const g=w.place_lat!=null;
-  return '<div class="wplace">📍 <b>'+esc(w.place)+'</b>'+(g?' · <a href="'+esc(mapUrl(w.place_lat,w.place_lon))+'" target="_blank" rel="noopener">Mapa ›</a>':'')+'</div>';
+  return '<div class="wplace">📍 <b>'+esc(w.place)+'</b>'+(w.place_city?' · '+esc(w.place_city+(w.place_area?' · '+w.place_area:'')):'')+(g?' · <a href="'+esc(mapUrl(w.place_lat,w.place_lon))+'" target="_blank" rel="noopener">Mapa ›</a>':'')+'</div>';
 }
 function wfPlaceSync(){
   if(!placeOk){$("wplacewrap").classList.add("hide");return}
@@ -2677,7 +2826,7 @@ function wfPlaceSync(){
   const sw=$("wpladd");sw.classList.toggle("on",!!wf.placeAdd);sw.setAttribute("aria-checked",!!wf.placeAdd);
   $("wpladd").closest(".wpladd").classList.toggle("hide",!!known);
   const inf=$("wplinfo");
-  if(cur&&wf.plat!=null){inf.innerHTML='📌 Pinezka: '+wf.plat.toFixed(4)+', '+wf.plon.toFixed(4)+' · <button type="button" class="lnk" id="wplmap">zmień na mapie</button> · <button type="button" class="lnk" id="wplnopin" style="color:var(--bad)">usuń pinezkę</button>';inf.classList.remove("hide")}
+  if(cur&&wf.plat!=null){inf.innerHTML='📌 Pinezka'+(wf.pcity?': '+esc(wf.pcity+(wf.parea?' · '+wf.parea:'')):': '+wf.plat.toFixed(4)+', '+wf.plon.toFixed(4))+' · <button type="button" class="lnk" id="wplmap">zmień na mapie</button> · <button type="button" class="lnk" id="wplnopin" style="color:var(--bad)">usuń pinezkę</button>';inf.classList.remove("hide")}
   else if(cur){inf.innerHTML='<button type="button" class="lnk" id="wplmap">📌 Dodaj pinezkę na mapie</button> <span class="note">— łatwiej trafić</span>';inf.classList.remove("hide")}
   else inf.classList.add("hide");
 }
@@ -2715,15 +2864,18 @@ $("mapsheet").addEventListener("click",e=>{
     if(pickCtx&&pickCtx.onOk){const cb=pickCtx.onOk;closePlaceMap();cb(+ll.lat.toFixed(6),+ll.lng.toFixed(6));return}
     const known=places.find(x=>x.name.toLowerCase()===n.toLowerCase());
     wf.place=n;wf.plat=+ll.lat.toFixed(6);wf.plon=+ll.lng.toFixed(6);wf.placeOwn=!known;wf.placeMap=!!known;if(!known)wf.placeAdd=true;
+    wf.pcity=known&&known.city||null;wf.parea=known&&known.area||null;
     closePlaceMap();wfPlaceSync();
+    // miasto i dzielnica z pinezki (OpenStreetMap) — pod filtr „Gdzie”
+    if(bikeOk){const la=wf.plat,lo=wf.plon;revGeo(la,lo).then(g=>{if(wf.plat===la&&wf.plon===lo&&g.city){wf.pcity=g.city;wf.parea=g.area||null;wfPlaceSync()}})}
   }
 });
 async function savePlaceToList(){
   if(!placeOk||!wf.placeAdd||!wf.place)return;
   if(places.some(x=>x.name.toLowerCase()===wf.place.toLowerCase()))return;
-  try{const r=await sb.from("places").insert({name:wf.place,lat:wf.plat,lon:wf.plon}).select("id,name,lat,lon,created_by").single();if(!r.error&&r.data)places.push(r.data)}catch(e){}
+  try{const row={name:wf.place,lat:wf.plat,lon:wf.plon};if(bikeOk&&wf.pcity){row.city=wf.pcity;row.area=wf.parea||null}const r=await sb.from("places").insert(row).select(bikeOk?"id,name,lat,lon,created_by,city,area":"id,name,lat,lon,created_by").single();if(!r.error&&r.data)places.push(r.data)}catch(e){}
 }
-function wfSnap(){return JSON.stringify([wf.day,$("wdt").value,wf.mode,wf.h,wf.m,wf.h2,wf.m2,wf.vis,[...wf.pick].sort(),wf.test,wf.pace,wf.km,wf.dur,wf.place,wf.plat,$("wnote").value.trim(),!!wf.route,wf.routeTouched])}
+function wfSnap(){return JSON.stringify([wf.day,$("wdt").value,wf.mode,wf.h,wf.m,wf.h2,wf.m2,wf.vis,[...wf.pick].sort(),wf.test,wf.pace,wf.bike,wf.km,wf.dur,wf.place,wf.plat,$("wnote").value.trim(),!!wf.route,wf.routeTouched])}
 function wfTryClose(){
   if($("wantform").classList.contains("hide"))return;
   if(wf.snap0&&wfSnap()!==wf.snap0){
@@ -2737,6 +2889,7 @@ $("wpacesel").addEventListener("change",()=>{const v=$("wpacesel").value;
   if(v==="*"){wf.pace=null;$("wpaceown").value="";$("wpaceown").classList.remove("hide");$("wpaceown").focus()}
   else{wf.pace=v||null;$("wpaceown").classList.add("hide")}
   wfRouteSync()});
+$("wbikesel").addEventListener("change",()=>{wf.bike=$("wbikesel").value||null});
 $("wpaceown").addEventListener("input",()=>{wf.pace=$("wpaceown").value.trim().slice(0,30)||null;wfRouteSync()});
 const wfJump=e=>{
   if(e.target.closest(".wtom")){wfSetDay("1");wfUpdate();try{navigator.vibrate&&navigator.vibrate(8)}catch(x){}return}
@@ -2747,13 +2900,13 @@ const wfJump=e=>{
 $("wdurinfo").addEventListener("click",wfJump);$("wfclash").addEventListener("click",wfJump);
 $("wplacesel").addEventListener("change",()=>{const v=$("wplacesel").value;
   if(v==="map"){openPlaceMap();return}
-  if(v==="own"){wf.placeOwn=true;wf.placeMap=false;wf.place="";wf.plat=wf.plon=null;wf.placeAdd=false;wfPlaceSync();$("wplacename").value="";$("wplacename").focus();return}
+  if(v==="own"){wf.placeOwn=true;wf.placeMap=false;wf.place="";wf.plat=wf.plon=null;wf.pcity=wf.parea=null;wf.placeAdd=false;wfPlaceSync();$("wplacename").value="";$("wplacename").focus();return}
   wf.placeOwn=false;wf.placeMap=false;wf.placeAdd=false;
-  if(!v){wf.place=null;wf.plat=wf.plon=null}else{const x=places.find(y=>"p:"+y.id===v);wf.place=x?x.name:null;wf.plat=x&&x.lat!=null?+x.lat:null;wf.plon=x&&x.lon!=null?+x.lon:null}
+  if(!v){wf.place=null;wf.plat=wf.plon=null;wf.pcity=wf.parea=null}else{const x=places.find(y=>"p:"+y.id===v);wf.place=x?x.name:null;wf.plat=x&&x.lat!=null?+x.lat:null;wf.plon=x&&x.lon!=null?+x.lon:null;wf.pcity=x&&x.city||null;wf.parea=x&&x.area||null}
   wfPlaceSync()});
 $("wplacename").addEventListener("input",()=>{wf.place=$("wplacename").value.trim().slice(0,40)||null;if(!wf.place)wf.plat=wf.plon=null;const i=$("wplinfo");if(wf.place&&wf.plat==null){i.innerHTML='<button type="button" class="lnk" id="wplmap">📌 Dodaj pinezkę na mapie</button> <span class="note">— łatwiej trafić</span>';i.classList.remove("hide")}else if(!wf.place)i.classList.add("hide")});
 $("wpladd").addEventListener("click",()=>{wf.placeAdd=!wf.placeAdd;wfPlaceSync()});
-$("wplinfo").addEventListener("click",e=>{if(e.target.id==="wplmap")openPlaceMap();if(e.target.id==="wplnopin"){wf.plat=wf.plon=null;wfPlaceSync()}});
+$("wplinfo").addEventListener("click",e=>{if(e.target.id==="wplmap")openPlaceMap();if(e.target.id==="wplnopin"){wf.plat=wf.plon=null;wf.pcity=wf.parea=null;wfPlaceSync()}});
 $("wkmsel").addEventListener("change",()=>{const v=$("wkmsel").value;
   if(v==="*"){wf.km=null;wf.kmOwn=true;$("wkmown").value="";wfDurSync();$("wkmown").focus();return}wf.kmOwn=false;wf.km=v?+v:null;
   wfDurSync()});
@@ -2882,7 +3035,7 @@ $("wsave").onclick=async()=>{
   try{
     await savePlaceToList();
     if(wf.editId){
-      const ow0=wants.find(x=>x.id===wf.editId),upd={starts_at:d.toISOString(),note};if(paceOk)upd.pace=wf.pace||null;if(placeOk){upd.place=wf.place||null;upd.place_lat=wf.place?wf.plat:null;upd.place_lon=wf.place?wf.plon:null}if(distOk){const R=wf.route||(!wf.routeTouched&&hasRoute(ow0));upd.km=R?null:wf.km||null;upd.dur_min=R||wf.km?null:wf.dur||DUR_DEF}
+      const ow0=wants.find(x=>x.id===wf.editId),upd={starts_at:d.toISOString(),note};if(paceOk)upd.pace=wf.pace||null;if(placeOk){upd.place=wf.place||null;upd.place_lat=wf.place?wf.plat:null;upd.place_lon=wf.place?wf.plon:null}if(bikeOk){upd.bike=wf.bike||null;upd.place_city=wf.place&&wf.pcity||null;upd.place_area=wf.place&&wf.parea||null}if(distOk){const R=wf.route||(!wf.routeTouched&&hasRoute(ow0));upd.km=R?null:wf.km||null;upd.dur_min=R||wf.km?null:wf.dur||DUR_DEF}
       if(wRouteOk&&wf.routeTouched){upd.route=wf.route?routeJson(wf.route):null;upd.route_km=wf.route?+routeKm(wf.route).toFixed(1):null;delete wRouteCache[wf.editId]}
       if(rng){upd.range_from=d.toISOString();upd.range_to=d2.toISOString();upd.settled_at=null}
       else if(isOpen(ow0)){upd.range_from=null;upd.range_to=null}
@@ -2890,7 +3043,7 @@ $("wsave").onclick=async()=>{
       if(res.error||!res.data||!res.data.length)throw new Error(res.error?res.error.message:"zmiana terminu wymaga KROKU 11 w bazie");
       const ow=wants.find(x=>x.id===wf.editId);editedPriv=!!ow&&((invs[ow.id]||[]).length>0||(joins[ow.id]||[]).some(x=>x!==uid));
     }else{
-      const row={starts_at:d.toISOString(),note};if(paceOk&&wf.pace)row.pace=wf.pace;if(placeOk&&wf.place){row.place=wf.place;if(wf.plat!=null){row.place_lat=wf.plat;row.place_lon=wf.plon}}if(distOk&&!wf.route){if(wf.km)row.km=wf.km;else row.dur_min=wf.dur||DUR_DEF}if(priv)row.visibility="private";if(testOk)row.is_test=!!wf.test;if(wRouteOk&&wf.route){row.route=routeJson(wf.route);row.route_km=+routeKm(wf.route).toFixed(1)}
+      const row={starts_at:d.toISOString(),note};if(paceOk&&wf.pace)row.pace=wf.pace;if(placeOk&&wf.place){row.place=wf.place;if(wf.plat!=null){row.place_lat=wf.plat;row.place_lon=wf.plon}}if(bikeOk){if(wf.bike)row.bike=wf.bike;if(wf.place&&wf.pcity){row.place_city=wf.pcity;if(wf.parea)row.place_area=wf.parea}}if(distOk&&!wf.route){if(wf.km)row.km=wf.km;else row.dur_min=wf.dur||DUR_DEF}if(priv)row.visibility="private";if(testOk)row.is_test=!!wf.test;if(wRouteOk&&wf.route){row.route=routeJson(wf.route);row.route_km=+routeKm(wf.route).toFixed(1)}
       if(rng){row.range_from=d.toISOString();row.range_to=d2.toISOString()}
       const res=await sb.from("wants").insert(row).select("id").single();
       if(res.error)throw res.error;
@@ -2925,7 +3078,7 @@ function renderMyWant(){
     return '<div class="mywant'+(isTest(w)?' test':'')+'" data-i="'+i+'" data-wid="'+esc(w.id)+'"><div class="myh">🙋 Ty zapraszasz'+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+(mine.length>1?' · '+(i+1)+' z '+mine.length:'')+(priv?'<span class="lockt">🔒 dla '+ni+' '+osob(ni)+'</span>':'')+'</div>'
      +'<div class="myt'+(isOpen(w)?' rng':'')+'">'+esc(n>=0&&n<=2?["Dziś","Jutro","Pojutrze"][n]+" "+wTime(w):wd.charAt(0).toUpperCase()+wd.slice(1)+" "+wTime(w))+(n>=0&&n<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
      +(isOpen(w)?'<div class="mym">🕖 Godzina do ustalenia'+(new Date(w.range_from).getTime()>Date.now()+36e5?' — ustali się sama '+esc(hhmm(new Date(new Date(w.range_from).getTime()-36e5)))+', jeśli jej nie wybierzesz':'')+'</div>':fromRange(w)?'<div class="mym">✅ Godzina ustalona</div>':'')
-     +paceHtml(w)+durLineHtml(w)+placeHtml(w)+(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')+wxHtml(w)+routeBoxHtml(w)
+     +paceHtml(w)+bikeHtml(w)+durLineHtml(w)+placeHtml(w)+(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')+wxHtml(w)+routeBoxHtml(w)
      +(priv?'<div class="mym">'+invitedHtml(w)+'</div>':'')
      +(isOpen(w)?'<div class="mym">'+tallyHtml(w)+'</div>'+(wTally(w).length?'<div class="prop">✨ Propozycja: <b>'+esc(hhmm(new Date(wBest(w))))+'</b> — pasuje '+wTally(w)[0].ids.length+' '+plf(wTally(w)[0].ids.length,["osobie","osobom","osobom"])+'</div>':'')
        :'<div class="mym">'+joinedHtml("my"+w.id,j,'Na razie nikt nie dołączył.')+declHtml(w)+'</div>')
@@ -3415,7 +3568,7 @@ function renderPop(){
    +'<div class="pwhen">'+esc(day+" "+wTime(w))+(dd>=0&&dd<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
    +(open?'<div class="pmeta">🕖 Zakres godzin — wybierz, kiedy możesz; godzinę ustali '+esc(nickOf(w.user_id))+'.</div>':'')
    +(moved&&!open?'<div class="pmeta">'+(fromRange(w)?'✅ Godzina jest już ustalona — powyżej.':'🕖 Godzina była już zmieniana — powyżej aktualna.')+'</div>':'')
-   +paceHtml(w)+durLineHtml(w)+placeHtml(w)+(w.note?'<div class="pnote">💬 '+esc(w.note)+'</div>':'')
+   +paceHtml(w)+bikeHtml(w)+durLineHtml(w)+placeHtml(w)+(w.note?'<div class="pnote">💬 '+esc(w.note)+'</div>':'')
    +(w.user_id!==actor&&!time?'<div class="pmeta">Zaproszenie od '+nk(w.user_id)+'</div>':'')
    +(inv.length?'<div class="pmeta">Zaproszeni też:</div><div class="nks">'+favFirst(inv).map(id=>nk(id)).join("")+'</div>':'')
    +(going.length&&!open?'<div class="pmeta">Jadą już ('+going.length+'):</div><div class="nks">'+favFirst(going).map(id=>nk(id)).join("")+'</div>':'')
@@ -3900,7 +4053,9 @@ async function loadRemote(selectId){
     // zaproszenia tylko z ostatnich 7 dni i przyszłe (wcześniej: 200 najstarszych — nowe by znikały)
     const wSince=new Date(Date.now()-7*864e5).toISOString();
     const wq=cols=>sb.from("wants").select(cols).gte("starts_at",wSince).order("starts_at").limit(1000);
-    let w=await wq("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min,place,place_lat,place_lon");
+    let w=await wq("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min,place,place_lat,place_lon,bike,place_city,place_area");
+    bikeOk=!w.error;
+    if(w.error)w=await wq("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min,place,place_lat,place_lon");
     placeOk=!w.error;
     if(w.error)w=await wq("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min");
     distOk=!w.error;
@@ -3960,7 +4115,7 @@ async function loadRemote(selectId){
     modBanned=new Set((ok(md)||[]).filter(x=>x.banned_at).map(x=>x.user_id));modHidden=new Set((ok(md)||[]).filter(x=>x.hidden).map(x=>x.user_id));
     wantsAll=wants.slice();
     if(!isAdmin)wants=wants.filter(x=>x.user_id===uid||!modGone(x.user_id));
-    if(placeOk){const pl=await sb.from("places").select("id,name,lat,lon,created_by").order("name").limit(500);places=(ok(pl)||[]).sort((a,b)=>a.name.localeCompare(b.name,"pl"))}
+    if(placeOk){const pl=await sb.from("places").select(bikeOk?"id,name,lat,lon,created_by,city,area":"id,name,lat,lon,created_by").order("name").limit(500);places=(ok(pl)||[]).sort((a,b)=>a.name.localeCompare(b.name,"pl"))}
     if(isAdmin){const sq=await sb.from("admin_stealth").select("user_id");stealthOk=!sq.error;stealthIds=new Set((ok(sq)||[]).map(x=>x.user_id))}else{stealthOk=false;stealthIds=new Set()}
     applyPresence();
     renderBan();
