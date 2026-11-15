@@ -2468,6 +2468,16 @@ $("fltsheet").addEventListener("input",e=>{
   if(e.target.id==="fltuq"){fltUQ=e.target.value;$("flt_user").innerHTML=fltUserChips()}
 });
 $("fltsheet").addEventListener("change",e=>{if(e.target.id==="fltdate"){flt.date=e.target.value;flt.when=flt.date?"date":"";fltSave();fltRefresh()}});
+let placesGeoDone=false;
+async function fillPlaceCities(){
+  for(const x of places.filter(y=>y.lat!=null&&!y.city)){
+    const g=await revGeo(x.lat,x.lon);if(!g.city)continue;
+    const u=await sb.from("places").update({city:g.city,area:g.area||null}).eq("id",x.id);
+    if(!u.error){x.city=g.city;x.area=g.area||null}
+    await new Promise(r=>setTimeout(r,1100)); // OpenStreetMap: maks. 1 zapytanie na sekundę
+  }
+  renderWants();
+}
 // miasto i dzielnica z pinezki — OpenStreetMap (Nominatim), bez klucza
 async function revGeo(la,lo){
   try{const r=await fetch("https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=16&accept-language=pl&lat="+la+"&lon="+lo);if(!r.ok)return {};
@@ -4116,6 +4126,9 @@ async function loadRemote(selectId){
     wantsAll=wants.slice();
     if(!isAdmin)wants=wants.filter(x=>x.user_id===uid||!modGone(x.user_id));
     if(placeOk){const pl=await sb.from("places").select(bikeOk?"id,name,lat,lon,created_by,city,area":"id,name,lat,lon,created_by").order("name").limit(500);places=(ok(pl)||[]).sort((a,b)=>a.name.localeCompare(b.name,"pl"))}
+    // miasto dla zaproszeń bez miasta — z listy miejsc (po nazwie); 👑: brakujące miasta miejsc z pinezką uzupełnia raz na wejście
+    if(bikeOk){wants.forEach(w=>{if(w.place&&!w.place_city){const x=places.find(y=>y.city&&y.name.toLowerCase()===w.place.toLowerCase());if(x){w.place_city=x.city;w.place_area=w.place_area||x.area||null}}});
+      if(isSuper(uid)&&!placesGeoDone){placesGeoDone=true;fillPlaceCities()}}
     if(isAdmin){const sq=await sb.from("admin_stealth").select("user_id");stealthOk=!sq.error;stealthIds=new Set((ok(sq)||[]).map(x=>x.user_id))}else{stealthOk=false;stealthIds=new Set()}
     applyPresence();
     renderBan();
