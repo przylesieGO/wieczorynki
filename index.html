@@ -418,7 +418,7 @@ html[data-theme=dark] .fbs.s-accepted{background:#1d2c45;color:#8fb5ff}
 .fbok{border:1.5px solid var(--acc)!important;color:var(--acc)!important}.fbno{border:1.5px solid rgba(214,69,69,.45)!important;color:var(--bad)!important}
 .fbre{display:block;width:100%;margin-top:12px;padding:12px;border-radius:14px;background:var(--fill)!important;color:var(--acc)!important;font-size:16px}
 .sbtn.tgx{background:linear-gradient(135deg,#2AABEE,#1E8FD0);color:#fff;padding:13px 14px;line-height:1.2;animation:tgpulse 1.8s ease-out infinite}
-.sbtn.tgx small{display:block;font-size:13px;font-weight:500;opacity:.92;margin-top:3px}
+.sbtn small{display:block;font-size:13px;font-weight:500;opacity:.85;margin-top:3px}.sbtn.tgx small{display:block;font-size:13px;font-weight:500;opacity:.92;margin-top:3px}
 @keyframes tgpulse{0%{box-shadow:0 0 0 0 rgba(42,171,238,.65)}70%{box-shadow:0 0 0 14px rgba(42,171,238,0)}100%{box-shadow:0 0 0 0 rgba(42,171,238,0)}}
 @media (prefers-reduced-motion:reduce){.sbtn.tgx{animation:none}}
 .tcard{border:1.5px solid rgba(122,79,209,.35);background:rgba(122,79,209,.07);border-radius:16px;padding:12px 14px;margin:24px 0 16px;text-align:left}
@@ -446,6 +446,12 @@ html[data-theme=dark] .fbs.s-accepted{background:#1d2c45;color:#8fb5ff}
 .cbx svg{display:none}.prow.on .cbx{background:var(--accbtn);border-color:var(--accbtn)}.prow.on .cbx svg{display:block}
 .bshint{flex:none;font-size:13px;color:var(--mut);margin-top:10px;line-height:1.35}
 .bsbox .big{flex:none;margin-top:10px}
+.wdemo{width:auto;display:inline-flex;padding:11px 22px;font-size:16px;border-radius:999px;background:var(--acc2)!important;color:var(--acc)!important;font-weight:700}
+.dmbox{text-align:left}.dmbox .ph,.dmbox .ptag{text-align:center}.dmtag{display:block;width:max-content;margin:0 auto 6px;background:#ede4ff;color:#6b3fd1}
+html[data-theme=dark] .dmtag{background:rgba(196,168,255,.18);color:#c4a8ff}
+.dmcap{display:flex;gap:10px;align-items:flex-start;margin:16px 0 8px;font-size:14.5px;line-height:1.4}.dmcap span{flex:none;width:24px;height:24px;border-radius:50%;background:var(--accbtn);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:13px}
+.dmbox .want{margin:0}.dmbox .big{margin-top:18px}
+ol.inst{margin:6px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:16px;line-height:1.45}.warnbox{background:#fff3c4;color:#6b4a00;padding:10px 12px;border-radius:12px;margin-bottom:8px}html[data-theme=dark] .warnbox{background:#4a3f12;color:#ffe08a}
 .hmorebtn{display:block;margin:12px auto 0;font-weight:700;color:var(--acc)}
 .hfull{margin-top:10px;text-align:left;display:flex;flex-direction:column;gap:12px}
 .hfs b{font-size:15px}.hfs ul{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:6px}.hfs li{font-size:14px;line-height:1.45}.hfs li b{font-size:inherit}
@@ -558,7 +564,8 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
   <div class="note wnote">Wystarczy e-mail i hasło (min. 6 znaków). Nick wybierzesz po zalogowaniu.</div>
   <div class="note" id="ainfo" style="margin-top:8px;text-align:center;font-size:14px;color:var(--ink)"></div>
  </div>
- <div class="center" style="margin-top:18px"><button type="button" class="lnk wguest" id="guestbtn">Rozejrzyj się bez logowania ›</button>
+ <div class="center" style="margin-top:18px"><button type="button" class="b wdemo" data-demo="1">👀 Zobacz przykład</button></div>
+ <div class="center" style="margin-top:12px"><button type="button" class="lnk wguest" id="guestbtn">Rozejrzyj się bez logowania ›</button>
   <p class="note wnote" style="margin-top:2px">Zobaczysz najbliższą wieczorynkę i trasę. Zaproszenia i zapisy wymagają konta.</p>
   <p class="wtg">📣 Bądź na bieżąco: <a href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">kanał PrzylesieGo na Telegramie</a></p>
  </div>
@@ -623,7 +630,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 <section id="p0">
  <div class="card">
   <div class="row between"><h2 style="margin:0">Umów się na rower</h2><span class="onl hide" id="onlbtn" title="Tyle osób ma teraz otwartą aplikację — ich nicki mają zieloną obwódkę"></span></div>
-  <div id="wantguest" class="note">Zaloguj się, aby zobaczyć chętnych i zgłosić ochotę na przejażdżkę.</div>
+  <div id="wantguest" class="note">Zaloguj się, aby zobaczyć chętnych i zgłosić ochotę na przejażdżkę.<div style="margin-top:10px"><button type="button" class="b wdemo" data-demo="1">👀 Zobacz przykład</button></div></div>
   <div id="wantmain" class="hide">
    <div id="mywant"></div>
    <div id="wantlist"></div>
@@ -737,6 +744,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 </footer>
 </div>
 <div class="sheet hide" id="helpsheet"></div>
+<div class="sheet hide" id="demosheet"></div>
 <div class="sheet hide" id="ratesheet"></div>
 <!-- ➕ pływający przycisk „Zaproś na rower” (zwija się przy przewijaniu w dół) -->
 <button type="button" class="totop" id="totop" aria-label="Przewiń na górę" title="Na górę"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 14.5l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
@@ -1567,6 +1575,7 @@ function renderGear(){
   else if(gearView==="fbmsg"&&session&&isAdmin&&nicks[fbTo])body=fbMsgHtml();
   else if(gearView==="nick"&&session)body=nickHtml();
   else if(gearView==="del"&&session)body=delHtml();
+  else if(gearView==="inst")body=instHtml();
   else body=session
     ?testerCardHtml()+'<div class="sname">👤 '+(me.nick?nk(uid):'ustaw nick')+(isAdmin?' 🛡️':'')+'</div><div class="smail">'+esc(session.user.email||"")+(stazTxt(uid)?'<br><span class="staz">'+esc(stazTxt(uid))+'</span>':'')+'</div>'
      +'<button class="b sbtn g" data-c="nick">✏️ '+(me.nick?'Nick i płeć':'Ustaw nick')+'</button>'
@@ -1576,12 +1585,12 @@ function renderGear(){
      +(fbOk?'<button class="b sbtn g" data-c="fb">💬 Oceń aplikację / zgłoś błąd'+(fbMineUnread().length?' <span class="fbcnt">'+fbMineUnread().length+'</span>':'')+'</button>':'')
      +(isAdmin?'<button class="b sbtn g" data-c="admin">🛡️ Administracja'+(fbAdmUnread().length?' <span class="fbcnt">'+fbAdmUnread().length+'</span>':'')+'</button>':'')
      +(meTester()?'<div class="note" style="margin-top:14px">🧪 Funkcje testowe (jesteś testerem)</div><div class="seg">'+[["1","Pokaż"],["0","Ukryj"]].map(([k,t])=>'<button data-beta="'+k+'" class="'+((betaOn?"1":"0")===k?"on":"")+'">'+t+'</button>').join("")+'</div><div class="note" style="margin-top:6px">„Ukryj” — widzisz aplikację tak jak wszyscy.</div>':'')
-     +'<button class="b sbtn g" data-c="help">❓ Pomoc — co potrafi aplikacja</button>'
+     +'<button class="b sbtn g" data-c="help">❓ Pomoc — co potrafi aplikacja</button>'+instBtnHtml()
      +themeHtml()+showNickHtml()+hideTestHtml()+helpPrefHtml()
      +'<button class="b sbtn" style="background:var(--bad);margin-top:20px" data-c="out">Wyloguj</button>'
      +'<button class="sdanger" data-c="del">Usuń konto…</button>'
     :'<div class="sname">Przeglądasz jako gość</div><div class="smail">Zaloguj się, żeby zapisywać się na wieczorynki i zgłaszać ochotę na jazdę.</div>'
-     +'<button class="b sbtn" data-c="login">Zaloguj się / załóż konto</button>'+tg+'<button class="b sbtn g" data-c="help">❓ Pomoc — co potrafi aplikacja</button>'+themeHtml()+helpPrefHtml();
+     +'<button class="b sbtn" data-c="login">Zaloguj się / załóż konto</button>'+tg+'<button class="b sbtn g" data-c="help">❓ Pomoc — co potrafi aplikacja</button>'+instBtnHtml()+themeHtml()+helpPrefHtml();
   p.innerHTML='<div class="sheetbox"><button class="sclose" data-c="close" aria-label="Zamknij">✕</button>'+body+'</div>';
   const s=$("adminsel");
   if(s&&keepSel&&[...s.options].some(o=>o.value===keepSel))s.value=keepSel;
@@ -1707,6 +1716,7 @@ $("gearpanel").addEventListener("click",async e=>{
     return;
   }
   if(c==="help"){gearOpen=false;renderGear();openHelp();return}
+  if(c==="inst"){if(instPrompt){const ev=instPrompt;instPrompt=null;try{ev.prompt();const r=await ev.userChoice;say(r&&r.outcome==="accepted"?"📲 Instaluję — ikona pojawi się na ekranie telefonu.":"Możesz zainstalować później: ⚙️ → Zainstaluj aplikację.")}catch(err){gearView="inst"}renderGear();return}gearView="inst";renderGear();return}
   if(c==="testeradd"){
     const sel=$("testersel"),id=sel?sel.value:"";if(!id||!isSuper(uid))return;
     try{const r=await sb.from("testers").insert({user_id:id,added_by:uid});if(r.error)throw r.error;await loadRemote();say("🧪 Nadano prawa testera: "+nickOf(id))}
@@ -1880,6 +1890,64 @@ const helpPrefHtml=()=>'<div class="note" style="margin-top:14px">Pokazuj pomoc 
   +[["1","Tak"],["0","Nie"]].map(([k,t])=>'<button data-hs="'+k+'" class="'+((helpOff?"0":"1")===k?"on":"")+'">'+t+'</button>').join("")+'</div>';
 let helpMore=false;
 // pełny opis (rozwijany pod krótką pomocą)
+// 📲 instalacja jako aplikacja (PWA): Android/Chrome — systemowe okienko; iPhone — instrukcja
+let instPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();instPrompt=e;if(gearOpen)renderGear()});
+window.addEventListener("appinstalled",()=>{instPrompt=null;if(gearOpen)renderGear();say("✅ Zainstalowano — PrzylesieGo! jest na ekranie telefonu.")});
+const isStandalone=()=>(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone===true;
+const instBtnHtml=()=>isStandalone()?'':'<button class="b sbtn g" data-c="inst">📲 Zainstaluj aplikację<small>Ikona na ekranie telefonu, bez paska przeglądarki</small></button>';
+function instHtml(){
+  const ua=navigator.userAgent||"",ios=/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1),
+    android=/Android/.test(ua),inApp=/Telegram|FBAN|FBAV|Instagram|Messenger/i.test(ua),notSafari=ios&&/CriOS|FxiOS|EdgiOS|GSA/.test(ua);
+  const ol=a=>'<ol class="inst">'+a.map(x=>'<li>'+x+'</li>').join("")+'</ol>';
+  let b;
+  if(inApp)b='<div class="note warnbox">⚠️ Otwierasz aplikację w przeglądarce wbudowanej w '+(/Telegram/i.test(ua)?'Telegram':'komunikator')+'. Stąd nie da się zainstalować.</div>'
+    +ol(["Stuknij ⋯ albo ikonę udostępniania w rogu.",ios?"Wybierz <b>„Otwórz w Safari”</b>.":"Wybierz <b>„Otwórz w przeglądarce”</b> (Chrome).","Tam: ⚙️ → 📲 Zainstaluj aplikację."]);
+  else if(notSafari)b='<div class="note warnbox">⚠️ Na iPhonie zainstalujesz tylko z <b>Safari</b>.</div>'+ol(["Skopiuj adres strony.","Otwórz <b>Safari</b> i wklej adres.","Tam: ⚙️ → 📲 Zainstaluj aplikację."]);
+  else if(ios)b=ol(["Stuknij <b>Udostępnij</b> — kwadrat ze strzałką w górę (na dole ekranu albo obok paska adresu).","Przewiń listę i wybierz <b>„Do ekranu początkowego”</b>.","Stuknij <b>„Dodaj”</b> w prawym górnym rogu.","Gotowe ✅ Otwieraj PrzylesieGo! z ikony z dwoma kołami."]);
+  else if(android)b=ol(["Stuknij <b>⋮</b> w prawym górnym rogu Chrome.","Wybierz <b>„Zainstaluj aplikację”</b> albo „Dodaj do ekranu głównego”.","Potwierdź <b>„Zainstaluj”</b>.","Gotowe ✅ Ikona z dwoma kołami pojawi się na ekranie."]);
+  else b=ol(["<b>Chrome / Edge:</b> ikona instalacji (monitor ze strzałką) po prawej stronie paska adresu → „Zainstaluj”.","<b>Safari na Macu:</b> menu Plik → „Dodaj do Docka”.","Na telefonie wygodniej: otwórz ten adres w Safari (iPhone) albo Chrome (Android)."]);
+  return '<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">📲 Zainstaluj aplikację</div>'
+   +'<div class="sleft">'+b+'<div class="note" style="margin-top:10px">Po instalacji PrzylesieGo! otwiera się jak zwykła aplikacja: pełny ekran, ikona na ekranie, liczba powiadomień na ikonie.</div></div>';
+}
+// 👀 przykład dla gościa: udawane osoby i zaproszenia, nic nie trafia do bazy
+function demoHtml(){
+  const keep={uid,wants,joins,prefs,decls,invs,nicks,genders,favs,favOk,paceOk,distOk,rangeOk,visOk,testOk,wRouteOk,isAdmin};
+  const t=(dd,h,m)=>{const d=new Date();d.setDate(d.getDate()+dd);d.setHours(h,m||0,0,0);return d.toISOString()};
+  try{
+    uid="demo-me";isAdmin=false;paceOk=distOk=rangeOk=visOk=wRouteOk=true;testOk=false;favOk=true;
+    nicks={"demo-me":"Ty",d1:"Marek z Bielan",d2:"Ania K",d3:"Kasia",d4:"Tomek R",d5:"Ola"};
+    genders={"demo-me":"M",d1:"M",d2:"K",d3:"K",d4:"M",d5:"K"};favs=new Set(["d2"]);
+    const now=new Date(),late=now.getHours()>=17,d0=late?1:0;
+    const W=[
+      {id:"dm1",user_id:"d1",starts_at:t(d0,18,0),note:"Kebab RIDE",visibility:"all",pace:"tour",km:40},
+      {id:"dm2",user_id:"d2",starts_at:t(d0+1,17,0),range_from:t(d0+1,17,0),range_to:t(d0+1,19,0),note:"Coffee Ride ☕",visibility:"all",pace:"senior",dur_min:120},
+      {id:"dm3",user_id:"d4",starts_at:t(d0+2,9,0),note:"SPEEDAY",visibility:"private",pace:"speed",route_km:62.4}];
+    wants=W;joins={dm1:["d2","d3"],dm2:["d1","d4","d5"],dm3:[]};
+    prefs={dm2:{d1:t(d0+1,17,30),d4:t(d0+1,18,0),d5:t(d0+1,18,0)}};decls={dm1:["d5"]};
+    invs={dm3:[{u:"demo-me",by:"d4"},{u:"d1",by:"d4"}]};
+    const WX=["🌡 9°C · 🌬 12 km/h z zachodu · 🌧 10%","🌡 11°C · 🌬 8 km/h z południa · 🌧 0%","🌡 7°C · 🌬 15 km/h z północnego zachodu · 🌧 20%"];
+    W.forEach((w,i)=>{wxTxt[w.id+"|"+wxWhen(w).getTime()]=WX[i]});
+    const cap=(n,t)=>'<div class="dmcap"><span>'+n+'</span><div>'+t+'</div></div>';
+    return '<div class="sheetbox popbox dmbox" role="dialog" aria-modal="true" aria-label="Przykład"><button class="sclose" data-dm="close" aria-label="Zamknij">✕</button>'
+     +'<span class="ptag dmtag">👀 PRZYKŁAD</span><div class="ph">Tak wygląda PrzylesieGo!</div>'
+     +'<div class="note" style="text-align:center">Udawane osoby i jazdy — możesz klikać, nic się nie zapisuje.</div>'
+     +cap(1,'Ktoś zaprasza wszystkich — wystarczy <b>„Jadę!”</b>')+wantHtml(W[0])
+     +cap(2,'Zakres godzin — każdy wybiera, <b>kiedy może</b>, autor ustala start')+wantHtml(W[1])
+     +cap(3,'🔒 Zaproszenie <b>tylko dla Ciebie</b>, z proponowaną trasą GPX')+wantHtml(W[2])
+     +cap(4,'Swoje zaproszenie tworzysz zielonym <b>➕</b> w prawym dolnym rogu. Pod <b>🔔</b> masz wszystkie zaproszenia do Ciebie.')
+     +'<button type="button" class="b big" data-dm="reg">Załóż konto — to 30 sekund</button>'
+     +'<button type="button" class="lnk" data-dm="close" style="display:block;margin:10px auto 0">Zamknij przykład</button></div>';
+  }finally{({uid,wants,joins,prefs,decls,invs,nicks,genders,favs,favOk,paceOk,distOk,rangeOk,visOk,testOk,wRouteOk,isAdmin}=keep)}
+}
+function openDemo(){const p=$("demosheet");p.innerHTML=demoHtml();p.classList.remove("hide");p.querySelector(".sheetbox").scrollTop=0}
+function closeDemo(){const p=$("demosheet");p.classList.add("hide");p.innerHTML=""}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-demo]");if(b){e.preventDefault();openDemo()}});
+$("demosheet").addEventListener("click",e=>{
+  if(e.target===$("demosheet")||e.target.closest("[data-dm='close']")){closeDemo();return}
+  if(e.target.closest("[data-dm='reg']")){closeDemo();if(guestMode){setGuest(false);renderChrome()}setTimeout(()=>{const m=$("ae");if(m){m.scrollIntoView({block:"center"});m.focus()}},120);return}
+  if(e.target.closest("button,a,summary,.nk")){e.preventDefault();e.stopPropagation();say("👀 To tylko przykład — załóż konto, żeby jeździć naprawdę.")}
+},true);
 function helpFullHtml(){
   const tg=feat("telegram_dm"),rides=tabOk(1),sec=(t,items)=>'<div class="hfs"><b>'+t+'</b><ul>'+items.map(x=>'<li>'+x+'</li>').join("")+'</ul></div>';
   return '<div class="hfull">'
