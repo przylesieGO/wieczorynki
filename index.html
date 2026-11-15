@@ -428,6 +428,16 @@ html[data-theme=dark] .fbs.s-accepted{background:#1d2c45;color:#8fb5ff}
 .cbx svg{display:none}.prow.on .cbx{background:var(--accbtn);border-color:var(--accbtn)}.prow.on .cbx svg{display:block}
 .bshint{flex:none;font-size:13px;color:var(--mut);margin-top:10px;line-height:1.35}
 .bsbox .big{flex:none;margin-top:10px}
+.wpace{display:flex;flex-direction:column;gap:8px}
+.wpt{display:flex;align-items:center;gap:12px;width:100%;border:2px solid transparent;background:var(--fill);color:var(--ink);border-radius:14px;padding:10px 12px;font:inherit;text-align:left;cursor:pointer}
+.wpt .e{font-size:24px;width:32px;text-align:center;flex:none}.wpt .t{flex:1;min-width:0}.wpt b{display:block;font-size:16px}.wpt small{display:block;color:var(--mut);font-size:13px}
+.wpt .k{font-weight:800;font-size:15px;white-space:nowrap;color:var(--mut)}
+.wpt.on{border-color:var(--accbtn);background:var(--acc2)}.wpt.on .k{color:var(--acc)}
+.wpcw{margin-top:6px}.wpc{display:inline-block;border-radius:999px;padding:2px 10px;font-size:13.5px;font-weight:700}
+.wpc-senior{background:var(--acc2);color:var(--acc)}.wpc-tour{background:#e3edfc;color:#1f56b3}.wpc-speed{background:#fff0de;color:#b45309}
+html[data-theme=dark] .wpc-tour{background:#1d2c45;color:#8fb5ff}html[data-theme=dark] .wpc-speed{background:#45301a;color:#ffb35c}
+.popbox .wpcw{text-align:center}
+
 .wfbox{height:min(92vh,860px);padding-left:0;padding-right:0;padding-bottom:0;max-width:560px}
 .wfhead{display:flex;align-items:center;gap:8px;flex:none;padding:0 12px 10px;border-bottom:1px solid var(--line)}
 .wfhead b{flex:1;text-align:center;font-size:19px}.wfsp{width:40px;flex:none}.wfhead .sclose{position:static;flex:none}
@@ -547,6 +557,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
     </div>
     <div class="qchips" id="wquick"><button type="button" data-q="30">Za 30 min</button><button type="button" data-q="17:30">17:30</button><button type="button" data-q="18:00">18:00</button><button type="button" data-q="19:00">19:00</button></div>
     <div class="wx hide" id="wwx"></div>
+    <div id="wpacewrap" class="hide"><div class="wlbl">Tempo</div><div class="wpace" id="wpace"></div><div class="note" id="wpacenote" style="margin-top:6px;text-align:center">Nic nie zaznaczone = tempo dowolne</div></div>
     <div id="wtestwrap" class="hide"><div class="wlbl">Rodzaj zaproszenia</div><div class="seg" id="wtest"><button type="button" data-test="1" class="on">🧪 Testowe</button><button type="button" data-test="0">🚴 Prawdziwe</button></div><div class="note" id="wtestnote" style="margin-top:6px"></div></div>
     <div id="wwhowrap" class="hide"><div class="wlbl">Kto zobaczy zaproszenie?</div><button type="button" class="who" id="wwho"></button></div>
     <div id="wroutewrap" class="hide"><div class="wlbl">Proponowana trasa (opcjonalnie)</div>
@@ -946,7 +957,7 @@ const uiIcon=k=>'<svg class="ui-i" viewBox="0 0 24 24" fill="none" stroke="curre
 const UI_MAP=[["⚙️","gear"],["⚙","gear"],["🔔","bell"],["🔕","belloff"],["❓","help"],["✏️","pencil"],["⭐","starf"],["☆","star"],["💬","msg"],["🛡️","shield"],["🛡","shield"],["📣","mega"],["☀️","sun"],["🌙","moon"],["👤","user"],["🕖","clock"],["🌡","therm"],["🌬","wind"],["🌧","rain"],["📩","mail"],["✉️","mail"],["🌍","globe"],["🔒","lock"],["🙋","hand"],["🚴","bike"],["🚲","bike"],["👥","users"],["🐞","bug"],["💡","bulb"],["🗺️","map"],["🗺","map"],["🧪","flask"],["⏳","hourglass"],["👀","eye"],["📅","cal"],["🗓","cal"],["📊","chart"],["🎨","palette"],["👩","venus"],["👨","mars"],["📍","pin"],["📏","ruler"],["⏱","timer"],["⏰","alarm"],["🙅","xcircle"],["✅","check"],["⚠️","alert"],["🗑️","trash"],["👋","logout"],["📲","phone"],["🆕","sparkles"],["✨","sparkles"],["📈","trend"],["➕","plus"],["🚦","sliders"],["🧹","trash"]];
 const UI_RE=new RegExp("("+UI_MAP.map(([e])=>e.replace(/[\u{FE0F}]/gu,"")).sort((a,b)=>b.length-a.length).map(e=>e.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")\uFE0F?","gu");
 const UI_K=Object.fromEntries(UI_MAP.map(([e,k])=>[e.replace(/\uFE0F/g,""),k]));
-const UI_SKIP=".nk,.stars,.fbst,.ttag,.beta,#toast,.fbcnt,.cdbadge,.ui-i";
+const UI_SKIP=".wpc,.wpace .e,.nk,.stars,.fbst,.ttag,.beta,#toast,.fbcnt,.cdbadge,.ui-i";
 function uiText(n){
   const el=n.parentElement;if(!el||/^(SCRIPT|STYLE|TEXTAREA|OPTION|TITLE)$/.test(el.tagName)||el.closest(UI_SKIP))return;
   const t=n.nodeValue;UI_RE.lastIndex=0;if(!UI_RE.test(t))return;UI_RE.lastIndex=0;
@@ -1897,7 +1908,7 @@ function fillWx(){
 }
 function routeBoxHtml(w){
   if(!hasRoute(w))return "";
-  return '<div class="wroute"><div>🗺️ <b>Proponowana trasa</b> · 📏 '+kmTxt(w.route_km)+' km · ⏱ ≈ '+esc(durTxt(w.route_km/WANT_PACE*60))+'</div>'
+  return '<div class="wroute"><div>🗺️ <b>Proponowana trasa</b> · 📏 '+kmTxt(w.route_km)+' km · ⏱ ≈ '+esc(durTxt(w.route_km/wPaceKmh(w.pace)*60))+'</div>'
    +'<div class="wrb"><button type="button" class="b g small" data-rt="gpx" data-id="'+esc(w.id)+'">⬇ Pobierz GPX</button><button type="button" class="b g small" data-rt="show" data-id="'+esc(w.id)+'">🗺️ Szczegóły</button></div></div>';
 }
 /* okienko „Szczegóły trasy”: mapa z wiatrem, statystyki, miejscowości */
@@ -1912,13 +1923,13 @@ async function openRouteSheet(w){
    +'<div class="legend"><span><i class="dot" style="background:#d64545"></i>pod wiatr</span><span><i class="dot" style="background:#e0b83a"></i>bocznie</span><span><i class="dot" style="background:#2a9d5c"></i>z wiatrem</span></div>'
    +'<div class="stats" id="stats3"></div><div class="note" id="windinfo3" style="margin-top:8px">Ładuję trasę…</div><div class="tip hide" id="tip3"></div><div class="routeinfo hide" id="placesbox3"></div>'
    +'<div class="pbtns" style="margin-top:14px"><button type="button" class="b" data-rt="gpx" data-id="'+esc(w.id)+'">⬇ Pobierz GPX</button><button type="button" class="b w" data-rk="close">Zamknij</button></div>'
-   +'<div class="ptg">Czas przy tempie ok. '+WANT_PACE+' km/h, z uwzględnieniem wiatru. Mapa © OpenStreetMap · pogoda: Open-Meteo.</div></div>';
+   +'<div class="ptg">Czas przy tempie ok. '+String(wPaceKmh(w.pace)).replace(".",",")+' km/h, z uwzględnieniem wiatru. Mapa © OpenStreetMap · pogoda: Open-Meteo.</div></div>';
   p.classList.remove("hide");
   let pts;
   try{pts=await getWantRoute(w.id)}catch(e){if(tok===rsTok)$("windinfo3").textContent="Nie udało się pobrać trasy.";return}
   if(tok!==rsTok)return;
   if(!pts){$("windinfo3").textContent="To zaproszenie nie ma już trasy.";return}
-  let an=analyze(pts,0,0,WANT_PACE,false);$("stats3").innerHTML=statsHtml(an);
+  let an=analyze(pts,0,0,wPaceKmh(w.pace),false);$("stats3").innerHTML=statsHtml(an);
   rsMap=makeMap("map3");
   if(rsMap){setTimeout(()=>{if(rsMap){rsMap.m.invalidateSize();drawRoute(rsMap,pts,null,true)}},60)}
   else $("map3").outerHTML='<div class="note">Nie udało się załadować mapy (sprawdź internet).</div>';
@@ -1926,7 +1937,7 @@ async function openRouteSheet(w){
   $("windinfo3").textContent="Sprawdzam prognozę wiatru…";
   try{
     const x=await getWind(pts[0].lat,pts[0].lon,wxWhen(w));if(tok!==rsTok)return;
-    an=analyze(pts,x.dir,x.speed,WANT_PACE,false);$("stats3").innerHTML=statsHtml(an);
+    an=analyze(pts,x.dir,x.speed,wPaceKmh(w.pace),false);$("stats3").innerHTML=statsHtml(an);
     if(rsMap){drawRoute(rsMap,pts,an.segs,false);setArrow("warrow3",x.dir,x.speed)}
     $("tip3").textContent=an.tip;$("tip3").classList.remove("hide");
     $("windinfo3").textContent="Wiatr o "+x.time+": "+windLabel(x.dir)+", "+Math.round(x.speed)+" km/h, porywy do "+Math.round(x.gust)+" km/h"+(x.temp!=null?" · "+Math.round(x.temp)+"°C":"")+(x.rain!=null?" · deszcz "+Math.round(x.rain)+"%":"")+" (Open-Meteo).";
@@ -2042,7 +2053,7 @@ function wantHtml(w){
     const peek=priv&&!mine&&!invIds(w).includes(uid)&&!joined;
     const open=isOpen(w),myp=(prefs[w.id]||{})[uid],dec=(decls[w.id]||[]).includes(uid);
     return '<div class="want'+(mine?' mine':'')+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'">'+(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+'<div class="wtop">'+nk(w.user_id)+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="lockt">do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?'<span class="lockt">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>':'')+(mine?'<span class="note">(Twoje zgłoszenie)</span>':'')+'</div>'
-     +(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+wxHtml(w)+routeBoxHtml(w)
+     +paceHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+wxHtml(w)+routeBoxHtml(w)
      +invitedHtml(w)
      +(open?tallyHtml(w):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w))
      +((!mine||isAdmin)?'<div class="acts">'
@@ -2147,6 +2158,7 @@ function openWantForm(w,preset){
   wf.route=null;wf.routeName="";wf.routeHad=hasRoute(w);wf.routeTouched=false;$("wrfile").value="";
   $("wroutewrap").classList.toggle("hide",!wRouteOk);
   if(w&&hasRoute(w)){getWantRoute(w.id).then(p=>{if(wf.editId===w.id&&!wf.routeTouched){wf.route=p||null;wfRouteSync()}}).catch(()=>{})}
+  wf.pace=w&&w.pace||null;$("wpacewrap").classList.toggle("hide",!paceOk);wfPaceSync();
   wfRouteSync();
   if(preset&&preset.pick){wf.vis="pick";wf.pick=new Set(preset.pick)}
   $("wwhowrap").classList.toggle("hide",!!w||!visOk);
@@ -2183,12 +2195,21 @@ function openWantForm(w,preset){
 /* 🗺️ trasa w zaproszeniu (KROK 23) */
 let wRouteOk=false;const wRouteCache={};
 const hasRoute=w=>!!w&&w.route_km!=null;
-const WANT_PACE=22; // km/h — szacunek czasu dla zaproszeń
+const WANT_PACE=22; // km/h — szacunek czasu dla zaproszeń bez wybranego tempa
+// ⏱ tempo zaproszenia (KROK 28): brak = dowolne
+const PACES={senior:{e:"🐢",n:"Senior Adventure",r:"15–18 km/h",d:"spokojnie, z przerwami",v:16.5},tour:{e:"🚴",n:"Turystycznie",r:"18–24 km/h",d:"równo, bez ścigania",v:21},speed:{e:"⚡",n:"SPEEDAY",r:"26+ km/h",d:"szybko, dla wyjeżdżonych",v:27}};
+let paceOk=false;
+const wPaceKmh=p=>PACES[p]?PACES[p].v:WANT_PACE;
+const paceHtml=w=>w&&PACES[w.pace]?'<div class="wpcw"><span class="wpc wpc-'+w.pace+'">'+PACES[w.pace].e+' '+PACES[w.pace].n+' · '+PACES[w.pace].r+'</span></div>':'';
+function wfPaceSync(){
+  $("wpace").innerHTML=Object.entries(PACES).map(([k,x])=>'<button type="button" data-pace="'+k+'" class="wpt'+(wf.pace===k?' on':'')+'"><span class="e">'+x.e+'</span><span class="t"><b>'+x.n+'</b><small>'+x.d+'</small></span><span class="k">'+x.r+'</span></button>').join("");
+  $("wpacenote").textContent=wf.pace?"Dotknij jeszcze raz, żeby odznaczyć (tempo dowolne).":"Nic nie zaznaczone = tempo dowolne";
+}
 const kmTxt=k=>Number(k).toFixed(1).replace(".",",");
 function wfRouteSync(){
   const i=$("wrinfo"),R=wf.route;
   $("wrlbl").textContent=R?"🗺️ Zmień plik GPX":"🗺️ Dodaj plik GPX";
-  i.innerHTML=R?'<span>✅ '+kmTxt(routeKm(R))+' km · ⏱ ≈ '+esc(durTxt(routeKm(R)/WANT_PACE*60))+(wf.routeName?' · '+esc(wf.routeName):'')+'</span><button type="button" class="lnk" id="wrdel" style="color:var(--bad)">Usuń trasę</button>'
+  i.innerHTML=R?'<span>✅ '+kmTxt(routeKm(R))+' km · ⏱ ≈ '+esc(durTxt(routeKm(R)/wPaceKmh(wf.pace)*60))+(wf.pace?' <span class="note">('+PACES[wf.pace].r+')</span>':'')+(wf.routeName?' · '+esc(wf.routeName):'')+'</span><button type="button" class="lnk" id="wrdel" style="color:var(--bad)">Usuń trasę</button>'
     :(wf.editId&&wf.routeHad?'<span class="note">Trasa zostanie usunięta po zapisaniu.</span>':'<span class="note">Inni zobaczą długość, mapę z wiatrem i pobiorą GPX.</span>');
 }
 async function getWantRoute(id){
@@ -2200,7 +2221,7 @@ async function getWantRoute(id){
 }
 function closeWantForm(){$("wantform").classList.add("hide");$("wfask").classList.add("hide");document.body.classList.remove("wfopen");wf.editId=null}
 // czy w formularzu coś zmieniono od otwarcia (wtedy ✕ / Anuluj pytają)
-function wfSnap(){return JSON.stringify([wf.day,$("wdt").value,wf.mode,wf.h,wf.m,wf.h2,wf.m2,wf.vis,[...wf.pick].sort(),wf.test,$("wnote").value.trim(),!!wf.route,wf.routeTouched])}
+function wfSnap(){return JSON.stringify([wf.day,$("wdt").value,wf.mode,wf.h,wf.m,wf.h2,wf.m2,wf.vis,[...wf.pick].sort(),wf.test,wf.pace,$("wnote").value.trim(),!!wf.route,wf.routeTouched])}
 function wfTryClose(){
   if($("wantform").classList.contains("hide"))return;
   if(wf.snap0&&wfSnap()!==wf.snap0){
@@ -2210,6 +2231,7 @@ function wfTryClose(){
   closeWantForm();
 }
 $("wfx").onclick=wfTryClose;
+$("wpace").addEventListener("click",e=>{const b=e.target.closest("button[data-pace]");if(!b)return;wf.pace=wf.pace===b.dataset.pace?null:b.dataset.pace;wfPaceSync();wfRouteSync();try{navigator.vibrate&&navigator.vibrate(8)}catch(x){}});
 $("wfaskno").onclick=closeWantForm;
 $("wfaskback").onclick=()=>$("wfask").classList.add("hide");
 $("wantform").addEventListener("click",e=>{if(e.target.id==="wantform")wfTryClose()});
@@ -2312,7 +2334,7 @@ $("wsave").onclick=async()=>{
   let editedPriv=false;
   try{
     if(wf.editId){
-      const ow0=wants.find(x=>x.id===wf.editId),upd={starts_at:d.toISOString(),note};
+      const ow0=wants.find(x=>x.id===wf.editId),upd={starts_at:d.toISOString(),note};if(paceOk)upd.pace=wf.pace||null;
       if(wRouteOk&&wf.routeTouched){upd.route=wf.route?routeJson(wf.route):null;upd.route_km=wf.route?+routeKm(wf.route).toFixed(1):null;delete wRouteCache[wf.editId]}
       if(rng){upd.range_from=d.toISOString();upd.range_to=d2.toISOString();upd.settled_at=null}
       else if(isOpen(ow0)){upd.range_from=null;upd.range_to=null}
@@ -2320,7 +2342,7 @@ $("wsave").onclick=async()=>{
       if(res.error||!res.data||!res.data.length)throw new Error(res.error?res.error.message:"zmiana terminu wymaga KROKU 11 w bazie");
       const ow=wants.find(x=>x.id===wf.editId);editedPriv=!!ow&&((invs[ow.id]||[]).length>0||(joins[ow.id]||[]).some(x=>x!==uid));
     }else{
-      const row={starts_at:d.toISOString(),note};if(priv)row.visibility="private";if(testOk)row.is_test=!!wf.test;if(wRouteOk&&wf.route){row.route=routeJson(wf.route);row.route_km=+routeKm(wf.route).toFixed(1)}
+      const row={starts_at:d.toISOString(),note};if(paceOk&&wf.pace)row.pace=wf.pace;if(priv)row.visibility="private";if(testOk)row.is_test=!!wf.test;if(wRouteOk&&wf.route){row.route=routeJson(wf.route);row.route_km=+routeKm(wf.route).toFixed(1)}
       if(rng){row.range_from=d.toISOString();row.range_to=d2.toISOString()}
       const res=await sb.from("wants").insert(row).select("id").single();
       if(res.error)throw res.error;
@@ -2355,7 +2377,7 @@ function renderMyWant(){
     return '<div class="mywant'+(isTest(w)?' test':'')+'" data-i="'+i+'" data-wid="'+esc(w.id)+'"><div class="myh">🙋 Ty zapraszasz'+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+(mine.length>1?' · '+(i+1)+' z '+mine.length:'')+(priv?'<span class="lockt">🔒 dla '+ni+' '+osob(ni)+'</span>':'')+'</div>'
      +'<div class="myt'+(isOpen(w)?' rng':'')+'">'+esc(n>=0&&n<=2?["Dziś","Jutro","Pojutrze"][n]+" "+wTime(w):wd.charAt(0).toUpperCase()+wd.slice(1)+" "+wTime(w))+(n>=0&&n<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
      +(isOpen(w)?'<div class="mym">🕖 Godzina do ustalenia'+(new Date(w.range_from).getTime()>Date.now()+36e5?' — ustali się sama '+esc(hhmm(new Date(new Date(w.range_from).getTime()-36e5)))+', jeśli jej nie wybierzesz':'')+'</div>':fromRange(w)?'<div class="mym">✅ Godzina ustalona</div>':'')
-     +(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')+wxHtml(w)+routeBoxHtml(w)
+     +paceHtml(w)+(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')+wxHtml(w)+routeBoxHtml(w)
      +(priv?'<div class="mym">'+invitedHtml(w)+'</div>':'')
      +(isOpen(w)?'<div class="mym">'+tallyHtml(w)+'</div>'+(wTally(w).length?'<div class="prop">✨ Propozycja: <b>'+esc(hhmm(new Date(wBest(w))))+'</b> — pasuje '+wTally(w)[0].ids.length+' '+plf(wTally(w)[0].ids.length,["osobie","osobom","osobom"])+'</div>':'')
        :'<div class="mym">'+joinedHtml("my"+w.id,j,'Na razie nikt nie dołączył.')+declHtml(w)+'</div>')
@@ -2844,7 +2866,7 @@ function renderPop(){
    +'<div class="pwhen">'+esc(day+" "+wTime(w))+(dd>=0&&dd<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
    +(open?'<div class="pmeta">🕖 Zakres godzin — wybierz, kiedy możesz; godzinę ustali '+esc(nickOf(w.user_id))+'.</div>':'')
    +(moved&&!open?'<div class="pmeta">'+(fromRange(w)?'✅ Godzina jest już ustalona — powyżej.':'🕖 Godzina była już zmieniana — powyżej aktualna.')+'</div>':'')
-   +(w.note?'<div class="pnote">💬 '+esc(w.note)+'</div>':'')
+   +paceHtml(w)+(w.note?'<div class="pnote">💬 '+esc(w.note)+'</div>':'')
    +(w.user_id!==actor&&!time?'<div class="pmeta">Zaproszenie od '+nk(w.user_id)+'</div>':'')
    +(inv.length?'<div class="pmeta">Zaproszeni też:</div><div class="nks">'+favFirst(inv).map(id=>nk(id)).join("")+'</div>':'')
    +(going.length&&!open?'<div class="pmeta">Jadą już ('+going.length+'):</div><div class="nks">'+favFirst(going).map(id=>nk(id)).join("")+'</div>':'')
@@ -3288,7 +3310,9 @@ async function loadRemote(selectId){
     // zaproszenia tylko z ostatnich 7 dni i przyszłe (wcześniej: 200 najstarszych — nowe by znikały)
     const wSince=new Date(Date.now()-7*864e5).toISOString();
     const wq=cols=>sb.from("wants").select(cols).gte("starts_at",wSince).order("starts_at").limit(1000);
-    let w=await wq("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km");
+    let w=await wq("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace");
+    paceOk=!w.error;
+    if(w.error)w=await wq("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km");
     wRouteOk=!w.error;
     if(w.error)w=await wq("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test");
     testOk=!w.error;
