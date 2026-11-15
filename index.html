@@ -446,6 +446,9 @@ html[data-theme=dark] .fbs.s-accepted{background:#1d2c45;color:#8fb5ff}
 .cbx svg{display:none}.prow.on .cbx{background:var(--accbtn);border-color:var(--accbtn)}.prow.on .cbx svg{display:block}
 .bshint{flex:none;font-size:13px;color:var(--mut);margin-top:10px;line-height:1.35}
 .bsbox .big{flex:none;margin-top:10px}
+.hmorebtn{display:block;margin:12px auto 0;font-weight:700;color:var(--acc)}
+.hfull{margin-top:10px;text-align:left;display:flex;flex-direction:column;gap:12px}
+.hfs b{font-size:15px}.hfs ul{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:6px}.hfs li{font-size:14px;line-height:1.45}.hfs li b{font-size:inherit}
 .hst{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:12px;text-align:left}
 .hst li{display:flex;gap:12px;align-items:flex-start;font-size:15.5px;line-height:1.4}
 .hst .hn{flex:none;width:28px;height:28px;border-radius:50%;background:var(--accbtn);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:15px;margin-top:1px}
@@ -1875,6 +1878,42 @@ try{helpOff=localStorage.getItem("helpOff")==="1"}catch(e){}
 function setHelpOff(v){helpOff=!!v;try{localStorage.setItem("helpOff",helpOff?"1":"0")}catch(e){}}
 const helpPrefHtml=()=>'<div class="note" style="margin-top:14px">Pokazuj pomoc przy starcie</div><div class="seg">'
   +[["1","Tak"],["0","Nie"]].map(([k,t])=>'<button data-hs="'+k+'" class="'+((helpOff?"0":"1")===k?"on":"")+'">'+t+'</button>').join("")+'</div>';
+let helpMore=false;
+// pełny opis (rozwijany pod krótką pomocą)
+function helpFullHtml(){
+  const tg=feat("telegram_dm"),rides=tabOk(1),sec=(t,items)=>'<div class="hfs"><b>'+t+'</b><ul>'+items.map(x=>'<li>'+x+'</li>').join("")+'</ul></div>';
+  return '<div class="hfull">'
+   +sec("🚲 Zapraszanie",[
+     "<b>➕ Zaproś na rower</b> (prawy dolny róg) otwiera formularz. Na dole zawsze są „Wyślij” i „Anuluj”; ✕ albo „Anuluj” po zmianach pytają, czy odrzucić.",
+     "<b>Dzień i godzina:</b> Dziś / Jutro / Inny dzień, godzina na kartkach zegara (przeciągnij palcem albo ▲▼) i skróty „Za 30 min”, 17:30, 18:00, 19:00.",
+     "<b>↔ Zakres godzin</b> (np. 17:30–19:30): każdy wybiera „Pasuje mi o…”, Ty ustalasz start („✅ Ustal 18:00”). Jeśli nie ustalisz — ustali się sam 1 h przed początkiem zakresu (najwięcej chętnych).",
+     "<b>🗺️ Trasa GPX</b> (opcjonalnie): inni zobaczą długość, mapę z wiatrem na odcinkach i pobiorą plik. Kosz obok usuwa trasę.",
+     "<b>Tempo:</b> 🐢 Senior Adventure 15–18, 🚴 Turystycznie 18–24, ⚡ SPEEDAY 26+ km/h albo ✏️ własne. Bez wyboru — tempo dowolne.",
+     "<b>Dystans</b> albo <b>„Na ile jedziesz?”</b> (domyślnie 2 h). Pod zegarem widać „⏱ Jazda ok. 18:00–20:40”.",
+     "<b>Kilka zaproszeń dziennie</b> — ale nie mogą na siebie nachodzić (+15 min zapasu). Gdy nachodzą, okienko pod zegarem i pasek nad „Wyślij” robią się żółte, a „Ustaw 11:55” podpowiada najwcześniejszą wolną godzinę.",
+     "<b>🧪 Testowe / 🚴 Prawdziwe:</b> testowe są na próbę (czerwona migająca plakietka TEST, na kanale z oznaczeniem). Możesz je ukryć: ⚙️ → „Testowe zaproszenia: Ukryj”.",
+     "<b>Kto zobaczy?</b> 🌍 Wszyscy (także kanał Telegram) albo 🔒 ⭐ Ulubieni / 👥 wybrane osoby. Prywatne widzą tylko zaproszeni; mogą doprosić kolejne osoby.",
+     "<b>Notatka:</b> gotowe (Kebab RIDE, Coffee Ride ☕, SPEEDAY…) albo własna. „↺ Jak ostatnio” ustawia godzinę z poprzedniego razu.",
+     "<b>Zmień godzinę</b> na karcie „Ty zapraszasz” — zmienisz też tempo, dystans i trasę; zaproszeni dostaną powiadomienie."])
+   +sec("🙋 Odpowiadanie",[
+     "Na karcie zaproszenia: <b>„Jadę!”</b>, <b>„Nie dam rady”</b>, a przy zakresie <b>„Pasuje mi o…”</b>. „Rezygnuję” — gdy zmienisz zdanie.",
+     "Na karcie: godzina, 🌡 pogoda (temperatura, wiatr, deszcz), tempo, „📏 50 km · ⏱ ok. 18:00–20:40”, kto dołączył i kto nie da rady.",
+     "Zaproszenia są pogrupowane w <b>karty dni</b>; kilka w jednym dniu — przewijasz w bok."])
+   +sec("🔔 Powiadomienia",[
+     "<b>🔔 w nagłówku</b> — wszystkie aktualne zaproszenia w jednym miejscu: <b>📩 Do Ciebie</b> (od innych, prywatne i dla wszystkich) i <b>🙋 Twoje</b> (kto dołączył, zmiany). Czerwona liczba = nieprzeczytane (też na ikonie aplikacji).",
+     "Po wejściu wyskakuje okienko, gdy ktoś zaprosił Cię prywatnie.",
+     "<b>🔴 Liczba na ➕</b> — ile zaproszeń <b>innych osób</b> jest na dziś (Twoich nie liczy). Po przewinięciu w dół przycisk zwija się do samego ➕.",
+     tg?"<b>Bot Telegram</b> napisze prywatnie: zaproszenie, zmiana godziny i szczegółów, ustalenie startu, kto dołączył, przypomnienie ~1 h przed jazdą. Włączysz: ⚙️ → Połącz z Telegramem → w Telegramie START. Wyłączysz tam samo (Rozłącz).":"",
+     "<b>Kanał @PrzylesieGo</b> na Telegramie — ogłoszenia nowych jazd dla wszystkich."].filter(Boolean))
+   +sec("⭐ Ludzie",[
+     "Dotknij nicku: karta osoby („Z nami od…”, „🚴 Zaproś na rower”, ☆ dodaj do ulubionych). ⭐ ulubieni są zawsze na górze list.",
+     "🟢 zielona obwódka = osoba ma teraz otwartą aplikację. Przy nickach: ⭐ ulubiony, 🧪 tester, 💡 3 zrealizowane pomysły/zgłoszenia, 👑 główny admin."])
+   +sec("⚙️ Ustawienia",[
+     "Nick i płeć, ⭐ ulubieni, 💬 oceń aplikację / zgłoś błąd lub pomysł (admin odpisuje — odpowiedź pod 🔔), 🧪 zostań testerem, wygląd ☀️ / 🌙 / Auto, nick na górze ekranu, pokazywanie pomocy, wyloguj, usuń konto.",
+     "<b>⬆</b> w lewym dolnym rogu wraca na górę strony."])
+   +(rides?sec("🗺️ Wieczorynki",["Zaplanowane jazdy z trasą, mapą, wiatrem i odliczaniem — zakładka Wieczorynki."]):'')
+   +'</div>';
+}
 function helpHtml(){
   // krótka pomoc: 3 kroki + kilka wskazówek (decyzja właściciela 2026-11-15: „jak najmniejsza i najbardziej pomocna”)
   const tg=feat("telegram_dm"),st=(n,b,t)=>'<li><span class="hn">'+n+'</span><span><b>'+b+'</b> '+t+'</span></li>';
@@ -1887,7 +1926,10 @@ function helpHtml(){
    +'</ol>'
    +'<div class="htips"><div>⭐ Dotknij nicku, żeby dodać kogoś do ulubionych.</div>'
    +'<div>🧪 <b>Testowe</b> = próba aplikacji, <b>Prawdziwe</b> = jedziemy naprawdę.</div>'
+   +'<div>🔴 Liczba na ➕ = ile osób <b>innych niż Ty</b> zaprasza na dziś.</div>'
    +(session?'':'<div>👤 Żeby zapraszać i dołączać, zaloguj się — wystarczą e-mail i hasło.</div>')+'</div>'
+   +'<button type="button" class="lnk hmorebtn" data-h="more">'+(helpMore?'Zwiń opis ▴':'📖 Wszystkie funkcje — dokładny opis ▾')+'</button>'
+   +(helpMore?helpFullHtml():'')
    +(tg&&session?(tgLink?'<div class="htg2">✅ Telegram połączony — bot napisze, gdy ktoś Cię zaprosi.</div>'
        :tgOn()?'<button type="button" class="b sbtn tgx" data-h="tg">'+uiIcon("send")+' Połącz z Telegramem<small>Powiadomienia prosto na telefon</small></button>':'')
      :'<div class="htg2">📣 Nowe jazdy także na kanale <a href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">@PrzylesieGo ›</a></div>')
@@ -1895,11 +1937,12 @@ function helpHtml(){
    +'<label class="hoff"><input type="checkbox" id="helpoff"'+(helpOff?' checked':'')+'> Nie pokazuj przy starcie</label>'
    +'<button type="button" class="b big" data-h="close">Zaczynamy!</button></div>';
 }
-function openHelp(){const p=$("helpsheet");p.innerHTML=helpHtml();p.classList.remove("hide")}
+function openHelp(){helpMore=false;const p=$("helpsheet");p.innerHTML=helpHtml();p.classList.remove("hide")}
 function closeHelp(){const p=$("helpsheet");p.classList.add("hide");p.innerHTML=""}
 $("helpsheet").addEventListener("click",e=>{
   if(e.target.closest("[data-h='tg']")){closeHelp();gearOpen=true;gearView="tg";renderGear();return}
   if(e.target.closest("[data-h='fb']")){closeHelp();gearOpen=true;gearView="fb";renderGear();return}
+  if(e.target.closest("[data-h='more']")){helpMore=!helpMore;const p=$("helpsheet"),y=p.querySelector(".sheetbox").scrollTop;p.innerHTML=helpHtml();p.querySelector(".sheetbox").scrollTop=y;return}
   if(e.target===$("helpsheet")||e.target.closest("[data-h='close']"))closeHelp();
 });
 $("helpsheet").addEventListener("change",e=>{if(e.target.id==="helpoff")setHelpOff(e.target.checked)});
