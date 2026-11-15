@@ -1717,7 +1717,8 @@ $("gearpanel").addEventListener("click",async e=>{
     return;
   }
   if(c==="help"){gearOpen=false;renderGear();openHelp();return}
-  if(c==="inst"){if(instPrompt){const ev=instPrompt;instPrompt=null;try{ev.prompt();const r=await ev.userChoice;say(r&&r.outcome==="accepted"?"📲 Instaluję — ikona pojawi się na ekranie telefonu.":"Możesz zainstalować później: ⚙️ → Zainstaluj aplikację.")}catch(err){gearView="inst"}renderGear();return}gearView="inst";renderGear();return}
+  if(c==="inst"){gearView="inst";renderGear();return}
+  if(c==="instgo"){if(instPrompt){const ev=instPrompt;instPrompt=null;try{ev.prompt();const r=await ev.userChoice;say(r&&r.outcome==="accepted"?"📲 Instaluję — ikona pojawi się na ekranie telefonu.":"Możesz zainstalować później: ⚙️ → Zainstaluj aplikację.")}catch(err){gearView="inst"}renderGear();return}gearView="inst";renderGear();return}
   if(c==="testeradd"){
     const sel=$("testersel"),id=sel?sel.value:"";if(!id||!isSuper(uid))return;
     try{const r=await sb.from("testers").insert({user_id:id,added_by:uid});if(r.error)throw r.error;await loadRemote();say("🧪 Nadano prawa testera: "+nickOf(id))}
@@ -1908,7 +1909,9 @@ function instHtml(){
   else if(ios)b=ol(["Stuknij <b>Udostępnij</b> — kwadrat ze strzałką w górę (na dole ekranu albo obok paska adresu).","Przewiń listę i wybierz <b>„Do ekranu początkowego”</b>.","Stuknij <b>„Dodaj”</b> w prawym górnym rogu.","Gotowe ✅ Otwieraj PrzylesieGo! z ikony z dwoma kołami."]);
   else if(android)b=ol(["Stuknij <b>⋮</b> w prawym górnym rogu Chrome.","Wybierz <b>„Zainstaluj aplikację”</b> albo „Dodaj do ekranu głównego”.","Potwierdź <b>„Zainstaluj”</b>.","Gotowe ✅ Ikona z dwoma kołami pojawi się na ekranie."]);
   else b=ol(["<b>Chrome / Edge:</b> ikona instalacji (monitor ze strzałką) po prawej stronie paska adresu → „Zainstaluj”.","<b>Safari na Macu:</b> menu Plik → „Dodaj do Docka”.","Na telefonie wygodniej: otwórz ten adres w Safari (iPhone) albo Chrome (Android)."]);
+  // jeden ekran dla gościa i zalogowanego; gdy przeglądarka pozwala — przycisk instalacji jednym stuknięciem
   return '<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">📲 Zainstaluj aplikację</div>'
+   +(instPrompt?'<button class="b sbtn" data-c="instgo">📲 Zainstaluj teraz</button><div class="note" style="margin:10px 0 2px">albo ręcznie:</div>':'')
    +'<div class="sleft">'+b+'<div class="note" style="margin-top:10px">Po instalacji PrzylesieGo! otwiera się jak zwykła aplikacja: pełny ekran, ikona na ekranie, liczba powiadomień na ikonie.</div></div>';
 }
 // 👀 przykład dla gościa: udawane osoby i zaproszenia, nic nie trafia do bazy
