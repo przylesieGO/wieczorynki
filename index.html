@@ -460,10 +460,11 @@ html[data-theme=dark] .wpc-tour{background:#1d2c45;color:#8fb5ff}html[data-theme
 .wfhead{display:flex;align-items:center;gap:8px;flex:none;padding:0 12px 10px;border-bottom:1px solid var(--line)}
 .wfhead b{flex:1;text-align:center;font-size:19px}.wfsp{width:40px;flex:none}.wfhead .sclose{position:static;flex:none}
 .wfscroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:4px 18px 18px}
-.wffoot{flex:none;border-top:1px solid var(--line);padding:10px 18px calc(12px + env(safe-area-inset-bottom,0px));background:var(--card);border-radius:0}
+.wffoot{flex:none;border-top:1px solid var(--line);position:relative;z-index:2;box-shadow:0 -8px 20px rgba(0,0,0,.10);padding:10px 18px calc(12px + env(safe-area-inset-bottom,0px));background:var(--card);border-radius:0}
 .wffoot .big{margin-top:0;width:100%}
 #wcancel{color:var(--bad)!important;margin-left:auto}
 body.wfopen{overflow:hidden}
+html[data-theme=dark] .wffoot{box-shadow:0 -10px 24px rgba(0,0,0,.45)}
 .wfask{position:absolute;inset:0;z-index:5;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:28px;border-radius:22px 22px 0 0}
 .wfaskbox{width:100%;max-width:300px;background:var(--card);border-radius:16px;text-align:center;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)}
 .wfaskbox b{display:block;font-size:17px;padding:18px 14px 4px}.wfaskbox p{margin:0 14px 14px;font-size:14px;color:var(--mut);line-height:1.35}
@@ -2260,7 +2261,16 @@ function wfDurSync(){
   const d=wfDate(),i=$("wdurinfo"),k=wfKm(),m=wfDurMin();
   if(!d){i.classList.add("hide");$("wfclash").classList.add("hide");return}
   const st=d,en=new Date((wfRange()?wfDate2():d).getTime()+m*60000);
-  i.innerHTML='⏱ '+(wfRange()?'Jazda ok. '+durTxt(m)+' → koniec najpóźniej ok. '+hhmm(en):'Jazda ok. '+hhmm(st)+'–'+hhmm(en)+' ('+durTxt(m)+')')
+  // godzina już minęła (np. „Dziś 00:00” po przewinięciu zegara przez północ)
+  if(st.getTime()<Date.now()-5*60000){
+    const tom=wf.day==="0";
+    i.innerHTML='<div class="wclash" style="margin:0">⚠️ '+esc(wfLabel(st))+' już minęła'+(tom?' — to był dzisiejszy ranek. Jazda po północy to „Jutro”.':'.')+'</div>'
+      +(tom?'<button type="button" class="lnk wtom" style="font-weight:700;color:var(--acc);margin-top:4px">Ustaw jutro '+hhmm(st)+'</button>':'');
+    i.classList.add("bad");i.classList.remove("hide");
+    const fb=$("wfclash");fb.innerHTML='⚠️ '+esc(wfLabel(st))+' już minęła'+(tom?' · <button type="button" class="lnk wtom">Ustaw jutro '+hhmm(st)+'</button>':'');fb.classList.remove("hide");
+    wf.jump=null;return}
+  const nd=localIso(en).slice(0,10)!==localIso(st).slice(0,10)?' <span class="note">(nast. dnia)</span>':'';
+  i.innerHTML='⏱ '+(wfRange()?'Jazda ok. '+durTxt(m)+' → koniec najpóźniej ok. '+hhmm(en)+nd:'Jazda ok. '+hhmm(st)+'–'+hhmm(en)+nd+' ('+durTxt(m)+')')
     +(k?' <span class="note">· '+kmTxt(k).replace(",0","")+' km przy '+String(Math.round(wPaceKmh(wf.pace)*10)/10).replace(".",",")+' km/h</span>':'');
   // od razu: czy nachodzi na inną Twoją jazdę (+15 min zapasu)
   const cl=wfClash(st,en);wf.jump=null;
@@ -2316,7 +2326,9 @@ $("wpacesel").addEventListener("change",()=>{const v=$("wpacesel").value;
   else{wf.pace=v||null;$("wpaceown").classList.add("hide")}
   wfRouteSync()});
 $("wpaceown").addEventListener("input",()=>{wf.pace=$("wpaceown").value.trim().slice(0,30)||null;wfRouteSync()});
-const wfJump=e=>{if(!e.target.closest(".wjump")||!wf.jump)return;
+const wfJump=e=>{
+  if(e.target.closest(".wtom")){wfSetDay("1");wfUpdate();try{navigator.vibrate&&navigator.vibrate(8)}catch(x){}return}
+  if(!e.target.closest(".wjump")||!wf.jump)return;
   const j=wf.jump,len=wfRange()?(wf.h2*60+wf.m2)-(wf.h*60+wf.m):0;wfSetTime(j.getHours(),j.getMinutes());
   if(len>0){const e2=new Date(j.getTime()+len*60000);if(e2.getDate()===j.getDate())wfSetTime2(e2.getHours(),e2.getMinutes())}
   wfUpdate();try{navigator.vibrate&&navigator.vibrate(8)}catch(x){}};
