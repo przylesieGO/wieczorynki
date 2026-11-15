@@ -393,6 +393,12 @@ html[data-theme=dark] .fbs.s-accepted{background:#1d2c45;color:#8fb5ff}
 .fbm.me{margin-left:auto;border-radius:14px 14px 4px 14px;background:var(--acc2)}
 .fbmh{font-size:12px;margin-bottom:2px}.fbmh .nk{font-size:13px;padding:0 7px}.fbmb{white-space:pre-wrap;word-break:break-word}
 /* „Połącz z Telegramem” — niebieski, pulsujący (wariant A), do czasu połączenia */
+.fbdv{margin-top:8px;font-size:13px;color:var(--mut);background:var(--fill);border-radius:10px;padding:8px 10px}.fbdv summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between}.fbdv summary::-webkit-details-marker{display:none}.fbdv summary::after{content:"›";transition:transform .2s}.fbdv[open] summary::after{transform:rotate(90deg)}.fbdv div{margin-top:6px;word-break:break-word;line-height:1.35}
+.sbtn.sgray{background:var(--fill);color:var(--ink)}
+.fbacts{border-top:1px solid var(--line);margin-top:16px;padding-top:4px}
+.fbact{display:flex;gap:8px;margin-top:10px}.fbact .b{flex:1;padding:13px;font-size:16px;border-radius:14px;background:transparent}
+.fbok{border:1.5px solid var(--acc)!important;color:var(--acc)!important}.fbno{border:1.5px solid rgba(214,69,69,.45)!important;color:var(--bad)!important}
+.fbre{display:block;width:100%;margin-top:12px;padding:12px;border-radius:14px;background:var(--fill)!important;color:var(--acc)!important;font-size:16px}
 .sbtn.tgx{background:linear-gradient(135deg,#2AABEE,#1E8FD0);color:#fff;padding:13px 14px;line-height:1.2;animation:tgpulse 1.8s ease-out infinite}
 .sbtn.tgx small{display:block;font-size:13px;font-weight:500;opacity:.92;margin-top:3px}
 @keyframes tgpulse{0%{box-shadow:0 0 0 0 rgba(42,171,238,.65)}70%{box-shadow:0 0 0 14px rgba(42,171,238,0)}100%{box-shadow:0 0 0 0 rgba(42,171,238,0)}}
@@ -1327,6 +1333,25 @@ function fbAdminHtml(){
    +'<div class="sleft">'+(L.length?L.map(f=>fbRow(f,true)).join(""):'<div class="note" style="margin-top:12px">Pusto 🎉</div>')+'</div>'
    +'<p class="note">✉️ Wiadomość do dowolnej osoby: kliknij jej nick → „✉️ Napisz wiadomość”.</p>';
 }
+// skrót opisu telefonu: „Safari · Mac · 2880×1620”
+function devShort(d){
+  const u=String(d||""),br=/Edg/.test(u)?"Edge":/OPR|Opera/.test(u)?"Opera":/Firefox|FxiOS/.test(u)?"Firefox":/Chrome|CriOS/.test(u)?"Chrome":/Safari/.test(u)?"Safari":"",
+    os=/iPhone/.test(u)?"iPhone":/iPad/.test(u)?"iPad":/Android/.test(u)?"Android":/Mac OS X|Macintosh/.test(u)?"Mac":/Windows/.test(u)?"Windows":/Linux/.test(u)?"Linux":"",
+    sc=(u.match(/\d{3,5}×\d{3,5}/)||[""])[0],ic=/z ikony/.test(u)?"z ikony":"";
+  return [br,os,sc,ic].filter(Boolean).join(" · ")||u.slice(0,40);
+}
+// przyciski akcji admina (wariant B): tylko te, które mają sens przy danym stanie
+function fbActHtml(f){
+  const st=f.status,t=f.kind==="tester",open=st==="new"||st==="accepted";let h="";
+  if(t&&testerIds.has(f.user_id))h+='<div class="note" style="margin-top:4px">🧪 Już jest testerem.</div>';
+  if(open){
+    if(t){if(isSuper(uid)&&!testerIds.has(f.user_id))h+='<button class="b sbtn" data-c="fbgrant">🧪 Nadaj prawa testera</button>'}
+    else h+='<button class="b sbtn" data-fs2="done">✓ '+(f.kind==="rating"?'Zamknij — przeczytane':'Oznacz jako zrobione')+'</button>';
+    h+='<div class="fbact">'+(st==="new"?'<button class="b fbok" data-fs2="accepted">Przyjmij</button>':'')+'<button class="b fbno" data-fs2="rejected">Odrzuć</button></div>'
+     +'<p class="note">'+(t?(st==="new"?'„Przyjmij” = odezwiemy się · ':'')+'„Odrzuć” = komplet testerów.':(st==="new"?'„Przyjmij” = zajmiesz się tym · ':'')+'„Odrzuć” = nie będzie zmian. Użytkownik dostanie wiadomość.')+'</p>';
+  }else h+='<button class="b fbre" data-fs2="new">↺ Otwórz ponownie</button>';
+  return '<div class="fbacts">'+h+'</div>';
+}
 function fbThreadHtml(){
   const f=fbList.find(x=>x.id===fbId);
   const back='<button class="sback" data-c="fbback">‹ '+(fbBack==="fbadmin"?'Zgłoszenia':fbBack==="bell"?'Zamknij':'Zgłoszenia')+'</button>';
@@ -1336,15 +1361,13 @@ function fbThreadHtml(){
   const bub=m=>{const mine=m.sender===uid;return '<div class="fbm'+(mine?' me':'')+'"><div class="fbmh">'+(m.sender?nk(m.sender):'<span class="note">usunięte konto</span>')+' <span class="note">'+esc(fbAgo(m.created_at))+'</span></div><div class="fbmb">'+(m.html?m.body:esc(m.body))+'</div></div>'};
   return back+'<div class="sname" style="margin-top:26px">'+FB_KIND[f.kind]+'</div>'
    +'<div class="smail">'+(adm?'od '+nk(f.user_id)+' · ':f.kind==="msg"?'od administratora · ':'')+(f.kind!=="msg"?'<span class="fbs s-'+f.status+'">'+FB_ST[f.status]+'</span>':'')+'</div>'
-   +(adm&&f.kind!=="msg"?'<div class="seg" id="fbstat">'+[["new","Nowe"],["accepted","Przyjęte"],["done","Zrobione"],["rejected","Odrzucone"]].map(([k,t])=>'<button type="button" data-fs2="'+k+'" class="'+(f.status===k?'on':'')+'">'+t+'</button>').join("")+'</div>':'')
    +'<div class="sleft fbthread">'+bub(first)+(M?M.map(bub).join(""):'<div class="note">Ładuję…</div>')
-   +(adm&&f.device?'<div class="note" style="margin-top:6px">📱 '+esc(f.device)+'</div>':'')
-   +(adm&&f.kind==="tester"&&isSuper(uid)&&!testerIds.has(f.user_id)?'<button class="b sbtn" data-c="fbgrant">🧪 Nadaj prawa testera</button><p class="note">Albo ustaw status: „Przyjęte” = odezwiemy się, „Odrzucone” = komplet testerów.</p>':'')
-   +(adm&&f.kind==="tester"&&testerIds.has(f.user_id)?'<div class="note" style="margin-top:6px">🧪 Już jest testerem.</div>':'')
+   +(adm&&f.device?'<details class="fbdv"><summary>📱 '+esc(devShort(f.device))+'</summary><div>'+esc(f.device)+'</div></details>':'')
    +'<textarea id="fbreply" rows="3" maxlength="1000" placeholder="'+(adm?'Odpowiedz '+esc(nickOf(f.user_id)):'Odpisz administratorowi')+'…">'+esc(fbReplyTxt)+'</textarea>'
    +'<div class="note" id="fbrinfo" style="color:var(--bad)"></div>'
-   +'<button class="b sbtn" data-c="fbreply"'+(fbBusy?' disabled':'')+'>Wyślij odpowiedź</button>'
-   +'<p class="note">'+(adm?'Odpowiedź zobaczy pod 🔔 (i na Telegramie, jeśli połączył bota).':'Odpowiedź trafi do administratora.')+'</p></div>';
+   +'<button class="b sbtn'+(adm&&f.kind!=="msg"?' sgray':'')+'" data-c="fbreply"'+(fbBusy?' disabled':'')+'>Wyślij odpowiedź</button>'
+   +'<p class="note">'+(adm?'Odpowiedź zobaczy pod 🔔 (i na Telegramie, jeśli połączył bota).':'Odpowiedź trafi do administratora.')+'</p>'
+   +(adm&&f.kind!=="msg"?fbActHtml(f):'')+'</div>';
 }
 function fbMsgHtml(){
   return '<button class="sback" data-c="userback2">‹ '+esc(nickOf(fbTo))+'</button><div class="sname" style="margin-top:26px">✉️ Wiadomość do '+nk(fbTo)+'</div>'
