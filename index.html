@@ -464,6 +464,7 @@ ol.inst{margin:6px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:
 #banscreen{position:fixed;inset:0;z-index:3500;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
 .banbox{max-width:380px;text-align:center}.banbox h2{margin:6px 0 10px}.banbox p{color:var(--mut);line-height:1.45}
 .modbox .sbtn{margin-top:8px}.changed ul{margin:6px 0 6px 18px;padding:0}
+.arbtns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.b.small.on{background:var(--accbtn);color:#fff}
 .hmorebtn{display:block;margin:12px auto 0;font-weight:700;color:var(--acc)}
 .hfull{margin-top:10px;text-align:left;display:flex;flex-direction:column;gap:12px}
 .hfs b{font-size:15px}.hfs ul{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:6px}.hfs li{font-size:14px;line-height:1.45}.hfs li b{font-size:inherit}
@@ -1119,7 +1120,7 @@ function renderMeNick(){const el=$("menick");if(!el)return;const on=showNick&&!!
 try{guestMode=sessionStorage.getItem("guest")==="1"}catch(e){}
 const setGuest=v=>{guestMode=v;try{v?sessionStorage.setItem("guest","1"):sessionStorage.removeItem("guest")}catch(e){}};
 function adminHtml(){
-  const rows=adminIds.map(id=>'<div class="arow">'+nk(id)+(isSuper(id)?'<span class="note">👑 główny admin'+(id===uid?' (Ty)':'')+'</span>':id===uid?'<span class="note">(Ty)</span>':'<button class="b g small" data-a="rm" data-id="'+esc(id)+'">Odbierz uprawnienia</button>')+'</div>').join("")||'<div class="note">Brak.</div>';
+  const rows=adminIds.map(id=>'<div class="arow">'+nk(id)+(isSuper(id)?'<span class="note">👑 główny admin'+(id===uid?' (Ty)':'')+'</span>':id===uid?'<span class="note">(Ty)</span>':'<span class="arbtns">'+(stealthOk&&isSuper(uid)?'<button class="b g small'+(stealthIds.has(id)?' on':'')+'" data-a="stealth" data-id="'+esc(id)+'" title="Czy ten admin może ukryć swoją obecność online">'+(stealthIds.has(id)?'👻 może się ukryć ✓':'👻 ukrywanie: nie')+'</button>':'')+'<button class="b g small" data-a="rm" data-id="'+esc(id)+'">Odbierz uprawnienia</button></span>')+'</div>').join("")||'<div class="note">Brak.</div>';
   const cand=Object.keys(nicks).filter(id=>!adminIds.includes(id)).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl"));
   const add=cand.length
     ?'<select id="adminsel">'+cand.map(id=>'<option value="'+esc(id)+'">'+esc(nicks[id])+'</option>').join("")+'</select><button class="b sbtn" data-c="adminadd">Nadaj uprawnienia</button>'
@@ -1130,6 +1131,7 @@ function adminHtml(){
    +(fbOk?'<button class="b sbtn g" data-c="fbadmin">💬 Zgłoszenia'+(fbAdmUnread().length?' <span class="fbcnt">'+fbAdmUnread().length+' nowe</span>':'')+'</button>':'')
    +(genderOk?'<button class="b sbtn g" data-c="colors">🎨 Kolory nicków</button>':'')
    +'<div class="sleft"><h3>Administratorzy</h3>'+rows
+   +(stealthOk&&isSuper(uid)?'<p class="note">👻 = admin może w Ustawieniach wyłączyć widoczność online (domyślnie każdy jest widoczny). Ty jako 👑 masz to zawsze.</p>':'')
    +'<h3>Nadaj uprawnienia administratora</h3>'+add
    +'<p class="note">Administrator może edytować i usuwać każdą wieczorynkę, zgłoszenie i trasę oraz zarządzać administratorami.</p>'
    +testersHtml()
@@ -1312,6 +1314,11 @@ function favsHtml(){
 let joinedAt={};
 // 🟢 kto jest teraz w aplikacji (dotknięcie „N online”)
 // 🛡️ admin: kto połączył Telegram (KROK 32) i aktywność osoby
+let stealthOk=false,stealthIds=new Set(),hideOnline=(()=>{try{return localStorage.getItem("hideOnline")==="1"}catch(e){return false}})();
+const canStealth=()=>!!session&&isAdmin&&(isSuper(uid)||stealthIds.has(uid));
+const stealthOn=()=>canStealth()&&hideOnline;
+function applyPresence(){if(!presCh)return;try{stealthOn()?presCh.untrack():presCh.track({t:Date.now()})}catch(e){}}
+const stealthHtml=()=>canStealth()?'<div class="note" style="margin-top:14px">Pokazuj mnie jako online (🛡️ admin)</div><div class="seg">'+[["0","Tak"],["1","Nie — niewidoczny 👻"]].map(([k,t])=>'<button data-ho="'+k+'" class="'+((hideOnline?"1":"0")===k?"on":"")+'">'+t+'</button>').join("")+'</div><div class="note" style="margin-top:6px">'+(hideOnline?'Inni nie widzą Cię w „online” ani zielonej obwódki. Ty widzisz wszystkich.':'Domyślnie jesteś widoczny jak wszyscy.')+'</div>':'';
 let modDelId="",modOk=false,modBanned=new Set(),modHidden=new Set(),modPrev=null,modBusy=false;
 const modGone=id=>id!==uid&&(modBanned.has(id)||modHidden.has(id));
 let tgLinks=null,admInfo={},tgLoading=false;
@@ -1665,7 +1672,7 @@ function renderGear(){
      +(isAdmin?'<button class="b sbtn g" data-c="admin">🛡️ Administracja'+(fbAdmUnread().length?' <span class="fbcnt">'+fbAdmUnread().length+'</span>':'')+'</button>':'')
      +(meTester()?'<div class="note" style="margin-top:14px">🧪 Funkcje testowe (jesteś testerem)</div><div class="seg">'+[["1","Pokaż"],["0","Ukryj"]].map(([k,t])=>'<button data-beta="'+k+'" class="'+((betaOn?"1":"0")===k?"on":"")+'">'+t+'</button>').join("")+'</div><div class="note" style="margin-top:6px">„Ukryj” — widzisz aplikację tak jak wszyscy.</div>':'')
      +'<button class="b sbtn g" data-c="help">❓ Pomoc — co potrafi aplikacja</button>'+instBtnHtml()
-     +themeHtml()+showNickHtml()+hideTestHtml()+helpPrefHtml()
+     +themeHtml()+showNickHtml()+stealthHtml()+hideTestHtml()+helpPrefHtml()
      +'<button class="b sbtn" style="background:var(--bad);margin-top:20px" data-c="out">Wyloguj</button>'
      +'<button class="sdanger" data-c="del">Usuń konto…</button>'
     :'<div class="sname">Przeglądasz jako gość</div><div class="smail">Zaloguj się, żeby zapisywać się na wieczorynki i zgłaszać ochotę na jazdę.</div>'
@@ -1739,6 +1746,8 @@ $("gearpanel").addEventListener("click",async e=>{
   const sn=e.target.closest("button[data-sn]");
   const ht=e.target.closest("button[data-ht]");
   if(ht){hideTest=ht.dataset.ht==="1";try{localStorage.setItem("hideTest",hideTest?"1":"0")}catch(err){}renderGear();await loadRemote();say(hideTest?"Testowe zaproszenia ukryte.":"Testowe zaproszenia widoczne.");return}
+  const ho=e.target.closest("button[data-ho]");
+  if(ho&&canStealth()){hideOnline=ho.dataset.ho==="1";try{localStorage.setItem("hideOnline",hideOnline?"1":"0")}catch(err){}applyPresence();renderGear();say(hideOnline?"👻 Jesteś niewidoczny — nie liczysz się do „online”.":"🟢 Znowu widać Cię jako online.");return}
   if(sn){showNick=sn.dataset.sn==="1";try{localStorage.setItem("showNick",showNick?"1":"0")}catch(err){}renderMeNick();renderGear();return}
   const hs=e.target.closest("button[data-hs]");
   if(hs){setHelpOff(hs.dataset.hs==="0");renderGear();return}
@@ -1777,6 +1786,12 @@ $("gearpanel").addEventListener("click",async e=>{
         say(a.dataset.a==="modban"?(nb?"⛔ Zablokowano: ":"✅ Odblokowano: ")+nickOf(id):(nh?"👻 Ukryto: ":"👁 Widoczne znowu: ")+nickOf(id))}
       catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
       modBusy=false;renderGear();loadRemote();return}
+    if(a.dataset.a==="stealth"&&isSuper(uid)){
+      const id=a.dataset.id,on=stealthIds.has(id);
+      try{const r=on?await sb.from("admin_stealth").delete().eq("user_id",id):await sb.from("admin_stealth").insert({user_id:id});if(r.error)throw r.error;
+        on?stealthIds.delete(id):stealthIds.add(id);renderGear();say(on?"Odebrano ukrywanie obecności: "+nickOf(id):"👻 "+nickOf(id)+" może teraz ukryć swoją obecność online")}
+      catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+      return}
     if(a.dataset.a==="moddel"&&isSuper(uid)){modDelId=a.dataset.id;modPrev=null;gearView="moddel";renderGear();
       try{const r=await sb.rpc("mod_preview",{u:modDelId});modPrev=r.error?{err:r.error.message}:r.data}catch(e){modPrev={err:"błąd"}}
       if(gearView==="moddel")renderGear();return}
@@ -3551,7 +3566,7 @@ function startPresence(){
       if(ids.join()===onlineIds.join())return;
       onlineIds=ids;renderOnline();renderWants();renderNext();renderCard();renderLibUi();
     })
-      .subscribe(async st=>{if(st==="SUBSCRIBED"){try{await presCh.track({t:Date.now()})}catch(e){}}});
+      .subscribe(async st=>{if(st==="SUBSCRIBED"&&!stealthOn()){try{await presCh.track({t:Date.now()})}catch(e){}}});
   }catch(e){presCh=null}
 }
 function stopPresence(){
@@ -3720,6 +3735,8 @@ async function loadRemote(selectId){
     const md=await sb.from("moderation").select("user_id,banned_at,hidden");modOk=!md.error;
     modBanned=new Set((ok(md)||[]).filter(x=>x.banned_at).map(x=>x.user_id));modHidden=new Set((ok(md)||[]).filter(x=>x.hidden).map(x=>x.user_id));
     if(!isAdmin)wants=wants.filter(x=>x.user_id===uid||!modGone(x.user_id));
+    if(isAdmin){const sq=await sb.from("admin_stealth").select("user_id");stealthOk=!sq.error;stealthIds=new Set((ok(sq)||[]).map(x=>x.user_id))}else{stealthOk=false;stealthIds=new Set()}
+    applyPresence();
     renderBan();
   }else{favs=new Set();favOk=false;nicks={};genders={};me.nick=null;wants=[];joins={};prefs={};decls={};invs={};notifs=[];testerIds=new Set();testerOk=false;tgOk=false;tgLink=null;tgCode="";fbOk=false;fbList=[];fbDone={};lib=[];adminIds=[];isAdmin=false;stopPresence()}
   sorted=a.data.map(r=>({id:r.id,title:r.title,when:r.starts_at,place:r.place,pace:r.pace,owner:r.owner_name,note:r.note,creator:r.creator,edited_at:r.edited_at||null,change_note:r.change_note||null,route_title:r.route_title||null,route_desc:r.route_desc||null}));
