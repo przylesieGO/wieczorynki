@@ -510,6 +510,23 @@ button.onl.off{background:var(--fill);color:var(--mut)}
 .fch{border:0;background:var(--fill);color:var(--ink);border-radius:999px;padding:8px 13px;font:inherit;font-size:15px;font-weight:600;cursor:pointer}
 .fch.on{background:var(--accbtn);color:#fff}.fdate{display:inline-flex;align-items:center;gap:4px;padding:4px 10px}.fdate input{border:0;background:none;color:inherit;font:inherit;font-size:14px;padding:2px;width:auto;min-height:0}
 .wpc.wbk{background:#efe7d6;color:#7a5a1e}html[data-theme=dark] .wpc.wbk{background:#3d3220;color:#e8c98a}
+.trwa{display:inline-flex;align-items:center;gap:6px;background:#ff9f0a;color:#fff;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:800;letter-spacing:.04em;vertical-align:1px}
+.trwa .ui-i{width:13px;height:13px}
+.tdots{display:inline-flex;gap:3px}.tdots i{width:5px;height:5px;border-radius:50%;background:#fff;animation:tdot 1.2s ease-in-out infinite}
+.tdots i:nth-child(2){animation-delay:.2s}.tdots i:nth-child(3){animation-delay:.4s}
+@keyframes tdot{0%,100%{background:#ffd9a0;transform:scale(.8)}50%{background:#8a4500;transform:scale(1.1)}}
+@media (prefers-reduced-motion:reduce){.tdots i{animation:none}}
+.wlivet{margin:4px 0 2px}.lbar{height:6px;border-radius:3px;background:var(--fill);margin:8px 0 3px;overflow:hidden}.lbar i{display:block;height:100%;background:#ff9f0a;border-radius:3px}
+.lrem{margin-bottom:4px}.linfo{background:var(--fill);border-radius:12px;padding:8px 11px;margin-top:8px;font-size:14px;color:var(--mut);line-height:1.4}
+.mywant.live{border-color:#ff9f0a}
+.arch{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+.ah{display:flex;align-items:center;width:100%;border:0;background:none;color:var(--ink);font:inherit;font-size:17px;font-weight:800;padding:4px 0;cursor:pointer;text-align:left}.ah span{margin-left:auto;color:var(--mut);font-weight:600;font-size:15px}
+.asum{background:var(--acc2);color:var(--acc);border-radius:12px;padding:9px 12px;margin-top:8px;font-weight:700;font-size:14.5px;line-height:1.4}
+.ai{border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-top:8px}.ai.test{opacity:.75}
+.ait{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.ait b{font-size:15.5px}.ait span:last-child{margin-left:auto;font-size:13px;font-weight:600}.aok{color:var(--mut)}.aex{color:#b07a00}
+html[data-theme=dark] .aex{color:#ffd666}
+.ail{margin-top:5px;font-size:14px;line-height:1.7}.amore{display:block;margin:8px auto 0}.anote{margin-top:8px;text-align:center}
+.kst{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.kst div{background:var(--fill);border-radius:12px;padding:9px 11px;text-align:left}.kst b{display:block;font-size:20px}.kst small{color:var(--mut);font-size:12.5px}
 .hmorebtn{display:block;margin:12px auto 0;font-weight:700;color:var(--acc)}
 .hfull{margin-top:10px;text-align:left;display:flex;flex-direction:column;gap:12px}
 .hfs b{font-size:15px}.hfs ul{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:6px}.hfs li{font-size:14px;line-height:1.45}.hfs li b{font-size:inherit}
@@ -705,6 +722,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
   <div id="wantmain" class="hide">
    <div id="mywant"></div>
    <div id="wantlist"></div>
+   <div id="wantarch"></div>
   </div>
  </div>
  <!-- „Najbliższa wieczorynka” ukryta (2026-11-14) — do ewentualnego powrotu w uproszczonej formie -->
@@ -1190,6 +1208,7 @@ function adminHtml(){
    +'<button class="b sbtn g" data-c="stats">📊 Statystyki</button>'
    +(fbOk?'<button class="b sbtn g" data-c="fbadmin">💬 Zgłoszenia'+(fbAdmUnread().length?' <span class="fbcnt">'+fbAdmUnread().length+' nowe</span>':'')+'</button>':'')
    +(genderOk?'<button class="b sbtn g" data-c="colors">🎨 Kolory nicków</button>':'')
+   +(isSuper(uid)?'<button class="b sbtn g" data-c="karch">🗄 Archiwum zaproszeń</button>':'')
    +(isSuper(uid)?'<button class="b sbtn g" data-c="allw">👁 Wszystkie zaproszenia ('+wantsAll.filter(w=>wantEnd(w).getTime()>Date.now()).length+')</button>':'')
    +(placeOk?'<button class="b sbtn g" data-c="places">📍 Miejsca zbiórki ('+places.length+')</button>':'')
    +'<div class="sleft"><h3>Administratorzy</h3>'+rows
@@ -1445,6 +1464,36 @@ function allWantsHtml(){
      +(iv.length?'<div class="awl">🔒 Zaproszeni ('+iv.length+'): '+iv.map(id=>nk(id)).join(" ")+'</div>':'')
      +'<div class="awl">🙋 Dołączyli ('+jn.length+'): '+(jn.length?jn.map(id=>nk(id)+(pr[id]?'<span class="note"> '+hhmm(new Date(pr[id]))+'</span>':'')).join(" "):'<span class="note">nikt</span>')+'</div>'
      +(dc.length?'<div class="awl">🙅 Nie da rady: '+dc.map(id=>nk(id)).join(" ")+'</div>':'')+'</div>'}).join("")+'</div>';
+}
+
+// 👑 archiwum: starsze niż 30 dni widzi tylko król (KROK 38) i sam je usuwa
+let kArch=null,kArchAll=false;
+async function loadKArch(){
+  try{
+    const since=new Date(Date.now()-30*864e5).toISOString();
+    const r=await sb.from("wants").select("id,user_id,starts_at,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min,place,place_city").lt("starts_at",since).order("starts_at",{ascending:false}).limit(1000);
+    if(r.error)throw r.error;const old=r.data||[],jj={};
+    for(let i=0;i<old.length;i+=100){const q=await sb.from("want_joins").select("want_id,user_id").in("want_id",old.slice(i,i+100).map(x=>x.id));(q.data||[]).forEach(x=>{(jj[x.want_id]=jj[x.want_id]||[]).push(x.user_id)})}
+    kArch={old,jj};
+  }catch(e){kArch={old:[],jj:{},err:(e&&e.message)||"błąd"}}
+  if(gearOpen&&gearView==="karch")renderGear();
+}
+function kArchHtml(){
+  const head='<button class="sback" data-c="backadm">‹ Administracja</button><div class="sname" style="margin-top:26px">🗄 Archiwum zaproszeń 👑</div>';
+  if(!kArch)return head+'<div class="note" style="text-align:center;margin-top:14px">Wczytuję…</div>';
+  if(kArch.err)return head+'<div class="note" style="text-align:center;margin-top:14px">Nie udało się wczytać: '+esc(kArch.err)+' (czy KROK 38 jest uruchomiony?)</div>';
+  const since=Date.now()-30*864e5,rec=wants.filter(w=>wDone(w)&&new Date(w.starts_at).getTime()>since),old=kArch.old;
+  const sv=joins;joins=Object.assign({},joins,kArch.jj);
+  try{
+    const S=archSum(rec.concat(old)),list=kArchAll?old:old.slice(0,10);
+    return head+'<div class="kst"><div><b>'+rec.length+'</b><small>ostatnie 30 dni — widzą wszyscy</small></div><div><b>'+old.length+'</b><small>starsze — widzisz tylko Ty</small></div>'
+     +'<div><b>'+S.p+'</b><small>'+plf(S.p,["osoba","osoby","osób"])+' łącznie</small></div><div><b>~'+S.km.toLocaleString("pl-PL")+' km</b><small>łącznie (plan)</small></div></div>'
+     +'<div class="bsgrp" style="margin-top:14px">Starsze niż 30 dni</div>'
+     +(old.length?'<div class="aws" style="gap:0">'+list.map(archItem).join("")+'</div>'+(old.length>10?'<button type="button" class="lnk amore" data-c="karchall">'+(kArchAll?'Zwiń ⌃':'Pokaż wszystkie ('+old.length+') ›')+'</button>':'')
+       +'<button class="b sbtn" style="background:var(--bad);margin-top:12px" data-c="karchdel">🗑 Usuń starsze niż 30 dni ('+old.length+')…</button>'
+      :'<div class="note">Brak — wszystko mieści się w 30 dniach.</div>')
+     +'<p class="note">Nic nie znika samo. Usuwa zaproszenia z dołączeniami, zaproszonymi i odmowami; <b>statystyki zostają</b> (dziennik aktywności).</p>';
+  }finally{joins=sv}
 }
 // 📍 miejsca zbiórki — lista wspólna; 👑 ustawia pinezki i usuwa
 function placesHtml(){
@@ -1746,6 +1795,7 @@ function renderGear(){
   else if(gearView==="user"&&session&&nicks[userId])body=userHtml();
   else if(gearView==="online"&&session)body=onlineHtml();
   else if(gearView==="allw"&&session&&isSuper(uid))body=allWantsHtml();
+  else if(gearView==="karch"&&session&&isSuper(uid))body=kArchHtml();
   else if(gearView==="places"&&session&&isAdmin)body=placesHtml();
   else if(gearView==="moddel"&&session&&isSuper(uid)&&modDelId)body=modDelHtml();
   else if(gearView==="confdel"&&session&&delReq)body=confDelHtml();
@@ -1927,6 +1977,14 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="stats"){gearView="stats";loadStats();return}
   if(c==="userback2m"){gearView="user";renderGear();return}
   if(c==="allw"){gearView="allw";renderGear();return}
+  if(c==="karch"){gearView="karch";kArch=null;renderGear();loadKArch();return}
+  if(c==="karchall"){kArchAll=!kArchAll;renderGear();return}
+  if(c==="karchdel"){
+    const n=kArch?kArch.old.length:0;if(!n)return;
+    const t=prompt("Usunąć "+n+" "+plf(n,["zaproszenie","zaproszenia","zaproszeń"])+" starsze niż 30 dni (z dołączeniami, zaproszonymi i odmowami)?\nStatystyki w dzienniku aktywności zostaną.\n\nWpisz USUŃ, żeby potwierdzić:");
+    if((t||"").trim().toUpperCase()!=="USUŃ"){if(t!==null)say("Nie usunięto — trzeba wpisać USUŃ.");return}
+    try{const r=await sb.rpc("admin_old_wants",{do_delete:true});if(r.error)throw r.error;say("🗑 Usunięto "+(+r.data||0)+" starych zaproszeń.");loadKArch()}catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+    return}
   if(c==="places"){gearView="places";renderGear();return}
   if(c==="backadm"){gearView="admin";renderGear();return}
   if(c==="accall"){statsAllAcc=!statsAllAcc;renderGear();return}
@@ -2217,6 +2275,7 @@ function helpFullHtml(){
      "Na karcie zaproszenia: <b>„Jadę!”</b>, <b>„Nie dam rady”</b>, a przy zakresie <b>„Pasuje mi o…”</b>. „Rezygnuję” — gdy zmienisz zdanie.",
      "Na karcie: godzina, 🌡 pogoda (temperatura, wiatr, deszcz), tempo, „📏 50 km · ⏱ ok. 18:00–20:40”, kto dołączył i kto nie da rady.",
      "Zaproszenia są pogrupowane w <b>karty dni</b>; kilka w jednym dniu — przewijasz w bok.",
+     "<b>🚴 TRWA</b> — od startu do końca jazdy: bez edycji, dołączania i dopraszania. Potem zaproszenie trafia do <b>🗄 Archiwum</b> na dole listy (30 dni) z podsumowaniem: kto pojechał, ile km (plan).",
      "<b>🔍 Filtry</b> (przycisk obok „online”): czyje, kiedy, gdzie (miasto, dzielnica, miejsce), rower / teren, tempo, osoba. Włączone filtry widać w pasku pod nagłówkiem — ✕ usuwa jeden, „Wyczyść” wszystkie. Z karty osoby: „🔍 Pokaż zaproszenia z …”."])
    +sec("🔔 Powiadomienia",[
      "<b>🔔 w nagłówku</b> — wszystkie aktualne zaproszenia w jednym miejscu: <b>📩 Do Ciebie</b> (od innych, prywatne i dla wszystkich) i <b>🙋 Twoje</b> (kto dołączył, zmiany). Czerwona liczba = nieprzeczytane (też na ikonie aplikacji).",
@@ -2352,6 +2411,39 @@ document.addEventListener("click",async e=>{
   const p=$("routesheet");if(p&&!p.classList.contains("hide")&&(e.target===p||e.target.closest("[data-rk='close']")))closeRouteSheet();
 },true);
 
+
+/* ---------- 🗄 archiwum zakończonych zaproszeń (30 dni; KROK 38) ---------- */
+let archOpen=false,archAll=false;
+const wPeople=w=>[w.user_id,...(joins[w.id]||[]).filter(x=>x!==w.user_id)];
+const wExpired=w=>isOpen(w)&&!(joins[w.id]||[]).some(x=>x!==w.user_id);
+function archSum(L){
+  const R=L.filter(w=>!wExpired(w)),ppl=new Set();let km=0;R.forEach(w=>{wPeople(w).forEach(x=>ppl.add(x));km+=kmOf(w)||0});
+  return {n:R.length,p:ppl.size,km:Math.round(km)};
+}
+function archItem(w){
+  const d=new Date(w.starts_at),ex=wExpired(w),pp=wPeople(w),k=kmOf(w);
+  const dd=dayDiff(d),dt=(dd===0?"Dziś":dd===-1?"Wczoraj":d.toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"}))+" · "+(isOpen(w)?wTime(w):hhmm(d));
+  return '<div class="ai'+(isTest(w)?' test':'')+'"><div class="ait"><b>'+esc(dt)+'</b>'+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+'<span class="'+(ex?'aex':'aok')+'">'+(ex?'⌛ wygasło':'zakończone')+'</span></div>'
+   +'<div class="ail">'+nk(w.user_id)+(w.place?' · 📍 '+esc(w.place+(w.place_city?' · '+w.place_city:'')):'')+'</div>'
+   +(ex?'<div class="ail note">Godzina nieustalona, nikt nie dołączył.</div>'
+     :'<div class="ail">🚴 Pojechało '+pp.length+': '+pp.map(id=>nk(id)).join(" ")+'</div>'
+      +'<div class="ail note">'+[w.route_km!=null?'🗺️ trasa '+String(w.route_km).replace(".",",")+' km':k?'📏 ok. '+k+' km':'',
+         '⏱ '+durTxt(wantDur(w)),w.pace?paceTxt(w.pace):''].filter(Boolean).map(esc).join(" · ")+'</div>')+'</div>';
+}
+function renderArch(all){
+  const box=$("wantarch");if(!box)return;
+  if(!session){box.innerHTML="";return}
+  const since=Date.now()-30*864e5,L=all.filter(w=>wDone(w)&&new Date(w.starts_at).getTime()>since).sort((a,b)=>new Date(b.starts_at)-new Date(a.starts_at));
+  if(!L.length){box.innerHTML="";return}
+  const S=archSum(L),show=archAll?L:L.slice(0,3);
+  box.innerHTML='<div class="arch"><button type="button" class="ah" data-arch="t">🗄 Archiwum · 30 dni<span>'+L.length+' '+(archOpen?'⌃':'⌄')+'</span></button>'
+   +(archOpen?'<div class="asum">📊 Ostatnie 30 dni: '+S.n+' '+plf(S.n,["jazda","jazdy","jazd"])+' · '+S.p+' '+plf(S.p,["osoba","osoby","osób"])+(S.km?' · ok. '+S.km+' km (plan)':'')+'</div>'
+     +show.map(archItem).join("")
+     +(L.length>3?'<button type="button" class="lnk amore" data-arch="all">'+(archAll?'Zwiń ⌃':'Pokaż wszystkie ('+L.length+') ›')+'</button>':'')
+     +'<div class="note anote">„Pojechało” = autor i osoby, które kliknęły „Jadę!”; km planowane.</div>':'')+'</div>';
+}
+$("wantarch").addEventListener("click",e=>{const b=e.target.closest("[data-arch]");if(!b)return;
+  if(b.dataset.arch==="t")archOpen=!archOpen;else archAll=!archAll;renderArch(wants)});
 /* ---------- 🔍 filtry zaproszeń (decyzje właściciela 2026-11-15 18:58: jak w makiecie filtry.png + z karty osoby) ---------- */
 // zapamiętane w telefonie; działają na listę zaproszeń (karty dni i Twoje zaproszenia), nie na 🔔
 const fltEmpty=()=>({who:"",when:"",date:"",where:"",bike:"",pace:"",user:""});
@@ -2359,7 +2451,7 @@ let flt=(()=>{try{return Object.assign(fltEmpty(),JSON.parse(localStorage.getIte
 function fltSave(){try{localStorage.setItem("flt",JSON.stringify(flt))}catch(e){}}
 const fltKeys=()=>Object.keys(fltEmpty()).filter(k=>k!=="date"&&flt[k]);
 const fltActive=()=>fltKeys().length>0;
-const wUpcoming=w=>new Date(w.starts_at).getTime()>=Date.now()-3*36e5;
+const wUpcoming=w=>!wDone(w);
 const lc=t=>(t||"").toLocaleLowerCase("pl");
 // najbliższy weekend; w niedzielę: dziś + następny weekend
 function fltWknd(){const d=new Date().getDay();return d===6?[0,1]:d===0?[0,6,7]:[6-d,7-d]}
@@ -2403,6 +2495,7 @@ function renderWants(){
   const all=wants,on=!!session&&fltActive();
   if(on)wants=all.filter(fltOk);
   try{renderWants0()}finally{wants=all}
+  renderArch(all);
   const b=$("fltbtn"),bar=$("fltbar");if(!b)return;
   b.classList.toggle("hide",!session);b.classList.toggle("on",on);
   const n=fltKeys().length;$("fltn").textContent=n;$("fltn").classList.toggle("hide",!on);
@@ -2501,7 +2594,7 @@ function renderWants0(){
   $("wantmain").classList.toggle("hide",guest);
   if(guest)return;
   renderMyWant();
-  const list=wants.filter(w=>new Date(w.starts_at).getTime()>=Date.now()-3*36e5);
+  const list=wants.filter(w=>!wDone(w));
   const box=$("wantlist");
   if(!list.length){box.innerHTML='<div class="note" style="margin-top:12px">Nikt jeszcze nie zaprasza. Bądź pierwszy — kliknij <b>➕ Zaproś na rower</b> w prawym dolnym rogu.</div>';return}
   // grupowanie po dniu: jedna rozwijana karta na dzień
@@ -2589,16 +2682,17 @@ function wantHtml(w){
     const priv=isPriv(w),canInv=priv&&!mine&&wantCanInvite(w);
     // admin widzi cudze prywatne zaproszenie tylko podglądowo (bez „Jadę!”), chyba że jest zaproszony
     const peek=priv&&!mine&&!invIds(w).includes(uid)&&!joined;
-    const open=isOpen(w),myp=(prefs[w.id]||{})[uid],dec=(decls[w.id]||[]).includes(uid);
-    return '<div class="want'+(mine?' mine':'')+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'">'+(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+'<div class="wtop">'+nk(w.user_id)+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="lockt">do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?'<span class="lockt">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>':'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
-     +paceHtml(w)+bikeHtml(w)+durLineHtml(w)+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+wxHtml(w)+routeBoxHtml(w)
+    const open=isOpen(w)&&!wLive(w),myp=(prefs[w.id]||{})[uid],dec=(decls[w.id]||[]).includes(uid),live=wLive(w);
+    return '<div class="want'+(mine?' mine':'')+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'">'+(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+'<div class="wtop">'+nk(w.user_id)+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="lockt">do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?'<span class="lockt">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>':'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
+     +(live?liveHtml(w):'')
+     +paceHtml(w)+bikeHtml(w)+(live?'':durLineHtml(w))+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+(live?'':wxHtml(w))+routeBoxHtml(w)
      +invitedHtml(w)
      +(open?tallyHtml(w):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w))
-     +((!mine||isAdmin)?'<div class="acts">'
-     +(mine?'':peek?'<span class="note" style="flex:1">Nie jesteś zaproszony — możesz tylko podejrzeć lub usunąć.</span>'
+     +((!mine||isAdmin||live)?'<div class="acts">'
+     +(mine?'':live?'<span class="note" style="flex:1">🚴 Jazda trwa — dołączyć już nie można.</span>':peek?'<span class="note" style="flex:1">Nie jesteś zaproszony — możesz tylko podejrzeć lub usunąć.</span>'
        :open?'<button class="b join'+(joined?' g':'')+'" data-w="pref" data-id="'+esc(w.id)+'">'+(joined&&myp?'✓ '+esc(hhmm(new Date(myp)))+' · zmień':dec?'Jednak mogę? Wybierz godzinę':'Pasuje mi o…')+'</button>'
        :'<button class="b join'+(joined?' g':'')+'" data-w="join" data-id="'+esc(w.id)+'">'+(joined?'Rezygnuję':dec?'Jednak jadę!':'Jadę!')+'</button>')
-     +(canInv?'<button class="ib" data-w="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
+     +(canInv&&!live?'<button class="ib" data-w="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
      +((mine||isAdmin)?'<button class="ib del'+(mine?'':' adm')+'" data-w="del" data-id="'+esc(w.id)+'" title="'+(mine?'Odwołaj zaproszenie':'Usuń (admin)')+'" aria-label="'+(mine?'Odwołaj zaproszenie':'Usuń (admin)')+'">'+ICON.del+'</button>':'')
      +'</div>':'')
      +'</div>';
@@ -2742,6 +2836,14 @@ let paceOk=false;
 const wPaceKmh=p=>{if(PACES[p])return PACES[p].v;const n=String(p||"").match(/\d+(?:[.,]\d+)?/g);if(!n)return WANT_PACE;const v=n.map(x=>+x.replace(",",".")).filter(x=>x>=5&&x<=60);return v.length?v.reduce((a,b)=>a+b,0)/v.length:WANT_PACE};
 // ⏱ czas jazdy (KROK 29): trasa/dystans ÷ prędkość tempa (bez tempa 19 km/h), inaczej „na ile jedziesz” (domyślnie 2 h)
 let distOk=false;const DUR_DEF=120,RIDE_GAP=15;
+// stan jazdy: trwa (od startu do końca czasu jazdy) / zakończona (→ archiwum)
+const wLive=w=>{const n=Date.now();return wantStart(w).getTime()<=n&&wantEnd(w).getTime()>n};
+const wDone=w=>wantEnd(w).getTime()<=Date.now();
+const trwaTag=()=>'<span class="trwa">🚴 TRWA<span class="tdots" aria-hidden="true"><i></i><i></i><i></i></span></span>';
+function liveHtml(w){
+  const s=wantStart(w).getTime(),e=wantEnd(w).getTime(),n=Date.now(),pc=Math.max(3,Math.min(100,Math.round((n-s)/(e-s)*100)));
+  return '<div class="lbar"><i style="width:'+pc+'%"></i></div><div class="note lrem">do ok. '+esc(hhmm(new Date(e)))+' · jeszcze ok. '+esc(durTxt((e-n)/60000))+'</div>';
+}
 const kmOf=w=>w?(w.route_km!=null?+w.route_km:w.km!=null?+w.km:null):null;
 const wantDur=w=>{const k=kmOf(w);return k?Math.round(k/wPaceKmh(w.pace)*60):(w&&w.dur_min)||DUR_DEF};
 const wantStart=w=>new Date(isOpen(w)?w.range_from:w.starts_at);
@@ -3086,7 +3188,7 @@ $("wsave").onclick=async()=>{
 /* ---------- Twoje zaproszenie (zamiast dużego przycisku) ---------- */
 function renderMyWant(){
   const box=$("mywant");if(!box)return;
-  const act=w=>new Date(w.starts_at).getTime()>=Date.now()-3*36e5;
+  const act=w=>!wDone(w);
   const mine=wants.filter(w=>w.user_id===uid&&act(w)).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
   const others=wants.filter(w=>w.user_id!==uid&&act(w)&&dayDiff(new Date(w.starts_at))===0).length;
   const bd=$("wbadge");bd.innerHTML='<span class="fbn">'+others+'</span><span class="fbd"> dziś</span>';bd.classList.toggle("hide",!others);
@@ -3096,6 +3198,13 @@ function renderMyWant(){
     const d=new Date(w.starts_at),j=(joins[w.id]||[]).filter(x=>x!==uid);
     const wd=d.toLocaleDateString("pl-PL",{weekday:"long"}),n=dayDiff(d);
     const priv=isPriv(w),ni=(invs[w.id]||[]).length;
+    const live=wLive(w);
+    if(live)return '<div class="mywant live'+(isTest(w)?' test':'')+'" data-i="'+i+'" data-wid="'+esc(w.id)+'"><div class="myh">🙋 Ty zapraszasz '+trwaTag()+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+(mine.length>1?' · '+(i+1)+' z '+mine.length:'')+'</div>'
+     +'<div class="myt">'+esc(relDay(new Date(w.starts_at))+" "+hhmm(new Date(w.starts_at)))+'</div>'+liveHtml(w)
+     +paceHtml(w)+bikeHtml(w)+placeHtml(w)+(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')
+     +'<div class="mym">'+joinedHtml("my"+w.id,j,'Jedziesz sam(a).')+'</div>'
+     +'<div class="linfo">🔒 Jazda trwa — nie można już edytować, dołączać ani doprosić. Po zakończeniu trafi do archiwum.</div>'
+     +'<div class="acts"><button class="b g join" data-my="share" data-id="'+esc(w.id)+'">Udostępnij</button><button class="ib del" data-my="del" data-id="'+esc(w.id)+'" title="Usuń zaproszenie" aria-label="Usuń zaproszenie">'+ICON.del+'</button></div></div>';
     return '<div class="mywant'+(isTest(w)?' test':'')+'" data-i="'+i+'" data-wid="'+esc(w.id)+'"><div class="myh">🙋 Ty zapraszasz'+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+(mine.length>1?' · '+(i+1)+' z '+mine.length:'')+(priv?'<span class="lockt">🔒 dla '+ni+' '+osob(ni)+'</span>':'')+'</div>'
      +'<div class="myt'+(isOpen(w)?' rng':'')+'">'+esc(n>=0&&n<=2?["Dziś","Jutro","Pojutrze"][n]+" "+wTime(w):wd.charAt(0).toUpperCase()+wd.slice(1)+" "+wTime(w))+(n>=0&&n<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
      +(isOpen(w)?'<div class="mym">🕖 Godzina do ustalenia'+(new Date(w.range_from).getTime()>Date.now()+36e5?' — ustali się sama '+esc(hhmm(new Date(new Date(w.range_from).getTime()-36e5)))+', jeśli jej nie wybierzesz':'')+'</div>':fromRange(w)?'<div class="mym">✅ Godzina ustalona</div>':'')
@@ -4072,7 +4181,7 @@ async function loadRemote(selectId){
     genderOk=!p.error;
     if(p.error)p=await sb.from("profiles").select("user_id,nick").limit(1000);
     // zaproszenia tylko z ostatnich 7 dni i przyszłe (wcześniej: 200 najstarszych — nowe by znikały)
-    const wSince=new Date(Date.now()-7*864e5).toISOString();
+    const wSince=new Date(Date.now()-31*864e5).toISOString(); // + archiwum 30 dni (KROK 38)
     const wq=cols=>sb.from("wants").select(cols).gte("starts_at",wSince).order("starts_at").limit(1000);
     let w=await wq("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min,place,place_lat,place_lon,bike,place_city,place_area");
     bikeOk=!w.error;
