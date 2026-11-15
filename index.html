@@ -428,6 +428,20 @@ html[data-theme=dark] .fbs.s-accepted{background:#1d2c45;color:#8fb5ff}
 .cbx svg{display:none}.prow.on .cbx{background:var(--accbtn);border-color:var(--accbtn)}.prow.on .cbx svg{display:block}
 .bshint{flex:none;font-size:13px;color:var(--mut);margin-top:10px;line-height:1.35}
 .bsbox .big{flex:none;margin-top:10px}
+.wfbox{height:min(92vh,860px);padding-left:0;padding-right:0;padding-bottom:0;max-width:560px}
+.wfhead{display:flex;align-items:center;gap:8px;flex:none;padding:0 12px 10px;border-bottom:1px solid var(--line)}
+.wfhead b{flex:1;text-align:center;font-size:19px}.wfsp{width:40px;flex:none}.wfhead .sclose{position:static;flex:none}
+.wfscroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:4px 18px 18px}
+.wffoot{flex:none;border-top:1px solid var(--line);padding:10px 18px calc(12px + env(safe-area-inset-bottom,0px));background:var(--card);border-radius:0}
+.wffoot .big{margin-top:0;width:100%}
+#wcancel{color:var(--bad)!important;margin-left:auto}
+body.wfopen{overflow:hidden}
+.wfask{position:absolute;inset:0;z-index:5;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:28px;border-radius:22px 22px 0 0}
+.wfaskbox{width:100%;max-width:300px;background:var(--card);border-radius:16px;text-align:center;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.wfaskbox b{display:block;font-size:17px;padding:18px 14px 4px}.wfaskbox p{margin:0 14px 14px;font-size:14px;color:var(--mut);line-height:1.35}
+.wfaskbox button{display:block;width:100%;border:0;border-top:1px solid var(--line);background:none;font:inherit;font-size:17px;padding:13px;cursor:pointer;color:var(--acc)}
+.wfaskbox .wfdrop{color:var(--bad);font-weight:700}
+
 .bsempty{font-size:15px;color:var(--mut);padding:18px 4px;text-align:center}
 .lockt{font-size:12px;font-weight:700;color:var(--mut);background:var(--fill);border-radius:999px;padding:1px 8px;white-space:nowrap}
 .myh .lockt{float:right;text-transform:none;letter-spacing:0}
@@ -512,27 +526,10 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 
 <div id="app">
 <div class="sheet hide" id="gearpanel"></div>
-<div class="sheet bsh hide" id="whosheet"></div>
-<div class="sheet hide" id="popsheet"></div>
-<div class="sheet hide" id="picksheet"></div>
-<div class="sheet bsh hide" id="bellsheet"></div>
-<div class="sheet hide" id="routesheet"></div>
-
-<div class="card hide" id="pwbox">
- <h2>Ustaw nowe hasło</h2>
- <div class="row"><div class="pw" style="flex:1;min-width:200px;max-width:320px"><input id="pw1" type="password" autocomplete="new-password" placeholder="Nowe hasło (min. 6 znaków)"><button type="button" class="eye" data-eye="pw1" aria-label="Pokaż hasło" title="Pokaż / ukryj hasło">👁️</button></div><button class="b" id="pwsave">Zapisz hasło</button></div>
- <div class="note" id="pwinfo" style="margin-top:6px"></div>
-</div>
-
-<!-- ===== START ===== -->
-<section id="p0">
- <div class="card">
-  <div class="row between"><h2 style="margin:0">Umów się na rower</h2><span class="onl hide" id="onlbtn" title="Tyle osób ma teraz otwartą aplikację — ich nicki mają zieloną obwódkę"></span></div>
-  <div id="wantguest" class="note">Zaloguj się, aby zobaczyć chętnych i zgłosić ochotę na przejażdżkę.</div>
-  <div id="wantmain" class="hide">
-   <div id="mywant"></div>
-   <div id="wantform" class="hide">
-    <div class="wlbl" id="wftitle">Kiedy jedziesz?</div>
+<div class="sheet bsh hide" id="wantform"><div class="bsbox wfbox" role="dialog" aria-modal="true" aria-labelledby="wfhtitle"><div class="bsgrab"></div>
+  <div class="wfhead"><span class="wfsp"></span><b id="wfhtitle">🚲 Zaproś na rower</b><button type="button" class="sclose wfx" id="wfx" aria-label="Zamknij">✕</button></div>
+  <div class="wfscroll" id="wfscroll">
+    <div class="wlbl" id="wftitle" style="margin-top:6px">Kiedy jedziesz?</div>
     <div class="seg" id="wdays"><button type="button" data-d="0" class="on">Dziś</button><button type="button" data-d="1">Jutro</button><button type="button" data-d="x">Inny dzień</button></div>
     <div id="wdwrap" class="hide" style="margin-top:8px"><input type="date" id="wdt"></div>
     <div class="seg hide" id="wmode" style="margin-top:8px"><button type="button" data-mode="one" class="on">🕖 Godzina</button><button type="button" data-mode="range">↔ Zakres godzin</button></div>
@@ -556,11 +553,34 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
      <label class="wrfile"><input type="file" id="wrfile" accept=".gpx,application/gpx+xml,text/xml"><span id="wrlbl">🗺️ Dodaj plik GPX</span></label>
      <div class="row" id="wrinfo" style="margin-top:6px;gap:10px"></div></div>
     <div class="wlbl">Notatka</div>
-    <select id="wnotesel"><option value="">— bez notatki —</option><option>Na godzinkę +/- :)</option><option>Trochę po mieście</option><option>Może do lasu</option><option>Nad rzekę</option><option>Nocna Wataha</option><option value="*">✏️ Własna…</option></select>
+    <select id="wnotesel"><option value="">— bez notatki —</option><option>W słusznej sprawie</option><option>Kebab RIDE</option><option>Na lody i pizza</option><option>Na godzinkę +/- :)</option><option>Trochę po mieście</option><option>Może do lasu</option><option>Nad rzekę</option><option>Nocna Wataha</option><option value="*">✏️ Własna…</option></select>
     <input id="wnote" class="hide" maxlength="200" placeholder="Napisz własną notatkę">
-    <button type="button" class="b big" id="wsave" style="margin-top:12px">Wyślij zaproszenie</button>
+  </div>
+  <div class="wffoot">
+    <button type="button" class="b big" id="wsave" >Wyślij zaproszenie</button>
     <div class="row between" style="margin-top:6px"><button type="button" class="lnk" id="wlast"></button><button type="button" class="lnk" id="wcancel">Anuluj</button></div>
-   </div>
+  </div>
+  <div class="wfask hide" id="wfask"><div class="wfaskbox"><b>Odrzucić zaproszenie?</b><p id="wfasktxt">Ustawienia nie zostaną zapisane.</p><button type="button" id="wfaskno" class="wfdrop">Odrzuć</button><button type="button" id="wfaskback">Wróć do edycji</button></div></div>
+</div></div>
+<div class="sheet bsh hide" id="whosheet"></div>
+<div class="sheet hide" id="popsheet"></div>
+<div class="sheet hide" id="picksheet"></div>
+<div class="sheet bsh hide" id="bellsheet"></div>
+<div class="sheet hide" id="routesheet"></div>
+
+<div class="card hide" id="pwbox">
+ <h2>Ustaw nowe hasło</h2>
+ <div class="row"><div class="pw" style="flex:1;min-width:200px;max-width:320px"><input id="pw1" type="password" autocomplete="new-password" placeholder="Nowe hasło (min. 6 znaków)"><button type="button" class="eye" data-eye="pw1" aria-label="Pokaż hasło" title="Pokaż / ukryj hasło">👁️</button></div><button class="b" id="pwsave">Zapisz hasło</button></div>
+ <div class="note" id="pwinfo" style="margin-top:6px"></div>
+</div>
+
+<!-- ===== START ===== -->
+<section id="p0">
+ <div class="card">
+  <div class="row between"><h2 style="margin:0">Umów się na rower</h2><span class="onl hide" id="onlbtn" title="Tyle osób ma teraz otwartą aplikację — ich nicki mają zieloną obwódkę"></span></div>
+  <div id="wantguest" class="note">Zaloguj się, aby zobaczyć chętnych i zgłosić ochotę na przejażdżkę.</div>
+  <div id="wantmain" class="hide">
+   <div id="mywant"></div>
    <div id="wantlist"></div>
   </div>
  </div>
@@ -2153,9 +2173,12 @@ function openWantForm(w,preset){
   const L=lastWant();
   $("wlast").classList.toggle("hide",!L||!!w);
   if(L)$("wlast").textContent="↺ Jak ostatnio: "+pad(L.h)+":"+pad(L.m)+(L.note?" · "+L.note:"");
-  $("wantform").classList.remove("hide");
+  $("wfhtitle").textContent=w?"🕖 Zmień termin":"🚲 Zaproś na rower";
+  $("wfask").classList.add("hide");
+  $("wantform").classList.remove("hide");document.body.classList.add("wfopen");
+  $("wfscroll").scrollTop=0;
   wfUpdate();
-  $("wantform").scrollIntoView({behavior:"smooth",block:"nearest"});
+  wf.snap0=wfSnap();
 }
 /* 🗺️ trasa w zaproszeniu (KROK 23) */
 let wRouteOk=false;const wRouteCache={};
@@ -2175,7 +2198,21 @@ async function getWantRoute(id){
   const pts=r.data&&r.data.route?parseRoute(r.data.route):false;
   wRouteCache[id]=pts;return pts;
 }
-function closeWantForm(){$("wantform").classList.add("hide");wf.editId=null}
+function closeWantForm(){$("wantform").classList.add("hide");$("wfask").classList.add("hide");document.body.classList.remove("wfopen");wf.editId=null}
+// czy w formularzu coś zmieniono od otwarcia (wtedy ✕ / Anuluj pytają)
+function wfSnap(){return JSON.stringify([wf.day,$("wdt").value,wf.mode,wf.h,wf.m,wf.h2,wf.m2,wf.vis,[...wf.pick].sort(),wf.test,$("wnote").value.trim(),!!wf.route,wf.routeTouched])}
+function wfTryClose(){
+  if($("wantform").classList.contains("hide"))return;
+  if(wf.snap0&&wfSnap()!==wf.snap0){
+    $("wfasktxt").textContent="Ustawienia ("+(wfDate()?wfLabel(wfDate()):"")+") nie zostaną zapisane.";
+    $("wfask").classList.remove("hide");return;
+  }
+  closeWantForm();
+}
+$("wfx").onclick=wfTryClose;
+$("wfaskno").onclick=closeWantForm;
+$("wfaskback").onclick=()=>$("wfask").classList.add("hide");
+$("wantform").addEventListener("click",e=>{if(e.target.id==="wantform")wfTryClose()});
 /* ➕ pływający przycisk: widoczny na Starcie, chowa się przy formularzu i okienkach; gość — wyszarzony */
 function updateFab(){
   const f=$("fab");if(!f)return;
@@ -2196,8 +2233,8 @@ $("fab").onclick=()=>{
   openWantForm(null);
 };
 // okienka i formularz otwierają się w wielu miejscach — pilnujemy zmian klasy „hide”
-{const mo=new MutationObserver(updateFab);document.querySelectorAll(".sheet,#wantform,#welcome").forEach(el=>mo.observe(el,{attributes:true,attributeFilter:["class"]}))}
-$("wcancel").onclick=closeWantForm;
+{const mo=new MutationObserver(updateFab);document.querySelectorAll(".sheet,#welcome").forEach(el=>mo.observe(el,{attributes:true,attributeFilter:["class"]}))}
+$("wcancel").onclick=wfTryClose;
 $("wrfile").addEventListener("change",async e=>{
   const f=e.target.files[0];if(!f)return;
   const p=parseGpx(await f.text());
@@ -2778,7 +2815,7 @@ function maybePopup(){
   popList=popPending();
   if(!popList.length){if(popOpen())closePop();return}
   if(popOpen()){popIdx=Math.min(popIdx,popList.length-1);renderPop();return}
-  if(gearOpen||needProfile()||pwMode||!$("whosheet").classList.contains("hide"))return;
+  if(gearOpen||needProfile()||pwMode||!$("whosheet").classList.contains("hide")||!$("wantform").classList.contains("hide"))return;
   popIdx=0;renderPop();
 }
 function renderPop(){
