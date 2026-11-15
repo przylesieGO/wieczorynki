@@ -1448,8 +1448,9 @@ function allWantsHtml(){
 function placesHtml(){
   const su=isSuper(uid);
   return '<button class="sback" data-c="backadm">‹ Administracja</button><div class="sname" style="margin-top:26px">📍 Miejsca zbiórki</div>'
-   +'<div class="sleft">'+(places.length?places.map(x=>'<div class="arow"><span><b>'+esc(x.name)+'</b><br><span class="note">'+(x.lat!=null?'📌 '+(+x.lat).toFixed(4)+', '+(+x.lon).toFixed(4)+' · <a href="'+esc(mapUrl(x.lat,x.lon))+'" target="_blank" rel="noopener">Mapa ›</a>':'bez pinezki')+(x.city?' · '+esc(x.city+(x.area?' · '+x.area:'')):'')+(x.created_by&&nicks[x.created_by]?' · dodał(a) '+esc(nicks[x.created_by]):'')+'</span></span>'
+   +'<div class="sleft">'+(places.length?places.map(x=>'<div class="arow"><span><b>'+esc(x.name)+'</b><br><span class="note">'+(x.lat!=null?'📌 '+(+x.lat).toFixed(4)+', '+(+x.lon).toFixed(4)+' · <a href="'+esc(mapUrl(x.lat,x.lon))+'" target="_blank" rel="noopener">Mapa ›</a>':'bez pinezki')+(x.city?' · 🏙 '+esc(x.city+(x.area?' · '+x.area:'')):(bikeOk&&x.lat!=null?' · bez miasta':''))+(x.created_by&&nicks[x.created_by]?' · dodał(a) '+esc(nicks[x.created_by]):'')+'</span></span>'
      +(su||x.created_by===uid?'<span class="arbtns" style="flex-direction:row;flex-wrap:nowrap;white-space:nowrap"><button class="b g small" data-a="plpin" data-id="'+esc(x.id)+'">📌 '+(x.lat!=null?'Zmień':'Pinezka')+'</button><button class="b g small" data-a="pldel" data-id="'+esc(x.id)+'">🗑</button></span>':'')+'</div>').join(""):'<div class="note">Brak miejsc.</div>')
+   +(su&&bikeOk&&places.some(x=>x.lat!=null&&!x.city)?'<button class="b sbtn g" data-a="plcity">🏙 Uzupełnij miasta z pinezek</button>':'')
    +'<p class="note">Miejsca dodaje każdy przy tworzeniu zaproszenia („✏️ Inne miejsce…” albo „🗺️ Wskaż na mapie…” + „Dodaj do listy miejsc”). Pinezkę ustawia i miejsce usuwa autor albo 👑.</p></div>';
 }
 function onlineHtml(){
@@ -1879,6 +1880,7 @@ $("gearpanel").addEventListener("click",async e=>{
         say(a.dataset.a==="modban"?(nb?"⛔ Zablokowano: ":"✅ Odblokowano: ")+nickOf(id):(nh?"👻 Ukryto: ":"👁 Widoczne znowu: ")+nickOf(id))}
       catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
       modBusy=false;renderGear();loadRemote();return}
+    if(a.dataset.a==="plcity"){fillPlaceCities(true);return}
     if(a.dataset.a==="plpin"||a.dataset.a==="pldel"){
       const x=places.find(y=>y.id===a.dataset.id);if(!x)return;
       if(a.dataset.a==="pldel"){if(!confirm("Usunąć miejsce „"+x.name+"” z listy? Zaproszenia, które już je mają, zostaną bez zmian."))return;
@@ -2469,20 +2471,27 @@ $("fltsheet").addEventListener("input",e=>{
 });
 $("fltsheet").addEventListener("change",e=>{if(e.target.id==="fltdate"){flt.date=e.target.value;flt.when=flt.date?"date":"";fltSave();fltRefresh()}});
 let placesGeoDone=false;
-async function fillPlaceCities(){
-  for(const x of places.filter(y=>y.lat!=null&&!y.city)){
-    const g=await revGeo(x.lat,x.lon);if(!g.city)continue;
-    const u=await sb.from("places").update({city:g.city,area:g.area||null}).eq("id",x.id);
-    if(!u.error){x.city=g.city;x.area=g.area||null}
+async function fillPlaceCities(loud){
+  const L=places.filter(y=>y.lat!=null&&!y.city);let okN=0,err="";
+  if(loud&&!L.length){say("Wszystkie miejsca z pinezką mają już miasto.");return}
+  if(loud)say("🏙 Sprawdzam miasta w OpenStreetMap… ("+L.length+")");
+  for(const x of L){
+    const g=await revGeo(x.lat,x.lon);
+    if(!g.city){err=g.err||"OpenStreetMap nie podał miasta";}
+    else{const u=await sb.from("places").update({city:g.city,area:g.area||null}).eq("id",x.id).select("id");
+      if(u.error||!u.data||!u.data.length)err="baza nie zapisała"+(u.error?": "+u.error.message:" (brak uprawnień)");else{x.city=g.city;x.area=g.area||null;okN++}}
     await new Promise(r=>setTimeout(r,1100)); // OpenStreetMap: maks. 1 zapytanie na sekundę
   }
-  renderWants();
+  if(loud)say(okN===L.length?"🏙 Uzupełniono miasta: "+okN:"🏙 Uzupełniono "+okN+" z "+L.length+(err?" — "+err:""));
+  // zaproszenia bez miasta — z listy miejsc
+  wants.forEach(w=>{if(w.place&&!w.place_city){const x=places.find(y=>y.city&&y.name.toLowerCase()===w.place.toLowerCase());if(x){w.place_city=x.city;w.place_area=w.place_area||x.area||null}}});
+  renderWants();if(gearOpen&&gearView==="places")renderGear();
 }
 // miasto i dzielnica z pinezki — OpenStreetMap (Nominatim), bez klucza
 async function revGeo(la,lo){
-  try{const r=await fetch("https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=16&accept-language=pl&lat="+la+"&lon="+lo);if(!r.ok)return {};
+  try{const r=await fetch("https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=16&accept-language=pl&lat="+la+"&lon="+lo);if(!r.ok)return {err:"OpenStreetMap odpowiedział błędem "+r.status};
     const a=(await r.json()).address||{},city=a.city||a.town||a.village||a.municipality||null;let area=a.city_district||a.suburb||a.borough||a.quarter||null;
-    if(area&&city&&area===city)area=null;return {city:city?city.slice(0,60):null,area:area?area.slice(0,60):null}}catch(e){return {}}
+    if(area&&city&&area===city)area=null;return {city:city?city.slice(0,60):null,area:area?area.slice(0,60):null}}catch(e){return {err:"brak połączenia z OpenStreetMap"}}
 }
 function renderWants0(){
   const guest=!session;
