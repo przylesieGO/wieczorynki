@@ -527,6 +527,15 @@ button.onl.off{background:var(--fill);color:var(--mut)}
 html[data-theme=dark] .aex{color:#ffd666}
 .ail{margin-top:5px;font-size:14px;line-height:1.7}.amore{display:block;margin:8px auto 0}.anote{margin-top:8px;text-align:center}
 .kst{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.kst div{background:var(--fill);border-radius:12px;padding:9px 11px;text-align:left}.kst b{display:block;font-size:20px}.kst small{color:var(--mut);font-size:12.5px}
+.repbox .bslist{padding-bottom:8px}.rsub{text-align:center;color:var(--mut);font-size:14.5px;line-height:1.6;margin:4px 0 2px}
+.rseg{margin-top:6px}.rseg button.on{background:var(--accbtn);color:#fff}
+.rrow{display:flex;align-items:center;gap:8px;margin-top:8px}.rrow input{flex:1;max-width:160px}.rrow span{color:var(--mut);font-weight:600}
+.rstars{display:flex;gap:6px;margin-top:6px}.rst{border:0;background:none;font-size:32px;line-height:1;color:var(--line);cursor:pointer;padding:0 2px}.rst.on{color:#f5b301}
+.rwho{border-bottom:1px solid var(--line)}.rwho .cbx{opacity:.5}.rwho.on .cbx{opacity:1}.rskip{display:block;margin:16px auto 4px;color:var(--mut)}
+.rpb{display:inline-flex;align-items:center;gap:4px;background:#fff3c4;color:#8a5a00;border-radius:999px;padding:2px 9px;font-weight:800;font-size:13px;margin-right:4px}.rpb small{font-weight:600}
+html[data-theme=dark] .rpb{background:#4a3f12;color:#ffd666}
+.rpt{display:inline-block;background:var(--fill);color:var(--ink);border-radius:999px;padding:2px 9px;font-size:13px;margin:2px 4px 2px 0}
+.rbtn{margin-top:8px}.ai .b.rbtn{width:100%;padding:9px}.rpend{font-style:normal;background:#ff9f0a;color:#fff;border-radius:999px;padding:1px 8px;font-size:13px;margin-left:6px}
 .hmorebtn{display:block;margin:12px auto 0;font-weight:700;color:var(--acc)}
 .hfull{margin-top:10px;text-align:left;display:flex;flex-direction:column;gap:12px}
 .hfs b{font-size:15px}.hfs ul{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:6px}.hfs li{font-size:14px;line-height:1.45}.hfs li b{font-size:inherit}
@@ -701,6 +710,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 </div></div>
 <div class="sheet bsh hide" id="whosheet"></div>
 <div class="sheet bsh hide" id="fltsheet"></div>
+<div class="sheet bsh hide" id="repsheet"></div>
 <div class="sheet hide" id="popsheet"></div>
 <div class="sheet hide" id="picksheet"></div>
 <div class="sheet bsh hide" id="bellsheet"></div>
@@ -1523,11 +1533,21 @@ function stazTxt(id){
   else{const y=Math.floor(days/365);ile=(y===1?"od roku":"od "+y+" lat")+" ("+days+" dni)"}
   return "🗓 Z nami od "+od+" · "+ile;
 }
+function userRidesHtml(id){
+  if(!reportOk)return "";
+  const s=userRides[id];
+  if(s===undefined){userRides[id]=null;sb.from("ride_reports").select("went,km,ride_at").eq("user_id",id).eq("went",true).limit(2000).then(r=>{
+    const L=(r&&r.data)||[],m=Date.now()-30*864e5;userRides[id]={n:L.length,km:Math.round(L.reduce((a,x)=>a+(+x.km||0),0)),n30:L.filter(x=>x.ride_at&&new Date(x.ride_at).getTime()>m).length,km30:Math.round(L.filter(x=>x.ride_at&&new Date(x.ride_at).getTime()>m).reduce((a,x)=>a+(+x.km||0),0))};
+    if(gearOpen&&gearView==="user"&&userId===id)renderGear()});return ""}
+  if(!s||!s.n)return "";
+  return '<div class="staz">🚴 Potwierdzone jazdy: '+s.n+(s.km?' · 📏 '+s.km.toLocaleString("pl-PL")+' km':'')+(s.n30?' (30 dni: '+s.n30+(s.km30?' · '+s.km30+' km':'')+')':'')+'</div>';
+}
 function userHtml(){
   const g=genders[userId],fav=isFav(userId);
   return (userBack?'<button class="sback" data-c="userback">‹ '+({favs:"Ulubieni",online:"Online",admin:"Administracja"}[userBack]||"Ustawienia")+'</button>':'')
    +'<div class="bigpill" style="margin-top:'+(userBack?'26px':'6px')+'">'+nk(userId)+'</div>'
    +'<div class="smail">'+(g==="K"?"👩 Kobieta":g==="M"?"👨 Mężczyzna":"")+(onlineIds.includes(userId)?(g?" · ":"")+"🟢 teraz w aplikacji":"")+'</div>'+(stazTxt(userId)?'<div class="staz">'+esc(stazTxt(userId))+'</div>':'')
+   +userRidesHtml(userId)
    +((fbDone[userId]||0)?'<div class="staz">💡 Zrealizowane zgłoszenia: '+fbDone[userId]+(fbBulb(userId)?' — współtwórca aplikacji':'')+'</div>':'')
    +(visOk?'<button class="b sbtn" data-a="invite" data-id="'+esc(userId)+'">🚴 Zaproś na rower</button>':'')
    +(session?'<button class="b sbtn g" data-a="fltuser" data-id="'+esc(userId)+'">🔍 Pokaż zaproszenia z '+esc(nicks[userId]||"tą osobą")+'</button>':'')
@@ -2275,6 +2295,7 @@ function helpFullHtml(){
      "Na karcie zaproszenia: <b>„Jadę!”</b>, <b>„Nie dam rady”</b>, a przy zakresie <b>„Pasuje mi o…”</b>. „Rezygnuję” — gdy zmienisz zdanie.",
      "Na karcie: godzina, 🌡 pogoda (temperatura, wiatr, deszcz), tempo, „📏 50 km · ⏱ ok. 18:00–20:40”, kto dołączył i kto nie da rady.",
      "Zaproszenia są pogrupowane w <b>karty dni</b>; kilka w jednym dniu — przewijasz w bok.",
+     "<b>🚴 Jak poszło?</b> — po jeździe aplikacja (i bot na Telegramie) pyta: pojechałeś?, ile km, średnia prędkość, ocena jazdy i trasy GPX, jak było. Autor potwierdza, kto był. Odpowiedzi widać w archiwum i w statystykach (karta osoby: potwierdzone jazdy i km).",
      "<b>🚴 TRWA</b> — od startu do końca jazdy: bez edycji, dołączania i dopraszania. Potem zaproszenie trafia do <b>🗄 Archiwum</b> na dole listy (30 dni) z podsumowaniem: kto pojechał, ile km (plan).",
      "<b>🔍 Filtry</b> (przycisk obok „online”): czyje, kiedy, gdzie (miasto, dzielnica, miejsce), rower / teren, tempo, osoba. Włączone filtry widać w pasku pod nagłówkiem — ✕ usuwa jeden, „Wyczyść” wszystkie. Z karty osoby: „🔍 Pokaż zaproszenia z …”."])
    +sec("🔔 Powiadomienia",[
@@ -2412,23 +2433,124 @@ document.addEventListener("click",async e=>{
 },true);
 
 
+
+/* ---------- 🚴 „Jak poszło?” po jeździe (KROK 39; decyzje właściciela 2026-11-15 20:08) ---------- */
+// wszystkie pytania + ocena trasy GPX; odpowiedzi widzą wszyscy; autor potwierdza obecność innych
+let reportOk=false,reports={},repHash="",rs=null,repShown=false,userRides={};
+const REP_TAGS=[["wind","💨 pod wiatr"],["rain","🌧 padało"],["flat","🛞 guma"],["coffee","☕ przerwa na kawę"],["rough","🪨 trudny teren"],["view","🌅 widoki"]];
+const repSkip=()=>{try{return new Set(JSON.parse(localStorage.getItem("repSkip")||"[]"))}catch(e){return new Set()}};
+const repLater=()=>{try{return new Set(JSON.parse(sessionStorage.getItem("repLater")||"[]"))}catch(e){return new Set()}};
+const myRep=w=>(reports[w.id]||[]).find(r=>r.user_id===uid);
+const repCan=w=>!!session&&reportOk&&wantStart(w).getTime()<=Date.now()&&Date.now()-new Date(w.starts_at).getTime()<7*864e5&&(w.user_id===uid||(joins[w.id]||[]).includes(uid));
+function repPending(){
+  const sk=repSkip(),lt=repLater();
+  return wants.filter(w=>wDone(w)&&Date.now()-wantEnd(w).getTime()<3*864e5&&repCan(w)&&!myRep(w)&&!sk.has(w.id)&&!lt.has(w.id))
+    .sort((a,b)=>new Date(b.starts_at)-new Date(a.starts_at));
+}
+function maybeReport(){
+  if(!session||!reportOk||pwMode||needProfile()||anySheetOpen()||gearOpen)return;
+  if(repHash){const w=wants.find(x=>x.id===repHash);repHash="";if(w&&repCan(w)){openReport(w.id);return}}
+  if(repShown)return;const p=repPending();if(!p.length)return;
+  repShown=true;openReport(p[0].id);
+}
+function openReport(id){
+  const w=wants.find(x=>x.id===id);if(!w)return;
+  const mine=myRep(w),plan=kmOf(w);
+  rs={id,went:mine?mine.went:null,kmMode:mine&&mine.km!=null?(plan&&+mine.km===plan?"plan":"own"):plan?"plan":"own",km:mine&&mine.km!=null?String(+mine.km):"",kmh:mine&&mine.avg_kmh!=null?String(+mine.avg_kmh):"",
+    rating:mine&&mine.rating||0,rrating:mine&&mine.route_rating||0,tags:new Set(mine&&mine.tags||[]),who:{}};
+  if(w.user_id===uid)(joins[w.id]||[]).filter(x=>x!==uid).forEach(x=>{const r=(reports[w.id]||[]).find(y=>y.user_id===x);rs.who[x]=r?r.went:true});
+  renderRep();
+}
+function closeRep(){const p=$("repsheet");p.classList.add("hide");p.innerHTML="";rs=null}
+const starsRow=(k,v)=>'<div class="rstars">'+[1,2,3,4,5].map(n=>'<button type="button" class="rst'+(n<=v?' on':'')+'" data-rs="'+k+'" data-v="'+n+'" aria-label="'+n+' na 5">★</button>').join("")+'</div>';
+function renderRep(){
+  const w=rs&&wants.find(x=>x.id===rs.id);if(!w){closeRep();return}
+  const plan=kmOf(w),p=$("repsheet"),pend=repPending(),idx=pend.findIndex(x=>x.id===w.id),own=w.user_id===uid;
+  const others=Object.keys(rs.who),RR=reports[w.id]||[];
+  p.classList.remove("hide");
+  p.innerHTML='<div class="bsbox repbox" role="dialog" aria-modal="true" aria-label="Jak poszło?"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-rs="later">Później</button><b>🚴 Jak poszło?</b><span style="min-width:64px;text-align:right" class="note">'+(pend.length>1&&idx>=0?(idx+1)+' z '+pend.length:'')+'</span></div>'
+   +'<div class="bslist">'
+   +'<div class="rsub">'+esc(relDayPast(new Date(w.starts_at))+" · "+hhmm(new Date(w.starts_at)))+(w.place?' · 📍 '+esc(w.place):'')+'<br>'+nk(w.user_id)+(own?' <span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
+   +'<div class="bsgrp">Pojechałeś?</div><div class="seg rseg"><button type="button" data-rs="went" data-v="1" class="'+(rs.went===true?'on':'')+'">✅ Tak</button><button type="button" data-rs="went" data-v="0" class="'+(rs.went===false?'on':'')+'">❌ Nie dałem rady</button></div>'
+   +(rs.went?'<div class="bsgrp">Ile km?</div><div class="fchips">'+(plan?[["plan","Jak w planie · "+String(plan).replace(".",",")+" km"],["less","Mniej"],["more","Więcej"]]:[]).map(([v,t])=>'<button type="button" class="fch'+(rs.kmMode===v?' on':'')+'" data-rs="km" data-v="'+v+'">'+esc(t)+'</button>').join("")+'</div>'
+      +(rs.kmMode!=="plan"||!plan?'<div class="rrow"><input type="text" inputmode="decimal" maxlength="6" id="repkm" placeholder="km" value="'+esc(rs.km)+'"><span>km</span></div>':'')
+      +'<div class="bsgrp">Średnia prędkość <span class="note">(opcjonalnie)</span></div><div class="rrow"><input type="text" inputmode="decimal" maxlength="5" id="repkmh" placeholder="np. 21" value="'+esc(rs.kmh)+'"><span>km/h</span></div>'
+      +'<div class="bsgrp">Oceń jazdę</div>'+starsRow("rating",rs.rating)
+      +(w.route_km!=null?'<div class="bsgrp">Oceń trasę GPX · '+String(w.route_km).replace(".",",")+' km</div>'+starsRow("rrating",rs.rrating)+'<div class="note">Dobre trasy trafią do bazy tras do kolejnych zaproszeń.</div>':'')
+      +'<div class="bsgrp">Jak było? <span class="note">(dotknij, co pasuje)</span></div><div class="fchips">'+REP_TAGS.map(([v,t])=>'<button type="button" class="fch'+(rs.tags.has(v)?' on':'')+'" data-rs="tag" data-v="'+v+'">'+t+'</button>').join("")+'</div>':'')
+   +(own&&others.length?'<div class="bsgrp">Kto był? <span class="note">(potwierdzasz za innych)</span></div>'+others.map(id=>{const r=RR.find(y=>y.user_id===id&&y.self);
+      return r?'<div class="prow rwho"><span class="pnm">'+nk(id)+'</span><span class="note">'+(r.went?'✅ sam(a) potwierdził(a)':'❌ nie pojechał(a)')+'</span></div>'
+        :'<button type="button" class="prow rwho'+(rs.who[id]?' on':'')+'" data-rs="who" data-v="'+esc(id)+'"><span class="cbx">'+CHECK+'</span><span class="pnm">'+nk(id)+'</span><span class="note">'+(rs.who[id]?'był(a)':'nie był(a)')+'</span></button>'}).join(""):'')
+   +'<button type="button" class="lnk rskip" data-rs="skip">Nie pytaj o tę jazdę</button></div>'
+   +'<button type="button" class="b big" data-rs="save"'+(rs.went==null?' disabled':'')+'>Zapisz</button></div>';
+}
+const relDayPast=d=>{const n=dayDiff(d);return n===0?"Dziś":n===-1?"Wczoraj":d.toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"})};
+async function saveReport(){
+  const w=wants.find(x=>x.id===rs.id);if(!w)return;
+  const plan=kmOf(w),num=v=>{const x=parseFloat(String(v).replace(",","."));return isFinite(x)?x:null};
+  let km=null;if(rs.went){km=rs.kmMode==="plan"&&plan?plan:num(rs.km);if(km!=null&&(km<0||km>1000)){say("Podaj km od 0 do 1000.");return}}
+  let kmh=rs.went?num(rs.kmh):null;if(kmh!=null&&(kmh<3||kmh>60)){say("Średnia prędkość: od 3 do 60 km/h.");return}
+  const row={want_id:w.id,user_id:uid,went:!!rs.went,km,avg_kmh:kmh,rating:rs.went&&rs.rating||null,route_rating:rs.went&&w.route_km!=null&&rs.rrating||null,tags:rs.went?[...rs.tags]:[]};
+  try{
+    const r=await sb.from("ride_reports").upsert(row,{onConflict:"want_id,user_id"});if(r.error)throw r.error;
+    const RR=reports[w.id]=(reports[w.id]||[]).filter(x=>x.user_id!==uid);RR.push(Object.assign({self:true},row));
+    if(w.user_id===uid)for(const id of Object.keys(rs.who)){
+      if(RR.some(y=>y.user_id===id&&y.self))continue;
+      const q=await sb.from("ride_reports").upsert({want_id:w.id,user_id:id,went:!!rs.who[id]},{onConflict:"want_id,user_id"});
+      if(!q.error){const i=RR.findIndex(y=>y.user_id===id);const o={want_id:w.id,user_id:id,went:!!rs.who[id],self:false,km:null,rating:null,tags:[]};if(i>=0)RR[i]=o;else RR.push(o)}
+    }
+    closeRep();renderWants();say(rs===null&&row.went?"Dzięki! Zapisano 🚴":"Dzięki! Zapisano.");
+    setTimeout(()=>{const p=repPending();if(p.length&&!anySheetOpen())openReport(p[0].id)},600);
+  }catch(e){say("Nie udało się zapisać: "+(e&&e.message?e.message:"błąd"))}
+}
+$("repsheet").addEventListener("click",e=>{
+  if(e.target===$("repsheet")){repLaterAdd();closeRep();return}
+  const b=e.target.closest("[data-rs]");if(!b||!rs)return;const k=b.dataset.rs,v=b.dataset.v;
+  if(k==="later"){repLaterAdd();closeRep();say("Zapytam przy następnym wejściu.");return}
+  if(k==="skip"){const sk=repSkip();sk.add(rs.id);try{localStorage.setItem("repSkip",JSON.stringify([...sk]))}catch(err){}closeRep();renderWants();return}
+  if(k==="save"){saveReport();return}
+  if(k==="went")rs.went=v==="1";
+  if(k==="km"){rs.kmMode=v;const w=wants.find(x=>x.id===rs.id),plan=kmOf(w);if(v!=="plan"&&!rs.km&&plan)rs.km=String(plan)}
+  if(k==="rating")rs.rating=rs.rating===+v?0:+v;
+  if(k==="rrating")rs.rrating=rs.rrating===+v?0:+v;
+  if(k==="tag"){rs.tags.has(v)?rs.tags.delete(v):rs.tags.add(v)}
+  if(k==="who")rs.who[v]=!rs.who[v];
+  const sc=$("repsheet").querySelector(".bslist"),top=sc?sc.scrollTop:0;renderRep();const s2=$("repsheet").querySelector(".bslist");if(s2)s2.scrollTop=top;
+  if(k==="km"&&v!=="plan"){const i=$("repkm");if(i)i.focus()}
+});
+$("repsheet").addEventListener("input",e=>{if(!rs)return;if(e.target.id==="repkm")rs.km=e.target.value;if(e.target.id==="repkmh")rs.kmh=e.target.value});
+function repLaterAdd(){if(!rs)return;const lt=repLater();lt.add(rs.id);try{sessionStorage.setItem("repLater",JSON.stringify([...lt]))}catch(e){}}
+// podsumowanie odpowiedzi do archiwum
+function repSum(w){
+  const R=reports[w.id]||[];if(!R.length)return null;
+  const yes=R.filter(r=>r.went),sk=yes.filter(r=>r.self&&r.km!=null).map(r=>+r.km),rt=R.filter(r=>r.rating).map(r=>r.rating),rr=R.filter(r=>r.route_rating).map(r=>r.route_rating);
+  const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null,tc={};R.forEach(r=>(r.tags||[]).forEach(t=>tc[t]=(tc[t]||0)+1));
+  return {yes:yes.map(r=>r.user_id),n:R.length,km:avg(sk),rating:avg(rt),rn:rt.length,route:avg(rr),tags:tc};
+}
+const fmt1=x=>(Math.round(x*10)/10).toString().replace(".",",");
 /* ---------- 🗄 archiwum zakończonych zaproszeń (30 dni; KROK 38) ---------- */
 let archOpen=false,archAll=false;
 const wPeople=w=>[w.user_id,...(joins[w.id]||[]).filter(x=>x!==w.user_id)];
 const wExpired=w=>isOpen(w)&&!(joins[w.id]||[]).some(x=>x!==w.user_id);
 function archSum(L){
-  const R=L.filter(w=>!wExpired(w)),ppl=new Set();let km=0;R.forEach(w=>{wPeople(w).forEach(x=>ppl.add(x));km+=kmOf(w)||0});
-  return {n:R.length,p:ppl.size,km:Math.round(km)};
+  const R=L.filter(w=>!wExpired(w)),ppl=new Set();let km=0,real=0;
+  R.forEach(w=>{const s=repSum(w);(s?s.yes:wPeople(w)).forEach(x=>ppl.add(x));if(s&&s.km!=null){km+=s.km;real++}else km+=kmOf(w)||0});
+  return {n:R.length,p:ppl.size,km:Math.round(km),real};
 }
 function archItem(w){
   const d=new Date(w.starts_at),ex=wExpired(w),pp=wPeople(w),k=kmOf(w);
   const dd=dayDiff(d),dt=(dd===0?"Dziś":dd===-1?"Wczoraj":d.toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"}))+" · "+(isOpen(w)?wTime(w):hhmm(d));
   return '<div class="ai'+(isTest(w)?' test':'')+'"><div class="ait"><b>'+esc(dt)+'</b>'+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+'<span class="'+(ex?'aex':'aok')+'">'+(ex?'⌛ wygasło':'zakończone')+'</span></div>'
    +'<div class="ail">'+nk(w.user_id)+(w.place?' · 📍 '+esc(w.place+(w.place_city?' · '+w.place_city:'')):'')+'</div>'
-   +(ex?'<div class="ail note">Godzina nieustalona, nikt nie dołączył.</div>'
-     :'<div class="ail">🚴 Pojechało '+pp.length+': '+pp.map(id=>nk(id)).join(" ")+'</div>'
-      +'<div class="ail note">'+[w.route_km!=null?'🗺️ trasa '+String(w.route_km).replace(".",",")+' km':k?'📏 ok. '+k+' km':'',
-         '⏱ '+durTxt(wantDur(w)),w.pace?paceTxt(w.pace):''].filter(Boolean).map(esc).join(" · ")+'</div>')+'</div>';
+   +(ex?'<div class="ail note">Godzina nieustalona, nikt nie dołączył.</div>':(()=>{const S=repSum(w);
+     return (S?'<div class="ail">✅ Potwierdziło '+S.yes.length+' z '+pp.length+': '+S.yes.map(id=>nk(id)).join(" ")+'</div>'+(pp.length>S.n?'<div class="ail note">❓ bez odpowiedzi: '+(pp.length-S.n)+'</div>':'')
+        :'<div class="ail">🚴 Pojechało '+pp.length+': '+pp.map(id=>nk(id)).join(" ")+'</div>')
+      +'<div class="ail note">'+[S&&S.km!=null?'📏 '+fmt1(S.km)+' km (z odpowiedzi)':w.route_km!=null?'🗺️ trasa '+String(w.route_km).replace(".",",")+' km':k?'📏 ok. '+k+' km':'',
+         S&&S.km!=null&&w.route_km!=null?'🗺️ plan '+String(w.route_km).replace(".",",")+' km':'',
+         '⏱ '+durTxt(wantDur(w)),w.pace?paceTxt(w.pace):''].filter(Boolean).map(esc).join(" · ")+'</div>'
+      +(S&&(S.rating||S.route||Object.keys(S.tags).length)?'<div class="ail">'+(S.rating?'<span class="rpb">★ '+fmt1(S.rating)+' <small>jazda ('+S.rn+')</small></span> ':'')+(S.route?'<span class="rpb">★ '+fmt1(S.route)+' <small>trasa</small></span> ':'')
+         +Object.entries(S.tags).sort((a,b)=>b[1]-a[1]).map(([t,c])=>{const x=REP_TAGS.find(y=>y[0]===t);return x?'<span class="rpt">'+esc(x[1])+(c>1?' ×'+c:'')+'</span>':''}).join("")+'</div>':'')
+      +(repCan(w)&&!myRep(w)?'<button type="button" class="b g rbtn" data-arch="rep" data-id="'+esc(w.id)+'">✍️ Jak poszło? Uzupełnij</button>':repCan(w)?'<button type="button" class="lnk rbtn" data-arch="rep" data-id="'+esc(w.id)+'">✏️ Zmień swoją odpowiedź</button>':'')})())+'</div>';
 }
 function renderArch(all){
   const box=$("wantarch");if(!box)return;
@@ -2436,13 +2558,14 @@ function renderArch(all){
   const since=Date.now()-30*864e5,L=all.filter(w=>wDone(w)&&new Date(w.starts_at).getTime()>since).sort((a,b)=>new Date(b.starts_at)-new Date(a.starts_at));
   if(!L.length){box.innerHTML="";return}
   const S=archSum(L),show=archAll?L:L.slice(0,3);
-  box.innerHTML='<div class="arch"><button type="button" class="ah" data-arch="t">🗄 Archiwum · 30 dni<span>'+L.length+' '+(archOpen?'⌃':'⌄')+'</span></button>'
-   +(archOpen?'<div class="asum">📊 Ostatnie 30 dni: '+S.n+' '+plf(S.n,["jazda","jazdy","jazd"])+' · '+S.p+' '+plf(S.p,["osoba","osoby","osób"])+(S.km?' · ok. '+S.km+' km (plan)':'')+'</div>'
+  box.innerHTML='<div class="arch"><button type="button" class="ah" data-arch="t">🗄 Archiwum · 30 dni'+(repPending().length?' <em class="rpend">✍️ '+repPending().length+'</em>':'')+'<span>'+L.length+' '+(archOpen?'⌃':'⌄')+'</span></button>'
+   +(archOpen?'<div class="asum">📊 Ostatnie 30 dni: '+S.n+' '+plf(S.n,["jazda","jazdy","jazd"])+' · '+S.p+' '+plf(S.p,["osoba","osoby","osób"])+(S.km?' · ok. '+S.km+' km'+(S.real?(S.real===S.n?'':' (część z planu)'):' (plan)'):'')+'</div>'
      +show.map(archItem).join("")
      +(L.length>3?'<button type="button" class="lnk amore" data-arch="all">'+(archAll?'Zwiń ⌃':'Pokaż wszystkie ('+L.length+') ›')+'</button>':'')
-     +'<div class="note anote">„Pojechało” = autor i osoby, które kliknęły „Jadę!”; km planowane.</div>':'')+'</div>';
+     +'<div class="note anote">„Pojechało” = autor i osoby z „Jadę!”; „Potwierdziło” i km — z odpowiedzi „🚴 Jak poszło?”.</div>':'')+'</div>';
 }
 $("wantarch").addEventListener("click",e=>{const b=e.target.closest("[data-arch]");if(!b)return;
+  if(b.dataset.arch==="rep"){openReport(b.dataset.id);return}
   if(b.dataset.arch==="t")archOpen=!archOpen;else archAll=!archAll;renderArch(wants)});
 /* ---------- 🔍 filtry zaproszeń (decyzje właściciela 2026-11-15 18:58: jak w makiecie filtry.png + z karty osoby) ---------- */
 // zapamiętane w telefonie; działają na listę zaproszeń (karty dni i Twoje zaproszenia), nie na 🔔
@@ -4073,7 +4196,7 @@ function renderOnline(){
 /* ---------- statystyki dla administratora ---------- */
 let statsData=null,statsErr="",seenAt=0,seenFor="";
 async function loadStats(){
-  statsData=null;statsErr="";renderGear();loadTgLinks();
+  statsData=null;repStats=null;statsErr="";renderGear();loadTgLinks();
   try{
     const r=await sb.rpc("admin_stats");
     if(r.error)statsErr=(r.error.code==="PGRST202"||/admin_stats/.test(r.error.message||""))?"Statystyki nie są jeszcze włączone w bazie (brak funkcji admin_stats — KROK 9).":"Nie udało się pobrać: "+r.error.message;
@@ -4098,6 +4221,15 @@ function newAccHtml(){
    +'<h3>Kto i kiedy założył konto ('+L.length+')</h3><div class="naccs">'+rows+'</div>'
    +(L.length>8?'<button class="lnk" data-c="accall" style="display:block;margin:8px auto 0">'+(statsAllAcc?'Zwiń ▴':'Pokaż wszystkich ('+L.length+') ›')+'</button>':'');
 }
+let repStats=null;
+function repStatsHtml(t){
+  if(!reportOk)return "";
+  if(!repStats){repStats={loading:1};sb.from("ride_reports").select("want_id,user_id,went,km,rating,route_rating,self").limit(10000).then(r=>{repStats={L:(r&&r.data)||[]};if(gearOpen&&gearView==="stats")renderGear()});return ""}
+  if(repStats.loading)return '<h3>🚴 Jak poszło?</h3><div class="smail">Ładuję…</div>';
+  const L=repStats.L;if(!L.length)return '<h3>🚴 Jak poszło?</h3><p class="note">Jeszcze nikt nie odpowiedział po jeździe.</p>';
+  const yes=L.filter(r=>r.went),rides=new Set(yes.map(r=>r.want_id)),km=Math.round(yes.reduce((a,r)=>a+(+r.km||0),0)),rt=L.filter(r=>r.rating).map(r=>r.rating);
+  return '<h3>🚴 Jak poszło? (odpowiedzi)</h3><div class="stats">'+t(rides.size,"jazd z potwierdzeniem")+t(km.toLocaleString("pl-PL")+" km","przejechane (deklaracje)")+t(Math.round(yes.length/L.length*100)+"%","frekwencja")+t(rt.length?fmt1(rt.reduce((a,b)=>a+b,0)/rt.length)+" ★":"—","średnia ocena jazd")+'</div>';
+}
 function adminStatsHtml(){
   const head='<button class="sback" data-c="backadmin">‹ Administracja</button><div class="sname" style="margin-top:26px">📊 Statystyki</div>';
   if(statsErr)return head+'<div class="sleft"><div class="changed">'+esc(statsErr)+'</div></div>';
@@ -4108,6 +4240,7 @@ function adminStatsHtml(){
    +'<h3>Konta</h3><div class="stats">'+t(d.accounts,"założone konta")+t(d.profiles,"z nickiem")+'</div>'
    +(Object.keys(joinedAt).length?'<h3>Nowi (z nickiem)</h3><div class="stats">'+t(Object.values(joinedAt).filter(x=>Date.now()-new Date(x)<7*864e5).length,"ostatnie 7 dni")+t(Object.values(joinedAt).filter(x=>Date.now()-new Date(x)<30*864e5).length,"ostatnie 30 dni")+'</div>':'')
    +newAccHtml()
+   +repStatsHtml(t)
    +'<h3>Aktywność</h3><div class="stats">'+t(onlineIds.length,"teraz online")+t(d.active7,"aktywni 7 dni")+t(d.active30,"aktywni 30 dni")+'</div>'
    +(tgLinks?'<h3>Telegram</h3><div class="stats">'+t(tgLinks.size,"połączony bot")+t(Math.max(0,(d.profiles||0)-tgLinks.size),"bez bota")+'</div>':'')
    +'<h3>Płeć</h3><div class="stats">'+t(d.women,"👩 kobiety")+t(d.men,"👨 mężczyźni")+(d.nogender?t(d.nogender,"bez płci"):"")+'</div>'
@@ -4212,6 +4345,11 @@ async function loadRemote(selectId){
     decls={};((dc&&!dc.error&&dc.data)||[]).forEach(x=>{(decls[x.want_id]=decls[x.want_id]||[]).push(x.user_id)});
     invs={};((iv&&!iv.error&&iv.data)||[]).forEach(x=>{(invs[x.want_id]=invs[x.want_id]||[]).push({u:x.user_id,by:x.added_by})});
     notifs=(nt&&!nt.error&&nt.data)||[];
+    // 🚴 „Jak poszło?” (KROK 39): odpowiedzi do jazd, które już wystartowały
+    {const rq=await sb.from("ride_reports").select("want_id").limit(1);reportOk=!rq.error;reports={};
+     if(reportOk){const ids=wants.filter(w=>wantStart(w).getTime()<=Date.now()).map(w=>w.id);
+       for(let i=0;i<ids.length;i+=100){const r=await sb.from("ride_reports").select("want_id,user_id,went,km,avg_kmh,rating,route_rating,tags,self").in("want_id",ids.slice(i,i+100));
+         (r.data||[]).forEach(x=>{(reports[x.want_id]=reports[x.want_id]||[]).push(x)})}}}
     const [j,l,ad,st,fv]=await Promise.all([
       byWant("want_joins",rangeOk?"want_id,user_id,pref_at":"want_id,user_id"),
       sb.from("routes").select("id,title,description,km,creator,created_at").order("created_at",{ascending:false}).limit(200),
@@ -4262,6 +4400,7 @@ async function loadRemote(selectId){
   maybePopup();
   maybeHelp();
   maybeFb();
+  maybeReport();
   // 1 h przed początkiem zakresu godzina ustala się sama (KROK 15) — robi to baza, wywołuje pierwszy, kto odświeży
   if(session&&rangeOk&&Date.now()-autoAt>60000&&wants.some(w=>isOpen(w)&&new Date(w.range_from).getTime()<=Date.now()+36e5)){
     autoAt=Date.now();
@@ -4565,6 +4704,7 @@ bootTimer=setTimeout(()=>bootFail(),8000);
     if(ready)setTimeout(()=>loadRemote().catch(()=>{}),0);
   });
   const m=/#ride=([0-9a-f-]{36})/i.exec(location.hash||"");
+  const rp=/#report=([0-9a-f-]{36})/i.exec(location.hash||"");if(rp){repHash=rp[1];try{history.replaceState(null,"",location.pathname)}catch(e){}}
   try{await loadRemote(m?m[1]:null);$("dbnote").textContent="";bootDone()}
   catch(e){$("dbnote").textContent="Nie udało się połączyć ze wspólną bazą (sprawdź internet i konfigurację Supabase).";bootFail()}
   ready=true;
