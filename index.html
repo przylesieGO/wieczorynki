@@ -456,6 +456,11 @@ html[data-theme=dark] .dmtag{background:rgba(196,168,255,.18);color:#c4a8ff}
 .dmbox .want{margin:0}.dmbox .big{margin-top:18px}
 ol.inst{margin:6px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:16px;line-height:1.45}.warnbox{background:#fff3c4;color:#6b4a00;padding:10px 12px;border-radius:12px;margin-bottom:8px}html[data-theme=dark] .warnbox{background:#4a3f12;color:#ffe08a}
 .hdemo{margin:2px 0 14px;padding:10px 12px;border-radius:12px;background:#ffe9e9;color:#8a1f1f;font-size:14px;line-height:1.45;text-align:left}html[data-theme=dark] .hdemo{background:rgba(255,99,99,.14);color:#ffb3b3}
+.honl{border:0;background:var(--acc2);color:var(--acc);font:inherit;font-size:12px;font-weight:700;border-radius:999px;padding:2px 7px;margin-right:6px;display:none;cursor:pointer;flex:none}
+.hdr.compact .honl:not(.hide){display:inline-flex}button.onl{border:0;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.admbox{margin-top:16px;padding:12px;border-radius:14px;background:var(--fill);text-align:left}.admbox>b{display:block;margin-bottom:6px}
+.admln{font-size:14.5px;margin:3px 0}.admst{margin:10px 0}.admrec{display:flex;flex-direction:column;gap:4px;font-size:14px}.admrec>div{display:flex;justify-content:space-between;gap:8px}
+.tgm{font-size:13px}
 .hmorebtn{display:block;margin:12px auto 0;font-weight:700;color:var(--acc)}
 .hfull{margin-top:10px;text-align:left;display:flex;flex-direction:column;gap:12px}
 .hfs b{font-size:15px}.hfs ul{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:6px}.hfs li{font-size:14px;line-height:1.45}.hfs li b{font-size:inherit}
@@ -539,7 +544,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 
 <!-- ===== NAGŁÓWEK (przyklejony, zwija się przy przewijaniu) ===== -->
 <header class="hdr" id="hdr"><button type="button" class="betabar" data-betafb="1">🧪 Wersja testowa (BETA) · <u>zgłoś uwagi ›</u></button><div class="hin">
- <h1 class="apptitle"><span class="tlogo"><svg class="blogo" viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="27" fill="#1f9d55"/><circle cx="44" cy="62" r="25" fill="none" stroke="#fff" stroke-width="9"/><circle cx="76" cy="62" r="25" fill="none" stroke="#fbbf24" stroke-width="9"/><circle cx="44" cy="62" r="4" fill="#fff"/><circle cx="76" cy="62" r="4" fill="#fbbf24"/></svg></span><span class="tname"> PrzylesieGo!</span><span class="menick hide" id="menick" title="Jesteś zalogowany jako — kliknij, żeby otworzyć Ustawienia"></span></h1>
+ <h1 class="apptitle"><button type="button" class="honl hide" id="honl" aria-label="Kto jest online"></button><span class="tlogo"><svg class="blogo" viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="27" fill="#1f9d55"/><circle cx="44" cy="62" r="25" fill="none" stroke="#fff" stroke-width="9"/><circle cx="76" cy="62" r="25" fill="none" stroke="#fbbf24" stroke-width="9"/><circle cx="44" cy="62" r="4" fill="#fff"/><circle cx="76" cy="62" r="4" fill="#fbbf24"/></svg></span><span class="tname"> PrzylesieGo!</span><span class="menick hide" id="menick" title="Jesteś zalogowany jako — kliknij, żeby otworzyć Ustawienia"></span></h1>
  <nav><button id="t0" class="on">ZAPROSZENIA</button><button id="t1">Wieczorynki</button><button id="t2">Zaawansowane</button></nav>
  <button class="gear bell hide" id="bellbtn" aria-label="Powiadomienia" title="Powiadomienia"><svg class="ui-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><b class="bbadge hide" id="bellbadge"></b></button>
  <button class="gear help" id="helpbtn" aria-label="Pomoc — co potrafi aplikacja" title="Pomoc"><svg class="ui-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></button>
@@ -633,7 +638,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 <!-- ===== START ===== -->
 <section id="p0">
  <div class="card">
-  <div class="row between"><h2 style="margin:0">Umów się na rower</h2><span class="onl hide" id="onlbtn" title="Tyle osób ma teraz otwartą aplikację — ich nicki mają zieloną obwódkę"></span></div>
+  <div class="row between"><h2 style="margin:0">Umów się na rower</h2><button type="button" class="onl hide" id="onlbtn" title="Kto jest teraz w aplikacji"></button></div>
   <div id="wantguest" class="note">Zaloguj się, aby zobaczyć chętnych i zgłosić ochotę na przejażdżkę.<div style="margin-top:10px"><button type="button" class="b wdemo" data-demo="1">👀 Zobacz przykład</button></div></div>
   <div id="wantmain" class="hide">
    <div id="mywant"></div>
@@ -1126,8 +1131,8 @@ function adminHtml(){
    +'<p class="note">Administrator może edytować i usuwać każdą wieczorynkę, zgłoszenie i trasę oraz zarządzać administratorami.</p>'
    +testersHtml()
    +(isSuper(uid)&&testOk?'<h3>🧪 Zaproszenia testowe</h3><button class="b sbtn" style="background:var(--bad)" data-c="testdel">🧹 Usuń wszystkie testowe zaproszenia…</button><p class="note">Usuwa tylko zaproszenia oznaczone 🧪 TEST (z dołączeniami i powiadomieniami). Prawdziwe zostają.</p>':'')
-   +'<h3>Użytkownicy ('+Object.keys(nicks).length+')</h3>'
-   +(Object.keys(nicks).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")).map(id=>'<div class="arow"><span>'+nk(id)+(joinedAt[id]?'<br><span class="note">od '+esc(new Date(joinedAt[id]).toLocaleDateString("pl-PL",{day:"numeric",month:"short",year:"numeric"}))+'</span>':'')+'</span>'+(id===uid?'<span class="note">(Ty)</span>':isSuper(id)?'<span class="note">👑</span>':'<button class="b g small" data-a="unick" data-id="'+esc(id)+'">Zmień nick</button>')+'</div>').join("")||'<div class="note">Brak użytkowników z nickiem.</div>')
+   +'<h3>Użytkownicy ('+Object.keys(nicks).length+')</h3>'+(tgLinks?'<p class="note">✈️ = połączony bot Telegram ('+tgLinks.size+'). Dotknij nicku — karta osoby z aktywnością.</p>':'')
+   +(Object.keys(nicks).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")).map(id=>'<div class="arow"><span>'+nk(id)+(tgLinks&&tgLinks.has(id)?' <span class="tgm" title="Telegram połączony">✈️</span>':'')+(joinedAt[id]?'<br><span class="note">od '+esc(new Date(joinedAt[id]).toLocaleDateString("pl-PL",{day:"numeric",month:"short",year:"numeric"}))+'</span>':'')+'</span>'+(id===uid?'<span class="note">(Ty)</span>':isSuper(id)?'<span class="note">👑</span>':'<button class="b g small" data-a="unick" data-id="'+esc(id)+'">Zmień nick</button>')+'</div>').join("")||'<div class="note">Brak użytkowników z nickiem.</div>')
    +'</div>';
 }
 /* 🧪 testerzy i funkcje testowe (KROK 16) — nadaje/odbiera i przełącza tylko 👑 */
@@ -1302,6 +1307,34 @@ function favsHtml(){
 }
 /* 🗓 data dołączenia (KROK 25): „Z nami od 12 marca 2026 · 245 dni” */
 let joinedAt={};
+// 🟢 kto jest teraz w aplikacji (dotknięcie „N online”)
+// 🛡️ admin: kto połączył Telegram (KROK 32) i aktywność osoby
+let tgLinks=null,admInfo={},tgLoading=false;
+async function loadTgLinks(){if(!isAdmin)return;try{const r=await sb.rpc("admin_tg_links");tgLinks=r.error?null:new Map((r.data||[]).map(x=>[x.user_id,x.linked_at]))}catch(e){tgLinks=null}}
+async function loadAdmInfo(id){
+  try{const r=await sb.rpc("admin_user_info",{u:id});admInfo[id]=r.error?{err:1}:r.data||{}}catch(e){admInfo[id]={err:1}}
+  if(gearOpen&&gearView==="user"&&userId===id)renderGear();
+}
+const ACT_TXT={want_public:"🌍 zaprosił(a) wszystkich",want_private:"🔒 zaprosił(a) wybranych",want_join:"🙋 dołączył(a) do jazdy",want_leave:"👋 zrezygnował(a) z jazdy",invite_sent:"➕ doprosił(a) kogoś",ride_created:"🗺️ utworzył(a) wieczorynkę",ride_join:"🚴 zapisał(a) się na wieczorynkę",ride_leave:"↩︎ wypisał(a) się z wieczorynki"};
+function admInfoHtml(id){
+  const a=admInfo[id];
+  if(!a)return '<div class="admbox"><b>🛡️ Dla admina</b><div class="note">Ładuję…</div></div>';
+  if(a.err)return '<div class="admbox"><b>🛡️ Dla admina</b><div class="note">Brak danych — uruchom KROK 32 w bazie.</div></div>';
+  const st=a.stats||{},n=k=>st[k]||0,c=(v,l)=>'<div class="st"><b>'+v+'</b><span>'+l+'</span></div>';
+  return '<div class="admbox"><b>🛡️ Dla admina</b>'
+   +'<div class="admln">👁 Ostatnio w aplikacji: <b>'+(onlineIds.includes(id)?'teraz 🟢':a.last_seen?esc(agoTxt(a.last_seen)):'—')+'</b></div>'
+   +'<div class="admln">✈️ Telegram: <b>'+(a.tg_linked_at?'połączony od '+esc(new Date(a.tg_linked_at).toLocaleDateString("pl-PL",{day:"numeric",month:"short"})):'nie połączony')+'</b></div>'
+   +'<div class="stats admst">'+c(n("want_public")+n("want_private"),"zaproszeń")+c(n("want_join"),"dołączeń")+c(n("want_leave"),"rezygnacji")+c(n("invite_sent"),"doproszeń")+'</div>'
+   +((a.recent||[]).length?'<div class="admrec">'+a.recent.map(x=>'<div><span>'+esc(ACT_TXT[x.kind]||x.kind)+'</span><span class="note">'+esc(agoTxt(x.at))+'</span></div>').join("")+'</div>':'<div class="note">Brak wpisów w dzienniku.</div>')
+   +'</div>';
+}
+document.addEventListener("click",e=>{if(!e.target.closest("#onlbtn,#honl")||!session)return;e.preventDefault();e.stopPropagation();gearOpen=true;gearView="online";renderGear()},true);
+function onlineHtml(){
+  const ids=favFirst(onlineIds.filter(id=>nicks[id]));
+  return '<div class="sname" style="margin-top:6px">🟢 Teraz w aplikacji ('+ids.length+')</div>'
+   +'<div class="sleft">'+(ids.length?ids.map(id=>'<div class="arow"><span>'+nk(id)+'</span>'+(id===uid?'<span class="note">(Ty)</span>':'')+'</div>').join(""):'<div class="note">Nikogo poza Tobą.</div>')
+   +'<p class="note">Dotknij nicku, żeby zobaczyć kartę osoby i zaprosić ją na rower. Lista odświeża się na bieżąco.</p></div>';
+}
 function stazTxt(id){
   const ts=joinedAt[id];if(!ts)return "";
   const d=new Date(ts),days=Math.floor((Date.now()-d.getTime())/864e5);
@@ -1315,14 +1348,15 @@ function stazTxt(id){
 }
 function userHtml(){
   const g=genders[userId],fav=isFav(userId);
-  return (userBack?'<button class="sback" data-c="userback">‹ '+(userBack==="favs"?'Ulubieni':'Ustawienia')+'</button>':'')
+  return (userBack?'<button class="sback" data-c="userback">‹ '+({favs:"Ulubieni",online:"Online",admin:"Administracja"}[userBack]||"Ustawienia")+'</button>':'')
    +'<div class="bigpill" style="margin-top:'+(userBack?'26px':'6px')+'">'+nk(userId)+'</div>'
    +'<div class="smail">'+(g==="K"?"👩 Kobieta":g==="M"?"👨 Mężczyzna":"")+(onlineIds.includes(userId)?(g?" · ":"")+"🟢 teraz w aplikacji":"")+'</div>'+(stazTxt(userId)?'<div class="staz">'+esc(stazTxt(userId))+'</div>':'')
    +((fbDone[userId]||0)?'<div class="staz">💡 Zrealizowane zgłoszenia: '+fbDone[userId]+(fbBulb(userId)?' — współtwórca aplikacji':'')+'</div>':'')
    +(visOk?'<button class="b sbtn" data-a="invite" data-id="'+esc(userId)+'">🚴 Zaproś na rower</button>':'')
    +'<button class="b sbtn'+(fav?' g':'')+'" data-a="fav" data-id="'+esc(userId)+'">'+(fav?'⭐ Usuń z ulubionych':'☆ Dodaj do ulubionych')+'</button>'
    +(isAdmin&&fbOk?'<button class="b sbtn g" data-a="fbmsg" data-id="'+esc(userId)+'">✉️ Napisz wiadomość</button>':'')
-   +(isAdmin&&!isSuper(userId)?'<button class="b sbtn g" data-a="unick" data-id="'+esc(userId)+'">✏️ Zmień nick (admin)</button>':'');
+   +(isAdmin&&!isSuper(userId)?'<button class="b sbtn g" data-a="unick" data-id="'+esc(userId)+'">✏️ Zmień nick (admin)</button>':'')
+   +(isAdmin?admInfoHtml(userId):'');
 }
 async function toggleFav(id){
   if(!session||!favOk||!id||id===uid)return;
@@ -1339,8 +1373,10 @@ async function toggleFav(id){
 document.addEventListener("click",e=>{
   const p=e.target.closest(".nk[data-u]");if(!p||!session||!favOk)return;
   const inPanel=!!p.closest("#gearpanel");
-  if(inPanel&&gearView!=="favs")return;
-  userBack=inPanel?"favs":"";userId=p.dataset.u;gearOpen=true;gearView="user";renderGear();
+  if(inPanel&&!["favs","online","admin"].includes(gearView))return;
+  if(inPanel&&p.dataset.u===uid)return;
+  userBack=inPanel?gearView:"";userId=p.dataset.u;gearOpen=true;gearView="user";renderGear();
+  if(isAdmin){delete admInfo[userId];loadAdmInfo(userId)}
 });
 /* ---------- 💬 Oceń aplikację / zgłoś błąd / pomysł + wiadomości od admina (KROK 26) ---------- */
 let fbOk=false,fbList=[],fbDone={},fbMsgs={},fbId="",fbBack="fb",fbAdmFilter="new",fbTo="",fbBusy=false;
@@ -1563,7 +1599,7 @@ function renderGear(){
   const keepNick=gearView==="nick"&&$("gnick")?{v:$("gnick").value,i:$("gnickinfo").textContent}:null;
   const tg='<a class="b sbtn g" href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">📣 Kanał na Telegramie</a>';
   let body;
-  if(gearView==="admin")body=adminHtml();
+  if(gearView==="admin"){body=adminHtml();if(tgLinks===null&&!tgLoading){tgLoading=true;loadTgLinks().then(()=>{if(gearView==="admin")renderGear()})}}
   else if(gearView==="unick")body=unickHtml();
   else if(gearView==="colors")body=colorsHtml();
   else if(gearView==="stats")body=adminStatsHtml();
@@ -1572,6 +1608,7 @@ function renderGear(){
   else if(gearView==="favs"&&session)body=favsHtml();
   else if(gearView==="tg"&&tgOn())body=tgHtml();
   else if(gearView==="user"&&session&&nicks[userId])body=userHtml();
+  else if(gearView==="online"&&session)body=onlineHtml();
   else if(gearView==="confdel"&&session&&delReq)body=confDelHtml();
   else if(gearView==="fb"&&session&&fbOk)body=fbHubHtml();
   else if(gearView==="fbt"&&session&&fbOk)body=fbThreadHtml();
@@ -1709,6 +1746,7 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="admin"){gearView="admin";renderGear();return}
   if(c==="colors"){gearView="colors";renderGear();return}
   if(c==="stats"){gearView="stats";loadStats();return}
+  if(c==="online"){if(!session)return;gearOpen=true;gearView="online";renderGear();return}
   if(c==="flags"){gearView="flags";renderGear();return}
   if(c==="testdel"){testDelN=null;gearView="testdel";renderGear();try{const r=await sb.rpc("admin_test_wants",{do_delete:false});if(r.error)throw r.error;testDelN=+r.data||0}catch(err){testDelN=0;say("Nie udało się policzyć: "+(err&&err.message?err.message:"błąd"))}if(gearView==="testdel")renderGear();return}
   if(c==="testdelgo"){
@@ -3466,13 +3504,15 @@ function renderOnline(){
   const b=$("onlbtn");if(!b)return;
   const show=!!session&&onlineIds.length>0;
   b.classList.toggle("hide",!show);
-  if(show)b.textContent="🟢 "+onlineIds.length+" online";
+  if(show)b.textContent="🟢 "+onlineIds.length+" online ›";
+  const h=$("honl");if(h){h.classList.toggle("hide",!show);if(show)h.textContent="🟢 "+onlineIds.length}
+  if(gearOpen&&gearView==="online")renderGear();
 }
 
 /* ---------- statystyki dla administratora ---------- */
 let statsData=null,statsErr="",seenAt=0,seenFor="";
 async function loadStats(){
-  statsData=null;statsErr="";renderGear();
+  statsData=null;statsErr="";renderGear();loadTgLinks();
   try{
     const r=await sb.rpc("admin_stats");
     if(r.error)statsErr=(r.error.code==="PGRST202"||/admin_stats/.test(r.error.message||""))?"Statystyki nie są jeszcze włączone w bazie (brak funkcji admin_stats — KROK 9).":"Nie udało się pobrać: "+r.error.message;
@@ -3490,6 +3530,7 @@ function adminStatsHtml(){
    +'<h3>Konta</h3><div class="stats">'+t(d.accounts,"założone konta")+t(d.profiles,"z nickiem")+'</div>'
    +(Object.keys(joinedAt).length?'<h3>Nowi (z nickiem)</h3><div class="stats">'+t(Object.values(joinedAt).filter(x=>Date.now()-new Date(x)<7*864e5).length,"ostatnie 7 dni")+t(Object.values(joinedAt).filter(x=>Date.now()-new Date(x)<30*864e5).length,"ostatnie 30 dni")+'</div>':'')
    +'<h3>Aktywność</h3><div class="stats">'+t(onlineIds.length,"teraz online")+t(d.active7,"aktywni 7 dni")+t(d.active30,"aktywni 30 dni")+'</div>'
+   +(tgLinks?'<h3>Telegram</h3><div class="stats">'+t(tgLinks.size,"połączony bot")+t(Math.max(0,(d.profiles||0)-tgLinks.size),"bez bota")+'</div>':'')
    +'<h3>Płeć</h3><div class="stats">'+t(d.women,"👩 kobiety")+t(d.men,"👨 mężczyźni")+(d.nogender?t(d.nogender,"bez płci"):"")+'</div>'
    +'<p class="note">Aktywny = otworzył aplikację zalogowany w danym okresie.'+(since?' Aktywność zapisywana od '+esc(since)+'.':'')+' Konta bez nicku liczą się tylko w „założone konta”.</p>'
    +'<button class="b sbtn g" data-c="stats">↻ Odśwież</button></div>';
