@@ -3536,8 +3536,8 @@ async function renderRbDetail(){
   rbPts=pts;
   const an=analyze(rb.rev?pts.slice().reverse():pts,0,0,20,false);$("stats4").innerHTML=statsHtml(an);
   rbMap=makeMap("map4");
-  if(rbMap)setTimeout(()=>{if(rbMap&&tok===rbTok){rbMap.m.invalidateSize();drawRoute(rbMap,rb.rev?pts.slice().reverse():pts,null,true);rbTowns(tok);rbOsmShow(tok);pwUpdate()}},60);
-  else{$("map4").outerHTML='<div class="note">Nie udało się załadować mapy (sprawdź internet).</div>';rbTowns(tok);rbOsmShow(tok);pwUpdate()}
+  if(rbMap)setTimeout(()=>{if(rbMap&&tok===rbTok){rbMap.m.invalidateSize();drawRoute(rbMap,rb.rev?pts.slice().reverse():pts,null,true);rbTowns(tok);rbOsmShow(tok);pwHrsCenter();pwUpdate()}},60);
+  else{$("map4").outerHTML='<div class="note">Nie udało się załadować mapy (sprawdź internet).</div>';rbTowns(tok);rbOsmShow(tok);pwHrsCenter();pwUpdate()}
 }
 /* ---------- 🌦 Przed jazdą (baza tras, etap 3): dzień i godzina → pogoda w czasie jazdy, wiatr, kierunek, co zabrać ---------- */
 const WMO=c=>c==null?"":uiIcon(c===0?"sun":c<=2?"cloudsun":c===3?"cloud":c<=48?"fog":c<=57?"drizzle":c<=67?"rain":c<=77?"cloudsnow":c<=82?"rain":c<=86?"cloudsnow":"storm");
@@ -3545,7 +3545,9 @@ const WMO_T=c=>c==null?"":c===0?"bezchmurnie":c<=2?"małe zachmurzenie":c===3?"p
 // przycisk „Zaproś na tę trasę” z terminem wybranym w „Przed jazdą”
 function rbInvLbl(){const d=pwWhen(),n=dayDiff(d),dn=d.toLocaleDateString("pl-PL",{weekday:"long"});
   return (rb.mode==="pick"?uiIcon("check")+' Wybierz tę trasę':uiIcon("bike")+' Zaproś na tę trasę')+'<small class="rbinvt">'+esc((n===0?"Dziś":n===1?"Jutro ("+dn+")":dn.charAt(0).toUpperCase()+dn.slice(1)+" "+d.getDate()+"."+pad(d.getMonth()+1))+" · "+hhmm(d))+'</small>'}
-function pwDefault(){const d=new Date();let h=d.getHours()+1;if(h>21)return {day:1,h:17};return {day:0,h:Math.max(h,6)}}
+function pwDefault(){const h=new Date().getHours()+1;return h>23?{day:1,h:0}:{day:0,h}}
+// pasek godzin: wybrana godzina na środku (bez przewijania strony)
+function pwHrsCenter(){const h=$("pwhrs"),on=h&&h.querySelector(".on");if(!on)return;h.scrollLeft+=on.getBoundingClientRect().left-h.getBoundingClientRect().left-(h.clientWidth-on.offsetWidth)/2}
 function pwWhen(){const v=rb.pw||(rb.pw=pwDefault()),d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()+v.day);d.setHours(v.h,v.m||0,0,0);return d}
 // tryb „Wybierz trasę” z formularza: pogoda startuje od dnia i godziny ustawionych w zaproszeniu
 function pwFromForm(){const d=wfDate();if(!d||d.getTime()<=Date.now())return null;const n=dayDiff(d);if(n<0||n>6)return null;return {day:n,h:d.getHours(),m:d.getMinutes()}}
@@ -3553,7 +3555,7 @@ function pwSelHtml(){
   const v=rb.pw||(rb.pw=pwDefault()),now=new Date(),dn=["nd","pn","wt","śr","cz","pt","sb"];
   let days='';for(let i=0;i<7;i++){const d=new Date(now);d.setDate(d.getDate()+i);
     days+='<button type="button" class="fch'+(v.day===i?' on':'')+'" data-rbpd="'+i+'">'+(i===0?'Dziś':i===1?'Jutro':dn[d.getDay()]+' '+d.getDate())+'</button>'}
-  let hrs='';for(let h=5;h<=22;h++){const past=v.day===0&&h<=now.getHours()-1;
+  let hrs='';for(let h=0;h<=23;h++){const past=v.day===0&&h<=now.getHours()-1;
     if(!past)hrs+='<button type="button" class="fch'+(v.h===h?' on':'')+'" data-rbph="'+h+'">'+h+':00</button>'}
   return '<div class="fchips pwrow">'+days+'</div><div class="fchips pwrow" id="pwhrs">'+hrs+'</div>';
 }
@@ -3849,8 +3851,8 @@ $("rbsheet").addEventListener("click",async e=>{
   const o=e.target.closest("[data-rbo]");if(o){rb.open=o.dataset.rbo;rb.rev=false;rb.pw=rb.mode==="pick"?pwFromForm():null;renderRb();return}
   const pk=e.target.closest("[data-pwit]");if(pk){pwPackToggle(pk);return}
   const pd=e.target.closest("[data-rbpd]"),ph=e.target.closest("[data-rbph]");
-  if(pd||ph){const v=rb.pw||(rb.pw=pwDefault());v.ch=1;if(ph)v.m=0;if(pd){v.day=+pd.dataset.rbpd;if(v.day===0&&v.h<=new Date().getHours()-1)v.h=Math.min(22,new Date().getHours()+1)}else v.h=+ph.dataset.rbph;
-    const hs=$("pwhrs"),sl=hs?hs.scrollLeft:0;$("pwsel").innerHTML=pwSelHtml();const ib=$("rbinvbtn");if(ib)ib.innerHTML=rbInvLbl();const h2=$("pwhrs");if(h2){h2.scrollLeft=sl;if(pd){const on=h2.querySelector(".on");if(on)on.scrollIntoView({block:"nearest",inline:"center"})}}pwUpdate();return}
+  if(pd||ph){const v=rb.pw||(rb.pw=pwDefault());v.ch=1;if(ph)v.m=0;if(pd){v.day=+pd.dataset.rbpd;if(v.day===0&&v.h<=new Date().getHours()-1)v.h=Math.min(23,new Date().getHours()+1)}else v.h=+ph.dataset.rbph;
+    const hs=$("pwhrs"),sl=hs?hs.scrollLeft:0;$("pwsel").innerHTML=pwSelHtml();const ib=$("rbinvbtn");if(ib)ib.innerHTML=rbInvLbl();const h2=$("pwhrs");if(h2){h2.scrollLeft=sl;if(pd)pwHrsCenter()}pwUpdate();return}
   const so=e.target.closest("[data-rbs]");if(so){rb.sort=so.dataset.rbs;renderRb();return}
   const bk=e.target.closest("[data-rbb]");if(bk){rb.bike=bk.dataset.rbb;renderRb();return}
   const ab=e.target.closest("[data-rbab]");if(ab&&rb.add){rb.add.bike=ab.dataset.rbab;renderRbAdd();return}
