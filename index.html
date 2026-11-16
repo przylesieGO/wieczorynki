@@ -607,6 +607,26 @@ html[data-theme=dark] .evp-t.soon{background:#4d2a0e;color:#ffb074}@keyframes ev
 .hmrow{display:flex;gap:8px}.hmrow input{flex:1;min-width:0}.hmrow .b{flex:none}
 .hmres{display:block;width:100%;text-align:left;border:0;background:var(--fill);color:var(--ink);border-radius:12px;padding:10px 12px;margin-top:8px;font:inherit;cursor:pointer}
 .hmres b{display:block;font-size:15px}.hmres span{display:block;font-size:12.5px;color:var(--mut);margin-top:2px}
+.ios-row{width:100%;border:0;background:none;color:var(--ink);font:inherit;font-size:16px;text-align:left;cursor:pointer;text-decoration:none}
+.ios-row:active{background:var(--line)}
+.ios-chev{color:var(--mut);opacity:.55;font-size:22px;font-weight:300;line-height:1;flex:none;margin-left:2px}
+.ios-v{color:var(--mut);font-size:15px;white-space:nowrap;display:flex;align-items:center;gap:4px;max-width:42%;overflow:hidden;text-overflow:ellipsis;flex:none}
+.ios-v.ok{color:#34c759;font-weight:600}.ios-v .ui-i{width:16px;height:16px}
+.ios-bdg{background:#ff3b30;color:#fff;border-radius:10px;font-size:12px;font-weight:800;padding:1px 7px;flex:none}
+.ios-out{justify-content:center;color:var(--bad);font-weight:600}
+.gprof{display:flex;align-items:center;gap:14px;width:100%;border:0;background:var(--fill);color:var(--ink);border-radius:16px;padding:14px;margin:40px 0 4px;text-align:left;font:inherit;cursor:pointer}
+.gav{flex:none;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#34c759,#1f9d55);color:#fff;font-size:26px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(31,157,85,.35)}
+.gav.k{background:linear-gradient(135deg,#ff6b9a,#d63a74);box-shadow:0 4px 12px rgba(214,58,116,.35)}
+.gpi{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px}.gpi .ui-i{width:16px;height:16px;vertical-align:-2px}
+.gml{font-size:13.5px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;max-width:100%;white-space:nowrap}.gsz{font-size:12.5px;color:var(--mut)}.gsz .ui-i{width:14px;height:14px}
+.ged{font-size:13.5px;color:var(--acc);font-weight:700;margin-top:2px}
+.rbhero{margin:12px 0 2px;border-radius:20px;padding:16px;color:#fff;background:linear-gradient(140deg,#1f9d55 0%,#0f7a3e 60%,#0b5f30 100%);box-shadow:0 10px 26px rgba(15,122,62,.32);text-align:left}
+.rbhh{font-size:21px;font-weight:800;display:flex;align-items:center;gap:8px;letter-spacing:-.01em}.rbhh .ui-i{width:22px;height:22px;stroke:#fff}
+.rbhp{font-size:13.5px;opacity:.92;line-height:1.4;margin-top:4px}
+.rbhm{display:flex;gap:8px;margin-top:12px}.rbhm button{flex:1;height:64px;border:0;border-radius:12px;background:rgba(255,255,255,.14);position:relative;overflow:hidden;padding:0;cursor:pointer}
+.rbhm svg{position:absolute;inset:0;width:100%;height:100%}.rbhm small{position:absolute;left:5px;bottom:4px;font-size:10.5px;font-weight:800;color:#fff;background:rgba(0,0,0,.35);border-radius:6px;padding:1px 5px}
+.rbhb{display:flex;gap:8px;margin-top:12px}.rbhb button{border:0;border-radius:12px;padding:11px 14px;font:inherit;font-weight:800;font-size:15px;cursor:pointer}
+.rbh1{flex:1;background:#fff;color:#0f7a3e}.rbh2{background:rgba(255,255,255,.18);color:#fff}
 .rbbox .bslist{padding-bottom:18px}
 .rbq{width:100%;margin-bottom:8px}
 .rbchips{margin-top:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.rbchips::-webkit-scrollbar{display:none}.rbchips .fch{flex:none}
@@ -1978,20 +1998,26 @@ function renderGear(){
   else if(gearView==="nick"&&session)body=nickHtml();
   else if(gearView==="del"&&session)body=delHtml();
   else if(gearView==="inst")body=instHtml();
+  // ⚙️ góra w stylu grup iPhone'a + wyróżniona „Baza tras” (wariant B, decyzja właściciela 2026-11-16 15:11)
   else body=session
-    ?testerCardHtml()+'<div class="sname">👤 '+(me.nick?nk(uid):'ustaw nick')+(isAdmin?' 🛡️':'')+'</div><div class="smail">'+esc(session.user.email||"")+(stazTxt(uid)?'<br><span class="staz">'+esc(stazTxt(uid))+'</span>':'')+'</div>'
-     +'<button class="b sbtn g" data-c="nick">✏️ '+(me.nick?'Nick i płeć':'Ustaw nick')+'</button>'
-     +(favOk?'<button class="b sbtn g" data-c="favs">⭐ Ulubieni'+(favs.size?' ('+favs.size+')':'')+'</button>':'')
-     +(tgOn()?(tgLink?'<button class="b sbtn g" data-c="tg">🔔 Telegram: połączony ✅'+betaTag("telegram_dm")+'</button>'
-       :'<button class="b sbtn tgx" data-c="tg">'+uiIcon("send")+' Połącz z Telegramem'+betaTag("telegram_dm")+'<small>Powiadomienia prosto na telefon</small></button>'):'')+tg
-     +(fbOk?'<button class="b sbtn g" data-c="fb">💬 Oceń aplikację / zgłoś błąd'+(fbMineUnread().length?' <span class="fbcnt">'+fbMineUnread().length+'</span>':'')+'</button>':'')
-     +(isAdmin?'<button class="b sbtn g" data-c="admin">🛡️ Administracja'+(fbAdmUnread().length?' <span class="fbcnt">'+fbAdmUnread().length+'</span>':'')+'</button>':'')
-     +'<button class="b sbtn g" data-c="help">❓ Pomoc — co potrafi aplikacja</button>'+instBtnHtml()
+    ?profCardHtml()+rbHeroHtml()+testerCardHtml()
+     +gGrp("Ludzie i okolica",[favOk?gRow("#ffcc00","starf","Ulubieni","Zawsze na górze list",favs.size?'<span class="ios-v">'+favs.size+'</span>':'','data-c="favs"'):"",
+        (evGeoOk&&tabOk(3))||rbOk?gRow("#ff9f0a","pin","Moja miejscowość",rbOk&&!(evGeoOk&&tabOk(3))?"Odległość do tras":"Odległość do imprez i tras",'<span class="ios-v">'+(homeGet()?esc(homeGet().name):'Ustaw')+'</span>','data-home="1"'):""])
+     +gGrp("Powiadomienia",[tgOn()?gRow("#0a84ff","send","Telegram"+betaTag("telegram_dm"),"Powiadomienia prosto na telefon",tgLink?'<span class="ios-v ok">'+uiIcon("check")+'Połączony</span>':'<span class="ios-v">Połącz</span>','data-c="tg"'):"",
+        gRow("#0a84ff","mega","Kanał @PrzylesieGo","Nowe jazdy dla wszystkich","",'href="https://t.me/PrzylesieGo" target="_blank" rel="noopener"',"a")])
+     +gGrp("Pomoc i opinie",[gRow("#30d158","help","Pomoc — co potrafi aplikacja","","",'data-c="help"'),
+        fbOk?gRow("#bf5af2","msg","Oceń aplikację / zgłoś błąd","Błąd, pomysł albo ocena — odpisujemy",fbMineUnread().length?'<span class="ios-bdg">'+fbMineUnread().length+'</span>':'','data-c="fb"'):"",
+        isStandalone()?"":gRow("#636366","phone","Zainstaluj aplikację","Ikona na ekranie telefonu","",'data-c="inst"')])
+     +(isAdmin?gGrp("Administracja",[gRow("#8e8e93","shield","Administracja","Użytkownicy, zgłoszenia, funkcje testowe",fbAdmUnread().length?'<span class="ios-bdg">'+fbAdmUnread().length+'</span>':'','data-c="admin"')]):'')
      +setGroupsHtml(false)
-     +'<button class="b sbtn" style="background:var(--bad);margin-top:20px" data-c="out">Wyloguj</button>'
+     +'<div class="ios-grp" style="margin-top:22px"><button type="button" class="ios-it ios-row ios-out" data-c="out">Wyloguj</button></div>'
      +'<button class="sdanger" data-c="del">Usuń konto…</button>'
-    :'<div class="sname">Przeglądasz jako gość</div><div class="smail">Zaloguj się, żeby zapisywać się na wieczorynki i zgłaszać ochotę na jazdę.</div>'
-     +'<button class="b sbtn" data-c="login">Zaloguj się / załóż konto</button>'+tg+'<button class="b sbtn g" data-c="help">❓ Pomoc — co potrafi aplikacja</button>'+instBtnHtml()+setGroupsHtml(true);
+    :'<div class="sname" style="margin-top:28px">Przeglądasz jako gość</div><div class="smail">Zaloguj się, żeby zapraszać na rower i dołączać do jazd.</div>'
+     +'<button class="b sbtn" data-c="login">Zaloguj się / załóż konto</button>'
+     +gGrp("Pomoc",[gRow("#30d158","help","Pomoc — co potrafi aplikacja","","",'data-c="help"'),
+        gRow("#0a84ff","mega","Kanał @PrzylesieGo","Nowe jazdy dla wszystkich","",'href="https://t.me/PrzylesieGo" target="_blank" rel="noopener"',"a"),
+        isStandalone()?"":gRow("#636366","phone","Zainstaluj aplikację","Ikona na ekranie telefonu","",'data-c="inst"')])
+     +setGroupsHtml(true);
   p.innerHTML='<div class="sheetbox"><button class="sclose" data-c="close" aria-label="Zamknij">✕</button>'+body+'</div>';
   const s=$("adminsel");
   if(s&&keepSel&&[...s.options].some(o=>o.value===keepSel))s.value=keepSel;
@@ -2352,6 +2378,26 @@ function setHelpOff(v){helpOff=!!v;try{localStorage.setItem("helpOff",helpOff?"1
 const helpPrefHtml=()=>'<div class="note" style="margin-top:14px">Pokazuj pomoc przy starcie</div><div class="seg">'
   +[["1","Tak"],["0","Nie"]].map(([k,t])=>'<button data-hs="'+k+'" class="'+((helpOff?"0":"1")===k?"on":"")+'">'+t+'</button>').join("")+'</div>';
 let helpMore=false;
+// ⚙️ wiersze-przyciski w grupach (ikonka, nazwa, opis, wartość, ›) — górna część panelu
+function gRow(col,ico,t,sub,right,attrs,tag){tag=tag||"button";
+  return '<'+tag+' '+(tag==="button"?'type="button" ':'')+'class="ios-it ios-row" '+attrs+'><span class="ios-ic" style="background:'+col+'">'+uiIcon(ico)+'</span><span class="ios-t">'+t+(sub?'<small>'+sub+'</small>':'')+'</span>'+(right||'')+'<span class="ios-chev" aria-hidden="true">›</span></'+tag+'>'}
+const gGrp=(h,rows)=>{rows=rows.filter(Boolean);return rows.length?'<div class="ios"><div class="ios-gh">'+h+'</div><div class="ios-grp">'+rows.join("")+'</div></div>':''};
+function profCardHtml(){
+  const n=me.nick||"";
+  return '<button type="button" class="gprof" data-c="nick"><span class="gav'+(genders[uid]==="K"?' k':'')+'" aria-hidden="true">'+esc((n||"?").charAt(0).toUpperCase())+'</span><span class="gpi"><span>'+(n?nk(uid):'<b>Ustaw nick</b>')+(isAdmin?' '+uiIcon("shield"):'')+'</span>'
+   +'<span class="gml">'+esc(session.user.email||"")+'</span>'+(stazTxt(uid)?'<span class="gsz">'+esc(stazTxt(uid))+'</span>':'')+'<span class="ged">'+(n?'Nick i płeć':'Ustaw nick i płeć')+'</span></span><span class="ios-chev" aria-hidden="true">›</span></button>';
+}
+// 🗺️ wyróżniona karta „Baza tras”: ile tras, 3 najpopularniejsze miniatury, „Odkryj trasy”, „+ Dodaj”
+function rbHeroHtml(){
+  if(!rbOk)return "";
+  if(!rbList&&!rbHeroLoading){rbHeroLoading=true;rbLoad().then(()=>{rbHeroLoading=false;if(gearOpen&&gearView==="main")renderGear()},()=>{rbHeroLoading=false})}
+  const L=(rbList||[]).filter(x=>!x.hidden),top=L.slice().sort((a,b)=>rbUses(b)-rbUses(a)||String(b.created_at).localeCompare(String(a.created_at))).slice(0,3);
+  return '<div class="rbhero"><div class="rbhh">'+uiIcon("map")+'Baza tras</div><div class="rbhp">'
+   +(rbList?(L.length?L.length+' '+plf(L.length,["trasa","trasy","tras"])+' od ekipy — wybierz, sprawdź wiatr i zaproś jednym kliknięciem.':'Jeszcze pusto — dodaj pierwszą trasę z pliku GPX, a inni wybiorą ją przy zapraszaniu.'):'Wczytuję trasy…')+'</div>'
+   +(top.length?'<div class="rbhm">'+top.map(x=>'<button type="button" data-rbhero="'+esc(x.id)+'" aria-label="'+esc(x.name)+'">'+rbSvg(x.preview,100,64,true)+'<small>'+String(Math.round(+x.km))+' km'+(rbUses(x)?' · '+rbUses(x)+'×':'')+'</small></button>').join("")+'</div>':'')
+   +'<div class="rbhb"><button type="button" class="rbh1" data-rbopen="1">Odkryj trasy ›</button><button type="button" class="rbh2" data-rbadd="1">+ Dodaj</button></div></div>';
+}
+let rbHeroLoading=false;
 // ⚙️ ustawienia w stylu Ustawień iPhone'a (Apple HIG): grupy, ikonka, przełącznik / mały segment
 function setGroupsHtml(guest){
   const sw=(on,attr,val)=>'<button type="button" class="ios-sw'+(on?' on':'')+'" role="switch" aria-checked="'+on+'" '+attr+'="'+val+'"></button>';
@@ -2363,8 +2409,6 @@ function setGroupsHtml(guest){
      it("#5e5ce6","moon","Motyw",themeMode==="auto"?"Jak w telefonie":"",theme),
      guest?"":it("#0a84ff","user","Nick na górze ekranu","",sw(showNick,"data-sn",showNick?"0":"1")),
      it("#30d158","help","Pomoc przy starcie","",sw(!helpOff,"data-hs",helpOff?"1":"0"))])
-   +(guest||!rbOk?'':grp("Trasy",[it("#30d158","map","Baza tras",rbList?rbList.filter(x=>!x.hidden).length+' '+plf(rbList.filter(x=>!x.hidden).length,["trasa","trasy","tras"])+' — wybierzesz je przy zapraszaniu':'Trasy GPX z zaproszeń — wybierzesz je przy zapraszaniu','<button type="button" class="lnk" data-rbopen="1">Otwórz ›</button>')]))
-   +(guest||!evGeoOk||!tabOk(3)?'':grp("Okolica",[it("#ff9f0a","pin","Moja miejscowość",homeGet()?esc(homeGet().name)+' — od niej liczę odległość do imprez':'Do filtra „📍 W okolicy” w Imprezach','<button type="button" class="lnk" data-home="1">'+(homeGet()?'Zmień':'Ustaw')+' ›</button>')]))
    +(guest?'':grp("Zaproszenia",[reportOk?it("#34c759","bike","Pytaj „Jak poszło?” po jeździe",repOff()?"Wyłączone — możesz ocenić jazdę z karty w 🗄 Archiwum":"Raz po jeździe: km, średnia, ocena (bez testowych)",sw(!repOff(),"data-ro",repOff()?"0":"1")):"",testOk?it("#ff453a","flask","Testowe zaproszenia",hideTest?"Ukryte — widzisz tylko prawdziwe (Twoje zostają)":"Widoczne — wyłącz, żeby widzieć tylko prawdziwe",sw(!hideTest,"data-ht",hideTest?"0":"1")):""]))
    +(guest||!meTester()?'':grp("🧪 Tester",[it("#bf5af2","flask","Funkcje testowe",betaOn?"Widzisz funkcje w budowie (🧪 BETA)":"Wyłączone — widzisz aplikację tak jak wszyscy",sw(betaOn,"data-beta",betaOn?"0":"1"))]))
    +(guest||!canStealth()?'':grp("🛡️ Administrator",[it("#636366","eye","Widoczny online",hideOnline?"Wyłączony: nikt nie widzi Cię w „online”. Ty widzisz wszystkich.":"Inni widzą Cię jako online",sw(!hideOnline,"data-ho",hideOnline?"0":"1"))]))
@@ -3056,14 +3100,15 @@ async function rbRoute(id){
   const r=await sb.from("route_base").select("route").eq("id",id).single();if(r.error)throw r.error;
   const p=r.data&&r.data.route?parseRoute(r.data.route):false;rbRouteCache[id]=p;return p;
 }
-function rbSvg(prev,w,h){
+function rbSvg(prev,w,h,white){
   let P=[];try{P=JSON.parse(prev||"[]")}catch(e){}
   if(P.length<2)return '<svg viewBox="0 0 '+w+' '+h+'"></svg>';
   const la=P.map(p=>p[0]),lo=P.map(p=>p[1]),k=Math.cos((Math.min(...la)+Math.max(...la))/2*Math.PI/180);
   const x0=Math.min(...lo)*k,x1=Math.max(...lo)*k,y0=Math.min(...la),y1=Math.max(...la),pad=9;
   const sc=Math.min((w-2*pad)/((x1-x0)||1e-6),(h-2*pad)/((y1-y0)||1e-6)),ox=(w-(x1-x0)*sc)/2,oy=(h-(y1-y0)*sc)/2;
   const pt=p=>[(ox+(p[1]*k-x0)*sc).toFixed(1),(oy+(y1-p[0])*sc).toFixed(1)],a=pt(P[0]);
-  return '<svg viewBox="0 0 '+w+' '+h+'" aria-hidden="true"><path d="M'+P.map(p=>pt(p).join(' ')).join(' L')+'" fill="none" stroke="#1f9d55" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><circle cx="'+a[0]+'" cy="'+a[1]+'" r="4" fill="#fff" stroke="#1f9d55" stroke-width="2.5"/></svg>';
+  const c=white?"#fff":"#1f9d55";
+  return '<svg viewBox="0 0 '+w+' '+h+'" aria-hidden="true"><path d="M'+P.map(p=>pt(p).join(' ')).join(' L')+'" fill="none" stroke="'+c+'" stroke-width="'+(white?2.6:3)+'" stroke-linejoin="round" stroke-linecap="round"/><circle cx="'+a[0]+'" cy="'+a[1]+'" r="4" fill="'+(white?'#1f9d55':'#fff')+'" stroke="'+c+'" stroke-width="2.5"/></svg>';
 }
 function rbFiltered(){
   const q=lc(rb.q.trim()),s=rb.sort;
@@ -3184,7 +3229,13 @@ function wfRbSync(){
 $("wrbadd").addEventListener("click",e=>{if(e.target.closest("#wrbsw")){wf.rbAdd=!rbAddOn();wfRbSync()}});
 $("wrbadd").addEventListener("input",e=>{if(e.target.id==="wrbname")wf.rbName=e.target.value});
 $("wrbasebtn").addEventListener("click",()=>openRb("pick"));
-document.addEventListener("click",e=>{if(e.target.closest("[data-rbopen]")){gearOpen=false;renderGear();openRb("browse")}});
+document.addEventListener("click",async e=>{
+  if(e.target.closest("[data-rbopen]")){gearOpen=false;renderGear();openRb("browse");return}
+  const h=e.target.closest("[data-rbhero]");
+  if(h){const id=h.dataset.rbhero;gearOpen=false;renderGear();await rbLoad();rb.mode="browse";rb.open=id;renderRb();return}
+  if(e.target.closest("[data-rbadd]")){gearOpen=false;renderGear();show(0);openWantForm(null);
+    if(wRouteOk){try{$("wrfile").click()}catch(err){}say("📚 Wybierz plik GPX — przełącznik „Dodaj do bazy tras” będzie pod spodem.")}}
+});
 $("rbsheet").addEventListener("input",e=>{if(e.target.id==="rbq"){rb.q=e.target.value;const l=$("rblist");if(l)l.innerHTML=rbListHtml()}});
 $("rbsheet").addEventListener("click",async e=>{
   const p=$("rbsheet");if(e.target===p){closeRb();return}
