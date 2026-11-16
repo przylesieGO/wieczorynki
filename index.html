@@ -3567,25 +3567,24 @@ function osmSurf(t){const sf=String(t.surface||"").toLowerCase(),h=t.highway||""
 async function rbOsmCompute(x,pts){
   const L=thin(pts,110).map(p=>p.lat.toFixed(5)+","+p.lon.toFixed(5)).join(","),cum=[0];
   for(let i=1;i<pts.length;i++)cum.push(cum[i-1]+dist(pts[i-1],pts[i]));
-  const total=cum[cum.length-1],P=Math.PI/180,kx=111.32*Math.cos(pts[0].lat*P),ky=110.57,res={v:1,asf:0,szu:0,gru:0,unk:0};
-  // 1) drogi przy śladzie → nawierzchnia odcinków
-  const OP={ms:75000,post:true},errs=[];let J1={elements:[]};
-  try{J1=await overpass('[out:json][timeout:60];way(around:20,'+L+')[highway];out tags geom;',OP);res.srf=1}catch(e){errs.push("nawierzchnia: "+e.message)}
-  const G={},C=0.0012,ck=(a,b)=>Math.floor(a/C)+":"+Math.floor(b/C);
-  (J1.elements||[]).forEach(w=>{const g=w.geometry||[],cl=osmSurf(w.tags||{});for(let i=1;i<g.length;i++){const a=g[i-1],b=g[i],seg={a,b,cl};
-    const la0=Math.min(a.lat,b.lat),la1=Math.max(a.lat,b.lat),lo0=Math.min(a.lon,b.lon),lo1=Math.max(a.lon,b.lon);
-    for(let y=Math.floor(la0/C);y<=Math.floor(la1/C);y++)for(let z=Math.floor(lo0/C);z<=Math.floor(lo1/C);z++){(G[y+":"+z]=G[y+":"+z]||[]).push(seg)}}});
-  const segD=(m,s)=>{const ax=(s.a.lon-m.lon)*kx,ay=(s.a.lat-m.lat)*ky,bx=(s.b.lon-m.lon)*kx,by=(s.b.lat-m.lat)*ky,dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy;
-    let t=l?-(ax*dx+ay*dy)/l:0;t=Math.max(0,Math.min(1,t));const px=ax+t*dx,py=ay+t*dy;return Math.sqrt(px*px+py*py)};
-  for(let i=1;i<pts.length;i++){const m={lat:(pts[i-1].lat+pts[i].lat)/2,lon:(pts[i-1].lon+pts[i].lon)/2},y=Math.floor(m.lat/C),z=Math.floor(m.lon/C);
-    let best=0.035,cl="unk";for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)(G[(y+a)+":"+(z+b)]||[]).forEach(sg=>{const d=segD(m,sg);if(d<best){best=d;cl=sg.cl}});
-    res[cl]+=cum[i]-cum[i-1]}
+  const total=cum[cum.length-1],res={v:2,asf:0,szu:0,gru:0,unk:0},OP={ms:75000,post:true},errs=[];
+  // próbki co ~0,4 km (maks. 100) — małe zapytania „w punkcie” zamiast całych dróg z geometrią (te bywały za ciężkie)
+  const n=Math.min(100,Math.max(10,Math.round(total/0.4))),S=[];
+  for(let j=0;j<n;j++){const tk=total*(j+.5)/n;let i=cum.findIndex(c=>c>=tk);if(i<0)i=pts.length-1;S.push(pts[i])}
+  const seg=total/n,ll=p=>p.lat.toFixed(5)+","+p.lon.toFixed(5);
+  // dzieli odpowiedź po znacznikach „make s” (i = numer próbki)
+  const split=J=>{const G=S.map(()=>[]);let cur=-1;(J.elements||[]).forEach(e=>{if(e.type==="s"){cur=+((e.tags||{}).i);return}if(cur>=0&&G[cur])G[cur].push(e)});return G};
+  // 1) nawierzchnia: drogi do 15 m od próbki
+  try{const J1=await overpass('[out:json][timeout:60];'+S.map((p,i)=>'make s i='+i+';out;way(around:15,'+ll(p)+')[highway];out tags;').join(""),OP);
+    const marks=(J1.elements||[]).filter(e=>e.type==="s").length;if(marks<S.length)throw new Error("niepełna odpowiedź");
+    split(J1).forEach(ws=>{const c={};ws.forEach(w=>{const k=osmSurf(w.tags||{});c[k]=(c[k]||0)+1});
+      const k=["gru","szu","asf"].sort((a,b)=>(c[b]||0)-(c[a]||0)).find(k=>c[k])||"unk";res[k]+=seg});
+    res.srf=1}catch(e){errs.push("nawierzchnia: "+e.message)}
   ["asf","szu","gru","unk"].forEach(k=>res[k]=+res[k].toFixed(1));
-  // 2) las — próbki co ~0,5 km (Overpass is_in)
-  try{const n=Math.min(80,Math.max(8,Math.round(total/0.5))),S=[];for(let j=0;j<n;j++){const tk=total*(j+.5)/n;let i=cum.findIndex(c=>c>=tk);if(i<0)i=pts.length-1;S.push(pts[i])}
-    const q='[out:json][timeout:50];'+S.map(p=>'is_in('+p.lat.toFixed(5)+','+p.lon.toFixed(5)+')->.a;(area.a["landuse"="forest"];area.a["natural"="wood"];);make f n=count(areas);out;').join("");
-    const J2=await overpass(q,OP),F=(J2.elements||[]).filter(e=>e.type==="f");
-    if(F.length===S.length)res.las=+(F.filter(e=>+((e.tags||{}).n)>0).length/S.length*total).toFixed(1);else errs.push("las: niepełna odpowiedź")}catch(e){errs.push("las: "+e.message)}
+  // 2) las: czy próbka leży w lesie (obszary landuse=forest / natural=wood)
+  try{const J2=await overpass('[out:json][timeout:60];'+S.map((p,i)=>'make s i='+i+';out;is_in('+ll(p)+')->.a;area.a[~"^(landuse|natural)$"~"^(forest|wood)$"];out ids;').join(""),OP);
+    const marks=(J2.elements||[]).filter(e=>e.type==="s").length;if(marks<S.length)throw new Error("niepełna odpowiedź");
+    res.las=+(split(J2).filter(g=>g.some(e=>e.type==="area")).length*seg).toFixed(1)}catch(e){errs.push("las: "+e.message)}
   // 3) po drodze (≤ 200 m): jedzenie, sklepy, woda, serwis
   let pois=[];
   try{const J3=await overpass('[out:json][timeout:60];(nwr(around:200,'+L+')[amenity~"^(cafe|restaurant|fast_food|ice_cream|pub|bar|biergarten|drinking_water)$"];nwr(around:200,'+L+')[shop~"^(convenience|supermarket|bakery|bicycle)$"];);out center tags;',OP);
@@ -3614,7 +3613,7 @@ function osmBoxHtml(x){
 async function rbOsmShow(tok,force){
   const x=(rbList||[]).find(y=>y.id===rb.open),box=$("osmbox4");if(!x||!box||!rbOsmOk||!rbPts)return;
   const put=h=>{if(tok===rbTok&&$("osmbox4")){$("osmbox4").innerHTML=h;$("osmbox4").classList.remove("hide");const d=$("osmpo");if(d)d.addEventListener("toggle",()=>osmMarkers(d.open))}};
-  if(x.osm&&!force){put(osmBoxHtml(x));return}
+  if(x.osm&&!force&&!((x.osm.v||1)<2&&(isAdmin||x.created_by===uid))){put(osmBoxHtml(x));return}
   if(rbOsmBusy[x.id])return;rbOsmBusy[x.id]=true;
   put('<b>'+uiIcon("road")+' Nawierzchnia i otoczenie</b><div class="note">Analizuję trasę w OpenStreetMap — nawierzchnia, las, kawiarnie i sklepy po drodze… (do 2–3 minut, tylko raz dla każdej trasy; możesz w tym czasie przeglądać dalej)</div>');
   try{const r=await rbOsmCompute(x,rbPts);
