@@ -202,6 +202,7 @@ details.wday .want{margin:0 10px 10px}
 .wsubc{font-size:14px;color:var(--mut);margin:4px 0 0;line-height:1.35}.wsubc a{color:var(--acc);font-weight:600;text-decoration:none;border-bottom:1px solid currentColor}
 .rbwrap{position:relative;width:164px;margin:14px auto 4px}.rbwrap .roundbtn{margin:0}
 .rbadge{position:absolute;top:6px;right:-14px;background:#fff;color:#248a3d;border-radius:999px;font-size:13px;font-weight:800;padding:3px 9px;box-shadow:0 2px 6px rgba(0,0,0,.2);white-space:nowrap}
+.rbaddprev{display:flex;justify-content:center;background:var(--fill);border-radius:14px;padding:10px;margin-top:4px}.rbaddprev svg{max-width:100%;height:auto}
 .wbike{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .wbk{display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 2px 8px;border-radius:12px;border:1.5px solid transparent;background:var(--fill);color:var(--ink);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
 .wbk .ui-i{width:22px;height:22px;color:var(--mut)}.wbk.on{background:var(--acc2);border-color:var(--acc);color:var(--acc)}.wbk.on .ui-i{color:var(--acc)}
@@ -3393,9 +3394,29 @@ function rbListHtml(){
    :'<div class="rbempty">'+(rbList.length?'Nic nie pasuje do filtrów.':'📚 Baza jest jeszcze pusta.<span class="note">Trasy trafiają tu z zaproszeń z plikiem GPX — przełącznik „📚 Dodaj do bazy tras” w formularzu — albo z karty zaproszenia: „📚 Do bazy tras”.</span>')+'</div>';
 }
 function rbCloseMap(){if(rbMap){try{rbMap.m.remove()}catch(e){}rbMap=null}rbTok++}
-function openRb(mode){rb.mode=mode||"browse";rb.open=null;renderRb();rbLoad(true).then(()=>{if(!$("rbsheet").classList.contains("hide")&&!rb.open)renderRb()})}
-function closeRb(){rbCloseMap();const p=$("rbsheet");p.classList.add("hide");p.innerHTML=""}
+function openRb(mode){rb.mode=mode||"browse";rb.open=null;rb.add=null;renderRb();rbLoad(true).then(()=>{if(!$("rbsheet").classList.contains("hide")&&!rb.open)renderRb()})}
+function closeRb(){rb.add=null;rbCloseMap();const p=$("rbsheet");p.classList.add("hide");p.innerHTML=""}
+// ＋ dodawanie trasy z pliku GPX bez zaproszenia — tylko administratorzy (decyzja właściciela 18:51; użytkownicy dodają przez zaproszenie)
+function rbAddStart(){if(!isAdmin)return;let f=$("rbfile");if(!f){f=document.createElement("input");f.type="file";f.id="rbfile";f.accept=".gpx,application/gpx+xml,text/xml";f.className="hide";document.body.appendChild(f);
+    f.addEventListener("change",async()=>{const x=f.files&&f.files[0];f.value="";if(!x)return;const pts=parseGpx(await x.text());
+      if(pts.length<2){say("Nie znaleziono punktów trasy w pliku GPX.");return}
+      const t=thin(pts,500);rb.add={pts:t,name:x.name.replace(/\.gpx$/i,"").replace(/[_-]+/g," ").trim().slice(0,60),bike:"",busy:false};rb.open=null;
+      if($("rbsheet").classList.contains("hide"))rb.mode="browse";renderRb()})}
+  f.click()}
+function renderRbAdd(){
+  const a=rb.add,p=$("rbsheet"),km=routeKm(a.pts),an=analyze(a.pts,0,0,20,false);
+  p.innerHTML='<div class="bsbox rbbox" role="dialog" aria-modal="true" aria-label="Dodaj trasę"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-rb="addx">Anuluj</button><b>＋ Dodaj trasę</b><button type="button" class="lnk" data-rb="addsave" style="min-width:64px;text-align:right"'+(a.busy?' disabled':'')+'>Zapisz</button></div><div class="bslist">'
+   +'<div class="rbaddprev">'+rbSvg(rbPreview(a.pts),320,160)+'</div>'
+   +'<div class="stats">'+[["Dystans",kmTxt(km)+" km"],["Przewyższenie",Math.round(an.gain)+" m"],["Czas (ok. 20 km/h)",Math.floor(an.tsec/3600)+" h "+pad(Math.round(an.tsec/60)%60)+" min"]].map(([x,y])=>'<div class="st"><b>'+y+'</b><span>'+x+'</span></div>').join("")+'</div>'
+   +'<div class="bsgrp" style="margin-top:14px">Nazwa trasy</div><input id="rbaddname" maxlength="60" value="'+esc(a.name)+'" placeholder="np. Pętla przez Puszczę Białą">'
+   +'<div class="bsgrp" style="margin-top:14px">Rower / teren</div><div class="wbike">'+WBIKE.map(([v,k,t])=>'<button type="button" class="wbk'+(a.bike===v?' on':'')+'" data-rbab="'+v+'">'+uiIcon(k)+'<span>'+t+'</span></button>').join("")+'</div>'
+   +'<p class="note" style="margin-top:12px">'+uiIcon("shield")+' Dodajesz jako administrator — trasa od razu trafi do bazy dla wszystkich. Ta sama trasa (start, meta i ślad) zostanie połączona z istniejącą.</p>'
+   +'<button type="button" class="b big" style="margin-top:8px;width:100%" data-rb="addsave"'+(a.busy?' disabled':'')+'>'+(a.busy?'Zapisuję…':'Dodaj do bazy tras')+'</button>'
+   +'</div></div>';
+  p.classList.remove("hide");
+}
 function renderRb(){
+  if(rb.add){renderRbAdd();return}
   if(rb.open&&rb.rate){renderRbRate();return}
   if(rb.open){renderRbDetail();return}
   rbCloseMap();
@@ -3405,7 +3426,8 @@ function renderRb(){
    +'<div class="fchips rbchips">'+RB_SORTS.filter(x=>x[0]!=="near"||originGet()).map(([k,t])=>'<button type="button" class="fch'+(rb.sort===k?' on':'')+'" data-rbs="'+k+'">'+t+'</button>').join("")+'</div>'
    +'<div class="fchips rbchips">'+[["","🚲 Każdy"]].concat(Object.entries(BIKES)).map(([k,t])=>'<button type="button" class="fch'+(rb.bike===k?' on':'')+'" data-rbb="'+k+'">'+t+'</button>').join("")+'</div>'
    +'<div id="rblist">'+rbListHtml()+'</div>'
-   +(rb.mode==="browse"?'<div class="note" style="margin-top:12px;text-align:center">Trasę dodasz w formularzu zaproszenia (plik GPX → „📚 Dodaj do bazy tras”).</div>':'')
+   +(rb.mode==="browse"?(isAdmin?'<button type="button" class="b g" style="margin-top:12px;width:100%" data-rb="add">'+uiIcon("plus")+' Dodaj trasę z pliku GPX</button>':'')
+     +'<div class="note" style="margin-top:12px;text-align:center">Trasę dodasz w formularzu zaproszenia (plik GPX → „📚 Dodaj do bazy tras”)'+(isAdmin?' — albo, jako administrator, przyciskiem powyżej':'')+'.</div>':'')
    +'</div></div>';
   p.classList.remove("hide");const nl=p.querySelector(".bslist");if(nl)nl.scrollTop=st;
 }
@@ -3654,10 +3676,11 @@ document.addEventListener("click",async e=>{
   if(e.target.closest("[data-rbopen]")){gearOpen=false;renderGear();openRb("browse");return}
   const h=e.target.closest("[data-rbhero]");
   if(h){const id=h.dataset.rbhero;gearOpen=false;renderGear();await rbLoad();rb.mode="browse";rb.open=id;renderRb();return}
+  if(e.target.closest("[data-rbadd]")&&isAdmin){gearOpen=false;renderGear();rb.mode="browse";rb.add=null;rbAddStart();return}
   if(e.target.closest("[data-rbadd]")){gearOpen=false;renderGear();show(0);openWantForm(null);
     if(wRouteOk){try{$("wrfile").click()}catch(err){}say("📚 Wybierz plik GPX — przełącznik „Dodaj do bazy tras” będzie pod spodem.")}}
 });
-$("rbsheet").addEventListener("input",e=>{if(e.target.id==="rbq"){rb.q=e.target.value;const l=$("rblist");if(l)l.innerHTML=rbListHtml()}
+$("rbsheet").addEventListener("input",e=>{if(e.target.id==="rbaddname"&&rb.add)rb.add.name=e.target.value;if(e.target.id==="rbq"){rb.q=e.target.value;const l=$("rblist");if(l)l.innerHTML=rbListHtml()}
   if(e.target.id==="rvcom"&&rb.rv)rb.rv.comment=e.target.value});
 $("rbsheet").addEventListener("click",async e=>{
   const p=$("rbsheet");if(e.target===p){closeRb();return}
@@ -3669,7 +3692,15 @@ $("rbsheet").addEventListener("click",async e=>{
     const hs=$("pwhrs"),sl=hs?hs.scrollLeft:0;$("pwsel").innerHTML=pwSelHtml();const h2=$("pwhrs");if(h2){h2.scrollLeft=sl;if(pd){const on=h2.querySelector(".on");if(on)on.scrollIntoView({block:"nearest",inline:"center"})}}pwUpdate();return}
   const so=e.target.closest("[data-rbs]");if(so){rb.sort=so.dataset.rbs;renderRb();return}
   const bk=e.target.closest("[data-rbb]");if(bk){rb.bike=bk.dataset.rbb;renderRb();return}
+  const ab=e.target.closest("[data-rbab]");if(ab&&rb.add){rb.add.bike=ab.dataset.rbab;renderRbAdd();return}
   const b=e.target.closest("[data-rb]");if(!b)return;const k=b.dataset.rb;
+  if(k==="add"){rbAddStart();return}
+  if(k==="addx"){rb.add=null;renderRb();return}
+  if(k==="addsave"&&rb.add&&!rb.add.busy){const a=rb.add,n=($("rbaddname")?$("rbaddname").value:a.name).trim();a.name=n;
+    if(n.length<2){say("Nazwa trasy: co najmniej 2 znaki.");return}
+    a.busy=true;renderRbAdd();const r=await rbAddRoute(a.pts,n,{bike:a.bike||null});a.busy=false;
+    if(!r){renderRbAdd();return}
+    rb.add=null;await rbLoad(true);rb.open=r.id;renderRb();if(r.isNew)say("📚 Dodano trasę do bazy: "+n);return}
   if(k==="close"){closeRb();return}
   if(k==="back"){if(rb.rate){rb.rate=false}else rb.open=null;renderRb();return}
   if(k==="rate"){const mine=(rbReviews[rb.open]||[]).find(r=>r.user_id===uid);rb.rv=rvFrom(mine);rb.rate=true;renderRb();return}
