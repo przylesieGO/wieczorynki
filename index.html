@@ -528,6 +528,11 @@ button.onl.off{background:var(--fill);color:var(--mut)}
 .pwh .pww{display:flex;align-items:center;gap:2px;color:var(--mut)}.pwh .pww i{display:inline-block;font-style:normal;font-weight:700;color:var(--acc)}
 .pwh .pwr{color:var(--mut);min-height:15px}.pwh .pwr.hi{color:#0a84ff;font-weight:700}
 .pwleg{font-size:11.5px;margin-top:4px}
+.plds summary{cursor:pointer;font-weight:700;display:flex;align-items:center;gap:6px}.plds .plcnt{background:var(--fill);border-radius:10px;padding:0 8px;font-size:13px;font-weight:600;color:var(--mut)}
+.pllist{margin-top:8px;background:var(--fill);border-radius:12px;overflow:hidden}
+.plit{display:flex;align-items:center;gap:10px;padding:8px 12px;font-size:15px}.plit+.plit{border-top:.5px solid var(--line)}
+.plic{flex:none;width:26px;height:26px;border-radius:50%;background:rgba(122,79,209,.14);color:#7a4fd1;display:flex;align-items:center;justify-content:center}.plic .ui-i{width:15px;height:15px}
+.plnm{flex:1;min-width:0}.plnm small{display:block;font-size:12px;color:var(--mut)}.plkm{flex:none;color:var(--mut);font-variant-numeric:tabular-nums}
 .pwrev{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-top:8px;padding:10px 12px;border-radius:10px;background:rgba(10,132,255,.1);font-size:14.5px}.pwrev .b{flex:none}
 .pwwarn{margin-top:8px;padding:10px 12px;border-radius:10px;background:rgba(255,159,10,.14);font-size:14.5px;display:flex;flex-direction:column;gap:4px}
 .pwpack{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px}.pwpack .bsgrp{margin:0}.pwpc{font-size:13px;color:var(--mut);display:flex;align-items:center;gap:8px}
@@ -1214,14 +1219,16 @@ async function placesAlong(pts,key){
   const seen=new Set(),res=out.filter(p=>{if(seen.has(p.name))return false;seen.add(p.name);return true});
   placeCache[key]=res;return res;
 }
-const PICON={city:"🏙️",town:"🏘️",village:"🏡",suburb:"📍",hamlet:"📍"};
+const PICON={city:"city",town:"city",village:"pin",suburb:"pin",hamlet:"pin"},PTYPE={city:"miasto",town:"miasto",village:"wieś",suburb:"dzielnica",hamlet:"osada"};
 function renderPlaces(boxId,mp,list,err){
   const box=$(boxId);
   if(mp)mp.p.clearLayers();
   if(err){box.innerHTML='<b>Miejscowości na trasie</b><div class="note">Nie udało się pobrać danych z OpenStreetMap. Spróbuj za chwilę.</div>';box.classList.remove("hide");return}
   if(!list.length){box.classList.add("hide");return}
   const kmt=k=>k<10?k.toFixed(1):String(Math.round(k));
-  box.innerHTML='<details><summary>📍 Miejscowości na trasie ('+list.length+')</summary><div style="margin-top:8px">'+list.map(p=>'<span style="white-space:nowrap">'+(PICON[p.type]||"📍")+' '+esc(p.name)+' <span class="note">'+kmt(p.km)+' km</span></span>').join(' → ')+'</div><div class="note" style="margin-top:6px">Odległości od startu wzdłuż trasy. Dane: OpenStreetMap.</div></details>';
+  box.innerHTML='<details class="plds"><summary>'+uiIcon("pin")+' Miejscowości na trasie <span class="plcnt">'+list.length+'</span></summary><div class="pllist">'
+    +list.map(p=>'<div class="plit"><span class="plic">'+uiIcon(PICON[p.type]||"pin")+'</span><span class="plnm">'+esc(p.name)+'<small>'+(PTYPE[p.type]||"")+'</small></span><span class="plkm">'+kmt(p.km)+' km</span></div>').join("")
+    +'</div><div class="note" style="margin-top:6px">Kilometr od startu wzdłuż trasy · rozwinięta lista pokazuje punkty na mapie · dane: OpenStreetMap.</div></details>';
   box.classList.remove("hide");
   const d=box.querySelector("details");
   d.addEventListener("toggle",()=>{
@@ -3224,7 +3231,7 @@ async function renderRbDetail(){
   p.innerHTML='<div class="bsbox rbbox" role="dialog" aria-modal="true" aria-label="Trasa"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-rb="back">‹ Trasy</button><b class="rbtitle">'+esc(x.name)+'</b><span style="min-width:64px"></span></div><div class="bslist">'
    +'<div class="mapwrap"><div class="map rsmap" id="map4"></div><div class="warrow hide" id="warrow4"></div></div>'
    +'<div class="legend"><span><i class="dot" style="background:#d64545"></i>pod wiatr</span><span><i class="dot" style="background:#e0b83a"></i>bocznie</span><span><i class="dot" style="background:#2a9d5c"></i>z wiatrem</span></div>'
-   +'<div class="stats" id="stats4"></div><div class="note" id="windinfo4" style="margin-top:8px">Ładuję trasę…</div>'
+   +'<div class="stats" id="stats4"></div><div class="note" id="windinfo4" style="margin-top:8px">Ładuję trasę…</div><div class="routeinfo hide" id="placesbox4"></div>'
    +'<div class="pwbox"><div class="bsgrp" style="margin-top:14px">🌦 Przed jazdą</div><div id="pwsel">'+pwSelHtml()+'</div><div id="pw4"></div></div>'
    +'<div class="rbinfo">'+[(x.start_city||k!=null)?'📍 start: '+(x.start_city?esc(x.start_city):'—')+(k!=null?' · '+nearKm(k)+' km od Ciebie':''):'',x.bike&&BIKES[x.bike]?BIKES[x.bike]:'',
       '🔁 wybrana '+(u.uses||0)+'×'+(u.planned?' · zaplanowana '+u.planned+'×':'')+(u.last?' · ostatnio '+esc(dd(u.last)):''),
@@ -3243,8 +3250,8 @@ async function renderRbDetail(){
   rbPts=pts;
   const an=analyze(rb.rev?pts.slice().reverse():pts,0,0,20,false);$("stats4").innerHTML=statsHtml(an);
   rbMap=makeMap("map4");
-  if(rbMap)setTimeout(()=>{if(rbMap&&tok===rbTok){rbMap.m.invalidateSize();drawRoute(rbMap,rb.rev?pts.slice().reverse():pts,null,true);pwUpdate()}},60);
-  else{$("map4").outerHTML='<div class="note">Nie udało się załadować mapy (sprawdź internet).</div>';pwUpdate()}
+  if(rbMap)setTimeout(()=>{if(rbMap&&tok===rbTok){rbMap.m.invalidateSize();drawRoute(rbMap,rb.rev?pts.slice().reverse():pts,null,true);rbTowns(tok);pwUpdate()}},60);
+  else{$("map4").outerHTML='<div class="note">Nie udało się załadować mapy (sprawdź internet).</div>';rbTowns(tok);pwUpdate()}
 }
 /* ---------- 🌦 Przed jazdą (baza tras, etap 3): dzień i godzina → pogoda w czasie jazdy, wiatr, kierunek, co zabrać ---------- */
 const WMO=c=>c==null?"":uiIcon(c===0?"sun":c<=2?"cloudsun":c===3?"cloud":c<=48?"fog":c<=57?"drizzle":c<=67?"rain":c<=77?"cloudsnow":c<=82?"rain":c<=86?"cloudsnow":"storm");
@@ -3301,6 +3308,11 @@ function pwPackRefresh(){
   const c=box.querySelectorAll(".pwit.on").length,n=pwPackCur.n;
   const ce=$("pwcnt");if(ce)ce.innerHTML=pwPackCnt(c,n);const bi=$("pwbari");if(bi)bi.style.width=(n?Math.round(c/n*100):0)+"%";
   const cl=$("pwclr");if(cl)cl.classList.toggle("hide",!c);
+}
+function rbTowns(tok){
+  const x=(rbList||[]).find(y=>y.id===rb.open);if(!x||!rbPts)return;
+  const pts=rb.rev?rbPts.slice().reverse():rbPts;
+  placesAlong(pts,"rb"+x.id+(rb.rev?":r":"")).then(l=>{if(tok===rbTok&&$("placesbox4"))renderPlaces("placesbox4",rbMap,l)}).catch(()=>{if(tok===rbTok&&$("placesbox4"))renderPlaces("placesbox4",null,[],true)});
 }
 async function pwUpdate(){
   const tok=rbTok,el=$("pw4"),pts0=rbPts;if(!el||!pts0)return;
@@ -3483,7 +3495,7 @@ $("rbsheet").addEventListener("click",async e=>{
     await Promise.all([rbLoad(true),rbLoadReviews(rb.open)]);renderRb();say("Usunięto ocenę.");return}
   const x=(rbList||[]).find(y=>y.id===rb.open);if(!x)return;
   if(k==="pwclr"){if(pwPackCur){const o=pwPackGet();delete o[pwPackCur.key];pwPackSet(o);document.querySelectorAll(".pwit.on").forEach(x=>{x.classList.remove("on");x.setAttribute("aria-pressed","false")});pwPackRefresh()}return}
-  if(k==="rev"){rb.rev=!rb.rev;if(rbMap&&rbPts)drawRoute(rbMap,rb.rev?rbPts.slice().reverse():rbPts,null,false);pwUpdate();return}
+  if(k==="rev"){rb.rev=!rb.rev;if(rbMap&&rbPts)drawRoute(rbMap,rb.rev?rbPts.slice().reverse():rbPts,null,false);rbTowns(rbTok);pwUpdate();return}
   if(k==="pick"||k==="invite"){let pts;try{pts=await rbRoute(x.id)}catch(err){pts=null}if(!pts){say("Nie udało się wczytać trasy.");return}
     if(rb.rev)pts=pts.slice().reverse();
     closeRb();if(k==="invite"){show(0);openWantForm(null)}rbApplyToForm(x,pts);say("📚 Trasa z bazy: "+x.name);return}
