@@ -545,7 +545,11 @@ html[data-theme=dark] .evdt{background:#e5e5ea;color:#1d1d1f}.evdt b{font-size:2
 .evm{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.evn{font-weight:800;font-size:17px;line-height:1.25}.evl{color:var(--mut);font-size:14px}.evch{color:var(--mut);font-size:18px}
 .evps{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}.evp{border-radius:999px;padding:2px 9px;font-size:12.5px;font-weight:800}
 .evp-u{background:var(--acc2);color:var(--acc)}.evp-t{background:#fff3c4;color:#8a5a00}.evp-r{background:#e3eefc;color:#1d4ed8}.evp-x{background:var(--fill);color:var(--mut)}.evp-m{background:var(--accbtn);color:#fff}
-html[data-theme=dark] .evp-t{background:#4a3f12;color:#ffd666}html[data-theme=dark] .evp-r{background:#1e2c45;color:#8fb6ff}
+html[data-theme=dark] .evp-t{background:#4a3f12;color:#ffd666}
+.evp-t{font-size:13.5px;padding:3px 11px}.evp-t.soon{background:#ffe1c2;color:#b34700}.evp-t.now{background:var(--accbtn);color:#fff;animation:evpulse 1.6s ease-in-out infinite}
+html[data-theme=dark] .evp-t.soon{background:#4d2a0e;color:#ffb074}@keyframes evpulse{50%{opacity:.75}}@media (prefers-reduced-motion:reduce){.evp-t.now{animation:none}}
+.evgrip{flex:none;width:26px;height:34px;display:flex;align-items:center;justify-content:center;color:var(--mut);cursor:grab;touch-action:none;border-radius:8px;user-select:none;-webkit-user-select:none}
+.evgrip svg{width:18px;height:18px}.evdr.drag{opacity:.92;background:var(--card);box-shadow:0 6px 18px rgba(0,0,0,.18);border-radius:10px;position:relative;z-index:2}.evdr.drag .evgrip{cursor:grabbing;color:var(--acc)}html[data-theme=dark] .evp-r{background:#1e2c45;color:#8fb6ff}
 .evb{padding:0 12px 12px}.evl2{margin-top:6px;font-size:14.5px;line-height:1.5;word-break:break-word}
 .evd{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}.evd.me .evdl b{color:var(--acc)}
 .evdl{flex:1;min-width:0}.evdl b{display:block;font-size:15.5px}.evdl span{color:var(--mut);font-size:13.5px}.evdn{margin-top:4px;line-height:1.8}
@@ -2512,14 +2516,15 @@ function evReg(e){
     return '<span class="evp evp-r">📝 zapisy do '+esc(new Date(e.reg_until+"T12:00").toLocaleDateString("pl-PL",{day:"numeric",month:"numeric"}))+(n<=14?' (za '+n+' '+plf(n,["dzień","dni","dni"])+')':'')+'</span>'}
   return '<span class="evp evp-r">📝 zapisy trwają</span>';
 }
-function evKmLine(e){const g={};(evDist[e.id]||[]).forEach(d=>{(g[d.bike]=g[d.bike]||[]).push(String(+d.km).replace(".",","))});
-  return Object.keys(EV_BIKE).filter(k=>g[k]).map(k=>EV_BIKE[k][0]+" "+g[k].join(" / ")).join(" · ")+(Object.keys(g).length?" km":"")}
-function evWhen(e){const n=evDays(e);if(n>0)return "⏳ za "+n+" "+plf(n,["dzień","dni","dni"]);if(!evPast(e))return "🚴 trwa";return ""}
+function evKmLine(e){const g={},o=[];(evDist[e.id]||[]).forEach(d=>{if(!g[d.bike]){g[d.bike]=[];o.push(d.bike)}g[d.bike].push(String(+d.km).replace(".",","))});
+  return o.filter(k=>EV_BIKE[k]).map(k=>EV_BIKE[k][0]+" "+g[k].join(" / ")).join(" · ")+(Object.keys(g).length?" km":"")}
+function evWhen(e){const n=evDays(e);if(n>1)return "🏁 start za "+n+" "+plf(n,["dzień","dni","dni"]);if(n===1)return "🏁 start jutro!";if(n===0)return "🏁 start dziś!";if(!evPast(e))return "🚴 trwa";return ""}
+const evWhenCls=e=>{const n=evDays(e);return n<=0?" now":n<=7?" soon":""};
 function evCard(e){
   const P=evPart[e.id]||[],D=evDist[e.id]||[],mine=evMine(e),open=evOpen===e.id,past=evPast(e),d=new Date(e.date_from+"T12:00");
   const head='<button type="button" class="evh" data-ev="tog" data-id="'+esc(e.id)+'"><span class="evdt"><b>'+d.getDate()+'</b><i>'+esc(d.toLocaleDateString("pl-PL",{month:"short"}).replace(".","").toUpperCase())+'</i></span><span class="evm"><span class="evn">'+esc(e.name)+'</span>'
    +'<span class="evl">'+(e.place?'📍 '+esc(e.place)+' · ':'')+esc(evDates(e))+'</span>'+(D.length?'<span class="evl">'+esc(evKmLine(e))+'</span>':'')
-   +'<span class="evps">'+(P.length?'<span class="evp evp-u">👥 '+P.length+' z nas</span>':'')+(evWhen(e)&&!past?'<span class="evp evp-t">'+evWhen(e)+'</span>':'')+evReg(e)+(mine?'<span class="evp evp-m">✓ '+esc(evVerb(((D.find(x=>x.id===mine.distance_id))||{}).bike).toLowerCase())+'</span>':'')+((evLikes[e.id]||[]).length?'<span class="evp evp-l">❤ '+(evLikes[e.id]||[]).length+'</span>':'')+(e.delete_req_at?'<span class="evp evp-x">🗑 prośba o usunięcie</span>':'')+'</span></span><span class="evch">'+(open?'⌃':'⌄')+'</span></button>';
+   +'<span class="evps">'+(evWhen(e)&&!past?'<span class="evp evp-t'+evWhenCls(e)+'">'+evWhen(e)+'</span>':'')+(P.length?'<span class="evp evp-u">👥 '+P.length+' z nas</span>':'')+evReg(e)+(mine?'<span class="evp evp-m">✓ '+esc(evVerb(((D.find(x=>x.id===mine.distance_id))||{}).bike).toLowerCase())+'</span>':'')+((evLikes[e.id]||[]).length?'<span class="evp evp-l">❤ '+(evLikes[e.id]||[]).length+'</span>':'')+(e.delete_req_at?'<span class="evp evp-x">🗑 prośba o usunięcie</span>':'')+'</span></span><span class="evch">'+(open?'⌃':'⌄')+'</span></button>';
   if(!open)return '<div class="ev'+(mine?' mine':'')+(past?' past':'')+'">'+head+'</div>';
   const rows=D.map(x=>{const on=P.filter(p=>p.distance_id===x.id).map(p=>p.user_id),me=mine&&mine.distance_id===x.id;
     return '<div class="evd'+(me?' me':'')+'"><div class="evdl"><b>'+EV_BIKE[x.bike][0]+' '+esc(x.name||EV_BIKE[x.bike][1]+' '+String(+x.km).replace(".",","))+'</b><span>'+EV_BIKE[x.bike][1]+' · '+String(+x.km).replace(".",",")+' km'+(on.length?' · '+on.length+' z nas':'')+'</span>'
@@ -2626,7 +2631,7 @@ function renderEvForm(){
    +'<div id="efsim">'+(sim.length?'<div class="evsim">Już są: '+sim.map(x=>'<b>'+esc(x.name)+'</b> ('+esc(evDates(x))+')').join(", ")+' — sprawdź, czy to nie ta sama.</div>':'')+'</div>'
    +'<div class="evtwo"><div><div class="bsgrp">Od</div><input type="date" id="effrom" value="'+esc(ef.from)+'"></div><div><div class="bsgrp">Do <span class="note">(opcj.)</span></div><input type="date" id="efto" value="'+esc(ef.to)+'"></div></div>'
    +'<div class="bsgrp">Gdzie (start / meta)</div><input id="efplace" maxlength="80" placeholder="np. Pułtusk, Przystań Miejska" value="'+esc(ef.place)+'">'
-   +'<div class="bsgrp">Dystanse (rower + km)</div><div id="efdist">'+efDistHtml()+'</div><button type="button" class="lnk" data-ef="adddist">＋ dodaj dystans</button>'
+   +'<div class="bsgrp">Dystanse (rower + km)'+(ef.dist.length>1?' <span class="note">· przeciągnij ⋮⋮</span>':'')+'</div><div id="efdist">'+efDistHtml()+'</div><button type="button" class="lnk" data-ef="adddist">＋ dodaj dystans</button>'
    +'<div class="bsgrp">Zapisy</div><div class="seg" id="efreg"><button type="button" data-ef="reg" data-v="open" class="'+(ef.reg==="open"?'on':'')+'">📝 Trwają</button><button type="button" data-ef="reg" data-v="closed" class="'+(ef.reg==="closed"?'on':'')+'">🔒 Zakończone</button></div>'
    +(ef.reg==="open"?'<div class="evtwo"><div><div class="bsgrp">Zapisy do <span class="note">(opcj.)</span></div><input type="date" id="efregu" value="'+esc(ef.regUntil)+'"></div><div></div></div>':'')
    +'<div class="bsgrp">Strona imprezy <span class="note">(opcj.)</span></div><input id="efurl" type="url" maxlength="300" placeholder="https://…" value="'+esc(ef.url)+'">'
@@ -2634,7 +2639,8 @@ function renderEvForm(){
    +(ef.id?'':'<div class="bsgrp">Biorę udział</div><select id="efjoin"><option value="">— nie teraz —</option>'+ef.dist.map((d,i)=>'<option value="'+i+'"'+(ef.join===String(i)?' selected':'')+'>'+EV_BIKE[d.bike][0]+' '+esc(d.name||EV_BIKE[d.bike][1])+(d.km?' · '+esc(d.km)+' km':'')+'</option>').join("")+'</select>')
    +'</div><button type="button" class="b big" data-ef="save">'+(ef.id?'Zapisz zmiany':'Dodaj imprezę')+'</button></div>';
 }
-function efDistHtml(){return ef.dist.map((d,i)=>'<div class="evdr"><select data-efd="bike" data-i="'+i+'">'+Object.entries(EV_BIKE).map(([k,v])=>'<option value="'+k+'"'+(d.bike===k?' selected':'')+'>'+v[0]+' '+v[1]+'</option>').join("")+'</select>'
+const GRIP='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>';
+function efDistHtml(){return ef.dist.map((d,i)=>'<div class="evdr" data-i="'+i+'">'+(ef.dist.length>1?'<span class="evgrip" data-i="'+i+'" title="Przeciągnij, by zmienić kolejność" aria-label="Przeciągnij, by zmienić kolejność">'+GRIP+'</span>':'')+'<select data-efd="bike" data-i="'+i+'">'+Object.entries(EV_BIKE).map(([k,v])=>'<option value="'+k+'"'+(d.bike===k?' selected':'')+'>'+v[0]+' '+v[1]+'</option>').join("")+'</select>'
   +'<input data-efd="km" data-i="'+i+'" inputmode="decimal" maxlength="6" placeholder="km" value="'+esc(d.km)+'"><input data-efd="name" data-i="'+i+'" maxlength="40" placeholder="nazwa (opcj.)" value="'+esc(d.name)+'">'
   +(ef.dist.length>1?'<button type="button" class="evdx" data-ef="rmdist" data-i="'+i+'" aria-label="Usuń dystans">✕</button>':'')+'</div>').join("")}
 function efRead(){const v=id=>{const x=$(id);return x?x.value:""};ef.name=v("efname");ef.from=v("effrom");ef.to=v("efto");ef.place=v("efplace");ef.url=v("efurl");ef.note=v("efnote");if($("efregu"))ef.regUntil=v("efregu");if($("efjoin"))ef.join=v("efjoin")}
@@ -2644,6 +2650,18 @@ $("evsheet").addEventListener("input",e=>{if(!ef)return;const t=e.target;
   if(t.id==="efname"){ef.name=t.value;const sim=ef.name.trim().length>=3?evs.filter(x=>x.id!==ef.id&&lc(x.name).includes(lc(ef.name.trim().slice(0,12)))).slice(0,3):[];
     $("efsim").innerHTML=sim.length?'<div class="evsim">Już są: '+sim.map(x=>'<b>'+esc(x.name)+'</b> ('+esc(evDates(x))+')').join(", ")+' — sprawdź, czy to nie ta sama.</div>':''}});
 $("evsheet").addEventListener("change",e=>{if(!ef)return;const t=e.target;if(t.dataset.efd==="bike"){const d=ef.dist[+t.dataset.i];if(d)d.bike=t.value}});
+// ↕ zmiana kolejności dystansów — przeciąganie uchwytu (mysz i dotyk)
+function efMove(from,to){if(from===to||to<0||to>=ef.dist.length)return;
+  const j=ef.join!==""?ef.dist[+ef.join]:null,[x]=ef.dist.splice(from,1);ef.dist.splice(to,0,x);
+  if(j)ef.join=String(ef.dist.indexOf(j))}
+$("evsheet").addEventListener("pointerdown",e=>{const g=e.target.closest(".evgrip");if(!g||!ef)return;
+  e.preventDefault();efRead();const box=$("efdist"),row=g.closest(".evdr"),from=+row.dataset.i;let to=from;
+  row.classList.add("drag");try{g.setPointerCapture(e.pointerId)}catch(_){}
+  const y0=e.clientY,mv=ev=>{row.style.transform="translateY("+(ev.clientY-y0)+"px)";
+    const rows=[...box.querySelectorAll(".evdr")].filter(r=>r!==row);to=rows.filter(r=>{const b=r.getBoundingClientRect();return ev.clientY>b.top+b.height/2}).length;
+    rows.forEach((r,k)=>{const shift=(+r.dataset.i<from&&k>=to)?row.offsetHeight+6:(+r.dataset.i>from&&k<to)?-(row.offsetHeight+6):0;r.style.transform=shift?"translateY("+shift+"px)":"";r.style.transition="transform .15s"})},
+  up=()=>{g.removeEventListener("pointermove",mv);g.removeEventListener("pointerup",up);g.removeEventListener("pointercancel",up);efMove(from,to);const L=$("evsheet").querySelector(".bslist"),st=L?L.scrollTop:0;renderEvForm();const L2=$("evsheet").querySelector(".bslist");if(L2)L2.scrollTop=st};
+  g.addEventListener("pointermove",mv);g.addEventListener("pointerup",up);g.addEventListener("pointercancel",up)});
 $("evsheet").addEventListener("click",async e=>{
   if(e.target===$("evsheet")){closeEvForm();return}
   const b=e.target.closest("[data-ef]");if(!b||!ef)return;const k=b.dataset.ef;
