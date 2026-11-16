@@ -491,6 +491,13 @@ input.srch{padding-left:38px!important;background:var(--fill) url("data:image/sv
 .wsqrow{display:flex;align-items:center;gap:10px;margin-top:10px}.wsqrow .bsq{flex:1;min-width:0;margin:0}.wsqrow .lnk{flex:none;font-weight:600;color:var(--bad);white-space:nowrap}
 .bsgrp.gl{display:flex;align-items:center;justify-content:space-between;gap:8px}.bsgrp.gl .lnk{font-size:13px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--acc)}
 .prow.lock{cursor:default}.prow.lock .cbx{opacity:.55}.prow .pjn{font-size:12px;color:var(--acc);font-weight:600}
+.prow.dis{cursor:default;opacity:.6}.prow.dis .pjn{color:var(--mut)}
+#whosheet{z-index:4100}.evacts{flex-wrap:wrap}.evacts .ib{flex:none}.bsmsg{width:100%;margin-top:8px;border:0;border-radius:12px;background:var(--fill);color:var(--ink);font:inherit;font-size:15px;padding:10px 12px;resize:none}
+.ev.nw{border:2px solid #0a84ff}html[data-theme=dark] .ev.nw{border-color:#4da3ff}
+.evp-n{background:#e6f1ff;color:#0a6cd6;display:inline-flex;align-items:center;gap:5px}.evp-n::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+html[data-theme=dark] .evp-n{background:#16304d;color:#7fbcff}
+.evinfo{display:block;margin-top:6px;font-size:13.5px;background:var(--fill);border-radius:10px;padding:6px 9px;color:var(--ink)}
+.evmon.evtop{display:flex;align-items:center;justify-content:space-between;gap:8px}.evmon.evtop .lnk{white-space:nowrap;font-size:13px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--acc)}
 .bslist{flex:1;overflow-y:auto;margin:6px -4px 0;padding:0 4px;-webkit-overflow-scrolling:touch}
 .bsgrp{font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 2px}
 .prow{display:flex;align-items:center;gap:10px;width:100%;padding:8px 2px;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
@@ -3081,6 +3088,51 @@ let evGeoOk=false,evExtraOk=false,evOk=false,evs=[],evDist={},evPart={},evOpen="
 const EV_BIKE={gravel:["🪨","Gravel","Jadę"],road:["🛣","Szosa","Jadę"],mtb:["⛰","MTB","Jadę"],any:["🚲","Dowolny rower","Jadę"],run:["🏃","Bieg","Biegnę"],walk:["🚶","Marsz","Idę"],tri:["🏊","Triathlon","Startuję"],other:["🏅","Inne","Biorę udział"]};
 const evVerb=b=>(EV_BIKE[b]||EV_BIKE.other)[2];
 let evLikes={};
+/* ---------- 🏁 NOWA / ZMIENIONA / ZAPROSZENIE (KROK 54; makieta mak_imprezy_*.png, właściciel 22:33) ----------
+   „przeczytane” w tym urządzeniu (localStorage.evSeen: b = pierwsze uruchomienie, m = otwarte karty);
+   po otwarciu karta zostaje na górze do wyjścia z zakładki (evStick), oznaczenie znika po 14 dniach */
+let evNewOk=false,evInvOk=false,evInv=[],evStick=new Set();
+const EV_WIN=14*864e5;
+function evSeenGet(){try{const o=JSON.parse(localStorage.getItem("evSeen")||"null");if(o&&o.b){o.m=o.m||{};return o}}catch(e){}
+  const o={b:Date.now(),m:{}};try{localStorage.setItem("evSeen",JSON.stringify(o))}catch(e){}return o}
+function evSeenMark(ids){const o=evSeenGet(),t=Date.now();ids.forEach(id=>{o.m[id]=t});for(const k in o.m)if(t-o.m[k]>60*864e5)delete o.m[k];try{localStorage.setItem("evSeen",JSON.stringify(o))}catch(e){}}
+function evState(e){
+  if(!session||evPast(e))return null;
+  const o=evSeenGet(),seen=o.m[e.id]||0,now=Date.now();
+  const inv=evInv.find(x=>x.event_id===e.id&&x.user_id===uid);
+  if(inv){const t=Date.parse(inv.created_at);if(t>seen&&now-t<EV_WIN)return {k:"inv",at:t,by:inv.invited_by,msg:inv.msg}}
+  if(!evNewOk)return null;
+  const c=Date.parse(e.created_at||0)||0,ch=e.changed_at?Date.parse(e.changed_at):0;
+  if(e.created_by!==uid&&c>o.b&&c>seen&&now-c<EV_WIN)return {k:"new",at:c};
+  if(ch&&e.changed_by!==uid&&ch>o.b&&ch>seen&&now-ch<EV_WIN&&ch-c>5*6e4)return {k:"chg",at:ch,what:e.changed_what||[]};
+  return null}
+const evBadge=st=>'<span class="evp evp-n">'+(st.k==="inv"?'ZAPROSZENIE od '+esc(nicks[st.by]||"ktoś"):st.k==="new"?'NOWA':'ZMIENIONA')+'</span>';
+const evInfo=st=>st.k==="inv"&&st.msg?'<span class="evinfo">💬 „'+esc(st.msg)+'”</span>':st.k==="chg"?'<span class="evinfo">✏️ zmieniono'+(st.what.length?': '+esc(st.what.join(", ")):'')+' · '+esc(agoTxt(new Date(st.at).toISOString()))+'</span>':'';
+// kto widzi zakładkę Imprezy (tylko ich można zaprosić) — jak ev_access w bazie
+function evAccess(id){const f=flags.tab_events;if(!f||adminIds.includes(id)||f.state==="all")return true;return f.state==="testers"&&(testerIds.has(id)||supers.has(id))}
+async function evInvite(eid,ids,msg){
+  const m=String(msg||"").trim().slice(0,120)||null,rows=ids.map(u=>({event_id:eid,user_id:u,msg:m}));
+  const r=await sb.from("event_invites").upsert(rows,{onConflict:"event_id,user_id",ignoreDuplicates:true});if(r.error)throw r.error;
+  const t=new Date().toISOString();ids.forEach(u=>{if(!evInv.some(x=>x.event_id===eid&&x.user_id===u))evInv.push({event_id:eid,user_id:u,invited_by:uid,msg:m,created_at:t})})}
+function evGo(id){const e=evs.find(x=>x.id===id);if(!e||!tabOk(3))return;show(3);evOpen=id;
+  if(evState(e)){evSeenMark([id]);evStick.add(id)}if(evPast(e))evArchOpen=true;renderEvents();renderBell();
+  setTimeout(()=>{const c=document.querySelector('#p3 [data-ev="tog"][data-id="'+id+'"]');if(c)c.scrollIntoView({block:"center",behavior:"smooth"})},80)}
+// 🔔 sekcja „Imprezy”: zaproszenia, nowe, zmienione + „przyjął(ęła) Twoje zaproszenie”
+function evBellItems(){
+  if(!session||!evOk||!tabOk(3))return [];
+  const L=[];evs.forEach(e=>{const st=evState(e);if(st)L.push({e,st,at:st.at})});
+  evInv.filter(x=>x.invited_by===uid).forEach(x=>{const e=evs.find(y=>y.id===x.event_id);if(!e||evPast(e))return;
+    const pp=(evPart[e.id]||[]).find(y=>y.user_id===x.user_id),t=pp&&Date.parse(pp.created_at||0);
+    if(!t||t<Date.parse(x.created_at)||Date.now()-t>EV_WIN)return;L.push({e,st:{k:"acc",u:x.user_id},at:t})});
+  return L.sort((a,b)=>b.at-a.at)}
+const evBellSeen=()=>Math.max(+(lsGet("evBell")||0),evSeenGet().b);
+const evBellUn=()=>{const s=evBellSeen();return evBellItems().filter(x=>x.at>s)};
+function evBellRow(x,un){const e=x.e,st=x.st,ago=esc(agoTxt(new Date(x.at).toISOString()));
+  const t=st.k==="inv"?'<b>'+esc(nicks[st.by]||"Ktoś")+'</b> zaprasza Cię: <b>'+esc(e.name)+'</b><div class="w">'+esc(evDates(e))+' · '+ago+'</div>'+(st.msg?'<div class="w">💬 „'+esc(st.msg)+'”</div>':'')
+    :st.k==="new"?'Nowa impreza: <b>'+esc(e.name)+'</b><div class="w">'+esc(evDates(e))+(e.created_by&&nicks[e.created_by]?' · dodał(a) '+esc(nicks[e.created_by]):'')+' · '+ago+'</div>'
+    :st.k==="chg"?'Zmieniona: <b>'+esc(e.name)+'</b><div class="w">'+esc((st.what||[]).join(", ")||"szczegóły")+' · '+ago+'</div>'
+    :'<b>'+esc(nicks[st.u]||"Ktoś")+'</b> '+(genders[st.u]==="K"?'przyjęła':'przyjął')+' Twoje zaproszenie — jedzie: <b>'+esc(e.name)+'</b><div class="w">'+ago+'</div>';
+  return '<div class="nit'+(un?' new':'')+'" data-evb="'+esc(e.id)+'"><div class="ic">'+({inv:"✉️",new:"🏁",chg:"✏️",acc:"✅"}[st.k])+'</div><div class="tx">'+t+'</div>'+(un?'<span class="dot"></span>':'')+'</div>'}
 const todayIso=()=>localIso(new Date()).slice(0,10);
 const evEnd=e=>e.date_to||e.date_from;
 const evPast=e=>evEnd(e)<todayIso();
@@ -3111,18 +3163,22 @@ const elevTxt=n=>Number(n).toLocaleString("pl-PL")+" m";
 function evWhen(e){const n=evDays(e);if(n>1)return "🏁 start za "+n+" "+plf(n,["dzień","dni","dni"]);if(n===1)return "🏁 start jutro!";if(n===0)return "🏁 start dziś!";if(!evPast(e))return "🚴 trwa";return ""}
 const evWhenCls=e=>{const n=evDays(e);return n<=0?" now":n<=7?" soon":""};
 function evCard(e){
-  const P=evPart[e.id]||[],D=evDist[e.id]||[],mine=evMine(e),open=evOpen===e.id,past=evPast(e),d=new Date(e.date_from+"T12:00");
+  const P=evPart[e.id]||[],D=evDist[e.id]||[],mine=evMine(e),open=evOpen===e.id,past=evPast(e),d=new Date(e.date_from+"T12:00"),st=evState(e);
   const head='<button type="button" class="evh" data-ev="tog" data-id="'+esc(e.id)+'"><span class="evdt"><b>'+d.getDate()+'</b><i>'+esc(d.toLocaleDateString("pl-PL",{month:"short"}).replace(".","").toUpperCase())+'</i></span><span class="evm"><span class="evn">'+esc(e.name)+'</span>'
    +'<span class="evl">'+(e.place?'📍 '+esc(e.place)+' · ':'')+esc(evDates(e))+'</span>'+(D.length?'<span class="evl">'+esc(evKmLine(e))+'</span>':'')
-   +'<span class="evps">'+(evKm(e)!=null&&!past?'<span class="evp evp-d">📍 '+(evKm(e)<1?'na miejscu':nearKm(evKm(e))+' km')+'</span>':'')+(evWhen(e)&&!past?'<span class="evp evp-t'+evWhenCls(e)+'">'+evWhen(e)+'</span>':'')+(P.length?'<span class="evp evp-u">👥 '+P.length+' z nas</span>':'')+evReg(e)+(mine?'<span class="evp evp-m">✓ '+esc(evVerb(((D.find(x=>x.id===mine.distance_id))||{}).bike).toLowerCase())+'</span>':'')+((evLikes[e.id]||[]).length?'<span class="evp evp-l">❤ '+(evLikes[e.id]||[]).length+'</span>':'')+(e.delete_req_at?'<span class="evp evp-x">🗑 prośba o usunięcie</span>':'')+'</span></span><span class="evch">'+(open?'⌃':'⌄')+'</span></button>';
-  if(!open)return '<div class="ev'+(mine?' mine':'')+(past?' past':'')+'">'+head+'</div>';
+   +(st?evInfo(st):'')
+   +'<span class="evps">'+(st?evBadge(st):'')+(evKm(e)!=null&&!past?'<span class="evp evp-d">📍 '+(evKm(e)<1?'na miejscu':nearKm(evKm(e))+' km')+'</span>':'')+(evWhen(e)&&!past?'<span class="evp evp-t'+evWhenCls(e)+'">'+evWhen(e)+'</span>':'')+(P.length?'<span class="evp evp-u">👥 '+P.length+' z nas</span>':'')+evReg(e)+(mine?'<span class="evp evp-m">✓ '+esc(evVerb(((D.find(x=>x.id===mine.distance_id))||{}).bike).toLowerCase())+'</span>':'')+((evLikes[e.id]||[]).length?'<span class="evp evp-l">❤ '+(evLikes[e.id]||[]).length+'</span>':'')+(e.delete_req_at?'<span class="evp evp-x">🗑 prośba o usunięcie</span>':'')+'</span></span><span class="evch">'+(open?'⌃':'⌄')+'</span></button>';
+  if(!open)return '<div class="ev'+(mine?' mine':'')+(past?' past':'')+(st?' nw':'')+'">'+head+'</div>';
   const rows=D.map(x=>{const on=P.filter(p=>p.distance_id===x.id).map(p=>p.user_id),me=mine&&mine.distance_id===x.id;
     return '<div class="evd'+(me?' me':'')+'"><div class="evdl"><b>'+EV_BIKE[x.bike][0]+' '+esc(x.name||EV_BIKE[x.bike][1]+' '+String(+x.km).replace(".",","))+'</b><span>'+EV_BIKE[x.bike][1]+' · '+String(+x.km).replace(".",",")+' km'+(on.length?' · '+on.length+' z nas':'')+'</span>'
      +(x.elev!=null||x.limit_min!=null?'<span class="evdx2">'+(x.elev!=null?'<i>📈 '+elevTxt(x.elev)+'</i>':'')+(x.limit_min!=null?'<i>⏱ limit '+limTxt(x.limit_min)+'</i>':'')+'</span>':'')
      +(on.length?'<div class="evdn">'+favFirst(on).map(id=>nk(id)).join(" ")+'</div>':'')+'</div>'
      +(past?'':'<button type="button" class="b '+(me?'g':'')+' evj" data-ev="'+(me?'leave':'join')+'" data-id="'+esc(e.id)+'" data-d="'+esc(x.id)+'">'+(me?'✓ ':'')+esc(evVerb(x.bike))+'</button>')+'</div>'}).join("");
   const noD=P.filter(p=>!p.distance_id||!D.some(x=>x.id===p.distance_id)).map(p=>p.user_id);
-  return '<div class="ev open'+(mine?' mine':'')+(past?' past':'')+'">'+head+'<div class="evb">'
+  const myInv=evInv.find(x=>x.event_id===e.id&&x.user_id===uid),sent=evInv.filter(x=>x.event_id===e.id&&x.invited_by===uid).map(x=>x.user_id).filter(id=>nicks[id]);
+  return '<div class="ev open'+(mine?' mine':'')+(past?' past':'')+(st?' nw':'')+'">'+head+'<div class="evb">'
+   +(myInv?'<div class="evl2">✉️ Zaprasza Cię '+nk(myInv.invited_by)+(myInv.msg?' — „'+esc(myInv.msg)+'”':'')+'</div>':'')
+   +(sent.length?'<div class="evl2">👥 '+(genders[uid]==="K"?'Zaprosiłaś':'Zaprosiłeś')+': '+sent.map(id=>nk(id)+(P.some(p=>p.user_id===id)?' <span class="note">jedzie</span>':'')).join(" ")+'</div>':'')
    +(e.url?'<div class="evl2">🌐 <a href="'+esc(e.url)+'" target="_blank" rel="noopener">'+esc(e.url.replace(/^https?:\/\/(www\.)?/i,"").replace(/\/$/,"").slice(0,48))+'</a></div>':'')
    +(e.note?'<div class="evl2">💬 '+esc(e.note)+'</div>':'')
    +(e.delete_req_at?'<div class="evdel">🗑 '+esc(nicks[e.delete_req_by]||"Autor")+' prosi o usunięcie tej imprezy — decyduje admin.'
@@ -3131,7 +3187,7 @@ function evCard(e){
    +'<div class="bsgrp">Dystanse'+(past?'':' — wybierz i kliknij')+'</div>'+(rows||'<div class="note">Brak dystansów.</div>')
    +(noD.length?'<div class="evl2">👥 Bez dystansu: '+noD.map(id=>nk(id)).join(" ")+'</div>':'')
    +(mine&&!past?'<button type="button" class="lnk evlv" data-ev="leave" data-id="'+esc(e.id)+'">Rezygnuję</button>':'')
-   +'<div class="acts evacts"><button class="ib evlike'+((evLikes[e.id]||[]).includes(uid)?' on':'')+'" data-ev="like" data-id="'+esc(e.id)+'" title="Lubię" aria-label="Lubię">'+ICON.heart+((evLikes[e.id]||[]).length?'<span class="lkn">'+(evLikes[e.id]||[]).length+'</span>':'')+'</button><button class="ib" data-ev="gcal" data-id="'+esc(e.id)+'" title="Google Kalendarz" aria-label="Google Kalendarz">'+ICON.gcal+'</button><button class="ib" data-ev="share" data-id="'+esc(e.id)+'" title="Udostępnij" aria-label="Udostępnij">'+ICON.share+'</button>'
+   +'<div class="acts evacts">'+(evInvOk&&!past?'<button class="ib" data-ev="inv" data-id="'+esc(e.id)+'" title="Zaproś na imprezę" aria-label="Zaproś na imprezę">'+ICON.addp+'</button>':'')+'<button class="ib evlike'+((evLikes[e.id]||[]).includes(uid)?' on':'')+'" data-ev="like" data-id="'+esc(e.id)+'" title="Lubię" aria-label="Lubię">'+ICON.heart+((evLikes[e.id]||[]).length?'<span class="lkn">'+(evLikes[e.id]||[]).length+'</span>':'')+'</button><button class="ib" data-ev="gcal" data-id="'+esc(e.id)+'" title="Google Kalendarz" aria-label="Google Kalendarz">'+ICON.gcal+'</button><button class="ib" data-ev="share" data-id="'+esc(e.id)+'" title="Udostępnij" aria-label="Udostępnij">'+ICON.share+'</button>'
    +'<button class="ib" data-ev="dup" data-id="'+esc(e.id)+'" title="Duplikuj (np. kolejna edycja)" aria-label="Duplikuj">'+ICON.dup+'</button>'
    +(evCanEdit(e)?'<button class="ib" data-ev="edit" data-id="'+esc(e.id)+'" title="Edytuj" aria-label="Edytuj">'+ICON.edit+'</button>'+((isAdmin||!e.delete_req_at)?'<button class="ib del'+(e.created_by===uid&&!isAdmin?'':' adm')+'" data-ev="'+(isAdmin?'del':'delreq')+'" data-id="'+esc(e.id)+'" title="'+(isAdmin?'Usuń':'Poproś o usunięcie')+'" aria-label="Usuń">'+ICON.del+'</button>':''):'')+'</div>'
    +(e.created_by&&nicks[e.created_by]?'<div class="note" style="margin-top:6px">Dodał(a): '+esc(nicks[e.created_by])+'</div>':'')+'</div></div>';
@@ -3227,7 +3283,9 @@ function renderEvents(){
   if(!evOk){box.innerHTML='<div class="note" style="margin-top:12px">Imprezy jeszcze niedostępne (KROK 40 w bazie).</div>';$("evarch").innerHTML="";return}
   const up=evs.filter(e=>!evPast(e)&&evMatch(e)).sort((a,b)=>a.date_from.localeCompare(b.date_from)),past=evs.filter(e=>evPast(e)&&evMatch(e)).sort((a,b)=>b.date_from.localeCompare(a.date_from));
   let m="",h="";
-  up.forEach(e=>{const d=new Date(e.date_from+"T12:00"),k=d.toLocaleDateString("pl-PL",{month:"long",year:"numeric"});if(k!==m){m=k;h+='<div class="evmon">'+esc(k)+'</div>'}h+=evCard(e)});
+  const tops=up.filter(e=>evState(e)||evStick.has(e.id)),topSet=new Set(tops.map(e=>e.id)),nTop=tops.filter(e=>evState(e)).length;
+  if(tops.length)h+='<div class="evmon evtop"><span>Nowe i zmienione'+(nTop?' ('+nTop+')':'')+'</span>'+(nTop?'<button type="button" class="lnk" data-ev="seenall">Oznacz jako przeczytane</button>':'')+'</div>'+tops.map(evCard).join("");
+  up.filter(e=>!topSet.has(e.id)).forEach(e=>{const d=new Date(e.date_from+"T12:00"),k=d.toLocaleDateString("pl-PL",{month:"long",year:"numeric"});if(k!==m){m=k;h+='<div class="evmon">'+esc(k)+'</div>'}h+=evCard(e)});
   const noGeo=evNearOn&&evGeoOk&&originGet()?evs.filter(e=>!evPast(e)&&!evHasGeo(e)).length:0;
   box.innerHTML=(evNearOn&&evGeoOk&&!originGet()?'<div class="note" style="margin-top:12px">Ustaw swoją miejscowość albo użyj lokalizacji, żeby zobaczyć imprezy w okolicy.</div>':
      h||'<div class="note" style="margin-top:12px">'+(evNearOn&&evGeoOk?'Brak imprez w promieniu '+evNearR+' km — zwiększ promień.':evFlt?'Brak imprez dla tego filtra.':'Nie ma jeszcze imprez. Dodaj pierwszą — „＋ Dodaj imprezę”.')+'</div>')
@@ -3257,9 +3315,11 @@ $("p3").addEventListener("click",async e=>{
   if(e.target.closest("#evadd")){openEvForm(null);return}
   const b=e.target.closest("[data-ev]");if(!b)return;
   if(b.dataset.ev==="arch"){evArchOpen=!evArchOpen;renderEvents();return}
+  if(b.dataset.ev==="seenall"){evSeenMark(evs.filter(x=>evState(x)).map(x=>x.id));lsSet("evBell",String(Date.now()));evStick=new Set();renderEvents();renderBell();return}
   const ev=evs.find(x=>x.id===b.dataset.id);if(!ev)return;
   const a=b.dataset.ev;
-  if(a==="tog"){evOpen=evOpen===ev.id?"":ev.id;renderEvents();return}
+  if(a==="tog"){evOpen=evOpen===ev.id?"":ev.id;if(evOpen&&evState(ev)){evSeenMark([ev.id]);evStick.add(ev.id);renderBell()}renderEvents();return}
+  if(a==="inv"){if(!evInvOk){say("Zapraszanie na imprezy wymaga KROKU 54 w bazie.");return}openWho("ev",ev.id);return}
   if(a==="join"){evJoin(ev,b.dataset.d);return}
   if(a==="leave"){if(b.dataset.d&&evMine(ev)&&evMine(ev).distance_id!==b.dataset.d){evJoin(ev,b.dataset.d);return}evLeave(ev);return}
   if(a==="edit"){openEvForm(ev);return}
@@ -3289,7 +3349,7 @@ $("p3").addEventListener("click",async e=>{
 function openEvForm(e,dup){
   ef={geo:e&&evHasGeo(e)?{lat:+e.lat,lon:+e.lon,name:""}:null,geoFor:e&&evHasGeo(e)&&e.place||"",geoAlt:[],geoBusy:false,
     id:e?e.id:null,name:e?e.name:"",from:e?e.date_from:"",to:e&&e.date_to||"",place:e&&e.place||"",url:e&&e.url||"",note:e&&e.note||"",reg:e&&e.reg_closed?"closed":"open",regUntil:e&&e.reg_until||"",
-    dist:e?(evDist[e.id]||[]).map(d=>({id:d.id,bike:d.bike,km:String(+d.km),name:d.name||"",elev:d.elev!=null?String(d.elev):"",lim:limEdit(d.limit_min)})):[{bike:"gravel",km:"",name:"",elev:"",lim:""}],join:"",dup:!!dup};
+    inv:[],invMsg:"",dist:e?(evDist[e.id]||[]).map(d=>({id:d.id,bike:d.bike,km:String(+d.km),name:d.name||"",elev:d.elev!=null?String(d.elev):"",lim:limEdit(d.limit_min)})):[{bike:"gravel",km:"",name:"",elev:"",lim:""}],join:"",dup:!!dup};
   if(dup){
     // kopia jako nowa impreza: gdy minęła — rok w nazwie i daty +1; zapisy od nowa; popraw, co się nie zgadza
     const past=evPast(e),y=d=>{if(!d)return "";const x=new Date(d+"T12:00");x.setFullYear(x.getFullYear()+1);return localIso(x).slice(0,10)};
@@ -3314,6 +3374,7 @@ function renderEvForm(){
    +(ef.reg==="open"?'<div class="evtwo"><div><div class="bsgrp">Zapisy do <span class="note">(opcj.)</span></div><input type="date" id="efregu" value="'+esc(ef.regUntil)+'"></div><div></div></div>':'')
    +'<div class="bsgrp">Strona imprezy <span class="note">(opcj.)</span></div><input id="efurl" type="url" maxlength="300" placeholder="https://…" value="'+esc(ef.url)+'">'
    +'<div class="bsgrp">Krótki komentarz <span class="note">(opcj.)</span></div><textarea id="efnote" maxlength="300" rows="2" placeholder="np. zapisy przez competit.pl, start grupami">'+esc(ef.note)+'</textarea>'
+   +(!ef.id&&evInvOk?'<div class="bsgrp">Zaproś znajomych <span class="note">(opcj.)</span></div><button type="button" class="who'+(ef.inv.length?' priv':'')+'" data-ef="inv"><span class="wic">👥</span><span class="wtx"><b>'+(ef.inv.length?'Wybrane osoby ('+ef.inv.length+')':'Nikogo')+'</b><span>'+esc(ef.inv.length?favFirst(ef.inv).map(id=>nicks[id]).join(", ")+(ef.invMsg?' · „'+ef.invMsg+'”':''):'Dostaną powiadomienie — możesz też zaprosić później z karty imprezy')+'</span></span><span class="war">›</span></button>':'')
    +(ef.id?'':'<div class="bsgrp">Biorę udział</div><select id="efjoin"><option value="">— nie teraz —</option>'+ef.dist.map((d,i)=>'<option value="'+i+'"'+(ef.join===String(i)?' selected':'')+'>'+EV_BIKE[d.bike][0]+' '+esc(d.name||EV_BIKE[d.bike][1])+(d.km?' · '+esc(d.km)+' km':'')+'</option>').join("")+'</select>')
    +'</div><button type="button" class="b big" data-ef="save">'+(ef.id?'Zapisz zmiany':'Dodaj imprezę')+'</button></div>';
 }
@@ -3370,6 +3431,7 @@ $("evsheet").addEventListener("click",async e=>{
   if(k==="reg"){ef.reg=b.dataset.v;renderEvForm();return}
   if(k==="geo"){efGeocode();return}
   if(k==="geopick"){const x=ef.geoAlt[+b.dataset.i];if(x){const old=ef.geo;ef.geo=x;ef.geoAlt=ef.geoAlt.filter(y=>y!==x);if(old)ef.geoAlt.unshift(old);const g=$("efgeo");if(g)g.innerHTML=efGeoHtml()}return}
+  if(k==="inv"){openWho("evf");return}
   if(k==="save")saveEvent();
 });
 async function saveEvent(){
@@ -3396,9 +3458,11 @@ async function saveEvent(){
     for(let i=0;i<D.length;i++){const d=D[i],dr={bike:d.bike,km:+d.k.toFixed(1),name:d.name.trim()||null,sort:i};if(evExtraOk){dr.elev=d.e;dr.limit_min=d.l}
       if(d.id){const r=await sb.from("event_distances").update(dr).eq("id",d.id);if(r.error)throw r.error;ids.push(d.id)}
       else{const r=await sb.from("event_distances").insert(Object.assign({event_id:id},dr)).select("id").single();if(r.error)throw r.error;ids.push(r.data.id)}}
+    const invIds=!ef.id?(ef.inv||[]):[],invMsg=ef.invMsg;let invN=0;
+    if(invIds.length){try{await evInvite(id,invIds,invMsg);invN=invIds.length}catch(err){say("Impreza zapisana, ale nie udało się zaprosić: "+(err&&err.message?err.message:"błąd"))}}
     if(!ef.id&&ef.join!==""){const j=ef.dist[+ef.join],ix=j?D.indexOf(D.find(d=>d===j||(d.bike===j.bike&&d.km===j.km&&d.name===j.name))):-1;
       if(ix>=0)await sb.from("event_participants").insert({event_id:id,distance_id:ids[ix]})}
-    closeEvForm();say(ef===null?"🏁 Zapisano imprezę.":"🏁 Zapisano.");evOpen=id;await loadRemote();show(3);
+    closeEvForm();say("🏁 Zapisano imprezę."+(invN?" Zaproszono "+invN+" "+plf(invN,["osobę","osoby","osób"])+" ✔":""));evOpen=id;await loadRemote();show(3);
   }catch(err){say("Nie udało się zapisać: "+(err&&err.message?err.message:"błąd"))}
 }
 /* ---------- 🗺️ Baza tras — etap 1 (KROK 47; decyzje właściciela 2026-11-16 13:55) ----------
@@ -5013,7 +5077,9 @@ function openWho(mode,wantId){
   if(!session)return;
   if(needProfile()){askNick();return}
   ws.mode=mode;ws.want=wantId||null;ws.q="";
+  ws.msg="";
   if(mode==="form"){ws.vis=wf.vis;ws.pick=new Set(wf.vis==="fav"?favIds():wf.pick);whoLocked().forEach(id=>ws.pick.add(id))}
+  else if(mode==="evf"){ws.vis="pick";ws.pick=new Set(ef&&ef.inv||[]);ws.msg=ef&&ef.invMsg||""}
   else{ws.vis="pick";ws.pick=new Set()}
   renderWho(true);
 }
@@ -5021,13 +5087,20 @@ function closeWho(){const p=$("whosheet");p.classList.add("hide");p.innerHTML=""
 function whoPeople(){
   let ids=Object.keys(nicks).filter(id=>id!==uid&&!modGone(id));
   if(ws.mode==="add"){const w=wants.find(x=>x.id===ws.want),ex=new Set(w?[w.user_id,...invIds(w)]:[]);ids=ids.filter(id=>!ex.has(id))}
+  if(whoEv())ids=ids.filter(evAccess);
   return ids.sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl"));
 }
+const whoEv=()=>ws.mode==="ev"||ws.mode==="evf";
+// 🏁 impreza: kto już jest zaproszony albo jedzie — widoczny, ale nie do wybrania
+function whoDis(){const M=new Map();if(ws.mode!=="ev")return M;
+  (evPart[ws.want]||[]).forEach(p=>M.set(p.user_id,"już jedzie"));
+  evInv.filter(x=>x.event_id===ws.want).forEach(x=>{if(!M.has(x.user_id))M.set(x.user_id,"już zaproszony(a)")});return M}
 // edycja zaproszenia: osoby, które już dołączyły, zostają zaproszone (nie da się ich odznaczyć)
 const whoLocked=()=>new Set(ws.mode==="form"&&wf.editId?(joins[wf.editId]||[]).filter(x=>x!==uid):[]);
-const whoRow=(id,on)=>{const lk=whoLocked().has(id);return '<button type="button" class="prow'+(on||lk?' on':'')+(lk?' lock':'')+'" data-p="'+esc(id)+'"><span class="cbx">'+CHECK+'</span><span class="pnm">'+nk(id)+'</span>'+(lk?'<span class="pjn">dołączył(a)</span>':onlineIds.includes(id)?'<span class="pon">🟢 teraz</span>':'')+'</button>'};
+const whoRow=(id,on)=>{const dn=whoDis().get(id);if(dn)return '<button type="button" class="prow dis" data-p="'+esc(id)+'"><span class="cbx"></span><span class="pnm">'+nk(id)+'</span><span class="pjn">'+esc(dn)+'</span></button>';
+  const lk=whoLocked().has(id);return '<button type="button" class="prow'+(on||lk?' on':'')+(lk?' lock':'')+'" data-p="'+esc(id)+'"><span class="cbx">'+CHECK+'</span><span class="pnm">'+nk(id)+'</span>'+(lk?'<span class="pjn">dołączył(a)</span>':onlineIds.includes(id)?'<span class="pon">🟢 teraz</span>':'')+'</button>'};
 // nagłówek grupy z „Zaznacz wszystkich / Odznacz”
-const whoGrp=(t,ids,g)=>{if(!ids.length)return '';const L=whoLocked(),all=ids.every(id=>ws.pick.has(id)||L.has(id)),free=ids.some(id=>!L.has(id));
+const whoGrp=(t,ids,g)=>{if(!ids.length)return '';const D=whoDis();ids=ids.filter(id=>!D.has(id));if(!ids.length)return '<div class="bsgrp">'+t+'</div>';const L=whoLocked(),all=ids.every(id=>ws.pick.has(id)||L.has(id)),free=ids.some(id=>!L.has(id));
   return '<div class="bsgrp gl"><span>'+t+'</span>'+(free?'<button type="button" class="lnk" data-k="grp" data-g="'+g+'">'+(all?'Odznacz':'Zaznacz wszystkich')+'</button>':'')+'</div>'};
 function whoListHtml(){
   if(ws.vis==="all")return '<div class="bsempty">🌍 Zaproszenie zobaczą wszyscy zalogowani, a wiadomość trafi na kanał Telegram.</div>';
@@ -5036,7 +5109,7 @@ function whoListHtml(){
     if(!favIds().length)return '<div class="bsempty">Nie masz jeszcze ulubionych. Dodasz ich, klikając czyjś nick → „☆ Dodaj do ulubionych”. Możesz też wybrać osoby ręcznie (👥 Wybieram).</div>';
     return '<div class="bsgrp">⭐ Ulubieni — zaproszeni wszyscy</div>'+all.filter(isFav).map(id=>whoRow(id,true)).join("");
   }
-  if(!all.length)return '<div class="bsempty">'+(q?'Nie znaleziono takiego nicku.':ws.mode==="add"?'Wszyscy są już zaproszeni.':'Brak innych osób z nickiem.')+'</div>';
+  if(!all.length)return '<div class="bsempty">'+(q?'Nie znaleziono takiego nicku.':ws.mode==="add"?'Wszyscy są już zaproszeni.':whoEv()?'Nikt inny nie widzi jeszcze zakładki Imprezy (BETA — testerzy).':'Brak innych osób z nickiem.')+'</div>';
   const f=all.filter(isFav),o=all.filter(id=>!isFav(id));
   return (f.length?whoGrp('⭐ Ulubieni',f,'f')+f.map(id=>whoRow(id,ws.pick.has(id))).join(""):'')
    +(o.length?whoGrp(f.length?'Pozostali':'Osoby',o,'o')+o.map(id=>whoRow(id,ws.pick.has(id))).join(""):'');
@@ -5045,12 +5118,15 @@ const whoCount=()=>ws.vis==="all"?0:ws.vis==="fav"?favIds().length:ws.pick.size;
 function renderWho(first){
   const p=$("whosheet");p.classList.remove("hide");
   if(first){
-    const w=ws.mode==="add"?wants.find(x=>x.id===ws.want):null;
-    p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-k="cancel">Anuluj</button><b>'+(ws.mode==="add"?"Zaproś kogoś jeszcze":"Kogo zapraszasz?")+'</b><span style="min-width:64px"></span></div>'
+    const w=ws.mode==="add"?wants.find(x=>x.id===ws.want):null,ev=ws.mode==="ev"?evs.find(x=>x.id===ws.want):null;
+    p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-k="cancel">Anuluj</button><b>'+(ws.mode==="add"?"Zaproś kogoś jeszcze":whoEv()?"Zaproś na imprezę":"Kogo zapraszasz?")+'</b><span style="min-width:64px"></span></div>'
+     +(ev?'<div class="note" style="margin-top:6px;text-align:center;font-size:14px">🏁 '+esc(ev.name)+' · '+esc(evDates(ev))+'</div>':'')
      +(ws.mode==="form"?'<div class="seg" id="wsseg">'+[["all","🌍 Wszyscy"],["fav","⭐ Ulubieni"],["pick","👥 Wybieram"]].map(([k,t])=>'<button type="button" data-v="'+k+'">'+t+'</button>').join("")+'</div>'
        :(w?'<div class="note" style="margin-top:6px;text-align:center;font-size:14px">Zaproszenie: '+esc(wfLabel(new Date(w.starts_at)))+(w.user_id!==uid&&nicks[w.user_id]?' · od '+esc(nicks[w.user_id]):'')+'</div>':''))
      +'<div class="wsqrow" id="wsqrow"><input class="bsq srch" id="wsq" type="search" placeholder="Szukaj nicku…" autocomplete="off"><button type="button" class="lnk hide" data-k="clr" id="wsclr"></button></div>'
-     +'<div class="bslist" id="wslist"></div><div class="bshint" id="wshint"></div>'
+     +'<div class="bslist" id="wslist"></div>'
+     +(whoEv()?'<textarea class="bsmsg" id="wsmsg" maxlength="120" rows="2" placeholder="Wiadomość (opcjonalnie), np. jedziemy razem 260?">'+esc(ws.msg||"")+'</textarea>':'')
+     +'<div class="bshint" id="wshint"></div>'
      +'<button type="button" class="b big" id="wsok" data-k="ok"></button></div>';
   }
   const seg=$("wsseg");if(seg)[...seg.children].forEach(b=>b.classList.toggle("on",b.dataset.v===ws.vis));
@@ -5059,10 +5135,10 @@ function renderWho(first){
   cb.textContent="Wyczyść ("+nUn+")";cb.classList.toggle("hide",ws.vis!=="pick"||!nUn);
   $("wslist").innerHTML=whoListHtml();
   const jn=ws.mode==="form"&&wf.editId?(joins[wf.editId]||[]).filter(x=>x!==uid).length:0;
-  $("wshint").textContent=ws.vis==="all"?"":ws.mode==="add"?"Dostaną powiadomienie i zobaczą to zaproszenie.":"🔒 Zaproszenie zobaczą tylko wybrane osoby (i kogo one doproszą). Nie trafi na publiczny kanał Telegram."+(jn?" Osoby, które już dołączyły ("+jn+"), zostaną zaproszone.":"");
+  $("wshint").textContent=whoEv()?"Dostaną powiadomienie w aplikacji i od bota na Telegramie (jeśli go połączyli). Zaprosić można osoby, które widzą zakładkę Imprezy.":ws.vis==="all"?"":ws.mode==="add"?"Dostaną powiadomienie i zobaczą to zaproszenie.":"🔒 Zaproszenie zobaczą tylko wybrane osoby (i kogo one doproszą). Nie trafi na publiczny kanał Telegram."+(jn?" Osoby, które już dołączyły ("+jn+"), zostaną zaproszone.":"");
   const n=whoCount(),ok=$("wsok");
-  ok.textContent=ws.mode==="add"?(n?"Zaproś · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.vis==="all"?"Gotowe · wszyscy":"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]);
-  ok.disabled=ws.mode==="add"&&!n;
+  ok.textContent=ws.mode==="ev"?(n?"Zaproś · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.mode==="evf"?(n?"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]):"Gotowe · nikogo"):ws.mode==="add"?(n?"Zaproś · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.vis==="all"?"Gotowe · wszyscy":"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]);
+  ok.disabled=(ws.mode==="add"||ws.mode==="ev")&&!n;
 }
 $("whosheet").addEventListener("click",async e=>{
   if(e.target===$("whosheet")){closeWho();return}
@@ -5072,6 +5148,7 @@ $("whosheet").addEventListener("click",async e=>{
   if(r){
     const id=r.dataset.p;
     if(whoLocked().has(id)){say((nicks[id]||"Ta osoba")+" już dołączył(a) — zostaje zaproszony(a).");return}
+    if(whoDis().has(id)){say((nicks[id]||"Ta osoba")+" — "+whoDis().get(id)+".");return}
     if(ws.vis==="fav"){ws.vis="pick";ws.pick=new Set(favIds())}
     ws.pick.has(id)?ws.pick.delete(id):ws.pick.add(id);
     renderWho();return;
@@ -5080,9 +5157,13 @@ $("whosheet").addEventListener("click",async e=>{
   if(k.dataset.k==="cancel"){closeWho();return}
   if(k.dataset.k==="clr"){const L=whoLocked();ws.pick=new Set([...ws.pick].filter(id=>L.has(id)));renderWho();return}
   if(k.dataset.k==="grp"){const L=whoLocked(),q=nickKey(ws.q.trim()),
-      ids=whoPeople().filter(id=>(!q||nickKey(nicks[id]).includes(q))&&(k.dataset.g==="f"?isFav(id):!isFav(id))&&!L.has(id)),
+      D=whoDis(),ids=whoPeople().filter(id=>(!q||nickKey(nicks[id]).includes(q))&&(k.dataset.g==="f"?isFav(id):!isFav(id))&&!L.has(id)&&!D.has(id)),
       all=ids.every(id=>ws.pick.has(id));
     ids.forEach(id=>all?ws.pick.delete(id):ws.pick.add(id));renderWho();return}
+  if(ws.mode==="evf"){if(ef){ef.inv=[...ws.pick];ef.invMsg=String(ws.msg||"").trim().slice(0,120);const L=$("evsheet").querySelector(".bslist"),st=L?L.scrollTop:0;renderEvForm();const L2=$("evsheet").querySelector(".bslist");if(L2)L2.scrollTop=st}closeWho();return}
+  if(ws.mode==="ev"){const ids=[...ws.pick];if(!ids.length)return;k.disabled=true;
+    try{await evInvite(ws.want,ids,ws.msg);closeWho();renderEvents();say("🏁 Zaproszono: "+ids.map(id=>nicks[id]).join(", ")+" ✔ Dostaną powiadomienie.")}
+    catch(err){k.disabled=false;say("Nie udało się zaprosić: "+(err&&err.message?err.message:"błąd"))}return}
   if(ws.mode==="form"){
     wf.vis=ws.vis;wf.pick=new Set(ws.vis==="pick"?ws.pick:[]);
     if(wf.vis==="pick"&&!wf.pick.size){wf.vis="all";say("Nikogo nie wybrano — zaproszenie zobaczą wszyscy.")}
@@ -5098,7 +5179,7 @@ $("whosheet").addEventListener("click",async e=>{
     say("Zaproszono: "+ids.map(id=>nicks[id]).join(", ")+" ✔ Dostaną powiadomienie.");
   }catch(err){k.disabled=false;say("Nie udało się zaprosić: "+(err&&err.message?err.message:"błąd"))}
 });
-$("whosheet").addEventListener("input",e=>{if(e.target.id==="wsq"){ws.q=e.target.value;$("wslist").innerHTML=whoListHtml()}});
+$("whosheet").addEventListener("input",e=>{if(e.target.id==="wsmsg"){ws.msg=e.target.value;return}if(e.target.id==="wsq"){ws.q=e.target.value;$("wslist").innerHTML=whoListHtml()}});
 /* ---------- zakres godzin, „Pasuje mi o…”, „Ustal godzinę” (KROK 15) ---------- */
 let rangeOk=false,prefs={},decls={},autoAt=0;
 const isOpen=w=>rangeOk&&!!w&&!!w.range_to&&!w.settled_at;
@@ -5281,7 +5362,7 @@ function lsRow(x){
 const bellUnread=()=>notifs.filter(n=>!n.read_at&&nWant(n)&&(ME_KINDS.includes(n.kind)||OWN_KINDS.includes(n.kind)));
 function renderBell(){
   const b=$("bellbtn");if(!b)return;
-  const on=!!session&&visOk,n=on?bellUnread().length+fbMineUnread().length+fbAdmUnread().length+nuUnread().length+stepsBadge():0,bd=$("bellbadge");
+  const on=!!session&&visOk,n=on?bellUnread().length+fbMineUnread().length+fbAdmUnread().length+nuUnread().length+stepsBadge()+evBellUn().length:0,bd=$("bellbadge");
   b.classList.toggle("hide",!on);
   bd.textContent=n>9?"9+":String(n);bd.classList.toggle("hide",!n);
   b.setAttribute("aria-label",n?"Powiadomienia — nowe: "+n:"Powiadomienia");
@@ -5304,7 +5385,7 @@ function renderBellSheet(){
   const ord=(a,b)=>((wUnread(b).length?1:0)-(wUnread(a).length?1:0))||((wNeedsAct(b)?1:0)-(wNeedsAct(a)?1:0))||(new Date(a.starts_at)-new Date(b.starts_at));
   const forMe=wants.filter(w=>w.user_id!==uid&&act(w)&&(w.visibility!=="private"||invIds(w).includes(uid)||(joins[w.id]||[]).includes(uid))).sort(ord);
   const mine=wants.filter(w=>w.user_id===uid&&act(w)).sort(ord);
-  const keep=p.querySelector(".bslist"),st=keep?keep.scrollTop:0,nu=bellUnread().length+nuUnread().length+lgUnread().length,LG=lgRows(),LGu=new Set(lgUnread()),LS=lsRows(),NU=nuList(),NUu=new Set(nuUnread()),SA=stepsAvail()?stepsList():[],SL=SA.filter(x=>!x.ok);
+  const keep=p.querySelector(".bslist"),st=keep?keep.scrollTop:0,nu=bellUnread().length+nuUnread().length+lgUnread().length+evBellUn().length,EVB=evBellItems(),EVBs=evBellSeen(),LG=lgRows(),LGu=new Set(lgUnread()),LS=lsRows(),NU=nuList(),NUu=new Set(nuUnread()),SA=stepsAvail()?stepsList():[],SL=SA.filter(x=>!x.ok);
   p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Powiadomienia"><div class="bsgrab"></div>'
    +'<div class="bshead"><button type="button" class="lnk" data-bk="close">Zamknij</button><b>🔔 Powiadomienia</b>'
    +(nu?'<button type="button" class="lnk" data-bk="all" style="text-align:right">✓ Przeczytane</button>':'<span style="min-width:64px"></span>')+'</div>'
@@ -5322,6 +5403,8 @@ function renderBellSheet(){
    +(LS.length?bsSec("ls",'🟢 Ostatnio w aplikacji',0,LS.length,LS.slice(0,8).map(lsRow).join("")
       +(LS.length>8?'<div class="bsempty">i jeszcze '+(LS.length-8)+' z ostatnich 14 dni</div>':'')
       +'<div class="bsempty">Czas odświeża się co ok. 15 min, gdy ktoś ma otwartą aplikację.</div>'):'')
+   +(EVB.length?bsSec("ev",'🏁 Imprezy',EVB.filter(x=>x.at>EVBs).length,EVB.length,EVB.slice(0,8).map(x=>evBellRow(x,x.at>EVBs)).join("")
+      +(EVB.length>8?'<div class="bsempty">i jeszcze '+(EVB.length-8)+' — zobacz w zakładce Imprezy</div>':'')):'')
    +bsSec("forme",'📩 Do Ciebie',forMe.filter(w=>wUnread(w).length).length,forMe.length,
       forMe.length?forMe.map(bellRowHtml).join(""):'<div class="bsempty">Na razie nikt nie zaprasza.</div>')
    +bsSec("mine",'🙋 Twoje zaproszenia',mine.filter(w=>wUnread(w).length).length,mine.length,
@@ -5342,6 +5425,7 @@ function closeBell(){
   const ids=bellUnread().filter(n=>!nNeedsAct(n)).map(n=>n.id);
   if(nuUnread().length)nuMarkSeen();
   if(lgUnread().length)lsSet("lgSeen",String(Date.now()));
+  if(evBellUn().length)lsSet("evBell",String(Date.now()));
   if(stepsLeft().length)lsSet("stepsSeen","1");
   $("bellsheet").classList.add("hide");$("bellsheet").innerHTML="";
   if(ids.length)markRead(ids);else renderBell();
@@ -5371,6 +5455,7 @@ $("bellsheet").addEventListener("click",async e=>{
   const fr=e.target.closest("button[data-fb]");
   const stb=e.target.closest("[data-sb]");   // „Dokończ start” (nie nazywać „sb” — to połączenie z bazą)
   if(stb){const k=stb.dataset.sb;closeBell();renderBell();stepGo(k);return}
+  const evb=e.target.closest("[data-evb]");if(evb){closeBell();evGo(evb.dataset.evb);return}
   const sc=e.target.closest("[data-bsec]");
   if(sc){const k=sc.dataset.bsec,st=bsColGet(),col=!sc.classList.contains("col");st[k]=col;try{localStorage.setItem("bellCol",JSON.stringify(st))}catch(err){}
     renderBellSheet();return}
@@ -5380,7 +5465,7 @@ $("bellsheet").addEventListener("click",async e=>{
   if(k){
     if(k.dataset.bk==="close")closeBell();
     else if(k.dataset.bk==="new"){closeBell();show(0);openWantForm(null)}
-    else{nuMarkSeen();lsSet("lgSeen",String(Date.now()));await markRead(bellUnread().map(n=>n.id));renderBell();renderBellSheet()}
+    else{nuMarkSeen();lsSet("lgSeen",String(Date.now()));lsSet("evBell",String(Date.now()));await markRead(bellUnread().map(n=>n.id));renderBell();renderBellSheet()}
     return;
   }
   const a=e.target.closest("button[data-na]");
@@ -6011,13 +6096,14 @@ async function loadRemote(selectId){
     // 🏁 imprezy masowe (KROK 40) — tylko gdy zakładka dostępna
     if(flags.tab_events&&tabOk(3)){
       const EVC="id,created_by,name,date_from,date_to,place,url,note,reg_until,reg_closed,delete_req_at,delete_req_by";
-      const [e1,e2,e3]=await Promise.all([sb.from("events").select(EVC+",lat,lon").order("date_from").limit(1000).then(r=>{evGeoOk=!r.error;return r.error?sb.from("events").select(EVC).order("date_from").limit(1000):r}),
-        sb.from("event_distances").select("id,event_id,bike,km,name,sort,elev,limit_min").limit(5000),sb.from("event_participants").select("event_id,user_id,distance_id").limit(10000)]);
+      const [e1,e2,e3]=await Promise.all([sb.from("events").select(EVC+",lat,lon,created_at,changed_at,changed_by,changed_what").order("date_from").limit(1000).then(r=>{evNewOk=!r.error;evGeoOk=!r.error;return r.error?sb.from("events").select(EVC+",lat,lon").order("date_from").limit(1000).then(r2=>{evGeoOk=!r2.error;return r2.error?sb.from("events").select(EVC).order("date_from").limit(1000):r2}):r}),
+        sb.from("event_distances").select("id,event_id,bike,km,name,sort,elev,limit_min").limit(5000),sb.from("event_participants").select("event_id,user_id,distance_id,created_at").limit(10000)]);
       evOk=!e1.error;evs=(e1.data||[]);evDist={};evPart={};evExtraOk=!e2.error;
       if(e2.error){const r=await sb.from("event_distances").select("id,event_id,bike,km,name,sort").limit(5000);e2.data=r.data}
       (e2.data||[]).forEach(x=>{(evDist[x.event_id]=evDist[x.event_id]||[]).push(x)});Object.values(evDist).forEach(a=>a.sort((p,q)=>p.sort-q.sort||p.km-q.km));
       (e3.data||[]).forEach(x=>{(evPart[x.event_id]=evPart[x.event_id]||[]).push(x)});
       const e4=await sb.from("event_likes").select("event_id,user_id").limit(20000);evLikes={};(e4.data||[]).forEach(x=>{(evLikes[x.event_id]=evLikes[x.event_id]||[]).push(x.user_id)});
+      const e5=await sb.from("event_invites").select("event_id,user_id,invited_by,msg,created_at").limit(5000);evInvOk=!e5.error;evInv=e5.data||[];   // ✉️ KROK 54
     }
     const fq=await sb.from("feedback").select("id,user_id,kind,rating,body,device,status,started_by,user_unread,admin_unread,created_at,updated_at").order("updated_at",{ascending:false}).limit(300);fbOk=!fq.error;fbList=fbOk?fq.data||[]:[];
     fbDone={};if(fbOk){const fc=await sb.rpc("fb_done_counts");if(!fc.error)(fc.data||[]).forEach(x=>{fbDone[x.user_id]=+x.n||0})}
@@ -6256,6 +6342,7 @@ function show(n,dir){
   [0,1,2,3].forEach(i=>{$("p"+i).classList.toggle("hide",i!==n);$("t"+i).classList.toggle("on",i===n)});
   const p=$("p"+n);p.style.transition="";p.style.transform="";p.style.opacity="";
   if(dir){p.classList.remove("slin-l","slin-r");void p.offsetWidth;p.classList.add(dir>0?"slin-r":"slin-l");setTimeout(()=>p.classList.remove("slin-l","slin-r"),300)}
+  if(n===3&&curTab!==3)evStick=new Set();
   curTab=n;
   window.scrollTo({top:0});
   updateFab();
@@ -6370,7 +6457,8 @@ bootTimer=setTimeout(()=>bootFail(),8000);
   });
   const m=/#ride=([0-9a-f-]{36})/i.exec(location.hash||"");
   const rp=/#report=([0-9a-f-]{36})/i.exec(location.hash||"");if(rp){repHash=rp[1];try{history.replaceState(null,"",location.pathname)}catch(e){}}
-  try{await loadRemote(m?m[1]:null);$("dbnote").textContent="";bootDone()}
+  const evh=/#event=([0-9a-f-]{36})/i.exec(location.hash||"");if(evh){try{history.replaceState(null,"",location.pathname)}catch(e){}}
+  try{await loadRemote(m?m[1]:null);$("dbnote").textContent="";bootDone();if(evh)evGo(evh[1])}
   catch(e){$("dbnote").textContent="Nie udało się połączyć ze wspólną bazą (sprawdź internet i konfigurację Supabase).";bootFail()}
   ready=true;
   setInterval(()=>{if(!document.hidden)loadRemote().catch(()=>{})},60000);
