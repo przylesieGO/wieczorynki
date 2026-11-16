@@ -592,6 +592,19 @@ html[data-theme=dark] .evp-t.soon{background:#4d2a0e;color:#ffb074}@keyframes ev
 .stc{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:900}
 .stit.dn{color:var(--mut)}.stit.dn .stt{text-decoration:line-through}.stit.dn .stc{background:var(--accbtn);border-color:var(--accbtn)}
 .stgo{margin-left:auto;font-weight:800;font-size:14px;white-space:nowrap}
+.evchips .fch.near{order:-1}.evchips .fch.near.on{background:#ff9f0a;color:#fff;border-color:#ff9f0a}
+.evnear{margin-top:10px;padding:10px 12px;border-radius:14px;background:var(--fill)}
+.evnr{display:flex;align-items:center;gap:10px}.evnl{font-size:13px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.evnseg{flex:1;margin:0}.evnseg button{padding:6px 4px}
+.evno{margin-top:8px;font-size:14px;color:var(--mut);line-height:1.5}.evno b{color:var(--ink)}.evno .lnk{font-size:14px;padding:0}
+.evnogeo{margin-top:12px;text-align:center}
+.evp-d{background:var(--fill);color:var(--mut)}
+.efgeo{margin-top:6px;font-size:13.5px;color:var(--mut);line-height:1.4}.efgeo.ok b{color:var(--ink)}.efgeo.warn{color:#b34700}html[data-theme=dark] .efgeo.warn{color:#ffb074}
+.efgeo .lnk{font-size:13.5px;padding:0}.efalt{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}.efalt .chip{font-size:12.5px}
+.hmcur{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--acc2);border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:15px}
+.hmrow{display:flex;gap:8px}.hmrow input{flex:1;min-width:0}.hmrow .b{flex:none}
+.hmres{display:block;width:100%;text-align:left;border:0;background:var(--fill);color:var(--ink);border-radius:12px;padding:10px 12px;margin-top:8px;font:inherit;cursor:pointer}
+.hmres b{display:block;font-size:15px}.hmres span{display:block;font-size:12.5px;color:var(--mut);margin-top:2px}
 .evdw{margin-top:10px}.evdw+.evdw{padding-top:10px;border-top:1px solid var(--line)}.evdw.drag{opacity:.95;background:var(--card);box-shadow:0 6px 18px rgba(0,0,0,.18);border-radius:10px;position:relative;z-index:2}.evdw.drag .evgrip{cursor:grabbing;color:var(--acc)}
 .evdr{display:flex;gap:6px;align-items:center}.evdr2{margin-top:6px}.evdr2.ind{padding-left:32px}.evdr2 label{flex:1;display:flex;align-items:center;gap:6px;min-width:0;color:var(--mut);font-size:13px}.evdr2 label{margin:0}.evdr2 input{flex:1;min-width:0;width:0;text-align:right}.evdr2 em{flex:none}.evdr2 em{font-style:normal;font-weight:700;color:var(--mut)}
 .evdx2{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:3px;font-size:12.5px;color:var(--mut)}.evdx2 i{font-style:normal;font-weight:700}.evdr select{flex:0 0 38%}.evdr input[data-efd="km"]{flex:0 0 64px;text-align:right}.evdr input[data-efd="name"]{flex:1;min-width:0}
@@ -785,6 +798,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 <div class="sheet hide" id="picksheet"></div>
 <div class="sheet bsh hide" id="bellsheet"></div>
 <div class="sheet bsh hide" id="welsheet"></div>
+<div class="sheet bsh hide" id="homesheet"></div>
 <div class="sheet hide" id="routesheet"></div>
 <div class="sheet hide" id="mapsheet"></div>
 
@@ -821,6 +835,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
  <div class="card">
   <div class="row between"><h2 style="margin:0">🏁 Imprezy <span id="evbeta"></span></h2><button type="button" class="b evadd" id="evadd">＋ Dodaj imprezę</button></div>
   <div class="evchips" id="evchips"></div>
+  <div id="evnear"></div>
   <div id="evlist"></div>
   <div id="evarch"></div>
  </div>
@@ -2309,6 +2324,7 @@ function setGroupsHtml(guest){
      it("#5e5ce6","moon","Motyw",themeMode==="auto"?"Jak w telefonie":"",theme),
      guest?"":it("#0a84ff","user","Nick na górze ekranu","",sw(showNick,"data-sn",showNick?"0":"1")),
      it("#30d158","help","Pomoc przy starcie","",sw(!helpOff,"data-hs",helpOff?"1":"0"))])
+   +(guest||!evGeoOk||!tabOk(3)?'':grp("Okolica",[it("#ff9f0a","pin","Moja miejscowość",homeGet()?esc(homeGet().name)+' — od niej liczę odległość do imprez':'Do filtra „📍 W okolicy” w Imprezach','<button type="button" class="lnk" data-home="1">'+(homeGet()?'Zmień':'Ustaw')+' ›</button>')]))
    +(guest?'':grp("Zaproszenia",[testOk?it("#ff453a","flask","Testowe zaproszenia",hideTest?"Ukryte — widzisz tylko prawdziwe (Twoje zostają)":"Widoczne — wyłącz, żeby widzieć tylko prawdziwe",sw(!hideTest,"data-ht",hideTest?"0":"1")):""]))
    +(guest||!meTester()?'':grp("🧪 Tester",[it("#bf5af2","flask","Funkcje testowe",betaOn?"Widzisz funkcje w budowie (🧪 BETA)":"Wyłączone — widzisz aplikację tak jak wszyscy",sw(betaOn,"data-beta",betaOn?"0":"1"))]))
    +(guest||!canStealth()?'':grp("🛡️ Administrator",[it("#636366","eye","Widoczny online",hideOnline?"Wyłączony: nikt nie widzi Cię w „online”. Ty widzisz wszystkich.":"Inni widzą Cię jako online",sw(!hideOnline,"data-ho",hideOnline?"0":"1"))]))
@@ -2617,7 +2633,7 @@ document.addEventListener("click",async e=>{
 
 
 /* ---------- 🏁 imprezy masowe — MVP (KROK 40; założenia właściciela 2026-11-15 20:58) ---------- */
-let evExtraOk=false,evOk=false,evs=[],evDist={},evPart={},evOpen="",evFlt="",evArchOpen=false,ef=null;
+let evGeoOk=false,evExtraOk=false,evOk=false,evs=[],evDist={},evPart={},evOpen="",evFlt="",evArchOpen=false,ef=null;
 const EV_BIKE={gravel:["🪨","Gravel","Jadę"],road:["🛣","Szosa","Jadę"],mtb:["⛰","MTB","Jadę"],any:["🚲","Dowolny rower","Jadę"],run:["🏃","Bieg","Biegnę"],walk:["🚶","Marsz","Idę"],tri:["🏊","Triathlon","Startuję"],other:["🏅","Inne","Biorę udział"]};
 const evVerb=b=>(EV_BIKE[b]||EV_BIKE.other)[2];
 let evLikes={};
@@ -2654,7 +2670,7 @@ function evCard(e){
   const P=evPart[e.id]||[],D=evDist[e.id]||[],mine=evMine(e),open=evOpen===e.id,past=evPast(e),d=new Date(e.date_from+"T12:00");
   const head='<button type="button" class="evh" data-ev="tog" data-id="'+esc(e.id)+'"><span class="evdt"><b>'+d.getDate()+'</b><i>'+esc(d.toLocaleDateString("pl-PL",{month:"short"}).replace(".","").toUpperCase())+'</i></span><span class="evm"><span class="evn">'+esc(e.name)+'</span>'
    +'<span class="evl">'+(e.place?'📍 '+esc(e.place)+' · ':'')+esc(evDates(e))+'</span>'+(D.length?'<span class="evl">'+esc(evKmLine(e))+'</span>':'')
-   +'<span class="evps">'+(evWhen(e)&&!past?'<span class="evp evp-t'+evWhenCls(e)+'">'+evWhen(e)+'</span>':'')+(P.length?'<span class="evp evp-u">👥 '+P.length+' z nas</span>':'')+evReg(e)+(mine?'<span class="evp evp-m">✓ '+esc(evVerb(((D.find(x=>x.id===mine.distance_id))||{}).bike).toLowerCase())+'</span>':'')+((evLikes[e.id]||[]).length?'<span class="evp evp-l">❤ '+(evLikes[e.id]||[]).length+'</span>':'')+(e.delete_req_at?'<span class="evp evp-x">🗑 prośba o usunięcie</span>':'')+'</span></span><span class="evch">'+(open?'⌃':'⌄')+'</span></button>';
+   +'<span class="evps">'+(evKm(e)!=null&&!past?'<span class="evp evp-d">📍 '+(evKm(e)<1?'na miejscu':nearKm(evKm(e))+' km')+'</span>':'')+(evWhen(e)&&!past?'<span class="evp evp-t'+evWhenCls(e)+'">'+evWhen(e)+'</span>':'')+(P.length?'<span class="evp evp-u">👥 '+P.length+' z nas</span>':'')+evReg(e)+(mine?'<span class="evp evp-m">✓ '+esc(evVerb(((D.find(x=>x.id===mine.distance_id))||{}).bike).toLowerCase())+'</span>':'')+((evLikes[e.id]||[]).length?'<span class="evp evp-l">❤ '+(evLikes[e.id]||[]).length+'</span>':'')+(e.delete_req_at?'<span class="evp evp-x">🗑 prośba o usunięcie</span>':'')+'</span></span><span class="evch">'+(open?'⌃':'⌄')+'</span></button>';
   if(!open)return '<div class="ev'+(mine?' mine':'')+(past?' past':'')+'">'+head+'</div>';
   const rows=D.map(x=>{const on=P.filter(p=>p.distance_id===x.id).map(p=>p.user_id),me=mine&&mine.distance_id===x.id;
     return '<div class="evd'+(me?' me':'')+'"><div class="evdl"><b>'+EV_BIKE[x.bike][0]+' '+esc(x.name||EV_BIKE[x.bike][1]+' '+String(+x.km).replace(".",","))+'</b><span>'+EV_BIKE[x.bike][1]+' · '+String(+x.km).replace(".",",")+' km'+(on.length?' · '+on.length+' z nas':'')+'</span>'
@@ -2676,7 +2692,82 @@ function evCard(e){
    +(evCanEdit(e)?'<button class="ib" data-ev="edit" data-id="'+esc(e.id)+'" title="Edytuj" aria-label="Edytuj">'+ICON.edit+'</button>'+((isAdmin||!e.delete_req_at)?'<button class="ib del'+(e.created_by===uid&&!isAdmin?'':' adm')+'" data-ev="'+(isAdmin?'del':'delreq')+'" data-id="'+esc(e.id)+'" title="'+(isAdmin?'Usuń':'Poproś o usunięcie')+'" aria-label="Usuń">'+ICON.del+'</button>':''):'')+'</div>'
    +(e.created_by&&nicks[e.created_by]?'<div class="note" style="margin-top:6px">Dodał(a): '+esc(nicks[e.created_by])+'</div>':'')+'</div></div>';
 }
+/* ---------- 📍 „W okolicy” (KROK 43; decyzja właściciela 2026-11-16 10:56) ----------
+   promień 50/100/200 km; odległość w linii prostej od „Mojej miejscowości” (⚙️, zapamiętana w tym telefonie)
+   albo od GPS (tylko na tę wizytę); imprezy bez punktu na mapie nie przechodzą przez filtr */
+const NEAR_R=[50,100,200];
+let evNearOn=(()=>{try{return localStorage.getItem("evNearOn")==="1"}catch(e){return false}})();
+let evNearR=(()=>{try{const v=+localStorage.getItem("evNearR");return NEAR_R.includes(v)?v:100}catch(e){return 100}})();
+const homeGet=()=>{try{const h=JSON.parse(localStorage.getItem("home")||"null");return h&&isFinite(h.lat)&&isFinite(h.lon)?h:null}catch(e){return null}};
+const gpsGet=()=>{try{const h=JSON.parse(sessionStorage.getItem("gpsOrigin")||"null");return h&&isFinite(h.lat)&&isFinite(h.lon)?h:null}catch(e){return null}};
+const originGet=()=>gpsGet()||homeGet();
+const evHasGeo=e=>e.lat!=null&&e.lon!=null&&isFinite(e.lat)&&isFinite(e.lon);
+const evKm=e=>{const o=originGet();return o&&evHasGeo(e)?dist({lat:o.lat,lon:o.lon},{lat:+e.lat,lon:+e.lon}):null};
+const nearKm=k=>k<10?String(Math.round(k*10)/10).replace(".",","):String(Math.round(k));
+const nearOk=e=>{if(!evNearOn||!evGeoOk)return true;const k=evKm(e);return k!=null&&k<=evNearR};
+function evNearHtml(){
+  if(!evGeoOk||!evNearOn)return "";
+  const o=originGet(),g=gpsGet();
+  return '<div class="evnear"><div class="evnr"><span class="evnl">Promień</span><span class="seg evnseg">'+NEAR_R.map(r=>'<button type="button" data-evr="'+r+'" class="'+(evNearR===r?'on':'')+'">'+r+' km</button>').join("")+'</span></div>'
+   +'<div class="evno">'+(o?'od: <b>'+(g?'📡 ':'📍 ')+esc(o.name)+'</b>'+(g&&homeGet()?' · <button type="button" class="lnk" data-evo="home">wróć do: '+esc(homeGet().name)+'</button>':'')
+       +' · <button type="button" class="lnk" data-evo="set">zmień</button>'+(g?'':' · <button type="button" class="lnk" data-evo="gps">📡 moja lokalizacja</button>')
+     :'<button type="button" class="lnk" data-evo="set">📍 Ustaw swoją miejscowość ›</button>')+'</div></div>';
+}
+// wyszukiwanie miejsc w OpenStreetMap (Nominatim) — tylko Polska
+async function geoSearch(q){
+  q=String(q||"").trim();if(q.length<2)return [];
+  try{const r=await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=pl&accept-language=pl&addressdetails=1&q="+encodeURIComponent(q));if(!r.ok)return null;
+    return (await r.json()).map(x=>{const a=x.address||{},c=a.city||a.town||a.village||a.hamlet||a.municipality||x.name||"",reg=a.state?String(a.state).replace(/^województwo /,""):"";
+      return {name:(x.name&&x.name!==c?x.name+", ":"")+c,full:[x.name&&x.name!==c?x.name:"",c,a.county||"",reg].filter(Boolean).join(", "),lat:+x.lat,lon:+x.lon}}).filter(x=>x.name&&isFinite(x.lat))}
+  catch(e){return null}
+}
+// okienko „📍 Moja miejscowość” (z filtra i z ⚙️)
+let homeRes=[],homeMsg="";
+function openHome(){homeRes=[];homeMsg="";renderHome();setTimeout(()=>{const i=$("homeq");if(i)i.focus()},120)}
+function renderHome(){
+  const p=$("homesheet"),h=homeGet(),g=gpsGet(),q=$("homeq")?$("homeq").value:"";
+  p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Moja miejscowość"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-hm="close">Zamknij</button><b>📍 Moja miejscowość</b><span style="min-width:64px"></span></div><div class="bslist">'
+   +'<div class="note" style="margin:0 0 10px">Od niej liczymy odległość do imprez („W okolicy”). Zapamiętana tylko w tym telefonie — nikt jej nie widzi.</div>'
+   +(h?'<div class="hmcur">📍 <b>'+esc(h.name)+'</b><button type="button" class="lnk" data-hm="del">Usuń</button></div>':'')
+   +'<div class="hmrow"><input id="homeq" maxlength="80" placeholder="np. Pułtusk, Warszawa Bielany" value="'+esc(q)+'" enterkeyhint="search"><button type="button" class="b" data-hm="find">Szukaj</button></div>'
+   +(homeMsg?'<div class="note" style="margin-top:8px">'+homeMsg+'</div>':'')
+   +homeRes.map((x,i)=>'<button type="button" class="hmres" data-hm="pick" data-i="'+i+'"><b>'+esc(x.name)+'</b><span>'+esc(x.full)+'</span></button>').join("")
+   +'<div class="bsgrp" style="margin-top:16px">Albo</div><button type="button" class="b g big" data-hm="gps">📡 Użyj mojej lokalizacji'+(g?' (teraz: '+esc(g.name)+')':'')+'</button>'
+   +'<div class="note" style="margin-top:6px">Lokalizacja z telefonu działa tylko podczas tej wizyty — przeglądarka zapyta o zgodę.</div>'
+   +'</div></div>';
+  p.classList.remove("hide");
+}
+function closeHome(){const p=$("homesheet");p.classList.add("hide");p.innerHTML="";if(curTab===3)renderEvents();if(gearOpen&&gearView==="main")renderGear()}
+async function homeFind(){const q=$("homeq")?$("homeq").value.trim():"";if(q.length<2){homeMsg="Wpisz nazwę miejscowości.";renderHome();return}
+  homeMsg="Szukam…";homeRes=[];renderHome();const r=await geoSearch(q);
+  homeRes=r||[];homeMsg=r===null?"Brak połączenia z OpenStreetMap — spróbuj za chwilę.":r.length?"Wybierz właściwe miejsce:":"Nic nie znaleziono — spróbuj inaczej (np. sama nazwa miejscowości).";renderHome()}
+function useGps(after){
+  if(!navigator.geolocation){say("Ta przeglądarka nie udostępnia lokalizacji.");return}
+  say("📡 Szukam Twojej lokalizacji…");
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    const la=pos.coords.latitude,lo=pos.coords.longitude,g=await revGeo(la,lo);
+    try{sessionStorage.setItem("gpsOrigin",JSON.stringify({name:(g&&g.city)||"Twoja lokalizacja",lat:la,lon:lo}))}catch(e){}
+    evNearOn=true;try{localStorage.setItem("evNearOn","1")}catch(e){}
+    say("📡 Odległości liczone od: "+((g&&g.city)||"Twojej lokalizacji"));after&&after();if(curTab===3)renderEvents()},
+   err=>{say(err&&err.code===1?"Brak zgody na lokalizację — ustaw swoją miejscowość ręcznie.":"Nie udało się ustalić lokalizacji.")},
+   {enableHighAccuracy:false,timeout:12000,maximumAge:600000});
+}
+$("homesheet").addEventListener("click",async e=>{
+  if(e.target===$("homesheet")){closeHome();return}
+  const b=e.target.closest("[data-hm]");if(!b)return;const k=b.dataset.hm;
+  if(k==="close"){closeHome();return}
+  if(k==="find"){homeFind();return}
+  if(k==="pick"){const x=homeRes[+b.dataset.i];if(!x)return;
+    try{localStorage.setItem("home",JSON.stringify({name:x.name,lat:x.lat,lon:x.lon}));sessionStorage.removeItem("gpsOrigin")}catch(err){}
+    evNearOn=true;try{localStorage.setItem("evNearOn","1")}catch(err){}
+    closeHome();say("📍 Moja miejscowość: "+x.name);return}
+  if(k==="del"){try{localStorage.removeItem("home")}catch(err){}renderHome();return}
+  if(k==="gps"){closeHome();useGps();return}
+});
+$("homesheet").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="homeq"){e.preventDefault();homeFind()}});
+document.addEventListener("click",e=>{if(e.target.closest("[data-home]")){openHome()}});
 function evMatch(e){
+  if(!nearOk(e))return false;
   if(!evFlt)return true;
   if(evFlt==="mine")return !!evMine(e)||e.created_by===uid;
   if(evFlt==="delreq")return !!e.delete_req_at;
@@ -2686,12 +2777,16 @@ function evMatch(e){
 function renderEvents(){
   const box=$("evlist");if(!box)return;
   $("evbeta").innerHTML=betaTag("tab_events");
-  $("evchips").innerHTML=[["","Wszystkie"],["gravel","🪨 Gravel"],["road","🛣 Szosa"],["mtb","⛰ MTB"],["run","🏃 Bieg"],["walk","🚶 Marsz"],["mine","🙋 Moje"]].concat(isAdmin&&evs.some(x=>x.delete_req_at)?[["delreq","🗑 Do usunięcia ("+evs.filter(x=>x.delete_req_at).length+")"]]:[]).map(([v,t])=>'<button type="button" class="fch'+(evFlt===v?' on':'')+'" data-evf="'+v+'">'+t+'</button>').join("");
+  $("evchips").innerHTML=(evGeoOk?'<button type="button" class="fch near'+(evNearOn?' on':'')+'" data-evnear="1">📍 W okolicy'+(evNearOn?' · '+evNearR+' km':'')+'</button>':'')+[["","Wszystkie"],["gravel","🪨 Gravel"],["road","🛣 Szosa"],["mtb","⛰ MTB"],["run","🏃 Bieg"],["walk","🚶 Marsz"],["mine","🙋 Moje"]].concat(isAdmin&&evs.some(x=>x.delete_req_at)?[["delreq","🗑 Do usunięcia ("+evs.filter(x=>x.delete_req_at).length+")"]]:[]).map(([v,t])=>'<button type="button" class="fch'+(evFlt===v?' on':'')+'" data-evf="'+v+'">'+t+'</button>').join("");
+  $("evnear").innerHTML=evNearHtml();
   if(!evOk){box.innerHTML='<div class="note" style="margin-top:12px">Imprezy jeszcze niedostępne (KROK 40 w bazie).</div>';$("evarch").innerHTML="";return}
   const up=evs.filter(e=>!evPast(e)&&evMatch(e)).sort((a,b)=>a.date_from.localeCompare(b.date_from)),past=evs.filter(e=>evPast(e)&&evMatch(e)).sort((a,b)=>b.date_from.localeCompare(a.date_from));
   let m="",h="";
   up.forEach(e=>{const d=new Date(e.date_from+"T12:00"),k=d.toLocaleDateString("pl-PL",{month:"long",year:"numeric"});if(k!==m){m=k;h+='<div class="evmon">'+esc(k)+'</div>'}h+=evCard(e)});
-  box.innerHTML=h||'<div class="note" style="margin-top:12px">'+(evFlt?'Brak imprez dla tego filtra.':'Nie ma jeszcze imprez. Dodaj pierwszą — „＋ Dodaj imprezę”.')+'</div>';
+  const noGeo=evNearOn&&evGeoOk&&originGet()?evs.filter(e=>!evPast(e)&&!evHasGeo(e)).length:0;
+  box.innerHTML=(evNearOn&&evGeoOk&&!originGet()?'<div class="note" style="margin-top:12px">Ustaw swoją miejscowość albo użyj lokalizacji, żeby zobaczyć imprezy w okolicy.</div>':
+     h||'<div class="note" style="margin-top:12px">'+(evNearOn&&evGeoOk?'Brak imprez w promieniu '+evNearR+' km — zwiększ promień.':evFlt?'Brak imprez dla tego filtra.':'Nie ma jeszcze imprez. Dodaj pierwszą — „＋ Dodaj imprezę”.')+'</div>')
+   +(noGeo?'<div class="note evnogeo">'+noGeo+' '+plf(noGeo,["impreza","imprezy","imprez"])+' bez miejsca na mapie (np. „do ogłoszenia”) — nie wiadomo, czy '+(noGeo===1?'jest':'są')+' blisko.</div>':'');
   $("evarch").innerHTML=past.length?'<div class="arch"><button type="button" class="ah" data-ev="arch">🗄 Minione imprezy<span>'+past.length+' '+(evArchOpen?'⌃':'⌄')+'</span></button>'+(evArchOpen?past.map(evCard).join(""):'')+'</div>':'';
 }
 async function evJoin(e,did){
@@ -2709,6 +2804,11 @@ async function evLeave(e){
 }
 $("p3").addEventListener("click",async e=>{
   const f=e.target.closest("[data-evf]");if(f){evFlt=evFlt===f.dataset.evf?"":f.dataset.evf;renderEvents();return}
+  if(e.target.closest("[data-evnear]")){evNearOn=!evNearOn;try{localStorage.setItem("evNearOn",evNearOn?"1":"0")}catch(err){}
+    renderEvents();if(evNearOn&&!originGet())openHome();return}
+  const rr=e.target.closest("[data-evr]");if(rr){evNearR=+rr.dataset.evr;try{localStorage.setItem("evNearR",String(evNearR))}catch(err){}renderEvents();return}
+  const eo=e.target.closest("[data-evo]");if(eo){const k=eo.dataset.evo;
+    if(k==="set")openHome();else if(k==="gps")useGps();else if(k==="home"){try{sessionStorage.removeItem("gpsOrigin")}catch(err){}renderEvents()}return}
   if(e.target.closest("#evadd")){openEvForm(null);return}
   const b=e.target.closest("[data-ev]");if(!b)return;
   if(b.dataset.ev==="arch"){evArchOpen=!evArchOpen;renderEvents();return}
@@ -2742,7 +2842,8 @@ $("p3").addEventListener("click",async e=>{
 });
 // formularz imprezy (okienko od dołu)
 function openEvForm(e,dup){
-  ef={id:e?e.id:null,name:e?e.name:"",from:e?e.date_from:"",to:e&&e.date_to||"",place:e&&e.place||"",url:e&&e.url||"",note:e&&e.note||"",reg:e&&e.reg_closed?"closed":"open",regUntil:e&&e.reg_until||"",
+  ef={geo:e&&evHasGeo(e)?{lat:+e.lat,lon:+e.lon,name:""}:null,geoFor:e&&evHasGeo(e)&&e.place||"",geoAlt:[],geoBusy:false,
+    id:e?e.id:null,name:e?e.name:"",from:e?e.date_from:"",to:e&&e.date_to||"",place:e&&e.place||"",url:e&&e.url||"",note:e&&e.note||"",reg:e&&e.reg_closed?"closed":"open",regUntil:e&&e.reg_until||"",
     dist:e?(evDist[e.id]||[]).map(d=>({id:d.id,bike:d.bike,km:String(+d.km),name:d.name||"",elev:d.elev!=null?String(d.elev):"",lim:limEdit(d.limit_min)})):[{bike:"gravel",km:"",name:"",elev:"",lim:""}],join:"",dup:!!dup};
   if(dup){
     // kopia jako nowa impreza: gdy minęła — rok w nazwie i daty +1; zapisy od nowa; popraw, co się nie zgadza
@@ -2762,6 +2863,7 @@ function renderEvForm(){
    +'<div id="efsim">'+(sim.length?'<div class="evsim">Już są: '+sim.map(x=>'<b>'+esc(x.name)+'</b> ('+esc(evDates(x))+')').join(", ")+' — sprawdź, czy to nie ta sama.</div>':'')+'</div>'
    +'<div class="evtwo"><div><div class="bsgrp">Od</div><input type="date" id="effrom" value="'+esc(ef.from)+'"></div><div><div class="bsgrp">Do <span class="note">(opcj.)</span></div><input type="date" id="efto" value="'+esc(ef.to)+'"></div></div>'
    +'<div class="bsgrp">Gdzie (start / meta)</div><input id="efplace" maxlength="80" placeholder="np. Pułtusk, Przystań Miejska" value="'+esc(ef.place)+'">'
+   +(evGeoOk?'<div id="efgeo">'+efGeoHtml()+'</div>':'')
    +'<div class="bsgrp">Dystanse (rower + km'+(evExtraOk?', przewyższenie, limit':'')+')'+(ef.dist.length>1?' <span class="note">· przeciągnij ⋮⋮</span>':'')+'</div><div id="efdist">'+efDistHtml()+'</div><button type="button" class="lnk" data-ef="adddist">＋ dodaj dystans</button>'
    +'<div class="bsgrp">Zapisy</div><div class="seg" id="efreg"><button type="button" data-ef="reg" data-v="open" class="'+(ef.reg==="open"?'on':'')+'">📝 Trwają</button><button type="button" data-ef="reg" data-v="closed" class="'+(ef.reg==="closed"?'on':'')+'">🔒 Zakończone</button></div>'
    +(ef.reg==="open"?'<div class="evtwo"><div><div class="bsgrp">Zapisy do <span class="note">(opcj.)</span></div><input type="date" id="efregu" value="'+esc(ef.regUntil)+'"></div><div></div></div>':'')
@@ -2771,6 +2873,21 @@ function renderEvForm(){
    +'</div><button type="button" class="b big" data-ef="save">'+(ef.id?'Zapisz zmiany':'Dodaj imprezę')+'</button></div>';
 }
 const GRIP='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>';
+function efGeoHtml(){
+  if(!ef.place.trim())return '';
+  if(ef.geoBusy)return '<div class="efgeo">📍 Szukam na mapie…</div>';
+  if(ef.geoFor!==ef.place.trim())return '<div class="efgeo">📍 Punkt na mapie znajdę przy zapisie — <button type="button" class="lnk" data-ef="geo">sprawdź teraz</button></div>';
+  if(!ef.geo)return '<div class="efgeo warn">⚠️ Nie znaleziono na mapie — impreza nie pojawi się w filtrze „W okolicy”. Wpisz miejscowość (np. „Hajnówka”).</div>';
+  return '<div class="efgeo ok">📍 Na mapie: <b>'+esc(ef.geo.name||ef.place.trim())+'</b>'+(ef.geoAlt.length?'<div class="efalt">To nie to? '+ef.geoAlt.map((x,i)=>'<button type="button" class="chip" data-ef="geopick" data-i="'+i+'">'+esc(x.name)+'</button>').join("")+'</div>':'')+'</div>';
+}
+async function efGeocode(){
+  const q=ef.place.trim();if(!q||!evGeoOk){ef.geo=null;ef.geoFor=q;return}
+  ef.geoBusy=true;const g0=$("efgeo");if(g0)g0.innerHTML=efGeoHtml();
+  const r=await geoSearch(q);ef.geoBusy=false;
+  if(r===null){ef.geoFor="";const g=$("efgeo");if(g)g.innerHTML='<div class="efgeo warn">⚠️ Brak połączenia z OpenStreetMap — punkt na mapie uzupełnię przy następnym zapisie.</div>';return}
+  ef.geoFor=q;ef.geo=r[0]?{lat:r[0].lat,lon:r[0].lon,name:r[0].full}:null;ef.geoAlt=r.slice(1,4).map(x=>({lat:x.lat,lon:x.lon,name:x.full}));
+  const g=$("efgeo");if(g)g.innerHTML=efGeoHtml();
+}
 function efDistHtml(){return ef.dist.map((d,i)=>'<div class="evdw" data-i="'+i+'"><div class="evdr">'+(ef.dist.length>1?'<span class="evgrip" data-i="'+i+'" title="Przeciągnij, by zmienić kolejność" aria-label="Przeciągnij, by zmienić kolejność">'+GRIP+'</span>':'')+'<select data-efd="bike" data-i="'+i+'">'+Object.entries(EV_BIKE).map(([k,v])=>'<option value="'+k+'"'+(d.bike===k?' selected':'')+'>'+v[0]+' '+v[1]+'</option>').join("")+'</select>'
   +'<input data-efd="km" data-i="'+i+'" inputmode="decimal" maxlength="6" placeholder="km" value="'+esc(d.km)+'"><input data-efd="name" data-i="'+i+'" maxlength="40" placeholder="nazwa (opcj.)" value="'+esc(d.name)+'">'
   +(ef.dist.length>1?'<button type="button" class="evdx" data-ef="rmdist" data-i="'+i+'" aria-label="Usuń dystans">✕</button>':'')+'</div>'
@@ -2782,6 +2899,7 @@ $("evsheet").addEventListener("input",e=>{if(!ef)return;const t=e.target;
   if(t.dataset.efd){const d=ef.dist[+t.dataset.i];if(d)d[t.dataset.efd]=t.value;return}
   if(t.id==="efname"){ef.name=t.value;const sim=ef.name.trim().length>=3?evs.filter(x=>x.id!==ef.id&&lc(x.name).includes(lc(ef.name.trim().slice(0,12)))).slice(0,3):[];
     $("efsim").innerHTML=sim.length?'<div class="evsim">Już są: '+sim.map(x=>'<b>'+esc(x.name)+'</b> ('+esc(evDates(x))+')').join(", ")+' — sprawdź, czy to nie ta sama.</div>':''}});
+$("evsheet").addEventListener("focusout",e=>{if(ef&&e.target.id==="efplace"){ef.place=e.target.value;if(evGeoOk&&ef.place.trim()&&ef.geoFor!==ef.place.trim())efGeocode()}});
 $("evsheet").addEventListener("change",e=>{if(!ef)return;const t=e.target;if(t.dataset.efd==="bike"){const d=ef.dist[+t.dataset.i];if(d)d.bike=t.value}});
 // ↕ zmiana kolejności dystansów — przeciąganie uchwytu (mysz i dotyk)
 function efMove(from,to){if(from===to||to<0||to>=ef.dist.length)return;
@@ -2805,6 +2923,8 @@ $("evsheet").addEventListener("click",async e=>{
   if(k==="adddist"){ef.dist.push({bike:ef.dist.length?ef.dist[ef.dist.length-1].bike:"gravel",km:"",name:"",elev:"",lim:""});renderEvForm();return}
   if(k==="rmdist"){ef.dist.splice(+b.dataset.i,1);renderEvForm();return}
   if(k==="reg"){ef.reg=b.dataset.v;renderEvForm();return}
+  if(k==="geo"){efGeocode();return}
+  if(k==="geopick"){const x=ef.geoAlt[+b.dataset.i];if(x){const old=ef.geo;ef.geo=x;ef.geoAlt=ef.geoAlt.filter(y=>y!==x);if(old)ef.geoAlt.unshift(old);const g=$("efgeo");if(g)g.innerHTML=efGeoHtml()}return}
   if(k==="save")saveEvent();
 });
 async function saveEvent(){
@@ -2818,7 +2938,9 @@ async function saveEvent(){
   if(evExtraOk)for(const d of D){d.e=String(d.elev||"").replace(/\s/g,"")===""?null:parseInt(String(d.elev).replace(/\s/g,""),10);d.l=limParse(d.lim);
     if(d.e!==null&&!(d.e>=0&&d.e<=50000)){say("Przewyższenie podaj w metrach (np. 2400).");return}
     if(d.l!==null&&!(d.l>0&&d.l<=20160)){say("Limit czasu podaj w godzinach, np. 72, 6:30 albo 45 min.");return}}
+  if(evGeoOk&&ef.place.trim()&&ef.geoFor!==ef.place.trim())await efGeocode();
   const row={name,date_from:ef.from,date_to:ef.to&&ef.to!==ef.from?ef.to:null,place:ef.place.trim()||null,url:url||null,note:ef.note.trim()||null,reg_closed:ef.reg==="closed",reg_until:ef.reg==="open"&&ef.regUntil?ef.regUntil:null};
+  if(evGeoOk){const g=ef.place.trim()&&ef.geoFor===ef.place.trim()?ef.geo:null;row.lat=g?g.lat:null;row.lon=g?g.lon:null}
   try{
     let id=ef.id;
     if(id){const r=await sb.from("events").update(row).eq("id",id).select("id");if(r.error||!r.data||!r.data.length)throw r.error||new Error("brak uprawnień")}
@@ -4795,7 +4917,8 @@ async function loadRemote(selectId){
     const ts=await sb.from("testers").select("user_id");testerOk=!ts.error;testerIds=new Set((!ts.error&&ts.data||[]).map(x=>x.user_id));
     // 🏁 imprezy masowe (KROK 40) — tylko gdy zakładka dostępna
     if(flags.tab_events&&tabOk(3)){
-      const [e1,e2,e3]=await Promise.all([sb.from("events").select("id,created_by,name,date_from,date_to,place,url,note,reg_until,reg_closed,delete_req_at,delete_req_by").order("date_from").limit(1000),
+      const EVC="id,created_by,name,date_from,date_to,place,url,note,reg_until,reg_closed,delete_req_at,delete_req_by";
+      const [e1,e2,e3]=await Promise.all([sb.from("events").select(EVC+",lat,lon").order("date_from").limit(1000).then(r=>{evGeoOk=!r.error;return r.error?sb.from("events").select(EVC).order("date_from").limit(1000):r}),
         sb.from("event_distances").select("id,event_id,bike,km,name,sort,elev,limit_min").limit(5000),sb.from("event_participants").select("event_id,user_id,distance_id").limit(10000)]);
       evOk=!e1.error;evs=(e1.data||[]);evDist={};evPart={};evExtraOk=!e2.error;
       if(e2.error){const r=await sb.from("event_distances").select("id,event_id,bike,km,name,sort").limit(5000);e2.data=r.data}
