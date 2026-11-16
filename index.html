@@ -66,6 +66,7 @@ nav button.on{background:var(--accbtn);color:#fff;box-shadow:0 1px 4px rgba(36,1
 .bsect .bschev{width:18px;height:18px;margin-left:auto;flex:none;transition:transform .2s;transform:rotate(180deg)}
 .bsect.col .bschev{transform:none}
 .bsecb{padding:0 2px}
+.nit.stn{align-items:center;cursor:default}.nit.stn .tx b{font-size:15px}.nit.stn .stgo{margin-left:auto;white-space:nowrap;font-weight:800}
 .nit{display:flex;gap:10px;padding:10px;border-radius:14px;margin-top:6px;position:relative;cursor:pointer;text-align:left}
 .nit.new{background:var(--acc2)}.nit.mine.new{background:#fff3c4}html[data-theme=dark] .nit.mine.new{background:#4a3f12}
 .nit.old{opacity:.62}
@@ -2507,9 +2508,21 @@ function stepsList(){
   if(favOk)S.push({k:"fav",t:"Dodaj ulubionych ⭐",ok:favIds().length>0,go:"Wybierz"});
   return S;
 }
-const stepsOn=()=>!!session&&!!nicks[uid]&&lsGet("stepsHide")!=="1"&&(welForce||(!!joinedAt[uid]&&Date.now()-new Date(joinedAt[uid]).getTime()<14*864e5));
+// dostępne przez 14 dni od założenia konta; „Ukryj” chowa tylko kartę w Zaproszeniach — kroki zostają w 🔔 („✨ Dokończ start”)
+const stepsAvail=()=>!!session&&!!nicks[uid]&&(welForce||(!!joinedAt[uid]&&Date.now()-new Date(joinedAt[uid]).getTime()<14*864e5));
+const stepsOn=()=>stepsAvail()&&lsGet("stepsHide")!=="1";
+const stepsLeft=()=>stepsAvail()?stepsList().filter(x=>!x.ok):[];
+// licznik na dzwonku: tylko do pierwszego obejrzenia listy 🔔 i gdy karta nie jest ukryta
+const stepsBadge=()=>lsGet("stepsSeen")==="1"||lsGet("stepsHide")==="1"?0:stepsLeft().length;
+function stepGo(k){
+  if(k==="ride"){show(0);const w=document.querySelector("#wantlist .want");if(w){w.scrollIntoView({behavior:"smooth",block:"center"});w.classList.remove("flash");void w.offsetWidth;w.classList.add("flash")}else openWantForm(null);return}
+  if(k==="tg"){gearOpen=true;gearView="tg";renderGear();return}
+  if(k==="fav"){gearOpen=true;gearView="favs";renderGear();return}
+  if(k==="show"){try{localStorage.removeItem("stepsHide")}catch(e){}show(0);renderSteps();const b=$("steps");if(b)setTimeout(()=>{b.scrollIntoView({behavior:"smooth",block:"center"})},60);renderBell();return}
+}
 function renderSteps(){
   const box=$("steps");if(!box)return;
+  try{renderBell()}catch(e){}
   if(!stepsOn()){box.className="hide";box.innerHTML="";return}
   const S=stepsList(),d=S.filter(x=>x.ok).length,all=d===S.length,first=String(nicks[uid]).trim().split(/\s+/)[0];
   box.className="steps"+(all?" all":"");
@@ -2522,10 +2535,9 @@ function renderSteps(){
 }
 $("steps").addEventListener("click",e=>{
   const b=e.target.closest("[data-st]");if(!b)return;const k=b.dataset.st;
-  if(k==="hide"){lsSet("stepsHide","1");welForce=false;renderSteps();return}
-  if(k==="ride"){const w=document.querySelector("#wantlist .want");if(w){w.scrollIntoView({behavior:"smooth",block:"center"});w.classList.remove("flash");void w.offsetWidth;w.classList.add("flash")}else openWantForm(null);return}
-  if(k==="tg"){gearOpen=true;gearView="tg";renderGear();return}
-  if(k==="fav"){gearOpen=true;gearView="favs";renderGear();return}
+  if(k==="hide"){lsSet("stepsHide","1");renderSteps();renderBell();
+    if(stepsLeft().length)say("Schowane — pozostałe kroki znajdziesz pod 🔔 „Dokończ start”.");return}
+  stepGo(k);
 });
 
 /* ---------- START: chętni ---------- */
@@ -4068,7 +4080,7 @@ function nuRow(id,un){const d=new Date(joinedAt[id]);
 const bellUnread=()=>notifs.filter(n=>!n.read_at&&nWant(n)&&(ME_KINDS.includes(n.kind)||OWN_KINDS.includes(n.kind)));
 function renderBell(){
   const b=$("bellbtn");if(!b)return;
-  const on=!!session&&visOk,n=on?bellUnread().length+fbMineUnread().length+fbAdmUnread().length+nuUnread().length:0,bd=$("bellbadge");
+  const on=!!session&&visOk,n=on?bellUnread().length+fbMineUnread().length+fbAdmUnread().length+nuUnread().length+stepsBadge():0,bd=$("bellbadge");
   b.classList.toggle("hide",!on);
   bd.textContent=n>9?"9+":String(n);bd.classList.toggle("hide",!n);
   b.setAttribute("aria-label",n?"Zaproszenia i powiadomienia — nowe: "+n:"Zaproszenia i powiadomienia");
@@ -4091,11 +4103,14 @@ function renderBellSheet(){
   const ord=(a,b)=>((wUnread(b).length?1:0)-(wUnread(a).length?1:0))||((wNeedsAct(b)?1:0)-(wNeedsAct(a)?1:0))||(new Date(a.starts_at)-new Date(b.starts_at));
   const forMe=wants.filter(w=>w.user_id!==uid&&act(w)&&(w.visibility!=="private"||invIds(w).includes(uid)||(joins[w.id]||[]).includes(uid))).sort(ord);
   const mine=wants.filter(w=>w.user_id===uid&&act(w)).sort(ord);
-  const keep=p.querySelector(".bslist"),st=keep?keep.scrollTop:0,nu=bellUnread().length+nuUnread().length,NU=nuList(),NUu=new Set(nuUnread());
+  const keep=p.querySelector(".bslist"),st=keep?keep.scrollTop:0,nu=bellUnread().length+nuUnread().length,NU=nuList(),NUu=new Set(nuUnread()),SA=stepsAvail()?stepsList():[],SL=SA.filter(x=>!x.ok);
   p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Zaproszenia i powiadomienia"><div class="bsgrab"></div>'
    +'<div class="bshead"><button type="button" class="lnk" data-bk="close">Zamknij</button><b>🔔 Zaproszenia</b>'
    +(nu?'<button type="button" class="lnk" data-bk="all" style="text-align:right">✓ Przeczytane</button>':'<span style="min-width:64px"></span>')+'</div>'
    +'<div class="bslist">'
+   +(SL.length?bsSec("start",'✨ Dokończ start · '+(SA.length-SL.length)+' z '+SA.length,lsGet("stepsHide")==="1"?0:SL.length,SL.length,
+      SL.map(x=>'<div class="nit stn"><div class="ic">'+({ride:"🚴",tg:"🔔",fav:"⭐"}[x.k]||"✨")+'</div><div class="tx"><b>'+x.t.replace(" ⭐","")+'</b></div>'+(x.go?'<button type="button" class="lnk stgo" data-sb="'+x.k+'">'+x.go+' ›</button>':'')+'</div>').join("")
+      +(lsGet("stepsHide")==="1"?'<div class="bsempty"><button type="button" class="lnk" data-sb="show">Pokaż z powrotem w Zaproszeniach ›</button></div>':'')):'')
    +(fbMineUnread().length?bsSec("msg",'💬 Wiadomości',fbMineUnread().length,fbMineUnread().length,fbMineUnread().map(f=>fbRow(f,false)).join("")):'')
    +(fbAdmUnread().length?bsSec("adm",'🛡️ Zgłoszenia',fbAdmUnread().length,fbAdmUnread().length,fbAdmUnread().slice(0,5).map(f=>fbRow(f,true)).join("")):'')
    +(NU.length?bsSec("nu",'🆕 Nowi użytkownicy',NUu.size,NU.length,NU.slice(0,6).map(id=>nuRow(id,NUu.has(id))).join("")
@@ -4119,8 +4134,9 @@ function closeBell(){
   // informacje (bez potrzeby odpowiedzi) uznajemy za przeczytane po obejrzeniu listy
   const ids=bellUnread().filter(n=>!nNeedsAct(n)).map(n=>n.id);
   if(nuUnread().length)nuMarkSeen();
+  if(stepsLeft().length)lsSet("stepsSeen","1");
   $("bellsheet").classList.add("hide");$("bellsheet").innerHTML="";
-  markRead(ids);
+  if(ids.length)markRead(ids);else renderBell();
 }
 // przejście do karty zaproszenia (Start: Twoje zaproszenie albo karta dnia)
 function goToWant(w){
@@ -4145,6 +4161,8 @@ $("bellbtn").onclick=()=>{if(!session)return;renderBellSheet()};
 $("bellsheet").addEventListener("click",async e=>{
   const p=$("bellsheet");
   const fr=e.target.closest("button[data-fb]");
+  const sb=e.target.closest("[data-sb]");
+  if(sb){const k=sb.dataset.sb;closeBell();renderBell();stepGo(k);return}
   const sc=e.target.closest("[data-bsec]");
   if(sc){const k=sc.dataset.bsec,st=bsColGet(),col=!sc.classList.contains("col");st[k]=col;try{localStorage.setItem("bellCol",JSON.stringify(st))}catch(err){}
     renderBellSheet();return}
