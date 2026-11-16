@@ -148,8 +148,7 @@ nav button.on{background:var(--accbtn);color:#fff;box-shadow:0 1px 4px rgba(36,1
 .sleft{text-align:left;margin-top:6px}
 .nk{display:inline-block;padding:2px 10px;margin:1px 0;border-radius:999px;font-size:16px;font-weight:700;line-height:1.4;letter-spacing:-.01em;background:var(--fill);color:var(--ink);white-space:nowrap;vertical-align:baseline}
 .nk.nobg{padding:2px 1px}
-.nk.live{box-shadow:0 0 0 2px #19e35a}
-.nk.nobg.live{padding:2px 8px}
+.nk.live::after{content:"";display:inline-block;width:.5em;height:.5em;min-width:7px;min-height:7px;border-radius:50%;background:#19e35a;margin-left:.35em;vertical-align:.08em;box-shadow:0 0 0 2px rgba(25,227,90,.22)}
 .nks{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .crow small{color:var(--mut);font-size:13px}
 .crow label{display:flex;align-items:center;gap:6px;margin:0;font-size:14px;color:var(--mut)}
@@ -1215,6 +1214,7 @@ document.addEventListener("click",e=>{
 /* ---------- ikony konturowe zamiast emoji (styl App Store); kolorowe zostają plakietki przy nicku ⭐ 💡 🧪 👑 ---------- */
 const UI_P={
 gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',help:'<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/>',
+key:'<path d="M2.6 17.4A2 2 0 0 0 2 18.8V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.2a2 2 0 0 0 1.4-.6l.8-.8a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/>',
 pencil:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
 star:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
 starf:'<polygon class="gold" points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
@@ -1282,7 +1282,7 @@ send:'<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/>',
 sliders:'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>'
 };
 const uiIcon=k=>'<svg class="ui-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+UI_P[k]+'</svg>';
-const UI_MAP=[["⚙️","gear"],["⚙","gear"],["🔔","bell"],["🔕","belloff"],["❓","help"],["✏️","pencil"],["⭐","starf"],["☆","star"],["💬","msg"],["🛡️","shield"],["🛡","shield"],["📣","mega"],["☀️","sun"],["🌙","moon"],["👤","user"],["🕖","clock"],["🌡","therm"],["🌬","wind"],["🌧","rain"],["📩","mail"],["✉️","mail"],["🌍","globe"],["🔒","lock"],["🙋","hand"],["🚴","bike"],["🚲","bike"],["👥","users"],["🐞","bug"],["💡","bulb"],["🗺️","map"],["🗺","map"],["🧪","flask"],["⏳","hourglass"],["👀","eye"],["📅","cal"],["🗓","cal"],["📊","chart"],["🎨","palette"],["👩","venus"],["👨","mars"],["📍","pin"],["📌","pushpin"],["🏁","flag"],["🪨","gravel"],["🛣️","road"],["🛣","road"],["⛰️","mtb"],["⛰","mtb"],["🏃","run"],["🚶","walk"],["🏊","swim"],["🏅","medal"],["📝","clip"],["❤️","heart"],["❤","heart"],["⧉","copy"],["🌐","globe"],["🗄️","archive"],["🗄","archive"],["🌳","tree"],["🌅","sunrise"],["☕","coffee"],["🛞","wheel"],["💨","windy"],["🏙️","city"],["🏙","city"],["📏","ruler"],["⏱","timer"],["⏰","alarm"],["🙅","xcircle"],["✅","check"],["⚠️","alert"],["🗑️","trash"],["👋","logout"],["📲","phone"],["🆕","sparkles"],["✨","sparkles"],["📈","trend"],["➕","plus"],["🚦","sliders"],["🧹","trash"]];
+const UI_MAP=[["🔑","key"],["⚙️","gear"],["⚙","gear"],["🔔","bell"],["🔕","belloff"],["❓","help"],["✏️","pencil"],["⭐","starf"],["☆","star"],["💬","msg"],["🛡️","shield"],["🛡","shield"],["📣","mega"],["☀️","sun"],["🌙","moon"],["👤","user"],["🕖","clock"],["🌡","therm"],["🌬","wind"],["🌧","rain"],["📩","mail"],["✉️","mail"],["🌍","globe"],["🔒","lock"],["🙋","hand"],["🚴","bike"],["🚲","bike"],["👥","users"],["🐞","bug"],["💡","bulb"],["🗺️","map"],["🗺","map"],["🧪","flask"],["⏳","hourglass"],["👀","eye"],["📅","cal"],["🗓","cal"],["📊","chart"],["🎨","palette"],["👩","venus"],["👨","mars"],["📍","pin"],["📌","pushpin"],["🏁","flag"],["🪨","gravel"],["🛣️","road"],["🛣","road"],["⛰️","mtb"],["⛰","mtb"],["🏃","run"],["🚶","walk"],["🏊","swim"],["🏅","medal"],["📝","clip"],["❤️","heart"],["❤","heart"],["⧉","copy"],["🌐","globe"],["🗄️","archive"],["🗄","archive"],["🌳","tree"],["🌅","sunrise"],["☕","coffee"],["🛞","wheel"],["💨","windy"],["🏙️","city"],["🏙","city"],["📏","ruler"],["⏱","timer"],["⏰","alarm"],["🙅","xcircle"],["✅","check"],["⚠️","alert"],["🗑️","trash"],["👋","logout"],["📲","phone"],["🆕","sparkles"],["✨","sparkles"],["📈","trend"],["➕","plus"],["🚦","sliders"],["🧹","trash"]];
 const UI_RE=new RegExp("("+UI_MAP.map(([e])=>e.replace(/[\u{FE0F}]/gu,"")).sort((a,b)=>b.length-a.length).map(e=>e.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")\uFE0F?","gu");
 const UI_K=Object.fromEntries(UI_MAP.map(([e,k])=>[e.replace(/\uFE0F/g,""),k]));
 const UI_SKIP=".wpc,.wpace .e,.nk,.stars,.fbst,.ttag,.beta,#toast,.fbcnt,.cdbadge,.ui-i";
@@ -2544,7 +2544,7 @@ function helpFullHtml(){
      "<b>＋ Dodaj imprezę</b> — każdy zalogowany. Autor i admin edytują; ⧉ Duplikuj tworzy kolejną edycję (rok i daty +1). Dystanse ułożysz, przeciągając ⋮⋮. Usuwa admin (autor prosi o usunięcie)."]):'')
    +sec("⭐ Ludzie",[
      "Dotknij nicku: karta osoby („Z nami od…”, „🚴 Zaproś na rower”, ☆ dodaj do ulubionych). ⭐ ulubieni są zawsze na górze list.",
-     "🟢 zielona obwódka = osoba ma teraz otwartą aplikację. Przy nickach: ⭐ ulubiony, 🧪 tester, 💡 3 zrealizowane pomysły/zgłoszenia, 👑 główny admin."])
+     "🟢 zielona kropka przy nicku = osoba ma teraz otwartą aplikację. Przy nickach: ⭐ ulubiony, 🧪 tester, 💡 3 zrealizowane pomysły/zgłoszenia, 👑 główny admin."])
    +sec("⚙️ Ustawienia",[
      "Nick i płeć, ⭐ ulubieni, 💬 oceń aplikację / zgłoś błąd lub pomysł (admin odpisuje — odpowiedź pod 🔔), 🧪 zostań testerem, wygląd ☀️ / 🌙 / Auto, nick na górze ekranu, pokazywanie pomocy, wyloguj, usuń konto.",
      "<b>⬆</b> w lewym dolnym rogu wraca na górę strony."])
@@ -4619,6 +4619,29 @@ const nuUnread=()=>{const s=nuSeen();return nuList().filter(id=>new Date(joinedA
 const nuMarkSeen=()=>{try{localStorage.setItem("nuSeen",String(Date.now()))}catch(e){}};
 function nuRow(id,un){const d=new Date(joinedAt[id]);
   return '<div class="nit'+(un?' new':'')+'" data-nu="'+esc(id)+'"><div class="ic">🆕</div><div class="tx">'+nk(id)+'<div class="w">'+(genders[id]==="K"?'dołączyła':'dołączył')+' '+esc(relDayPast(d).toLowerCase())+', '+esc(hhmm(d))+(tgLinks&&tgLinks.has(id)?' · ✈️ Telegram':'')+'</div></div>'+(un?'<span class="dot"></span>':'')+'</div>'}
+// 🔑 ostatnie logowania i 🟢 ostatnio w aplikacji (tylko admini, KROK 49) — ładowane przy otwarciu 🔔
+let lgOk=null,lgList=[],lsList=[],lgAt=0,lgBusy=false;
+async function lgLoad(force){
+  if(!session||!isAdmin||lgOk===false||lgBusy||(!force&&Date.now()-lgAt<60000))return;
+  lgBusy=true;
+  try{const [a,b]=await Promise.all([sb.rpc("admin_logins",{days:14}),sb.rpc("admin_last_seen",{days:14})]);
+    if(a.error||b.error){lgOk=false}else{lgOk=true;lgList=a.data||[];lsList=b.data||[];lgAt=Date.now()}
+  }catch(e){lgOk=false}
+  lgBusy=false;
+  if(!$("bellsheet").classList.contains("hide"))renderBellSheet();
+}
+const lgSeen=()=>{try{const v=localStorage.getItem("lgSeen");return v?+v:Date.now()-864e5}catch(e){return 0}};
+const lgRows=()=>lgOk?lgList.filter(x=>x.user_id!==uid&&nicks[x.user_id]):[];
+const lgUnread=()=>{const s=lgSeen();return lgRows().filter(x=>!x.backfill&&new Date(x.at).getTime()>s)};
+const lgWhen=d=>relDayPast(d).toLowerCase()+', '+hhmm(d);
+function lgRow(x,un){const d=new Date(x.at),k=genders[x.user_id]==="K";
+  return '<div class="nit'+(un?' new':'')+'" data-nu="'+esc(x.user_id)+'"><div class="ic">🔑</div><div class="tx">'+nk(x.user_id)+'<div class="w">'+(k?'zalogowała się':'zalogował się')+' '+esc(lgWhen(d))
+   +(x.backfill?'':x.prev_at?' · poprzednio: '+esc(agoTxt(x.prev_at)):' · ✨ pierwsze logowanie')+'</div></div>'+(un?'<span class="dot"></span>':'')+'</div>'}
+function lsRows(){if(!lgOk)return [];
+  const on=onlineIds.filter(id=>id!==uid&&nicks[id]).map(id=>({user_id:id,now:true}));
+  return on.concat(lsList.filter(x=>x.user_id!==uid&&nicks[x.user_id]&&!onlineIds.includes(x.user_id)))}
+function lsRow(x){
+  return '<div class="nit" data-nu="'+esc(x.user_id)+'"><div class="ic">'+(x.now?'🟢':'🕖')+'</div><div class="tx">'+nk(x.user_id)+'<div class="w">'+(x.now?'teraz w aplikacji':'w aplikacji '+esc(agoTxt(x.last_seen)))+'</div></div></div>'}
 const bellUnread=()=>notifs.filter(n=>!n.read_at&&nWant(n)&&(ME_KINDS.includes(n.kind)||OWN_KINDS.includes(n.kind)));
 function renderBell(){
   const b=$("bellbtn");if(!b)return;
@@ -4645,7 +4668,7 @@ function renderBellSheet(){
   const ord=(a,b)=>((wUnread(b).length?1:0)-(wUnread(a).length?1:0))||((wNeedsAct(b)?1:0)-(wNeedsAct(a)?1:0))||(new Date(a.starts_at)-new Date(b.starts_at));
   const forMe=wants.filter(w=>w.user_id!==uid&&act(w)&&(w.visibility!=="private"||invIds(w).includes(uid)||(joins[w.id]||[]).includes(uid))).sort(ord);
   const mine=wants.filter(w=>w.user_id===uid&&act(w)).sort(ord);
-  const keep=p.querySelector(".bslist"),st=keep?keep.scrollTop:0,nu=bellUnread().length+nuUnread().length,NU=nuList(),NUu=new Set(nuUnread()),SA=stepsAvail()?stepsList():[],SL=SA.filter(x=>!x.ok);
+  const keep=p.querySelector(".bslist"),st=keep?keep.scrollTop:0,nu=bellUnread().length+nuUnread().length+lgUnread().length,LG=lgRows(),LGu=new Set(lgUnread()),LS=lsRows(),NU=nuList(),NUu=new Set(nuUnread()),SA=stepsAvail()?stepsList():[],SL=SA.filter(x=>!x.ok);
   p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Powiadomienia"><div class="bsgrab"></div>'
    +'<div class="bshead"><button type="button" class="lnk" data-bk="close">Zamknij</button><b>🔔 Powiadomienia</b>'
    +(nu?'<button type="button" class="lnk" data-bk="all" style="text-align:right">✓ Przeczytane</button>':'<span style="min-width:64px"></span>')+'</div>'
@@ -4657,6 +4680,12 @@ function renderBellSheet(){
    +(fbAdmUnread().length?bsSec("adm",'🛡️ Zgłoszenia',fbAdmUnread().length,fbAdmUnread().length,fbAdmUnread().slice(0,5).map(f=>fbRow(f,true)).join("")):'')
    +(NU.length?bsSec("nu",'🆕 Nowi użytkownicy',NUu.size,NU.length,NU.slice(0,6).map(id=>nuRow(id,NUu.has(id))).join("")
       +(NU.length>6?'<div class="bsempty">i jeszcze '+(NU.length-6)+' z ostatnich 14 dni — pełna lista: ⚙️ → 🛡️ Administracja</div>':'')):'')
+   +(LG.length?bsSec("lg",'🔑 Ostatnie logowania',LGu.size,LG.length,LG.slice(0,6).map(x=>lgRow(x,LGu.has(x))).join("")
+      +(LG.length>6?'<div class="bsempty">i jeszcze '+(LG.length-6)+' z ostatnich 14 dni</div>':'')
+      +'<div class="bsempty">Liczy się wpisanie e-maila i hasła — z zainstalowanej aplikacji ludzie zwykle logują się raz.</div>'):'')
+   +(LS.length?bsSec("ls",'🟢 Ostatnio w aplikacji',0,LS.length,LS.slice(0,8).map(lsRow).join("")
+      +(LS.length>8?'<div class="bsempty">i jeszcze '+(LS.length-8)+' z ostatnich 14 dni</div>':'')
+      +'<div class="bsempty">Czas odświeża się co ok. 15 min, gdy ktoś ma otwartą aplikację.</div>'):'')
    +bsSec("forme",'📩 Do Ciebie',forMe.filter(w=>wUnread(w).length).length,forMe.length,
       forMe.length?forMe.map(bellRowHtml).join(""):'<div class="bsempty">Na razie nikt nie zaprasza.</div>')
    +bsSec("mine",'🙋 Twoje zaproszenia',mine.filter(w=>wUnread(w).length).length,mine.length,
@@ -4676,6 +4705,7 @@ function closeBell(){
   // informacje (bez potrzeby odpowiedzi) uznajemy za przeczytane po obejrzeniu listy
   const ids=bellUnread().filter(n=>!nNeedsAct(n)).map(n=>n.id);
   if(nuUnread().length)nuMarkSeen();
+  if(lgUnread().length)lsSet("lgSeen",String(Date.now()));
   if(stepsLeft().length)lsSet("stepsSeen","1");
   $("bellsheet").classList.add("hide");$("bellsheet").innerHTML="";
   if(ids.length)markRead(ids);else renderBell();
@@ -4699,7 +4729,7 @@ function goToWant(w){
   setTimeout(()=>{el.scrollIntoView({behavior:"smooth",block:"center"});el.classList.remove("flash");void el.offsetWidth;el.classList.add("flash")},80);
 }
 $("menick").onclick=()=>{gearOpen=true;gearView="main";renderGear()};
-$("bellbtn").onclick=()=>{if(!session)return;renderBellSheet()};
+$("bellbtn").onclick=()=>{if(!session)return;renderBellSheet();lgLoad()};
 $("bellsheet").addEventListener("click",async e=>{
   const p=$("bellsheet");
   const fr=e.target.closest("button[data-fb]");
@@ -4714,7 +4744,7 @@ $("bellsheet").addEventListener("click",async e=>{
   if(k){
     if(k.dataset.bk==="close")closeBell();
     else if(k.dataset.bk==="new"){closeBell();show(0);openWantForm(null)}
-    else{nuMarkSeen();await markRead(bellUnread().map(n=>n.id));renderBell();renderBellSheet()}
+    else{nuMarkSeen();lsSet("lgSeen",String(Date.now()));await markRead(bellUnread().map(n=>n.id));renderBell();renderBellSheet()}
     return;
   }
   const a=e.target.closest("button[data-na]");
