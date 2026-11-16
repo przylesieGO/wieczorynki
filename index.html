@@ -205,6 +205,7 @@ details.wday .want{margin:0 10px 10px}
 .rbaddprev{display:flex;justify-content:center;background:var(--fill);border-radius:14px;padding:10px;margin-top:4px}.rbaddprev svg{max-width:100%;height:auto}
 .rbinfo2{display:flex;gap:10px;align-items:flex-start;background:var(--acc2);border-radius:14px;padding:11px 12px;margin:2px 0 10px;text-align:left}
 .rbinfo2>.ui-i{flex:none;width:20px;height:20px;color:var(--acc);margin-top:2px}.rbinfo2 b{display:block;font-size:15px}.rbinfo2 span{display:block;font-size:13.5px;color:var(--mut);margin-top:2px;line-height:1.35}.rbinfo2 .b{margin-top:8px}
+.fch.pwnx{display:inline-flex;flex-direction:column;align-items:center;line-height:1.05;border:1px dashed var(--mut)}.fch.pwnx small{font-size:11px;font-weight:600;opacity:.7}
 .rbinvt{display:block;font-size:13px;font-weight:600;opacity:.9;margin-top:1px}
 .osmbar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--fill);margin:8px 0 6px}.osmbar i{display:block;height:100%}
 .osmbar.mini{height:5px;border-radius:3px;margin:5px 0 2px;width:100%}
@@ -3557,6 +3558,9 @@ function pwSelHtml(){
     days+='<button type="button" class="fch'+(v.day===i?' on':'')+'" data-rbpd="'+i+'">'+(i===0?'Dziś':i===1?'Jutro':dn[d.getDay()]+' '+d.getDate())+'</button>'}
   let hrs='';for(let h=0;h<=23;h++){const past=v.day===0&&h<=now.getHours()-1;
     if(!past)hrs+='<button type="button" class="fch'+(v.h===h?' on':'')+'" data-rbph="'+h+'">'+h+':00</button>'}
+  // po 23:00 — noc i ranek następnego dnia; dotknięcie sam przełącza dzień
+  if(v.day<6){const nd=new Date(now);nd.setDate(nd.getDate()+v.day+1);const nl=v.day===0?'jutro':dn[nd.getDay()]+' '+nd.getDate();
+    for(let h=0;h<=6;h++)hrs+='<button type="button" class="fch pwnx" data-rbph="'+h+'" data-rbpn="1">'+h+':00<small>'+nl+'</small></button>'}
   return '<div class="fchips pwrow">'+days+'</div><div class="fchips pwrow" id="pwhrs">'+hrs+'</div>';
 }
 function pwBring(o){
@@ -3851,8 +3855,8 @@ $("rbsheet").addEventListener("click",async e=>{
   const o=e.target.closest("[data-rbo]");if(o){rb.open=o.dataset.rbo;rb.rev=false;rb.pw=rb.mode==="pick"?pwFromForm():null;renderRb();return}
   const pk=e.target.closest("[data-pwit]");if(pk){pwPackToggle(pk);return}
   const pd=e.target.closest("[data-rbpd]"),ph=e.target.closest("[data-rbph]");
-  if(pd||ph){const v=rb.pw||(rb.pw=pwDefault());v.ch=1;if(ph)v.m=0;if(pd){v.day=+pd.dataset.rbpd;if(v.day===0&&v.h<=new Date().getHours()-1)v.h=Math.min(23,new Date().getHours()+1)}else v.h=+ph.dataset.rbph;
-    const hs=$("pwhrs"),sl=hs?hs.scrollLeft:0;$("pwsel").innerHTML=pwSelHtml();const ib=$("rbinvbtn");if(ib)ib.innerHTML=rbInvLbl();const h2=$("pwhrs");if(h2){h2.scrollLeft=sl;if(pd)pwHrsCenter()}pwUpdate();return}
+  if(pd||ph){const v=rb.pw||(rb.pw=pwDefault());v.ch=1;if(ph)v.m=0;if(pd){v.day=+pd.dataset.rbpd;if(v.day===0&&v.h<=new Date().getHours()-1)v.h=Math.min(23,new Date().getHours()+1)}else{v.h=+ph.dataset.rbph;if(ph.dataset.rbpn)v.day=Math.min(6,v.day+1)}
+    const hs=$("pwhrs"),sl=hs?hs.scrollLeft:0;$("pwsel").innerHTML=pwSelHtml();const ib=$("rbinvbtn");if(ib)ib.innerHTML=rbInvLbl();const h2=$("pwhrs");if(h2){h2.scrollLeft=sl;if(pd||(ph&&ph.dataset.rbpn))pwHrsCenter()}pwUpdate();return}
   const so=e.target.closest("[data-rbs]");if(so){rb.sort=so.dataset.rbs;renderRb();return}
   const bk=e.target.closest("[data-rbb]");if(bk){rb.bike=bk.dataset.rbb;renderRb();return}
   const ab=e.target.closest("[data-rbab]");if(ab&&rb.add){rb.add.bike=ab.dataset.rbab;renderRbAdd();return}
@@ -4428,7 +4432,9 @@ function openWantForm(w,preset){
   wf.pace=w&&w.pace||null;wf.bike=w&&w.bike||null;wbikeRender();$("wbikewrap").classList.toggle("hide",!bikeOk);wf.pcity=w&&w.place_city||null;wf.parea=w&&w.place_area||null;wf.km=w&&w.km!=null?+w.km:null;wf.dur=w&&w.dur_min||null;wf.kmOwn=false;wf.durOwn=false;wf.place=w&&w.place||null;wf.plat=w&&w.place_lat!=null?+w.place_lat:null;wf.plon=w&&w.place_lon!=null?+w.place_lon:null;wf.placeOwn=false;wf.placeMap=false;wf.placeAdd=false;wfPlaceSync();$("wpacewrap").classList.toggle("hide",!paceOk);wfPaceSync();
   wfRouteSync();
   if(preset&&preset.pick){wf.vis="pick";wf.pick=new Set(preset.pick)}
-  $("wwhowrap").classList.toggle("hide",!!w||!visOk);
+  // edycja: „Kto zobaczy?” startuje z obecnego stanu (prywatne → wybrane osoby = obecni zaproszeni)
+  if(w&&isPriv(w)){wf.vis="pick";wf.pick=new Set((invs[w.id]||[]).map(x=>x.u))}
+  $("wwhowrap").classList.toggle("hide",!visOk);
   renderWhoBtn();
   $("wftitle").textContent="Kiedy jedziesz?";
   let d;
@@ -4791,6 +4797,11 @@ $("wsave").onclick=async()=>{
       return}
   }
   const priv=!wf.editId&&wfPriv(),ids=priv?wfInvIds():[];
+  // edycja: zmiana „Kto zobaczy?” (osoby, które już dołączyły, zostają zaproszone)
+  const ow1=wf.editId?wants.find(x=>x.id===wf.editId):null,ePriv=!!ow1&&visOk&&wfPriv(),
+    eJoined=ow1?(joins[ow1.id]||[]).filter(x=>x!==uid):[],eTarget=ePriv?[...new Set([...wfInvIds(),...eJoined])]:[];
+  if(ePriv&&!eTarget.length){say(wf.vis==="fav"?"Nie masz jeszcze ulubionych — wybierz osoby w „Kto zobaczy”.":"Wybierz co najmniej jedną osobę w „Kto zobaczy”.");return}
+  let visMsg="";
   if(priv&&!ids.length){say(wf.vis==="fav"?"Nie masz jeszcze ulubionych — wybierz osoby w „Kto zobaczy”.":"Wybierz co najmniej jedną osobę w „Kto zobaczy”.");return}
   let editedPriv=false;
   try{
@@ -4812,6 +4823,18 @@ $("wsave").onclick=async()=>{
       const res=await sb.from("wants").update(upd).eq("id",wf.editId).select("id");
       if(res.error||!res.data||!res.data.length)throw new Error(res.error?res.error.message:"zmiana terminu wymaga KROKU 11 w bazie");
       const ow=wants.find(x=>x.id===wf.editId);editedPriv=!!ow&&((invs[ow.id]||[]).length>0||(joins[ow.id]||[]).some(x=>x!==uid));
+      if(ow1&&visOk){
+        const was=isPriv(ow1),cur=(invs[ow1.id]||[]).map(x=>x.u);
+        if(was!==ePriv){const rv=await sb.from("wants").update({visibility:ePriv?"private":"all"}).eq("id",ow1.id).select("id");
+          if(rv.error||!rv.data||!rv.data.length)throw new Error("termin zapisany, ale zmiana „Kto zobaczy” wymaga KROKU 52 w bazie");
+          visMsg=ePriv?" 🔒 Teraz widzą tylko zaproszeni.":" 🌍 Teraz widzą wszyscy (i kanał Telegram)."}
+        if(ePriv){const add=eTarget.filter(u=>!cur.includes(u)),rem=cur.filter(u=>!eTarget.includes(u));
+          if(add.length){const ri=await sb.from("want_invitees").insert(add.map(u=>({want_id:ow1.id,user_id:u,added_by:uid})));if(ri.error)throw ri.error}
+          if(rem.length){const rd=await sb.from("want_invitees").delete().eq("want_id",ow1.id).in("user_id",rem);if(rd.error)throw rd.error}
+          const nNew=add.filter(u=>!eJoined.includes(u)).length;
+          if(nNew)visMsg+=" Zaproszono "+nNew+" "+plf(nNew,["nową osobę","nowe osoby","nowych osób"])+".";
+          if(rem.length)visMsg+=" Usunięto z zaproszonych: "+rem.length+".";}
+      }
     }else{
       const row={starts_at:d.toISOString(),note};if(paceOk&&wf.pace)row.pace=wf.pace;if(placeOk&&wf.place){row.place=wf.place;if(wf.plat!=null){row.place_lat=wf.plat;row.place_lon=wf.plon}}if(bikeOk){if(wf.bike)row.bike=wf.bike;if(wf.place&&wf.pcity){row.place_city=wf.pcity;if(wf.parea)row.place_area=wf.parea}}if(distOk&&!wf.route){if(wf.km)row.km=wf.km;else row.dur_min=wf.dur||DUR_DEF}if(priv)row.visibility="private";if(testOk)row.is_test=!!wf.test;if(wRouteOk&&wf.route){row.route=routeJson(wf.route);row.route_km=+routeKm(wf.route).toFixed(1)}if(rbOk&&rbUse)row.route_base_id=rbUse;
       if(rng){row.range_from=d.toISOString();row.range_to=d2.toISOString()}
@@ -4829,7 +4852,7 @@ $("wsave").onclick=async()=>{
     closeWantForm();$("wnote").value="";
     await loadRemote();
     const lbl=wfLabel(d)+(rng?"–"+hhmm(d2):"");
-    say(wasEdit?"Zmieniono termin ✔ "+lbl+(editedPriv&&visOk?" — zaproszeni dostaną powiadomienie.":"")
+    say(wasEdit?"Zapisano ✔ "+lbl+(visMsg||(editedPriv&&visOk?" — zaproszeni dostaną powiadomienie.":""))
       :priv?"Wysłane 🔒 do "+ids.length+" "+osob(ids.length)+" ✔ Dostaną powiadomienie w aplikacji.":testOk&&wf.test?"Wysłane 🧪 testowe zaproszenie na "+lbl+" ✔ (na kanale Telegram z oznaczeniem TESTOWE)":"Wysłane ✔ Zaproszenie na "+lbl+" jest też na kanale Telegram.");
   }catch(e){say("Nie udało się: "+(e&&e.message?e.message:"błąd"))}
 };
@@ -5015,7 +5038,8 @@ function renderWho(first){
   const seg=$("wsseg");if(seg)[...seg.children].forEach(b=>b.classList.toggle("on",b.dataset.v===ws.vis));
   $("wsq").classList.toggle("hide",ws.vis!=="pick");
   $("wslist").innerHTML=whoListHtml();
-  $("wshint").textContent=ws.vis==="all"?"":ws.mode==="add"?"Dostaną powiadomienie i zobaczą to zaproszenie.":"🔒 Zaproszenie zobaczą tylko wybrane osoby (i kogo one doproszą). Nie trafi na publiczny kanał Telegram.";
+  const jn=ws.mode==="form"&&wf.editId?(joins[wf.editId]||[]).filter(x=>x!==uid).length:0;
+  $("wshint").textContent=ws.vis==="all"?"":ws.mode==="add"?"Dostaną powiadomienie i zobaczą to zaproszenie.":"🔒 Zaproszenie zobaczą tylko wybrane osoby (i kogo one doproszą). Nie trafi na publiczny kanał Telegram."+(jn?" Osoby, które już dołączyły ("+jn+"), zostaną zaproszone.":"");
   const n=whoCount(),ok=$("wsok");
   ok.textContent=ws.mode==="add"?(n?"Zaproś · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.vis==="all"?"Gotowe · wszyscy":"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]);
   ok.disabled=ws.mode==="add"&&!n;
