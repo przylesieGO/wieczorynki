@@ -613,6 +613,8 @@ html[data-theme=dark] .evp-t.soon{background:#4d2a0e;color:#ffb074}@keyframes ev
 .instb{font-size:13px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.03em}
 .instx{margin-top:10px}.instx summary{cursor:pointer;font-weight:700;color:var(--acc);font-size:15px;padding:4px 0}
 .instx .instb{margin-top:12px}.instx ol.inst{font-size:14.5px;gap:4px}
+.myrep{background:var(--acc2);color:var(--acc);border-radius:10px;padding:7px 10px;font-size:13.5px;line-height:1.4}.myrep b{color:var(--acc)}
+.ai .myrep{margin-top:6px}
 .rskip2{margin-top:2px!important;font-size:13.5px!important;color:var(--mut)!important}
 .evdw{margin-top:10px}.evdw+.evdw{padding-top:10px;border-top:1px solid var(--line)}.evdw.drag{opacity:.95;background:var(--card);box-shadow:0 6px 18px rgba(0,0,0,.18);border-radius:10px;position:relative;z-index:2}.evdw.drag .evgrip{cursor:grabbing;color:var(--acc)}
 .evdr{display:flex;gap:6px;align-items:center}.evdr2{margin-top:6px}.evdr2.ind{padding-left:32px}.evdr2 label{flex:1;display:flex;align-items:center;gap:6px;min-width:0;color:var(--mut);font-size:13px}.evdr2 label{margin:0}.evdr2 input{flex:1;min-width:0;width:0;text-align:right}.evdr2 em{flex:none}.evdr2 em{font-style:normal;font-weight:700;color:var(--mut)}
@@ -3042,6 +3044,7 @@ function renderRep(){
   p.innerHTML='<div class="bsbox repbox" role="dialog" aria-modal="true" aria-label="Jak poszło?"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-rs="later">Później</button><b>🚴 Jak poszło?</b><span style="min-width:64px;text-align:right" class="note">'+(pend.length>1&&idx>=0?(idx+1)+' z '+pend.length:'')+'</span></div>'
    +'<div class="bslist">'
    +'<div class="rsub">'+esc(relDayPast(new Date(w.starts_at))+" · "+hhmm(new Date(w.starts_at)))+(w.place?' · 📍 '+esc(w.place):'')+'<br>'+nk(w.user_id)+(own?' <span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
+   +(myRep(w)?'<div class="myrep" style="margin-top:10px">✏️ '+(genders[uid]==="K"?'Odpowiedziałaś':'Odpowiedziałeś')+(myRep(w).updated_at?' '+esc(new Date(myRep(w).updated_at).toLocaleDateString("pl-PL",{day:"numeric",month:"numeric"})):'')+' — możesz zmienić i zapisać ponownie.</div>':'')
    +'<div class="bsgrp">Pojechałeś?</div><div class="seg rseg"><button type="button" data-rs="went" data-v="1" class="'+(rs.went===true?'on':'')+'">✅ Tak</button><button type="button" data-rs="went" data-v="0" class="'+(rs.went===false?'on':'')+'">❌ Nie dałem rady</button></div>'
    +(rs.went?'<div class="bsgrp">Ile km?</div><div class="fchips">'+(plan?[["plan","Jak w planie · "+String(plan).replace(".",",")+" km"],["less","Mniej"],["more","Więcej"]]:[]).map(([v,t])=>'<button type="button" class="fch'+(rs.kmMode===v?' on':'')+'" data-rs="km" data-v="'+v+'">'+esc(t)+'</button>').join("")+'</div>'
       +(rs.kmMode!=="plan"||!plan?'<div class="rrow"><input type="text" inputmode="decimal" maxlength="6" id="repkm" placeholder="km" value="'+esc(rs.km)+'"><span>km</span></div>':'')
@@ -3065,7 +3068,7 @@ async function saveReport(){
   const row={want_id:w.id,user_id:uid,went:!!rs.went,km,avg_kmh:kmh,rating:rs.went&&rs.rating||null,route_rating:rs.went&&w.route_km!=null&&rs.rrating||null,tags:rs.went?[...rs.tags]:[]};
   try{
     const r=await sb.from("ride_reports").upsert(row,{onConflict:"want_id,user_id"});if(r.error)throw r.error;
-    const RR=reports[w.id]=(reports[w.id]||[]).filter(x=>x.user_id!==uid);RR.push(Object.assign({self:true},row));
+    const RR=reports[w.id]=(reports[w.id]||[]).filter(x=>x.user_id!==uid);RR.push(Object.assign({self:true,updated_at:new Date().toISOString()},row));
     if(w.user_id===uid)for(const id of Object.keys(rs.who)){
       if(RR.some(y=>y.user_id===id&&y.self))continue;
       const q=await sb.from("ride_reports").upsert({want_id:w.id,user_id:id,went:!!rs.who[id]},{onConflict:"want_id,user_id"});
@@ -3094,6 +3097,13 @@ $("repsheet").addEventListener("click",e=>{
 $("repsheet").addEventListener("input",e=>{if(!rs)return;if(e.target.id==="repkm")rs.km=e.target.value;if(e.target.id==="repkmh")rs.kmh=e.target.value});
 function repLaterAdd(){if(!rs)return;const lt=repLater();lt.add(rs.id);try{sessionStorage.setItem("repLater",JSON.stringify([...lt]))}catch(e){}}
 // podsumowanie odpowiedzi do archiwum
+// ✅ „Twoja odpowiedź” na karcie (prośba właściciela 2026-11-16 12:31: widać, że już odpowiedziałem)
+function myRepHtml(w){
+  const r=myRep(w);if(!r)return "";const K=genders[uid]==="K",when=r.updated_at?new Date(r.updated_at):null;
+  const bits=r.self===false?[(r.went?'✅ autor potwierdził, że '+(K?'byłaś':'byłeś'):'❌ autor zaznaczył, że '+(K?'nie byłaś':'nie byłeś'))]
+    :[r.went?(K?'✅ pojechałaś':'✅ pojechałeś'):(K?'❌ nie pojechałaś':'❌ nie pojechałeś'),r.km!=null?fmt1(+r.km)+' km':'',r.avg_kmh!=null?'⚡ '+fmt1(+r.avg_kmh)+' km/h':'',r.rating?'jazda '+'★'.repeat(r.rating):'',r.route_rating?'trasa '+'★'.repeat(r.route_rating):''];
+  return '<div class="ail myrep"><b>'+(r.self===false?'Twoja jazda':(K?'Odpowiedziałaś':'Odpowiedziałeś'))+(when?' '+esc(when.toLocaleDateString("pl-PL",{day:"numeric",month:"numeric"}))+'</b>':'</b>')+': '+bits.filter(Boolean).map(esc).join(" · ")+'</div>';
+}
 function repSum(w){
   const R=reports[w.id]||[];if(!R.length)return null;
   const yes=R.filter(r=>r.went),sp=yes.filter(r=>r.self&&r.avg_kmh!=null).map(r=>+r.avg_kmh),sk=yes.filter(r=>r.self&&r.km!=null).map(r=>+r.km),rt=R.filter(r=>r.rating).map(r=>r.rating),rr=R.filter(r=>r.route_rating).map(r=>r.route_rating);
@@ -3124,6 +3134,7 @@ function archItem(w){
          '⏱ '+durTxt(wantDur(w)),w.pace?paceTxt(w.pace):''].filter(Boolean).map(esc).join(" · ")+'</div>'
       +(S&&(S.rating||S.route||Object.keys(S.tags).length)?'<div class="ail">'+(S.rating?'<span class="rpb">★ '+fmt1(S.rating)+' <small>jazda ('+S.rn+')</small></span> ':'')+(S.route?'<span class="rpb">★ '+fmt1(S.route)+' <small>trasa</small></span> ':'')
          +Object.entries(S.tags).sort((a,b)=>b[1]-a[1]).map(([t,c])=>{const x=REP_TAGS.find(y=>y[0]===t);return x?'<span class="rpt">'+esc(x[1])+(c>1?' ×'+c:'')+'</span>':''}).join("")+'</div>':'')
+      +myRepHtml(w)
       +(repCan(w)&&!myRep(w)?'<button type="button" class="b g rbtn" data-arch="rep" data-id="'+esc(w.id)+'">✍️ Jak poszło? Uzupełnij</button>':repCan(w)?'<button type="button" class="lnk rbtn" data-arch="rep" data-id="'+esc(w.id)+'">✏️ Zmień swoją odpowiedź</button>':'')})())+'</div>';
 }
 function renderArch(all){
@@ -4954,8 +4965,10 @@ async function loadRemote(selectId){
     notifs=(nt&&!nt.error&&nt.data)||[];
     // 🚴 „Jak poszło?” (KROK 39): odpowiedzi do jazd, które już wystartowały
     {const rq=await sb.from("ride_reports").select("want_id").limit(1);reportOk=!rq.error;reports={};
-     if(reportOk){const ids=wants.filter(w=>wantStart(w).getTime()<=Date.now()).map(w=>w.id);
-       for(let i=0;i<ids.length;i+=100){const r=await sb.from("ride_reports").select("want_id,user_id,went,km,avg_kmh,rating,route_rating,tags,self").in("want_id",ids.slice(i,i+100));
+     // poprawka 2026-11-16 12:31: lista ze ŚWIEŻO wczytanych zaproszeń (wcześniej brała starą `wants` — przy starcie aplikacji
+     // pustą, więc odpowiedzi się nie wczytywały i „Jak poszło?” pytało ponownie o jazdy z odpowiedzią)
+     if(reportOk){const ids=(w.error?[]:w.data||[]).filter(x=>wantStart(x).getTime()<=Date.now()).map(x=>x.id);
+       for(let i=0;i<ids.length;i+=100){const r=await sb.from("ride_reports").select("want_id,user_id,went,km,avg_kmh,rating,route_rating,tags,self,updated_at").in("want_id",ids.slice(i,i+100));
          (r.data||[]).forEach(x=>{(reports[x.want_id]=reports[x.want_id]||[]).push(x)})}}}
     const [j,l,ad,st,fv]=await Promise.all([
       byWant("want_joins",rangeOk?"want_id,user_id,pref_at":"want_id,user_id"),
