@@ -487,6 +487,10 @@ html[data-theme=dark] .fbs.s-accepted{background:#1d2c45;color:#8fb5ff}
 .bsbox .seg{flex:none;margin-top:12px}.bsbox .seg button{padding:10px 2px;font-size:15px}
 .bsbox .seg button.on{background:var(--accbtn);color:#fff}
 .bsq{flex:none;margin-top:10px}
+input.srch{padding-left:38px!important;background:var(--fill) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 12px center/18px 18px}
+.wsqrow{display:flex;align-items:center;gap:10px;margin-top:10px}.wsqrow .bsq{flex:1;min-width:0;margin:0}.wsqrow .lnk{flex:none;font-weight:600;color:var(--bad);white-space:nowrap}
+.bsgrp.gl{display:flex;align-items:center;justify-content:space-between;gap:8px}.bsgrp.gl .lnk{font-size:13px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--acc)}
+.prow.lock{cursor:default}.prow.lock .cbx{opacity:.55}.prow .pjn{font-size:12px;color:var(--acc);font-weight:600}
 .bslist{flex:1;overflow-y:auto;margin:6px -4px 0;padding:0 4px;-webkit-overflow-scrolling:touch}
 .bsgrp{font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 2px}
 .prow{display:flex;align-items:center;gap:10px;width:100%;padding:8px 2px;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
@@ -1572,7 +1576,7 @@ function adminHtml(){
    +testersHtml()
    +(isSuper(uid)&&testOk?'<h3>🧪 Zaproszenia testowe</h3><button class="b sbtn" style="background:var(--bad)" data-c="testdel">🧹 Usuń wszystkie testowe zaproszenia…</button><p class="note">Usuwa tylko zaproszenia oznaczone 🧪 TEST (z dołączeniami i powiadomieniami). Prawdziwe zostają.</p>':'')
    +'<h3>Użytkownicy ('+Object.keys(nicks).length+')</h3>'+(tgLinks?'<p class="note">✈️ = połączony bot Telegram ('+tgLinks.size+'). Dotknij nicku — karta osoby z aktywnością.</p>':'')
-   +'<div class="admq"><input id="admq" type="search" placeholder="🔍 Szukaj po nicku" value="'+esc(admQ)+'" autocomplete="off" enterkeyhint="search"><span class="note" id="admqn"></span></div>'
+   +'<div class="admq"><input id="admq" type="search" class="srch" placeholder="Szukaj po nicku" value="'+esc(admQ)+'" autocomplete="off" enterkeyhint="search"><span class="note" id="admqn"></span></div>'
    +'<div class="fchips admqf">'+[["","Wszyscy"],["on","🟢 Online"],["new","🆕 Nowi (14 dni)"],["tg","Telegram"],["ban","Zablokowani"],["hid","Ukryci"]].map(([k,t])=>'<button type="button" class="fch'+(admF===k?' on':'')+'" data-admf="'+k+'">'+t+'</button>').join("")+'</div>'
    +(Object.keys(nicks).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")).map(id=>'<div class="arow" data-admu="'+esc(id)+'"'+(admMatch(id)?'':' style="display:none"')+'><span>'+nk(id)+(tgLinks&&tgLinks.has(id)?' <span class="tgm" title="Telegram połączony">✈️</span>':'')+(modBanned.has(id)?' <span class="tgm" title="Zablokowany">⛔</span>':'')+(modHidden.has(id)?' <span class="tgm" title="Ukryty">👻</span>':'')+(joinedAt[id]?'<br><span class="note">od '+esc(new Date(joinedAt[id]).toLocaleDateString("pl-PL",{day:"numeric",month:"short",year:"numeric"}))+'</span>':'')+'</span>'+(id===uid?'<span class="note">(Ty)</span>':isSuper(id)?'<span class="note">👑</span>':'<button class="b g small" data-a="unick" data-id="'+esc(id)+'">Zmień nick</button>')+'</div>').join("")||'<div class="note">Brak użytkowników z nickiem.</div>')
    +'</div>';
@@ -3503,7 +3507,7 @@ function renderRb(){
    +(rb.mode==="browse"?'<div class="rbinfo2">'+uiIcon("plus")+'<div><b>'+(isAdmin?'Dodaj trasę do bazy':'Jak dodać swoją trasę?')+'</b><span>'
        +(isAdmin?'Jako administrator dodasz plik GPX od razu. Użytkownicy dodają trasy przez zaproszenie.':'Utwórz zaproszenie z plikiem GPX i włącz „📚 Dodaj do bazy tras” — po zapisaniu trasa trafi tutaj.')+'</span>'
        +'<button type="button" class="b g small" data-rb="'+(isAdmin?'add':'addinv')+'">'+(isAdmin?'＋ Dodaj trasę z pliku GPX':'＋ Zaproś z trasą')+'</button></div></div>':'')
-   +'<input id="rbq" class="rbq" placeholder="🔍 Szukaj: nazwa albo miejscowość" value="'+esc(rb.q)+'" enterkeyhint="search">'
+   +'<input id="rbq" class="rbq srch" placeholder="Szukaj: nazwa albo miejscowość" value="'+esc(rb.q)+'" enterkeyhint="search">'
    +'<div class="fchips rbchips">'+RB_SORTS.filter(x=>x[0]!=="near"||originGet()).map(([k,t])=>'<button type="button" class="fch'+(rb.sort===k?' on':'')+'" data-rbs="'+k+'">'+t+'</button>').join("")+'</div>'
    +'<div class="fchips rbchips">'+[["","🚲 Każdy"]].concat(Object.entries(BIKES)).map(([k,t])=>'<button type="button" class="fch'+(rb.bike===k?' on':'')+'" data-rbb="'+k+'">'+t+'</button>').join("")+'</div>'
    +'<div id="rblist">'+rbListHtml()+'</div>'
@@ -4163,9 +4167,9 @@ function openFlt(){
   const sec=(k,t,extra)=>'<div class="fsec"><div class="bsgrp">'+t+'</div>'+(extra||'')+'<div class="fchips" id="flt_'+k+'"></div></div>';
   p.innerHTML='<div class="bsbox fltbox" role="dialog" aria-modal="true" aria-label="Filtry"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="close">Zamknij</button><b>Filtry</b><button type="button" class="lnk" data-fk="clear" style="color:var(--bad);text-align:right">Wyczyść</button></div>'
    +'<div class="bslist">'+sec("who","Czyje")+sec("when","Kiedy")
-   +(placeOk?sec("where","Gdzie",'<input class="bsq" id="fltwq" type="search" placeholder="🔍 Miasto, dzielnica, miejsce…" autocomplete="off">'):'')
+   +(placeOk?sec("where","Gdzie",'<input class="bsq srch" id="fltwq" type="search" placeholder="Miasto, dzielnica, miejsce…" autocomplete="off">'):'')
    +(bikeOk?sec("bike","Rower / teren"):'')+(paceOk?sec("pace","Tempo"):'')
-   +sec("user","Osoba",'<input class="bsq" id="fltuq" type="search" placeholder="🔍 Nick…" autocomplete="off">')+'</div>'
+   +sec("user","Osoba",'<input class="bsq srch" id="fltuq" type="search" placeholder="Nick…" autocomplete="off">')+'</div>'
    +'<button type="button" class="b big" id="fltok" data-fk="close">Gotowe</button></div>';
   fltRefresh();
 }
@@ -5009,7 +5013,7 @@ function openWho(mode,wantId){
   if(!session)return;
   if(needProfile()){askNick();return}
   ws.mode=mode;ws.want=wantId||null;ws.q="";
-  if(mode==="form"){ws.vis=wf.vis;ws.pick=new Set(wf.vis==="fav"?favIds():wf.pick)}
+  if(mode==="form"){ws.vis=wf.vis;ws.pick=new Set(wf.vis==="fav"?favIds():wf.pick);whoLocked().forEach(id=>ws.pick.add(id))}
   else{ws.vis="pick";ws.pick=new Set()}
   renderWho(true);
 }
@@ -5019,7 +5023,12 @@ function whoPeople(){
   if(ws.mode==="add"){const w=wants.find(x=>x.id===ws.want),ex=new Set(w?[w.user_id,...invIds(w)]:[]);ids=ids.filter(id=>!ex.has(id))}
   return ids.sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl"));
 }
-const whoRow=(id,on)=>'<button type="button" class="prow'+(on?' on':'')+'" data-p="'+esc(id)+'"><span class="cbx">'+CHECK+'</span><span class="pnm">'+nk(id)+'</span>'+(onlineIds.includes(id)?'<span class="pon">🟢 teraz</span>':'')+'</button>';
+// edycja zaproszenia: osoby, które już dołączyły, zostają zaproszone (nie da się ich odznaczyć)
+const whoLocked=()=>new Set(ws.mode==="form"&&wf.editId?(joins[wf.editId]||[]).filter(x=>x!==uid):[]);
+const whoRow=(id,on)=>{const lk=whoLocked().has(id);return '<button type="button" class="prow'+(on||lk?' on':'')+(lk?' lock':'')+'" data-p="'+esc(id)+'"><span class="cbx">'+CHECK+'</span><span class="pnm">'+nk(id)+'</span>'+(lk?'<span class="pjn">dołączył(a)</span>':onlineIds.includes(id)?'<span class="pon">🟢 teraz</span>':'')+'</button>'};
+// nagłówek grupy z „Zaznacz wszystkich / Odznacz”
+const whoGrp=(t,ids,g)=>{if(!ids.length)return '';const L=whoLocked(),all=ids.every(id=>ws.pick.has(id)||L.has(id)),free=ids.some(id=>!L.has(id));
+  return '<div class="bsgrp gl"><span>'+t+'</span>'+(free?'<button type="button" class="lnk" data-k="grp" data-g="'+g+'">'+(all?'Odznacz':'Zaznacz wszystkich')+'</button>':'')+'</div>'};
 function whoListHtml(){
   if(ws.vis==="all")return '<div class="bsempty">🌍 Zaproszenie zobaczą wszyscy zalogowani, a wiadomość trafi na kanał Telegram.</div>';
   const q=ws.vis==="pick"?nickKey(ws.q.trim()):"",all=whoPeople().filter(id=>!q||nickKey(nicks[id]).includes(q));
@@ -5029,8 +5038,8 @@ function whoListHtml(){
   }
   if(!all.length)return '<div class="bsempty">'+(q?'Nie znaleziono takiego nicku.':ws.mode==="add"?'Wszyscy są już zaproszeni.':'Brak innych osób z nickiem.')+'</div>';
   const f=all.filter(isFav),o=all.filter(id=>!isFav(id));
-  return (f.length?'<div class="bsgrp">⭐ Ulubieni</div>'+f.map(id=>whoRow(id,ws.pick.has(id))).join(""):'')
-   +(o.length?'<div class="bsgrp">'+(f.length?'Pozostali':'Osoby')+'</div>'+o.map(id=>whoRow(id,ws.pick.has(id))).join(""):'');
+  return (f.length?whoGrp('⭐ Ulubieni',f,'f')+f.map(id=>whoRow(id,ws.pick.has(id))).join(""):'')
+   +(o.length?whoGrp(f.length?'Pozostali':'Osoby',o,'o')+o.map(id=>whoRow(id,ws.pick.has(id))).join(""):'');
 }
 const whoCount=()=>ws.vis==="all"?0:ws.vis==="fav"?favIds().length:ws.pick.size;
 function renderWho(first){
@@ -5040,12 +5049,14 @@ function renderWho(first){
     p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-k="cancel">Anuluj</button><b>'+(ws.mode==="add"?"Zaproś kogoś jeszcze":"Kogo zapraszasz?")+'</b><span style="min-width:64px"></span></div>'
      +(ws.mode==="form"?'<div class="seg" id="wsseg">'+[["all","🌍 Wszyscy"],["fav","⭐ Ulubieni"],["pick","👥 Wybieram"]].map(([k,t])=>'<button type="button" data-v="'+k+'">'+t+'</button>').join("")+'</div>'
        :(w?'<div class="note" style="margin-top:6px;text-align:center;font-size:14px">Zaproszenie: '+esc(wfLabel(new Date(w.starts_at)))+(w.user_id!==uid&&nicks[w.user_id]?' · od '+esc(nicks[w.user_id]):'')+'</div>':''))
-     +'<input class="bsq" id="wsq" type="search" placeholder="🔍 Szukaj nicku…" autocomplete="off">'
+     +'<div class="wsqrow" id="wsqrow"><input class="bsq srch" id="wsq" type="search" placeholder="Szukaj nicku…" autocomplete="off"><button type="button" class="lnk hide" data-k="clr" id="wsclr"></button></div>'
      +'<div class="bslist" id="wslist"></div><div class="bshint" id="wshint"></div>'
      +'<button type="button" class="b big" id="wsok" data-k="ok"></button></div>';
   }
   const seg=$("wsseg");if(seg)[...seg.children].forEach(b=>b.classList.toggle("on",b.dataset.v===ws.vis));
-  $("wsq").classList.toggle("hide",ws.vis!=="pick");
+  $("wsqrow").classList.toggle("hide",ws.vis!=="pick");
+  const nUn=[...ws.pick].filter(id=>!whoLocked().has(id)).length,cb=$("wsclr");
+  cb.textContent="Wyczyść ("+nUn+")";cb.classList.toggle("hide",ws.vis!=="pick"||!nUn);
   $("wslist").innerHTML=whoListHtml();
   const jn=ws.mode==="form"&&wf.editId?(joins[wf.editId]||[]).filter(x=>x!==uid).length:0;
   $("wshint").textContent=ws.vis==="all"?"":ws.mode==="add"?"Dostaną powiadomienie i zobaczą to zaproszenie.":"🔒 Zaproszenie zobaczą tylko wybrane osoby (i kogo one doproszą). Nie trafi na publiczny kanał Telegram."+(jn?" Osoby, które już dołączyły ("+jn+"), zostaną zaproszone.":"");
@@ -5060,12 +5071,18 @@ $("whosheet").addEventListener("click",async e=>{
   const r=e.target.closest(".prow");
   if(r){
     const id=r.dataset.p;
+    if(whoLocked().has(id)){say((nicks[id]||"Ta osoba")+" już dołączył(a) — zostaje zaproszony(a).");return}
     if(ws.vis==="fav"){ws.vis="pick";ws.pick=new Set(favIds())}
     ws.pick.has(id)?ws.pick.delete(id):ws.pick.add(id);
     renderWho();return;
   }
   const k=e.target.closest("[data-k]");if(!k)return;
   if(k.dataset.k==="cancel"){closeWho();return}
+  if(k.dataset.k==="clr"){const L=whoLocked();ws.pick=new Set([...ws.pick].filter(id=>L.has(id)));renderWho();return}
+  if(k.dataset.k==="grp"){const L=whoLocked(),q=nickKey(ws.q.trim()),
+      ids=whoPeople().filter(id=>(!q||nickKey(nicks[id]).includes(q))&&(k.dataset.g==="f"?isFav(id):!isFav(id))&&!L.has(id)),
+      all=ids.every(id=>ws.pick.has(id));
+    ids.forEach(id=>all?ws.pick.delete(id):ws.pick.add(id));renderWho();return}
   if(ws.mode==="form"){
     wf.vis=ws.vis;wf.pick=new Set(ws.vis==="pick"?ws.pick:[]);
     if(wf.vis==="pick"&&!wf.pick.size){wf.vis="all";say("Nikogo nie wybrano — zaproszenie zobaczą wszyscy.")}
