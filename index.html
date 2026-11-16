@@ -527,7 +527,17 @@ button.onl.off{background:var(--fill);color:var(--mut)}
 .pwleg{font-size:11.5px;margin-top:4px}
 .pwrev{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-top:8px;padding:10px 12px;border-radius:10px;background:rgba(10,132,255,.1);font-size:14.5px}.pwrev .b{flex:none}
 .pwwarn{margin-top:8px;padding:10px 12px;border-radius:10px;background:rgba(255,159,10,.14);font-size:14.5px;display:flex;flex-direction:column;gap:4px}
-.pwbring{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.pwbring span{background:var(--fill);border-radius:999px;padding:5px 11px;font-size:14px;display:inline-flex;align-items:center;gap:6px}.pwbring .ui-i{color:var(--acc)}
+.pwpack{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px}.pwpack .bsgrp{margin:0}.pwpc{font-size:13px;color:var(--mut);display:flex;align-items:center;gap:8px}
+.pwbar{height:5px;border-radius:3px;background:var(--fill);margin-top:6px;overflow:hidden}.pwbar i{display:block;height:100%;background:#34c759;border-radius:3px;transition:width .25s}
+.pwbring{margin-top:8px;background:var(--fill);border-radius:12px;overflow:hidden}
+.pwit{display:flex;align-items:center;gap:11px;width:100%;border:0;background:none;color:var(--ink);font:inherit;font-size:15px;text-align:left;padding:10px 12px;cursor:pointer}
+.pwit+.pwit{border-top:.5px solid var(--line)}.pwit:active{background:var(--line)}
+.pwit .pwck{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--mut);opacity:.6;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.pwit .pwck .ui-i{width:14px;height:14px;stroke:#fff;stroke-width:3;opacity:0}
+.pwit>.ui-i{color:var(--acc);width:19px;height:19px}
+.pwit.on .pwck{background:#34c759;border-color:#34c759;opacity:1}.pwit.on .pwck .ui-i{opacity:1}
+.pwit.on .pwtx{text-decoration:line-through;color:var(--mut)}.pwit.on>.ui-i{opacity:.45}
+.pwdone{color:#34c759;font-weight:700}
 .pwh .pwi .ui-i{width:22px;height:22px}
 .fch{border:0;background:var(--fill);color:var(--ink);border-radius:999px;padding:8px 13px;font:inherit;font-size:15px;font-weight:600;cursor:pointer}
 .fch.on{background:var(--accbtn);color:#fff}.fdate{display:inline-flex;align-items:center;gap:4px;padding:4px 10px}.fdate input{border:0;background:none;color:inherit;font:inherit;font-size:14px;padding:2px;width:auto;min-height:0}
@@ -3261,6 +3271,33 @@ function pwBring(o){
   add("wrench","dętka, łyżki i pompka");add("phone","naładowany telefon");
   return L;
 }
+// 🎒 lista do odhaczenia: zapamiętana w urządzeniu dla tej trasy i dnia (wpisy starsze niż 3 dni znikają)
+const pwPackKey=w=>(rb.open||"")+"|"+localIso(w).slice(0,10);
+function pwPackGet(){try{const o=JSON.parse(localStorage.getItem("pwPack")||"{}"),lim=Date.now()-3*864e5;for(const k in o)if(!o[k].t||o[k].t<lim)delete o[k];return o}catch(e){return {}}}
+function pwPackSet(o){try{localStorage.setItem("pwPack",JSON.stringify(o))}catch(e){}}
+let pwPackCur=null;
+function pwPackHtml(items,when){
+  const key=pwPackKey(when),on=new Set((pwPackGet()[key]||{}).d||[]);pwPackCur={key,n:items.length};
+  const c=items.filter(([,t])=>on.has(t)).length;
+  return '<div class="pwpack"><div class="bsgrp">🎒 Co zabrać</div><span class="pwpc"><span id="pwcnt">'+pwPackCnt(c,items.length)+'</span>'
+     +'<button type="button" class="lnk'+(c?'':' hide')+'" id="pwclr" data-rb="pwclr">Wyczyść</button></span></div>'
+   +'<div class="pwbar"><i id="pwbari" style="width:'+(items.length?Math.round(c/items.length*100):0)+'%"></i></div>'
+   +'<div class="pwbring">'+items.map(([k,t])=>'<button type="button" class="pwit'+(on.has(t)?' on':'')+'" data-pwit="'+esc(t)+'" aria-pressed="'+on.has(t)+'"><span class="pwck"><svg class="ui-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>'+uiIcon(k)+'<span class="pwtx">'+esc(t)+'</span></button>').join("")+'</div>'
+   +'<div class="note" style="margin-top:4px">Odhaczaj, co już masz spakowane — zapamiętam to w tym telefonie dla tej jazdy.</div>';
+}
+const pwPackCnt=(c,n)=>c>=n&&n?'<span class="pwdone">'+uiIcon("check")+' Wszystko spakowane!</span>':'Spakowane '+c+' z '+n;
+function pwPackToggle(b){
+  if(!pwPackCur)return;const o=pwPackGet(),e=o[pwPackCur.key]||{d:[]},t=b.dataset.pwit,i=e.d.indexOf(t);
+  i<0?e.d.push(t):e.d.splice(i,1);e.t=Date.now();o[pwPackCur.key]=e;pwPackSet(o);
+  const on=i<0;b.classList.toggle("on",on);b.setAttribute("aria-pressed",String(on));try{navigator.vibrate&&navigator.vibrate(8)}catch(err){}
+  pwPackRefresh();
+}
+function pwPackRefresh(){
+  const box=document.querySelector(".pwbring");if(!box||!pwPackCur)return;
+  const c=box.querySelectorAll(".pwit.on").length,n=pwPackCur.n;
+  const ce=$("pwcnt");if(ce)ce.innerHTML=pwPackCnt(c,n);const bi=$("pwbari");if(bi)bi.style.width=(n?Math.round(c/n*100):0)+"%";
+  const cl=$("pwclr");if(cl)cl.classList.toggle("hide",!c);
+}
 async function pwUpdate(){
   const tok=rbTok,el=$("pw4"),pts0=rbPts;if(!el||!pts0)return;
   const pts=rb.rev?pts0.slice().reverse():pts0,when=pwWhen();
@@ -3307,7 +3344,7 @@ async function pwUpdate(){
    +'<div class="note pwleg">godzina · pogoda · temp. · wiatr km/h (strzałka = dokąd wieje) · szansa deszczu</div>'
    +'<div class="tip">'+esc(an.tip.replace(" Rozważ „Odwróć kierunek”, żeby wiatr pomagał na końcu.",""))+'</div>'+revTip
    +(warn.length?'<div class="pwwarn">'+warn.map(([k,t])=>'<div>'+uiIcon(k)+' '+esc(t)+'</div>').join("")+'</div>':'')
-   +'<div class="bsgrp" style="margin-top:12px">🎒 Co zabrać</div><div class="pwbring">'+pwBring({tmin,rain,mm,wind,dark,sunny,when,hours:an.tsec/3600}).map(([k,t])=>'<span>'+uiIcon(k)+esc(t)+'</span>').join("")+'</div>'
+   +pwPackHtml(pwBring({tmin,rain,mm,wind,dark,sunny,when,hours:an.tsec/3600}),when)
    +'<div class="note" style="margin-top:4px">Odczuwalnie '+Math.round(tmin)+'°C'+(Math.round(tmax)!==Math.round(tmin)?' – '+Math.round(tmax)+'°C':'')+' · wiatr do '+Math.round(wind)+' km/h'+(gust?' (porywy '+Math.round(gust)+')':'')+'</div>';
 }
 /* ---------- ⭐ oceny tras (etap 2, KROK 48) ---------- */
@@ -3420,6 +3457,7 @@ $("rbsheet").addEventListener("click",async e=>{
   const p=$("rbsheet");if(e.target===p){closeRb();return}
   const rvb=e.target.closest("[data-rv]");if(rvb&&rb.rv){rvClick(rb.rv,rvb);const sc=p.querySelector(".bslist"),t=sc?sc.scrollTop:0;renderRbRate();const s2=p.querySelector(".bslist");if(s2)s2.scrollTop=t;return}
   const o=e.target.closest("[data-rbo]");if(o){rb.open=o.dataset.rbo;rb.rev=false;rb.pw=null;renderRb();return}
+  const pk=e.target.closest("[data-pwit]");if(pk){pwPackToggle(pk);return}
   const pd=e.target.closest("[data-rbpd]"),ph=e.target.closest("[data-rbph]");
   if(pd||ph){const v=rb.pw||(rb.pw=pwDefault());if(pd){v.day=+pd.dataset.rbpd;if(v.day===0&&v.h<=new Date().getHours()-1)v.h=Math.min(22,new Date().getHours()+1)}else v.h=+ph.dataset.rbph;
     const hs=$("pwhrs"),sl=hs?hs.scrollLeft:0;$("pwsel").innerHTML=pwSelHtml();const h2=$("pwhrs");if(h2){h2.scrollLeft=sl;if(pd){const on=h2.querySelector(".on");if(on)on.scrollIntoView({block:"nearest",inline:"center"})}}pwUpdate();return}
@@ -3438,6 +3476,7 @@ $("rbsheet").addEventListener("click",async e=>{
     const r=await sb.from("route_reviews").delete().eq("route_id",rb.open).eq("user_id",u).select("user_id");if(r.error||!r.data||!r.data.length){say("Nie udało się usunąć.");return}
     await Promise.all([rbLoad(true),rbLoadReviews(rb.open)]);renderRb();say("Usunięto ocenę.");return}
   const x=(rbList||[]).find(y=>y.id===rb.open);if(!x)return;
+  if(k==="pwclr"){if(pwPackCur){const o=pwPackGet();delete o[pwPackCur.key];pwPackSet(o);document.querySelectorAll(".pwit.on").forEach(x=>{x.classList.remove("on");x.setAttribute("aria-pressed","false")});pwPackRefresh()}return}
   if(k==="rev"){rb.rev=!rb.rev;if(rbMap&&rbPts)drawRoute(rbMap,rb.rev?rbPts.slice().reverse():rbPts,null,false);pwUpdate();return}
   if(k==="pick"||k==="invite"){let pts;try{pts=await rbRoute(x.id)}catch(err){pts=null}if(!pts){say("Nie udało się wczytać trasy.");return}
     if(rb.rev)pts=pts.slice().reverse();
