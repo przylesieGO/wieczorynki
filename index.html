@@ -457,6 +457,17 @@ html[data-theme=dark] .fbs.s-accepted{background:#1d2c45;color:#8fb5ff}
 .sheet.bsh{align-items:flex-end;padding:0}
 .bsbox{position:relative;width:100%;max-width:520px;height:min(86vh,760px);display:flex;flex-direction:column;background:var(--card);border-radius:22px 22px 0 0;padding:8px 16px calc(16px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px rgba(0,0,0,.25)}
 .bsgrab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 8px;flex:none}
+/* 🖥 komputer / tablet w poziomie: okna wysuwane od dołu jako wyśrodkowane okno (na telefonie bez zmian) */
+@media (min-width:768px) and (min-height:560px){
+  .sheet.bsh{align-items:center;padding:28px}
+  .bsbox{height:min(84vh,860px);border-radius:22px;padding-bottom:16px;box-shadow:0 24px 70px rgba(0,0,0,.30);animation:bspop .18s ease-out}
+  .wfbox{height:min(88vh,920px);padding-bottom:0;overflow:hidden}
+  .wffoot{padding-bottom:14px;border-radius:0 0 22px 22px}
+  .bsgrab{display:none}
+  .bsbox .bshead{margin-top:6px}
+}
+@keyframes bspop{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.bsbox{animation:none}}
 .bshead{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none}
 .bshead b{font-size:19px;text-align:center;flex:1}.bshead .lnk{min-width:64px;text-align:left}
 .bsbox .seg{flex:none;margin-top:12px}.bsbox .seg button{padding:10px 2px;font-size:15px}
