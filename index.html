@@ -4348,8 +4348,8 @@ $("bellbtn").onclick=()=>{if(!session)return;renderBellSheet()};
 $("bellsheet").addEventListener("click",async e=>{
   const p=$("bellsheet");
   const fr=e.target.closest("button[data-fb]");
-  const sb=e.target.closest("[data-sb]");
-  if(sb){const k=sb.dataset.sb;closeBell();renderBell();stepGo(k);return}
+  const stb=e.target.closest("[data-sb]");   // „Dokończ start” (nie nazywać „sb” — to połączenie z bazą)
+  if(stb){const k=stb.dataset.sb;closeBell();renderBell();stepGo(k);return}
   const sc=e.target.closest("[data-bsec]");
   if(sc){const k=sc.dataset.bsec,st=bsColGet(),col=!sc.classList.contains("col");st[k]=col;try{localStorage.setItem("bellCol",JSON.stringify(st))}catch(err){}
     renderBellSheet();return}
