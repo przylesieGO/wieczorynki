@@ -721,6 +721,15 @@ html .ios-seg.fseg button.on.fs-off{background:#8e8e93;color:#fff}html .ios-seg.
 .hst li{display:flex;gap:12px;align-items:flex-start;font-size:15.5px;line-height:1.4}
 .hst .hn{flex:none;width:28px;height:28px;border-radius:50%;background:var(--accbtn);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:15px;margin-top:1px}
 .hst b{display:block}
+.hrel{margin:0 0 14px;padding:10px 12px;border-radius:14px;background:var(--fill);text-align:left}
+.hrel>summary{cursor:pointer;font-weight:700;font-size:15.5px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}.hrel>summary .ui-i{color:var(--acc)}
+.hrel>summary small{font-weight:500;color:var(--mut);font-size:12.5px;margin-left:auto}
+.hrelnew{background:#ff3b30;color:#fff;border-radius:8px;font-size:11px;font-weight:800;padding:1px 6px;letter-spacing:.03em}
+.hrel ul{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:7px;font-size:14px;line-height:1.4}
+.hrel li{display:flex;gap:9px;align-items:flex-start}.hrel li>.ui-i{flex:none;margin-top:2px;color:var(--acc);width:17px;height:17px}
+.hrelold{margin-top:10px}.hrelold>summary{cursor:pointer;color:var(--mut);font-size:13.5px}.hrelv{font-weight:700;font-size:13.5px;margin-top:8px}
+.hver{margin-top:10px;text-align:center;font-size:12px}
+.gear.newdot{position:relative}.gear.newdot::after{content:"";position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:50%;background:#ff3b30;box-shadow:0 0 0 2px var(--card)}
 .htips{margin-top:14px;padding:10px 12px;border-radius:12px;background:var(--fill);font-size:14px;line-height:1.45;text-align:left;display:flex;flex-direction:column;gap:4px}
 .htg2{margin-top:12px;font-size:14px;color:var(--mut);text-align:center}.htg2 a{color:var(--acc);font-weight:600}
 .hbox .sbtn.tgx{margin-top:14px}
@@ -1275,6 +1284,7 @@ eyeoff:'<path d="M10.7 5.1A10.7 10.7 0 0 1 22 12a10.8 10.8 0 0 1-1.4 2.5"/><path
 book:'<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/>',
 download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
 search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+up:'<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>',
 pencil:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
 star:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
 starf:'<polygon class="gold" points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
@@ -1342,7 +1352,7 @@ send:'<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/>',
 sliders:'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>'
 };
 const uiIcon=k=>'<svg class="ui-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+UI_P[k]+'</svg>';
-const UI_MAP=[["🔑","key"],["🔁","repeat"],["🌿","tree"],["🚗","car"],["🙈","eyeoff"],["👻","eyeoff"],["📚","book"],["📖","book"],["✍️","pencil"],["✍","pencil"],["⬇️","download"],["⬇","download"],["🔍","search"],["✈️","send"],["✈","send"],["🌦","cloudsun"],["🎒","backpack"],["🌇","sunset"],["⚙️","gear"],["⚙","gear"],["🔔","bell"],["🔕","belloff"],["❓","help"],["✏️","pencil"],["⭐","starf"],["☆","star"],["💬","msg"],["🛡️","shield"],["🛡","shield"],["📣","mega"],["☀️","sun"],["🌙","moon"],["👤","user"],["🕖","clock"],["🌡","therm"],["🌬","wind"],["🌧","rain"],["📩","mail"],["✉️","mail"],["🌍","globe"],["🔒","lock"],["🙋","hand"],["🚴","bike"],["🚲","bike"],["👥","users"],["🐞","bug"],["💡","bulb"],["🗺️","map"],["🗺","map"],["🧪","flask"],["⏳","hourglass"],["👀","eye"],["📅","cal"],["🗓","cal"],["📊","chart"],["🎨","palette"],["👩","venus"],["👨","mars"],["📍","pin"],["📌","pushpin"],["🏁","flag"],["🪨","gravel"],["🛣️","road"],["🛣","road"],["⛰️","mtb"],["⛰","mtb"],["🏃","run"],["🚶","walk"],["🏊","swim"],["🏅","medal"],["📝","clip"],["❤️","heart"],["❤","heart"],["⧉","copy"],["🌐","globe"],["🗄️","archive"],["🗄","archive"],["🌳","tree"],["🌅","sunrise"],["☕","coffee"],["🛞","wheel"],["💨","windy"],["🏙️","city"],["🏙","city"],["📏","ruler"],["⏱","timer"],["⏰","alarm"],["🙅","xcircle"],["✅","check"],["⚠️","alert"],["🗑️","trash"],["👋","logout"],["📲","phone"],["🆕","sparkles"],["✨","sparkles"],["📈","trend"],["➕","plus"],["🚦","sliders"],["🧹","trash"]];
+const UI_MAP=[["🔑","key"],["⬆️","up"],["⬆","up"],["📡","globe"],["🔁","repeat"],["🌿","tree"],["🚗","car"],["🙈","eyeoff"],["👻","eyeoff"],["📚","book"],["📖","book"],["✍️","pencil"],["✍","pencil"],["⬇️","download"],["⬇","download"],["🔍","search"],["✈️","send"],["✈","send"],["🌦","cloudsun"],["🎒","backpack"],["🌇","sunset"],["⚙️","gear"],["⚙","gear"],["🔔","bell"],["🔕","belloff"],["❓","help"],["✏️","pencil"],["⭐","starf"],["☆","star"],["💬","msg"],["🛡️","shield"],["🛡","shield"],["📣","mega"],["☀️","sun"],["🌙","moon"],["👤","user"],["🕖","clock"],["🌡","therm"],["🌬","wind"],["🌧","rain"],["📩","mail"],["✉️","mail"],["🌍","globe"],["🔒","lock"],["🙋","hand"],["🚴","bike"],["🚲","bike"],["👥","users"],["🐞","bug"],["💡","bulb"],["🗺️","map"],["🗺","map"],["🧪","flask"],["⏳","hourglass"],["👀","eye"],["📅","cal"],["🗓","cal"],["📊","chart"],["🎨","palette"],["👩","venus"],["👨","mars"],["📍","pin"],["📌","pushpin"],["🏁","flag"],["🪨","gravel"],["🛣️","road"],["🛣","road"],["⛰️","mtb"],["⛰","mtb"],["🏃","run"],["🚶","walk"],["🏊","swim"],["🏅","medal"],["📝","clip"],["❤️","heart"],["❤","heart"],["⧉","copy"],["🌐","globe"],["🗄️","archive"],["🗄","archive"],["🌳","tree"],["🌅","sunrise"],["☕","coffee"],["🛞","wheel"],["💨","windy"],["🏙️","city"],["🏙","city"],["📏","ruler"],["⏱","timer"],["⏰","alarm"],["🙅","xcircle"],["✅","check"],["⚠️","alert"],["🗑️","trash"],["👋","logout"],["📲","phone"],["🆕","sparkles"],["✨","sparkles"],["📈","trend"],["➕","plus"],["🚦","sliders"],["🧹","trash"]];
 const UI_RE=new RegExp("("+UI_MAP.map(([e])=>e.replace(/[\u{FE0F}]/gu,"")).sort((a,b)=>b.length-a.length).map(e=>e.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")\uFE0F?","gu");
 const UI_K=Object.fromEntries(UI_MAP.map(([e,k])=>[e.replace(/\uFE0F/g,""),k]));
 const UI_SKIP=".wpc,.wpace .e,.nk,.stars,.fbst,.ttag,.beta,#toast,.fbcnt,.cdbadge,.ui-i";
@@ -1830,7 +1840,23 @@ document.addEventListener("click",e=>{
 /* ---------- 💬 Oceń aplikację / zgłoś błąd / pomysł + wiadomości od admina (KROK 26) ---------- */
 let fbOk=false,fbList=[],fbDone={},fbMsgs={},fbId="",fbBack="fb",fbAdmFilter="new",fbTo="",fbBusy=false;
 const fbf={kind:"bug",rating:0,text:"",dev:true};let fbReplyTxt="",fbMsgTxt="";
-const APP_VER="2026-11-14";
+// 🔢 numeracja wydań: 0.x.y w czasie BETY (1.0 = publiczne wydanie); x — paczka nowości, y — poprawki.
+// Nowe wydanie: dopisz pozycję na początku APP_REL (wersja, data, nowości) — w ❓ Pomocy pokaże się „Co nowego” i kropka przy ❓.
+const APP_REL=[
+  {v:"0.9",d:"16.11.2026",items:[
+    ["book","<b>Baza tras</b> (⚙️ → Baza tras): trasy z zaproszeń, sortowanie (najczęściej, najlepsze, malownicze, najtrudniejsze, najbliżej…), mapa z wiatrem."],
+    ["star","<b>Oceny tras</b>: gwiazdki, malownicza, trudność, ruch aut, plakietki (las, kawa, błoto…) i komentarze — też w „Jak poszło?”."],
+    ["cloudsun","<b>Przed jazdą</b>: wybierz dzień i godzinę — pogoda godzina po godzinie, wiatr na trasie, zachód słońca, „↺ jedź w drugą stronę”."],
+    ["backpack","<b>Co zabrać</b> — lista dopasowana do pogody, do odhaczania (kask zawsze na górze)."],
+    ["pin","<b>Miejscowości na trasie</b> — rozwijana lista z kilometrem od startu."],
+    ["gear","Nowy, czytelniejszy wygląd ⚙️ Ustawień i paneli (karta profilu, grupy jak w iPhonie)."],
+    ["bell","🔔 <b>Powiadomienia</b>: zwijane sekcje z licznikami, „✨ Dokończ start”, powiadomienie, gdy ktoś wróci do jazdy."],
+    ["flag","Imprezy: przewyższenie, limit czasu, kolejność dystansów, „start za N dni”, filtr <b>📍 W okolicy</b>."],
+    ["phone","Pomoc z instrukcją instalacji dla Twojej przeglądarki; zielona kropka przy nicku = osoba jest teraz w aplikacji."]]}
+];
+const APP_VER=APP_REL[0].v;
+const relNew=()=>{try{return localStorage.getItem("seenVer")!==APP_VER}catch(e){return false}};
+function relMark(){try{localStorage.setItem("seenVer",APP_VER)}catch(e){}const b=$("helpbtn");if(b)b.classList.remove("newdot")}
 const FB_KIND={bug:"🐞 Błąd",idea:"💡 Pomysł",rating:"⭐ Ocena",msg:"✉️ Wiadomość",tester:"🧪 Chce testować"};
 const FB_ST={new:"nowe",accepted:"przyjęte",done:"zrobione",rejected:"odrzucone"};
 const fbMineUnread=()=>fbList.filter(f=>f.user_id===uid&&f.user_unread);
@@ -2076,7 +2102,7 @@ function renderGear(){
         (evGeoOk&&tabOk(3))||rbOk?gRow("#ff9f0a","pin","Moja miejscowość",rbOk&&!(evGeoOk&&tabOk(3))?"Odległość do tras":"Odległość do imprez i tras",'<span class="ios-v">'+(homeGet()?esc(homeGet().name):'Ustaw')+'</span>','data-home="1"'):""])
      +gGrp("Powiadomienia",[tgOn()?gRow("#0a84ff","send","Telegram"+betaTag("telegram_dm"),"Powiadomienia prosto na telefon",tgLink?'<span class="ios-v ok">'+uiIcon("check")+'Połączony</span>':'<span class="ios-v">Połącz</span>','data-c="tg"'):"",
         gRow("#0a84ff","mega","Kanał @PrzylesieGo","Nowe jazdy dla wszystkich","",'href="https://t.me/PrzylesieGo" target="_blank" rel="noopener"',"a")])
-     +gGrp("Pomoc i opinie",[gRow("#30d158","help","Pomoc — co potrafi aplikacja","","",'data-c="help"'),
+     +gGrp("Pomoc i opinie",[gRow("#30d158","help","Pomoc — co potrafi aplikacja","Wersja "+esc(APP_VER),relNew()?'<span class="ios-bdg">Nowości</span>':'','data-c="help"'),
         fbOk?gRow("#bf5af2","msg","Oceń aplikację / zgłoś błąd","Błąd, pomysł albo ocena — odpisujemy",fbMineUnread().length?'<span class="ios-bdg">'+fbMineUnread().length+'</span>':'','data-c="fb"'):"",
         isStandalone()?"":gRow("#636366","phone","Zainstaluj aplikację","Ikona na ekranie telefonu","",'data-c="inst"')])
      +(isAdmin?gGrp("Administracja",[gRow("#8e8e93","shield","Administracja","Użytkownicy, zgłoszenia, funkcje testowe",fbAdmUnread().length?'<span class="ios-bdg">'+fbAdmUnread().length+'</span>':'','data-c="admin"')]):'')
@@ -2085,7 +2111,7 @@ function renderGear(){
      +'<button class="sdanger" data-c="del">Usuń konto…</button>'
     :'<div class="sname" style="margin-top:28px">Przeglądasz jako gość</div><div class="smail">Zaloguj się, żeby zapraszać na rower i dołączać do jazd.</div>'
      +'<button class="b sbtn" data-c="login">Zaloguj się / załóż konto</button>'
-     +gGrp("Pomoc",[gRow("#30d158","help","Pomoc — co potrafi aplikacja","","",'data-c="help"'),
+     +gGrp("Pomoc",[gRow("#30d158","help","Pomoc — co potrafi aplikacja","Wersja "+esc(APP_VER),relNew()?'<span class="ios-bdg">Nowości</span>':'','data-c="help"'),
         gRow("#0a84ff","mega","Kanał @PrzylesieGo","Nowe jazdy dla wszystkich","",'href="https://t.me/PrzylesieGo" target="_blank" rel="noopener"',"a"),
         isStandalone()?"":gRow("#636366","phone","Zainstaluj aplikację","Ikona na ekranie telefonu","",'data-c="inst"')])
      +setGroupsHtml(true);
@@ -2575,7 +2601,7 @@ function helpFullHtml(){
      "<b>Dzień i godzina:</b> Dziś / Jutro / Inny dzień, godzina na kartkach zegara (przeciągnij palcem albo ▲▼) i skróty „Za 30 min”, 17:30, 18:00, 19:00.",
      "<b>↔ Zakres godzin</b> (np. 17:30–19:30): każdy wybiera „Pasuje mi o…”, Ty ustalasz start („✅ Ustal 18:00”). Jeśli nie ustalisz — ustali się sam 1 h przed początkiem zakresu (najwięcej chętnych).",
      "<b>🗺️ Trasa GPX</b> (opcjonalnie): inni zobaczą długość, mapę z wiatrem na odcinkach i pobiorą plik. Kosz obok usuwa trasę.",
-     "<b>Tempo:</b> 🐢 Senior Adventure 15–18, 🚴 Turystycznie 18–24, ⚡ SPEEDAY 26+ km/h albo ✏️ własne. Bez wyboru — tempo dowolne.",
+     "<b>Tempo:</b> Senior Adventure 15–18, Turystycznie 18–24, SPEEDAY 26+ km/h albo ✏️ własne. Bez wyboru — tempo dowolne.",
      "<b>Dystans</b> albo <b>„Na ile jedziesz?”</b> (domyślnie 2 h). Pod zegarem widać „⏱ Jazda ok. 18:00–20:40”.",
      "<b>Kilka zaproszeń dziennie</b> — ale nie mogą na siebie nachodzić (+15 min zapasu). Gdy nachodzą, okienko pod zegarem i pasek nad „Wyślij” robią się żółte, a „Ustaw 11:55” podpowiada najwcześniejszą wolną godzinę.",
      "<b>🧪 Testowe / 🚴 Prawdziwe:</b> testowe są na próbę (czerwona migająca plakietka TEST, na kanale z oznaczeniem). Możesz je ukryć: ⚙️ → „Testowe zaproszenia: Ukryj”.",
@@ -2583,18 +2609,19 @@ function helpFullHtml(){
      "<b>🚲 Rower / teren</b>: dla wszystkich (domyślnie), szosa, gravel, MTB, trekking.",
      "<b>📍 Punkt zbiórki</b> (opcjonalnie): wybierz z listy, „✏️ Inne miejsce…” albo „🗺️ Wskaż na mapie…”. Przełącznik „Dodaj do listy miejsc” zapisze miejsce dla wszystkich. Na karcie „Mapa ›” otwiera nawigację.",
      "<b>Notatka:</b> gotowe (Kebab RIDE, Coffee Ride ☕, SPEEDAY…) albo własna. „↺ Jak ostatnio” ustawia godzinę z poprzedniego razu.",
+     "<b>📚 Wybierz z bazy tras</b> — gotowa trasa jednym dotknięciem. Przełącznik „📚 Dodaj trasę do bazy tras” zapisze Twój plik GPX dla wszystkich (z nazwą).",
      "<b>✏️ Edytuj</b> na karcie „Ty zapraszasz” — zmienisz godzinę, tempo, dystans, trasę i punkt zbiórki; zaproszeni dostaną powiadomienie."])
    +sec("🙋 Odpowiadanie",[
      "Na karcie zaproszenia: <b>„Jadę!”</b>, <b>„Nie dam rady”</b>, a przy zakresie <b>„Pasuje mi o…”</b>. „Rezygnuję” — gdy zmienisz zdanie.",
      "Na karcie: godzina, 🌡 pogoda (temperatura, wiatr, deszcz), tempo, „📏 50 km · ⏱ ok. 18:00–20:40”, kto dołączył i kto nie da rady.",
      "Zaproszenia są pogrupowane w <b>karty dni</b>; kilka w jednym dniu — przewijasz w bok.",
-     "<b>🚴 Jak poszło?</b> — po jeździe aplikacja (i bot na Telegramie) pyta: pojechałeś?, ile km, średnia prędkość, ocena jazdy i trasy GPX, jak było. Autor potwierdza, kto był. Odpowiedzi widać w archiwum i w statystykach (karta osoby: potwierdzone jazdy i km).",
+     "<b>🚴 Jak poszło?</b> — po jeździe aplikacja (i bot na Telegramie) pyta: pojechałeś?, ile km, średnia prędkość, ocena jazdy i trasy GPX, jak było. Przy trasie z bazy od razu ocenisz ją (malownicza, trudność, ruch aut, plakietki, komentarz). Wyłączysz w ⚙️. Autor potwierdza, kto był. Odpowiedzi widać w archiwum i w statystykach (karta osoby: potwierdzone jazdy i km).",
      "<b>🚴 TRWA</b> — od startu do końca jazdy: bez edycji, dołączania i dopraszania. Potem zaproszenie trafia do <b>🗄 Archiwum</b> na dole listy (30 dni) z podsumowaniem: kto pojechał, ile km (plan).",
      "<b>🔍 Filtry</b> (przycisk obok „online”): czyje, kiedy, gdzie (miasto, dzielnica, miejsce), rower / teren, tempo, osoba. Włączone filtry widać w pasku pod nagłówkiem — ✕ usuwa jeden, „Wyczyść” wszystkie. Z karty osoby: „🔍 Pokaż zaproszenia z …”."])
    +sec("🔔 Powiadomienia",[
      "<b>🔔 w nagłówku</b> — wszystko w jednym miejscu: <b>📩 Do Ciebie</b> (od innych, prywatne i dla wszystkich), <b>🙋 Twoje zaproszenia</b> (kto dołączył, zmiany), odpowiedzi na Twoje zgłoszenia i — przez pierwsze dni — <b>✨ Dokończ start</b>. Sekcje zwijasz i rozwijasz dotknięciem nagłówka; czerwone kółko = nieprzeczytane (liczba także na ikonie aplikacji).",
-     "Po wejściu wyskakuje okienko, gdy ktoś zaprosił Cię prywatnie.",
-     "<b>🔴 Liczba na ➕</b> — ile zaproszeń <b>innych osób</b> jest na dziś (Twoich nie liczy). Po przewinięciu w dół przycisk zwija się do samego ➕.",
+     "Po wejściu wyskakuje okienko, gdy ktoś zaprosił Cię prywatnie. Dowiesz się też, gdy ktoś zrezygnuje i <b>🔁 wróci</b> do Twojej jazdy.",
+     "<b>Czerwona liczba na ➕</b> — ile zaproszeń <b>innych osób</b> jest na dziś (Twoich nie liczy). Po przewinięciu w dół przycisk zwija się do samego ➕.",
      tg?"<b>Bot Telegram</b> napisze prywatnie: zaproszenie, zmiana godziny i szczegółów, ustalenie startu, kto dołączył, przypomnienie ~1 h przed jazdą. Włączysz: ⚙️ → Połącz z Telegramem → w Telegramie START. Wyłączysz tam samo (Rozłącz).":"",
      "<b>Kanał @PrzylesieGo</b> na Telegramie — ogłoszenia nowych jazd dla wszystkich."].filter(Boolean))
    +(tabOk(3)?sec("🏁 Imprezy",[
@@ -2602,17 +2629,31 @@ function helpFullHtml(){
      "<b>Rozwiń kartę</b>, wybierz dystans i kliknij „Jadę!” (przy biegu „Biegnę”, przy marszu „Idę”). ❤ Lubię, 📅 do Google Kalendarza, udostępnij.",
      "<b>📍 W okolicy</b> — imprezy w promieniu 50 / 100 / 200 km od <b>Mojej miejscowości</b> (ustawisz w filtrze albo w ⚙️ → Okolica) albo od Twojej lokalizacji z telefonu. Na każdej karcie widać odległość w linii prostej.",
      "<b>＋ Dodaj imprezę</b> — każdy zalogowany. Autor i admin edytują; ⧉ Duplikuj tworzy kolejną edycję (rok i daty +1). Dystanse ułożysz, przeciągając ⋮⋮. Usuwa admin (autor prosi o usunięcie)."]):'')
+   +(rbOk?sec("🗺️ Baza tras",[
+     "<b>⚙️ → Baza tras</b> — trasy, którymi jeździmy. Sortowanie: najczęściej wybierane, najlepsze, najbardziej malownicze, najtrudniejsze, najłatwiejsze, najmniej aut, najdłuższe, najbliżej (od Mojej miejscowości); filtr roweru i szukajka.",
+     "<b>Szczegóły trasy:</b> mapa z wiatrem (czerwone = pod wiatr), długość, przewyższenie, czas, <b>📍 miejscowości na trasie</b> (rozwijana lista z kilometrem od startu), oceny i komentarze.",
+     "<b>🌦 Przed jazdą:</b> wybierz dzień i godzinę startu — pogoda godzina po godzinie (3 h przed, cała jazda, 3 h po), wiatr w połowie jazdy, zachód słońca, ostrzeżenia (deszcz, porywy, gołoledź, zmrok). Gdy w drugą stronę jest lepiej — „↺ Odwróć”.",
+     "<b>🎒 Co zabrać</b> — lista dopasowana do pogody i długości jazdy; odhaczaj, co już spakowane (zapamiętane w telefonie).",
+     "<b>⭐ Oceń trasę</b> — gwiazdki, malownicza, trudność, ruch aut, plakietki i komentarz (widzą wszyscy). <b>🚲 Zaproś na tę trasę</b> otwiera formularz z wybraną trasą.",
+     "Trasy dodaje się z zaproszenia z plikiem GPX (przełącznik w formularzu albo „📚 Do bazy tras” na karcie). Autor i admin zmieniają nazwę, ukrywają i usuwają."]):'')
    +sec("⭐ Ludzie",[
      "Dotknij nicku: karta osoby („Z nami od…”, „🚴 Zaproś na rower”, ☆ dodaj do ulubionych). ⭐ ulubieni są zawsze na górze list.",
      "🟢 zielona kropka przy nicku = osoba ma teraz otwartą aplikację. Przy nickach: ⭐ ulubiony, 🧪 tester, 💡 3 zrealizowane pomysły/zgłoszenia, 👑 główny admin."])
    +sec("⚙️ Ustawienia",[
-     "Nick i płeć, ⭐ ulubieni, 💬 oceń aplikację / zgłoś błąd lub pomysł (admin odpisuje — odpowiedź pod 🔔), 🧪 zostań testerem, wygląd ☀️ / 🌙 / Auto, nick na górze ekranu, pokazywanie pomocy, wyloguj, usuń konto.",
+     "Na górze karta profilu (nick i płeć), pod nią <b>🗺️ Baza tras</b>. Dalej grupy: Ludzie i okolica (⭐ ulubieni, Moja miejscowość), Powiadomienia (Telegram, kanał), Pomoc i opinie (💬 oceń aplikację / zgłoś błąd lub pomysł — odpowiedź pod 🔔, instalacja), wygląd ☀️ / 🌙 / Auto, zaproszenia (testowe, „Jak poszło?”), wyloguj, usuń konto.",
      "<b>⬆</b> w lewym dolnym rogu wraca na górę strony."])
    +sec("🔒 Prywatność",[
      "Prywatne zaproszenia widzą tylko autor i zaproszeni — oraz administratorzy, wyłącznie do moderacji (np. usunięcia spamu). Administrator nie może dołączyć ani doprosić się do cudzego prywatnego zaproszenia.",
      "Nie zapisujemy Twojej lokalizacji — „Moja lokalizacja” na mapie i „📡 moja lokalizacja” w Imprezach działają tylko w telefonie, gdy sam je włączysz. <b>Moja miejscowość</b> jest zapamiętana tylko w Twoim telefonie — nikt jej nie widzi."])
    +(rides?sec("🗺️ Wieczorynki",["Zaplanowane jazdy z trasą, mapą, wiatrem i odliczaniem — zakładka Wieczorynki."]):'')
    +'</div>';
+}
+function relHtml(){
+  const r=APP_REL[0],nw=relNew(),li=x=>'<li>'+uiIcon(x[0])+'<span>'+x[1]+'</span></li>';
+  return '<details class="hrel"'+(nw?' open':'')+'><summary>'+uiIcon("sparkles")+' Co nowego w wersji '+esc(r.v)+(nw?' <span class="hrelnew">NOWE</span>':'')+'<small>'+esc(r.d)+'</small></summary>'
+   +'<ul>'+r.items.map(li).join("")+'</ul>'
+   +(APP_REL.length>1?'<details class="hrelold"><summary>Wcześniejsze wersje</summary>'+APP_REL.slice(1).map(o=>'<div class="hrelv">'+esc(o.v)+' · '+esc(o.d)+'</div><ul>'+o.items.map(li).join("")+'</ul>').join("")+'</details>':'')
+   +'</details>';
 }
 function helpHtml(){
   // pomoc przeredagowana 2026-11-16 11:48: na górze instalacja; potem 4 kroki i wskazówki; pełny opis rozwijany
@@ -2623,6 +2664,7 @@ function helpHtml(){
       +instGuideHtml()+'</div>';
   return '<div class="sheetbox popbox hbox" role="dialog" aria-modal="true" aria-label="Pomoc"><button class="sclose" data-h="close" aria-label="Zamknij">✕</button>'
    +'<div class="ph" style="margin-top:0">Jak to działa?</div>'
+   +relHtml()
    +inst
    +'<ol class="hst">'
    +st(1,"Zaproś na rower — ➕ w prawym dolnym rogu.","Dzień i godzina (albo zakres, np. 17–19 — każdy wybierze, kiedy może). Do tego, jeśli chcesz: tempo, dystans, trasa GPX, punkt zbiórki. Dla wszystkich albo 🔒 tylko dla wybranych.")
@@ -2631,6 +2673,7 @@ function helpHtml(){
    +(ev?st(4,"Imprezy — rajdy, gravele, maratony, biegi.","Kliknij dystans i „Jadę!”, a zobaczysz, kto z nas jedzie. „📍 W okolicy” pokaże imprezy blisko Ciebie."):'')
    +'</ol>'
    +'<div class="htips"><div>⭐ Dotknij nicku — karta osoby, ulubieni, „Zaproś na rower”.</div>'
+   +(rbOk?'<div>🗺️ <b>Baza tras</b> w ⚙️ — oceny, pogoda na jazdę i lista „co zabrać”.</div>':'')
    +'<div>🚴 Po jeździe aplikacja zapyta <b>„Jak poszło?”</b> — km, średnia, ocena trasy.</div>'
    +'<div>🧪 Zaproszenia z czerwoną plakietką <b>TEST</b> są na próbę — śmiało klikaj. Ukryjesz je w ⚙️.</div>'
    +(session?'':'<div>👤 Żeby zapraszać i dołączać, zaloguj się — wystarczą e-mail i hasło.</div>')+'</div>'
@@ -2641,9 +2684,10 @@ function helpHtml(){
      :'<div class="htg2">📣 Nowe jazdy także na kanale <a href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">@PrzylesieGo ›</a></div>')
    +(session&&fbOk?'<button type="button" class="lnk" data-h="fb" style="display:block;margin:12px auto 0">💬 Coś nie działa albo masz pomysł? Napisz ›</button>':'')
    +'<label class="hoff"><input type="checkbox" id="helpoff"'+(helpOff?' checked':'')+'> Nie pokazuj przy starcie</label>'
+   +'<div class="note hver">PrzylesieGo! · wersja '+esc(APP_VER)+' (BETA) · '+esc(APP_REL[0].d)+'</div>'
    +'<button type="button" class="b big" data-h="close">Zaczynamy!</button></div>';
 }
-function openHelp(){helpMore=false;const p=$("helpsheet");p.innerHTML=helpHtml();p.classList.remove("hide")}
+function openHelp(){helpMore=false;const p=$("helpsheet");p.innerHTML=helpHtml();p.classList.remove("hide");relMark()}
 function closeHelp(){const p=$("helpsheet");p.classList.add("hide");p.innerHTML=""}
 $("helpsheet").addEventListener("click",async e=>{
   if(e.target.closest("[data-h='instgo']")){if(instPrompt){const ev=instPrompt;instPrompt=null;try{ev.prompt();const r=await ev.userChoice;say(r&&r.outcome==="accepted"?"📲 Instaluję — ikona pojawi się na ekranie telefonu.":"Możesz zainstalować później — instrukcja jest w ❓ Pomocy.")}catch(err){}}
@@ -2655,6 +2699,7 @@ $("helpsheet").addEventListener("click",async e=>{
 });
 $("helpsheet").addEventListener("change",e=>{if(e.target.id==="helpoff")setHelpOff(e.target.checked)});
 $("helpbtn").onclick=openHelp;
+if(relNew())$("helpbtn").classList.add("newdot");
 $("welhelp").onclick=openHelp;
 // samo się pokazuje raz na uruchomienie aplikacji (po zalogowaniu), dopóki ktoś nie wyłączy
 function maybeHelp(){
