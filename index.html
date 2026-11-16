@@ -1225,9 +1225,9 @@ function renderPlaces(boxId,mp,list,err){
   if(mp)mp.p.clearLayers();
   if(err){box.innerHTML='<b>Miejscowości na trasie</b><div class="note">Nie udało się pobrać danych z OpenStreetMap. Spróbuj za chwilę.</div>';box.classList.remove("hide");return}
   if(!list.length){box.classList.add("hide");return}
-  const kmt=k=>k<10?k.toFixed(1):String(Math.round(k));
+  const kmt=k=>k<10?k.toFixed(1).replace(".",","):String(Math.round(k));
   box.innerHTML='<details class="plds"><summary>'+uiIcon("pin")+' Miejscowości na trasie <span class="plcnt">'+list.length+'</span></summary><div class="pllist">'
-    +list.map(p=>'<div class="plit"><span class="plic">'+uiIcon(PICON[p.type]||"pin")+'</span><span class="plnm">'+esc(p.name)+'<small>'+(PTYPE[p.type]||"")+'</small></span><span class="plkm">'+kmt(p.km)+' km</span></div>').join("")
+    +list.map(p=>'<div class="plit"><span class="plic">'+uiIcon(PICON[p.type]||"pin")+'</span><span class="plnm">'+esc(p.name)+'<small>'+(PTYPE[p.type]||"")+'</small></span><span class="plkm">'+(p.km<0.3?'start':kmt(p.km)+' km')+'</span></div>').join("")
     +'</div><div class="note" style="margin-top:6px">Kilometr od startu wzdłuż trasy · rozwinięta lista pokazuje punkty na mapie · dane: OpenStreetMap.</div></details>';
   box.classList.remove("hide");
   const d=box.querySelector("details");
