@@ -42,7 +42,7 @@ h1{font-size:24px;margin:4px 0;letter-spacing:-.02em}h2{font-size:19px;margin:0 
 .wtitle{font-size:34px;margin:6px 0 0}.wsub{font-size:18px;color:var(--acc);font-weight:600}
 .gear{flex:none;width:44px;height:44px;border-radius:50%;border:1px solid rgba(0,0,0,.06);background:var(--card);color:var(--ink);font-size:21px;line-height:1;cursor:pointer;box-shadow:var(--shadow);transition:width .2s,height .2s,font-size .2s}
 nav{display:flex;gap:2px;padding:3px;background:var(--navbg);border-radius:12px;margin-bottom:16px}
-nav button{flex:1;padding:9px 4px;border:0;background:transparent;color:var(--mut);border-radius:9px;font:inherit;font-weight:600;font-size:15px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;transition:padding .2s,font-size .2s}
+nav button{flex:1;min-width:0;padding:9px 4px;border:0;background:transparent;color:var(--mut);border-radius:9px;font:inherit;font-weight:600;font-size:15px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;transition:padding .2s,font-size .2s}
 nav button.on{background:var(--accbtn);color:#fff;box-shadow:0 1px 4px rgba(36,138,61,.45)}
 /* ---- nagłówek przyklejony u góry ---- */
 .betabar{display:flex;width:100%;justify-content:center;align-items:center;gap:5px;border:0;margin:0;padding:5px 10px;font:inherit;font-size:12.5px;font-weight:600;background:#ede4ff;color:#5b31c0;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -83,7 +83,7 @@ nav button.on{background:var(--accbtn);color:#fff;box-shadow:0 1px 4px rgba(36,1
 .wlab.me{background:#fff3c4;color:#8a5a00}html[data-theme=dark] .wlab.me{background:#4a3f12;color:#ffd666}
 .wwx{font-size:14px;color:var(--mut);margin-top:6px}
 .wroute{margin-top:8px;padding:9px 11px;border-radius:12px;background:var(--acc2);font-size:15px}
-.wroute .wrb{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.wroute .wrb{flex-wrap:nowrap}.wroute .wrb .b{background:var(--card)!important;flex:1;padding:8px 6px;white-space:nowrap}
+.wroute .wrb{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.wroute .wrb .b{background:var(--card)!important;flex:1 1 auto;min-width:0;padding:8px 10px;white-space:nowrap}
 .wrrow{display:flex;gap:8px;align-items:stretch}.wrrow .wrfile{flex:1;min-width:0}.wrrow .ib{height:auto;min-height:44px;width:48px}
 #wpacesel,#wkmsel,#wdursel{font-size:16px;font-weight:600}#wkmown,#wdurown{margin-top:8px}
 .wdurinfo.bad{background:#fff3c4;color:#6b4a00}html[data-theme=dark] .wdurinfo.bad{background:#4a3f12;color:#ffe08a}.wclash{margin-top:6px;font-size:14px;font-weight:600;line-height:1.35}.wclash .lnk{font-weight:700;color:var(--acc);margin-left:4px}
@@ -121,7 +121,7 @@ nav button.on{background:var(--accbtn);color:#fff;box-shadow:0 1px 4px rgba(36,1
 .tgsteps{text-align:left;margin:12px 0 4px;padding-left:24px;font-size:16px;line-height:1.4}.tgsteps li{margin:6px 0}
 .tgok{display:inline-block;background:var(--acc2);color:var(--acc);border-radius:999px;padding:4px 12px;font-weight:700;font-size:15px}
 .hoff{display:flex;align-items:center;justify-content:center;gap:8px;margin:14px 0 0;font-size:14px;color:var(--mut)}.hoff input{width:auto;margin:0}
-.hdr nav{order:3;flex:1 0 100%;margin:0}
+.hdr nav{order:3;flex:1 0 100%;margin:0;min-width:0}
 .hdr.compact{border-bottom-color:var(--line)}
 .hdr.compact .hin{padding:8px 16px;flex-wrap:nowrap;gap:10px}
 .hdr.compact .apptitle{flex:1 1 auto;min-width:0;font-size:17px;display:flex;align-items:center;gap:6px}.hdr.compact .apptitle .tlogo{display:inline-flex;align-items:center}.hdr.compact .apptitle .blogo{vertical-align:0}.hdr.compact .apptitle .menick:not(.hide){display:inline-flex!important;align-items:center;margin:0!important;vertical-align:0!important}
@@ -255,7 +255,7 @@ html[data-theme=dark] .fcard::after{background:rgba(0,0,0,.25);box-shadow:0 1px 
 .mycar{display:flex;gap:10px}
 .mycar.multi{overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -4px;padding:0 4px}
 .mycar.multi::-webkit-scrollbar{display:none}
-.mycar .mywant{flex:0 0 100%;scroll-snap-align:center;box-sizing:border-box}
+.mycar .mywant{flex:0 0 100%;min-width:0;scroll-snap-align:center;box-sizing:border-box}.mywant,.want{min-width:0;overflow-wrap:anywhere}
 .mycar.multi .mywant{flex-basis:calc(100% - 26px)}
 .mydots{display:flex;justify-content:center;gap:7px;margin-top:10px}
 .mydots button{width:8px;height:8px;padding:0;border:0;border-radius:50%;background:var(--line);cursor:pointer}
