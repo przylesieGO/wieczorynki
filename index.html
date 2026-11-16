@@ -203,6 +203,8 @@ details.wday .want{margin:0 10px 10px}
 .rbwrap{position:relative;width:164px;margin:14px auto 4px}.rbwrap .roundbtn{margin:0}
 .rbadge{position:absolute;top:6px;right:-14px;background:#fff;color:#248a3d;border-radius:999px;font-size:13px;font-weight:800;padding:3px 9px;box-shadow:0 2px 6px rgba(0,0,0,.2);white-space:nowrap}
 .rbaddprev{display:flex;justify-content:center;background:var(--fill);border-radius:14px;padding:10px;margin-top:4px}.rbaddprev svg{max-width:100%;height:auto}
+.rbinfo2{display:flex;gap:10px;align-items:flex-start;background:var(--acc2);border-radius:14px;padding:11px 12px;margin:2px 0 10px;text-align:left}
+.rbinfo2>.ui-i{flex:none;width:20px;height:20px;color:var(--acc);margin-top:2px}.rbinfo2 b{display:block;font-size:15px}.rbinfo2 span{display:block;font-size:13.5px;color:var(--mut);margin-top:2px;line-height:1.35}.rbinfo2 .b{margin-top:8px}
 .wbike{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .wbk{display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 2px 8px;border-radius:12px;border:1.5px solid transparent;background:var(--fill);color:var(--ink);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
 .wbk .ui-i{width:22px;height:22px;color:var(--mut)}.wbk.on{background:var(--acc2);border-color:var(--acc);color:var(--acc)}.wbk.on .ui-i{color:var(--acc)}
@@ -678,7 +680,7 @@ html[data-theme=dark] .evp-t.soon{background:#4d2a0e;color:#ffb074}@keyframes ev
 .rbhm{display:flex;gap:8px;margin-top:12px}.rbhm button{flex:1;height:64px;border:0;border-radius:12px;background:rgba(255,255,255,.14);position:relative;overflow:hidden;padding:0;cursor:pointer}
 .rbhm svg{position:absolute;inset:0;width:100%;height:100%}.rbhm small{position:absolute;left:5px;bottom:4px;font-size:10.5px;font-weight:800;color:#fff;background:rgba(0,0,0,.35);border-radius:6px;padding:1px 5px}
 .rbhb{display:flex;gap:8px;margin-top:12px}.rbhb button{border:0;border-radius:12px;padding:11px 14px;font:inherit;font-weight:800;font-size:15px;cursor:pointer}
-.rbh1{flex:1;background:#fff;color:#0f7a3e}.rbh2{background:rgba(255,255,255,.18);color:#fff}
+.rbhb button{white-space:nowrap;padding:11px 10px!important}.rbh1{flex:1;background:#fff;color:#0f7a3e}.rbh2{flex:1;background:rgba(255,255,255,.18);color:#fff}
 .rbstar{color:#f5a623;font-weight:800}.rbstar0{color:var(--line)}
 .rbmet{font-weight:600}
 .rvgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.rvgrid div{background:var(--fill);border-radius:12px;padding:8px 4px;text-align:center}
@@ -2630,9 +2632,9 @@ function rbHeroHtml(){
   if(!rbList&&!rbHeroLoading){rbHeroLoading=true;rbLoad().then(()=>{rbHeroLoading=false;if(gearOpen&&gearView==="main")renderGear()},()=>{rbHeroLoading=false})}
   const L=(rbList||[]).filter(x=>!x.hidden),top=L.slice().sort((a,b)=>rbUses(b)-rbUses(a)||String(b.created_at).localeCompare(String(a.created_at))).slice(0,3);
   return '<div class="rbhero"><div class="rbhh">'+uiIcon("map")+'Baza tras</div><div class="rbhp">'
-   +(rbList?(L.length?L.length+' '+plf(L.length,["trasa","trasy","tras"])+' od ekipy — wybierz, sprawdź wiatr i zaproś jednym kliknięciem.':'Jeszcze pusto — dodaj pierwszą trasę z pliku GPX, a inni wybiorą ją przy zapraszaniu.'):'Wczytuję trasy…')+'</div>'
+   +(rbList?(L.length?L.length+' '+plf(L.length,["trasa","trasy","tras"])+' od ekipy — wybierz, sprawdź wiatr i zaproś jednym kliknięciem.':'Jeszcze pusto — dodaj pierwszą trasę: utwórz zaproszenie z plikiem GPX i włącz „Dodaj do bazy tras”.'):'Wczytuję trasy…')+'</div>'
    +(top.length?'<div class="rbhm">'+top.map(x=>'<button type="button" data-rbhero="'+esc(x.id)+'" aria-label="'+esc(x.name)+'">'+rbSvg(x.preview,100,64,true)+'<small>'+String(Math.round(+x.km))+' km'+(rbUses(x)?' · '+rbUses(x)+'×':'')+'</small></button>').join("")+'</div>':'')
-   +'<div class="rbhb"><button type="button" class="rbh1" data-rbopen="1">Odkryj trasy ›</button><button type="button" class="rbh2" data-rbadd="1">+ Dodaj</button></div></div>';
+   +'<div class="rbhb"><button type="button" class="rbh1" data-rbopen="1">Odkryj trasy ›</button><button type="button" class="rbh2" data-rbadd="1">'+(isAdmin?'+ Dodaj trasę':'+ Zaproś z trasą')+'</button></div></div>';
 }
 let rbHeroLoading=false;
 // ⚙️ ustawienia w stylu Ustawień iPhone'a (Apple HIG): grupy, ikonka, przełącznik / mały segment
@@ -3422,12 +3424,14 @@ function renderRb(){
   rbCloseMap();
   const p=$("rbsheet"),keep=p.querySelector("#rblist"),st=keep&&p.querySelector(".bslist")?p.querySelector(".bslist").scrollTop:0,n=rbList?rbList.filter(x=>!x.hidden).length:null;
   p.innerHTML='<div class="bsbox rbbox" role="dialog" aria-modal="true" aria-label="Baza tras"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-rb="close">'+(rb.mode==="pick"?'Anuluj':'Zamknij')+'</button><b>🗺️ '+(rb.mode==="pick"?'Wybierz trasę':'Baza tras')+(n!=null?' · '+n:'')+'</b><span style="min-width:64px"></span></div><div class="bslist">'
+   +(rb.mode==="browse"?'<div class="rbinfo2">'+uiIcon("plus")+'<div><b>'+(isAdmin?'Dodaj trasę do bazy':'Jak dodać swoją trasę?')+'</b><span>'
+       +(isAdmin?'Jako administrator dodasz plik GPX od razu. Użytkownicy dodają trasy przez zaproszenie.':'Utwórz zaproszenie z plikiem GPX i włącz „📚 Dodaj do bazy tras” — po zapisaniu trasa trafi tutaj.')+'</span>'
+       +'<button type="button" class="b g small" data-rb="'+(isAdmin?'add':'addinv')+'">'+(isAdmin?'＋ Dodaj trasę z pliku GPX':'＋ Zaproś z trasą')+'</button></div></div>':'')
    +'<input id="rbq" class="rbq" placeholder="🔍 Szukaj: nazwa albo miejscowość" value="'+esc(rb.q)+'" enterkeyhint="search">'
    +'<div class="fchips rbchips">'+RB_SORTS.filter(x=>x[0]!=="near"||originGet()).map(([k,t])=>'<button type="button" class="fch'+(rb.sort===k?' on':'')+'" data-rbs="'+k+'">'+t+'</button>').join("")+'</div>'
    +'<div class="fchips rbchips">'+[["","🚲 Każdy"]].concat(Object.entries(BIKES)).map(([k,t])=>'<button type="button" class="fch'+(rb.bike===k?' on':'')+'" data-rbb="'+k+'">'+t+'</button>').join("")+'</div>'
    +'<div id="rblist">'+rbListHtml()+'</div>'
-   +(rb.mode==="browse"?(isAdmin?'<button type="button" class="b g" style="margin-top:12px;width:100%" data-rb="add">'+uiIcon("plus")+' Dodaj trasę z pliku GPX</button>':'')
-     +'<div class="note" style="margin-top:12px;text-align:center">Trasę dodasz w formularzu zaproszenia (plik GPX → „📚 Dodaj do bazy tras”)'+(isAdmin?' — albo, jako administrator, przyciskiem powyżej':'')+'.</div>':'')
+
    +'</div></div>';
   p.classList.remove("hide");const nl=p.querySelector(".bslist");if(nl)nl.scrollTop=st;
 }
@@ -3695,6 +3699,7 @@ $("rbsheet").addEventListener("click",async e=>{
   const ab=e.target.closest("[data-rbab]");if(ab&&rb.add){rb.add.bike=ab.dataset.rbab;renderRbAdd();return}
   const b=e.target.closest("[data-rb]");if(!b)return;const k=b.dataset.rb;
   if(k==="add"){rbAddStart();return}
+  if(k==="addinv"){closeRb();show(0);openWantForm(null);if(wRouteOk){try{$("wrfile").click()}catch(err){}say("📚 Wybierz plik GPX, potem włącz „Dodaj do bazy tras” pod trasą.")}return}
   if(k==="addx"){rb.add=null;renderRb();return}
   if(k==="addsave"&&rb.add&&!rb.add.busy){const a=rb.add,n=($("rbaddname")?$("rbaddname").value:a.name).trim();a.name=n;
     if(n.length<2){say("Nazwa trasy: co najmniej 2 znaki.");return}
