@@ -4802,6 +4802,8 @@ $("wsave").onclick=async()=>{
     eJoined=ow1?(joins[ow1.id]||[]).filter(x=>x!==uid):[],eTarget=ePriv?[...new Set([...wfInvIds(),...eJoined])]:[];
   if(ePriv&&!eTarget.length){say(wf.vis==="fav"?"Nie masz jeszcze ulubionych — wybierz osoby w „Kto zobaczy”.":"Wybierz co najmniej jedną osobę w „Kto zobaczy”.");return}
   let visMsg="";
+  // prywatne → wszyscy: potwierdzenie (ogłoszenie na kanale Telegram nie da się cofnąć; baza wysyła je tylko raz — KROK 52)
+  if(ow1&&visOk&&isPriv(ow1)&&!ePriv&&!confirm("Zaproszenie zobaczą wszyscy zalogowani.\n\nJeśli jeszcze nie było na kanale Telegram, trafi tam teraz — wiadomości z kanału nie da się cofnąć (nawet gdy później znów zrobisz je prywatnym).\n\nZapisać?"))return;
   if(priv&&!ids.length){say(wf.vis==="fav"?"Nie masz jeszcze ulubionych — wybierz osoby w „Kto zobaczy”.":"Wybierz co najmniej jedną osobę w „Kto zobaczy”.");return}
   let editedPriv=false;
   try{
@@ -4827,7 +4829,7 @@ $("wsave").onclick=async()=>{
         const was=isPriv(ow1),cur=(invs[ow1.id]||[]).map(x=>x.u);
         if(was!==ePriv){const rv=await sb.from("wants").update({visibility:ePriv?"private":"all"}).eq("id",ow1.id).select("id");
           if(rv.error||!rv.data||!rv.data.length)throw new Error("termin zapisany, ale zmiana „Kto zobaczy” wymaga KROKU 52 w bazie");
-          visMsg=ePriv?" 🔒 Teraz widzą tylko zaproszeni.":" 🌍 Teraz widzą wszyscy (i kanał Telegram)."}
+          visMsg=ePriv?" 🔒 Teraz widzą tylko zaproszeni.":" 🌍 Teraz widzą wszyscy."}
         if(ePriv){const add=eTarget.filter(u=>!cur.includes(u)),rem=cur.filter(u=>!eTarget.includes(u));
           if(add.length){const ri=await sb.from("want_invitees").insert(add.map(u=>({want_id:ow1.id,user_id:u,added_by:uid})));if(ri.error)throw ri.error}
           if(rem.length){const rd=await sb.from("want_invitees").delete().eq("want_id",ow1.id).in("user_id",rem);if(rd.error)throw rd.error}
