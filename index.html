@@ -211,6 +211,8 @@ details.wday .want{margin:0 10px 10px}
 .osmleg{display:flex;flex-direction:column;gap:3px;font-size:13.5px}.osmleg span{display:flex;align-items:center;gap:6px}.osmleg i{width:10px;height:10px;border-radius:3px;flex:none}
 .osmrow{margin-top:8px;font-size:14.5px;display:flex;align-items:center;gap:6px}.osmrow .ui-i{color:var(--acc)}
 .osmpo{margin-top:10px}.osmsum{font-weight:500;font-size:12.5px;color:var(--mut);margin-left:auto}.osmic{background:rgba(255,159,10,.15)!important;color:#ff9f0a!important}
+.admq{display:flex;align-items:center;gap:10px;margin:6px 0 4px}.admq input{flex:1;min-width:0}.admq .note{flex:none;margin:0}
+.admqf{margin:4px 0 8px}
 .wbike{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .wbk{display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 2px 8px;border-radius:12px;border:1.5px solid transparent;background:var(--fill);color:var(--ink);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
 .wbk .ui-i{width:22px;height:22px;color:var(--mut)}.wbk.on{background:var(--acc2);border-color:var(--acc);color:var(--acc)}.wbk.on .ui-i{color:var(--acc)}
@@ -1519,6 +1521,21 @@ const hideTestHtml=()=>testOk?'<div class="note" style="margin-top:14px">Testowe
 function renderMeNick(){const el=$("menick");if(!el)return;const on=showNick&&!!session&&!!me.nick;el.classList.toggle("hide",!on);el.innerHTML=on?'<i title="Zalogowany">👤 </i>'+nk(uid):''}
 try{guestMode=sessionStorage.getItem("guest")==="1"}catch(e){}
 const setGuest=v=>{guestMode=v;try{v?sessionStorage.setItem("guest","1"):sessionStorage.removeItem("guest")}catch(e){}};
+// 🔍 wyszukiwanie użytkowników w Administracji (po nicku, bez polskich znaków i wielkości liter) + szybkie filtry
+let admQ="",admF="";
+function admMatch(id){
+  const q=nickKey(admQ.trim());if(q&&!nickKey(nicks[id]||"").includes(q)&&!lc(nicks[id]||"").includes(lc(admQ.trim())))return false;
+  if(admF==="on")return onlineIds.includes(id);
+  if(admF==="new")return !!joinedAt[id]&&Date.now()-new Date(joinedAt[id]).getTime()<14*864e5;
+  if(admF==="tg")return !!(tgLinks&&tgLinks.has(id));
+  if(admF==="ban")return modBanned.has(id);
+  if(admF==="hid")return modHidden.has(id);
+  return true;
+}
+function admFilter(){let n=0,t=0;document.querySelectorAll("[data-admu]").forEach(r=>{t++;const ok=admMatch(r.dataset.admu);r.style.display=ok?"":"none";if(ok)n++});
+  const c=$("admqn");if(c)c.textContent=(admQ.trim()||admF)?n+" z "+t:"";}
+document.addEventListener("input",e=>{if(e.target.id==="admq"){admQ=e.target.value;admFilter()}});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-admf]");if(!b)return;admF=b.dataset.admf;document.querySelectorAll("[data-admf]").forEach(x=>x.classList.toggle("on",x===b));admFilter()});
 function adminHtml(){
   const rows=adminIds.map(id=>'<div class="arow">'+nk(id)+(isSuper(id)?'<span class="note">👑 główny admin'+(id===uid?' (Ty)':'')+'</span>':id===uid?'<span class="note">(Ty)</span>':'<span class="arbtns">'+(stealthOk&&isSuper(uid)?'<button class="b g small'+(stealthIds.has(id)?' on':'')+'" data-a="stealth" data-id="'+esc(id)+'" title="Czy ten admin może ukryć swoją obecność online">'+(stealthIds.has(id)?'👻 może się ukryć ✓':'👻 ukrywanie: nie')+'</button>':'')+'<button class="b g small" data-a="rm" data-id="'+esc(id)+'">Odbierz uprawnienia</button></span>')+'</div>').join("")||'<div class="note">Brak.</div>';
   const cand=Object.keys(nicks).filter(id=>!adminIds.includes(id)).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl"));
@@ -1541,7 +1558,9 @@ function adminHtml(){
    +testersHtml()
    +(isSuper(uid)&&testOk?'<h3>🧪 Zaproszenia testowe</h3><button class="b sbtn" style="background:var(--bad)" data-c="testdel">🧹 Usuń wszystkie testowe zaproszenia…</button><p class="note">Usuwa tylko zaproszenia oznaczone 🧪 TEST (z dołączeniami i powiadomieniami). Prawdziwe zostają.</p>':'')
    +'<h3>Użytkownicy ('+Object.keys(nicks).length+')</h3>'+(tgLinks?'<p class="note">✈️ = połączony bot Telegram ('+tgLinks.size+'). Dotknij nicku — karta osoby z aktywnością.</p>':'')
-   +(Object.keys(nicks).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")).map(id=>'<div class="arow"><span>'+nk(id)+(tgLinks&&tgLinks.has(id)?' <span class="tgm" title="Telegram połączony">✈️</span>':'')+(modBanned.has(id)?' <span class="tgm" title="Zablokowany">⛔</span>':'')+(modHidden.has(id)?' <span class="tgm" title="Ukryty">👻</span>':'')+(joinedAt[id]?'<br><span class="note">od '+esc(new Date(joinedAt[id]).toLocaleDateString("pl-PL",{day:"numeric",month:"short",year:"numeric"}))+'</span>':'')+'</span>'+(id===uid?'<span class="note">(Ty)</span>':isSuper(id)?'<span class="note">👑</span>':'<button class="b g small" data-a="unick" data-id="'+esc(id)+'">Zmień nick</button>')+'</div>').join("")||'<div class="note">Brak użytkowników z nickiem.</div>')
+   +'<div class="admq"><input id="admq" type="search" placeholder="🔍 Szukaj po nicku" value="'+esc(admQ)+'" autocomplete="off" enterkeyhint="search"><span class="note" id="admqn"></span></div>'
+   +'<div class="fchips admqf">'+[["","Wszyscy"],["on","🟢 Online"],["new","🆕 Nowi (14 dni)"],["tg","Telegram"],["ban","Zablokowani"],["hid","Ukryci"]].map(([k,t])=>'<button type="button" class="fch'+(admF===k?' on':'')+'" data-admf="'+k+'">'+t+'</button>').join("")+'</div>'
+   +(Object.keys(nicks).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")).map(id=>'<div class="arow" data-admu="'+esc(id)+'"'+(admMatch(id)?'':' style="display:none"')+'><span>'+nk(id)+(tgLinks&&tgLinks.has(id)?' <span class="tgm" title="Telegram połączony">✈️</span>':'')+(modBanned.has(id)?' <span class="tgm" title="Zablokowany">⛔</span>':'')+(modHidden.has(id)?' <span class="tgm" title="Ukryty">👻</span>':'')+(joinedAt[id]?'<br><span class="note">od '+esc(new Date(joinedAt[id]).toLocaleDateString("pl-PL",{day:"numeric",month:"short",year:"numeric"}))+'</span>':'')+'</span>'+(id===uid?'<span class="note">(Ty)</span>':isSuper(id)?'<span class="note">👑</span>':'<button class="b g small" data-a="unick" data-id="'+esc(id)+'">Zmień nick</button>')+'</div>').join("")||'<div class="note">Brak użytkowników z nickiem.</div>')
    +'</div>';
 }
 /* 🧪 testerzy i funkcje testowe (KROK 16) — nadaje/odbiera i przełącza tylko 👑 */
@@ -2233,6 +2252,7 @@ function renderGear(){
   const keepSel=$("adminsel")?$("adminsel").value:"";
   const keepCol=gearView==="colors"&&$("colK")?colVals():null;
   const keepNickSex=gearView==="nick";
+  const keepAdmq=document.activeElement&&document.activeElement.id==="admq"?document.activeElement.selectionStart:null;
   const keepUnick=gearView==="unick"&&$("gunick")?{v:$("gunick").value,i:$("gunickinfo").textContent}:null;
   const keepConf=gearView==="confdel"&&$("gconf")?$("gconf").value:null;
   const keepDel=gearView==="del"&&$("gdel")?{v:$("gdel").value,i:$("gdelinfo").textContent}:null;
@@ -2289,6 +2309,7 @@ function renderGear(){
   if(keepConf!=null&&$("gconf"))$("gconf").value=keepConf;
   if(keepDel&&$("gdel")){$("gdel").value=keepDel.v;$("gdelinfo").textContent=keepDel.i}
   if(keepNick&&$("gnick")){$("gnick").value=keepNick.v;$("gnickinfo").textContent=keepNick.i}
+  if($("admq")){admFilter();if(keepAdmq!=null){const q=$("admq");q.focus();try{q.setSelectionRange(keepAdmq,keepAdmq)}catch(e){}}}
 }
 function tgHtml(){
   const head='<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">🔔 Telegram'+betaTag("telegram_dm")+'</div>';
