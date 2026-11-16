@@ -213,6 +213,12 @@ details.wday .want{margin:0 10px 10px}
 .osmpo{margin-top:10px}.osmsum{font-weight:500;font-size:12.5px;color:var(--mut);margin-left:auto}.osmic{background:rgba(255,159,10,.15)!important;color:#ff9f0a!important}
 .admq{display:flex;align-items:center;gap:10px;margin:6px 0 4px}.admq input{flex:1;min-width:0}.admq .note{flex:none;margin:0}
 .admqf{margin:4px 0 8px}
+.wempty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;margin-top:14px;padding:22px 16px 18px;border:1.5px dashed var(--line);border-radius:16px}
+.wemi{width:54px;height:54px;border-radius:50%;background:var(--acc2);color:var(--acc);display:flex;align-items:center;justify-content:center;margin-bottom:4px}.wemi .ui-i{width:28px;height:28px}
+.wempty b{font-size:17px}.wempty span{font-size:14.5px;color:var(--mut);max-width:380px;line-height:1.4}
+.wembtn{margin-top:10px;padding:12px 22px;font-size:16px;display:inline-flex;align-items:center;gap:6px}.wembtn .ui-i{width:18px;height:18px}
+.hdnew{display:none;align-items:center;gap:5px;border:0;border-radius:999px;padding:8px 14px;background:var(--accbtn);color:#fff;font:inherit;font-weight:700;font-size:15px;cursor:pointer}.hdnew svg{width:16px;height:16px}
+@media (min-width:768px){.hdnew{display:inline-flex}}
 .wbike{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .wbk{display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 2px 8px;border-radius:12px;border:1.5px solid transparent;background:var(--fill);color:var(--ink);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
 .wbk .ui-i{width:22px;height:22px;color:var(--mut)}.wbk.on{background:var(--acc2);border-color:var(--acc);color:var(--acc)}.wbk.on .ui-i{color:var(--acc)}
@@ -964,7 +970,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 <section id="p0">
  <div id="steps" class="hide"></div>
  <div class="card">
-  <div class="row between"><h2 style="margin:0">Umów się na rower</h2><span class="hdbtns"><button type="button" class="fbtn hide" id="fltbtn" aria-label="Filtry"><svg class="fico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg> Filtry<span class="fn hide" id="fltn"></span></button><button type="button" class="onl hide" id="onlbtn" title="Kto jest teraz w aplikacji"></button></span></div>
+  <div class="row between"><h2 style="margin:0">Umów się na rower</h2><span class="hdbtns"><button type="button" class="hdnew" data-wnew="1" aria-label="Zaproś na rower"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg> Zaproś</button><button type="button" class="fbtn hide" id="fltbtn" aria-label="Filtry"><svg class="fico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4 2v-8z"/></svg> Filtry<span class="fn hide" id="fltn"></span></button><button type="button" class="onl hide" id="onlbtn" title="Kto jest teraz w aplikacji"></button></span></div>
   <div id="fltbar" class="fltbar hide"></div>
   <div id="wantguest" class="note">Zaloguj się, aby zobaczyć chętnych i zgłosić ochotę na przejażdżkę.<div style="margin-top:10px"><button type="button" class="b wdemo" data-demo="1">👀 Zobacz przykład</button></div></div>
   <div id="wantmain" class="hide">
@@ -4193,7 +4199,8 @@ function renderWants0(){
   renderMyWant();
   const list=wants.filter(w=>!wDone(w));
   const box=$("wantlist");
-  if(!list.length){box.innerHTML='<div class="note" style="margin-top:12px">Nikt jeszcze nie zaprasza. Bądź pierwszy — kliknij <b>➕ Zaproś na rower</b> w prawym dolnym rogu.</div>';return}
+  if(!list.length){box.innerHTML='<div class="wempty"><div class="wemi">'+uiIcon("bike")+'</div><b>Nikt jeszcze nie zaprasza</b><span>Bądź pierwszy — wybierz dzień i godzinę, a reszta ekipy dostanie zaproszenie.</span>'
+     +'<button type="button" class="b wembtn" data-wnew="1">'+uiIcon("plus")+' Zaproś na rower</button></div>';return}
   // grupowanie po dniu: jedna rozwijana karta na dzień
   const days=[];
   list.slice().sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at)).forEach(w=>{
@@ -4666,6 +4673,7 @@ window.addEventListener("scroll",()=>{
   if(y<80)f.classList.remove("mini");else if(y>fabY+6)f.classList.add("mini");else if(y<fabY-6)f.classList.remove("mini");
   fabY=y;updateTop();
 },{passive:true});
+document.addEventListener("click",e=>{if(e.target.closest("[data-wnew]")){if(!session){say("Zaloguj się, żeby zaprosić na rower.");return}openWantForm(null)}});
 $("fab").onclick=()=>{
   if(!session){say("Zaloguj się, żeby zaprosić na rower.");return}
   openWantForm(null);
