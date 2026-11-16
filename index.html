@@ -1234,11 +1234,17 @@ function setArrow(id,wf,ws){
 
 /* ---------- miejscowości wzdłuż trasy (OpenStreetMap / Overpass) ---------- */
 const placeCache={};
-async function overpass(q){
-  let last;
+// o = {ms: limit czasu na serwer, post: wysyłka POST (długie zapytania)}
+async function overpass(q,o){
+  o=o||{};let last;
   for(const ep of ["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"]){
-    const ac=typeof AbortController!=="undefined"?new AbortController():null,tm=ac?setTimeout(()=>ac.abort(),15000):0;
-    try{const r=await fetch(ep+"?data="+encodeURIComponent(q),ac?{signal:ac.signal}:{});if(!r.ok)throw new Error("http "+r.status);const j=await r.json();clearTimeout(tm);return j}catch(e){clearTimeout(tm);last=e}
+    const ac=typeof AbortController!=="undefined"?new AbortController():null,tm=ac?setTimeout(()=>ac.abort(),o.ms||15000):0;
+    try{const r=o.post?await fetch(ep,Object.assign({method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"data="+encodeURIComponent(q)},ac?{signal:ac.signal}:{}))
+        :await fetch(ep+"?data="+encodeURIComponent(q),ac?{signal:ac.signal}:{});
+      if(!r.ok)throw new Error(r.status===429?"serwer zajęty (429)":r.status===504?"serwer przeciążony (504)":"błąd serwera "+r.status);
+      const j=await r.json();clearTimeout(tm);
+      if(j&&j.remark&&/error|timed out|out of memory/i.test(j.remark))throw new Error(/timed out/i.test(j.remark)?"przekroczony czas na serwerze":"błąd zapytania");
+      return j}catch(e){clearTimeout(tm);last=e&&e.name==="AbortError"?new Error("brak odpowiedzi"):e}
   }
   throw last;
 }
@@ -3563,7 +3569,8 @@ async function rbOsmCompute(x,pts){
   for(let i=1;i<pts.length;i++)cum.push(cum[i-1]+dist(pts[i-1],pts[i]));
   const total=cum[cum.length-1],P=Math.PI/180,kx=111.32*Math.cos(pts[0].lat*P),ky=110.57,res={v:1,asf:0,szu:0,gru:0,unk:0};
   // 1) drogi przy śladzie → nawierzchnia odcinków
-  const J1=await overpass('[out:json][timeout:50];way(around:25,'+L+')[highway];out tags geom;');
+  const OP={ms:75000,post:true},errs=[];let J1={elements:[]};
+  try{J1=await overpass('[out:json][timeout:60];way(around:20,'+L+')[highway];out tags geom;',OP);res.srf=1}catch(e){errs.push("nawierzchnia: "+e.message)}
   const G={},C=0.0012,ck=(a,b)=>Math.floor(a/C)+":"+Math.floor(b/C);
   (J1.elements||[]).forEach(w=>{const g=w.geometry||[],cl=osmSurf(w.tags||{});for(let i=1;i<g.length;i++){const a=g[i-1],b=g[i],seg={a,b,cl};
     const la0=Math.min(a.lat,b.lat),la1=Math.max(a.lat,b.lat),lo0=Math.min(a.lon,b.lon),lo1=Math.max(a.lon,b.lon);
@@ -3577,18 +3584,20 @@ async function rbOsmCompute(x,pts){
   // 2) las — próbki co ~0,5 km (Overpass is_in)
   try{const n=Math.min(80,Math.max(8,Math.round(total/0.5))),S=[];for(let j=0;j<n;j++){const tk=total*(j+.5)/n;let i=cum.findIndex(c=>c>=tk);if(i<0)i=pts.length-1;S.push(pts[i])}
     const q='[out:json][timeout:50];'+S.map(p=>'is_in('+p.lat.toFixed(5)+','+p.lon.toFixed(5)+')->.a;(area.a["landuse"="forest"];area.a["natural"="wood"];);make f n=count(areas);out;').join("");
-    const J2=await overpass(q),F=(J2.elements||[]).filter(e=>e.type==="f");
-    if(F.length===S.length)res.las=+(F.filter(e=>+((e.tags||{}).n)>0).length/S.length*total).toFixed(1)}catch(e){}
+    const J2=await overpass(q,OP),F=(J2.elements||[]).filter(e=>e.type==="f");
+    if(F.length===S.length)res.las=+(F.filter(e=>+((e.tags||{}).n)>0).length/S.length*total).toFixed(1);else errs.push("las: niepełna odpowiedź")}catch(e){errs.push("las: "+e.message)}
   // 3) po drodze (≤ 200 m): jedzenie, sklepy, woda, serwis
   let pois=[];
-  try{const J3=await overpass('[out:json][timeout:40];(nwr(around:200,'+L+')[amenity~"^(cafe|restaurant|fast_food|ice_cream|pub|bar|biergarten|drinking_water)$"];nwr(around:200,'+L+')[shop~"^(convenience|supermarket|bakery|bicycle)$"];);out center tags;');
+  try{const J3=await overpass('[out:json][timeout:60];(nwr(around:200,'+L+')[amenity~"^(cafe|restaurant|fast_food|ice_cream|pub|bar|biergarten|drinking_water)$"];nwr(around:200,'+L+')[shop~"^(convenience|supermarket|bakery|bicycle)$"];);out center tags;',OP);
     (J3.elements||[]).forEach(e=>{const t=e.tags||{},ty=t.amenity&&POI_T[t.amenity]?t.amenity:t.shop&&POI_T[t.shop]?t.shop:null;if(!ty)return;
       const la=e.lat!=null?e.lat:e.center&&e.center.lat,lo=e.lon!=null?e.lon:e.center&&e.center.lon;if(la==null)return;
       let bi=0,bd=1e9;for(let i=0;i<pts.length;i++){const d=dist(pts[i],{lat:la,lon:lo});if(d<bd){bd=d;bi=i}}
       pois.push({n:String(t.name||"").slice(0,50),t:ty,k:+cum[bi].toFixed(1),la:+la.toFixed(5),lo:+lo.toFixed(5)})});
     pois.sort((a,b)=>a.k-b.k);const seen=[];pois=pois.filter(p=>{if(seen.some(q=>q.t===p.t&&q.n===p.n&&dist(q,{lat:p.la,lon:p.lo})<0.15))return false;seen.push({t:p.t,n:p.n,lat:p.la,lon:p.lo});return true}).slice(0,80);
-    res.food=pois.filter(p=>POI_T[p.t][2]==="food").length;res.shop=pois.filter(p=>POI_T[p.t][2]==="shop").length;res.water=pois.filter(p=>p.t==="drinking_water").length;res.bike=pois.filter(p=>p.t==="bicycle").length}catch(e){pois=null}
-  return {o:res,p:pois};
+    res.food=pois.filter(p=>POI_T[p.t][2]==="food").length;res.shop=pois.filter(p=>POI_T[p.t][2]==="shop").length;res.water=pois.filter(p=>p.t==="drinking_water").length;res.bike=pois.filter(p=>p.t==="bicycle").length}catch(e){pois=null;errs.push("po drodze: "+e.message)}
+  if(!res.srf&&res.las==null&&pois==null){const er=new Error(errs.join(" · "));er.all=true;throw er}
+  if(!res.srf){res.unk=+total.toFixed(1);res.asf=res.szu=res.gru=0}
+  delete res.srf;return {o:res,p:pois,errs};
 }
 function osmBoxHtml(x){
   const o=x.osm,T=OSM_CL.reduce((a,c)=>a+(o[c[0]]||0),0)||1,can=isAdmin||x.created_by===uid,P=v=>Math.round(v/T*100)+'%',pois=rbPois[x.id]||[],tot=x.km||T;
@@ -3607,13 +3616,14 @@ async function rbOsmShow(tok,force){
   const put=h=>{if(tok===rbTok&&$("osmbox4")){$("osmbox4").innerHTML=h;$("osmbox4").classList.remove("hide");const d=$("osmpo");if(d)d.addEventListener("toggle",()=>osmMarkers(d.open))}};
   if(x.osm&&!force){put(osmBoxHtml(x));return}
   if(rbOsmBusy[x.id])return;rbOsmBusy[x.id]=true;
-  put('<b>'+uiIcon("road")+' Nawierzchnia i otoczenie</b><div class="note">Analizuję trasę w OpenStreetMap — nawierzchnia, las, kawiarnie i sklepy po drodze… (do minuty, tylko raz dla każdej trasy)</div>');
+  put('<b>'+uiIcon("road")+' Nawierzchnia i otoczenie</b><div class="note">Analizuję trasę w OpenStreetMap — nawierzchnia, las, kawiarnie i sklepy po drodze… (do 2–3 minut, tylko raz dla każdej trasy; możesz w tym czasie przeglądać dalej)</div>');
   try{const r=await rbOsmCompute(x,rbPts);
     const sv=await sb.rpc("route_osm_set",{r:x.id,o:r.o,p:r.p});
     x.osm=r.o;x.osm_at=new Date().toISOString();if(r.p)rbPois[x.id]=r.p;
     if(sv.error)console.warn("route_osm_set",sv.error);
     put(osmBoxHtml(x));
-  }catch(e){put('<b>'+uiIcon("road")+' Nawierzchnia i otoczenie</b><div class="note">OpenStreetMap nie odpowiada — spróbuj za chwilę. <button type="button" class="lnk" data-rb="osmre">Spróbuj ponownie ›</button></div>')}
+    if(r.errs&&r.errs.length)say("Część danych z OpenStreetMap nie przyszła ("+r.errs.join("; ")+") — „↻ Przelicz” później.");
+  }catch(e){put('<b>'+uiIcon("road")+' Nawierzchnia i otoczenie</b><div class="note">Nie udało się pobrać danych z OpenStreetMap'+(e&&e.message?' ('+esc(e.message)+')':'')+'. Serwer bywa przeciążony — spróbuj za chwilę. <button type="button" class="lnk" data-rb="osmre">Spróbuj ponownie ›</button></div>')}
   rbOsmBusy[x.id]=false;
 }
 function osmMarkers(on){
