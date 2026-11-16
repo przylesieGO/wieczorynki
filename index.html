@@ -3950,10 +3950,18 @@ function bellRowHtml(w){
   return '<div class="nit'+(mine?' mine':'')+(un.length?' new':'')+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'"><div class="ic">'+(mine?'🙋':isPriv(w)?'📩':'🌍')+'</div>'
    +'<div class="tx">'+testTag(w)+title+'<div class="w">'+sub+'</div>'+news+btns+'</div>'+(un.length?'<span class="dot"></span>':'')+'</div>';
 }
+// 🆕 nowi użytkownicy (tylko admini): konta z nickiem z ostatnich 14 dni; „przeczytane” zapamiętane w tym urządzeniu
+const nuList=()=>{if(!isAdmin)return [];const lim=Date.now()-14*864e5;
+  return Object.keys(nicks).filter(id=>id!==uid&&joinedAt[id]&&new Date(joinedAt[id]).getTime()>lim).sort((a,b)=>new Date(joinedAt[b])-new Date(joinedAt[a]))};
+const nuSeen=()=>{try{const v=localStorage.getItem("nuSeen");return v?+v:Date.now()-3*864e5}catch(e){return 0}};
+const nuUnread=()=>{const s=nuSeen();return nuList().filter(id=>new Date(joinedAt[id]).getTime()>s)};
+const nuMarkSeen=()=>{try{localStorage.setItem("nuSeen",String(Date.now()))}catch(e){}};
+function nuRow(id,un){const d=new Date(joinedAt[id]);
+  return '<div class="nit'+(un?' new':'')+'" data-nu="'+esc(id)+'"><div class="ic">🆕</div><div class="tx">'+nk(id)+'<div class="w">'+(genders[id]==="K"?'dołączyła':'dołączył')+' '+esc(relDayPast(d).toLowerCase())+', '+esc(hhmm(d))+(tgLinks&&tgLinks.has(id)?' · ✈️ Telegram':'')+'</div></div>'+(un?'<span class="dot"></span>':'')+'</div>'}
 const bellUnread=()=>notifs.filter(n=>!n.read_at&&nWant(n)&&(ME_KINDS.includes(n.kind)||OWN_KINDS.includes(n.kind)));
 function renderBell(){
   const b=$("bellbtn");if(!b)return;
-  const on=!!session&&visOk,n=on?bellUnread().length+fbMineUnread().length+fbAdmUnread().length:0,bd=$("bellbadge");
+  const on=!!session&&visOk,n=on?bellUnread().length+fbMineUnread().length+fbAdmUnread().length+nuUnread().length:0,bd=$("bellbadge");
   b.classList.toggle("hide",!on);
   bd.textContent=n>9?"9+":String(n);bd.classList.toggle("hide",!n);
   b.setAttribute("aria-label",n?"Zaproszenia i powiadomienia — nowe: "+n:"Zaproszenia i powiadomienia");
@@ -3967,13 +3975,15 @@ function renderBellSheet(){
   const forMe=wants.filter(w=>w.user_id!==uid&&act(w)&&(w.visibility!=="private"||invIds(w).includes(uid)||(joins[w.id]||[]).includes(uid))).sort(ord);
   const mine=wants.filter(w=>w.user_id===uid&&act(w)).sort(ord);
   const cnt=L=>{const n=L.filter(w=>wUnread(w).length).length;return n?' <span class="cnt">'+n+'</span>':''};
-  const keep=p.querySelector(".bslist"),st=keep?keep.scrollTop:0,nu=bellUnread().length;
+  const keep=p.querySelector(".bslist"),st=keep?keep.scrollTop:0,nu=bellUnread().length+nuUnread().length,NU=nuList(),NUu=new Set(nuUnread());
   p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Zaproszenia i powiadomienia"><div class="bsgrab"></div>'
    +'<div class="bshead"><button type="button" class="lnk" data-bk="close">Zamknij</button><b>🔔 Zaproszenia</b>'
    +(nu?'<button type="button" class="lnk" data-bk="all" style="text-align:right">✓ Przeczytane</button>':'<span style="min-width:64px"></span>')+'</div>'
    +'<div class="bslist">'
    +(fbMineUnread().length?'<div class="bsec">💬 Wiadomości <span class="cnt">'+fbMineUnread().length+'</span></div>'+fbMineUnread().map(f=>fbRow(f,false)).join(""):'')
    +(fbAdmUnread().length?'<div class="bsec">🛡️ Zgłoszenia <span class="cnt">'+fbAdmUnread().length+'</span></div>'+fbAdmUnread().slice(0,5).map(f=>fbRow(f,true)).join(""):'')
+   +(NU.length?'<div class="bsec">🆕 Nowi użytkownicy'+(NUu.size?' <span class="cnt">'+NUu.size+'</span>':'')+'</div>'+NU.slice(0,6).map(id=>nuRow(id,NUu.has(id))).join("")
+      +(NU.length>6?'<div class="bsempty">i jeszcze '+(NU.length-6)+' z ostatnich 14 dni — pełna lista: ⚙️ → 🛡️ Administracja</div>':''):'')
    +'<div class="bsec">📩 Do Ciebie'+cnt(forMe)+'</div>'
    +(forMe.length?forMe.map(bellRowHtml).join(""):'<div class="bsempty">Na razie nikt nie zaprasza.</div>')
    +'<div class="bsec">🙋 Twoje zaproszenia'+cnt(mine)+'</div>'
@@ -3992,6 +4002,7 @@ async function markRead(ids){
 function closeBell(){
   // informacje (bez potrzeby odpowiedzi) uznajemy za przeczytane po obejrzeniu listy
   const ids=bellUnread().filter(n=>!nNeedsAct(n)).map(n=>n.id);
+  if(nuUnread().length)nuMarkSeen();
   $("bellsheet").classList.add("hide");$("bellsheet").innerHTML="";
   markRead(ids);
 }
@@ -4024,7 +4035,7 @@ $("bellsheet").addEventListener("click",async e=>{
   if(k){
     if(k.dataset.bk==="close")closeBell();
     else if(k.dataset.bk==="new"){closeBell();show(0);openWantForm(null)}
-    else{await markRead(bellUnread().map(n=>n.id));renderBellSheet()}
+    else{nuMarkSeen();await markRead(bellUnread().map(n=>n.id));renderBell();renderBellSheet()}
     return;
   }
   const a=e.target.closest("button[data-na]");
@@ -4044,6 +4055,8 @@ $("bellsheet").addEventListener("click",async e=>{
     }catch(err){a.disabled=false;say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
     return;
   }
+  const nu=e.target.closest(".nit[data-nu]");
+  if(nu){const id=nu.dataset.nu;closeBell();renderBell();userBack="";userId=id;gearOpen=true;gearView="user";renderGear();if(isAdmin){delete admInfo[userId];loadAdmInfo(userId)}return}
   const it=e.target.closest(".nit[data-wid]");
   if(it){
     const w=wants.find(x=>x.id===it.dataset.wid);if(!w)return;
