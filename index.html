@@ -627,6 +627,20 @@ html[data-theme=dark] .evp-t.soon{background:#4d2a0e;color:#ffb074}@keyframes ev
 .rbhm svg{position:absolute;inset:0;width:100%;height:100%}.rbhm small{position:absolute;left:5px;bottom:4px;font-size:10.5px;font-weight:800;color:#fff;background:rgba(0,0,0,.35);border-radius:6px;padding:1px 5px}
 .rbhb{display:flex;gap:8px;margin-top:12px}.rbhb button{border:0;border-radius:12px;padding:11px 14px;font:inherit;font-weight:800;font-size:15px;cursor:pointer}
 .rbh1{flex:1;background:#fff;color:#0f7a3e}.rbh2{background:rgba(255,255,255,.18);color:#fff}
+.rbstar{color:#f5a623;font-weight:800}.rbstar0{color:var(--line)}
+.rbmet{font-weight:600}
+.rvgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.rvgrid div{background:var(--fill);border-radius:12px;padding:8px 4px;text-align:center}
+.rvgrid b{display:block;font-size:16px}.rvgrid span{display:block;font-size:11px;color:var(--mut);margin-top:2px}
+.rvcm{border-top:1px solid var(--line);padding:9px 0 7px}.rvcm:first-of-type{border-top:0}
+.rvch{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px}.rvch .note{margin-left:auto}.rvx{font-size:12.5px!important;color:var(--bad)!important;padding:0 0 0 6px!important}
+.rvct{font-size:14.5px;line-height:1.4;margin-top:4px}
+.rvrow{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:14.5px;font-weight:600}.rvrow>span{flex:0 0 116px}
+.rvseg{flex:1;display:flex;gap:4px}.rvseg button{flex:1;min-width:0;border:0;border-radius:9px;background:var(--fill);color:var(--mut);font:inherit;font-size:13px;font-weight:700;padding:7px 2px;cursor:pointer}
+.rvseg button.on{background:var(--accbtn);color:#fff}
+.rvstars{justify-content:center;margin:8px 0 4px}
+.rvtitle{text-align:center;font-weight:800;font-size:17px;margin-top:4px}
+.rvbox{margin-top:8px;padding:10px 12px;border-radius:12px;background:var(--fill)}.rvbox .rvseg button{background:var(--card)}.rvbox .rvseg button.on{background:var(--accbtn)}
+.rvbox textarea{background:var(--card)}
 .rbbox .bslist{padding-bottom:18px}
 .rbq{width:100%;margin-bottom:8px}
 .rbchips{margin-top:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.rbchips::-webkit-scrollbar{display:none}.rbchips .fch{flex:none}
@@ -3082,13 +3096,16 @@ async function saveEvent(){
    „📚 Do bazy tras” na karcie; baza w ⚙️ (nie na głównym ekranie) i „📚 Wybierz z bazy tras” w formularzu */
 let rbOk=false,rbList=null,rbStats={},rbAt=0,rbMap=null,rbTok=0;
 const rb={mode:"browse",sort:"uses",bike:"",q:"",open:null},rbRouteCache={};
-const RB_SORTS=[["uses","🔁 Najczęściej"],["new","🆕 Najnowsze"],["long","📏 Najdłuższe"],["short","📏 Najkrótsze"],["near","📍 Najbliżej"]];
+const RB_SORTS=[["uses","🔁 Najczęściej"],["best","★ Najlepsze"],["scenic","🌅 Malownicze"],["hard","🪨 Najtrudniejsze"],["easy","🌿 Najłatwiejsze"],["quiet","🚗 Najmniej aut"],["long","📏 Najdłuższe"],["short","📏 Najkrótsze"],["near","📍 Najbliżej"],["new","🆕 Najnowsze"]];
+// rankingi z ocen (etap 2): wartość dla sortowania; brak ocen — na końcu
+const RB_MET={best:[x=>(rbStats[x.id]||{}).rating,-1],scenic:[x=>(rbStats[x.id]||{}).scenic,-1],hard:[x=>(rbStats[x.id]||{}).difficulty,-1],easy:[x=>(rbStats[x.id]||{}).difficulty,1],quiet:[x=>(rbStats[x.id]||{}).traffic,1]};
 async function rbLoad(force){
   if(!rbOk||!session)return;
   if(!force&&rbList&&Date.now()-rbAt<120000)return;
   const r=await sb.from("route_base").select("id,name,km,up_m,start_lat,start_lon,start_city,bike,created_by,created_at,hidden,preview,src_want").order("created_at",{ascending:false}).limit(1000);
   rbList=r.error?[]:(r.data||[]);
-  try{const st=await sb.rpc("route_base_stats");rbStats={};((st&&st.data)||[]).forEach(x=>{rbStats[x.route_id]={uses:+x.uses||0,planned:+x.planned||0,last:x.last_at}})}catch(e){}
+  try{const st=await sb.rpc("route_base_stats");rbStats={};((st&&st.data)||[]).forEach(x=>{rbStats[x.route_id]={uses:+x.uses||0,planned:+x.planned||0,last:x.last_at,
+    n:+x.reviews||0,rating:x.rating!=null?+x.rating:null,scenic:x.scenic!=null?+x.scenic:null,difficulty:x.difficulty!=null?+x.difficulty:null,traffic:x.traffic!=null?+x.traffic:null,tags:x.tags||{}}})}catch(e){}
   rbAt=Date.now();
 }
 const rbUses=x=>(rbStats[x.id]||{}).uses||0;
@@ -3114,12 +3131,16 @@ function rbFiltered(){
   const q=lc(rb.q.trim()),s=rb.sort;
   const L=(rbList||[]).filter(x=>(!rb.bike||x.bike===rb.bike)&&(!q||lc(x.name+" "+(x.start_city||"")).includes(q)));
   return L.sort(s==="new"?(a,b)=>String(b.created_at).localeCompare(String(a.created_at)):s==="long"?(a,b)=>b.km-a.km:s==="short"?(a,b)=>a.km-b.km
-    :s==="near"?(a,b)=>((rbKmFrom(a)??1e9)-(rbKmFrom(b)??1e9)):(a,b)=>rbUses(b)-rbUses(a)||String(b.created_at).localeCompare(String(a.created_at)));
+    :s==="near"?(a,b)=>((rbKmFrom(a)??1e9)-(rbKmFrom(b)??1e9))
+    :RB_MET[s]?(a,b)=>{const [f,d]=RB_MET[s],va=f(a),vb=f(b);if(va==null&&vb==null)return rbUses(b)-rbUses(a);if(va==null)return 1;if(vb==null)return -1;return (va-vb)*d||((rbStats[b.id]||{}).n||0)-((rbStats[a.id]||{}).n||0)}
+    :(a,b)=>rbUses(b)-rbUses(a)||String(b.created_at).localeCompare(String(a.created_at)));
 }
 function rbCard(x,i){
-  const u=rbUses(x),k=rbKmFrom(x),B=x.bike&&BIKES[x.bike];
-  return '<button type="button" class="rbc'+(x.hidden?' hid':'')+'" data-rbo="'+esc(x.id)+'"><span class="rbmini">'+rbSvg(x.preview,84,84)+(rb.sort==="uses"&&u&&i<3?'<i class="rbrk">#'+(i+1)+'</i>':'')+'</span>'
-   +'<span class="rbci"><b>'+esc(x.name)+'</b><span class="rbm">'+kmTxt(x.km)+' km'+(x.up_m!=null?' · ⛰ '+x.up_m+' m':'')+' · 🔁 '+u+'×</span>'
+  const u=rbUses(x),k=rbKmFrom(x),B=x.bike&&BIKES[x.bike],S=rbStats[x.id]||{};
+  const rk=i<3&&(rb.sort==="uses"?u>0:RB_MET[rb.sort]?RB_MET[rb.sort][0](x)!=null:false);
+  return '<button type="button" class="rbc'+(x.hidden?' hid':'')+'" data-rbo="'+esc(x.id)+'"><span class="rbmini">'+rbSvg(x.preview,84,84)+(rk?'<i class="rbrk">#'+(i+1)+'</i>':'')+'</span>'
+   +'<span class="rbci"><b>'+esc(x.name)+'</b><span class="rbm">'+kmTxt(x.km)+' km'+(x.up_m!=null?' · ⛰ '+x.up_m+' m':'')+' · 🔁 '+u+'×'+(S.n?' · <span class="rbstar">★ '+fmt1(S.rating||0)+'</span> ('+S.n+')':'')+'</span>'
+   +(S.n&&RB_MET[rb.sort]&&rb.sort!=="best"?'<span class="rbm rbmet">'+rbMetTxt(rb.sort,S)+'</span>':'')+''
    +((x.start_city||k!=null)?'<span class="rbm">📍 '+(x.start_city?esc(x.start_city):'start')+(k!=null?' · '+nearKm(k)+' km od Ciebie':'')+'</span>':'')
    +'<span class="rbtg">'+(B?'<i>'+B+'</i>':'')+(x.hidden?'<i>🙈 ukryta</i>':'')+(x.created_by&&nicks[x.created_by]?'<i>👤 '+esc(nicks[x.created_by])+'</i>':'')+'</span></span></button>';
 }
@@ -3133,6 +3154,7 @@ function rbCloseMap(){if(rbMap){try{rbMap.m.remove()}catch(e){}rbMap=null}rbTok+
 function openRb(mode){rb.mode=mode||"browse";rb.open=null;renderRb();rbLoad(true).then(()=>{if(!$("rbsheet").classList.contains("hide")&&!rb.open)renderRb()})}
 function closeRb(){rbCloseMap();const p=$("rbsheet");p.classList.add("hide");p.innerHTML=""}
 function renderRb(){
+  if(rb.open&&rb.rate){renderRbRate();return}
   if(rb.open){renderRbDetail();return}
   rbCloseMap();
   const p=$("rbsheet"),keep=p.querySelector("#rblist"),st=keep&&p.querySelector(".bslist")?p.querySelector(".bslist").scrollTop:0,n=rbList?rbList.filter(x=>!x.hidden).length:null;
@@ -3156,12 +3178,14 @@ async function renderRbDetail(){
    +'<div class="rbinfo">'+[(x.start_city||k!=null)?'📍 start: '+(x.start_city?esc(x.start_city):'—')+(k!=null?' · '+nearKm(k)+' km od Ciebie':''):'',x.bike&&BIKES[x.bike]?BIKES[x.bike]:'',
       '🔁 wybrana '+(u.uses||0)+'×'+(u.planned?' · zaplanowana '+u.planned+'×':'')+(u.last?' · ostatnio '+esc(dd(u.last)):''),
       '👤 '+(x.created_by&&nicks[x.created_by]?esc(nicks[x.created_by]):'—')+' · dodana '+esc(dd(x.created_at))].filter(Boolean).map(t=>'<div>'+t+'</div>').join("")+'</div>'
+   +'<div id="rbrev">'+rbRevHtml(x)+'</div>'
    +(x.hidden?'<div class="note warnbox" style="margin-top:8px">🙈 Ukryta — widzisz ją tylko Ty'+(isAdmin?' i admini':'')+'.</div>':'')
    +'<button type="button" class="b big" style="margin-top:12px;width:100%" data-rb="'+(rb.mode==="pick"?'pick':'invite')+'">'+(rb.mode==="pick"?'✅ Wybierz tę trasę':'🚲 Zaproś na tę trasę')+'</button>'
    +'<div class="pbtns" style="margin-top:8px"><button type="button" class="b g" data-rb="gpx">⬇ GPX</button>'+(can?'<button type="button" class="b g" data-rb="rename">✏️ Nazwa</button><button type="button" class="b g" data-rb="hide">'+(x.hidden?'👁 Pokaż':'🙈 Ukryj')+'</button>':'')+'</div>'
    +(can?'<button type="button" class="lnk rbdel" data-rb="del">Usuń z bazy tras</button>':'')
    +'<div class="ptg">Wiatr i czas na najbliższą pełną godzinę, tempo ok. 20 km/h. Mapa © OpenStreetMap · pogoda: Open-Meteo.</div></div></div>';
   p.classList.remove("hide");
+  if(!(x.id in rbReviews))rbLoadReviews(x.id).then(()=>{if(tok===rbTok&&rb.open===x.id&&!rb.rate){const el=$("rbrev");if(el)el.innerHTML=rbRevHtml(x)}});
   let pts;try{pts=await rbRoute(x.id)}catch(e){pts=null}
   if(tok!==rbTok)return;
   if(!pts){$("windinfo4").textContent="Nie udało się wczytać trasy.";return}
@@ -3177,6 +3201,52 @@ async function renderRbDetail(){
     $("tip4").textContent=an.tip;$("tip4").classList.remove("hide");
     $("windinfo4").textContent="Wiatr o "+wd.time+": "+windLabel(wd.dir)+", "+Math.round(wd.speed)+" km/h"+(wd.temp!=null?" · "+Math.round(wd.temp)+"°C":"")+(wd.rain!=null?" · deszcz "+Math.round(wd.rain)+"%":"");
   }catch(e){if(tok===rbTok)$("windinfo4").textContent="Nie udało się pobrać prognozy wiatru."}
+}
+/* ---------- ⭐ oceny tras (etap 2, KROK 48) ---------- */
+const RT_TAGS=[["forest","🌳 dużo lasu"],["view","🌅 widoki"],["coffee","☕ dobra kawa"],["shade","🌲 cień"],["mud","💧 błoto"],["sand","🏖 piach"],["potholes","🛣 dziurawy asfalt"],["dogs","🐕 psy"],["detour","🚧 objazd"]];
+const TRAF=["","mało","średnio","dużo"],rbReviews={};
+const rbMetTxt=(k,S)=>k==="scenic"?'🌅 malownicza '+fmt1(S.scenic)+'/5':k==="hard"||k==="easy"?'🪨 trudność '+fmt1(S.difficulty)+'/5':k==="quiet"?'🚗 ruch aut: '+TRAF[Math.round(S.traffic)]:'';
+async function rbLoadReviews(id){
+  const r=await sb.from("route_reviews").select("user_id,rating,scenic,difficulty,traffic,tags,comment,updated_at").eq("route_id",id).order("updated_at",{ascending:false}).limit(100);
+  rbReviews[id]=r.error?[]:(r.data||[]);
+}
+function rbRevHtml(x){
+  const S=rbStats[x.id]||{},L=rbReviews[x.id],mine=L&&L.find(r=>r.user_id===uid);
+  const tg=Object.entries(S.tags||{}).sort((a,b)=>b[1]-a[1]).map(([k,c])=>{const t=RT_TAGS.find(y=>y[0]===k);return t?'<span class="rpt">'+esc(t[1])+(c>1?' ×'+c:'')+'</span>':''}).join("");
+  const stars=n=>'<span class="rbstar">'+'★'.repeat(n)+'</span><span class="rbstar0">'+'★'.repeat(5-n)+'</span>';
+  return '<div class="bsgrp" style="margin-top:14px">Oceny jeżdżących'+(S.n?' · '+S.n:'')+'</div>'
+   +(S.n?'<div class="rvgrid"><div><b class="rbstar">★ '+fmt1(S.rating||0)+'</b><span>ogólna</span></div><div><b>'+(S.scenic!=null?fmt1(S.scenic):'—')+'</b><span>🌅 malownicza</span></div><div><b>'+(S.difficulty!=null?fmt1(S.difficulty)+'/5':'—')+'</b><span>🪨 trudność</span></div><div><b>'+(S.traffic!=null?TRAF[Math.round(S.traffic)]:'—')+'</b><span>🚗 ruch aut</span></div></div>'
+       +(tg?'<div class="fchips" style="margin-top:8px">'+tg+'</div>':'')
+     :'<div class="note">Jeszcze nikt nie ocenił tej trasy — bądź pierwszy.</div>')
+   +(L?L.filter(r=>r.comment).slice(0,20).map(r=>'<div class="rvcm"><div class="rvch">'+nk(r.user_id)+(r.rating?' '+stars(r.rating):'')+'<span class="note">'+esc(new Date(r.updated_at).toLocaleDateString("pl-PL",{day:"numeric",month:"numeric"}))+'</span>'
+       +(isAdmin&&r.user_id!==uid?'<button type="button" class="lnk rvx" data-rb="rvmod" data-u="'+esc(r.user_id)+'">usuń</button>':'')+'</div><div class="rvct">'+esc(r.comment)+'</div></div>').join(""):'<div class="note">Wczytuję komentarze…</div>')
+   +'<button type="button" class="b g" style="margin-top:10px;width:100%" data-rb="rate">'+(mine?'✏️ Zmień swoją ocenę':'✍️ Oceń trasę')+'</button>';
+}
+const rvEmpty=()=>({rating:0,scenic:null,difficulty:null,traffic:null,tags:new Set(),comment:""});
+const rvFrom=r=>r?{rating:r.rating||0,scenic:r.scenic,difficulty:r.difficulty,traffic:r.traffic,tags:new Set(r.tags||[]),comment:r.comment||""}:rvEmpty();
+function rvRow(route,v,want){const c=String(v.comment||"").trim(),row={route_id:route,rating:v.rating||null,scenic:v.scenic,difficulty:v.difficulty,traffic:v.traffic,tags:[...v.tags],comment:c||null};if(want)row.want_id=want;return row}
+const rvHas=r=>!!(r.rating||r.scenic||r.difficulty||r.traffic||r.comment||(r.tags&&r.tags.length));
+async function rvSave(row){const r=await sb.from("route_reviews").upsert(row,{onConflict:"route_id,user_id"});if(r.error)throw r.error;rbAt=0;delete rbReviews[row.route_id]}
+function rvClick(v,b){const k=b.dataset.rv,n=b.dataset.v;if(k==="tag"){v.tags.has(n)?v.tags.delete(n):v.tags.add(n)}else{const x=+n;v[k]=v[k]===x?(k==="rating"?0:null):x}}
+// pola oceny trasy — wspólne dla „Oceń trasę” i „🚴 Jak poszło?”
+function rvFieldsHtml(v,withStars){
+  const seg=(k,lbl,vals)=>'<div class="rvrow"><span>'+lbl+'</span><div class="rvseg">'+vals.map(([n,t])=>'<button type="button" data-rv="'+k+'" data-v="'+n+'" class="'+(v[k]===n?'on':'')+'">'+t+'</button>').join("")+'</div></div>';
+  const f=[1,2,3,4,5].map(n=>[n,String(n)]);
+  return (withStars?'<div class="rstars rvstars">'+[1,2,3,4,5].map(n=>'<button type="button" class="rst'+(n<=v.rating?' on':'')+'" data-rv="rating" data-v="'+n+'" aria-label="'+n+' na 5">★</button>').join("")+'</div>':'')
+   +seg("scenic","🌅 Malownicza",f)+seg("difficulty","🪨 Trudność",f)+seg("traffic","🚗 Ruch aut",[[1,"mało"],[2,"średnio"],[3,"dużo"]])
+   +'<div class="bsgrp">Co było na trasie?</div><div class="fchips">'+RT_TAGS.map(([k,t])=>'<button type="button" class="fch'+(v.tags.has(k)?' on':'')+'" data-rv="tag" data-v="'+k+'">'+t+'</button>').join("")+'</div>'
+   +'<div class="bsgrp">Komentarz <span class="note">(widzą wszyscy)</span></div><textarea id="rvcom" maxlength="300" rows="2" placeholder="np. Najpiękniej jesienią, kawa w km 18 obowiązkowo">'+esc(v.comment||"")+'</textarea>';
+}
+function renderRbRate(){
+  const x=(rbList||[]).find(y=>y.id===rb.open);if(!x){rb.rate=false;renderRb();return}
+  rbCloseMap();const p=$("rbsheet"),mine=(rbReviews[x.id]||[]).find(r=>r.user_id===uid);
+  p.innerHTML='<div class="bsbox rbbox" role="dialog" aria-modal="true" aria-label="Oceń trasę"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-rb="back">‹ Trasa</button><b>⭐ Oceń trasę</b><button type="button" class="lnk" data-rb="rvsave" style="min-width:64px;text-align:right">Zapisz</button></div><div class="bslist">'
+   +'<div class="rvtitle">'+esc(x.name)+'</div><div class="note" style="text-align:center">'+kmTxt(x.km)+' km'+(x.start_city?' · '+esc(x.start_city):'')+'</div>'
+   +rvFieldsHtml(rb.rv,true)
+   +'<button type="button" class="b big" style="width:100%;margin-top:14px" data-rb="rvsave">Zapisz ocenę</button>'
+   +(mine?'<button type="button" class="lnk rbdel" data-rb="rvdel">Usuń moją ocenę</button>':'')
+   +'<div class="note" style="margin-top:10px;text-align:center">Ocena trafia do rankingów w Bazie tras. Jedna ocena na osobę — możesz ją zmienić.</div></div></div>';
+  p.classList.remove("hide");
 }
 function rbApplyToForm(x,pts){
   wf.route=pts;wf.routeName=x.name;wf.rbId=x.id;wf.routeTouched=true;$("wrfile").value="";
@@ -3236,15 +3306,26 @@ document.addEventListener("click",async e=>{
   if(e.target.closest("[data-rbadd]")){gearOpen=false;renderGear();show(0);openWantForm(null);
     if(wRouteOk){try{$("wrfile").click()}catch(err){}say("📚 Wybierz plik GPX — przełącznik „Dodaj do bazy tras” będzie pod spodem.")}}
 });
-$("rbsheet").addEventListener("input",e=>{if(e.target.id==="rbq"){rb.q=e.target.value;const l=$("rblist");if(l)l.innerHTML=rbListHtml()}});
+$("rbsheet").addEventListener("input",e=>{if(e.target.id==="rbq"){rb.q=e.target.value;const l=$("rblist");if(l)l.innerHTML=rbListHtml()}
+  if(e.target.id==="rvcom"&&rb.rv)rb.rv.comment=e.target.value});
 $("rbsheet").addEventListener("click",async e=>{
   const p=$("rbsheet");if(e.target===p){closeRb();return}
+  const rvb=e.target.closest("[data-rv]");if(rvb&&rb.rv){rvClick(rb.rv,rvb);const sc=p.querySelector(".bslist"),t=sc?sc.scrollTop:0;renderRbRate();const s2=p.querySelector(".bslist");if(s2)s2.scrollTop=t;return}
   const o=e.target.closest("[data-rbo]");if(o){rb.open=o.dataset.rbo;renderRb();return}
   const so=e.target.closest("[data-rbs]");if(so){rb.sort=so.dataset.rbs;renderRb();return}
   const bk=e.target.closest("[data-rbb]");if(bk){rb.bike=bk.dataset.rbb;renderRb();return}
   const b=e.target.closest("[data-rb]");if(!b)return;const k=b.dataset.rb;
   if(k==="close"){closeRb();return}
-  if(k==="back"){rb.open=null;renderRb();return}
+  if(k==="back"){if(rb.rate){rb.rate=false}else rb.open=null;renderRb();return}
+  if(k==="rate"){const mine=(rbReviews[rb.open]||[]).find(r=>r.user_id===uid);rb.rv=rvFrom(mine);rb.rate=true;renderRb();return}
+  if(k==="rvsave"){const row=rvRow(rb.open,rb.rv);if(!rvHas(row)){say("Zaznacz coś albo napisz komentarz.");return}
+    try{await rvSave(row);await Promise.all([rbLoad(true),rbLoadReviews(rb.open)]);rb.rate=false;renderRb();say("⭐ Dzięki — ocena zapisana.")}catch(err){say("Nie udało się zapisać oceny: "+(err&&err.message||"błąd"))}return}
+  if(k==="rvdel"){if(!confirm("Usunąć Twoją ocenę tej trasy?"))return;
+    const r=await sb.from("route_reviews").delete().eq("route_id",rb.open).eq("user_id",uid);if(r.error){say("Nie udało się usunąć.");return}
+    await Promise.all([rbLoad(true),rbLoadReviews(rb.open)]);rb.rate=false;renderRb();say("Usunięto Twoją ocenę.");return}
+  if(k==="rvmod"){const u=b.dataset.u;if(!isAdmin||!confirm("Usunąć tę ocenę z komentarzem (moderacja)?"))return;
+    const r=await sb.from("route_reviews").delete().eq("route_id",rb.open).eq("user_id",u).select("user_id");if(r.error||!r.data||!r.data.length){say("Nie udało się usunąć.");return}
+    await Promise.all([rbLoad(true),rbLoadReviews(rb.open)]);renderRb();say("Usunięto ocenę.");return}
   const x=(rbList||[]).find(y=>y.id===rb.open);if(!x)return;
   if(k==="pick"||k==="invite"){let pts;try{pts=await rbRoute(x.id)}catch(err){pts=null}if(!pts){say("Nie udało się wczytać trasy.");return}
     closeRb();if(k==="invite"){show(0);openWantForm(null)}rbApplyToForm(x,pts);say("📚 Trasa z bazy: "+x.name);return}
@@ -3286,7 +3367,11 @@ function openReport(id){
   const w=wants.find(x=>x.id===id);if(!w)return;
   const mine=myRep(w),plan=kmOf(w);
   rs={id,went:mine?mine.went:null,kmMode:mine&&mine.km!=null?(plan&&+mine.km===plan?"plan":"own"):plan?"plan":"own",km:mine&&mine.km!=null?String(+mine.km):"",kmh:mine&&mine.avg_kmh!=null?String(+mine.avg_kmh):"",
-    rating:mine&&mine.rating||0,rrating:mine&&mine.route_rating||0,tags:new Set(mine&&mine.tags||[]),who:{}};
+    rating:mine&&mine.rating||0,rrating:mine&&mine.route_rating||0,tags:new Set(mine&&mine.tags||[]),who:{},
+    rv:rbOk&&w.route_base_id&&!isTest(w)?rvEmpty():null};
+  // ocena trasy z bazy: wczytaj swoją dotychczasową
+  if(rs.rv){const rid=w.route_base_id,sid=id;sb.from("route_reviews").select("rating,scenic,difficulty,traffic,tags,comment").eq("route_id",rid).eq("user_id",uid).limit(1).then(r=>{const d=r&&r.data&&r.data[0];
+      if(d&&rs&&rs.id===sid&&rs.rv&&!rs.rvTouched){const v=rvFrom(d);v.comment=rs.rv.comment||v.comment;rs.rv=v;if(!rs.rrating&&d.rating)rs.rrating=d.rating;renderRep()}},()=>{})}
   if(w.user_id===uid)(joins[w.id]||[]).filter(x=>x!==uid).forEach(x=>{const r=(reports[w.id]||[]).find(y=>y.user_id===x);rs.who[x]=r?r.went:true});
   renderRep();
 }
@@ -3307,7 +3392,9 @@ function renderRep(){
       +(rs.kmMode!=="plan"||!plan?'<div class="rrow"><input type="text" inputmode="decimal" maxlength="6" id="repkm" placeholder="km" value="'+esc(rs.km)+'"><span>km</span></div>':'')
       +'<div class="bsgrp">Średnia prędkość <span class="note">(opcjonalnie)</span></div><div class="rrow"><input type="text" inputmode="decimal" maxlength="5" id="repkmh" placeholder="np. 21" value="'+esc(rs.kmh)+'"><span>km/h</span></div>'
       +'<div class="bsgrp">Oceń jazdę</div>'+starsRow("rating",rs.rating)
-      +(w.route_km!=null?'<div class="bsgrp">Oceń trasę GPX · '+String(w.route_km).replace(".",",")+' km</div>'+starsRow("rrating",rs.rrating)+'<div class="note">Dobre trasy trafią do bazy tras do kolejnych zaproszeń.</div>':'')
+      +(w.route_km!=null?'<div class="bsgrp">Oceń trasę GPX · '+String(w.route_km).replace(".",",")+' km</div>'+starsRow("rrating",rs.rrating)
+        +(rs.rv?'<div class="rvbox"><div class="note" style="margin-bottom:4px">📚 Trasa z Bazy tras — Twoja ocena trafi do rankingów.</div>'+rvFieldsHtml(rs.rv,false)+'</div>'
+          :'<div class="note">Dobre trasy trafią do bazy tras do kolejnych zaproszeń.</div>'):'')
       +'<div class="bsgrp">Jak było? <span class="note">(dotknij, co pasuje)</span></div><div class="fchips">'+REP_TAGS.map(([v,t])=>'<button type="button" class="fch'+(rs.tags.has(v)?' on':'')+'" data-rs="tag" data-v="'+v+'">'+t+'</button>').join("")+'</div>':'')
    +(own&&others.length?'<div class="bsgrp">Kto był? <span class="note">(potwierdzasz za innych)</span></div>'+others.map(id=>{const r=RR.find(y=>y.user_id===id&&y.self);
       return r?'<div class="prow rwho"><span class="pnm">'+nk(id)+'</span><span class="note">'+(r.went?'✅ sam(a) potwierdził(a)':'❌ nie pojechał(a)')+'</span></div>'
@@ -3325,6 +3412,9 @@ async function saveReport(){
   const row={want_id:w.id,user_id:uid,went:!!rs.went,km,avg_kmh:kmh,rating:rs.went&&rs.rating||null,route_rating:rs.went&&w.route_km!=null&&rs.rrating||null,tags:rs.went?[...rs.tags]:[]};
   try{
     const r=await sb.from("ride_reports").upsert(row,{onConflict:"want_id,user_id"});if(r.error)throw r.error;
+    // ⭐ ocena trasy z bazy (etap 2) — razem z odpowiedzią
+    if(rs.rv&&rs.went&&w.route_base_id){const v=Object.assign({},rs.rv,{rating:rs.rrating||0}),rr=rvRow(w.route_base_id,v,w.id);
+      if(rvHas(rr))try{await rvSave(rr)}catch(err){say("Odpowiedź zapisana, ale ocena trasy nie: "+(err&&err.message||"błąd"))}}
     const RR=reports[w.id]=(reports[w.id]||[]).filter(x=>x.user_id!==uid);RR.push(Object.assign({self:true,updated_at:new Date().toISOString()},row));
     if(w.user_id===uid)for(const id of Object.keys(rs.who)){
       if(RR.some(y=>y.user_id===id&&y.self))continue;
@@ -3337,6 +3427,8 @@ async function saveReport(){
 }
 $("repsheet").addEventListener("click",e=>{
   if(e.target===$("repsheet")){repLaterAdd();closeRep();return}
+  const rvb=e.target.closest("[data-rv]");
+  if(rvb&&rs&&rs.rv){rs.rvTouched=true;rvClick(rs.rv,rvb);const sc=$("repsheet").querySelector(".bslist"),t=sc?sc.scrollTop:0;renderRep();const s2=$("repsheet").querySelector(".bslist");if(s2)s2.scrollTop=t;return}
   const b=e.target.closest("[data-rs]");if(!b||!rs)return;const k=b.dataset.rs,v=b.dataset.v;
   if(k==="later"){repLaterAdd();closeRep();say("Zapytam przy następnym wejściu.");return}
   if(k==="skip"){const sk=repSkip();sk.add(rs.id);try{localStorage.setItem("repSkip",JSON.stringify([...sk]))}catch(err){}closeRep();renderWants();return}
@@ -3351,7 +3443,7 @@ $("repsheet").addEventListener("click",e=>{
   const sc=$("repsheet").querySelector(".bslist"),top=sc?sc.scrollTop:0;renderRep();const s2=$("repsheet").querySelector(".bslist");if(s2)s2.scrollTop=top;
   if(k==="km"&&v!=="plan"){const i=$("repkm");if(i)i.focus()}
 });
-$("repsheet").addEventListener("input",e=>{if(!rs)return;if(e.target.id==="repkm")rs.km=e.target.value;if(e.target.id==="repkmh")rs.kmh=e.target.value});
+$("repsheet").addEventListener("input",e=>{if(!rs)return;if(e.target.id==="repkm")rs.km=e.target.value;if(e.target.id==="repkmh")rs.kmh=e.target.value;if(e.target.id==="rvcom"&&rs.rv){rs.rv.comment=e.target.value;rs.rvTouched=true}});
 function repLaterAdd(){if(!rs)return;const lt=repLater();lt.add(rs.id);try{sessionStorage.setItem("repLater",JSON.stringify([...lt]))}catch(e){}}
 // podsumowanie odpowiedzi do archiwum
 // ✅ „Twoja odpowiedź” na karcie (prośba właściciela 2026-11-16 12:31: widać, że już odpowiedziałem)
