@@ -935,7 +935,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
     <div id="wpacewrap" class="hide"><div class="wlbl">Tempo</div><select id="wpacesel"><option value="">— tempo dowolne —</option><option value="senior">Senior Adventure · 15–18 km/h</option><option value="tour">Turystycznie · 18–24 km/h</option><option value="speed">SPEEDAY · 26+ km/h</option><option value="*">Inne… (wpisz)</option></select><input id="wpaceown" class="hide" maxlength="30" placeholder="np. 20–22 km/h, bez pośpiechu"></div>
     <div id="wbikewrap" class="hide"><div class="wlbl">Rower / teren</div><div class="wbike" id="wbikesel"></div></div>
     <div id="wdistwrap" class="hide"><div class="wlbl">Dystans</div><select id="wkmsel"><option value="">— nie wiem —</option><option value="20">20 km</option><option value="30">30 km</option><option value="50">50 km</option><option value="80">80 km</option><option value="100">100 km</option><option value="*">Inny… (wpisz)</option></select><input id="wkmown" class="hide" inputmode="decimal" maxlength="5" placeholder="ile km, np. 42"></div>
-    <div id="wdurwrap" class="hide"><div class="wlbl">Na ile jedziesz?</div><select id="wdursel"><option value="60">1 h</option><option value="90">1,5 h</option><option value="120">2 h</option><option value="150">2,5 h</option><option value="180">3 h</option><option value="240">4 h</option><option value="300">5 h</option><option value="360">6 h</option><option value="*">Inny… (wpisz)</option></select><input id="wdurown" class="hide" inputmode="decimal" maxlength="4" placeholder="ile godzin, np. 3,5"></div>
+    <div id="wdurwrap" class="hide"><div class="wlbl">Na ile jedziesz?</div><select id="wdursel"><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">1 h</option><option value="90">1,5 h</option><option value="120">2 h</option><option value="150">2,5 h</option><option value="180">3 h</option><option value="240">4 h</option><option value="300">5 h</option><option value="360">6 h</option><option value="*">Inny… (wpisz)</option></select><input id="wdurown" class="hide" maxlength="8" placeholder="np. 3,5 h albo 40 min"></div>
     <div id="wplacewrap" class="hide"><div class="wlbl">📍 Punkt zbiórki</div><select id="wplacesel"></select>
       <div id="wplaceown" class="hide"><input id="wplacename" maxlength="40" placeholder="Nazwa miejsca, np. Pod ratuszem">
         <label class="wpladd"><span>Dodaj do listy miejsc — zobaczą ją inni</span><button type="button" class="ios-sw" id="wpladd" role="switch" aria-checked="false"></button></label></div>
@@ -4516,7 +4516,7 @@ function wfDurSync(){
   const ds=$("wdursel"),dp=[...ds.options].some(o=>o.value===String(wf.dur||DUR_DEF));
   if(!dp)wf.durOwn=true;
   ds.value=wf.durOwn?"*":String(wf.dur||DUR_DEF);$("wdurown").classList.toggle("hide",!wf.durOwn);
-  if(wf.durOwn&&wf.dur&&document.activeElement!==$("wdurown"))$("wdurown").value=String(wf.dur/60).replace(".",",");
+  if(wf.durOwn&&wf.dur&&document.activeElement!==$("wdurown"))$("wdurown").value=durOwnTxt(wf.dur);
   const d=wfDate(),i=$("wdurinfo"),k=wfKm(),m=wfDurMin();
   if(!d){i.classList.add("hide");$("wfclash").classList.add("hide");return}
   const st=d,en=new Date((wfRange()?wfDate2():d).getTime()+m*60000);
@@ -4680,7 +4680,14 @@ $("wkmown").addEventListener("input",()=>{const v=parseFloat($("wkmown").value.r
 $("wdursel").addEventListener("change",()=>{const v=$("wdursel").value;
   if(v==="*"){wf.durOwn=true;$("wdurown").value="";wfDurSync();$("wdurown").focus();return}wf.durOwn=false;wf.dur=+v;
   wfDurSync()});
-$("wdurown").addEventListener("input",()=>{const v=parseFloat($("wdurown").value.replace(",","."));wf.dur=v>=0.25&&v<=12?Math.round(v*60/15)*15:null;wfDurSync()});
+// „Inny…”: godziny (3,5 · 3,5 h), minuty (40 min · liczba > 12) albo 1:30
+function durParse(t){t=String(t||"").trim().toLowerCase().replace(",",".");if(!t)return null;let m;
+  const hm=t.match(/^(\d{1,2}):(\d{1,2})$/);
+  if(hm)m=+hm[1]*60+ +hm[2];
+  else{const v=parseFloat(t);if(!(v>0))return null;m=/m/.test(t)?v:/h|g/.test(t)?v*60:v>12?v:v*60}
+  m=Math.round(m/5)*5;return m>=15&&m<=720?m:null}
+const durOwnTxt=m=>m<60||m%30?m+" min":String(m/60).replace(".",",")+" h";
+$("wdurown").addEventListener("input",()=>{wf.dur=durParse($("wdurown").value);wfDurSync()});
 $("wfaskno").onclick=closeWantForm;
 $("wfaskback").onclick=()=>$("wfask").classList.add("hide");
 $("wantform").addEventListener("click",e=>{if(e.target.id==="wantform")wfTryClose()});
