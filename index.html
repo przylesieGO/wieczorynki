@@ -1399,13 +1399,13 @@ function adminHtml(){
     :'<div class="note">Brak użytkowników z nickiem, którym można nadać uprawnienia.</div>';
   return '<button class="sback" data-c="back">‹ Ustawienia</button>'
    +'<div class="sname" style="margin-top:26px">🛡️ Administracja</div>'
-   +'<button class="b sbtn g" data-c="stats">📊 Statystyki</button>'
-   +(fbOk?'<button class="b sbtn g" data-c="fbadmin">💬 Zgłoszenia'+(fbAdmUnread().length?' <span class="fbcnt">'+fbAdmUnread().length+' nowe</span>':'')+'</button>':'')
-   +(genderOk?'<button class="b sbtn g" data-c="colors">🎨 Kolory nicków</button>':'')
-   +(isSuper(uid)?'<button class="b sbtn g" data-c="karch">🗄 Archiwum zaproszeń</button>':'')
-   +(isSuper(uid)?'<button class="b sbtn g" data-c="allw">👁 Wszystkie zaproszenia ('+wantsAll.filter(w=>wantEnd(w).getTime()>Date.now()).length+')</button>':'')
-   +(evs.some(x=>x.delete_req_at)?'<button class="b sbtn" style="background:var(--bad)" data-c="evdelreq">🗑 Prośby o usunięcie imprez ('+evs.filter(x=>x.delete_req_at).length+')</button>':'')
-   +(placeOk?'<button class="b sbtn g" data-c="places">📍 Miejsca zbiórki ('+places.length+')</button>':'')
+   +(evs.some(x=>x.delete_req_at)?gGrp("Do zrobienia",[gRow("#ff3b30","trash","Prośby o usunięcie imprez","Autorzy chcą usunąć swoje imprezy",'<span class="ios-bdg">'+evs.filter(x=>x.delete_req_at).length+'</span>','data-c="evdelreq"')]):'')
+   +gGrp("Narzędzia",[gRow("#0a84ff","chart","Statystyki","Aktywność, jazdy, logowania","",'data-c="stats"'),
+      fbOk?gRow("#bf5af2","msg","Zgłoszenia","Uwagi i błędy od użytkowników",fbAdmUnread().length?'<span class="ios-bdg">'+fbAdmUnread().length+'</span>':'','data-c="fbadmin"'):'',
+      genderOk?gRow("#ff2d55","palette","Kolory nicków","","",'data-c="colors"'):'',
+      placeOk?gRow("#ff9f0a","pin","Miejsca zbiórki","",'<span class="ios-v">'+places.length+'</span>','data-c="places"'):''])
+   +(isSuper(uid)?gGrp("Zaproszenia",[gRow("#30d158","eye","Wszystkie zaproszenia","Także prywatne i testowe",'<span class="ios-v">'+wantsAll.filter(w=>wantEnd(w).getTime()>Date.now()).length+'</span>','data-c="allw"'),
+      gRow("#8e8e93","archive","Archiwum zaproszeń","Zakończone jazdy","",'data-c="karch"')]):'')
    +'<div class="sleft"><h3>Administratorzy</h3>'+rows
    +(stealthOk&&isSuper(uid)?'<p class="note">👻 = admin może w Ustawieniach wyłączyć widoczność online (domyślnie każdy jest widoczny). Ty jako 👑 masz to zawsze.</p>':'')
    +'<h3>Nadaj uprawnienia administratora</h3>'+add
@@ -1425,7 +1425,7 @@ function testersHtml(){
   const cand=Object.keys(nicks).filter(id=>!testerIds.has(id)&&!isSuper(id)).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl"));
   return '<h3>🧪 Testerzy ('+ids.length+')</h3>'+(rows||'<div class="note">Brak testerów.</div>')
    +(king?(cand.length?'<select id="testersel">'+cand.map(id=>'<option value="'+esc(id)+'">'+esc(nicks[id])+'</option>').join("")+'</select><button class="b sbtn" data-c="testeradd">Nadaj prawa testera</button>':'')
-     +'<button class="b sbtn g" data-c="flags">🚦 Funkcje testowe</button>'
+     +'<div class="ios-grp" style="margin-top:12px">'+gRow("#5e5ce6","flask","Funkcje testowe","Kto widzi nowe funkcje: nikt, testerzy, wszyscy","",'data-c="flags"')+'</div>'
      :'<p class="note">Prawa testera nadaje i odbiera tylko 👑 główny administrator.</p>')
    +'<p class="note">Tester widzi funkcje w fazie testów (z plakietką 🧪 BETA), zanim dostaną je wszyscy. 🧪 przy nicku oznacza testera.</p>';
 }
@@ -1696,7 +1696,7 @@ function placesHtml(){
   return '<button class="sback" data-c="backadm">‹ Administracja</button><div class="sname" style="margin-top:26px">📍 Miejsca zbiórki</div>'
    +'<div class="sleft">'+(places.length?places.map(x=>'<div class="arow"><span><b>'+esc(x.name)+'</b><br><span class="note">'+(x.lat!=null?'📌 '+(+x.lat).toFixed(4)+', '+(+x.lon).toFixed(4)+' · <a href="'+esc(mapUrl(x.lat,x.lon))+'" target="_blank" rel="noopener">Mapa ›</a>':'bez pinezki')+(x.city?' · 🏙 '+esc(x.city+(x.area?' · '+x.area:'')):(bikeOk&&x.lat!=null?' · bez miasta':''))+(x.created_by&&nicks[x.created_by]?' · dodał(a) '+esc(nicks[x.created_by]):'')+'</span></span>'
      +(su||x.created_by===uid?'<span class="arbtns" style="flex-direction:row;flex-wrap:nowrap;white-space:nowrap"><button class="b g small" data-a="plpin" data-id="'+esc(x.id)+'">📌 '+(x.lat!=null?'Zmień':'Pinezka')+'</button><button class="b g small" data-a="pldel" data-id="'+esc(x.id)+'">🗑</button></span>':'')+'</div>').join(""):'<div class="note">Brak miejsc.</div>')
-   +(su&&bikeOk&&places.some(x=>x.lat!=null&&!x.city)?'<button class="b sbtn g" data-a="plcity">🏙 Uzupełnij miasta z pinezek</button>':'')
+   +(su&&bikeOk&&places.some(x=>x.lat!=null&&!x.city)?'<div class="ios-grp" style="margin-top:12px">'+gRow("#0a84ff","city","Uzupełnij miasta z pinezek","Dla miejsc bez nazwy miasta","",'data-a="plcity"')+'</div>':'')
    +'<p class="note">Miejsca dodaje każdy przy tworzeniu zaproszenia („✏️ Inne miejsce…” albo „🗺️ Wskaż na mapie…” + „Dodaj do listy miejsc”). Pinezkę ustawia i miejsce usuwa autor albo 👑.</p></div>';
 }
 function onlineHtml(){
@@ -1736,18 +1736,16 @@ function userHtml(){
    +userRidesHtml(userId)
    +((fbDone[userId]||0)?'<div class="staz">💡 Zrealizowane zgłoszenia: '+fbDone[userId]+(fbBulb(userId)?' — współtwórca aplikacji':'')+'</div>':'')
    +(visOk?'<button class="b sbtn" data-a="invite" data-id="'+esc(userId)+'">🚴 Zaproś na rower</button>':'')
-   +(session?'<button class="b sbtn g" data-a="fltuser" data-id="'+esc(userId)+'">🔍 Pokaż zaproszenia z '+esc(nicks[userId]||"tą osobą")+'</button>':'')
-   +'<button class="b sbtn'+(fav?' g':'')+'" data-a="fav" data-id="'+esc(userId)+'">'+(fav?'⭐ Usuń z ulubionych':'☆ Dodaj do ulubionych')+'</button>'
-   +(isAdmin&&fbOk?'<button class="b sbtn g" data-a="fbmsg" data-id="'+esc(userId)+'">✉️ Napisz wiadomość</button>':'')
-   +(isAdmin&&!isSuper(userId)?'<button class="b sbtn g" data-a="unick" data-id="'+esc(userId)+'">✏️ Zmień nick (admin)</button>':'')
+   +gGrp("Ta osoba",[session?gRow("#0a84ff","cal","Pokaż zaproszenia z "+esc(nicks[userId]||"tą osobą"),"Filtr na liście zaproszeń","",'data-a="fltuser" data-id="'+esc(userId)+'"'):'',
+      gRow("#ffcc00",fav?"starf":"star",fav?"W ulubionych":"Dodaj do ulubionych",fav?"Dotknij, aby usunąć":"Zawsze na górze list",fav?'<span class="ios-v ok">'+uiIcon("check")+'</span>':'','data-a="fav" data-id="'+esc(userId)+'"')])
+   +(isAdmin?gGrp("Administrator",[fbOk?gRow("#bf5af2","msg","Napisz wiadomość","Trafi do jej skrzynki zgłoszeń","",'data-a="fbmsg" data-id="'+esc(userId)+'"'):'',
+      !isSuper(userId)?gRow("#ff9f0a","pencil","Zmień nick","","",'data-a="unick" data-id="'+esc(userId)+'"'):'']):'')
    +(isAdmin?admInfoHtml(userId):'')
-   +(modOk&&isSuper(uid)&&userId!==uid&&!isSuper(userId)?'<div class="admbox modbox"><b>👑 Moderacja</b>'
-      +(modBanned.has(userId)?'<div class="admln">⛔ <b>Zablokowany</b> — widzi tylko komunikat o blokadzie.</div>':'')
-      +(modHidden.has(userId)?'<div class="admln">👻 <b>Ukryty</b> — inni go nie widzą ani jego zaproszeń.</div>':'')
-      +'<button class="b sbtn g" data-a="modhide" data-id="'+esc(userId)+'"'+(modBusy?' disabled':'')+'>'+(modHidden.has(userId)?'👁 Pokaż konto innym':'👻 Ukryj konto (np. testowe)')+'</button>'
-      +'<button class="b sbtn g" data-a="modban" data-id="'+esc(userId)+'"'+(modBusy?' disabled':'')+'>'+(modBanned.has(userId)?'✅ Odblokuj konto':'⛔ Zablokuj konto')+'</button>'
-      +(adminIds.includes(userId)?'<p class="note">Administratora nie można usunąć — najpierw odbierz mu uprawnienia.</p>':'<button class="b sbtn" style="background:var(--bad)" data-a="moddel" data-id="'+esc(userId)+'">🗑 Usuń konto…</button>')
-      +'</div>':'');
+   +(modOk&&isSuper(uid)&&userId!==uid&&!isSuper(userId)?(()=>{const d=modBusy?' disabled':'',id='data-id="'+esc(userId)+'"'+d,hid=modHidden.has(userId),ban=modBanned.has(userId);
+      return gGrp("👑 Moderacja",[gRow(hid?"#30d158":"#8e8e93",hid?"eye":"user",hid?"Pokaż konto innym":"Ukryj konto",hid?"Teraz: ukryte — inni go nie widzą ani jego zaproszeń":"Np. konto testowe — zniknie z list","",'data-a="modhide" '+id),
+        gRow(ban?"#30d158":"#ff3b30",ban?"check":"lock",ban?"Odblokuj konto":"Zablokuj konto",ban?"Teraz: zablokowane — widzi tylko komunikat o blokadzie":"Zobaczy tylko komunikat o blokadzie","",'data-a="modban" '+id)])
+       +(adminIds.includes(userId)?'<p class="note" style="margin:8px 14px 0">Administratora nie można usunąć — najpierw odbierz mu uprawnienia.</p>'
+        :'<div class="ios-grp" style="margin-top:14px"><button type="button" class="ios-it ios-row ios-out" data-a="moddel" '+id+'>Usuń konto…</button></div>')})():'');
 }
 async function toggleFav(id){
   if(!session||!favOk||!id||id===uid)return;
@@ -1988,7 +1986,6 @@ function renderGear(){
   const keepConf=gearView==="confdel"&&$("gconf")?$("gconf").value:null;
   const keepDel=gearView==="del"&&$("gdel")?{v:$("gdel").value,i:$("gdelinfo").textContent}:null;
   const keepNick=gearView==="nick"&&$("gnick")?{v:$("gnick").value,i:$("gnickinfo").textContent}:null;
-  const tg='<a class="b sbtn g" href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">📣 Kanał na Telegramie</a>';
   let body;
   if(gearView==="admin"){body=adminHtml();if(tgLinks===null&&!tgLoading){tgLoading=true;loadTgLinks().then(()=>{if(gearView==="admin")renderGear()})}}
   else if(gearView==="unick")body=unickHtml();
@@ -2047,8 +2044,8 @@ function tgHtml(){
   const what='<ul><li>ktoś Cię zaprosi na rower,</li><li>zmieni albo ustali godzinę,</li><li>ktoś dołączy do Twojego zaproszenia albo zrezygnuje,</li><li>za godzinę jedziesz (przypomnienie — też na wieczorynki).</li></ul>';
   if(tgLink)return head+'<div class="smail"><span class="tgok">✅ Połączono'+(tgLink.tg_name?' · '+esc(tgLink.tg_name):'')+'</span></div>'
     +'<div class="sleft"><div class="note" style="font-size:15px">Bot <b>@PrzylesieGo_bot</b> napisze do Ciebie, gdy:</div>'+what+'</div>'
-    +'<a class="b sbtn g" href="https://t.me/PrzylesieGo_bot" target="_blank" rel="noopener">💬 Otwórz rozmowę z botem</a>'
-    +'<button class="b sbtn" style="background:var(--bad)" data-c="tgoff">Rozłącz</button>'
+    +'<div class="ios-grp" style="margin-top:14px">'+gRow("#0a84ff","send","Otwórz rozmowę z botem","@PrzylesieGo_bot","",'href="https://t.me/PrzylesieGo_bot" target="_blank" rel="noopener"',"a")+'</div>'
+    +'<div class="ios-grp" style="margin-top:14px"><button type="button" class="ios-it ios-row ios-out" data-c="tgoff">Rozłącz Telegram</button></div>'
     +'<p class="note" style="margin-top:10px">Okienko z zaproszeniami w aplikacji działa dalej — Telegram to dodatek.</p>';
   return head+'<div class="smail">Powiadomienia o zaproszeniach prosto na Telegram.</div>'
    +'<ol class="tgsteps"><li>Zainstaluj <b>Telegram</b> (App Store / Google Play) i załóż konto.</li>'
@@ -2434,7 +2431,6 @@ let instPrompt=null;
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();instPrompt=e;if(gearOpen)renderGear()});
 window.addEventListener("appinstalled",()=>{instPrompt=null;try{localStorage.setItem("stepInstall","1")}catch(e){}try{renderSteps()}catch(e){}if(gearOpen)renderGear();say("✅ Zainstalowano — PrzylesieGo! jest na ekranie telefonu.")});
 const isStandalone=()=>(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone===true;
-const instBtnHtml=()=>isStandalone()?'':'<button class="b sbtn g" data-c="inst">📲 Zainstaluj aplikację<small>Ikona na ekranie telefonu, bez paska przeglądarki</small></button>';
 // 📲 instrukcja instalacji — wspólna dla Pomocy i ⚙️ (decyzja właściciela 2026-11-16 11:48)
 // najpierw przeglądarka, w której jesteś teraz; pozostałe rozwijane niżej
 function instEnv(){
