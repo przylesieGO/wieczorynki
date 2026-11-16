@@ -3524,7 +3524,7 @@ async function renderRbDetail(){
       '👤 '+(x.created_by&&nicks[x.created_by]?esc(nicks[x.created_by]):'—')+' · dodana '+esc(dd(x.created_at))].filter(Boolean).map(t=>'<div>'+t+'</div>').join("")+'</div>'
    +'<div id="rbrev">'+rbRevHtml(x)+'</div>'
    +(x.hidden?'<div class="note warnbox" style="margin-top:8px">🙈 Ukryta — widzisz ją tylko Ty'+(isAdmin?' i admini':'')+'.</div>':'')
-   +'<button type="button" class="b big" style="margin-top:12px;width:100%" data-rb="'+(rb.mode==="pick"?'pick':'invite')+'" id="rbinvbtn">'+(rb.mode==="pick"?'✅ Wybierz tę trasę':rbInvLbl())+'</button>'
+   +'<button type="button" class="b big" style="margin-top:12px;width:100%" data-rb="'+(rb.mode==="pick"?'pick':'invite')+'" id="rbinvbtn">'+rbInvLbl()+'</button>'
    +'<div class="pbtns" style="margin-top:8px"><button type="button" class="b g" data-rb="gpx">⬇ GPX</button>'+(can?'<button type="button" class="b g" data-rb="rename">✏️ Nazwa</button><button type="button" class="b g" data-rb="hide">'+(x.hidden?'👁 Pokaż':'🙈 Ukryj')+'</button>':'')+'</div>'
    +(can?'<button type="button" class="lnk rbdel" data-rb="del">Usuń z bazy tras</button>':'')
    +'<div class="ptg">Czas jazdy przy tempie ok. 20 km/h, z wiatrem. Pogoda dla punktu startu. Mapa © OpenStreetMap · pogoda: Open-Meteo.</div></div></div>';
@@ -3544,9 +3544,11 @@ const WMO=c=>c==null?"":uiIcon(c===0?"sun":c<=2?"cloudsun":c===3?"cloud":c<=48?"
 const WMO_T=c=>c==null?"":c===0?"bezchmurnie":c<=2?"małe zachmurzenie":c===3?"pochmurno":c<=48?"mgła":c<=57?"mżawka":c<=67?"deszcz":c<=77?"śnieg":c<=82?"przelotny deszcz":c<=86?"przelotny śnieg":"burza";
 // przycisk „Zaproś na tę trasę” z terminem wybranym w „Przed jazdą”
 function rbInvLbl(){const d=pwWhen(),n=dayDiff(d),dn=d.toLocaleDateString("pl-PL",{weekday:"long"});
-  return uiIcon("bike")+' Zaproś na tę trasę<small class="rbinvt">'+esc((n===0?"Dziś":n===1?"Jutro ("+dn+")":dn.charAt(0).toUpperCase()+dn.slice(1)+" "+d.getDate()+"."+pad(d.getMonth()+1))+" · "+hhmm(d))+'</small>'}
+  return (rb.mode==="pick"?uiIcon("check")+' Wybierz tę trasę':uiIcon("bike")+' Zaproś na tę trasę')+'<small class="rbinvt">'+esc((n===0?"Dziś":n===1?"Jutro ("+dn+")":dn.charAt(0).toUpperCase()+dn.slice(1)+" "+d.getDate()+"."+pad(d.getMonth()+1))+" · "+hhmm(d))+'</small>'}
 function pwDefault(){const d=new Date();let h=d.getHours()+1;if(h>21)return {day:1,h:17};return {day:0,h:Math.max(h,6)}}
-function pwWhen(){const v=rb.pw||(rb.pw=pwDefault()),d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()+v.day);d.setHours(v.h,0,0,0);return d}
+function pwWhen(){const v=rb.pw||(rb.pw=pwDefault()),d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()+v.day);d.setHours(v.h,v.m||0,0,0);return d}
+// tryb „Wybierz trasę” z formularza: pogoda startuje od dnia i godziny ustawionych w zaproszeniu
+function pwFromForm(){const d=wfDate();if(!d||d.getTime()<=Date.now())return null;const n=dayDiff(d);if(n<0||n>6)return null;return {day:n,h:d.getHours(),m:d.getMinutes()}}
 function pwSelHtml(){
   const v=rb.pw||(rb.pw=pwDefault()),now=new Date(),dn=["nd","pn","wt","śr","cz","pt","sb"];
   let days='';for(let i=0;i<7;i++){const d=new Date(now);d.setDate(d.getDate()+i);
@@ -3844,11 +3846,11 @@ $("rbsheet").addEventListener("input",e=>{if(e.target.id==="rbaddname"&&rb.add)r
 $("rbsheet").addEventListener("click",async e=>{
   const p=$("rbsheet");if(e.target===p){closeRb();return}
   const rvb=e.target.closest("[data-rv]");if(rvb&&rb.rv){rvClick(rb.rv,rvb);const sc=p.querySelector(".bslist"),t=sc?sc.scrollTop:0;renderRbRate();const s2=p.querySelector(".bslist");if(s2)s2.scrollTop=t;return}
-  const o=e.target.closest("[data-rbo]");if(o){rb.open=o.dataset.rbo;rb.rev=false;rb.pw=null;renderRb();return}
+  const o=e.target.closest("[data-rbo]");if(o){rb.open=o.dataset.rbo;rb.rev=false;rb.pw=rb.mode==="pick"?pwFromForm():null;renderRb();return}
   const pk=e.target.closest("[data-pwit]");if(pk){pwPackToggle(pk);return}
   const pd=e.target.closest("[data-rbpd]"),ph=e.target.closest("[data-rbph]");
-  if(pd||ph){const v=rb.pw||(rb.pw=pwDefault());if(pd){v.day=+pd.dataset.rbpd;if(v.day===0&&v.h<=new Date().getHours()-1)v.h=Math.min(22,new Date().getHours()+1)}else v.h=+ph.dataset.rbph;
-    const hs=$("pwhrs"),sl=hs?hs.scrollLeft:0;$("pwsel").innerHTML=pwSelHtml();const ib=$("rbinvbtn");if(ib&&rb.mode!=="pick")ib.innerHTML=rbInvLbl();const h2=$("pwhrs");if(h2){h2.scrollLeft=sl;if(pd){const on=h2.querySelector(".on");if(on)on.scrollIntoView({block:"nearest",inline:"center"})}}pwUpdate();return}
+  if(pd||ph){const v=rb.pw||(rb.pw=pwDefault());v.ch=1;if(ph)v.m=0;if(pd){v.day=+pd.dataset.rbpd;if(v.day===0&&v.h<=new Date().getHours()-1)v.h=Math.min(22,new Date().getHours()+1)}else v.h=+ph.dataset.rbph;
+    const hs=$("pwhrs"),sl=hs?hs.scrollLeft:0;$("pwsel").innerHTML=pwSelHtml();const ib=$("rbinvbtn");if(ib)ib.innerHTML=rbInvLbl();const h2=$("pwhrs");if(h2){h2.scrollLeft=sl;if(pd){const on=h2.querySelector(".on");if(on)on.scrollIntoView({block:"nearest",inline:"center"})}}pwUpdate();return}
   const so=e.target.closest("[data-rbs]");if(so){rb.sort=so.dataset.rbs;renderRb();return}
   const bk=e.target.closest("[data-rbb]");if(bk){rb.bike=bk.dataset.rbb;renderRb();return}
   const ab=e.target.closest("[data-rbab]");if(ab&&rb.add){rb.add.bike=ab.dataset.rbab;renderRbAdd();return}
@@ -3879,7 +3881,8 @@ $("rbsheet").addEventListener("click",async e=>{
   if(k==="rev"){rb.rev=!rb.rev;if(rbMap&&rbPts)drawRoute(rbMap,rb.rev?rbPts.slice().reverse():rbPts,null,false);rbTowns(rbTok);rbOsmShow(rbTok);pwUpdate();return}
   if(k==="pick"||k==="invite"){let pts;try{pts=await rbRoute(x.id)}catch(err){pts=null}if(!pts){say("Nie udało się wczytać trasy.");return}
     if(rb.rev)pts=pts.slice().reverse();
-    const at=k==="invite"?pwWhen():null;closeRb();if(k==="invite"){show(0);openWantForm(null,{at})}rbApplyToForm(x,pts);
+    const at=k==="invite"||(rb.pw&&rb.pw.ch)?pwWhen():null;closeRb();if(k==="invite"){show(0);openWantForm(null,{at})}rbApplyToForm(x,pts);
+    if(k==="pick"&&at&&at.getTime()>Date.now())wfApplyAt(at);
     say("📚 Trasa z bazy: "+x.name+(at&&at.getTime()>Date.now()?" · "+(dayDiff(at)===0?"dziś":dayDiff(at)===1?"jutro":at.toLocaleDateString("pl-PL",{weekday:"long"}))+" "+hhmm(at):""));return}
   if(k==="gpx"){let pts;try{pts=await rbRoute(x.id)}catch(err){pts=null}if(!pts){say("Nie udało się wczytać trasy.");return}
     const nm=slug(x.name)+".gpx";say(saveFile(makeGpx(pts,x.name),nm,"application/gpx+xml")?"Pobrano: "+nm:"Nie udało się pobrać pliku.");return}
@@ -4354,6 +4357,13 @@ function wfSetDay(day,keep){
   [...$("wdays").children].forEach(b=>b.classList.toggle("on",b.dataset.d===day));
   $("wdwrap").classList.toggle("hide",day!=="x");
   if(day==="x"&&!$("wdt").value&&!keep){const t=new Date();t.setDate(t.getDate()+3);$("wdt").value=localIso(t).slice(0,10)}
+}
+function wfApplyAt(d){
+  const a=wfDate(),b=wfRange()?wfDate2():null,len=a&&b?b-a:2*36e5,n=dayDiff(d);
+  if(n>=0&&n<=1)wfSetDay(String(n));else{$("wdt").value=localIso(d).slice(0,10);wfSetDay("x",true)}
+  wf.h=d.getHours();wf.m=d.getMinutes();$("fch").textContent=pad(wf.h);$("fcm").textContent=pad(wf.m);
+  const e=new Date(d.getTime()+Math.max(len,15*6e4));wf.h2=e.getHours();wf.m2=e.getMinutes();$("fch2").textContent=pad(wf.h2);$("fcm2").textContent=pad(wf.m2);
+  wfUpdate();
 }
 function wfSetTime(hh,mm){
   wf.h=((hh%24)+24)%24;wf.m=mm;
