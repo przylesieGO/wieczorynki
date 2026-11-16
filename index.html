@@ -58,6 +58,14 @@ nav button.on{background:var(--accbtn);color:#fff;box-shadow:0 1px 4px rgba(36,1
 .hdr.compact .bbadge{top:-5px;right:-7px}
 .bsbox .bsec{display:flex;align-items:center;gap:8px;margin:16px 0 4px;font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--mut)}
 .bsec .cnt{background:#ff3b30;color:#fff;border-radius:9px;padding:0 7px;font-size:12px;letter-spacing:0}
+.bsbox .bsect{width:100%;border:0;background:var(--fill);border-radius:12px;padding:10px 12px;margin:12px 0 4px;font-family:inherit;cursor:pointer;text-align:left}
+.bsbox .bsect:first-child{margin-top:4px}
+.bsect .bst{display:inline-flex;align-items:center;gap:8px}
+.bsect .cnt,.bsect .cnt0{min-width:22px;height:22px;border-radius:11px;padding:0 6px;display:inline-flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;letter-spacing:0}
+.bsect .cnt0{background:var(--card);color:var(--mut);box-shadow:inset 0 0 0 1.5px var(--line)}
+.bsect .bschev{width:18px;height:18px;margin-left:auto;flex:none;transition:transform .2s;transform:rotate(180deg)}
+.bsect.col .bschev{transform:none}
+.bsecb{padding:0 2px}
 .nit{display:flex;gap:10px;padding:10px;border-radius:14px;margin-top:6px;position:relative;cursor:pointer;text-align:left}
 .nit.new{background:var(--acc2)}.nit.mine.new{background:#fff3c4}html[data-theme=dark] .nit.mine.new{background:#4a3f12}
 .nit.old{opacity:.62}
@@ -4068,26 +4076,35 @@ function renderBell(){
   try{if(navigator.setAppBadge){(n?navigator.setAppBadge(n):navigator.clearAppBadge()).catch(()=>{})}}catch(e){}
   if(!$("bellsheet").classList.contains("hide"))renderBellSheet();
 }
+// 🔔 sekcje zwijane: wybór zapamiętany w urządzeniu; bez wyboru — rozwinięta, gdy jest coś nowego
+// na zwiniętej: czerwone kółko z liczbą nieprzeczytanych (albo szare z liczbą pozycji, gdy nic nowego)
+const bsColGet=()=>{try{return JSON.parse(localStorage.getItem("bellCol")||"{}")}catch(e){return {}}};
+function bsSec(k,title,un,total,body){
+  const st=bsColGet(),col=k in st?!!st[k]:!un;
+  return '<button type="button" class="bsec bsect'+(col?' col':'')+'" data-bsec="'+k+'" aria-expanded="'+(!col)+'"><span class="bst">'+title+'</span>'
+   +(un?'<span class="cnt">'+un+'</span>':col&&total?'<span class="cnt0">'+total+'</span>':'')
+   +'<svg class="bschev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>'
+   +'<div class="bsecb'+(col?' hide':'')+'">'+body+'</div>';
+}
 function renderBellSheet(){
   const p=$("bellsheet"),act=w=>new Date(w.starts_at).getTime()>=Date.now()-3*36e5;
   const ord=(a,b)=>((wUnread(b).length?1:0)-(wUnread(a).length?1:0))||((wNeedsAct(b)?1:0)-(wNeedsAct(a)?1:0))||(new Date(a.starts_at)-new Date(b.starts_at));
   const forMe=wants.filter(w=>w.user_id!==uid&&act(w)&&(w.visibility!=="private"||invIds(w).includes(uid)||(joins[w.id]||[]).includes(uid))).sort(ord);
   const mine=wants.filter(w=>w.user_id===uid&&act(w)).sort(ord);
-  const cnt=L=>{const n=L.filter(w=>wUnread(w).length).length;return n?' <span class="cnt">'+n+'</span>':''};
   const keep=p.querySelector(".bslist"),st=keep?keep.scrollTop:0,nu=bellUnread().length+nuUnread().length,NU=nuList(),NUu=new Set(nuUnread());
   p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Zaproszenia i powiadomienia"><div class="bsgrab"></div>'
    +'<div class="bshead"><button type="button" class="lnk" data-bk="close">Zamknij</button><b>🔔 Zaproszenia</b>'
    +(nu?'<button type="button" class="lnk" data-bk="all" style="text-align:right">✓ Przeczytane</button>':'<span style="min-width:64px"></span>')+'</div>'
    +'<div class="bslist">'
-   +(fbMineUnread().length?'<div class="bsec">💬 Wiadomości <span class="cnt">'+fbMineUnread().length+'</span></div>'+fbMineUnread().map(f=>fbRow(f,false)).join(""):'')
-   +(fbAdmUnread().length?'<div class="bsec">🛡️ Zgłoszenia <span class="cnt">'+fbAdmUnread().length+'</span></div>'+fbAdmUnread().slice(0,5).map(f=>fbRow(f,true)).join(""):'')
-   +(NU.length?'<div class="bsec">🆕 Nowi użytkownicy'+(NUu.size?' <span class="cnt">'+NUu.size+'</span>':'')+'</div>'+NU.slice(0,6).map(id=>nuRow(id,NUu.has(id))).join("")
-      +(NU.length>6?'<div class="bsempty">i jeszcze '+(NU.length-6)+' z ostatnich 14 dni — pełna lista: ⚙️ → 🛡️ Administracja</div>':''):'')
-   +'<div class="bsec">📩 Do Ciebie'+cnt(forMe)+'</div>'
-   +(forMe.length?forMe.map(bellRowHtml).join(""):'<div class="bsempty">Na razie nikt nie zaprasza.</div>')
-   +'<div class="bsec">🙋 Twoje zaproszenia'+cnt(mine)+'</div>'
-   +(mine.length?mine.map(bellRowHtml).join(""):'<div class="bsempty">Nie masz aktywnych zaproszeń. <button type="button" class="lnk" data-bk="new">Idziemy na rower? ›</button></div>')
-   +'</div><div class="bshint">Czerwona kropka = coś nowego. Kliknij zaproszenie, żeby przejść do jego karty.</div></div>';
+   +(fbMineUnread().length?bsSec("msg",'💬 Wiadomości',fbMineUnread().length,fbMineUnread().length,fbMineUnread().map(f=>fbRow(f,false)).join("")):'')
+   +(fbAdmUnread().length?bsSec("adm",'🛡️ Zgłoszenia',fbAdmUnread().length,fbAdmUnread().length,fbAdmUnread().slice(0,5).map(f=>fbRow(f,true)).join("")):'')
+   +(NU.length?bsSec("nu",'🆕 Nowi użytkownicy',NUu.size,NU.length,NU.slice(0,6).map(id=>nuRow(id,NUu.has(id))).join("")
+      +(NU.length>6?'<div class="bsempty">i jeszcze '+(NU.length-6)+' z ostatnich 14 dni — pełna lista: ⚙️ → 🛡️ Administracja</div>':'')):'')
+   +bsSec("forme",'📩 Do Ciebie',forMe.filter(w=>wUnread(w).length).length,forMe.length,
+      forMe.length?forMe.map(bellRowHtml).join(""):'<div class="bsempty">Na razie nikt nie zaprasza.</div>')
+   +bsSec("mine",'🙋 Twoje zaproszenia',mine.filter(w=>wUnread(w).length).length,mine.length,
+      mine.length?mine.map(bellRowHtml).join(""):'<div class="bsempty">Nie masz aktywnych zaproszeń. <button type="button" class="lnk" data-bk="new">Idziemy na rower? ›</button></div>')
+   +'</div><div class="bshint">Czerwona kropka = coś nowego. Dotknij nagłówka, żeby zwinąć albo rozwinąć sekcję.</div></div>';
   p.classList.remove("hide");
   const nl=p.querySelector(".bslist");if(nl)nl.scrollTop=st;
 }
@@ -4128,6 +4145,9 @@ $("bellbtn").onclick=()=>{if(!session)return;renderBellSheet()};
 $("bellsheet").addEventListener("click",async e=>{
   const p=$("bellsheet");
   const fr=e.target.closest("button[data-fb]");
+  const sc=e.target.closest("[data-bsec]");
+  if(sc){const k=sc.dataset.bsec,st=bsColGet(),col=!sc.classList.contains("col");st[k]=col;try{localStorage.setItem("bellCol",JSON.stringify(st))}catch(err){}
+    renderBellSheet();return}
   if(fr){const f=fbList.find(x=>x.id===fr.dataset.fb);closeBell();fbOpen(fr.dataset.fb,f&&f.user_id!==uid&&isAdmin?"fbadmin":"bell");return}
   if(e.target===p){closeBell();return}
   const k=e.target.closest("[data-bk]");
