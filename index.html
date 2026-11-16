@@ -648,6 +648,25 @@ html[data-theme=dark] .evp-t.soon{background:#4d2a0e;color:#ffb074}@keyframes ev
 .ios-out{justify-content:center;color:var(--bad);font-weight:600}
 .gprof{display:flex;align-items:center;gap:14px;width:100%;border:0;background:var(--fill);color:var(--ink);border-radius:16px;padding:14px;margin:40px 0 4px;text-align:left;font:inherit;cursor:pointer}
 .gav{flex:none;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#34c759,#1f9d55);color:#fff;font-size:26px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(31,157,85,.35)}
+.gav.ph{background:var(--fill);overflow:hidden;padding:0}.gav .gavi{width:100%;height:100%;object-fit:cover;display:block}
+.gmi{display:flex;gap:6px;margin-top:2px}.gmi span{width:22px;height:22px;border-radius:6px;background:var(--fill);display:flex;align-items:center;justify-content:center;color:var(--mut)}.gmi .ui-i{width:13px;height:13px}
+.nkav{width:1.2em;height:1.2em;border-radius:50%;object-fit:cover;vertical-align:-.25em;margin:0 .3em 0 -.45em;display:inline-block}
+.pe-av{display:flex;flex-direction:column;align-items:center;gap:8px;margin:14px 0 4px}
+.pe-avb{position:relative;width:96px;height:96px;border-radius:50%;border:0;padding:0;background:none;cursor:pointer}
+.pe-avb img,.pe-avb .gav{width:96px;height:96px;border-radius:50%;object-fit:cover;display:flex;font-size:40px}
+.pe-cam{position:absolute;right:-2px;bottom:-2px;width:32px;height:32px;border-radius:50%;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px var(--card)}.pe-cam .ui-i{width:17px;height:17px}
+.pe-avl{display:flex;gap:18px}.pe-avl .lnk{font-size:15px;font-weight:600}.pe-rm{color:var(--bad)!important}
+.pe-row{display:flex;align-items:center;gap:11px;cursor:default}.pe-in{flex:1;min-width:0;border:0!important;background:none!important;padding:6px 0!important;margin:0!important;font-size:15.5px!important;box-shadow:none!important;color:var(--ink)}
+.pe-opt{text-transform:none;letter-spacing:0}.pe-seg{padding:0 14px 10px}.pe-seg .seg{margin:0}.pe-seg .seg .ui-i{width:14px;height:14px;vertical-align:-2px}
+.pe-note{margin:6px 14px 0;text-align:left}.pe-note .ui-i{width:13px;height:13px;vertical-align:-2px}
+.tgl{flex:none;width:51px;height:31px;border-radius:16px;border:0;background:var(--fill);position:relative;cursor:pointer;padding:0;transition:background .2s}.tgl span{position:absolute;left:2px;top:2px;width:27px;height:27px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);transition:left .2s}
+.tgl.on{background:#34c759}.tgl.on span{left:22px}
+.bigpill .nkav,.gprof .nkav{display:none}
+.pe-seg .seg button{font-size:13.5px;white-space:nowrap;padding:7px 4px}
+.ucav{display:flex;justify-content:center}.ucav img{width:96px;height:96px;border-radius:50%;object-fit:cover;box-shadow:0 0 0 3px var(--card),0 0 0 5px #34c759}
+.ucsoc{display:flex;justify-content:center;gap:10px;margin:10px 0 2px}.ucs{width:44px;height:44px;border-radius:12px;background:var(--fill);display:flex;align-items:center;justify-content:center;color:var(--acc)}.ucs .ui-i{width:21px;height:21px}
+.uccall{display:flex;gap:8px;margin-top:10px}.ucb{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:11px;border-radius:12px;background:var(--fill);font-weight:600;font-size:15px;color:var(--acc);text-decoration:none}
+.ucwhy{font-size:12.5px;color:var(--mut);text-align:center;margin-top:5px}
 .gav.k{background:linear-gradient(135deg,#ff6b9a,#d63a74);box-shadow:0 4px 12px rgba(214,58,116,.35)}
 .gpi{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:3px}.gpi .ui-i{width:16px;height:16px;vertical-align:-2px}
 .gml{font-size:13.5px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;max-width:100%;white-space:nowrap}.gsz{font-size:12.5px;color:var(--mut)}.gsz .ui-i{width:14px;height:14px}
@@ -1289,6 +1308,12 @@ book:'<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1
 download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
 search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
 up:'<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>',
+cam:'<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>',
+fb:'<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>',
+ig:'<rect width="20" height="20" x="2" y="2" rx="5"/><path d="M16 11.4A4 4 0 1 1 12.6 8 4 4 0 0 1 16 11.4z"/><path d="M17.5 6.5h.01"/>',
+yt:'<path d="M2.5 17a24 24 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.6 49.6 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24 24 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.6 49.6 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/>',
+strava:'<path d="M22 12h-2.5a2 2 0 0 0-1.9 1.5l-2.4 8.4a.25.25 0 0 1-.5 0L9.2 2.2a.25.25 0 0 0-.5 0l-2.3 8.4A2 2 0 0 1 4.5 12H2"/>',
+call:'<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/>',
 pencil:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
 star:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
 starf:'<polygon class="gold" points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
@@ -1398,7 +1423,7 @@ const pill=(t,c,bg,live,uid_,extra,pre)=>'<span'+(uid_?' data-u="'+esc(uid_)+'"'
 /* ulubieni (prywatni: każdy widzi tylko swoich) */
 let favs=new Set(),favOk=false;
 const isFav=id=>favs.has(id);
-const nk=(id,fallback)=>{const c=colorOf(id),g=genders[id],t=nicks[id]||fallback||"ktoś";return pill(t+(testerIds.has(id)?" 🧪":""),c,c?nickBgs[g]:"",onlineIds.includes(id),nicks[id]&&favOk&&id!==uid?id:"",fbBulb(id)?' '+uiIcon("bulb"):"",isFav(id)?uiIcon("starf")+' ':"")};
+const nk=(id,fallback)=>{const c=colorOf(id),g=genders[id],t=nicks[id]||fallback||"ktoś";return pill(t+(testerIds.has(id)?" 🧪":""),c,c?nickBgs[g]:"",onlineIds.includes(id),nicks[id]&&favOk&&id!==uid?id:"",fbBulb(id)?' '+uiIcon("bulb"):"",avImg(id,"nkav")+(isFav(id)?uiIcon("starf")+' ':""))};
 const favFirst=ids=>ids.slice().sort((a,b)=>(isFav(b)?1:0)-(isFav(a)?1:0));
 const nkList=ids=>'<div class="nks">'+favFirst(ids).map(id=>nk(id)).join("")+'</div>';
 const favNames=ids=>favFirst(ids).filter(isFav).map(id=>nicks[id]).filter(Boolean);
@@ -1563,7 +1588,7 @@ function nickHtml(){
   const head=short?'<div class="sname">✏️ Wybierz nowy nick</div><div class="smail">Nick „'+esc(me.nick)+'” jest za krótki. Wybierz taki, który ma co najmniej 3 litery — żeby inni wiedzieli, kto jedzie.</div>'
      :first?'<div class="sname">👋 Wybierz swój nick</div><div class="smail">Witaj w PrzylesieGo! Nick widzą inni przy zapisach na wieczorynki i zgłoszeniach.</div>'
      :incomplete?'<div class="sname">👋 Uzupełnij profil</div><div class="smail">Wybierz płeć — od niej zależy kolor Twojego nicku.</div>'
-     :'<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">✏️ Nick i płeć</div>';
+     :'<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">'+(profExOk?'Edytuj profil':'✏️ Nick i płeć')+'</div>'+avEditHtml();
   const gsel=genderOk?'<label style="font-size:15px;margin-top:14px">Płeć (obowiązkowo)</label><div class="seg" id="gsex" style="margin-top:4px">'
      +[["K","👩 Kobieta"],["M","👨 Mężczyzna"]].map(([k,t])=>'<button type="button" data-g="'+k+'" class="'+(selGender===k?"on":"")+'">'+t+'</button>').join("")+'</div>':'';
   return head
@@ -1572,6 +1597,7 @@ function nickHtml(){
    +'<p class="note">Najlepiej <b>imię + litera nazwiska</b> albo ksywka, np. <i>Ania K</i>, <i>Marek z Bielan</i>. Co najmniej 3 litery (bez inicjałów typu „AK”), do 20 znaków: litery, cyfry, spacja, kropka, _ lub -. Nick musi być unikalny; widzą go inni zalogowani.</p>'
    +'<div class="nsug hide" id="gnicksug"></div>'
    +gsel
+   +(first||incomplete||short?'':profExHtml())
    +'<div class="note" id="gnickinfo" style="color:var(--bad);margin-top:8px"></div>'
    +'<button class="b sbtn" data-c="nicksave">Zapisz</button></div>';
 }
@@ -1663,6 +1689,106 @@ function favsHtml(){
 }
 /* 🗓 data dołączenia (KROK 25): „Z nami od 12 marca 2026 · 245 dni” */
 let joinedAt={};
+/* 👤 profil (KROK 50): zdjęcie i media w profiles (widzą zalogowani), telefon i miejscowość w profile_private (user_extra) */
+let profExOk=false,avAt={},medias={},avData={},myPriv=null,uxCache={},pe=null;
+try{avData=JSON.parse(localStorage.getItem("avc")||"{}")||{}}catch(e){avData={}}
+const avImg=(id,cls)=>avData[id]&&avData[id].d?'<img class="'+cls+'" src="'+avData[id].d+'" alt="" aria-hidden="true">':'';
+const MEDIA=[["strava","strava","Strava","#fc4c02","strava.com/athletes/…"],["instagram","ig","Instagram","#c13584","@nazwa albo link"],["youtube","yt","YouTube","#ff0000","@kanał albo link"],["facebook","fb","Facebook","#1877f2","link albo nazwa"],["www","globe","Strona www","#636366","adres strony"]];
+function mediaUrl(k,v){
+  v=String(v||"").trim();if(!v)return "";
+  if(/^https?:\/\//i.test(v))v=v.replace(/^http:/i,"https:");
+  else if(/^[\w.-]+\.[a-z]{2,}(\/|$)/i.test(v)&&!/^@/.test(v))v="https://"+v;
+  else{const u=v.replace(/^@/,"").replace(/\s+/g,"");if(!u)return "";
+    v=k==="strava"?"https://www.strava.com/athletes/"+u:k==="instagram"?"https://instagram.com/"+u:k==="youtube"?"https://youtube.com/@"+u:k==="facebook"?"https://facebook.com/"+u:"https://"+u}
+  return /^https:\/\/[^\s<>"]+$/.test(v)&&v.length<=200?v:null;
+}
+const mediaShow=u=>String(u||"").replace(/^https:\/\/(www\.)?/,"").replace(/\/$/,"");
+async function loadAvatars(){
+  if(!profExOk)return;
+  const need=Object.keys(avAt).filter(id=>avAt[id]&&(!avData[id]||avData[id].t!==avAt[id]));
+  Object.keys(avData).forEach(id=>{if(!avAt[id])delete avData[id]});
+  for(let i=0;i<need.length;i+=40){
+    const r=await sb.from("profiles").select("user_id,avatar,avatar_at").in("user_id",need.slice(i,i+40));
+    if(!r.error)(r.data||[]).forEach(x=>{if(x.avatar)avData[x.user_id]={t:x.avatar_at,d:x.avatar};else delete avData[x.user_id]});
+  }
+  try{localStorage.setItem("avc",JSON.stringify(avData))}catch(e){}
+  if(need.length){try{renderWants();renderBell();if(gearOpen)renderGear()}catch(e){}}
+}
+async function loadMyPriv(){
+  if(!session)return;
+  const r=await sb.from("profile_private").select("phone,phone_vis,city,city_lat,city_lon,city_vis").eq("user_id",uid).maybeSingle();
+  if(r.error){profExOk=false;return}
+  profExOk=true;myPriv=r.data||null;
+  // Moja miejscowość z profilu — na nowym telefonie
+  if(myPriv&&myPriv.city&&myPriv.city_lat!=null&&!homeGet()){try{localStorage.setItem("home",JSON.stringify({name:myPriv.city,lat:myPriv.city_lat,lon:myPriv.city_lon}))}catch(e){}}
+}
+async function savePrivCity(h){
+  if(!profExOk||!session)return;
+  const row={user_id:uid,city:h?h.name.slice(0,80):null,city_lat:h?h.lat:null,city_lon:h?h.lon:null,updated_at:new Date().toISOString()};
+  const r=await sb.from("profile_private").upsert(row,{onConflict:"user_id"}).select("phone,phone_vis,city,city_lat,city_lon,city_vis").maybeSingle();
+  if(!r.error)myPriv=r.data;
+}
+async function loadUx(id){if(!profExOk||!session||!id)return;const r=await sb.rpc("user_extra",{u:id});uxCache[id]=r.error?{}:(r.data||{});if(gearOpen&&gearView==="user"&&userId===id)renderGear()}
+// zdjęcie z galerii → kwadrat 256 px (środek), JPEG do ~45 KB
+function avFromFile(f){return new Promise((res,rej)=>{
+  if(!f||!/^image\//.test(f.type||"image/"))return rej(new Error("To nie jest zdjęcie."));
+  const img=new Image(),url=URL.createObjectURL(f);
+  img.onload=()=>{try{const S=256,c=document.createElement("canvas");c.width=S;c.height=S;const x=c.getContext("2d"),m=Math.min(img.naturalWidth,img.naturalHeight);
+      x.drawImage(img,(img.naturalWidth-m)/2,(img.naturalHeight-m)/2,m,m,0,0,S,S);URL.revokeObjectURL(url);
+      let q=.8,d=c.toDataURL("image/jpeg",q);while(d.length>45000&&q>.35){q-=.1;d=c.toDataURL("image/jpeg",q)}
+      if(d.length>58000)return rej(new Error("Zdjęcie jest za duże."));res(d)}catch(e){rej(e)}};
+  img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error("Nie udało się wczytać zdjęcia."))};img.src=url})}
+function peStart(){pe={av:avData[uid]?avData[uid].d:null,avCh:false,media:Object.assign({},medias[uid]||{}),phone:myPriv&&myPriv.phone||"",pvis:myPriv&&myPriv.phone_vis||"off",cvis:!!(myPriv&&myPriv.city_vis)}}
+function profExHtml(){
+  if(!profExOk||!pe)return "";
+  const h=homeGet(),tg=(k,on)=>'<button type="button" class="tgl'+(on?' on':'')+'" data-pet="'+k+'" role="switch" aria-checked="'+on+'"><span></span></button>';
+  return gGrp("Miejscowość",[gRow("#ff9f0a","pin",h?esc(h.name):"Ustaw miejscowość","Do „najbliżej” w trasach i „W okolicy”",'','data-home="1"'),
+      '<div class="ios-it pe-row"><span class="ios-t">Pokazuj innym<small>Domyślnie ukryta</small></span>'+tg("cvis",pe.cvis)+'</div>'])
+   +'<div class="ios"><div class="ios-gh">Moje media <span class="pe-opt">(opcjonalnie)</span></div><div class="ios-grp">'
+   +MEDIA.map(([k,ic,t,col,ph])=>'<label class="ios-it pe-row"><span class="ios-ic" style="background:'+col+'">'+uiIcon(ic)+'</span><input class="pe-in" data-pe="'+k+'" value="'+esc(pe.media[k]?mediaShow(pe.media[k]):"")+'" placeholder="'+esc(t+" — "+ph)+'" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="url" maxlength="200"></label>').join("")+'</div></div>'
+   +'<div class="ios"><div class="ios-gh">Telefon</div><div class="ios-grp">'
+   +'<label class="ios-it pe-row"><span class="ios-ic" style="background:#30d158">'+uiIcon("phone")+'</span><input class="pe-in" data-pe="phone" value="'+esc(pe.phone)+'" placeholder="np. +48 600 123 456" inputmode="tel" autocomplete="tel" maxlength="20"></label>'
+   +'<div class="ios-it pe-row"><span class="ios-t">Pokazuj innym<small>Przycisk „Zadzwoń / SMS” na Twojej karcie</small></span>'+tg("pvis",pe.pvis!=="off")+'</div>'
+   +(pe.pvis!=="off"?'<div class="pe-seg"><div class="seg">'+[["fav",uiIcon("star")+" Tylko ulubieni"],["all","Wszyscy zalogowani"]].map(([k,t])=>'<button type="button" data-pev="'+k+'" class="'+(pe.pvis===k?"on":"")+'">'+t+'</button>').join("")+'</div></div>':'')
+   +'</div>'+(pe.pvis==="fav"?'<p class="note pe-note">„Ulubieni” = osoby, które <b>Ty</b> masz w ⭐ ulubionych.</p>':'')+'</div>'
+   +'<p class="note pe-note">'+uiIcon("lock")+' Zdjęcie i media widzą zalogowani. Miejscowość i telefon — tylko gdy włączysz. Goście nie widzą nic.</p>';
+}
+function avEditHtml(){
+  if(!profExOk||!pe)return "";
+  const n=me.nick||"?";
+  return '<div class="pe-av"><button type="button" class="pe-avb" data-c="pephoto" aria-label="Zmień zdjęcie">'+(pe.av?'<img src="'+pe.av+'" alt="">':'<span class="gav'+(genders[uid]==="K"?' k':'')+'">'+esc(n.charAt(0).toUpperCase())+'</span>')+'<span class="pe-cam">'+uiIcon("cam")+'</span></button>'
+   +'<div class="pe-avl"><button type="button" class="lnk" data-c="pephoto">'+(pe.av?'Zmień zdjęcie':'Dodaj zdjęcie')+'</button>'+(pe.av?'<button type="button" class="lnk pe-rm" data-c="pephotodel">Usuń</button>':'')+'</div>'
+   +'<input type="file" id="pefile" accept="image/*" class="hide"></div>';
+}
+document.addEventListener("input",e=>{const t=e.target;if(!pe||!t.matches||!t.matches(".pe-in"))return;const k=t.dataset.pe;if(k==="phone")pe.phone=t.value;else pe.media[k]=t.value});
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-pet],[data-pev]");if(!t||!pe||!t.closest(".sheetbox"))return;
+  if(t.dataset.pet==="cvis"){if(!homeGet()&&!pe.cvis){say("Najpierw ustaw miejscowość.");return}pe.cvis=!pe.cvis}
+  else if(t.dataset.pet==="pvis")pe.pvis=pe.pvis==="off"?"fav":"off";
+  else if(t.dataset.pev)pe.pvis=t.dataset.pev;
+  const sb2=t.closest(".sheetbox"),y=sb2?sb2.scrollTop:0;renderGear();const s3=document.querySelector("#gearsheet .sheetbox,.sheetbox");if(s3)s3.scrollTop=y;
+});
+document.addEventListener("change",async e=>{if(e.target.id!=="pefile"||!pe)return;const f=e.target.files&&e.target.files[0];if(!f)return;
+  try{pe.av=await avFromFile(f);pe.avCh=true;renderGear()}catch(err){say(err.message||"Nie udało się wczytać zdjęcia.")}});
+async function saveProfEx(){
+  if(!profExOk||!pe)return true;
+  const info=$("gnickinfo"),med={};
+  for(const [k,,t] of MEDIA){const v=pe.media[k];if(!v)continue;const u=mediaUrl(k,v);if(u===null){if(info)info.textContent=t+": niepoprawny link albo nazwa.";return false}if(u)med[k]=u}
+  const ph=String(pe.phone||"").replace(/\s+/g," ").trim();
+  if(ph&&!/^\+?[0-9 ()-]{6,20}$/.test(ph)){if(info)info.textContent="Telefon: same cyfry (może być + na początku), np. +48 600 123 456.";return false}
+  if(pe.pvis!=="off"&&!ph){if(info)info.textContent="Wpisz telefon albo wyłącz „Pokazuj innym”.";return false}
+  const row={media:Object.keys(med).length?med:null};if(pe.avCh)row.avatar=pe.av||null;
+  const changedPub=pe.avCh||JSON.stringify(row.media||{})!==JSON.stringify(medias[uid]||{});
+  if(changedPub){const r=await sb.from("profiles").update(row).eq("user_id",uid).select("user_id,avatar_at");
+    if(r.error){if(info)info.textContent=/BANNED/.test(r.error.message||"")?"Konto zablokowane.":"Nie udało się zapisać profilu: "+r.error.message;return false}
+    medias[uid]=row.media||{};if(pe.avCh){const t=r.data&&r.data[0]&&r.data[0].avatar_at;if(pe.av){avData[uid]={t,d:pe.av};avAt[uid]=t}else{delete avData[uid];delete avAt[uid]}try{localStorage.setItem("avc",JSON.stringify(avData))}catch(e){}}}
+  const h=homeGet(),prv={user_id:uid,phone:ph||null,phone_vis:ph?pe.pvis:"off",city_vis:!!(pe.cvis&&h),city:h?h.name.slice(0,80):null,city_lat:h?h.lat:null,city_lon:h?h.lon:null,updated_at:new Date().toISOString()};
+  const o=myPriv||{},chPriv=prv.phone!==(o.phone||null)||prv.phone_vis!==(o.phone_vis||"off")||prv.city_vis!==!!o.city_vis||prv.city!==(o.city||null);
+  if(chPriv){const r=await sb.from("profile_private").upsert(prv,{onConflict:"user_id"}).select("phone,phone_vis,city,city_lat,city_lon,city_vis").maybeSingle();
+    if(r.error){if(info)info.textContent="Nie udało się zapisać telefonu / miejscowości: "+r.error.message;return false}myPriv=r.data}
+  if(changedPub||chPriv){delete uxCache[uid];say("Profil zapisany ✔")}
+  return true;
+}
 // 🟢 kto jest teraz w aplikacji (dotknięcie „N online”)
 // 🛡️ admin: kto połączył Telegram (KROK 32) i aktywność osoby
 let stealthOk=false,stealthIds=new Set(),hideOnline=(()=>{try{return localStorage.getItem("hideOnline")==="1"}catch(e){return false}})();
@@ -1803,10 +1929,16 @@ function userRidesHtml(id){
   return '<div class="staz">🚴 Potwierdzone jazdy: '+s.n+(s.km?' · 📏 '+s.km.toLocaleString("pl-PL")+' km':'')+(s.n30?' (30 dni: '+s.n30+(s.km30?' · '+s.km30+' km':'')+')':'')+(s.kmh!=null?' · ⚡ śr. '+fmt1(s.kmh)+' km/h':'')+'</div>';
 }
 function userHtml(){
-  const g=genders[userId],fav=isFav(userId);
+  const g=genders[userId],fav=isFav(userId),ux=uxCache[userId]||{},mu=MEDIA.filter(m=>(medias[userId]||{})[m[0]]);
+  if(profExOk&&session&&!(userId in uxCache)){uxCache[userId]={};loadUx(userId)}
   return (userBack?'<button class="sback" data-c="userback">‹ '+({favs:"Ulubieni",online:"Online",admin:"Administracja"}[userBack]||"Ustawienia")+'</button>':'')
-   +'<div class="bigpill" style="margin-top:'+(userBack?'26px':'6px')+'">'+nk(userId)+'</div>'
-   +'<div class="smail">'+(g==="K"?"👩 Kobieta":g==="M"?"👨 Mężczyzna":"")+(onlineIds.includes(userId)?(g?" · ":"")+"🟢 teraz w aplikacji":"")+'</div>'+(stazTxt(userId)?'<div class="staz">'+esc(stazTxt(userId))+'</div>':'')
+   +(avData[userId]?'<div class="ucav" style="margin-top:'+(userBack?'30px':'8px')+'">'+avImg(userId,"")+'</div>':'')
+   +'<div class="bigpill" style="margin-top:'+(avData[userId]?'8px':userBack?'26px':'6px')+'">'+nk(userId)+'</div>'
+   +'<div class="smail">'+(g==="K"?"👩 Kobieta":g==="M"?"👨 Mężczyzna":"")+(onlineIds.includes(userId)?(g?" · ":"")+"🟢 teraz w aplikacji":"")+'</div>'
+   +(ux.city?'<div class="staz">'+uiIcon("pin")+' '+esc(ux.city)+'</div>':'')+(stazTxt(userId)?'<div class="staz">'+esc(stazTxt(userId))+'</div>':'')
+   +(mu.length?'<div class="ucsoc">'+mu.map(([k,ic,t])=>'<a class="ucs" href="'+esc(medias[userId][k])+'" target="_blank" rel="noopener nofollow" title="'+esc(t)+'" aria-label="'+esc(t)+'">'+uiIcon(ic)+'</a>').join("")+'</div>':'')
+   +(ux.phone&&userId!==uid?'<div class="uccall"><a class="ucb" href="tel:'+esc(ux.phone.replace(/[^0-9+]/g,""))+'">'+uiIcon("call")+' Zadzwoń</a><a class="ucb" href="sms:'+esc(ux.phone.replace(/[^0-9+]/g,""))+'">'+uiIcon("msg")+' SMS</a></div>'
+       +'<div class="ucwhy">'+esc(ux.phone)+(ux.why==="fav"?' · widzisz, bo jesteś w '+(g==="K"?"jej":"jego")+' ulubionych':'')+'</div>':'')
    +userRidesHtml(userId)
    +((fbDone[userId]||0)?'<div class="staz">💡 Zrealizowane zgłoszenia: '+fbDone[userId]+(fbBulb(userId)?' — współtwórca aplikacji':'')+'</div>':'')
    +(visOk?'<button class="b sbtn" data-a="invite" data-id="'+esc(userId)+'">🚴 Zaproś na rower</button>':'')
@@ -2338,8 +2470,10 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="userback"){gearView=userBack||"main";renderGear();return}
   if(c==="coldef"){["K","M"].forEach(g=>{$("col"+g).value=DEF_COLORS[g];$("bg"+g).value=DEF_BGS[g];$("nob"+g).checked=false});colorsPreview();return}
   if(c==="colsave"){await saveColors();return}
-  if(c==="nick"){selGender=genders[uid]||"";gearView="nick";renderGear();const i=$("gnick");if(i){i.focus();i.select()}return}
-  if(c==="nicksave"){await gearSaveNick();return}
+  if(c==="nick"){selGender=genders[uid]||"";peStart();gearView="nick";renderGear();return}
+  if(c==="nicksave"){if(!needProfile()&&!nickShort()&&!(await saveProfEx()))return;await gearSaveNick();return}
+  if(c==="pephoto"){const f=$("pefile");if(f)f.click();return}
+  if(c==="pephotodel"){if(pe){pe.av=null;pe.avCh=true;renderGear()}return}
   if(c==="del"){gearView="del";renderGear();const i=$("gdel");if(i)i.focus();return}
   if(c==="delgo"){await gearDeleteAccount();return}
   if(c==="back"){gearView="main";renderGear();return}
@@ -2485,8 +2619,9 @@ function gRow(col,ico,t,sub,right,attrs,tag){tag=tag||"button";
 const gGrp=(h,rows)=>{rows=rows.filter(Boolean);return rows.length?'<div class="ios"><div class="ios-gh">'+h+'</div><div class="ios-grp">'+rows.join("")+'</div></div>':''};
 function profCardHtml(){
   const n=me.nick||"";
-  return '<button type="button" class="gprof" data-c="nick"><span class="gav'+(genders[uid]==="K"?' k':'')+'" aria-hidden="true">'+esc((n||"?").charAt(0).toUpperCase())+'</span><span class="gpi"><span>'+(n?nk(uid):'<b>Ustaw nick</b>')+(isAdmin?' '+uiIcon("shield"):'')+'</span>'
-   +'<span class="gml">'+esc(session.user.email||"")+'</span>'+(stazTxt(uid)?'<span class="gsz">'+esc(stazTxt(uid))+'</span>':'')+'<span class="ged">'+(n?'Nick i płeć':'Ustaw nick i płeć')+'</span></span><span class="ios-chev" aria-hidden="true">›</span></button>';
+  const mi=Object.keys(medias[uid]||{}).map(k=>{const m=MEDIA.find(x=>x[0]===k);return m?'<span>'+uiIcon(m[1])+'</span>':''}).join("");
+  return '<button type="button" class="gprof" data-c="nick"><span class="gav'+(genders[uid]==="K"?' k':'')+(avData[uid]?' ph':'')+'" aria-hidden="true">'+(avData[uid]?avImg(uid,"gavi"):esc((n||"?").charAt(0).toUpperCase()))+'</span><span class="gpi"><span>'+(n?nk(uid):'<b>Ustaw nick</b>')+(isAdmin?' '+uiIcon("shield"):'')+'</span>'
+   +'<span class="gml">'+esc(session.user.email||"")+'</span>'+(stazTxt(uid)?'<span class="gsz">'+esc(stazTxt(uid))+'</span>':'')+(mi?'<span class="gmi">'+mi+'</span>':'')+'<span class="ged">'+(n?(profExOk?'Edytuj profil':'Nick i płeć'):'Ustaw nick i płeć')+'</span></span><span class="ios-chev" aria-hidden="true">›</span></button>';
 }
 // 🗺️ wyróżniona karta „Baza tras”: ile tras, 3 najpopularniejsze miniatury, „Odkryj trasy”, „+ Dodaj”
 function rbHeroHtml(){
@@ -2641,10 +2776,10 @@ function helpFullHtml(){
      "<b>⭐ Oceń trasę</b> — gwiazdki, malownicza, trudność, ruch aut, plakietki i komentarz (widzą wszyscy). <b>🚲 Zaproś na tę trasę</b> otwiera formularz z wybraną trasą.",
      "Trasy dodaje się z zaproszenia z plikiem GPX (przełącznik w formularzu albo „📚 Do bazy tras” na karcie). Autor i admin zmieniają nazwę, ukrywają i usuwają."]):'')
    +sec("⭐ Ludzie",[
-     "Dotknij nicku: karta osoby („Z nami od…”, „🚴 Zaproś na rower”, ☆ dodaj do ulubionych). ⭐ ulubieni są zawsze na górze list.",
+     "Dotknij nicku: karta osoby — zdjęcie, „Z nami od…”, media, a jeśli ktoś pozwolił: miejscowość i „Zadzwoń / SMS”; „🚴 Zaproś na rower”, ☆ dodaj do ulubionych. ⭐ ulubieni są zawsze na górze list.",
      "🟢 zielona kropka przy nicku = osoba ma teraz otwartą aplikację. Przy nickach: ⭐ ulubiony, 🧪 tester, 💡 3 zrealizowane pomysły/zgłoszenia, 👑 główny admin."])
    +sec("⚙️ Ustawienia",[
-     "Na górze karta profilu (nick i płeć), pod nią <b>🗺️ Baza tras</b>. Dalej grupy: Ludzie i okolica (⭐ ulubieni, Moja miejscowość), Powiadomienia (Telegram, kanał), Pomoc i opinie (💬 oceń aplikację / zgłoś błąd lub pomysł — odpowiedź pod 🔔, instalacja), wygląd ☀️ / 🌙 / Auto, zaproszenia (testowe, „Jak poszło?”), wyloguj, usuń konto.",
+     "Na górze karta profilu → <b>Edytuj profil</b>: zdjęcie, nick i płeć, miejscowość (domyślnie ukryta), Moje media (Strava, Instagram, YouTube, Facebook, www) i telefon z wyborem, kto go widzi (tylko ulubieni albo wszyscy zalogowani). Pod nią <b>🗺️ Baza tras</b>. Dalej grupy: Ludzie i okolica (⭐ ulubieni, Moja miejscowość), Powiadomienia (Telegram, kanał), Pomoc i opinie (💬 oceń aplikację / zgłoś błąd lub pomysł — odpowiedź pod 🔔, instalacja), wygląd ☀️ / 🌙 / Auto, zaproszenia (testowe, „Jak poszło?”), wyloguj, usuń konto.",
      "<b>⬆</b> w lewym dolnym rogu wraca na górę strony."])
    +sec("🔒 Prywatność",[
      "Prywatne zaproszenia widzą tylko autor i zaproszeni — oraz administratorzy, wyłącznie do moderacji (np. usunięcia spamu). Administrator nie może dołączyć ani doprosić się do cudzego prywatnego zaproszenia.",
@@ -2977,7 +3112,7 @@ function renderHome(){
    +'</div></div>';
   p.classList.remove("hide");
 }
-function closeHome(){const p=$("homesheet");p.classList.add("hide");p.innerHTML="";if(curTab===3)renderEvents();if(gearOpen&&gearView==="main")renderGear()}
+function closeHome(){const p=$("homesheet");p.classList.add("hide");p.innerHTML="";if(curTab===3)renderEvents();if(gearOpen&&(gearView==="main"||gearView==="nick"))renderGear()}
 async function homeFind(){const q=$("homeq")?$("homeq").value.trim():"";if(q.length<2){homeMsg="Wpisz nazwę miejscowości.";renderHome();return}
   homeMsg="Szukam…";homeRes=[];renderHome();const r=await geoSearch(q);
   homeRes=r||[];homeMsg=r===null?"Brak połączenia z OpenStreetMap — spróbuj za chwilę.":r.length?"Wybierz właściwe miejsce:":"Nic nie znaleziono — spróbuj inaczej (np. sama nazwa miejscowości).";renderHome()}
@@ -2999,9 +3134,10 @@ $("homesheet").addEventListener("click",async e=>{
   if(k==="find"){homeFind();return}
   if(k==="pick"){const x=homeRes[+b.dataset.i];if(!x)return;
     try{localStorage.setItem("home",JSON.stringify({name:x.name,lat:x.lat,lon:x.lon}));sessionStorage.removeItem("gpsOrigin")}catch(err){}
+    savePrivCity({name:x.name,lat:x.lat,lon:x.lon});
     evNearOn=true;try{localStorage.setItem("evNearOn","1")}catch(err){}
     closeHome();say("📍 Moja miejscowość: "+x.name);return}
-  if(k==="del"){try{localStorage.removeItem("home")}catch(err){}renderHome();return}
+  if(k==="del"){try{localStorage.removeItem("home")}catch(err){}savePrivCity(null);if(pe)pe.cvis=false;renderHome();return}
   if(k==="gps"){closeHome();useGps();return}
 });
 $("homesheet").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="homeq"){e.preventDefault();homeFind()}});
@@ -5544,7 +5680,9 @@ async function loadRemote(selectId){
   flags={};if(!ff.error)(ff.data||[]).forEach(f=>{flags[f.key]=f});flagsReady=true;
   if(session){
     const ok=r=>r.error?null:r.data;
-    let p=await sb.from("profiles").select("user_id,nick,gender,joined_at").limit(1000);
+    await loadMyPriv();   // 👤 KROK 50
+    let p=profExOk?await sb.from("profiles").select("user_id,nick,gender,joined_at,avatar_at,media").limit(1000):{error:1};
+    if(p.error){profExOk=false;p=await sb.from("profiles").select("user_id,nick,gender,joined_at").limit(1000)}
     if(p.error)p=await sb.from("profiles").select("user_id,nick,gender").limit(1000);
     genderOk=!p.error;
     if(p.error)p=await sb.from("profiles").select("user_id,nick").limit(1000);
@@ -5612,7 +5750,8 @@ async function loadRemote(selectId){
     const fq=await sb.from("feedback").select("id,user_id,kind,rating,body,device,status,started_by,user_unread,admin_unread,created_at,updated_at").order("updated_at",{ascending:false}).limit(300);fbOk=!fq.error;fbList=fbOk?fq.data||[]:[];
     fbDone={};if(fbOk){const fc=await sb.rpc("fb_done_counts");if(!fc.error)(fc.data||[]).forEach(x=>{fbDone[x.user_id]=+x.n||0})}
     const tl=await sb.from("telegram_links").select("tg_name,linked_at").eq("user_id",uid).limit(1);tgOk=!tl.error;tgLink=tgOk&&tl.data&&tl.data[0]||null;
-    nicks={};genders={};joinedAt={};(ok(p)||[]).forEach(x=>{nicks[x.user_id]=x.nick;if(x.gender)genders[x.user_id]=x.gender;if(x.joined_at)joinedAt[x.user_id]=x.joined_at});
+    nicks={};genders={};joinedAt={};avAt={};medias={};(ok(p)||[]).forEach(x=>{nicks[x.user_id]=x.nick;if(x.gender)genders[x.user_id]=x.gender;if(x.joined_at)joinedAt[x.user_id]=x.joined_at;if(x.avatar_at)avAt[x.user_id]=x.avatar_at;if(x.media)medias[x.user_id]=x.media});
+    if(profExOk)loadAvatars();
     me.nick=nicks[uid]||null;
     favOk=!fv.error;favs=new Set((ok(fv)||[]).map(x=>x.fav_id));
     nickColors={...DEF_COLORS};nickBgs={...DEF_BGS};
