@@ -517,6 +517,17 @@ button.onl.off{background:var(--fill);color:var(--mut)}
 .fclr{color:var(--bad);font-size:14px;margin-left:auto}.fcnt{margin-top:6px}
 .fltbox .bslist{padding-bottom:6px}.fsec{margin-top:4px}.fsec .bsq{margin:4px 0 6px}
 .fchips{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px}
+.pwrow{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;-webkit-overflow-scrolling:touch}.pwrow::-webkit-scrollbar{display:none}.pwrow .fch{flex:none}
+.pwsum{margin-top:10px;font-size:15px}
+.pwtab{display:flex;gap:6px;overflow-x:auto;margin-top:8px;padding-bottom:2px;scrollbar-width:none}.pwtab::-webkit-scrollbar{display:none}
+.pwh{flex:none;min-width:54px;display:flex;flex-direction:column;align-items:center;gap:3px;background:var(--fill);border-radius:12px;padding:8px 4px;font-size:13px}
+.pwh .pwt{color:var(--mut);font-size:12px}.pwh .pwi{font-size:20px;line-height:1}.pwh b{font-size:15px}
+.pwh .pww{display:flex;align-items:center;gap:2px;color:var(--mut)}.pwh .pww i{display:inline-block;font-style:normal;font-weight:700;color:var(--acc)}
+.pwh .pwr{color:var(--mut);min-height:15px}.pwh .pwr.hi{color:#0a84ff;font-weight:700}
+.pwleg{font-size:11.5px;margin-top:4px}
+.pwrev{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-top:8px;padding:10px 12px;border-radius:10px;background:rgba(10,132,255,.1);font-size:14.5px}.pwrev .b{flex:none}
+.pwwarn{margin-top:8px;padding:10px 12px;border-radius:10px;background:rgba(255,159,10,.14);font-size:14.5px;display:flex;flex-direction:column;gap:4px}
+.pwbring{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.pwbring span{background:var(--fill);border-radius:999px;padding:5px 11px;font-size:14px}
 .fch{border:0;background:var(--fill);color:var(--ink);border-radius:999px;padding:8px 13px;font:inherit;font-size:15px;font-weight:600;cursor:pointer}
 .fch.on{background:var(--accbtn);color:#fff}.fdate{display:inline-flex;align-items:center;gap:4px;padding:4px 10px}.fdate input{border:0;background:none;color:inherit;font:inherit;font-size:14px;padding:2px;width:auto;min-height:0}
 .wpc.wbk{background:#efe7d6;color:#7a5a1e}html[data-theme=dark] .wpc.wbk{background:#3d3220;color:#e8c98a}
@@ -1102,21 +1113,23 @@ function analyze(pts,wf,ws,bs,reversible){
     const r=ws?h/ws:0;
     segs.push({col:r>0.35?"head":r<-0.35?"tail":"side"});
   }
-  return {segs,total:sum,gain,tsec,headPct:sum?Math.round(head/sum*100):0,ws,tip:tipText(ws,h1,h2,sum,reversible)};
+  return {segs,total:sum,gain,tsec,headPct:sum?Math.round(head/sum*100):0,ws,back:ws>=5&&h2>h1+ws*sum*0.15,tip:tipText(ws,h1,h2,sum,reversible)};
 }
 function statsHtml(an){
   const m=Math.round(an.tsec/60);
   return [["Dystans",an.total.toFixed(1)+" km"],["Przewyższenie",Math.round(an.gain)+" m"],["Czas (szac.)",Math.floor(m/60)+" h "+pad(m%60)+" min"],["Pod wiatr",an.ws>0?an.headPct+"% trasy":"—"]].map(([a,b])=>'<div class="st"><b>'+b+'</b><span>'+a+'</span></div>').join("");
 }
 const windCache={};
-async function getWind(lat,lon,when){
+async function getWxJ(lat,lon){
   const key=lat.toFixed(2)+","+lon.toFixed(2);
   if(!windCache[key]||Date.now()-windCache[key].t>6e5){
-    const u="https://api.open-meteo.com/v1/forecast?latitude="+lat.toFixed(3)+"&longitude="+lon.toFixed(3)+"&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_2m,precipitation_probability&wind_speed_unit=kmh&timezone=auto&past_days=30&forecast_days=16";
+    const u="https://api.open-meteo.com/v1/forecast?latitude="+lat.toFixed(3)+"&longitude="+lon.toFixed(3)+"&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_2m,apparent_temperature,precipitation_probability,precipitation,weather_code&daily=sunrise,sunset&wind_speed_unit=kmh&timezone=auto&past_days=30&forecast_days=16";
     windCache[key]={t:Date.now(),p:fetch(u).then(r=>{if(!r.ok)throw new Error("http "+r.status);return r.json()})};
   }
-  let J;
-  try{J=await windCache[key].p}catch(e){delete windCache[key];throw e}
+  try{return await windCache[key].p}catch(e){delete windCache[key];throw e}
+}
+async function getWind(lat,lon,when){
+  const J=await getWxJ(lat,lon);
   const H=J.hourly,off=(J.utc_offset_seconds||0)*1000;
   const k=new Date(when.getTime()+off+30*60000).toISOString().slice(0,13)+":00";
   const i=H.time.indexOf(k);
@@ -1285,7 +1298,7 @@ const uiIcon=k=>'<svg class="ui-i" viewBox="0 0 24 24" fill="none" stroke="curre
 const UI_MAP=[["🔑","key"],["⚙️","gear"],["⚙","gear"],["🔔","bell"],["🔕","belloff"],["❓","help"],["✏️","pencil"],["⭐","starf"],["☆","star"],["💬","msg"],["🛡️","shield"],["🛡","shield"],["📣","mega"],["☀️","sun"],["🌙","moon"],["👤","user"],["🕖","clock"],["🌡","therm"],["🌬","wind"],["🌧","rain"],["📩","mail"],["✉️","mail"],["🌍","globe"],["🔒","lock"],["🙋","hand"],["🚴","bike"],["🚲","bike"],["👥","users"],["🐞","bug"],["💡","bulb"],["🗺️","map"],["🗺","map"],["🧪","flask"],["⏳","hourglass"],["👀","eye"],["📅","cal"],["🗓","cal"],["📊","chart"],["🎨","palette"],["👩","venus"],["👨","mars"],["📍","pin"],["📌","pushpin"],["🏁","flag"],["🪨","gravel"],["🛣️","road"],["🛣","road"],["⛰️","mtb"],["⛰","mtb"],["🏃","run"],["🚶","walk"],["🏊","swim"],["🏅","medal"],["📝","clip"],["❤️","heart"],["❤","heart"],["⧉","copy"],["🌐","globe"],["🗄️","archive"],["🗄","archive"],["🌳","tree"],["🌅","sunrise"],["☕","coffee"],["🛞","wheel"],["💨","windy"],["🏙️","city"],["🏙","city"],["📏","ruler"],["⏱","timer"],["⏰","alarm"],["🙅","xcircle"],["✅","check"],["⚠️","alert"],["🗑️","trash"],["👋","logout"],["📲","phone"],["🆕","sparkles"],["✨","sparkles"],["📈","trend"],["➕","plus"],["🚦","sliders"],["🧹","trash"]];
 const UI_RE=new RegExp("("+UI_MAP.map(([e])=>e.replace(/[\u{FE0F}]/gu,"")).sort((a,b)=>b.length-a.length).map(e=>e.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")\uFE0F?","gu");
 const UI_K=Object.fromEntries(UI_MAP.map(([e,k])=>[e.replace(/\uFE0F/g,""),k]));
-const UI_SKIP=".wpc,.wpace .e,.nk,.stars,.fbst,.ttag,.beta,#toast,.fbcnt,.cdbadge,.ui-i";
+const UI_SKIP=".wpc,.wpace .e,.nk,.stars,.fbst,.ttag,.beta,#toast,.fbcnt,.cdbadge,.ui-i,.pwi,.pwbring";
 function uiText(n){
   const el=n.parentElement;if(!el||/^(SCRIPT|STYLE|TEXTAREA|OPTION|TITLE)$/.test(el.tagName)||el.closest(UI_SKIP))return;
   const t=n.nodeValue;UI_RE.lastIndex=0;if(!UI_RE.test(t))return;UI_RE.lastIndex=0;
@@ -3091,7 +3104,8 @@ async function saveEvent(){
    trasa trafia do bazy tylko przełącznikiem „📚 Dodaj do bazy tras” (decyduje zapraszający) albo przyciskiem
    „📚 Do bazy tras” na karcie; baza w ⚙️ (nie na głównym ekranie) i „📚 Wybierz z bazy tras” w formularzu */
 let rbOk=false,rbList=null,rbStats={},rbAt=0,rbMap=null,rbTok=0;
-const rb={mode:"browse",sort:"uses",bike:"",q:"",open:null},rbRouteCache={};
+const rb={mode:"browse",sort:"uses",bike:"",q:"",open:null,pw:null,rev:false},rbRouteCache={};
+let rbPts=null;
 const RB_SORTS=[["uses","🔁 Najczęściej"],["best","★ Najlepsze"],["scenic","🌅 Malownicze"],["hard","🪨 Najtrudniejsze"],["easy","🌿 Najłatwiejsze"],["quiet","🚗 Najmniej aut"],["long","📏 Najdłuższe"],["short","📏 Najkrótsze"],["near","📍 Najbliżej"],["new","🆕 Najnowsze"]];
 // rankingi z ocen (etap 2): wartość dla sortowania; brak ocen — na końcu
 const RB_MET={best:[x=>(rbStats[x.id]||{}).rating,-1],scenic:[x=>(rbStats[x.id]||{}).scenic,-1],hard:[x=>(rbStats[x.id]||{}).difficulty,-1],easy:[x=>(rbStats[x.id]||{}).difficulty,1],quiet:[x=>(rbStats[x.id]||{}).traffic,1]};
@@ -3170,7 +3184,8 @@ async function renderRbDetail(){
   p.innerHTML='<div class="bsbox rbbox" role="dialog" aria-modal="true" aria-label="Trasa"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-rb="back">‹ Trasy</button><b class="rbtitle">'+esc(x.name)+'</b><span style="min-width:64px"></span></div><div class="bslist">'
    +'<div class="mapwrap"><div class="map rsmap" id="map4"></div><div class="warrow hide" id="warrow4"></div></div>'
    +'<div class="legend"><span><i class="dot" style="background:#d64545"></i>pod wiatr</span><span><i class="dot" style="background:#e0b83a"></i>bocznie</span><span><i class="dot" style="background:#2a9d5c"></i>z wiatrem</span></div>'
-   +'<div class="stats" id="stats4"></div><div class="note" id="windinfo4" style="margin-top:8px">Ładuję trasę…</div><div class="tip hide" id="tip4"></div>'
+   +'<div class="stats" id="stats4"></div><div class="note" id="windinfo4" style="margin-top:8px">Ładuję trasę…</div>'
+   +'<div class="pwbox"><div class="bsgrp" style="margin-top:14px">🌦 Przed jazdą</div><div id="pwsel">'+pwSelHtml()+'</div><div id="pw4"></div></div>'
    +'<div class="rbinfo">'+[(x.start_city||k!=null)?'📍 start: '+(x.start_city?esc(x.start_city):'—')+(k!=null?' · '+nearKm(k)+' km od Ciebie':''):'',x.bike&&BIKES[x.bike]?BIKES[x.bike]:'',
       '🔁 wybrana '+(u.uses||0)+'×'+(u.planned?' · zaplanowana '+u.planned+'×':'')+(u.last?' · ostatnio '+esc(dd(u.last)):''),
       '👤 '+(x.created_by&&nicks[x.created_by]?esc(nicks[x.created_by]):'—')+' · dodana '+esc(dd(x.created_at))].filter(Boolean).map(t=>'<div>'+t+'</div>').join("")+'</div>'
@@ -3179,24 +3194,95 @@ async function renderRbDetail(){
    +'<button type="button" class="b big" style="margin-top:12px;width:100%" data-rb="'+(rb.mode==="pick"?'pick':'invite')+'">'+(rb.mode==="pick"?'✅ Wybierz tę trasę':'🚲 Zaproś na tę trasę')+'</button>'
    +'<div class="pbtns" style="margin-top:8px"><button type="button" class="b g" data-rb="gpx">⬇ GPX</button>'+(can?'<button type="button" class="b g" data-rb="rename">✏️ Nazwa</button><button type="button" class="b g" data-rb="hide">'+(x.hidden?'👁 Pokaż':'🙈 Ukryj')+'</button>':'')+'</div>'
    +(can?'<button type="button" class="lnk rbdel" data-rb="del">Usuń z bazy tras</button>':'')
-   +'<div class="ptg">Wiatr i czas na najbliższą pełną godzinę, tempo ok. 20 km/h. Mapa © OpenStreetMap · pogoda: Open-Meteo.</div></div></div>';
+   +'<div class="ptg">Czas jazdy przy tempie ok. 20 km/h, z wiatrem. Pogoda dla punktu startu. Mapa © OpenStreetMap · pogoda: Open-Meteo.</div></div></div>';
   p.classList.remove("hide");
   if(!(x.id in rbReviews))rbLoadReviews(x.id).then(()=>{if(tok===rbTok&&rb.open===x.id&&!rb.rate){const el=$("rbrev");if(el)el.innerHTML=rbRevHtml(x)}});
   let pts;try{pts=await rbRoute(x.id)}catch(e){pts=null}
   if(tok!==rbTok)return;
   if(!pts){$("windinfo4").textContent="Nie udało się wczytać trasy.";return}
-  let an=analyze(pts,0,0,20,false);$("stats4").innerHTML=statsHtml(an);
+  rbPts=pts;
+  const an=analyze(rb.rev?pts.slice().reverse():pts,0,0,20,false);$("stats4").innerHTML=statsHtml(an);
   rbMap=makeMap("map4");
-  if(rbMap)setTimeout(()=>{if(rbMap&&tok===rbTok){rbMap.m.invalidateSize();drawRoute(rbMap,pts,null,true)}},60);
-  else $("map4").outerHTML='<div class="note">Nie udało się załadować mapy (sprawdź internet).</div>';
-  const when=new Date();when.setMinutes(0,0,0);when.setHours(when.getHours()+1);
-  $("windinfo4").textContent="Sprawdzam prognozę wiatru…";
-  try{const wd=await getWind(pts[0].lat,pts[0].lon,when);if(tok!==rbTok)return;
-    an=analyze(pts,wd.dir,wd.speed,20,false);$("stats4").innerHTML=statsHtml(an);
-    if(rbMap){drawRoute(rbMap,pts,an.segs,false);setArrow("warrow4",wd.dir,wd.speed)}
-    $("tip4").textContent=an.tip;$("tip4").classList.remove("hide");
-    $("windinfo4").textContent="Wiatr o "+wd.time+": "+windLabel(wd.dir)+", "+Math.round(wd.speed)+" km/h"+(wd.temp!=null?" · "+Math.round(wd.temp)+"°C":"")+(wd.rain!=null?" · deszcz "+Math.round(wd.rain)+"%":"");
-  }catch(e){if(tok===rbTok)$("windinfo4").textContent="Nie udało się pobrać prognozy wiatru."}
+  if(rbMap)setTimeout(()=>{if(rbMap&&tok===rbTok){rbMap.m.invalidateSize();drawRoute(rbMap,rb.rev?pts.slice().reverse():pts,null,true);pwUpdate()}},60);
+  else{$("map4").outerHTML='<div class="note">Nie udało się załadować mapy (sprawdź internet).</div>';pwUpdate()}
+}
+/* ---------- 🌦 Przed jazdą (baza tras, etap 3): dzień i godzina → pogoda w czasie jazdy, wiatr, kierunek, co zabrać ---------- */
+const WMO=c=>c==null?"":c===0?"☀️":c<=2?"🌤":c===3?"☁️":c<=48?"🌫":c<=57?"🌦":c<=67?"🌧":c<=77?"🌨":c<=82?"🌧":c<=86?"🌨":"⛈";
+const WMO_T=c=>c==null?"":c===0?"bezchmurnie":c<=2?"małe zachmurzenie":c===3?"pochmurno":c<=48?"mgła":c<=57?"mżawka":c<=67?"deszcz":c<=77?"śnieg":c<=82?"przelotny deszcz":c<=86?"przelotny śnieg":"burza";
+function pwDefault(){const d=new Date();let h=d.getHours()+1;if(h>21)return {day:1,h:17};return {day:0,h:Math.max(h,6)}}
+function pwWhen(){const v=rb.pw||(rb.pw=pwDefault()),d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()+v.day);d.setHours(v.h,0,0,0);return d}
+function pwSelHtml(){
+  const v=rb.pw||(rb.pw=pwDefault()),now=new Date(),dn=["nd","pn","wt","śr","cz","pt","sb"];
+  let days='';for(let i=0;i<7;i++){const d=new Date(now);d.setDate(d.getDate()+i);
+    days+='<button type="button" class="fch'+(v.day===i?' on':'')+'" data-rbpd="'+i+'">'+(i===0?'Dziś':i===1?'Jutro':dn[d.getDay()]+' '+d.getDate())+'</button>'}
+  let hrs='';for(let h=5;h<=22;h++){const past=v.day===0&&h<=now.getHours()-1;
+    if(!past)hrs+='<button type="button" class="fch'+(v.h===h?' on':'')+'" data-rbph="'+h+'">'+h+':00</button>'}
+  return '<div class="fchips pwrow">'+days+'</div><div class="fchips pwrow" id="pwhrs">'+hrs+'</div>';
+}
+function pwBring(o){
+  const L=[],t=o.tmin,dark=o.dark;
+  if(t<=3)L.push("🧤 zimowe rękawiczki","🧢 czapka pod kask","🧦 ocieplacze na buty","🧣 komin na szyję","☕ termos z ciepłą herbatą");
+  else if(t<=8)L.push("🧤 długie rękawiczki","🧥 ciepła kurtka / wiatrówka","👖 długie spodnie albo nogawki","☕ bidon z ciepłym napojem");
+  else if(t<=14)L.push("🧥 wiatrówka albo kamizelka","💪 rękawki i nogawki (zdejmiesz po drodze)");
+  else if(t>=27)L.push("💧 dwa bidony","🧴 krem z filtrem","🧢 coś na głowę");
+  if(o.rain>=40||o.mm>=0.3)L.push("🌂 kurtka przeciwdeszczowa","🛡 błotniki");
+  if(o.wind>=25&&t>8)L.push("🧥 wiatrówka — mocno wieje");
+  if(dark)L.push("💡 lampki przód i tył","🦺 odblaski albo kamizelka odblaskowa");
+  if(!dark&&(o.sunny||new Date(o.when).getMonth()>=9||new Date(o.when).getMonth()<=2))L.push("🕶 okulary"+(o.sunny?" przeciwsłoneczne":" (nisko słońce, liście, błoto)"));
+  else if(dark)L.push("🕶 okulary z jasnymi szkłami");
+  if(o.hours>=1.5&&t>3&&t<27)L.push("💧 bidon");
+  if(o.hours>=2.5)L.push("🍫 batony albo coś do jedzenia");
+  L.push("🔧 dętka, łyżki i pompka","📱 naładowany telefon");
+  return [...new Set(L)];
+}
+async function pwUpdate(){
+  const tok=rbTok,el=$("pw4"),pts0=rbPts;if(!el||!pts0)return;
+  const pts=rb.rev?pts0.slice().reverse():pts0,when=pwWhen();
+  el.innerHTML='<div class="note">Sprawdzam prognozę…</div>';
+  let J;try{J=await getWxJ(pts[0].lat,pts[0].lon)}catch(e){if(tok===rbTok)el.innerHTML='<div class="note">Nie udało się pobrać prognozy (sprawdź internet).</div>';return}
+  if(tok!==rbTok)return;
+  const H=J.hourly,off=(J.utc_offset_seconds||0)*1000,key=t=>new Date(t.getTime()+off).toISOString().slice(0,13)+":00";
+  const i0=H.time.indexOf(key(when));
+  if(i0<0){el.innerHTML='<div class="note">Prognoza jest dostępna do 16 dni naprzód.</div>';$("windinfo4").textContent="";return}
+  // czas jazdy: najpierw bez wiatru, potem z wiatrem ze środka jazdy
+  let an=analyze(pts,H.wind_direction_10m[i0],H.wind_speed_10m[i0],20,true);
+  const im=Math.min(H.time.length-1,i0+Math.floor(an.tsec/3600/2));
+  an=analyze(pts,H.wind_direction_10m[im],H.wind_speed_10m[im],20,true);
+  const anR=analyze(pts.slice().reverse(),H.wind_direction_10m[im],H.wind_speed_10m[im],20,true);
+  const end=new Date(when.getTime()+an.tsec*1000),i1=Math.min(H.time.length-1,i0+Math.ceil(an.tsec/3600));
+  const rows=[];for(let i=i0;i<=i1&&rows.length<9;i++)rows.push(i);
+  const pick=(a,f)=>rows.map(i=>a&&a[i]).filter(v=>v!=null).reduce(f);
+  const tmin=pick(H.apparent_temperature||H.temperature_2m,(a,b)=>Math.min(a,b)),tmax=pick(H.temperature_2m,(a,b)=>Math.max(a,b));
+  const rain=H.precipitation_probability?pick(H.precipitation_probability,(a,b)=>Math.max(a,b)):0,mm=H.precipitation?pick(H.precipitation,(a,b)=>a+b):0;
+  const wind=pick(H.wind_speed_10m,(a,b)=>Math.max(a,b)),gust=H.wind_gusts_10m?pick(H.wind_gusts_10m,(a,b)=>Math.max(a,b)):0;
+  const dk=key(when).slice(0,10),di=J.daily&&J.daily.time?J.daily.time.indexOf(dk):-1;
+  const sunset=di>=0?J.daily.sunset[di]:null,sunrise=di>=0?J.daily.sunrise[di]:null,endL=new Date(end.getTime()+off).toISOString().slice(0,16),stL=key(when).slice(0,16);
+  const dark=(sunset&&endL>sunset)||(sunrise&&stL<sunrise);
+  const sunny=rows.some(i=>H.weather_code&&H.weather_code[i]!=null&&H.weather_code[i]<=1);
+  // mapa, strzałka, statystyki
+  if(rbMap){drawRoute(rbMap,pts,an.segs,false);setArrow("warrow4",H.wind_direction_10m[im],H.wind_speed_10m[im])}
+  $("stats4").innerHTML=statsHtml(an);
+  $("windinfo4").textContent="Wiatr w połowie jazdy ("+H.time[im].slice(11,16)+"): "+windLabel(H.wind_direction_10m[im])+", "+Math.round(H.wind_speed_10m[im])+" km/h";
+  const save=Math.round((an.tsec-anR.tsec)/60);
+  const revTip=(an.back&&!anR.back)||save>=Math.max(3,an.tsec/60*0.04)?'<div class="pwrev"><span>↺ <b>Jedź w drugą stronę</b> — '+(an.back&&!anR.back?'wiatr pod koniec będzie w plecy, a nie w twarz':'wiatr pomoże tam, gdzie teraz przeszkadza')+(save>=3?' (szybciej o ok. '+save+' min)':'')+'.</span><button type="button" class="b g small" data-rb="rev">Odwróć</button></div>'
+    :rb.rev?'<div class="pwrev"><span>↺ Pokazuję trasę <b>w drugą stronę</b>.</span><button type="button" class="b g small" data-rb="rev">Przywróć</button></div>':'';
+  const hh=t=>t?t.slice(11,16):"",dt=d=>pad(d.getHours())+":"+pad(d.getMinutes());
+  const warn=[gust>=50?'💨 Porywy do '+Math.round(gust)+' km/h — uważaj na otwartych odcinkach i przy ciężarówkach.':'',
+    rain>=60||mm>=1?'🌧 Spory deszcz w czasie jazdy (do '+Math.round(rain)+'%'+(mm>=0.1?', ok. '+fmt1(mm)+' mm':'')+').':'',
+    tmin<=0?'🧊 Odczuwalnie '+Math.round(tmin)+'°C — możliwa gołoledź, zwłaszcza na mostach i w cieniu.':'',
+    tmax>=30?'🔥 Upał '+Math.round(tmax)+'°C — pij co 15–20 min, unikaj południa.':'',
+    dark?'🌙 '+(sunset&&endL>sunset?'Zachód słońca o '+hh(sunset)+' — wrócisz po zmroku.':'Wschód słońca o '+hh(sunrise)+' — ruszysz po ciemku.'):''].filter(Boolean);
+  el.innerHTML='<div class="pwsum"><b>'+esc(dt(when))+'–'+esc(dt(end))+'</b> · ok. '+Math.floor(an.tsec/3600)+' h '+pad(Math.round(an.tsec/60)%60)+' min'
+     +(sunset?' · 🌇 zachód '+esc(hh(sunset)):'')+'</div>'
+   +'<div class="pwtab">'+rows.map(i=>{const c=H.weather_code?H.weather_code[i]:null;
+      return '<div class="pwh"><span class="pwt">'+esc(H.time[i].slice(11,16))+'</span><span class="pwi" title="'+esc(WMO_T(c))+'">'+WMO(c)+'</span><b>'+Math.round(H.temperature_2m[i])+'°</b>'
+       +'<span class="pww"><i style="transform:rotate('+((H.wind_direction_10m[i]+180)%360)+'deg)">↑</i>'+Math.round(H.wind_speed_10m[i])+'</span>'
+       +'<span class="pwr'+(H.precipitation_probability&&H.precipitation_probability[i]>=40?' hi':'')+'">'+(H.precipitation_probability?Math.round(H.precipitation_probability[i])+'%':'')+'</span></div>'}).join("")+'</div>'
+   +'<div class="note pwleg">godzina · pogoda · temp. · wiatr km/h (strzałka = dokąd wieje) · szansa deszczu</div>'
+   +'<div class="tip">'+esc(an.tip.replace(" Rozważ „Odwróć kierunek”, żeby wiatr pomagał na końcu.",""))+'</div>'+revTip
+   +(warn.length?'<div class="pwwarn">'+warn.map(t=>'<div>'+esc(t)+'</div>').join("")+'</div>':'')
+   +'<div class="bsgrp" style="margin-top:12px">🎒 Co zabrać</div><div class="pwbring">'+pwBring({tmin,rain,mm,wind,dark,sunny,when,hours:an.tsec/3600}).map(t=>'<span>'+esc(t)+'</span>').join("")+'</div>'
+   +'<div class="note" style="margin-top:4px">Odczuwalnie '+Math.round(tmin)+'°C'+(Math.round(tmax)!==Math.round(tmin)?' – '+Math.round(tmax)+'°C':'')+' · wiatr do '+Math.round(wind)+' km/h'+(gust?' (porywy '+Math.round(gust)+')':'')+'</div>';
 }
 /* ---------- ⭐ oceny tras (etap 2, KROK 48) ---------- */
 const RT_TAGS=[["forest","🌳 dużo lasu"],["view","🌅 widoki"],["coffee","☕ dobra kawa"],["shade","🌲 cień"],["mud","💧 błoto"],["sand","🏖 piach"],["potholes","🛣 dziurawy asfalt"],["dogs","🐕 psy"],["detour","🚧 objazd"]];
@@ -3307,7 +3393,10 @@ $("rbsheet").addEventListener("input",e=>{if(e.target.id==="rbq"){rb.q=e.target.
 $("rbsheet").addEventListener("click",async e=>{
   const p=$("rbsheet");if(e.target===p){closeRb();return}
   const rvb=e.target.closest("[data-rv]");if(rvb&&rb.rv){rvClick(rb.rv,rvb);const sc=p.querySelector(".bslist"),t=sc?sc.scrollTop:0;renderRbRate();const s2=p.querySelector(".bslist");if(s2)s2.scrollTop=t;return}
-  const o=e.target.closest("[data-rbo]");if(o){rb.open=o.dataset.rbo;renderRb();return}
+  const o=e.target.closest("[data-rbo]");if(o){rb.open=o.dataset.rbo;rb.rev=false;rb.pw=null;renderRb();return}
+  const pd=e.target.closest("[data-rbpd]"),ph=e.target.closest("[data-rbph]");
+  if(pd||ph){const v=rb.pw||(rb.pw=pwDefault());if(pd){v.day=+pd.dataset.rbpd;if(v.day===0&&v.h<=new Date().getHours()-1)v.h=Math.min(22,new Date().getHours()+1)}else v.h=+ph.dataset.rbph;
+    const hs=$("pwhrs"),sl=hs?hs.scrollLeft:0;$("pwsel").innerHTML=pwSelHtml();const h2=$("pwhrs");if(h2){h2.scrollLeft=sl;if(pd){const on=h2.querySelector(".on");if(on)on.scrollIntoView({block:"nearest",inline:"center"})}}pwUpdate();return}
   const so=e.target.closest("[data-rbs]");if(so){rb.sort=so.dataset.rbs;renderRb();return}
   const bk=e.target.closest("[data-rbb]");if(bk){rb.bike=bk.dataset.rbb;renderRb();return}
   const b=e.target.closest("[data-rb]");if(!b)return;const k=b.dataset.rb;
@@ -3323,7 +3412,9 @@ $("rbsheet").addEventListener("click",async e=>{
     const r=await sb.from("route_reviews").delete().eq("route_id",rb.open).eq("user_id",u).select("user_id");if(r.error||!r.data||!r.data.length){say("Nie udało się usunąć.");return}
     await Promise.all([rbLoad(true),rbLoadReviews(rb.open)]);renderRb();say("Usunięto ocenę.");return}
   const x=(rbList||[]).find(y=>y.id===rb.open);if(!x)return;
+  if(k==="rev"){rb.rev=!rb.rev;if(rbMap&&rbPts)drawRoute(rbMap,rb.rev?rbPts.slice().reverse():rbPts,null,false);pwUpdate();return}
   if(k==="pick"||k==="invite"){let pts;try{pts=await rbRoute(x.id)}catch(err){pts=null}if(!pts){say("Nie udało się wczytać trasy.");return}
+    if(rb.rev)pts=pts.slice().reverse();
     closeRb();if(k==="invite"){show(0);openWantForm(null)}rbApplyToForm(x,pts);say("📚 Trasa z bazy: "+x.name);return}
   if(k==="gpx"){let pts;try{pts=await rbRoute(x.id)}catch(err){pts=null}if(!pts){say("Nie udało się wczytać trasy.");return}
     const nm=slug(x.name)+".gpx";say(saveFile(makeGpx(pts,x.name),nm,"application/gpx+xml")?"Pobrano: "+nm:"Nie udało się pobrać pliku.");return}
