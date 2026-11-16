@@ -202,6 +202,9 @@ details.wday .want{margin:0 10px 10px}
 .wsubc{font-size:14px;color:var(--mut);margin:4px 0 0;line-height:1.35}.wsubc a{color:var(--acc);font-weight:600;text-decoration:none;border-bottom:1px solid currentColor}
 .rbwrap{position:relative;width:164px;margin:14px auto 4px}.rbwrap .roundbtn{margin:0}
 .rbadge{position:absolute;top:6px;right:-14px;background:#fff;color:#248a3d;border-radius:999px;font-size:13px;font-weight:800;padding:3px 9px;box-shadow:0 2px 6px rgba(0,0,0,.2);white-space:nowrap}
+.wbike{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.wbk{display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 2px 8px;border-radius:12px;border:1.5px solid transparent;background:var(--fill);color:var(--ink);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.wbk .ui-i{width:22px;height:22px;color:var(--mut)}.wbk.on{background:var(--acc2);border-color:var(--acc);color:var(--acc)}.wbk.on .ui-i{color:var(--acc)}
 .wlbl{font-size:13px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin:16px 0 8px}
 #wdays button{padding:10px 4px;font-size:15px}
 .fclock{display:flex;justify-content:center;align-items:center;gap:10px;margin:14px 0 4px}
@@ -876,10 +879,10 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
      <div class="row" id="wrinfo" style="margin-top:6px;gap:10px"></div>
      <div id="wrbase" class="wrbase hide"><button type="button" class="lnk" id="wrbasebtn">📚 Wybierz z bazy tras ›</button></div>
      <div id="wrbadd" class="wrbadd hide"></div></div>
-    <div id="wpacewrap" class="hide"><div class="wlbl">Tempo</div><select id="wpacesel"><option value="">— tempo dowolne —</option><option value="senior">🐢 Senior Adventure · 15–18 km/h</option><option value="tour">🚴 Turystycznie · 18–24 km/h</option><option value="speed">⚡ SPEEDAY · 26+ km/h</option><option value="*">✏️ Inne…</option></select><input id="wpaceown" class="hide" maxlength="30" placeholder="np. 20–22 km/h, bez pośpiechu"></div>
-    <div id="wbikewrap" class="hide"><div class="wlbl">Rower / teren</div><select id="wbikesel"><option value="">🚲 Dla wszystkich rowerów</option><option value="road">🛣 Szosa</option><option value="gravel">🪨 Gravel</option><option value="mtb">⛰ MTB</option><option value="trekking">🌳 Trekking</option></select></div>
-    <div id="wdistwrap" class="hide"><div class="wlbl">Dystans</div><select id="wkmsel"><option value="">— nie wiem —</option><option value="20">20 km</option><option value="30">30 km</option><option value="50">50 km</option><option value="80">80 km</option><option value="100">100 km</option><option value="*">✏️ Inny…</option></select><input id="wkmown" class="hide" inputmode="decimal" maxlength="5" placeholder="ile km, np. 42"></div>
-    <div id="wdurwrap" class="hide"><div class="wlbl">Na ile jedziesz?</div><select id="wdursel"><option value="60">1 h</option><option value="90">1,5 h</option><option value="120">2 h</option><option value="150">2,5 h</option><option value="180">3 h</option><option value="240">4 h</option><option value="300">5 h</option><option value="360">6 h</option><option value="*">✏️ Inny…</option></select><input id="wdurown" class="hide" inputmode="decimal" maxlength="4" placeholder="ile godzin, np. 3,5"></div>
+    <div id="wpacewrap" class="hide"><div class="wlbl">Tempo</div><select id="wpacesel"><option value="">— tempo dowolne —</option><option value="senior">Senior Adventure · 15–18 km/h</option><option value="tour">Turystycznie · 18–24 km/h</option><option value="speed">SPEEDAY · 26+ km/h</option><option value="*">Inne… (wpisz)</option></select><input id="wpaceown" class="hide" maxlength="30" placeholder="np. 20–22 km/h, bez pośpiechu"></div>
+    <div id="wbikewrap" class="hide"><div class="wlbl">Rower / teren</div><div class="wbike" id="wbikesel"></div></div>
+    <div id="wdistwrap" class="hide"><div class="wlbl">Dystans</div><select id="wkmsel"><option value="">— nie wiem —</option><option value="20">20 km</option><option value="30">30 km</option><option value="50">50 km</option><option value="80">80 km</option><option value="100">100 km</option><option value="*">Inny… (wpisz)</option></select><input id="wkmown" class="hide" inputmode="decimal" maxlength="5" placeholder="ile km, np. 42"></div>
+    <div id="wdurwrap" class="hide"><div class="wlbl">Na ile jedziesz?</div><select id="wdursel"><option value="60">1 h</option><option value="90">1,5 h</option><option value="120">2 h</option><option value="150">2,5 h</option><option value="180">3 h</option><option value="240">4 h</option><option value="300">5 h</option><option value="360">6 h</option><option value="*">Inny… (wpisz)</option></select><input id="wdurown" class="hide" inputmode="decimal" maxlength="4" placeholder="ile godzin, np. 3,5"></div>
     <div id="wplacewrap" class="hide"><div class="wlbl">📍 Punkt zbiórki</div><select id="wplacesel"></select>
       <div id="wplaceown" class="hide"><input id="wplacename" maxlength="40" placeholder="Nazwa miejsca, np. Pod ratuszem">
         <label class="wpladd"><span>Dodaj do listy miejsc — zobaczą ją inni</span><button type="button" class="ios-sw" id="wpladd" role="switch" aria-checked="false"></button></label></div>
@@ -887,7 +890,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
     <div id="wtestwrap" class="hide"><div class="wlbl">Rodzaj zaproszenia</div><div class="seg" id="wtest"><button type="button" data-test="1" class="on">🧪 Testowe</button><button type="button" data-test="0">🚴 Prawdziwe</button></div><div class="note" id="wtestnote" style="margin-top:6px"></div></div>
     <div id="wwhowrap" class="hide"><div class="wlbl">Kto zobaczy zaproszenie?</div><button type="button" class="who" id="wwho"></button></div>
     <div class="wlbl">Notatka</div>
-    <select id="wnotesel"><option value="">— bez notatki —</option><option>W słusznej sprawie</option><option>Kebab RIDE</option><option>Na lody i pizza</option><option>SPEEDAY</option><option>Coffee Ride ☕</option><option>Na godzinkę +/- :)</option><option>Trochę po mieście</option><option>Może do lasu</option><option>Nad rzekę</option><option>Nocna Wataha</option><option value="*">✏️ Własna…</option></select>
+    <select id="wnotesel"><option value="">— bez notatki —</option><option>W słusznej sprawie</option><option>Kebab RIDE</option><option>Na lody i pizza</option><option>SPEEDAY</option><option value="Coffee Ride ☕">Coffee Ride</option><option>Na godzinkę +/- :)</option><option>Trochę po mieście</option><option>Może do lasu</option><option>Nad rzekę</option><option>Nocna Wataha</option><option value="*">Własna… (wpisz)</option></select>
     <input id="wnote" class="hide" maxlength="200" placeholder="Napisz własną notatkę">
   </div>
   <div class="wffoot">
@@ -3462,7 +3465,7 @@ function renderRbRate(){
 }
 function rbApplyToForm(x,pts){
   wf.route=pts;wf.routeName=x.name;wf.rbId=x.id;wf.routeTouched=true;$("wrfile").value="";
-  if(!wf.bike&&x.bike&&bikeOk){wf.bike=x.bike;$("wbikesel").value=x.bike}
+  if(!wf.bike&&x.bike&&bikeOk){wf.bike=x.bike;wbikeRender()}
   wfRouteSync();try{wfUpdate()}catch(e){}
 }
 // dodanie trasy do bazy; ta sama trasa (start i meta ≤ 300 m, długość ±3%, ślad średnio ≤ 250 m) — łączy z istniejącą
@@ -4029,7 +4032,7 @@ function wfStep(unit,dir){
 }
 function wfTestSync(){try{wfRbSync()}catch(e){}
   [...$("wtest").children].forEach(b=>b.classList.toggle("on",(b.dataset.test==="1")===wf.test));
-  $("wtestnote").textContent=wf.test?"🧪 Na próbę — będzie przygaszone, z czerwoną migającą plakietką TEST; na kanale Telegram z oznaczeniem 🔴 TESTOWE. Testowe zostaną kiedyś usunięte.":"🚴 Prawdziwa jazda — zaproszenie zobaczą wszyscy bez plakietki TEST.";
+  $("wtestnote").textContent=wf.test?"🧪 Na próbę — będzie przygaszone, z czerwoną migającą plakietką TEST; na kanale Telegram z oznaczeniem „TESTOWE”. Testowe zostaną kiedyś usunięte.":"🚴 Prawdziwa jazda — zaproszenie zobaczą wszyscy bez plakietki TEST.";
 }
 let wxTimer=null;
 function wfUpdate(){
@@ -4070,7 +4073,7 @@ function openWantForm(w,preset){
   wf.rbId=w&&w.route_base_id||null;wf.rbAdd=null;wf.rbName="";
   $("wroutewrap").classList.toggle("hide",!wRouteOk);
   if(w&&hasRoute(w)){getWantRoute(w.id).then(p=>{if(wf.editId===w.id&&!wf.routeTouched){wf.route=p||null;wfRouteSync()}}).catch(()=>{})}
-  wf.pace=w&&w.pace||null;wf.bike=w&&w.bike||null;$("wbikesel").value=wf.bike||"";$("wbikewrap").classList.toggle("hide",!bikeOk);wf.pcity=w&&w.place_city||null;wf.parea=w&&w.place_area||null;wf.km=w&&w.km!=null?+w.km:null;wf.dur=w&&w.dur_min||null;wf.kmOwn=false;wf.durOwn=false;wf.place=w&&w.place||null;wf.plat=w&&w.place_lat!=null?+w.place_lat:null;wf.plon=w&&w.place_lon!=null?+w.place_lon:null;wf.placeOwn=false;wf.placeMap=false;wf.placeAdd=false;wfPlaceSync();$("wpacewrap").classList.toggle("hide",!paceOk);wfPaceSync();
+  wf.pace=w&&w.pace||null;wf.bike=w&&w.bike||null;wbikeRender();$("wbikewrap").classList.toggle("hide",!bikeOk);wf.pcity=w&&w.place_city||null;wf.parea=w&&w.place_area||null;wf.km=w&&w.km!=null?+w.km:null;wf.dur=w&&w.dur_min||null;wf.kmOwn=false;wf.durOwn=false;wf.place=w&&w.place||null;wf.plat=w&&w.place_lat!=null?+w.place_lat:null;wf.plon=w&&w.place_lon!=null?+w.place_lon:null;wf.placeOwn=false;wf.placeMap=false;wf.placeAdd=false;wfPlaceSync();$("wpacewrap").classList.toggle("hide",!paceOk);wfPaceSync();
   wfRouteSync();
   if(preset&&preset.pick){wf.vis="pick";wf.pick=new Set(preset.pick)}
   $("wwhowrap").classList.toggle("hide",!!w||!visOk);
@@ -4220,8 +4223,8 @@ function wfPlaceSync(){
   if(!placeOk){$("wplacewrap").classList.add("hide");return}
   $("wplacewrap").classList.remove("hide");
   const s=$("wplacesel"),cur=wf.place||"",known=places.find(x=>x.name.toLowerCase()===cur.toLowerCase());
-  s.innerHTML='<option value="">— bez punktu zbiórki —</option>'+places.map(x=>'<option value="p:'+esc(x.id)+'">'+esc(x.name)+(x.lat!=null?' 📌':'')+'</option>').join("")
-    +'<option value="own">✏️ Inne miejsce…</option><option value="map">🗺️ Wskaż na mapie…</option>';
+  s.innerHTML='<option value="">— bez punktu zbiórki —</option>'+places.map(x=>'<option value="p:'+esc(x.id)+'">'+esc(x.name)+(x.lat!=null?' · na mapie':'')+'</option>').join("")
+    +'<option value="own">Inne miejsce… (wpisz)</option><option value="map">Wskaż na mapie…</option>';
   s.value=wf.placeOwn?"own":!cur?"":known&&!wf.placeMap?"p:"+known.id:"own";
   $("wplaceown").classList.toggle("hide",!(wf.placeOwn||(cur&&!known)));
   if(!$("wplaceown").classList.contains("hide")&&document.activeElement!==$("wplacename"))$("wplacename").value=cur;
@@ -4291,7 +4294,9 @@ $("wpacesel").addEventListener("change",()=>{const v=$("wpacesel").value;
   if(v==="*"){wf.pace=null;$("wpaceown").value="";$("wpaceown").classList.remove("hide");$("wpaceown").focus()}
   else{wf.pace=v||null;$("wpaceown").classList.add("hide")}
   wfRouteSync()});
-$("wbikesel").addEventListener("change",()=>{wf.bike=$("wbikesel").value||null});
+const WBIKE=[["","bike","Każdy"],["road","road","Szosa"],["gravel","gravel","Gravel"],["mtb","mtb","MTB"],["trekking","tree","Trekking"]];
+function wbikeRender(){const el=$("wbikesel");if(!el)return;el.innerHTML=WBIKE.map(([v,k,t])=>'<button type="button" class="wbk'+((wf.bike||"")===v?' on':'')+'" data-wbk="'+v+'" aria-pressed="'+((wf.bike||"")===v)+'">'+uiIcon(k)+'<span>'+t+'</span></button>').join("")}
+$("wbikesel").addEventListener("click",e=>{const b=e.target.closest("[data-wbk]");if(!b)return;wf.bike=b.dataset.wbk||null;wbikeRender()});
 $("wpaceown").addEventListener("input",()=>{wf.pace=$("wpaceown").value.trim().slice(0,30)||null;wfRouteSync()});
 const wfJump=e=>{
   if(e.target.closest(".wtom")){wfSetDay("1");wfUpdate();try{navigator.vibrate&&navigator.vibrate(8)}catch(x){}return}
