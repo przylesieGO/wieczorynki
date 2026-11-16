@@ -520,7 +520,10 @@ button.onl.off{background:var(--fill);color:var(--mut)}
 .pwrow{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;-webkit-overflow-scrolling:touch}.pwrow::-webkit-scrollbar{display:none}.pwrow .fch{flex:none}
 .pwsum{margin-top:10px;font-size:15px}
 .pwtab{display:flex;gap:6px;overflow-x:auto;margin-top:8px;padding-bottom:2px;scrollbar-width:none}.pwtab::-webkit-scrollbar{display:none}
-.pwh{flex:none;min-width:54px;display:flex;flex-direction:column;align-items:center;gap:3px;background:var(--fill);border-radius:12px;padding:8px 4px;font-size:13px}
+.pwh{flex:none;min-width:54px;display:flex;flex-direction:column;align-items:center;gap:3px;background:var(--fill);border-radius:12px;padding:8px 4px;font-size:13px;opacity:.6;border:1.5px solid transparent}
+.pwh.ride{opacity:1;background:var(--acc2);border-color:rgba(52,199,89,.45)}.pwh.st .pwt,.pwh.en .pwt{color:var(--acc);font-weight:700}
+.pwtab{scroll-snap-type:x proximity;scroll-behavior:auto}.pwh{scroll-snap-align:start}
+.pwlr{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--acc2);border:1.5px solid rgba(52,199,89,.45);vertical-align:-1px;margin-right:3px}
 .pwh .pwt{color:var(--mut);font-size:12px}.pwh .pwi{font-size:20px;line-height:1}.pwh b{font-size:15px}
 .pwh .pww{display:flex;align-items:center;gap:2px;color:var(--mut)}.pwh .pww i{display:inline-block;font-style:normal;font-weight:700;color:var(--acc)}
 .pwh .pwr{color:var(--mut);min-height:15px}.pwh .pwr.hi{color:#0a84ff;font-weight:700}
@@ -3258,10 +3261,11 @@ function pwSelHtml(){
 }
 function pwBring(o){
   const L=[],t=o.tmin,dark=o.dark,m=new Date(o.when).getMonth(),add=(k,x)=>{if(!L.some(y=>y[1]===x))L.push([k,x])};
-  if(t<=3){add("hand","zimowe rękawiczki");add("hat","czapka pod kask");add("feet","ocieplacze na buty");add("layers","komin na szyję");add("coffee","termos z ciepłą herbatą")}
+  add("hat","kask");
+  if(t<=3){add("hand","zimowe rękawiczki");add("layers","czapka pod kask");add("feet","ocieplacze na buty");add("layers","komin na szyję");add("coffee","termos z ciepłą herbatą")}
   else if(t<=8){add("hand","długie rękawiczki");add("shirt","ciepła kurtka / wiatrówka");add("layers","długie spodnie albo nogawki");add("coffee","bidon z ciepłym napojem")}
   else if(t<=14){add("shirt","wiatrówka albo kamizelka");add("layers","rękawki i nogawki (zdejmiesz po drodze)")}
-  else if(t>=27){add("droplet","dwa bidony");add("sun","krem z filtrem");add("hat","coś na głowę")}
+  else if(t>=27){add("droplet","dwa bidony");add("sun","krem z filtrem");add("sun","czapka z daszkiem albo buff pod kask")}
   if(o.rain>=40||o.mm>=0.3){add("umbrella","kurtka przeciwdeszczowa");add("shield","błotniki")}
   if(o.wind>=25&&t>8)add("windy","wiatrówka — mocno wieje");
   if(dark){add("bulb","lampki przód i tył");add("vest","odblaski albo kamizelka odblaskowa");add("glasses","okulary z jasnymi szkłami")}
@@ -3313,7 +3317,8 @@ async function pwUpdate(){
   an=analyze(pts,H.wind_direction_10m[im],H.wind_speed_10m[im],20,true);
   const anR=analyze(pts.slice().reverse(),H.wind_direction_10m[im],H.wind_speed_10m[im],20,true);
   const end=new Date(when.getTime()+an.tsec*1000),i1=Math.min(H.time.length-1,i0+Math.ceil(an.tsec/3600));
-  const rows=[];for(let i=i0;i<=i1&&rows.length<9;i++)rows.push(i);
+  const rows=[];for(let i=i0;i<=i1;i++)rows.push(i);
+  const wide=[];for(let i=Math.max(0,i0-3);i<=Math.min(H.time.length-1,i1+3);i++)wide.push(i);
   const pick=(a,f)=>rows.map(i=>a&&a[i]).filter(v=>v!=null).reduce(f);
   const tmin=pick(H.apparent_temperature||H.temperature_2m,(a,b)=>Math.min(a,b)),tmax=pick(H.temperature_2m,(a,b)=>Math.max(a,b));
   const rain=H.precipitation_probability?pick(H.precipitation_probability,(a,b)=>Math.max(a,b)):0,mm=H.precipitation?pick(H.precipitation,(a,b)=>a+b):0;
@@ -3337,15 +3342,16 @@ async function pwUpdate(){
     dark?['moon',sunset&&endL>sunset?'Zachód słońca o '+hh(sunset)+' — wrócisz po zmroku.':'Wschód słońca o '+hh(sunrise)+' — ruszysz po ciemku.']:null].filter(Boolean);
   el.innerHTML='<div class="pwsum"><b>'+esc(dt(when))+'–'+esc(dt(end))+'</b> · ok. '+Math.floor(an.tsec/3600)+' h '+pad(Math.round(an.tsec/60)%60)+' min'
      +(sunset?' · 🌇 zachód '+esc(hh(sunset)):'')+'</div>'
-   +'<div class="pwtab">'+rows.map(i=>{const c=H.weather_code?H.weather_code[i]:null;
-      return '<div class="pwh"><span class="pwt">'+esc(H.time[i].slice(11,16))+'</span><span class="pwi" title="'+esc(WMO_T(c))+'">'+WMO(c)+'</span><b>'+Math.round(H.temperature_2m[i])+'°</b>'
+   +'<div class="pwtab" id="pwtab">'+wide.map(i=>{const c=H.weather_code?H.weather_code[i]:null,r=i>=i0&&i<=i1;
+      return '<div class="pwh'+(r?' ride':'')+(i===i0?' st':'')+(i===i1?' en':'')+'"'+(i===i0?' id="pwh0"':'')+'><span class="pwt">'+esc(H.time[i].slice(11,16))+'</span><span class="pwi" title="'+esc(WMO_T(c))+'">'+WMO(c)+'</span><b>'+Math.round(H.temperature_2m[i])+'°</b>'
        +'<span class="pww"><i style="transform:rotate('+((H.wind_direction_10m[i]+180)%360)+'deg)">↑</i>'+Math.round(H.wind_speed_10m[i])+'</span>'
        +'<span class="pwr'+(H.precipitation_probability&&H.precipitation_probability[i]>=40?' hi':'')+'">'+(H.precipitation_probability?Math.round(H.precipitation_probability[i])+'%':'')+'</span></div>'}).join("")+'</div>'
-   +'<div class="note pwleg">godzina · pogoda · temp. · wiatr km/h (strzałka = dokąd wieje) · szansa deszczu</div>'
+   +'<div class="note pwleg"><span class="pwlr"></span> w czasie jazdy · przesuń w bok: 3 h przed i po · wiatr km/h (strzałka = dokąd wieje) · szansa deszczu</div>'
    +'<div class="tip">'+esc(an.tip.replace(" Rozważ „Odwróć kierunek”, żeby wiatr pomagał na końcu.",""))+'</div>'+revTip
    +(warn.length?'<div class="pwwarn">'+warn.map(([k,t])=>'<div>'+uiIcon(k)+' '+esc(t)+'</div>').join("")+'</div>':'')
    +pwPackHtml(pwBring({tmin,rain,mm,wind,dark,sunny,when,hours:an.tsec/3600}),when)
-   +'<div class="note" style="margin-top:4px">Odczuwalnie '+Math.round(tmin)+'°C'+(Math.round(tmax)!==Math.round(tmin)?' – '+Math.round(tmax)+'°C':'')+' · wiatr do '+Math.round(wind)+' km/h'+(gust?' (porywy '+Math.round(gust)+')':'')+'</div>';
+   +'<div class="note" style="margin-top:4px">W czasie jazdy odczuwalnie '+Math.round(tmin)+'°C'+(Math.round(tmax)!==Math.round(tmin)?' – '+Math.round(tmax)+'°C':'')+' · wiatr do '+Math.round(wind)+' km/h'+(gust?' (porywy '+Math.round(gust)+')':'')+'</div>';
+  const tb=$("pwtab"),h0=$("pwh0");if(tb&&h0)tb.scrollLeft=Math.max(0,h0.offsetLeft-tb.offsetLeft-60);
 }
 /* ---------- ⭐ oceny tras (etap 2, KROK 48) ---------- */
 const RT_TAGS=[["forest","🌳 dużo lasu"],["view","🌅 widoki"],["coffee","☕ dobra kawa"],["shade","🌲 cień"],["mud","💧 błoto"],["sand","🏖 piach"],["potholes","🛣 dziurawy asfalt"],["dogs","🐕 psy"],["detour","🚧 objazd"]];
