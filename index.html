@@ -4625,7 +4625,7 @@ function renderBell(){
   const on=!!session&&visOk,n=on?bellUnread().length+fbMineUnread().length+fbAdmUnread().length+nuUnread().length+stepsBadge():0,bd=$("bellbadge");
   b.classList.toggle("hide",!on);
   bd.textContent=n>9?"9+":String(n);bd.classList.toggle("hide",!n);
-  b.setAttribute("aria-label",n?"Zaproszenia i powiadomienia — nowe: "+n:"Zaproszenia i powiadomienia");
+  b.setAttribute("aria-label",n?"Powiadomienia — nowe: "+n:"Powiadomienia");
   // liczba na ikonie aplikacji w telefonie (gdy aplikacja jest na ekranie głównym)
   try{if(navigator.setAppBadge){(n?navigator.setAppBadge(n):navigator.clearAppBadge()).catch(()=>{})}}catch(e){}
   if(!$("bellsheet").classList.contains("hide"))renderBellSheet();
@@ -4646,8 +4646,8 @@ function renderBellSheet(){
   const forMe=wants.filter(w=>w.user_id!==uid&&act(w)&&(w.visibility!=="private"||invIds(w).includes(uid)||(joins[w.id]||[]).includes(uid))).sort(ord);
   const mine=wants.filter(w=>w.user_id===uid&&act(w)).sort(ord);
   const keep=p.querySelector(".bslist"),st=keep?keep.scrollTop:0,nu=bellUnread().length+nuUnread().length,NU=nuList(),NUu=new Set(nuUnread()),SA=stepsAvail()?stepsList():[],SL=SA.filter(x=>!x.ok);
-  p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Zaproszenia i powiadomienia"><div class="bsgrab"></div>'
-   +'<div class="bshead"><button type="button" class="lnk" data-bk="close">Zamknij</button><b>🔔 Zaproszenia</b>'
+  p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Powiadomienia"><div class="bsgrab"></div>'
+   +'<div class="bshead"><button type="button" class="lnk" data-bk="close">Zamknij</button><b>🔔 Powiadomienia</b>'
    +(nu?'<button type="button" class="lnk" data-bk="all" style="text-align:right">✓ Przeczytane</button>':'<span style="min-width:64px"></span>')+'</div>'
    +'<div class="bslist">'
    +(SL.length?bsSec("start",'✨ Dokończ start · '+(SA.length-SL.length)+' z '+SA.length,lsGet("stepsHide")==="1"?0:SL.length,SL.length,
