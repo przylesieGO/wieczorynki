@@ -219,6 +219,11 @@ details.wday .want{margin:0 10px 10px}
 .wembtn{margin-top:10px;padding:12px 22px;font-size:16px;display:inline-flex;align-items:center;gap:6px}.wembtn .ui-i{width:18px;height:18px}
 .hdnew{display:none;align-items:center;gap:5px;border:0;border-radius:999px;padding:8px 14px;background:var(--accbtn);color:#fff;font:inherit;font-weight:700;font-size:15px;cursor:pointer}.hdnew svg{width:16px;height:16px}
 @media (min-width:768px){.hdnew{display:inline-flex}}
+.wsec{font-size:12.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:16px 2px 0}.wsec i{font-style:normal;font-weight:600;letter-spacing:0;text-transform:none}
+#wseccal{margin-top:22px;padding-top:14px;border-top:1px solid var(--line)}
+.want.wmine{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 14px!important;border-style:dashed;margin:10px 0}
+.wmn{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}.wmt{font-size:14.5px;line-height:1.35}.wmt .ui-i{color:var(--acc);margin-right:4px}.wms{font-size:13px;color:var(--mut)}
+.wmup{flex:none;font-weight:700;font-size:14.5px;padding:6px 4px!important}
 .wbike{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .wbk{display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 2px 8px;border-radius:12px;border:1.5px solid transparent;background:var(--fill);color:var(--ink);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
 .wbk .ui-i{width:22px;height:22px;color:var(--mut)}.wbk.on{background:var(--acc2);border-color:var(--acc);color:var(--acc)}.wbk.on .ui-i{color:var(--acc)}
@@ -974,7 +979,9 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
   <div id="fltbar" class="fltbar hide"></div>
   <div id="wantguest" class="note">Zaloguj się, aby zobaczyć chętnych i zgłosić ochotę na przejażdżkę.<div style="margin-top:10px"><button type="button" class="b wdemo" data-demo="1">👀 Zobacz przykład</button></div></div>
   <div id="wantmain" class="hide">
+   <div class="wsec hide" id="wsecmy">Twoje zaproszenia</div>
    <div id="mywant"></div>
+   <div class="wsec hide" id="wseccal">Kalendarz jazd <i>· wszystkie zaproszenia</i></div>
    <div id="wantlist"></div>
    <div id="wantarch"></div>
   </div>
@@ -4200,7 +4207,7 @@ function renderWants0(){
   const list=wants.filter(w=>!wDone(w));
   const box=$("wantlist");
   if(!list.length){box.innerHTML='<div class="wempty"><div class="wemi">'+uiIcon("bike")+'</div><b>Nikt jeszcze nie zaprasza</b><span>Bądź pierwszy — wybierz dzień i godzinę, a reszta ekipy dostanie zaproszenie.</span>'
-     +'<button type="button" class="b wembtn" data-wnew="1">'+uiIcon("plus")+' Zaproś na rower</button></div>';return}
+     +'<button type="button" class="b wembtn" data-wnew="1">'+uiIcon("plus")+' Zaproś na rower</button></div>';wsecSync();return}
   // grupowanie po dniu: jedna rozwijana karta na dzień
   const days=[];
   list.slice().sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at)).forEach(w=>{
@@ -4219,19 +4226,21 @@ function renderWants0(){
     const os=ppl.size===1?"osoba":(ppl.size%10>=2&&ppl.size%10<=4&&(ppl.size%100<10||ppl.size%100>=20))?"osoby":"osób";
     const wd=dt.toLocaleDateString("pl-PL",{weekday:"long"}),fn=favNames([...ppl]);
     const hrs=d.ws.map(wTime);
-    const ord=d.ws.slice().sort((a,b)=>((isFav(b.user_id)?1:0)-(isFav(a.user_id)?1:0))||(new Date(a.starts_at)-new Date(b.starts_at)));
+    const ord0=d.ws.slice().sort((a,b)=>((isFav(b.user_id)?1:0)-(isFav(a.user_id)?1:0))||(new Date(a.starts_at)-new Date(b.starts_at)));
+    const mineTop=ord0.filter(wAbove),ord=ord0.filter(w=>!wAbove(w));
     const l1=n>=0&&n<=2?esc(["Dziś","Jutro","Pojutrze"][n])+' <i>· '+esc(wd)+'</i>':esc(wd.charAt(0).toUpperCase()+wd.slice(1));
     return '<details class="wday" data-day="'+d.k+'"'+(open?' open':'')+'><summary>'
      +'<div class="ftile'+(n===0?' today':'')+'"><div class="fu">'+pad(dt.getDate())+'</div><div class="ft">'+pad(dt.getDate())+'</div><div class="fb">'+MON3[dt.getMonth()]+'</div><div class="fs"></div><div class="fh"></div><div class="fh2"></div></div>'
      +'<div class="wtx"><div class="wl1">'+l1+'</div>'
      +'<div class="wl2"><span class="whrs">'+hrs.slice(0,4).map(h=>'<b>'+h+'</b>').join("")+(hrs.length>4?'<b>+'+(hrs.length-4)+'</b>':'')+'</span>· '+ppl.size+' '+os+(me?'<span class="wme">Ty</span>':'')+'</div>'
      +(fn.length?'<div class="wl3">⭐ '+esc(fn.join(", "))+'</div>':'')+'</div>'
-     +'</summary>'+(ord.length>1
+     +'</summary>'+mineTop.map(wantDayHtml).join("")+(ord.length>1
        ?'<div class="dcar" data-day="'+d.k+'">'+ord.map(wantHtml).join("")+'</div><div class="mydots ddots">'+ord.map((_,i)=>'<button type="button" data-ddot="'+i+'" class="'+(i===(dayIdx[d.k]||0)?'on':'')+'" aria-label="Zaproszenie '+(i+1)+'"></button>').join("")+'<span>'+(Math.min(dayIdx[d.k]||0,ord.length-1)+1)+' z '+ord.length+'</span></div>'
-       :wantHtml(ord[0]))+'</details>';
+       :ord.length?wantHtml(ord[0]):'')+'</details>';
   }).join("");
   box.querySelectorAll(".dcar").forEach(dcarRestore);
   fillWx();
+  wsecSync();
 }
 /* karuzela zaproszeń w karcie dnia */
 const dayIdx={};
@@ -4281,6 +4290,14 @@ document.addEventListener("toggle",e=>{
   const d=e.target;if(!(d.classList&&(d.classList.contains("jlist")||d.classList.contains("chg"))))return;
   d.open?joinOpen.add(d.dataset.j):joinOpen.delete(d.dataset.j);
 },true);
+// w karcie dnia: Twoje zaproszenie jest już pełne na górze („Twoje zaproszenia”) — tu tylko krótka linia z przejściem w górę
+const wAbove=w=>w.user_id===uid&&!!document.querySelector('#mywant [data-wid="'+w.id+'"]');
+function wantDayHtml(w){
+  const jn=(joins[w.id]||[]).length;
+  return '<div class="want wmine'+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'"><div class="wmn"><span class="wmt">'+uiIcon("hand")+'<b>Twoje · '+esc(wTime(w))+'</b></span>'
+   +'<span class="wms">'+(jn?'dołączyło: '+jn:'nikt jeszcze nie dołączył')+(isTest(w)?' · test':'')+'</span></div>'
+   +'<button type="button" class="lnk wmup" data-wmup="'+esc(w.id)+'" aria-label="Pokaż wyżej">Wyżej ↑</button></div>';
+}
 function wantHtml(w){
     const j=joins[w.id]||[],mine=w.user_id===uid,joined=j.includes(uid),others=j.filter(x=>x!==w.user_id);
     const priv=isPriv(w),canInv=priv&&!mine&&wantCanInvite(w);
@@ -4805,6 +4822,9 @@ $("wsave").onclick=async()=>{
   }catch(e){say("Nie udało się: "+(e&&e.message?e.message:"błąd"))}
 };
 /* ---------- Twoje zaproszenie (zamiast dużego przycisku) ---------- */
+function wsecSync(){const my=$("mywant"),hasMy=!!(my&&my.querySelector("[data-wid]")),hasCal=!!$("wantlist").querySelector(".wday");
+  $("wsecmy").classList.toggle("hide",!hasMy);$("wseccal").classList.toggle("hide",!(hasMy&&hasCal))}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-wmup]");if(!b)return;const w=wants.find(x=>x.id===b.dataset.wmup);if(w)goToWant(w)});
 function renderMyWant(){
   const box=$("mywant");if(!box)return;
   const act=w=>!wDone(w);
@@ -5274,7 +5294,7 @@ function goToWant(w){
     el=document.querySelector('#mywant .mywant[data-wid="'+w.id+'"]');
   }else{
     const k=localIso(new Date(w.starts_at)).slice(0,10);wantOpenDay=k;
-    const ord=wants.filter(x=>localIso(new Date(x.starts_at)).slice(0,10)===k&&new Date(x.starts_at).getTime()>=Date.now()-3*36e5)
+    const ord=wants.filter(x=>localIso(new Date(x.starts_at)).slice(0,10)===k&&new Date(x.starts_at).getTime()>=Date.now()-3*36e5&&!wAbove(x))
       .sort((a,b)=>((isFav(b.user_id)?1:0)-(isFav(a.user_id)?1:0))||(new Date(a.starts_at)-new Date(b.starts_at)));
     dayIdx[k]=Math.max(0,ord.findIndex(x=>x.id===w.id));renderWants();
     el=document.querySelector('#wantlist .want[data-wid="'+w.id+'"]');
