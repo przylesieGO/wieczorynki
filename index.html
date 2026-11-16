@@ -605,6 +605,25 @@ html[data-theme=dark] .evp-t.soon{background:#4d2a0e;color:#ffb074}@keyframes ev
 .hmrow{display:flex;gap:8px}.hmrow input{flex:1;min-width:0}.hmrow .b{flex:none}
 .hmres{display:block;width:100%;text-align:left;border:0;background:var(--fill);color:var(--ink);border-radius:12px;padding:10px 12px;margin-top:8px;font:inherit;cursor:pointer}
 .hmres b{display:block;font-size:15px}.hmres span{display:block;font-size:12.5px;color:var(--mut);margin-top:2px}
+.rbbox .bslist{padding-bottom:18px}
+.rbq{width:100%;margin-bottom:8px}
+.rbchips{margin-top:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.rbchips::-webkit-scrollbar{display:none}.rbchips .fch{flex:none}
+.rbc{display:flex;gap:10px;width:100%;text-align:left;border:0;background:var(--fill);color:var(--ink);border-radius:16px;padding:10px;margin-top:10px;font:inherit;cursor:pointer}
+.rbc.hid{opacity:.6}
+.rbmini{flex:none;width:84px;height:84px;border-radius:12px;background:#e6efe3;position:relative;overflow:hidden}
+html[data-theme=dark] .rbmini{background:#24332a}.rbmini svg{position:absolute;inset:0;width:100%;height:100%}
+.rbrk{position:absolute;left:5px;top:5px;font-style:normal;background:#fbbf24;color:#3d2c00;font-weight:900;font-size:11px;border-radius:7px;padding:1px 6px}
+.rbci{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.rbci b{font-size:15.5px;line-height:1.25}
+.rbm{color:var(--mut);font-size:13px;line-height:1.35}
+.rbtg{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}.rbtg i{font-style:normal;font-size:11.5px;font-weight:700;border-radius:999px;padding:2px 8px;background:var(--card);color:var(--mut)}
+.rbempty{text-align:center;margin:22px 8px;font-weight:700;line-height:1.5}.rbempty .note{display:block;font-weight:400;margin-top:6px}
+.rbtitle{max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rbinfo{margin-top:10px;font-size:14px;line-height:1.6;color:var(--mut)}
+.rbdel{display:block;margin:12px auto 0;color:var(--bad)!important}
+.wrbase{margin-top:6px}.wrbase .lnk{padding:0;font-weight:700}
+.wrbadd{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--fill)}
+.wrbrow{display:flex;align-items:center;gap:10px;justify-content:space-between}.wrbrow span{font-size:14.5px;font-weight:700}.wrbrow small{display:block;font-weight:400;color:var(--mut);font-size:12.5px;margin-top:2px}
+.wrbadd input{width:100%;margin-top:8px;background:var(--card)}
 .hinst{margin:0 0 16px;padding:12px 14px;border-radius:16px;background:var(--acc2);text-align:left}
 .hinst.ok{padding:10px 14px;font-size:14.5px;font-weight:600;color:var(--acc)}
 .hinsth{font-size:17px;font-weight:800}.hinstl{font-size:14px;color:var(--mut);line-height:1.4;margin:4px 0 10px}
@@ -780,7 +799,9 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
     <div class="wx hide" id="wwx"></div>
     <div id="wroutewrap" class="hide"><div class="wlbl">Proponowana trasa (opcjonalnie)</div>
      <div class="wrrow"><label class="wrfile"><input type="file" id="wrfile" accept=".gpx,application/gpx+xml,text/xml"><span id="wrlbl">🗺️ Dodaj plik GPX</span></label><button type="button" class="ib del hide" id="wrdel" aria-label="Usuń trasę" title="Usuń trasę"></button></div>
-     <div class="row" id="wrinfo" style="margin-top:6px;gap:10px"></div></div>
+     <div class="row" id="wrinfo" style="margin-top:6px;gap:10px"></div>
+     <div id="wrbase" class="wrbase hide"><button type="button" class="lnk" id="wrbasebtn">📚 Wybierz z bazy tras ›</button></div>
+     <div id="wrbadd" class="wrbadd hide"></div></div>
     <div id="wpacewrap" class="hide"><div class="wlbl">Tempo</div><select id="wpacesel"><option value="">— tempo dowolne —</option><option value="senior">🐢 Senior Adventure · 15–18 km/h</option><option value="tour">🚴 Turystycznie · 18–24 km/h</option><option value="speed">⚡ SPEEDAY · 26+ km/h</option><option value="*">✏️ Inne…</option></select><input id="wpaceown" class="hide" maxlength="30" placeholder="np. 20–22 km/h, bez pośpiechu"></div>
     <div id="wbikewrap" class="hide"><div class="wlbl">Rower / teren</div><select id="wbikesel"><option value="">🚲 Dla wszystkich rowerów</option><option value="road">🛣 Szosa</option><option value="gravel">🪨 Gravel</option><option value="mtb">⛰ MTB</option><option value="trekking">🌳 Trekking</option></select></div>
     <div id="wdistwrap" class="hide"><div class="wlbl">Dystans</div><select id="wkmsel"><option value="">— nie wiem —</option><option value="20">20 km</option><option value="30">30 km</option><option value="50">50 km</option><option value="80">80 km</option><option value="100">100 km</option><option value="*">✏️ Inny…</option></select><input id="wkmown" class="hide" inputmode="decimal" maxlength="5" placeholder="ile km, np. 42"></div>
@@ -812,6 +833,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 <div class="sheet bsh hide" id="welsheet"></div>
 <div class="sheet bsh hide" id="homesheet"></div>
 <div class="sheet hide" id="routesheet"></div>
+<div class="sheet bsh hide" id="rbsheet"></div>
 <div class="sheet hide" id="mapsheet"></div>
 
 <div class="card hide" id="pwbox">
@@ -2339,6 +2361,7 @@ function setGroupsHtml(guest){
      it("#5e5ce6","moon","Motyw",themeMode==="auto"?"Jak w telefonie":"",theme),
      guest?"":it("#0a84ff","user","Nick na górze ekranu","",sw(showNick,"data-sn",showNick?"0":"1")),
      it("#30d158","help","Pomoc przy starcie","",sw(!helpOff,"data-hs",helpOff?"1":"0"))])
+   +(guest||!rbOk?'':grp("Trasy",[it("#30d158","map","Baza tras",rbList?rbList.filter(x=>!x.hidden).length+' '+plf(rbList.filter(x=>!x.hidden).length,["trasa","trasy","tras"])+' — wybierzesz je przy zapraszaniu':'Trasy GPX z zaproszeń — wybierzesz je przy zapraszaniu','<button type="button" class="lnk" data-rbopen="1">Otwórz ›</button>')]))
    +(guest||!evGeoOk||!tabOk(3)?'':grp("Okolica",[it("#ff9f0a","pin","Moja miejscowość",homeGet()?esc(homeGet().name)+' — od niej liczę odległość do imprez':'Do filtra „📍 W okolicy” w Imprezach','<button type="button" class="lnk" data-home="1">'+(homeGet()?'Zmień':'Ustaw')+' ›</button>')]))
    +(guest?'':grp("Zaproszenia",[reportOk?it("#34c759","bike","Pytaj „Jak poszło?” po jeździe",repOff()?"Wyłączone — możesz ocenić jazdę z karty w 🗄 Archiwum":"Raz po jeździe: km, średnia, ocena (bez testowych)",sw(!repOff(),"data-ro",repOff()?"0":"1")):"",testOk?it("#ff453a","flask","Testowe zaproszenia",hideTest?"Ukryte — widzisz tylko prawdziwe (Twoje zostają)":"Widoczne — wyłącz, żeby widzieć tylko prawdziwe",sw(!hideTest,"data-ht",hideTest?"0":"1")):""]))
    +(guest||!meTester()?'':grp("🧪 Tester",[it("#bf5af2","flask","Funkcje testowe",betaOn?"Widzisz funkcje w budowie (🧪 BETA)":"Wyłączone — widzisz aplikację tak jak wszyscy",sw(betaOn,"data-beta",betaOn?"0":"1"))]))
@@ -2630,7 +2653,7 @@ function fillWx(){
 function routeBoxHtml(w){
   if(!hasRoute(w))return "";
   return '<div class="wroute"><div>🗺️ <b>Proponowana trasa</b> · 📏 '+kmTxt(w.route_km)+' km · ⏱ ≈ '+esc(durTxt(w.route_km/wPaceKmh(w.pace)*60))+'</div>'
-   +'<div class="wrb"><button type="button" class="b g small" data-rt="gpx" data-id="'+esc(w.id)+'">⬇ Pobierz GPX</button><button type="button" class="b g small" data-rt="show" data-id="'+esc(w.id)+'">🗺️ Szczegóły</button></div></div>';
+   +'<div class="wrb"><button type="button" class="b g small" data-rt="gpx" data-id="'+esc(w.id)+'">⬇ Pobierz GPX</button><button type="button" class="b g small" data-rt="show" data-id="'+esc(w.id)+'">🗺️ Szczegóły</button>'+rbBtnHtml(w)+'</div></div>';
 }
 /* okienko „Szczegóły trasy”: mapa z wiatrem, statystyki, miejscowości */
 let rsMap=null,rsTok=0;
@@ -2670,6 +2693,8 @@ document.addEventListener("click",async e=>{
     e.stopPropagation();
     const w=wants.find(x=>x.id===b.dataset.id);if(!w)return;
     if(b.dataset.rt==="show"){openRouteSheet(w);return}
+    if(b.dataset.rt==="rbopen"){await rbLoad(true);rb.mode="browse";rb.open=w.route_base_id;renderRb();return}
+    if(b.dataset.rt==="rbadd"){rbAddFromWant(w);return}
     try{const pts=await getWantRoute(w.id);if(!pts){say("To zaproszenie nie ma trasy.");return}
       const nm="trasa-"+slug(nickOf(w.user_id))+"-"+localIso(new Date(w.starts_at)).slice(0,10)+".gpx";
       say(saveFile(makeGpx(pts,"Trasa — "+nickOf(w.user_id)+", "+wfLabel(new Date(w.starts_at))),nm,"application/gpx+xml")?"Pobrano: "+nm:"Nie udało się pobrać pliku.")}
@@ -3006,6 +3031,182 @@ async function saveEvent(){
     closeEvForm();say(ef===null?"🏁 Zapisano imprezę.":"🏁 Zapisano.");evOpen=id;await loadRemote();show(3);
   }catch(err){say("Nie udało się zapisać: "+(err&&err.message?err.message:"błąd"))}
 }
+/* ---------- 🗺️ Baza tras — etap 1 (KROK 47; decyzje właściciela 2026-11-16 13:55) ----------
+   trasa trafia do bazy tylko przełącznikiem „📚 Dodaj do bazy tras” (decyduje zapraszający) albo przyciskiem
+   „📚 Do bazy tras” na karcie; baza w ⚙️ (nie na głównym ekranie) i „📚 Wybierz z bazy tras” w formularzu */
+let rbOk=false,rbList=null,rbStats={},rbAt=0,rbMap=null,rbTok=0;
+const rb={mode:"browse",sort:"uses",bike:"",q:"",open:null},rbRouteCache={};
+const RB_SORTS=[["uses","🔁 Najczęściej"],["new","🆕 Najnowsze"],["long","📏 Najdłuższe"],["short","📏 Najkrótsze"],["near","📍 Najbliżej"]];
+async function rbLoad(force){
+  if(!rbOk||!session)return;
+  if(!force&&rbList&&Date.now()-rbAt<120000)return;
+  const r=await sb.from("route_base").select("id,name,km,up_m,start_lat,start_lon,start_city,bike,created_by,created_at,hidden,preview,src_want").order("created_at",{ascending:false}).limit(1000);
+  rbList=r.error?[]:(r.data||[]);
+  try{const st=await sb.rpc("route_base_stats");rbStats={};((st&&st.data)||[]).forEach(x=>{rbStats[x.route_id]={uses:+x.uses||0,planned:+x.planned||0,last:x.last_at}})}catch(e){}
+  rbAt=Date.now();
+}
+const rbUses=x=>(rbStats[x.id]||{}).uses||0;
+const rbCanEdit=x=>!!session&&(x.created_by===uid||isAdmin);
+const rbKmFrom=x=>{const o=originGet();return o&&x.start_lat!=null?dist({lat:o.lat,lon:o.lon},{lat:+x.start_lat,lon:+x.start_lon}):null};
+const rbPreview=pts=>JSON.stringify(thin(pts,40).map(p=>[+p.lat.toFixed(4),+p.lon.toFixed(4)]));
+async function rbRoute(id){
+  if(id in rbRouteCache)return rbRouteCache[id];
+  const r=await sb.from("route_base").select("route").eq("id",id).single();if(r.error)throw r.error;
+  const p=r.data&&r.data.route?parseRoute(r.data.route):false;rbRouteCache[id]=p;return p;
+}
+function rbSvg(prev,w,h){
+  let P=[];try{P=JSON.parse(prev||"[]")}catch(e){}
+  if(P.length<2)return '<svg viewBox="0 0 '+w+' '+h+'"></svg>';
+  const la=P.map(p=>p[0]),lo=P.map(p=>p[1]),k=Math.cos((Math.min(...la)+Math.max(...la))/2*Math.PI/180);
+  const x0=Math.min(...lo)*k,x1=Math.max(...lo)*k,y0=Math.min(...la),y1=Math.max(...la),pad=9;
+  const sc=Math.min((w-2*pad)/((x1-x0)||1e-6),(h-2*pad)/((y1-y0)||1e-6)),ox=(w-(x1-x0)*sc)/2,oy=(h-(y1-y0)*sc)/2;
+  const pt=p=>[(ox+(p[1]*k-x0)*sc).toFixed(1),(oy+(y1-p[0])*sc).toFixed(1)],a=pt(P[0]);
+  return '<svg viewBox="0 0 '+w+' '+h+'" aria-hidden="true"><path d="M'+P.map(p=>pt(p).join(' ')).join(' L')+'" fill="none" stroke="#1f9d55" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><circle cx="'+a[0]+'" cy="'+a[1]+'" r="4" fill="#fff" stroke="#1f9d55" stroke-width="2.5"/></svg>';
+}
+function rbFiltered(){
+  const q=lc(rb.q.trim()),s=rb.sort;
+  const L=(rbList||[]).filter(x=>(!rb.bike||x.bike===rb.bike)&&(!q||lc(x.name+" "+(x.start_city||"")).includes(q)));
+  return L.sort(s==="new"?(a,b)=>String(b.created_at).localeCompare(String(a.created_at)):s==="long"?(a,b)=>b.km-a.km:s==="short"?(a,b)=>a.km-b.km
+    :s==="near"?(a,b)=>((rbKmFrom(a)??1e9)-(rbKmFrom(b)??1e9)):(a,b)=>rbUses(b)-rbUses(a)||String(b.created_at).localeCompare(String(a.created_at)));
+}
+function rbCard(x,i){
+  const u=rbUses(x),k=rbKmFrom(x),B=x.bike&&BIKES[x.bike];
+  return '<button type="button" class="rbc'+(x.hidden?' hid':'')+'" data-rbo="'+esc(x.id)+'"><span class="rbmini">'+rbSvg(x.preview,84,84)+(rb.sort==="uses"&&u&&i<3?'<i class="rbrk">#'+(i+1)+'</i>':'')+'</span>'
+   +'<span class="rbci"><b>'+esc(x.name)+'</b><span class="rbm">'+kmTxt(x.km)+' km'+(x.up_m!=null?' · ⛰ '+x.up_m+' m':'')+' · 🔁 '+u+'×</span>'
+   +((x.start_city||k!=null)?'<span class="rbm">📍 '+(x.start_city?esc(x.start_city):'start')+(k!=null?' · '+nearKm(k)+' km od Ciebie':'')+'</span>':'')
+   +'<span class="rbtg">'+(B?'<i>'+B+'</i>':'')+(x.hidden?'<i>🙈 ukryta</i>':'')+(x.created_by&&nicks[x.created_by]?'<i>👤 '+esc(nicks[x.created_by])+'</i>':'')+'</span></span></button>';
+}
+function rbListHtml(){
+  if(!rbList)return '<div class="note" style="text-align:center;margin-top:16px">Wczytuję trasy…</div>';
+  const L=rbFiltered();
+  return L.length?L.map(rbCard).join("")
+   :'<div class="rbempty">'+(rbList.length?'Nic nie pasuje do filtrów.':'📚 Baza jest jeszcze pusta.<span class="note">Trasy trafiają tu z zaproszeń z plikiem GPX — przełącznik „📚 Dodaj do bazy tras” w formularzu — albo z karty zaproszenia: „📚 Do bazy tras”.</span>')+'</div>';
+}
+function rbCloseMap(){if(rbMap){try{rbMap.m.remove()}catch(e){}rbMap=null}rbTok++}
+function openRb(mode){rb.mode=mode||"browse";rb.open=null;renderRb();rbLoad(true).then(()=>{if(!$("rbsheet").classList.contains("hide")&&!rb.open)renderRb()})}
+function closeRb(){rbCloseMap();const p=$("rbsheet");p.classList.add("hide");p.innerHTML=""}
+function renderRb(){
+  if(rb.open){renderRbDetail();return}
+  rbCloseMap();
+  const p=$("rbsheet"),keep=p.querySelector("#rblist"),st=keep&&p.querySelector(".bslist")?p.querySelector(".bslist").scrollTop:0,n=rbList?rbList.filter(x=>!x.hidden).length:null;
+  p.innerHTML='<div class="bsbox rbbox" role="dialog" aria-modal="true" aria-label="Baza tras"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-rb="close">'+(rb.mode==="pick"?'Anuluj':'Zamknij')+'</button><b>🗺️ '+(rb.mode==="pick"?'Wybierz trasę':'Baza tras')+(n!=null?' · '+n:'')+'</b><span style="min-width:64px"></span></div><div class="bslist">'
+   +'<input id="rbq" class="rbq" placeholder="🔍 Szukaj: nazwa albo miejscowość" value="'+esc(rb.q)+'" enterkeyhint="search">'
+   +'<div class="fchips rbchips">'+RB_SORTS.filter(x=>x[0]!=="near"||originGet()).map(([k,t])=>'<button type="button" class="fch'+(rb.sort===k?' on':'')+'" data-rbs="'+k+'">'+t+'</button>').join("")+'</div>'
+   +'<div class="fchips rbchips">'+[["","🚲 Każdy"]].concat(Object.entries(BIKES)).map(([k,t])=>'<button type="button" class="fch'+(rb.bike===k?' on':'')+'" data-rbb="'+k+'">'+t+'</button>').join("")+'</div>'
+   +'<div id="rblist">'+rbListHtml()+'</div>'
+   +(rb.mode==="browse"?'<div class="note" style="margin-top:12px;text-align:center">Trasę dodasz w formularzu zaproszenia (plik GPX → „📚 Dodaj do bazy tras”).</div>':'')
+   +'</div></div>';
+  p.classList.remove("hide");const nl=p.querySelector(".bslist");if(nl)nl.scrollTop=st;
+}
+async function renderRbDetail(){
+  const x=(rbList||[]).find(y=>y.id===rb.open);if(!x){rb.open=null;renderRb();return}
+  rbCloseMap();const tok=rbTok,p=$("rbsheet"),u=rbStats[x.id]||{},k=rbKmFrom(x),can=rbCanEdit(x);
+  const dd=t=>new Date(t).toLocaleDateString("pl-PL",{day:"numeric",month:"numeric",year:"numeric"});
+  p.innerHTML='<div class="bsbox rbbox" role="dialog" aria-modal="true" aria-label="Trasa"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-rb="back">‹ Trasy</button><b class="rbtitle">'+esc(x.name)+'</b><span style="min-width:64px"></span></div><div class="bslist">'
+   +'<div class="mapwrap"><div class="map rsmap" id="map4"></div><div class="warrow hide" id="warrow4"></div></div>'
+   +'<div class="legend"><span><i class="dot" style="background:#d64545"></i>pod wiatr</span><span><i class="dot" style="background:#e0b83a"></i>bocznie</span><span><i class="dot" style="background:#2a9d5c"></i>z wiatrem</span></div>'
+   +'<div class="stats" id="stats4"></div><div class="note" id="windinfo4" style="margin-top:8px">Ładuję trasę…</div><div class="tip hide" id="tip4"></div>'
+   +'<div class="rbinfo">'+[(x.start_city||k!=null)?'📍 start: '+(x.start_city?esc(x.start_city):'—')+(k!=null?' · '+nearKm(k)+' km od Ciebie':''):'',x.bike&&BIKES[x.bike]?BIKES[x.bike]:'',
+      '🔁 wybrana '+(u.uses||0)+'×'+(u.planned?' · zaplanowana '+u.planned+'×':'')+(u.last?' · ostatnio '+esc(dd(u.last)):''),
+      '👤 '+(x.created_by&&nicks[x.created_by]?esc(nicks[x.created_by]):'—')+' · dodana '+esc(dd(x.created_at))].filter(Boolean).map(t=>'<div>'+t+'</div>').join("")+'</div>'
+   +(x.hidden?'<div class="note warnbox" style="margin-top:8px">🙈 Ukryta — widzisz ją tylko Ty'+(isAdmin?' i admini':'')+'.</div>':'')
+   +'<button type="button" class="b big" style="margin-top:12px;width:100%" data-rb="'+(rb.mode==="pick"?'pick':'invite')+'">'+(rb.mode==="pick"?'✅ Wybierz tę trasę':'🚲 Zaproś na tę trasę')+'</button>'
+   +'<div class="pbtns" style="margin-top:8px"><button type="button" class="b g" data-rb="gpx">⬇ GPX</button>'+(can?'<button type="button" class="b g" data-rb="rename">✏️ Nazwa</button><button type="button" class="b g" data-rb="hide">'+(x.hidden?'👁 Pokaż':'🙈 Ukryj')+'</button>':'')+'</div>'
+   +(can?'<button type="button" class="lnk rbdel" data-rb="del">Usuń z bazy tras</button>':'')
+   +'<div class="ptg">Wiatr i czas na najbliższą pełną godzinę, tempo ok. 20 km/h. Mapa © OpenStreetMap · pogoda: Open-Meteo.</div></div></div>';
+  p.classList.remove("hide");
+  let pts;try{pts=await rbRoute(x.id)}catch(e){pts=null}
+  if(tok!==rbTok)return;
+  if(!pts){$("windinfo4").textContent="Nie udało się wczytać trasy.";return}
+  let an=analyze(pts,0,0,20,false);$("stats4").innerHTML=statsHtml(an);
+  rbMap=makeMap("map4");
+  if(rbMap)setTimeout(()=>{if(rbMap&&tok===rbTok){rbMap.m.invalidateSize();drawRoute(rbMap,pts,null,true)}},60);
+  else $("map4").outerHTML='<div class="note">Nie udało się załadować mapy (sprawdź internet).</div>';
+  const when=new Date();when.setMinutes(0,0,0);when.setHours(when.getHours()+1);
+  $("windinfo4").textContent="Sprawdzam prognozę wiatru…";
+  try{const wd=await getWind(pts[0].lat,pts[0].lon,when);if(tok!==rbTok)return;
+    an=analyze(pts,wd.dir,wd.speed,20,false);$("stats4").innerHTML=statsHtml(an);
+    if(rbMap){drawRoute(rbMap,pts,an.segs,false);setArrow("warrow4",wd.dir,wd.speed)}
+    $("tip4").textContent=an.tip;$("tip4").classList.remove("hide");
+    $("windinfo4").textContent="Wiatr o "+wd.time+": "+windLabel(wd.dir)+", "+Math.round(wd.speed)+" km/h"+(wd.temp!=null?" · "+Math.round(wd.temp)+"°C":"")+(wd.rain!=null?" · deszcz "+Math.round(wd.rain)+"%":"");
+  }catch(e){if(tok===rbTok)$("windinfo4").textContent="Nie udało się pobrać prognozy wiatru."}
+}
+function rbApplyToForm(x,pts){
+  wf.route=pts;wf.routeName=x.name;wf.rbId=x.id;wf.routeTouched=true;$("wrfile").value="";
+  if(!wf.bike&&x.bike&&bikeOk){wf.bike=x.bike;$("wbikesel").value=x.bike}
+  wfRouteSync();try{wfUpdate()}catch(e){}
+}
+// dodanie trasy do bazy; ta sama trasa (start i meta ≤ 300 m, długość ±3%, ślad średnio ≤ 250 m) — łączy z istniejącą
+async function rbAddRoute(pts,name,o){
+  await rbLoad();
+  const km=routeKm(pts),a=pts[0],z=pts[pts.length-1];
+  for(const x of (rbList||[])){
+    if(x.start_lat==null||Math.abs(x.km-km)>Math.max(1,km*0.03))continue;
+    if(dist(a,{lat:+x.start_lat,lon:+x.start_lon})>0.3)continue;
+    let q;try{q=await rbRoute(x.id)}catch(e){continue}if(!q||dist(z,q[q.length-1])>0.3)continue;
+    const S=thin(pts,30);let sum=0;for(const p of S){let m=1e9;for(const r of q){const d=dist(p,r);if(d<m)m=d}sum+=m}
+    if(sum/S.length<=0.25){say("📚 Ta trasa już jest w bazie: „"+x.name+"” — połączono.");return {id:x.id,isNew:false}}
+  }
+  let city=o&&o.city||null;
+  if(!city){try{const g=await Promise.race([revGeo(a.lat,a.lon),new Promise(r=>setTimeout(()=>r(null),4000))]);city=g&&g.city||null}catch(e){}}
+  const an=analyze(pts,0,0,20,false);
+  const row={name:String(name).trim().slice(0,60),route:routeJson(pts),preview:rbPreview(pts),km:+km.toFixed(1),up_m:Math.round(an.gain||0),
+    start_lat:+a.lat.toFixed(5),start_lon:+a.lon.toFixed(5),start_city:city?String(city).slice(0,60):null,bike:o&&o.bike&&BIKES[o.bike]?o.bike:null};
+  const r=await sb.from("route_base").insert(row).select("id").single();
+  if(r.error||!r.data){say("Nie udało się dodać trasy do bazy: "+(r.error&&r.error.message||"błąd"));return null}
+  rbAt=0;return {id:r.data.id,isNew:true};
+}
+async function rbAddFromWant(w){
+  const def="Trasa "+kmTxt(w.route_km)+" km"+(w.place_city?" · "+w.place_city:"");
+  const n=prompt("Nazwa trasy w bazie (2–60 znaków):",def);if(n==null)return;
+  if(n.trim().length<2){say("Nazwa: co najmniej 2 znaki.");return}
+  let pts;try{pts=await getWantRoute(w.id)}catch(e){pts=null}if(!pts){say("Nie udało się wczytać trasy.");return}
+  const r=await rbAddRoute(pts,n,{bike:w.bike||null,city:w.place_city||null});if(!r)return;
+  if(w.user_id===uid){const u=await sb.from("wants").update({route_base_id:r.id}).eq("id",w.id).select("id");if(!u.error)w.route_base_id=r.id}
+  if(r.isNew)sb.from("route_base").update({src_want:w.id}).eq("id",r.id).then(()=>{},()=>{});
+  if(r.isNew)say("📚 Dodano do bazy tras: "+n.trim());
+  renderWants();
+}
+const rbBtnHtml=w=>!rbOk||!hasRoute(w)?'':w.route_base_id?'<button type="button" class="b g small" data-rt="rbopen" data-id="'+esc(w.id)+'">📚 W bazie tras</button>'
+  :(!isTest(w)&&(w.user_id===uid||isAdmin))?'<button type="button" class="b g small" data-rt="rbadd" data-id="'+esc(w.id)+'">📚 Do bazy tras</button>':'';
+// formularz: przełącznik „Dodaj do bazy tras” (domyślnie: włączony przy prawdziwym zaproszeniu dla wszystkich)
+const rbAddOn=()=>wf.rbAdd!=null?wf.rbAdd:(!wf.test&&wf.vis==="all");
+function wfRbSync(){
+  const bb=$("wrbase"),ad=$("wrbadd");if(!bb||!ad)return;
+  bb.classList.toggle("hide",!rbOk);
+  const vis=rbOk&&!!wf.route&&!wf.rbId;ad.classList.toggle("hide",!vis);if(!vis){ad.innerHTML="";return}
+  if(!ad.querySelector("#wrbsw"))ad.innerHTML='<div class="wrbrow"><span>📚 Dodaj trasę do bazy tras<small>Inni wybiorą ją przy swoich zaproszeniach. Zdecyduj sam(a) — także przy prywatnych.</small></span><button type="button" class="ios-sw" role="switch" id="wrbsw" aria-label="Dodaj trasę do bazy tras"></button></div><input id="wrbname" maxlength="60" placeholder="Nazwa trasy, np. Pętla przez Puszczę Białą">';
+  const on=rbAddOn(),sw=$("wrbsw"),nm=$("wrbname");sw.classList.toggle("on",on);sw.setAttribute("aria-checked",String(on));nm.classList.toggle("hide",!on);
+  if(document.activeElement!==nm)nm.value=wf.rbName||wf.routeName||"";
+}
+$("wrbadd").addEventListener("click",e=>{if(e.target.closest("#wrbsw")){wf.rbAdd=!rbAddOn();wfRbSync()}});
+$("wrbadd").addEventListener("input",e=>{if(e.target.id==="wrbname")wf.rbName=e.target.value});
+$("wrbasebtn").addEventListener("click",()=>openRb("pick"));
+document.addEventListener("click",e=>{if(e.target.closest("[data-rbopen]")){gearOpen=false;renderGear();openRb("browse")}});
+$("rbsheet").addEventListener("input",e=>{if(e.target.id==="rbq"){rb.q=e.target.value;const l=$("rblist");if(l)l.innerHTML=rbListHtml()}});
+$("rbsheet").addEventListener("click",async e=>{
+  const p=$("rbsheet");if(e.target===p){closeRb();return}
+  const o=e.target.closest("[data-rbo]");if(o){rb.open=o.dataset.rbo;renderRb();return}
+  const so=e.target.closest("[data-rbs]");if(so){rb.sort=so.dataset.rbs;renderRb();return}
+  const bk=e.target.closest("[data-rbb]");if(bk){rb.bike=bk.dataset.rbb;renderRb();return}
+  const b=e.target.closest("[data-rb]");if(!b)return;const k=b.dataset.rb;
+  if(k==="close"){closeRb();return}
+  if(k==="back"){rb.open=null;renderRb();return}
+  const x=(rbList||[]).find(y=>y.id===rb.open);if(!x)return;
+  if(k==="pick"||k==="invite"){let pts;try{pts=await rbRoute(x.id)}catch(err){pts=null}if(!pts){say("Nie udało się wczytać trasy.");return}
+    closeRb();if(k==="invite"){show(0);openWantForm(null)}rbApplyToForm(x,pts);say("📚 Trasa z bazy: "+x.name);return}
+  if(k==="gpx"){let pts;try{pts=await rbRoute(x.id)}catch(err){pts=null}if(!pts){say("Nie udało się wczytać trasy.");return}
+    const nm=slug(x.name)+".gpx";say(saveFile(makeGpx(pts,x.name),nm,"application/gpx+xml")?"Pobrano: "+nm:"Nie udało się pobrać pliku.");return}
+  if(k==="rename"){const n=prompt("Nazwa trasy (2–60 znaków):",x.name);if(n==null)return;const t=n.trim();if(t.length<2||t.length>60){say("Nazwa: od 2 do 60 znaków.");return}
+    const r=await sb.from("route_base").update({name:t}).eq("id",x.id).select("id");if(r.error||!r.data||!r.data.length){say("Nie udało się zmienić nazwy.");return}
+    x.name=t;renderRb();say("Zmieniono nazwę.");return}
+  if(k==="hide"){const r=await sb.from("route_base").update({hidden:!x.hidden}).eq("id",x.id).select("id");if(r.error||!r.data||!r.data.length){say("Nie udało się.");return}
+    x.hidden=!x.hidden;renderRb();say(x.hidden?"🙈 Trasa ukryta — inni jej nie widzą.":"👁 Trasa znowu widoczna.");return}
+  if(k==="del"){if(!confirm("Usunąć trasę „"+x.name+"” z bazy tras? Zaproszenia z tą trasą ją zachowają."))return;
+    const r=await sb.from("route_base").delete().eq("id",x.id).select("id");if(r.error||!r.data||!r.data.length){say("Nie udało się usunąć.");return}
+    rbList=rbList.filter(y=>y.id!==x.id);rb.open=null;renderRb();say("Usunięto z bazy tras.");return}
+});
+
 /* ---------- 🚴 „Jak poszło?” po jeździe (KROK 39; decyzje właściciela 2026-11-15 20:08) ---------- */
 // wszystkie pytania + ocena trasy GPX; odpowiedzi widzą wszyscy; autor potwierdza obecność innych
 let reportOk=false,reports={},repHash="",rs=null,repShown=false,userRides={};
@@ -3137,6 +3338,7 @@ function archItem(w){
          '⏱ '+durTxt(wantDur(w)),w.pace?paceTxt(w.pace):''].filter(Boolean).map(esc).join(" · ")+'</div>'
       +(S&&(S.rating||S.route||Object.keys(S.tags).length)?'<div class="ail">'+(S.rating?'<span class="rpb">★ '+fmt1(S.rating)+' <small>jazda ('+S.rn+')</small></span> ':'')+(S.route?'<span class="rpb">★ '+fmt1(S.route)+' <small>trasa</small></span> ':'')
          +Object.entries(S.tags).sort((a,b)=>b[1]-a[1]).map(([t,c])=>{const x=REP_TAGS.find(y=>y[0]===t);return x?'<span class="rpt">'+esc(x[1])+(c>1?' ×'+c:'')+'</span>':''}).join("")+'</div>':'')
+      +(hasRoute(w)&&rbBtnHtml(w)?'<div class="wrb" style="margin-top:6px">'+rbBtnHtml(w)+'</div>':'')
       +myRepHtml(w)
       +(repCan(w)&&!myRep(w)?'<button type="button" class="b g rbtn" data-arch="rep" data-id="'+esc(w.id)+'">✍️ Jak poszło? Uzupełnij</button>':repCan(w)?'<button type="button" class="lnk rbtn" data-arch="rep" data-id="'+esc(w.id)+'">✏️ Zmień swoją odpowiedź</button>':'')})())+'</div>';
 }
@@ -3460,7 +3662,7 @@ function wfStep(unit,dir){
   }
   two?wfSetTime2(hh,mm):wfSetTime(hh,mm);
 }
-function wfTestSync(){
+function wfTestSync(){try{wfRbSync()}catch(e){}
   [...$("wtest").children].forEach(b=>b.classList.toggle("on",(b.dataset.test==="1")===wf.test));
   $("wtestnote").textContent=wf.test?"🧪 Na próbę — będzie przygaszone, z czerwoną migającą plakietką TEST; na kanale Telegram z oznaczeniem 🔴 TESTOWE. Testowe zostaną kiedyś usunięte.":"🚴 Prawdziwa jazda — zaproszenie zobaczą wszyscy bez plakietki TEST.";
 }
@@ -3500,6 +3702,7 @@ function openWantForm(w,preset){
   wf.vis="all";wf.pick=new Set();
   wf.test=true;$("wtestwrap").classList.toggle("hide",!!w||!testOk);wfTestSync();
   wf.route=null;wf.routeName="";wf.routeHad=hasRoute(w);wf.routeTouched=false;$("wrfile").value="";
+  wf.rbId=w&&w.route_base_id||null;wf.rbAdd=null;wf.rbName="";
   $("wroutewrap").classList.toggle("hide",!wRouteOk);
   if(w&&hasRoute(w)){getWantRoute(w.id).then(p=>{if(wf.editId===w.id&&!wf.routeTouched){wf.route=p||null;wfRouteSync()}}).catch(()=>{})}
   wf.pace=w&&w.pace||null;wf.bike=w&&w.bike||null;$("wbikesel").value=wf.bike||"";$("wbikewrap").classList.toggle("hide",!bikeOk);wf.pcity=w&&w.place_city||null;wf.parea=w&&w.place_area||null;wf.km=w&&w.km!=null?+w.km:null;wf.dur=w&&w.dur_min||null;wf.kmOwn=false;wf.durOwn=false;wf.place=w&&w.place||null;wf.plat=w&&w.place_lat!=null?+w.place_lat:null;wf.plon=w&&w.place_lon!=null?+w.place_lon:null;wf.placeOwn=false;wf.placeMap=false;wf.placeAdd=false;wfPlaceSync();$("wpacewrap").classList.toggle("hide",!paceOk);wfPaceSync();
@@ -3627,9 +3830,9 @@ function wfRouteSync(){
   const i=$("wrinfo"),R=wf.route;
   $("wrlbl").textContent=R?"🗺️ Zmień plik GPX":"🗺️ Dodaj plik GPX";
   const dl=$("wrdel");if(!dl.innerHTML)dl.innerHTML=ICON.del;dl.classList.toggle("hide",!R);
-  i.innerHTML=R?'<span>✅ '+kmTxt(routeKm(R))+' km · ⏱ ≈ '+esc(durTxt(routeKm(R)/wPaceKmh(wf.pace)*60))+(wf.pace?' <span class="note">('+esc(PACES[wf.pace]?PACES[wf.pace].r:wf.pace)+')</span>':'')+(wf.routeName?' · '+esc(wf.routeName):'')+'</span>'
+  i.innerHTML=R?'<span>✅ '+kmTxt(routeKm(R))+' km · ⏱ ≈ '+esc(durTxt(routeKm(R)/wPaceKmh(wf.pace)*60))+(wf.pace?' <span class="note">('+esc(PACES[wf.pace]?PACES[wf.pace].r:wf.pace)+')</span>':'')+(wf.rbId?' · 📚 '+esc(wf.routeName||'z bazy tras'):wf.routeName?' · '+esc(wf.routeName):'')+'</span>'
     :(wf.editId&&wf.routeHad?'<span class="note">Trasa zostanie usunięta po zapisaniu.</span>':'<span class="note">Inni zobaczą długość, mapę z wiatrem i pobiorą GPX.</span>');
-  wfDurSync();
+  wfDurSync();try{wfRbSync()}catch(e){}
 }
 async function getWantRoute(id){
   if(id in wRouteCache)return wRouteCache[id];
@@ -3787,9 +3990,9 @@ $("wrfile").addEventListener("change",async e=>{
   const f=e.target.files[0];if(!f)return;
   const p=parseGpx(await f.text());
   if(p.length<2){say("Nie znaleziono punktów trasy w pliku GPX.");e.target.value="";return}
-  wf.route=thin(p,500);wf.routeName=f.name.replace(/\.gpx$/i,"");wf.routeTouched=true;wfRouteSync();
+  wf.route=thin(p,500);wf.routeName=f.name.replace(/\.gpx$/i,"");wf.rbId=null;wf.rbName="";wf.routeTouched=true;wfRouteSync();
 });
-$("wrdel").addEventListener("click",()=>{wf.route=null;wf.routeName="";wf.routeTouched=true;$("wrfile").value="";wfRouteSync()});
+$("wrdel").addEventListener("click",()=>{wf.route=null;wf.routeName="";wf.rbId=null;wf.routeTouched=true;$("wrfile").value="";wfRouteSync()});
 $("wtest").addEventListener("click",e=>{const b=e.target.closest("button[data-test]");if(!b)return;wf.test=b.dataset.test==="1";wfTestSync();wfUpdate()});
 $("wdays").addEventListener("click",e=>{const b=e.target.closest("button[data-d]");if(!b)return;wfSetDay(b.dataset.d);wfUpdate()});
 $("wdt").addEventListener("change",wfUpdate);
@@ -3868,19 +4071,29 @@ $("wsave").onclick=async()=>{
   let editedPriv=false;
   try{
     await savePlaceToList();
+    // 📚 baza tras: trasa wybrana z bazy albo dodana przełącznikiem „Dodaj do bazy tras”
+    let rbUse=null,rbNew=null;
+    if(rbOk&&wRouteOk&&wf.route&&(!wf.editId||wf.routeTouched)){
+      if(wf.rbId)rbUse=wf.rbId;
+      else if(rbAddOn()){const nm=(wf.rbName||wf.routeName||"").trim();
+        const r=await rbAddRoute(wf.route,nm.length>=2?nm:"Trasa "+kmTxt(routeKm(wf.route))+" km",{bike:wf.bike||null,city:wf.place&&wf.pcity||null});
+        if(r){rbUse=r.id;if(r.isNew)rbNew=r.id}}
+    }
     if(wf.editId){
       const ow0=wants.find(x=>x.id===wf.editId),upd={starts_at:d.toISOString(),note};if(paceOk)upd.pace=wf.pace||null;if(placeOk){upd.place=wf.place||null;upd.place_lat=wf.place?wf.plat:null;upd.place_lon=wf.place?wf.plon:null}if(bikeOk){upd.bike=wf.bike||null;upd.place_city=wf.place&&wf.pcity||null;upd.place_area=wf.place&&wf.parea||null}if(distOk){const R=wf.route||(!wf.routeTouched&&hasRoute(ow0));upd.km=R?null:wf.km||null;upd.dur_min=R||wf.km?null:wf.dur||DUR_DEF}
-      if(wRouteOk&&wf.routeTouched){upd.route=wf.route?routeJson(wf.route):null;upd.route_km=wf.route?+routeKm(wf.route).toFixed(1):null;delete wRouteCache[wf.editId]}
+      if(wRouteOk&&wf.routeTouched){upd.route=wf.route?routeJson(wf.route):null;upd.route_km=wf.route?+routeKm(wf.route).toFixed(1):null;delete wRouteCache[wf.editId];if(rbOk)upd.route_base_id=wf.route?rbUse:null}
+      if(rbNew)sb.from("route_base").update({src_want:wf.editId}).eq("id",rbNew).then(()=>{},()=>{});
       if(rng){upd.range_from=d.toISOString();upd.range_to=d2.toISOString();upd.settled_at=null}
       else if(isOpen(ow0)){upd.range_from=null;upd.range_to=null}
       const res=await sb.from("wants").update(upd).eq("id",wf.editId).select("id");
       if(res.error||!res.data||!res.data.length)throw new Error(res.error?res.error.message:"zmiana terminu wymaga KROKU 11 w bazie");
       const ow=wants.find(x=>x.id===wf.editId);editedPriv=!!ow&&((invs[ow.id]||[]).length>0||(joins[ow.id]||[]).some(x=>x!==uid));
     }else{
-      const row={starts_at:d.toISOString(),note};if(paceOk&&wf.pace)row.pace=wf.pace;if(placeOk&&wf.place){row.place=wf.place;if(wf.plat!=null){row.place_lat=wf.plat;row.place_lon=wf.plon}}if(bikeOk){if(wf.bike)row.bike=wf.bike;if(wf.place&&wf.pcity){row.place_city=wf.pcity;if(wf.parea)row.place_area=wf.parea}}if(distOk&&!wf.route){if(wf.km)row.km=wf.km;else row.dur_min=wf.dur||DUR_DEF}if(priv)row.visibility="private";if(testOk)row.is_test=!!wf.test;if(wRouteOk&&wf.route){row.route=routeJson(wf.route);row.route_km=+routeKm(wf.route).toFixed(1)}
+      const row={starts_at:d.toISOString(),note};if(paceOk&&wf.pace)row.pace=wf.pace;if(placeOk&&wf.place){row.place=wf.place;if(wf.plat!=null){row.place_lat=wf.plat;row.place_lon=wf.plon}}if(bikeOk){if(wf.bike)row.bike=wf.bike;if(wf.place&&wf.pcity){row.place_city=wf.pcity;if(wf.parea)row.place_area=wf.parea}}if(distOk&&!wf.route){if(wf.km)row.km=wf.km;else row.dur_min=wf.dur||DUR_DEF}if(priv)row.visibility="private";if(testOk)row.is_test=!!wf.test;if(wRouteOk&&wf.route){row.route=routeJson(wf.route);row.route_km=+routeKm(wf.route).toFixed(1)}if(rbOk&&rbUse)row.route_base_id=rbUse;
       if(rng){row.range_from=d.toISOString();row.range_to=d2.toISOString()}
       const res=await sb.from("wants").insert(row).select("id").single();
       if(res.error)throw res.error;
+      if(rbNew)sb.from("route_base").update({src_want:res.data.id}).eq("id",rbNew).then(()=>{},()=>{});
       if(priv){
         const r2=await sb.from("want_invitees").insert(ids.map(u=>({want_id:res.data.id,user_id:u,added_by:uid})));
         if(r2.error){await sb.from("wants").delete().eq("id",res.data.id);throw r2.error}
@@ -4097,7 +4310,7 @@ $("whosheet").addEventListener("click",async e=>{
     wf.vis=ws.vis;wf.pick=new Set(ws.vis==="pick"?ws.pick:[]);
     if(wf.vis==="pick"&&!wf.pick.size){wf.vis="all";say("Nikogo nie wybrano — zaproszenie zobaczą wszyscy.")}
     if(wf.vis==="fav"&&!favIds().length){wf.vis="all";say("Nie masz jeszcze ulubionych — zaproszenie zobaczą wszyscy.")}
-    closeWho();renderWhoBtn();wfUpdate();return;
+    closeWho();renderWhoBtn();wfUpdate();try{wfRbSync()}catch(e){}return;
   }
   const ids=[...ws.pick];if(!ids.length)return;
   k.disabled=true;
@@ -4939,7 +5152,9 @@ async function loadRemote(selectId){
     // zaproszenia tylko z ostatnich 7 dni i przyszłe (wcześniej: 200 najstarszych — nowe by znikały)
     const wSince=new Date(Date.now()-31*864e5).toISOString(); // + archiwum 30 dni (KROK 38)
     const wq=cols=>sb.from("wants").select(cols).gte("starts_at",wSince).order("starts_at").limit(1000);
-    let w=await wq("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min,place,place_lat,place_lon,bike,place_city,place_area");
+    const WFULL="id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min,place,place_lat,place_lon,bike,place_city,place_area";
+    let w=await wq(WFULL+",route_base_id");rbOk=!w.error;   // 🗺️ baza tras (KROK 47)
+    if(w.error)w=await wq(WFULL);
     bikeOk=!w.error;
     if(w.error)w=await wq("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min,place,place_lat,place_lon");
     placeOk=!w.error;
