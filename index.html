@@ -4082,9 +4082,8 @@ function openWantForm(w,preset){
   let d;
   if(w)d=new Date(w.starts_at);
   else{
-    const L=lastWant();d=new Date();
-    if(L){d.setHours(L.h,L.m,0,0)}else{d.setHours(19,0,0,0)}
-    if(d.getTime()<Date.now()+15*60000)d.setDate(d.getDate()+1);
+    // domyślnie: dziś, najbliższy pełny kwadrans od teraz (18:04 → 18:15); „↺ Jak ostatnio” ustawia godzinę z poprzedniego zaproszenia
+    d=new Date();d.setSeconds(0,0);d.setMinutes(Math.ceil((d.getMinutes()+1)/15)*15);
   }
   const n=dayDiff(d);
   if(n>=0&&n<=1)wfSetDay(String(n));else{$("wdt").value=localIso(d).slice(0,10);wfSetDay("x",true)}
