@@ -613,6 +613,7 @@ html[data-theme=dark] .evp-t.soon{background:#4d2a0e;color:#ffb074}@keyframes ev
 .instb{font-size:13px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.03em}
 .instx{margin-top:10px}.instx summary{cursor:pointer;font-weight:700;color:var(--acc);font-size:15px;padding:4px 0}
 .instx .instb{margin-top:12px}.instx ol.inst{font-size:14.5px;gap:4px}
+.rskip2{margin-top:2px!important;font-size:13.5px!important;color:var(--mut)!important}
 .evdw{margin-top:10px}.evdw+.evdw{padding-top:10px;border-top:1px solid var(--line)}.evdw.drag{opacity:.95;background:var(--card);box-shadow:0 6px 18px rgba(0,0,0,.18);border-radius:10px;position:relative;z-index:2}.evdw.drag .evgrip{cursor:grabbing;color:var(--acc)}
 .evdr{display:flex;gap:6px;align-items:center}.evdr2{margin-top:6px}.evdr2.ind{padding-left:32px}.evdr2 label{flex:1;display:flex;align-items:center;gap:6px;min-width:0;color:var(--mut);font-size:13px}.evdr2 label{margin:0}.evdr2 input{flex:1;min-width:0;width:0;text-align:right}.evdr2 em{flex:none}.evdr2 em{font-style:normal;font-weight:700;color:var(--mut)}
 .evdx2{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:3px;font-size:12.5px;color:var(--mut)}.evdx2 i{font-style:normal;font-weight:700}.evdr select{flex:0 0 38%}.evdr input[data-efd="km"]{flex:0 0 64px;text-align:right}.evdr input[data-efd="name"]{flex:1;min-width:0}
@@ -2032,6 +2033,8 @@ $("gearpanel").addEventListener("click",async e=>{
   const ns=e.target.closest("button[data-ns]");
   if(ns){const i=$("gnick");if(i){i.value=ns.dataset.ns;i.focus()}return}
   const sn=e.target.closest("button[data-sn]");
+  const ro=e.target.closest("button[data-ro]");
+  if(ro){try{localStorage.setItem("repOff",ro.dataset.ro==="1"?"1":"0")}catch(err){}renderGear();say(ro.dataset.ro==="1"?"Nie będę pytać „Jak poszło?”.":"Zapytam „Jak poszło?” po jeździe.");return}
   const ht=e.target.closest("button[data-ht]");
   if(ht){hideTest=ht.dataset.ht==="1";try{localStorage.setItem("hideTest",hideTest?"1":"0")}catch(err){}renderGear();await loadRemote();say(hideTest?"Testowe zaproszenia ukryte.":"Testowe zaproszenia widoczne.");return}
   const ho=e.target.closest("button[data-ho]");
@@ -2333,7 +2336,7 @@ function setGroupsHtml(guest){
      guest?"":it("#0a84ff","user","Nick na górze ekranu","",sw(showNick,"data-sn",showNick?"0":"1")),
      it("#30d158","help","Pomoc przy starcie","",sw(!helpOff,"data-hs",helpOff?"1":"0"))])
    +(guest||!evGeoOk||!tabOk(3)?'':grp("Okolica",[it("#ff9f0a","pin","Moja miejscowość",homeGet()?esc(homeGet().name)+' — od niej liczę odległość do imprez':'Do filtra „📍 W okolicy” w Imprezach','<button type="button" class="lnk" data-home="1">'+(homeGet()?'Zmień':'Ustaw')+' ›</button>')]))
-   +(guest?'':grp("Zaproszenia",[testOk?it("#ff453a","flask","Testowe zaproszenia",hideTest?"Ukryte — widzisz tylko prawdziwe (Twoje zostają)":"Widoczne — wyłącz, żeby widzieć tylko prawdziwe",sw(!hideTest,"data-ht",hideTest?"0":"1")):""]))
+   +(guest?'':grp("Zaproszenia",[reportOk?it("#34c759","bike","Pytaj „Jak poszło?” po jeździe",repOff()?"Wyłączone — możesz ocenić jazdę z karty w 🗄 Archiwum":"Raz po jeździe: km, średnia, ocena (bez testowych)",sw(!repOff(),"data-ro",repOff()?"0":"1")):"",testOk?it("#ff453a","flask","Testowe zaproszenia",hideTest?"Ukryte — widzisz tylko prawdziwe (Twoje zostają)":"Widoczne — wyłącz, żeby widzieć tylko prawdziwe",sw(!hideTest,"data-ht",hideTest?"0":"1")):""]))
    +(guest||!meTester()?'':grp("🧪 Tester",[it("#bf5af2","flask","Funkcje testowe",betaOn?"Widzisz funkcje w budowie (🧪 BETA)":"Wyłączone — widzisz aplikację tak jak wszyscy",sw(betaOn,"data-beta",betaOn?"0":"1"))]))
    +(guest||!canStealth()?'':grp("🛡️ Administrator",[it("#636366","eye","Widoczny online",hideOnline?"Wyłączony: nikt nie widzi Cię w „online”. Ty widzisz wszystkich.":"Inni widzą Cię jako online",sw(!hideOnline,"data-ho",hideOnline?"0":"1"))]))
    +'</div>';
@@ -3007,15 +3010,18 @@ const repSkip=()=>{try{return new Set(JSON.parse(localStorage.getItem("repSkip")
 const repLater=()=>{try{return new Set(JSON.parse(sessionStorage.getItem("repLater")||"[]"))}catch(e){return new Set()}};
 const myRep=w=>(reports[w.id]||[]).find(r=>r.user_id===uid);
 const repCan=w=>!!session&&reportOk&&wantStart(w).getTime()<=Date.now()&&Date.now()-new Date(w.starts_at).getTime()<7*864e5&&(w.user_id===uid||(joins[w.id]||[]).includes(uid));
+// poprawka 2026-11-16 12:25: nie pytamy o zaproszenia TESTOWE (także własne — zostają widoczne mimo „Ukryj testowe”)
+// i można wyłączyć pytanie całkiem: ⚙️ → Zaproszenia → „Pytaj „Jak poszło?” po jeździe” (localStorage.repOff)
+const repOff=()=>{try{return localStorage.getItem("repOff")==="1"}catch(e){return false}};
 function repPending(){
   const sk=repSkip(),lt=repLater();
-  return wants.filter(w=>wDone(w)&&Date.now()-wantEnd(w).getTime()<3*864e5&&repCan(w)&&!myRep(w)&&!sk.has(w.id)&&!lt.has(w.id))
+  return wants.filter(w=>wDone(w)&&!isTest(w)&&Date.now()-wantEnd(w).getTime()<3*864e5&&repCan(w)&&!myRep(w)&&!sk.has(w.id)&&!lt.has(w.id))
     .sort((a,b)=>new Date(b.starts_at)-new Date(a.starts_at));
 }
 function maybeReport(){
   if(!session||!reportOk||pwMode||needProfile()||anySheetOpen()||gearOpen)return;
   if(repHash){const w=wants.find(x=>x.id===repHash);repHash="";if(w&&repCan(w)){openReport(w.id);return}}
-  if(repShown)return;const p=repPending();if(!p.length)return;
+  if(repShown||repOff())return;const p=repPending();if(!p.length)return;
   repShown=true;openReport(p[0].id);
 }
 function openReport(id){
@@ -3046,7 +3052,8 @@ function renderRep(){
    +(own&&others.length?'<div class="bsgrp">Kto był? <span class="note">(potwierdzasz za innych)</span></div>'+others.map(id=>{const r=RR.find(y=>y.user_id===id&&y.self);
       return r?'<div class="prow rwho"><span class="pnm">'+nk(id)+'</span><span class="note">'+(r.went?'✅ sam(a) potwierdził(a)':'❌ nie pojechał(a)')+'</span></div>'
         :'<button type="button" class="prow rwho'+(rs.who[id]?' on':'')+'" data-rs="who" data-v="'+esc(id)+'"><span class="cbx">'+CHECK+'</span><span class="pnm">'+nk(id)+'</span><span class="note">'+(rs.who[id]?'był(a)':'nie był(a)')+'</span></button>'}).join(""):'')
-   +'<button type="button" class="lnk rskip" data-rs="skip">Nie pytaj o tę jazdę</button></div>'
+   +'<button type="button" class="lnk rskip" data-rs="skip">Nie pytaj o tę jazdę</button>'
+   +'<button type="button" class="lnk rskip rskip2" data-rs="off">Nie pytaj mnie po jazdach</button></div>'
    +'<button type="button" class="b big" data-rs="save"'+(rs.went==null?' disabled':'')+'>Zapisz</button></div>';
 }
 const relDayPast=d=>{const n=dayDiff(d);return n===0?"Dziś":n===-1?"Wczoraj":d.toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"})};
@@ -3065,7 +3072,7 @@ async function saveReport(){
       if(!q.error){const i=RR.findIndex(y=>y.user_id===id);const o={want_id:w.id,user_id:id,went:!!rs.who[id],self:false,km:null,rating:null,tags:[]};if(i>=0)RR[i]=o;else RR.push(o)}
     }
     closeRep();renderWants();say(rs===null&&row.went?"Dzięki! Zapisano 🚴":"Dzięki! Zapisano.");
-    setTimeout(()=>{const p=repPending();if(p.length&&!anySheetOpen())openReport(p[0].id)},600);
+    setTimeout(()=>{if(repOff())return;const p=repPending();if(p.length&&!anySheetOpen())openReport(p[0].id)},600);
   }catch(e){say("Nie udało się zapisać: "+(e&&e.message?e.message:"błąd"))}
 }
 $("repsheet").addEventListener("click",e=>{
@@ -3073,6 +3080,7 @@ $("repsheet").addEventListener("click",e=>{
   const b=e.target.closest("[data-rs]");if(!b||!rs)return;const k=b.dataset.rs,v=b.dataset.v;
   if(k==="later"){repLaterAdd();closeRep();say("Zapytam przy następnym wejściu.");return}
   if(k==="skip"){const sk=repSkip();sk.add(rs.id);try{localStorage.setItem("repSkip",JSON.stringify([...sk]))}catch(err){}closeRep();renderWants();return}
+  if(k==="off"){try{localStorage.setItem("repOff","1")}catch(err){}closeRep();renderWants();say("Nie będę pytać po jazdach. Włączysz w ⚙️ → Zaproszenia.");return}
   if(k==="save"){saveReport();return}
   if(k==="went")rs.went=v==="1";
   if(k==="km"){rs.kmMode=v;const w=wants.find(x=>x.id===rs.id),plan=kmOf(w);if(v!=="plan"&&!rs.km&&plan)rs.km=String(plan)}
