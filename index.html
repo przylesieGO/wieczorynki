@@ -163,7 +163,7 @@ body.pvon{padding-top:30px}body.pvon .hdr{top:30px}.wbeta{border-radius:999px;wi
 .crow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;font-size:16px}
 .crow input[type=color]{width:56px;height:36px;padding:2px;border-radius:9px;cursor:pointer}
 .onl{background:var(--acc2);color:var(--acc);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:700;white-space:nowrap}
-.sheetbox .stats{grid-template-columns:1fr 1fr}.sheetbox .st b{font-size:24px}.sheetbox .st span{font-size:14px}
+.sheetbox .stats{grid-template-columns:1fr 1fr}.sheetbox .stats.ustats{grid-template-columns:repeat(4,1fr);gap:6px;margin:4px 0 6px}.sheetbox .ustats .st{padding:7px 4px;text-align:center}.sheetbox .ustats .st b{font-size:18px}.sheetbox .ustats .st span{font-size:11.5px}.staz.ustz{margin:0 0 2px;font-size:13px}.note.ustn{margin:0 0 12px;font-size:12px}.sheetbox .st b{font-size:24px}.sheetbox .st span{font-size:14px}
 .nk[data-u]{cursor:pointer}
 .wfav{font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .favline{margin-top:6px;font-size:14px;font-weight:600}
@@ -229,6 +229,7 @@ details.wday .want{margin:0 10px 10px}
 .osmpo{margin-top:10px}.osmsum{font-weight:500;font-size:12.5px;color:var(--mut);margin-left:auto}.osmic{background:rgba(255,159,10,.15)!important;color:#ff9f0a!important}
 .admq{display:flex;align-items:center;gap:10px;margin:6px 0 4px}.admq input{flex:1;min-width:0}.admq .note{flex:none;margin:0}
 .admqf{margin:4px 0 8px}
+.wonly{margin:12px 2px 0;text-align:center}
 .wempty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;margin-top:14px;padding:22px 16px 18px;border:1.5px dashed var(--line);border-radius:16px}
 .wemi{width:54px;height:54px;border-radius:50%;background:var(--acc2);color:var(--acc);display:flex;align-items:center;justify-content:center;margin-bottom:4px}.wemi .ui-i{width:28px;height:28px}
 .wempty b{font-size:17px}.wempty span{font-size:14.5px;color:var(--mut);max-width:380px;line-height:1.4}
@@ -236,6 +237,8 @@ details.wday .want{margin:0 10px 10px}
 .hdnew{display:none;align-items:center;gap:5px;border:0;border-radius:999px;padding:8px 14px;background:var(--accbtn);color:#fff;font:inherit;font-weight:700;font-size:15px;cursor:pointer}.hdnew svg{width:16px;height:16px}
 @media (min-width:768px){.hdnew{display:inline-flex}}
 .wsec{font-size:12.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:16px 2px 0}.wsec i{font-style:normal;font-weight:600;letter-spacing:0;text-transform:none}
+.wsecr{display:flex;align-items:center;justify-content:space-between;gap:10px}.wsecr>span{min-width:0}
+.ios-sw.wsecsw{width:42px;height:26px}.ios-sw.wsecsw::after{width:22px;height:22px}.ios-sw.wsecsw.on::after{left:18px}
 #wseccal{margin-top:22px;padding-top:14px;border-top:1px solid var(--line)}
 .want.wmine{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:10px 14px!important;border-style:dashed;margin:10px 0}
 .wmn{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}.wmt{font-size:14.5px;line-height:1.35}.wmt .ui-i{color:var(--acc);margin-right:4px}.wms{font-size:13px;color:var(--mut)}
@@ -685,7 +688,7 @@ html[data-theme=dark] .evp-t.soon{background:#4d2a0e;color:#ffb074}@keyframes ev
 .stbar+.stit{border-top:0}
 .stc{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:900}
 .stit.dn{color:var(--mut)}.stit.dn .stt{text-decoration:line-through}.stit.dn .stc{background:var(--accbtn);border-color:var(--accbtn)}
-.stgo{margin-left:auto;font-weight:800;font-size:14px;white-space:nowrap}
+.stgo{margin-left:auto;font-weight:800;font-size:14px;white-space:nowrap}.bsempty.repsum{text-align:left}
 .evchips .fch.near{order:-1}.evchips .fch.near.on{background:#ff9f0a;color:#fff;border-color:#ff9f0a}
 .evnear{margin-top:10px;padding:10px 12px;border-radius:14px;background:var(--fill)}
 .evnr{display:flex;align-items:center;gap:10px}.evnl{font-size:13px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
@@ -1018,7 +1021,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
   <div id="fltbar" class="fltbar hide"></div>
   <div id="wantguest" class="note">Zaloguj się, aby zobaczyć chętnych i zgłosić ochotę na przejażdżkę.<div style="margin-top:10px"><button type="button" class="b wdemo" data-demo="1">👀 Zobacz przykład</button></div></div>
   <div id="wantmain" class="hide">
-   <div class="wsec hide" id="wsecmy">Twoje zaproszenia</div>
+   <div class="wsec wsecr hide" id="wsecmy"><span>Twoje zaproszenia<i id="wsecmyn"></i></span><button type="button" class="ios-sw wsecsw on" id="mysw" role="switch" aria-checked="true" aria-label="Twoje zaproszenia osobno na górze"></button></div>
    <div id="mywant"></div>
    <div class="wsec hide" id="wseccal">Kalendarz jazd <i>· wszystkie zaproszenia</i></div>
    <div id="wantlist"></div>
@@ -2081,8 +2084,22 @@ function userRidesHtml(id){
     .then(r=>r&&r.error?sb.from("ride_reports").select("went,km,avg_kmh,ride_at").eq("user_id",id).eq("went",true).limit(2000):r).then(r=>{
     const L=(r&&r.data)||[],m=Date.now()-30*864e5;userRides[id]={n:L.length,km:Math.round(L.reduce((a,x)=>a+(+x.km||0),0)),n30:L.filter(x=>x.ride_at&&new Date(x.ride_at).getTime()>m).length,km30:Math.round(L.filter(x=>x.ride_at&&new Date(x.ride_at).getTime()>m).reduce((a,x)=>a+(+x.km||0),0)),kmh:(()=>{const v=L.filter(x=>x.avg_kmh!=null).map(x=>+x.avg_kmh);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null})()};
     if(gearOpen&&gearView==="user"&&userId===id)renderGear()});return ""}
-  if(!s||!s.n)return "";
-  return '<div class="staz">🚴 Potwierdzone jazdy: '+s.n+(s.km?' · 📏 '+s.km.toLocaleString("pl-PL")+' km':'')+(s.n30?' (30 dni: '+s.n30+(s.km30?' · '+s.km30+' km':'')+')':'')+(s.kmh!=null?' · ⚡ śr. '+fmt1(s.kmh)+' km/h':'')+'</div>';
+  const u=userPubStats(id);if(!u&&(!s||!s.n))return "";
+  // 📊 mała statystyka na karcie osoby — widzą wszyscy zalogowani (prośba właściciela 2026-11-17 21:21; KROK 59)
+  const c=(v,l)=>'<div class="st"><b>'+v+'</b><span>'+l+'</span></div>',n=s&&s.n||0;
+  return '<div class="stats ustats">'+(u?c(u.created,plf(u.created,["zaproszenie","zaproszenia","zaproszeń"]))+c(u.joined,plf(u.joined,["dołączenie","dołączenia","dołączeń"])):'')
+   +c(n,plf(n,["jazda","jazdy","jazd"]))+c(s&&s.km?s.km.toLocaleString("pl-PL"):0,"km")+'</div>'
+   +(s&&(s.n30||s.kmh!=null)?'<div class="staz ustz">'+[s.n30?'📅 30 dni: '+s.n30+' '+plf(s.n30,["jazda","jazdy","jazd"])+(s.km30?' · '+s.km30+' km':''):'',s.kmh!=null?'⚡ śr. '+fmt1(s.kmh)+' km/h':''].filter(Boolean).join(' · ')+'</div>':'')
+   +'<div class="note ustn">Jazdy i km — potwierdzone w „Jak poszło?”. Bez testowych.</div>';
+}
+// liczby z dziennika aktywności (KROK 59): wysłane zaproszenia i dołączenia, bez testowych
+let upStats={},upOk=true;
+function userPubStats(id){
+  if(!upOk||!session)return null;
+  if(!(id in upStats)){upStats[id]=null;Promise.resolve(sb.rpc("user_pub_stats",{u:id})).then(r=>{
+      if(r&&r.error){upOk=false;delete upStats[id]}else upStats[id]=r&&r.data||null;
+      if(gearOpen&&gearView==="user"&&userId===id)renderGear()},()=>{delete upStats[id]})}
+  const v=upStats[id];return v?{created:+v.created||0,joined:+v.joined||0}:null;
 }
 function userHtml(){
   const g=genders[userId],fav=isFav(userId),ux=uxCache[userId]||{},mu=MEDIA.filter(m=>(medias[userId]||{})[m[0]]);
@@ -4183,14 +4200,17 @@ let reportOk=false,reports={},repHash="",rs=null,repShown=false,userRides={};
 const REP_TAGS=[["sun","☀️ słonecznie"],["wind","💨 pod wiatr"],["tailwind","🌬 wiatr w plecy"],["rain","🌧 padało"],["gravelp","✨ szutry premium"],["forest","🌳 przez las"],["mud","💧 błoto"],["climb","⛰️ podjazdy"],["rough","🪨 trudny teren"],["fast","🔥 mocne tempo"],["flat","🛞 guma"],["coffee","☕ przerwa na kawę"],["icecream","🍦 lody"],["view","🌅 widoki"]];
 const REP_TAGS_OLD=["wind","rain","flat","coffee","rough","view"];   // bez KROKU 57 baza przyjmuje tylko te
 const repSkip=()=>{try{return new Set(JSON.parse(localStorage.getItem("repSkip")||"[]"))}catch(e){return new Set()}};
-const repLater=()=>{try{return new Set(JSON.parse(sessionStorage.getItem("repLater")||"[]"))}catch(e){return new Set()}};
+// okienko „Jak poszło?” pokazuje się samo tylko RAZ po każdej jeździe — potem jazda czeka w 🔔 (prośba właściciela 2026-11-17 21:21)
+const repAsked=()=>{try{return new Set(JSON.parse(localStorage.getItem("repAsked")||"[]"))}catch(e){return new Set()}};
+function repAskedAdd(id){const a=[...repAsked()].filter(x=>x!==id);a.push(id);try{localStorage.setItem("repAsked",JSON.stringify(a.slice(-300)))}catch(e){}}
+function repAutoOpen(id){repAskedAdd(id);openReport(id)}
 const myRep=w=>(reports[w.id]||[]).find(r=>r.user_id===uid);
 const repCan=w=>!!session&&reportOk&&wantStart(w).getTime()<=Date.now()&&Date.now()-new Date(w.starts_at).getTime()<7*864e5&&(w.user_id===uid||(joins[w.id]||[]).includes(uid));
 // testowe: pytamy też po nich (decyzja właściciela 13:15 — pomaga w testach), ale ich odpowiedzi nie liczą się do statystyk (KROK 45)
 // pytanie można wyłączyć: ⚙️ → Zaproszenia → „Pytaj „Jak poszło?” po jeździe” (localStorage.repOff)
 const repOff=()=>{try{return localStorage.getItem("repOff")==="1"}catch(e){return false}};
 function repPending(){
-  const sk=repSkip(),lt=repLater();
+  const sk=repSkip(),lt=repAsked();
   return wants.filter(w=>wDone(w)&&Date.now()-wantEnd(w).getTime()<3*864e5&&repCan(w)&&!myRep(w)&&!sk.has(w.id)&&!lt.has(w.id))
     .sort((a,b)=>new Date(b.starts_at)-new Date(a.starts_at));
 }
@@ -4198,7 +4218,26 @@ function maybeReport(){
   if(!session||!reportOk||pwMode||needProfile()||anySheetOpen()||gearOpen)return;
   if(repHash){const w=wants.find(x=>x.id===repHash);repHash="";if(w&&repCan(w)){openReport(w.id);return}}
   if(repShown||repOff())return;const p=repPending();if(!p.length)return;
-  repShown=true;openReport(p[0].id);
+  repShown=true;repAutoOpen(p[0].id);
+}
+// 🔔 sekcja „Jak poszło?”: jazdy z 30 dni (moje i te, do których dołączyłem), ile ocenionych, co jeszcze można ocenić (do 7 dni)
+function repBell(){
+  if(!session||!reportOk)return null;
+  const m=Date.now()-30*864e5,sk=repSkip();
+  const all=wants.filter(w=>wDone(w)&&wantEnd(w).getTime()>m&&(w.user_id===uid||(joins[w.id]||[]).includes(uid)));
+  const todo=all.filter(w=>!myRep(w)&&repCan(w)&&!sk.has(w.id)).sort((a,b)=>new Date(b.starts_at)-new Date(a.starts_at));
+  return {n:all.length,rated:all.filter(w=>myRep(w)).length,todo};
+}
+const repTodoN=()=>{const r=repBell();return r?r.todo.length:0};
+function repBellRow(w){const d=new Date(w.starts_at);
+  return '<div class="nit stn"><div class="ic">🚴</div><div class="tx"><b>'+esc(relDayPast(d)+' · '+hhmm(d))+'</b>'
+   +'<div class="w">'+(w.user_id===uid?'Twoje zaproszenie':'z '+esc(nickOf(w.user_id)))+(w.place?' · '+esc(w.place):w.note?' · '+esc(w.note.slice(0,40)):'')+(isTest(w)?' · test':'')+'</div></div>'
+   +'<button type="button" class="lnk stgo" data-rep="'+esc(w.id)+'">Oceń ›</button></div>'}
+function repBellHtml(){
+  const r=repBell();if(!r||!r.n)return "";const K=genders[uid]==="K";
+  return bsSec("rep",'🚴 Jak poszło? · 30 dni',r.todo.length,r.todo.length,
+    '<div class="bsempty repsum">'+(K?'Jeździłaś':'Jeździłeś')+': <b>'+r.n+'</b> · ocenione: <b>'+r.rated+'</b> · do oceny: <b>'+r.todo.length+'</b></div>'
+    +(r.todo.length?r.todo.map(repBellRow).join(""):'<div class="bsempty">✅ Wszystko ocenione — dzięki!</div>'));
 }
 function openReport(id){
   const w=wants.find(x=>x.id===id);if(!w)return;
@@ -4263,16 +4302,17 @@ async function saveReport(){
       if(!q.error){const i=RR.findIndex(y=>y.user_id===id);const o={want_id:w.id,user_id:id,went:!!rs.who[id],self:false,km:null,rating:null,tags:[]};if(i>=0)RR[i]=o;else RR.push(o)}
     }
     closeRep();renderWants();say(rs===null&&row.went?"Dzięki! Zapisano 🚴":"Dzięki! Zapisano.");
-    setTimeout(()=>{if(repOff())return;const p=repPending();if(p.length&&!anySheetOpen())openReport(p[0].id)},600);
+    renderBell();
+    setTimeout(()=>{if(repOff())return;const p=repPending();if(p.length&&!anySheetOpen())repAutoOpen(p[0].id)},600);
   }catch(e){say("Nie udało się zapisać: "+(e&&e.message?e.message:"błąd"))}
 }
 $("repsheet").addEventListener("click",e=>{
-  if(e.target===$("repsheet")){repLaterAdd();closeRep();return}
+  if(e.target===$("repsheet")){repLaterAdd();closeRep();renderBell();return}
   const rvb=e.target.closest("[data-rv]");
   if(rvb&&rs&&rs.rv){rs.rvTouched=true;rvClick(rs.rv,rvb);const sc=$("repsheet").querySelector(".bslist"),t=sc?sc.scrollTop:0;renderRep();const s2=$("repsheet").querySelector(".bslist");if(s2)s2.scrollTop=t;return}
   const b=e.target.closest("[data-rs]");if(!b||!rs)return;const k=b.dataset.rs,v=b.dataset.v;
-  if(k==="later"){repLaterAdd();closeRep();say("Zapytam przy następnym wejściu.");return}
-  if(k==="skip"){const sk=repSkip();sk.add(rs.id);try{localStorage.setItem("repSkip",JSON.stringify([...sk]))}catch(err){}closeRep();renderWants();return}
+  if(k==="later"){repLaterAdd();closeRep();renderBell();say("Jazda czeka w 🔔 Powiadomieniach.");return}
+  if(k==="skip"){const sk=repSkip();sk.add(rs.id);try{localStorage.setItem("repSkip",JSON.stringify([...sk]))}catch(err){}closeRep();renderWants();renderBell();return}
   if(k==="off"){try{localStorage.setItem("repOff","1")}catch(err){}closeRep();renderWants();say("Nie będę pytać po jazdach. Włączysz w ⚙️ → Zaproszenia.");return}
   if(k==="save"){saveReport();return}
   if(k==="went")rs.went=v==="1";
@@ -4285,7 +4325,7 @@ $("repsheet").addEventListener("click",e=>{
   if(k==="km"&&v!=="plan"){const i=$("repkm");if(i)i.focus()}
 });
 $("repsheet").addEventListener("input",e=>{if(!rs)return;if(e.target.id==="repkm")rs.km=e.target.value;if(e.target.id==="repkmh")rs.kmh=e.target.value;if(e.target.id==="rvcom"&&rs.rv){rs.rv.comment=e.target.value;rs.rvTouched=true}});
-function repLaterAdd(){if(!rs)return;const lt=repLater();lt.add(rs.id);try{sessionStorage.setItem("repLater",JSON.stringify([...lt]))}catch(e){}}
+function repLaterAdd(){if(rs)repAskedAdd(rs.id)}
 // podsumowanie odpowiedzi do archiwum
 // ✅ „Twoja odpowiedź” na karcie (prośba właściciela 2026-11-16 12:31: widać, że już odpowiedziałem)
 function myRepHtml(w){
@@ -4493,8 +4533,9 @@ function renderWants0(){
   $("wantmain").classList.toggle("hide",guest);
   if(guest)return;
   renderMyWant();
-  const list=wants.filter(w=>!wDone(w));
+  const list=wants.filter(w=>!wDone(w)&&!(myOn()&&w.user_id===uid));
   const box=$("wantlist");
+  if(!list.length&&myCnt){box.innerHTML='<div class="note wonly">Poza Tobą nikt jeszcze nie zaprasza.</div>';wsecSync();return}
   if(!list.length){box.innerHTML='<div class="wempty"><div class="wemi">'+uiIcon("bike")+'</div><b>Nikt jeszcze nie zaprasza</b><span>Bądź pierwszy — wybierz dzień i godzinę, a reszta ekipy dostanie zaproszenie.</span>'
      +'<button type="button" class="b wembtn" data-wnew="1">'+uiIcon("plus")+' Zaproś na rower</button></div>';wsecSync();return}
   // grupowanie po dniu: jedna rozwijana karta na dzień
@@ -4601,13 +4642,15 @@ function wantHtml(w){
      +paceHtml(w)+bikeHtml(w)+(live?'':durLineHtml(w))+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+(live?'':wxHtml(w))+routeBoxHtml(w)
      +invitedHtml(w)
      +(open?tallyHtml(w):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w))
-     +((!mine||isAdmin||live)?'<div class="acts">'
-     +(mine?'':live?'<span class="note" style="flex:1">🚴 Jazda trwa — dołączyć już nie można.</span>':peek?'<span class="note" style="flex:1">Nie jesteś zaproszony — możesz tylko podejrzeć lub usunąć.</span>'
+     +'<div class="acts">'
+     +(mine?(live?'':(open?'<button class="b join" data-my="settle" data-id="'+esc(w.id)+'" title="Ustal godzinę">✅ Ustal '+esc(hhmm(new Date(wBest(w))))+'</button>':'<button class="b g join" data-my="edit" data-id="'+esc(w.id)+'">✏️ Edytuj</button>')
+        +(priv?'<button class="ib" data-my="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
+        +'<button class="ib" data-my="share" data-id="'+esc(w.id)+'" title="Udostępnij" aria-label="Udostępnij">'+ICON.share+'</button>'):live?'<span class="note" style="flex:1">🚴 Jazda trwa — dołączyć już nie można.</span>':peek?'<span class="note" style="flex:1">Nie jesteś zaproszony — możesz tylko podejrzeć lub usunąć.</span>'
        :open?'<button class="b join'+(joined?' g':'')+'" data-w="pref" data-id="'+esc(w.id)+'">'+(joined&&myp?'✓ '+esc(hhmm(new Date(myp)))+' · zmień':dec?'Jednak mogę? Wybierz godzinę':'Pasuje mi o…')+'</button>'
        :'<button class="b join'+(joined?' g':'')+'" data-w="join" data-id="'+esc(w.id)+'">'+(joined?'Rezygnuję':dec?'Jednak jadę!':'Jadę!')+'</button>')
      +(canInv&&!live?'<button class="ib" data-w="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
      +((mine||isAdmin)?'<button class="ib del'+(mine?'':' adm')+'" data-w="del" data-id="'+esc(w.id)+'" title="'+(mine?'Odwołaj zaproszenie':'Usuń (admin)')+'" aria-label="'+(mine?'Odwołaj zaproszenie':'Usuń (admin)')+'">'+ICON.del+'</button>':'')
-     +'</div>':'')
+     +'</div>'
      +'</div>';
 }
 /* ---------- formularz zaproszenia: dzień + zegar klapkowy + notatka ---------- */
@@ -5156,8 +5199,15 @@ $("wsave").onclick=async()=>{
   }catch(e){say("Nie udało się: "+(e&&e.message?e.message:"błąd"))}
 };
 /* ---------- Twoje zaproszenie (zamiast dużego przycisku) ---------- */
-function wsecSync(){const my=$("mywant"),hasMy=!!(my&&my.querySelector("[data-wid]")),hasCal=!!$("wantlist").querySelector(".wday");
-  $("wsecmy").classList.toggle("hide",!hasMy);$("wseccal").classList.toggle("hide",!(hasMy&&hasCal))}
+// 🔀 przełącznik „Twoje zaproszenia” (prośba właściciela 2026-11-17 21:21): włączony — osobno na górze (karuzela),
+// wyłączony — zwinięte, a Twoje zaproszenia wracają do kalendarza na swoje godziny; zapamiętane w telefonie
+const myOn=()=>{try{return localStorage.getItem("myOff")!=="1"}catch(e){return true}};
+let myCnt=0;
+function wsecSync(){const hasMy=myCnt>0,hasCal=!!$("wantlist").querySelector(".wday"),on=myOn();
+  $("wsecmy").classList.toggle("hide",!hasMy);$("wseccal").classList.toggle("hide",!(hasMy&&hasCal));
+  const sw=$("mysw");sw.classList.toggle("on",on);sw.setAttribute("aria-checked",String(on));
+  $("wsecmyn").textContent=hasMy?' · '+myCnt+(on?'':' · w kalendarzu'):''}
+$("mysw").addEventListener("click",()=>{const on=!myOn();try{localStorage.setItem("myOff",on?"0":"1")}catch(e){}renderWants();say(on?"Twoje zaproszenia — osobno na górze.":"Twoje zaproszenia — w kalendarzu, na swoich godzinach.")});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-wmup]");if(!b)return;const w=wants.find(x=>x.id===b.dataset.wmup);if(w)goToWant(w)});
 function renderMyWant(){
   const box=$("mywant");if(!box)return;
@@ -5165,7 +5215,8 @@ function renderMyWant(){
   const mine=wants.filter(w=>w.user_id===uid&&act(w)).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
   const others=wants.filter(w=>w.user_id!==uid&&act(w)&&dayDiff(new Date(w.starts_at))===0).length;
   const bd=$("wbadge");bd.innerHTML='<span class="fbn">'+others+'</span><span class="fbd"> dziś</span>';bd.classList.toggle("hide",!others);
-  if(!mine.length){box.innerHTML="";return}
+  myCnt=mine.length;
+  if(!mine.length||!myOn()){box.innerHTML="";return}
   // kilka zaproszeń: karuzela przewijana w bok (z kropkami)
   const card=(w,i)=>{
     const d=new Date(w.starts_at),j=(joins[w.id]||[]).filter(x=>x!==uid);
@@ -5209,7 +5260,7 @@ $("mywant").addEventListener("scroll",e=>{
   myIdx=myCarIdx();
   const dots=$("mydots");if(dots)[...dots.children].forEach((b,i)=>b.classList.toggle("on",i===myIdx));
 },true);
-$("mywant").addEventListener("click",async e=>{
+async function myClick(e){
   const dot=e.target.closest("button[data-dot]");
   if(dot){const c=$("mycar"),it=c&&c.children[+dot.dataset.dot];if(it)c.scrollTo({left:it.offsetLeft-c.offsetLeft,behavior:"smooth"});return}
   const b=e.target.closest("button[data-my]");if(!b)return;
@@ -5236,7 +5287,10 @@ $("mywant").addEventListener("click",async e=>{
   if(b.dataset.my==="del"){
     askDelete("want",w.id);
   }
-});
+}
+$("mywant").addEventListener("click",myClick);
+// Twoje zaproszenia w kalendarzu (przełącznik wyłączony) — te same przyciski co na górze
+$("wantlist").addEventListener("click",e=>{if(e.target.closest("button[data-my]"))myClick(e)});
 $("wantlist").addEventListener("click",async e=>{
   const b=e.target.closest("button[data-w]");if(!b)return;
   const id=b.dataset.id;
@@ -5597,7 +5651,7 @@ function lsRow(x){
 const bellUnread=()=>notifs.filter(n=>!n.read_at&&nWant(n)&&(ME_KINDS.includes(n.kind)||OWN_KINDS.includes(n.kind)));
 function renderBell(){
   const b=$("bellbtn");if(!b)return;
-  const on=!!session&&visOk,n=on?bellUnread().length+fbMineUnread().length+fbAdmUnread().length+nuUnread().length+stepsBadge()+evBellUn().length:0,bd=$("bellbadge");
+  const on=!!session&&visOk,n=on?bellUnread().length+fbMineUnread().length+fbAdmUnread().length+nuUnread().length+stepsBadge()+evBellUn().length+repTodoN():0,bd=$("bellbadge");
   b.classList.toggle("hide",!on);
   bd.textContent=n>9?"9+":String(n);bd.classList.toggle("hide",!n);
   b.setAttribute("aria-label",n?"Powiadomienia — nowe: "+n:"Powiadomienia");
@@ -5628,6 +5682,7 @@ function renderBellSheet(){
    +(SL.length?bsSec("start",'✨ Dokończ start · '+(SA.length-SL.length)+' z '+SA.length,lsGet("stepsHide")==="1"?0:SL.length,SL.length,
       SL.map(x=>'<div class="nit stn"><div class="ic">'+({inst:"📲",ride:"🚴",tg:"🔔",fav:"⭐"}[x.k]||"✨")+'</div><div class="tx"><b>'+x.t.replace(" ⭐","")+'</b></div>'+(x.go?'<button type="button" class="lnk stgo" data-sb="'+x.k+'">'+x.go+' ›</button>':'')+'</div>').join("")
       +(lsGet("stepsHide")==="1"?'<div class="bsempty"><button type="button" class="lnk" data-sb="show">Pokaż z powrotem w Zaproszeniach ›</button></div>':'')):'')
+   +repBellHtml()
    +(fbMineUnread().length?bsSec("msg",'💬 Wiadomości',fbMineUnread().length,fbMineUnread().length,fbMineUnread().map(f=>fbRow(f,false)).join("")):'')
    +(fbAdmUnread().length?bsSec("adm",'🛡️ Zgłoszenia',fbAdmUnread().length,fbAdmUnread().length,fbAdmUnread().slice(0,5).map(f=>fbRow(f,true)).join("")):'')
    +(NU.length?bsSec("nu",'🆕 Nowi użytkownicy',NUu.size,NU.length,NU.slice(0,6).map(id=>nuRow(id,NUu.has(id))).join("")
@@ -5672,7 +5727,7 @@ function closeBell(){
 function goToWant(w){
   show(0);
   let el;
-  if(w.user_id===uid){
+  if(w.user_id===uid&&myOn()){
     const mine=wants.filter(x=>x.user_id===uid&&new Date(x.starts_at).getTime()>=Date.now()-3*36e5).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
     myIdx=Math.max(0,mine.findIndex(x=>x.id===w.id));renderWants();
     el=document.querySelector('#mywant .mywant[data-wid="'+w.id+'"]');
@@ -5694,6 +5749,7 @@ $("bellsheet").addEventListener("click",async e=>{
   const stb=e.target.closest("[data-sb]");   // „Dokończ start” (nie nazywać „sb” — to połączenie z bazą)
   if(stb){const k=stb.dataset.sb;closeBell();renderBell();stepGo(k);return}
   const evb=e.target.closest("[data-evb]");if(evb){closeBell();evGo(evb.dataset.evb);return}
+  const rpb=e.target.closest("[data-rep]");if(rpb){const id=rpb.dataset.rep;closeBell();repAskedAdd(id);openReport(id);return}
   const sc=e.target.closest("[data-bsec]");
   if(sc){const k=sc.dataset.bsec,st=bsColGet(),col=!sc.classList.contains("col");st[k]=col;try{localStorage.setItem("bellCol",JSON.stringify(st))}catch(err){}
     renderBellSheet();return}
