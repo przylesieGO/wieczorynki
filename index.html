@@ -49,7 +49,11 @@ nav button.on{background:var(--accbtn);color:#fff;box-shadow:0 1px 4px rgba(36,1
 /* ---- nagłówek przyklejony u góry ---- */
 .betabar{display:flex;width:100%;justify-content:center;align-items:center;gap:5px;border:0;margin:0;padding:5px 10px;font:inherit;font-size:12.5px;font-weight:600;background:#ede4ff;color:#5b31c0;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .betabar u{font-weight:700}html[data-theme=dark] .betabar{background:#2e2547;color:#cbb6ff}
-.hdr.compact .betabar{display:none}.wbeta{border-radius:999px;width:max-content;max-width:100%;margin:0 auto 14px;padding:6px 14px}
+.hdr.compact .betabar{display:none}
+/* 👁 podgląd aplikacji (👑) */
+.pvbar{position:fixed;top:0;left:0;right:0;z-index:3000;display:flex;justify-content:center;align-items:center;gap:8px;padding:calc(5px + env(safe-area-inset-top,0px)) 10px 5px;font-size:12.5px;font-weight:600;background:#fff1d6;color:#8a4b00;box-shadow:0 1px 0 rgba(0,0,0,.08)}.pvbar button{border:0;background:#8a4b00;color:#fff;font:inherit;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;cursor:pointer}
+html[data-theme=dark] .pvbar{background:#4a3512;color:#ffcf80}html[data-theme=dark] .pvbar button{background:#ffcf80;color:#2b1d05}
+body.pvon{padding-top:30px}body.pvon .hdr{top:30px}.wbeta{border-radius:999px;width:max-content;max-width:100%;margin:0 auto 14px;padding:6px 14px}
 .hdr{position:sticky;top:0;z-index:1000;background:var(--hdrbg);-webkit-backdrop-filter:saturate(180%) blur(20px);backdrop-filter:saturate(180%) blur(20px);padding-top:env(safe-area-inset-top,0px);border-bottom:1px solid transparent;transition:border-color .2s}
 .hin{max-width:900px;margin:0 auto;padding:14px 16px 10px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;transition:padding .2s}
 .apptitle{flex:1;min-width:0;margin:0;font-size:22px;line-height:1.2;white-space:nowrap;transition:font-size .2s}
@@ -890,6 +894,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 <div class="bootbeta">Wersja testowa (BETA)</div></div>
 
 <!-- ===== NAGŁÓWEK (przyklejony, zwija się przy przewijaniu) ===== -->
+<div class="pvbar hide" id="pvbar" role="status"></div>
 <header class="hdr" id="hdr"><button type="button" class="betabar" data-betafb="1">🧪 Wersja testowa (BETA) · <u>zgłoś uwagi ›</u></button><div class="hin">
  <h1 class="apptitle"><button type="button" class="honl hide" id="honl" aria-label="Kto jest online"></button><span class="tlogo"><svg class="blogo" viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="27" fill="#1f9d55"/><circle cx="44" cy="62" r="25" fill="none" stroke="#fff" stroke-width="9"/><circle cx="76" cy="62" r="25" fill="none" stroke="#fbbf24" stroke-width="9"/><circle cx="44" cy="62" r="4" fill="#fff"/><circle cx="76" cy="62" r="4" fill="#fbbf24"/></svg></span><span class="tname"> PrzylesieGo!</span><span class="menick hide" id="menick" title="Jesteś zalogowany jako — kliknij, żeby otworzyć Ustawienia"></span></h1>
  <nav><button id="t0" class="on">ZAPROSZENIA</button><button id="t3" class="hide">Imprezy</button><button id="t1" class="hide">Wieczorynki</button><button id="t2" class="hide">Zaawansowane</button></nav>
@@ -1709,16 +1714,18 @@ function nickHtml(){
    +'<button class="b sbtn" data-c="nicksave">Zapisz</button></div>';
 }
 const lastAdmin=()=>isAdmin&&adminIds.length<=1;
-let supers=new Set();const isSuper=id=>supers.has(id);
+// 👁 podgląd aplikacji dla 👑 (decyzja właściciela 2026-11-17 05:37–05:44): pv = "" | "user" | "tester"; gość — osobna karta ?jako=gosc
+let pv="";const PV_GUEST=/[?&]jako=gosc(&|$)/.test(location.search);
+let supers=new Set();const isSuper=id=>supers.has(id)&&!(pv&&id===uid);const isKingReal=()=>!!session&&supers.has(uid);
 /* 🔔 Telegram w prywatnej wiadomości (KROK 18, funkcja testowa telegram_dm) */
 let tgOk=false,tgLink=null,tgCode="",tgPoll=null,tgPollEnd=0;
 const tgOn=()=>!!session&&tgOk&&feat("telegram_dm");
 /* 🧪 testerzy i funkcje testowe (KROK 16) */
 let testerIds=new Set(),testerOk=false,flags={},flagsReady=false,betaOn=true;
 try{betaOn=localStorage.getItem("betaOn")!=="0"}catch(e){}
-const meTester=()=>!!session&&(testerIds.has(uid)||isSuper(uid));
+const meTester=()=>!!session&&(pv?pv==="tester":(testerIds.has(uid)||isSuper(uid)));
 // czy pokazać funkcję o danym kluczu: „Wszyscy” albo „Tylko testerzy” + tester z włączonym podglądem
-const feat=k=>{const f=flags[k];return !!f&&(f.state==="all"||(f.state==="testers"&&meTester()&&betaOn))};
+const feat=k=>{const f=flags[k];return !!f&&(f.state==="all"||(f.state==="testers"&&meTester()&&(betaOn||pv==="tester")))};
 // plakietka 🧪 BETA przy funkcji, która nie jest jeszcze dla wszystkich
 const betaTag=k=>flags[k]&&flags[k].state!=="all"?'<span class="beta">🧪 BETA</span>':'';
 // zakładki pod przełącznikiem (KROK 17): brak wpisu w bazie = widoczna dla wszystkich (jak dotąd)
@@ -2349,6 +2356,10 @@ function renderGear(){
      +gGrp("Pomoc i opinie",[gRow("#30d158","help","Pomoc — co potrafi aplikacja","Wersja "+esc(APP_VER),relNew()?'<span class="ios-bdg">Nowości</span>':'','data-c="help"'),
         fbOk?gRow("#bf5af2","msg","Oceń aplikację / zgłoś błąd","Błąd, pomysł albo ocena — odpisujemy",fbMineUnread().length?'<span class="ios-bdg">'+fbMineUnread().length+'</span>':'','data-c="fb"'):"",
         isStandalone()?"":gRow("#636366","phone","Zainstaluj aplikację","Ikona na ekranie telefonu","",'data-c="inst"')])
+     +(isKingReal()?gGrp("👑 Podgląd aplikacji",[
+        gRow("#8e8e93","user","Jak widzi gość","Nowa karta bez logowania",'','data-c="pv" data-pv="guest"'),
+        gRow("#0a84ff","users","Jak widzi użytkownik","Bez funkcji testowych i bez uprawnień admina",pv==="user"?'<span class="ios-v ok">'+uiIcon("check")+'Teraz</span>':'','data-c="pv" data-pv="user"'),
+        gRow("#bf5af2","flask","Jak widzi tester","Z funkcjami testowymi (🧪 BETA), bez uprawnień admina",pv==="tester"?'<span class="ios-v ok">'+uiIcon("check")+'Teraz</span>':'','data-c="pv" data-pv="tester"')]):'')
      +(isAdmin?gGrp("Administracja",[gRow("#8e8e93","shield","Administracja","Użytkownicy, zgłoszenia, funkcje testowe",fbAdmUnread().length?'<span class="ios-bdg">'+fbAdmUnread().length+'</span>':'','data-c="admin"')]):'')
      +setGroupsHtml(false)
      +'<div class="ios-grp" style="margin-top:22px"><button type="button" class="ios-it ios-row ios-out" data-c="out">Wyloguj</button></div>'
@@ -2544,6 +2555,9 @@ $("gearpanel").addEventListener("click",async e=>{
   }
   if(c==="help"){gearOpen=false;renderGear();openHelp();return}
   if(c==="inst"){gearView="inst";renderGear();return}
+  if(c==="pv"){const m=e.target.closest("[data-pv]").dataset.pv;
+    if(m==="guest"){const w=window.open(location.pathname+"?jako=gosc","_blank","noopener");if(!w)say("Przeglądarka zablokowała nową kartę — zezwól na wyskakujące okna.");return}
+    gearOpen=false;renderGear();pvSet(pv===m?"":m);return}
   if(c==="instgo"){if(instPrompt){const ev=instPrompt;instPrompt=null;try{ev.prompt();const r=await ev.userChoice;say(r&&r.outcome==="accepted"?"📲 Instaluję — ikona pojawi się na ekranie telefonu.":"Możesz zainstalować później: ⚙️ → Zainstaluj aplikację.")}catch(err){gearView="inst"}renderGear();return}gearView="inst";renderGear();return}
   if(c==="testeradd"){
     const sel=$("testersel"),id=sel?sel.value:"";if(!id||!isSuper(uid))return;
@@ -5172,7 +5186,7 @@ $("wantlist").addEventListener("click",async e=>{
 /* ---------- zaproszenia dla wybranych osób (KROK 13) ---------- */
 let visOk=false,invs={},notifs=[];
 /* 🧪 zaproszenia testowe (KROK 22) */
-let testOk=false;const isTest=w=>!!w&&!!w.is_test;
+let testOk=false;const isTest=w=>!!w&&!!w.is_test&&!pv&&!PV_GUEST;   // w podglądzie 👑 testowe wyglądają jak prawdziwe
 const testTag=w=>isTest(w)?'<span class="ttag">🧪 TEST</span>':'';
 const CHECK='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const plf=(n,f)=>n===1?f[0]:(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20))?f[1]:f[2];
@@ -6168,6 +6182,8 @@ function deriveWants(){
   if(hideTest)a=a.filter(x=>!x.is_test||x.user_id===uid||(joins[x.id]||[]).includes(uid));
   wantsAll=a.slice();
   if(!isAdmin)a=a.filter(x=>x.user_id===uid||!modGone(x.user_id));
+  // 👁 podgląd: cudze prywatne zaproszenia, do których 👑 nie jest zaproszony — jak u zwykłego użytkownika (niewidoczne)
+  if(pv)a=a.filter(x=>x.visibility!=="private"||x.user_id===uid||(invs[x.id]||[]).some(y=>y.u===uid)||(joins[x.id]||[]).includes(uid));
   if(bikeOk)a.forEach(w=>{if(w.place&&!w.place_city){const x=places.find(y=>y.city&&y.name.toLowerCase()===w.place.toLowerCase());if(x){w.place_city=x.city;w.place_area=w.place_area||x.area||null}}});
   wants=a;
 }
@@ -6258,7 +6274,18 @@ async function afterData(){
     try{const r=await sb.rpc("want_autosettle");if(!r.error&&r.data)await syncNow()}catch(e){}
   }
 }
-function snapClear(){try{localStorage.removeItem("snap")}catch(e){}}
+const PV_LBL={user:"użytkownik bez funkcji testowych",tester:"tester (z funkcjami testowymi)"};
+function pvBar(){const b=$("pvbar");if(!b)return;const on=!!pv||PV_GUEST;
+  b.classList.toggle("hide",!on);document.body.classList.toggle("pvon",on);
+  b.innerHTML=on?uiIcon("eye")+'<span>Podgląd: '+(PV_GUEST?'gość':PV_LBL[pv])+'</span><button type="button" id="pvend">'+(PV_GUEST?'Zamknij':'Zakończ')+'</button>':''}
+function pvSet(m){
+  pv=m||"";isAdmin=adminIds.includes(uid)&&!pv;
+  deriveWants();pvBar();refreshUi();try{renderEvents()}catch(e){}try{renderSteps()}catch(e){}
+  if(pv)say("👁 Podgląd: "+PV_LBL[pv]+". Akcje (np. „Jadę!”) działają naprawdę na Twoim koncie.");else say("Koniec podglądu.");
+}
+document.addEventListener("click",e=>{if(!e.target.closest("#pvend"))return;
+  if(PV_GUEST){window.close();setTimeout(()=>{location.href=location.pathname},150);return}pvSet("")});
+function snapClear(){if(PV_GUEST)return;try{localStorage.removeItem("snap")}catch(e){}}
 function snapSave(){
   if(!session||!syncOk||syncN==null)return;
   try{
@@ -6284,7 +6311,7 @@ function snapLoad(){
     myPriv=d.myPriv;profExOk=d.profExOk;genderOk=d.genderOk;nicks=d.nicks||{};genders=d.genders||{};joinedAt=d.joinedAt||{};avAt=d.avAt||{};medias=d.medias||{};me.nick=d.meNick||null;
     rbOk=d.rbOk;bikeOk=d.bikeOk;placeOk=d.placeOk;distOk=d.distOk;paceOk=d.paceOk;wRouteOk=d.wRouteOk;testOk=d.testOk;rangeOk=d.rangeOk;visOk=d.visOk;wCols=d.wCols;
     wRaw=d.wRaw||[];joins=d.joins||{};prefs=d.prefs||{};invs=d.invs||{};decls=d.decls||{};notifs=d.notifs||[];reportOk=d.reportOk;reports=d.reports||{};lib=d.lib||[];
-    adminIds=d.adminIds||[];isAdmin=adminIds.includes(uid);nickColors=d.nickColors||{...DEF_COLORS};nickBgs=d.nickBgs||{...DEF_BGS};
+    adminIds=d.adminIds||[];isAdmin=adminIds.includes(uid)&&!pv;nickColors=d.nickColors||{...DEF_COLORS};nickBgs=d.nickBgs||{...DEF_BGS};
     favOk=d.favOk;favs=new Set(d.favs||[]);supers=new Set(d.supers||[]);testerOk=d.testerOk;testerIds=new Set(d.testerIds||[]);
     evOk=d.evOk;evNewOk=d.evNewOk;evGeoOk=d.evGeoOk;evExtraOk=d.evExtraOk;evInvOk=d.evInvOk;evPriceOk=!!d.evPriceOk;evLoaded=!!d.evLoaded;evs=d.evs||[];evDist=d.evDist||{};evPart=d.evPart||{};evLikes=d.evLikes||{};evInv=d.evInv||[];
     fbOk=d.fbOk;fbList=d.fbList||[];fbDone=d.fbDone||{};tgOk=d.tgOk;tgLink=d.tgLink||null;
@@ -6413,7 +6440,7 @@ async function loadRemote(selectId){
     if(hideTest)wants=wants.filter(x=>!x.is_test||x.user_id===uid||(joins[x.id]||[]).includes(uid));
     lib=ok(l)||[];
     startPresence();
-    adminIds=(ok(ad)||[]).map(x=>x.user_id);isAdmin=adminIds.includes(uid);
+    adminIds=(ok(ad)||[]).map(x=>x.user_id);isAdmin=adminIds.includes(uid)&&!pv;
     // 👑 moderacja (KROK 33): ⛔ zablokowani i 👻 ukryci — inni ich nie widzą (admin widzi)
     const md=await sb.from("moderation").select("user_id,banned_at,hidden");modOk=!md.error;
     modBanned=new Set((ok(md)||[]).filter(x=>x.banned_at).map(x=>x.user_id));modHidden=new Set((ok(md)||[]).filter(x=>x.hidden).map(x=>x.user_id));
@@ -6731,7 +6758,10 @@ bootTimer=setTimeout(()=>bootFail(),8000);
   $("wdt").value=localIso(new Date()).slice(0,10);
   advRender(false);refreshUi();
   if(!window.supabase){$("dbnote").textContent="Nie udało się załadować biblioteki bazy danych — sprawdź połączenie z internetem i odśwież stronę.";bootFail(navigator.onLine===false?"📡 Brak połączenia z internetem":"📡 Nie udało się wczytać aplikacji");return}
-  sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  // 👁 podgląd gościa: osobny klient bez sesji (nie rusza logowania 👑 w innych kartach)
+  sb=PV_GUEST?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:"pv-guest"}})
+    :window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  if(PV_GUEST)pvBar();
   try{const r=await sb.auth.getSession();setSession(r.data.session)}catch(e){}
   if(RECOVERY&&session)pwMode=true;
   if(HASH_EXPIRED&&!session){$("ainfo").textContent="Link z maila wygasł albo został już użyty. Wpisz e-mail i kliknij „Nie pamiętam hasła”, żeby wysłać nowy.";try{history.replaceState(null,"",location.pathname)}catch(e){}}
