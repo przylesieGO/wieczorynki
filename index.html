@@ -3253,6 +3253,15 @@ const limEdit=n=>n==null?"":n%60?Math.floor(n/60)+":"+String(n%60).padStart(2,"0
 const elevTxt=n=>Number(n).toLocaleString("pl-PL")+" m";
 function evWhen(e){const n=evDays(e);if(n>1)return "🏁 start za "+n+" "+plf(n,["dzień","dni","dni"]);if(n===1)return "🏁 start jutro!";if(n===0)return "🏁 start dziś!";if(!evPast(e))return "🚴 trwa";return ""}
 const evWhenCls=e=>{const n=evDays(e);return n<=0?" now":n<=7?" soon":""};
+// ✏️ ostatnia zmiana imprezy — kto, kiedy, co (dane z KROKU 54; decyzja właściciela 2026-11-17 10:25: wariant A, bez pełnej historii)
+function evLastChg(e){
+  if(!e.changed_at)return "";
+  const d=new Date(e.changed_at),p=n=>String(n).padStart(2,"0"),now=new Date();
+  const when=p(d.getDate())+"."+p(d.getMonth()+1)+(d.getFullYear()!==now.getFullYear()?"."+d.getFullYear():"")+", "+p(d.getHours())+":"+p(d.getMinutes());
+  const who=e.changed_by===uid?"Ty":e.changed_by&&nicks[e.changed_by]?nicks[e.changed_by]:"ktoś";
+  const what=(e.changed_what||[]).join(", ");
+  return '<div class="note" style="margin-top:2px">Ostatnia zmiana: '+esc(who)+' · '+esc(when)+(what?' · '+esc(what):'')+'</div>';
+}
 function evCard(e){
   const P=evPart[e.id]||[],D=evDist[e.id]||[],mine=evMine(e),open=evOpen===e.id,past=evPast(e),d=new Date(e.date_from+"T12:00"),st=evState(e);
   const head='<button type="button" class="evh" data-ev="tog" data-id="'+esc(e.id)+'"><span class="evdt"><b>'+d.getDate()+'</b><i>'+esc(d.toLocaleDateString("pl-PL",{month:"short"}).replace(".","").toUpperCase())+'</i></span><span class="evm"><span class="evn">'+esc(e.name)+'</span>'
@@ -3282,7 +3291,8 @@ function evCard(e){
    +'<div class="acts evacts">'+(evInvOk&&!past?'<button class="ib" data-ev="inv" data-id="'+esc(e.id)+'" title="Zaproś na imprezę" aria-label="Zaproś na imprezę">'+ICON.addp+'</button>':'')+'<button class="ib evlike'+((evLikes[e.id]||[]).includes(uid)?' on':'')+'" data-ev="like" data-id="'+esc(e.id)+'" title="Lubię" aria-label="Lubię">'+ICON.heart+((evLikes[e.id]||[]).length?'<span class="lkn">'+(evLikes[e.id]||[]).length+'</span>':'')+'</button><button class="ib" data-ev="gcal" data-id="'+esc(e.id)+'" title="Google Kalendarz" aria-label="Google Kalendarz">'+ICON.gcal+'</button><button class="ib" data-ev="share" data-id="'+esc(e.id)+'" title="Udostępnij" aria-label="Udostępnij">'+ICON.share+'</button>'
    +'<button class="ib" data-ev="dup" data-id="'+esc(e.id)+'" title="Duplikuj (np. kolejna edycja)" aria-label="Duplikuj">'+ICON.dup+'</button>'
    +(evCanEdit(e)?'<button class="ib" data-ev="edit" data-id="'+esc(e.id)+'" title="Edytuj" aria-label="Edytuj">'+ICON.edit+'</button>'+((isAdmin||!e.delete_req_at)?'<button class="ib del'+(e.created_by===uid&&!isAdmin?'':' adm')+'" data-ev="'+(isAdmin?'del':'delreq')+'" data-id="'+esc(e.id)+'" title="'+(isAdmin?'Usuń':'Poproś o usunięcie')+'" aria-label="Usuń">'+ICON.del+'</button>':''):'')+'</div>'
-   +(e.created_by&&nicks[e.created_by]?'<div class="note" style="margin-top:6px">Dodał(a): '+esc(nicks[e.created_by])+'</div>':'')+'</div></div>';
+   +(e.created_by&&nicks[e.created_by]?'<div class="note" style="margin-top:6px">Dodał(a): '+esc(nicks[e.created_by])+'</div>':'')
+   +evLastChg(e)+'</div></div>';
 }
 /* ---------- 📍 „W okolicy” (KROK 43; decyzja właściciela 2026-11-16 10:56) ----------
    promień 50/100/200 km; odległość w linii prostej od „Mojej miejscowości” (⚙️, zapamiętana w tym telefonie)
