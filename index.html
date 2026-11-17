@@ -1756,7 +1756,7 @@ async function doDelete(r){
     if(r.kind==="route")delete libCache[r.id];
     if(r.kind==="want")closeWantForm();
     gearOpen=false;delReq=null;
-    await loadRemote();
+    await syncNow();
     say(r.kind==="want"?(r.own?"Zaproszenie odwołane.":"Zaproszenie usunięte."):r.kind==="ride"?"Wieczorynka usunięta.":"Trasa usunięta.");
   }catch(err){
     const i=$("gconfinfo");const m="Nie udało się: "+(err&&err.message?err.message:"błąd");
@@ -2120,12 +2120,12 @@ function testerCardHtml(){
 }
 async function testerReq(b){
   if(b)b.disabled=true;
-  try{const r=await sb.rpc("fb_send",{k:"tester",r:null,b:null,dev:fbDevice()});if(r.error)throw r.error;await loadRemote();say("🧪 Zgłoszenie wysłane — dzięki! Odezwiemy się, gdy będzie miejsce.")}
+  try{const r=await sb.rpc("fb_send",{k:"tester",r:null,b:null,dev:fbDevice()});if(r.error)throw r.error;await syncNow();say("🧪 Zgłoszenie wysłane — dzięki! Odezwiemy się, gdy będzie miejsce.")}
   catch(e){if(b)b.disabled=false;say(fbErr(e))}
 }
 async function testerGrant(f){
   try{const r=await sb.from("testers").insert({user_id:f.user_id,added_by:uid});if(r.error&&r.error.code!=="23505")throw r.error;
-    const s=await sb.rpc("fb_status",{f:f.id,s:"done"});if(s.error)throw s.error;await loadRemote();say("🧪 Nadano prawa testera: "+nickOf(f.user_id))}
+    const s=await sb.rpc("fb_status",{f:f.id,s:"done"});if(s.error)throw s.error;await syncNow();say("🧪 Nadano prawa testera: "+nickOf(f.user_id))}
   catch(e){say("Nie udało się: "+(e&&e.message?e.message:"błąd"))}
 }
 function fbHubHtml(){
@@ -2212,19 +2212,19 @@ async function fbSend(){
   if(k!=="rating"&&t.length<3){inf.textContent="Opisz zgłoszenie (min. 3 znaki).";return}
   fbBusy=true;renderGear();
   try{const r=await sb.rpc("fb_send",{k,r:k==="rating"?fbf.rating:null,b:t||null,dev:fbf.dev?fbDevice():null});if(r.error)throw r.error;
-    fbf.text="";fbf.rating=0;fbBusy=false;await loadRemote();say(k==="rating"?"⭐ Dzięki za ocenę!":"💬 Wysłane — dzięki! Odpowiedź zobaczysz pod 🔔.")}
+    fbf.text="";fbf.rating=0;fbBusy=false;await syncNow();say(k==="rating"?"⭐ Dzięki za ocenę!":"💬 Wysłane — dzięki! Odpowiedź zobaczysz pod 🔔.")}
   catch(e){fbBusy=false;renderGear();const i=$("fbinfo");if(i)i.textContent=fbErr(e)}
 }
 async function fbReply(){
   const t=fbReplyTxt.trim();if(t.length<1){$("fbrinfo").textContent="Wpisz odpowiedź.";return}
   fbBusy=true;renderGear();
-  try{const r=await sb.rpc("fb_reply",{f:fbId,b:t});if(r.error)throw r.error;fbReplyTxt="";fbBusy=false;await fbLoadMsgs(fbId);await loadRemote();say("Wysłano ✔")}
+  try{const r=await sb.rpc("fb_reply",{f:fbId,b:t});if(r.error)throw r.error;fbReplyTxt="";fbBusy=false;await fbLoadMsgs(fbId);await syncNow();say("Wysłano ✔")}
   catch(e){fbBusy=false;renderGear();const i=$("fbrinfo");if(i)i.textContent=fbErr(e)}
 }
 async function fbMsgSend(){
   const t=fbMsgTxt.trim();if(t.length<3){$("fbminfo").textContent="Wpisz wiadomość (min. 3 znaki).";return}
   fbBusy=true;renderGear();
-  try{const r=await sb.rpc("fb_admin_msg",{u:fbTo,b:t});if(r.error)throw r.error;fbMsgTxt="";fbBusy=false;await loadRemote();say("✉️ Wysłano do "+nickOf(fbTo));fbOpen(r.data,"fbadmin")}
+  try{const r=await sb.rpc("fb_admin_msg",{u:fbTo,b:t});if(r.error)throw r.error;fbMsgTxt="";fbBusy=false;await syncNow();say("✉️ Wysłano do "+nickOf(fbTo));fbOpen(r.data,"fbadmin")}
   catch(e){fbBusy=false;renderGear();const i=$("fbminfo");if(i)i.textContent=fbErr(e)}
 }
 /* gwiazdki: przesuwanie palcem / myszą zapala kolejne */
@@ -2265,7 +2265,7 @@ $("ratesheet").addEventListener("click",async e=>{
   if(!rateV){inf.textContent="Zaznacz gwiazdki — przesuń palcem.";return}
   if(rateV<=3&&t.length<3){inf.textContent="Napisz, co poprawić (przy 1–3 ★).";return}
   b.disabled=true;
-  try{const x=await sb.rpc("fb_send",{k:"rating",r:rateV,b:t||null,dev:fbDevice()});if(x.error)throw x.error;closeRate(0);await loadRemote();say("⭐ Dzięki za ocenę!")}
+  try{const x=await sb.rpc("fb_send",{k:"rating",r:rateV,b:t||null,dev:fbDevice()});if(x.error)throw x.error;closeRate(0);await syncNow();say("⭐ Dzięki za ocenę!")}
   catch(err){b.disabled=false;inf.textContent=fbErr(err)}
 });
 const anySheetOpen=()=>[...document.querySelectorAll(".sheet")].some(x=>!x.classList.contains("hide"));
@@ -2413,7 +2413,7 @@ $("gearpanel").addEventListener("click",async e=>{
   const ro=e.target.closest("button[data-ro]");
   if(ro){try{localStorage.setItem("repOff",ro.dataset.ro==="1"?"1":"0")}catch(err){}renderGear();say(ro.dataset.ro==="1"?"Nie będę pytać „Jak poszło?”.":"Zapytam „Jak poszło?” po jeździe.");return}
   const ht=e.target.closest("button[data-ht]");
-  if(ht){hideTest=ht.dataset.ht==="1";try{localStorage.setItem("hideTest",hideTest?"1":"0")}catch(err){}renderGear();await loadRemote();say(hideTest?"Testowe zaproszenia ukryte.":"Testowe zaproszenia widoczne.");return}
+  if(ht){hideTest=ht.dataset.ht==="1";try{localStorage.setItem("hideTest",hideTest?"1":"0")}catch(err){}renderGear();await syncNow();say(hideTest?"Testowe zaproszenia ukryte.":"Testowe zaproszenia widoczne.");return}
   const ho=e.target.closest("button[data-ho]");
   if(ho&&canStealth()){hideOnline=ho.dataset.ho==="1";try{localStorage.setItem("hideOnline",hideOnline?"1":"0")}catch(err){}applyPresence();renderGear();say(hideOnline?"👻 Jesteś niewidoczny — nie liczysz się do „online”.":"🟢 Znowu widać Cię jako online.");return}
   if(sn){showNick=sn.dataset.sn==="1";try{localStorage.setItem("showNick",showNick?"1":"0")}catch(err){}renderMeNick();renderGear();return}
@@ -2428,7 +2428,7 @@ $("gearpanel").addEventListener("click",async e=>{
     try{
       const r=await sb.from("feature_flags").update({state:st,updated_at:new Date().toISOString(),updated_by:uid}).eq("key",k).select("key");
       if(r.error)throw r.error;if(!r.data||!r.data.length)throw new Error("brak uprawnień");
-      await loadRemote();say("🚦 "+(flags[k]?flags[k].name:k)+": "+FSTATE.find(x=>x[0]===st)[1]);
+      await syncNow();say("🚦 "+(flags[k]?flags[k].name:k)+": "+FSTATE.find(x=>x[0]===st)[1]);
     }catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
     return;
   }
@@ -2442,7 +2442,7 @@ $("gearpanel").addEventListener("click",async e=>{
     if(a.dataset.a==="trm"){
       if(!isSuper(uid))return;
       if(!confirm("Odebrać prawa testera użytkownikowi "+nickOf(a.dataset.id)+"?"))return;
-      try{const r=await sb.from("testers").delete().eq("user_id",a.dataset.id);if(r.error)throw r.error;await loadRemote();say("Odebrano prawa testera.")}
+      try{const r=await sb.from("testers").delete().eq("user_id",a.dataset.id);if(r.error)throw r.error;await syncNow();say("Odebrano prawa testera.")}
       catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
       return;
     }
@@ -2454,7 +2454,7 @@ $("gearpanel").addEventListener("click",async e=>{
         nb?modBanned.add(id):modBanned.delete(id);nh?modHidden.add(id):modHidden.delete(id);
         say(a.dataset.a==="modban"?(nb?"⛔ Zablokowano: ":"✅ Odblokowano: ")+nickOf(id):(nh?"👻 Ukryto: ":"👁 Widoczne znowu: ")+nickOf(id))}
       catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
-      modBusy=false;renderGear();loadRemote();return}
+      modBusy=false;renderGear();syncNow();return}
     if(a.dataset.a==="plcity"){fillPlaceCities(true);return}
     if(a.dataset.a==="plpin"||a.dataset.a==="pldel"){
       const x=places.find(y=>y.id===a.dataset.id);if(!x)return;
@@ -2479,7 +2479,7 @@ $("gearpanel").addEventListener("click",async e=>{
       const v=($("moddelw")||{}).value||"";if(v.trim().toUpperCase()!=="USUŃ"){say("Wpisz USUŃ, żeby potwierdzić.");return}
       const id=modDelId,nm=nickOf(id);modBusy=true;renderGear();
       try{const r=await sb.rpc("admin_delete_user",{u:id});if(r.error)throw r.error;
-        say("🗑 Usunięto konto "+nm);gearView="admin";modDelId="";await loadRemote()}
+        say("🗑 Usunięto konto "+nm);gearView="admin";modDelId="";await syncNow()}
       catch(err){say(/ADMIN/.test(err&&err.message||"")?"Najpierw odbierz uprawnienia administratora.":"Nie udało się: "+(err&&err.message?err.message:"błąd"))}
       modBusy=false;renderGear();return}
     if(!isAdmin)return;
@@ -2489,7 +2489,7 @@ $("gearpanel").addEventListener("click",async e=>{
     try{
       const res=await sb.from("admins").delete().eq("user_id",a.dataset.id);
       if(res.error)throw res.error;
-      await loadRemote();say("Uprawnienia odebrane.");
+      await syncNow();say("Uprawnienia odebrane.");
     }catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
     return;
   }
@@ -2519,7 +2519,7 @@ $("gearpanel").addEventListener("click",async e=>{
     const i=$("gtdel");if(!i)return;
     if(i.value.trim().toUpperCase()!=="USUŃ"){$("gtdelinfo").textContent="Wpisz słowo USUŃ, aby potwierdzić.";return}
     b.disabled=true;
-    try{const r=await sb.rpc("admin_test_wants",{do_delete:true});if(r.error)throw r.error;gearView="admin";await loadRemote();renderGear();say("🧹 Usunięto testowe zaproszenia: "+(+r.data||0))}
+    try{const r=await sb.rpc("admin_test_wants",{do_delete:true});if(r.error)throw r.error;gearView="admin";await syncNow();renderGear();say("🧹 Usunięto testowe zaproszenia: "+(+r.data||0))}
     catch(err){b.disabled=false;$("gtdelinfo").textContent="Nie udało się: "+(err&&err.message?err.message:"błąd")}
     return;
   }
@@ -2528,7 +2528,7 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="instgo"){if(instPrompt){const ev=instPrompt;instPrompt=null;try{ev.prompt();const r=await ev.userChoice;say(r&&r.outcome==="accepted"?"📲 Instaluję — ikona pojawi się na ekranie telefonu.":"Możesz zainstalować później: ⚙️ → Zainstaluj aplikację.")}catch(err){gearView="inst"}renderGear();return}gearView="inst";renderGear();return}
   if(c==="testeradd"){
     const sel=$("testersel"),id=sel?sel.value:"";if(!id||!isSuper(uid))return;
-    try{const r=await sb.from("testers").insert({user_id:id,added_by:uid});if(r.error)throw r.error;await loadRemote();say("🧪 Nadano prawa testera: "+nickOf(id))}
+    try{const r=await sb.from("testers").insert({user_id:id,added_by:uid});if(r.error)throw r.error;await syncNow();say("🧪 Nadano prawa testera: "+nickOf(id))}
     catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
     return;
   }
@@ -2574,7 +2574,7 @@ $("gearpanel").addEventListener("click",async e=>{
     try{
       const res=await sb.from("admins").insert({user_id:id});
       if(res.error)throw res.error;
-      await loadRemote();say("Nadano uprawnienia: "+nickOf(id));
+      await syncNow();say("Nadano uprawnienia: "+nickOf(id));
     }catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
     return;
   }
@@ -2592,7 +2592,7 @@ $("gearpanel").addEventListener("click",async e=>{
   const ff=e.target.closest("button[data-ff]");if(ff){fbAdmFilter=ff.dataset.ff;renderGear();return}
   const row=e.target.closest("button[data-fb]");if(row){fbOpen(row.dataset.fb,gearView==="fbadmin"?"fbadmin":"fb");return}
   const st=e.target.closest("button[data-fs2]");
-  if(st&&isAdmin){try{const r=await sb.rpc("fb_status",{f:fbId,s:st.dataset.fs2});if(r.error)throw r.error;await loadRemote();say("Status: "+FB_ST[st.dataset.fs2])}catch(err){say(fbErr(err))}}
+  if(st&&isAdmin){try{const r=await sb.rpc("fb_status",{f:fbId,s:st.dataset.fs2});if(r.error)throw r.error;await syncNow();say("Status: "+FB_ST[st.dataset.fs2])}catch(err){say(fbErr(err))}}
 });
 async function saveColors(){
   if(!isAdmin)return;
@@ -2602,7 +2602,7 @@ async function saveColors(){
     const res=await sb.from("app_settings").upsert([{key:"nick_color_K",value:x.cK},{key:"nick_color_M",value:x.cM},{key:"nick_bg_K",value:x.bK},{key:"nick_bg_M",value:x.bM}]).select("key");
     if(res.error)throw res.error;
     if(!res.data||res.data.length<4)throw new Error("brak uprawnień");
-    await loadRemote();gearView="admin";renderGear();say("Kolory nicków zapisane ✔");
+    await syncNow();gearView="admin";renderGear();say("Kolory nicków zapisane ✔");
   }catch(err){inf.textContent="Nie udało się zapisać: "+(err&&err.message?err.message:"błąd")}
 }
 $("gearpanel").addEventListener("keydown",e=>{
@@ -2629,7 +2629,7 @@ async function gearDeleteAccount(){
     }
     try{await sb.auth.signOut()}catch(e){}
     setSession(null);setGuest(false);gearOpen=false;
-    await loadRemote().catch(()=>{});renderChrome();
+    await syncNow().catch(()=>{});renderChrome();
     say("Konto zostało usunięte.");
   }catch(e){inf.textContent="Nie udało się usunąć konta."}
   finally{deleting=false}
@@ -2684,7 +2684,7 @@ async function saveNick(n,target,gender){
     if(res.error&&/NICK_SHORT/.test(res.error.message||""))return "Nick musi mieć co najmniej 3 litery.";
     if(res.error)return res.error.code==="23505"?"Ten nick jest zajęty albo zbyt podobny do istniejącego — wybierz inny.":"Nie udało się zapisać: "+res.error.message;
     if(!res.data||!res.data.length)return "Brak uprawnień do zmiany tego nicku.";
-    await loadRemote();return null;
+    await syncNow();return null;
   }catch(e){return "Nie udało się zapisać nicku."}
 }
 async function adminSaveNick(){
@@ -3478,7 +3478,7 @@ async function saveEvent(){
     if(invIds.length){try{await evInvite(id,invIds,invMsg);invN=invIds.length}catch(err){say("Impreza zapisana, ale nie udało się zaprosić: "+(err&&err.message?err.message:"błąd"))}}
     if(!ef.id&&ef.join!==""){const j=ef.dist[+ef.join],ix=j?D.indexOf(D.find(d=>d===j||(d.bike===j.bike&&d.km===j.km&&d.name===j.name))):-1;
       if(ix>=0)await sb.from("event_participants").insert({event_id:id,distance_id:ids[ix]})}
-    closeEvForm();say("🏁 Zapisano imprezę."+(invN?" Zaproszono "+invN+" "+plf(invN,["osobę","osoby","osób"])+" ✔":""));evOpen=id;await loadRemote();show(3);
+    closeEvForm();say("🏁 Zapisano imprezę."+(invN?" Zaproszono "+invN+" "+plf(invN,["osobę","osoby","osób"])+" ✔":""));evOpen=id;await syncNow();show(3);
   }catch(err){say("Nie udało się zapisać: "+(err&&err.message?err.message:"błąd"))}
 }
 /* ---------- 🗺️ Baza tras — etap 1 (KROK 47; decyzje właściciela 2026-11-16 13:55) ----------
@@ -4945,7 +4945,7 @@ $("wsave").onclick=async()=>{
     try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}
     const wasEdit=!!wf.editId;
     closeWantForm();$("wnote").value="";
-    await loadRemote();
+    await syncNow();
     const lbl=wfLabel(d)+(rng?"–"+hhmm(d2):"");
     say(wasEdit?"Zapisano ✔ "+lbl+(visMsg||(editedPriv&&visOk?" — zaproszeni dostaną powiadomienie.":""))
       :priv?"Wysłane 🔒 do "+ids.length+" "+osob(ids.length)+" ✔ Dostaną powiadomienie w aplikacji.":testOk&&wf.test?"Wysłane 🧪 testowe zaproszenie na "+lbl+" ✔ (na kanale Telegram z oznaczeniem TESTOWE)":"Wysłane ✔ Zaproszenie na "+lbl+" jest też na kanale Telegram.");
@@ -5018,7 +5018,7 @@ $("mywant").addEventListener("click",async e=>{
   if(b.dataset.my==="settle"){
     const t=wBest(w);
     if(!confirm("Ustalić godzinę "+hhmm(new Date(t))+"? Zaproszeni dostaną powiadomienie."))return;
-    try{await settleWant(w,t);await loadRemote();say("✅ Ustalono "+wfLabel(new Date(t))+" — zaproszeni dostaną powiadomienie.")}
+    try{await settleWant(w,t);await syncNow();say("✅ Ustalono "+wfLabel(new Date(t))+" — zaproszeni dostaną powiadomienie.")}
     catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
     return;
   }
@@ -5048,7 +5048,7 @@ $("wantlist").addEventListener("click",async e=>{
     }else{
       askDelete("want",id);return;
     }
-    await loadRemote();
+    await syncNow();
   }catch(err){say("Operacja nie powiodła się"+(err&&err.message?": "+err.message:"."))}
 });
 
@@ -5193,7 +5193,7 @@ $("whosheet").addEventListener("click",async e=>{
   try{
     const res=await sb.from("want_invitees").insert(ids.map(u=>({want_id:ws.want,user_id:u,added_by:uid})));
     if(res.error)throw res.error;
-    closeWho();await loadRemote();
+    closeWho();await syncNow();
     say("Zaproszono: "+ids.map(id=>nicks[id]).join(", ")+" ✔ Dostaną powiadomienie.");
   }catch(err){k.disabled=false;say("Nie udało się zaprosić: "+(err&&err.message?err.message:"błąd"))}
 });
@@ -5294,7 +5294,7 @@ $("picksheet").addEventListener("click",async e=>{
       if(pk.mode==="settle"){await settleWant(w,pk.sel);say("✅ Ustalono "+wfLabel(new Date(pk.sel))+" — zaproszeni dostaną powiadomienie.")}
       else{await setPref(w,pk.sel);say("✔ Pasuje Ci "+hhmm(new Date(pk.sel))+" — "+nickOf(w.user_id)+" to zobaczy.")}
     }else if(k.dataset.k==="no"){await declineWant(w);say("OK — zapisano „Nie dam rady”.")}
-    closePick();await loadRemote();
+    closePick();await syncNow();
   }catch(err){k.disabled=false;say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
 });
 
@@ -5499,7 +5499,7 @@ $("bellsheet").addEventListener("click",async e=>{
         try{navigator.vibrate&&navigator.vibrate(30)}catch(err){}
         say("Jedziesz ✔ "+wfLabel(new Date(w.starts_at)));
       }else{await declineWant(w);say("OK — zapisano „Nie dam rady”.")}
-      await markRead(ids);await loadRemote();
+      await markRead(ids);await syncNow();
     }catch(err){a.disabled=false;say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
     return;
   }
@@ -5605,7 +5605,7 @@ $("popsheet").addEventListener("click",async e=>{
     else if(q==="pref")say("✔ Pasuje Ci "+hhmm(new Date(chosen))+" — "+nickOf(it.w.user_id)+" to zobaczy.");
     else if(q==="no")say("OK. Zaproszenie zostaje na Starcie, gdybyś zmienił zdanie.");
     else if(q==="leave")say("Zrezygnowano.");
-    if(q!=="read")await loadRemote();
+    if(q!=="read")await syncNow();
   }catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
   finally{popBusy=false}
 });
@@ -5722,7 +5722,7 @@ async function toggleRsvp(id){
   const mine=(rsvps[id]||[]).includes(uid);
   const res=mine?await sb.from("rsvps").delete().eq("ride_id",id).eq("user_id",uid):await sb.from("rsvps").insert({ride_id:id});
   if(res.error)throw res.error;
-  await loadRemote();
+  await syncNow();
 }
 
 /* ---------- WIECZORYNKI: widok ---------- */
@@ -5887,7 +5887,7 @@ $("ladd").onclick=async()=>{
     const res=await sb.from("routes").insert({title:t,description:d,km:+routeKm(libFile).toFixed(1),route:routeJson(libFile)});
     if(res.error)throw res.error;
     libFile=null;$("lf").value="";$("lt").value="";$("ld").value="";inf.textContent="";
-    await loadRemote();say("Trasa dodana do biblioteki ✔");
+    await syncNow();say("Trasa dodana do biblioteki ✔");
   }catch(e){inf.textContent="Nie udało się dodać: "+(e&&e.message?e.message:"błąd")}
 };
 
@@ -6037,8 +6037,169 @@ async function showRide(idx){
 }
 
 /* ---------- baza: ładowanie ---------- */
+/* ---------- ⚡ odświeżanie przyrostowe (KROK 56) + pamięć danych w telefonie ----------
+   Co minutę jedno małe pytanie sync_since(n) „co się zmieniło?” zamiast pełnego wczytania.
+   Zmienione zaproszenia / osoby / imprezy dociągane osobno; rzadkie listy (misc) → pełne wczytanie.
+   Pełne wczytanie też co 15 minut otwartej aplikacji (siatka bezpieczeństwa).
+   Ostatni stan zapisany w telefonie (localStorage „snap”) — start pokazuje go od razu i dociąga zmiany.
+   Bez KROKU 56 (błąd sync_since) — jak dawniej: pełne wczytanie co minutę. */
+let lastTick=Date.now(),syncN=null,syncOk=false,syncTicks=0,syncP=null,syncAgain=false,wRaw=[],wCols=null,wColsTry=null;
+const SNAP_V=1,SNAP_MAX=2500000,SYNC_FULL_EVERY=15;
+function deriveWants(){
+  const since=Date.now()-31*864e5;
+  let a=wRaw.filter(x=>new Date(x.starts_at).getTime()>=since);
+  if(hideTest)a=a.filter(x=>!x.is_test||x.user_id===uid||(joins[x.id]||[]).includes(uid));
+  wantsAll=a.slice();
+  if(!isAdmin)a=a.filter(x=>x.user_id===uid||!modGone(x.user_id));
+  if(bikeOk)a.forEach(w=>{if(w.place&&!w.place_city){const x=places.find(y=>y.city&&y.name.toLowerCase()===w.place.toLowerCase());if(x){w.place_city=x.city;w.place_area=w.place_area||x.area||null}}});
+  wants=a;
+}
+function tick(){
+  if(session&&syncOk&&syncN!=null&&++syncTicks<SYNC_FULL_EVERY)return syncDelta();
+  return loadRemote();
+}
+// po własnej akcji: tylko zmiany (albo pełne wczytanie bez KROKU 56)
+function syncNow(){return (session&&syncOk&&syncN!=null)?syncDelta():loadRemote()}
+function syncDelta(){
+  if(syncP){syncAgain=true;return syncP}
+  syncP=(async()=>{do{syncAgain=false;await syncOnce()}while(syncAgain)})().finally(()=>{syncP=null});
+  return syncP;
+}
+async function syncOnce(){
+  if(!session||!syncOk||syncN==null)return loadRemote();
+  let d;
+  try{const r=await sb.rpc("sync_since",{n:syncN});if(r.error||!r.data)throw r.error||1;d=r.data}
+  catch(e){syncOk=false;return loadRemote()}
+  if(d.full||d.misc)return loadRemote();
+  const W=d.want||[],P=d.prof||[],E=d.ev||[];
+  const changed=!!(W.length||P.length||E.length||d.me||d.fb);
+  try{
+    if(W.length)await syncWants(W);
+    if(P.length)await syncProfiles(P);
+    if(E.length&&flags.tab_events&&tabOk(3))await loadEvents();
+    if(d.me)await syncMe();
+    if(d.fb)await syncFb();
+  }catch(e){return loadRemote()}
+  syncN=+d.last;
+  deriveWants();
+  if(changed)snapSave();
+  refreshUi();
+  afterData();
+}
+async function syncWants(ids){
+  const got=[];
+  for(let i=0;i<ids.length;i+=100){const r=await sb.from("wants").select(wCols).in("id",ids.slice(i,i+100));if(r.error)throw r.error;got.push(...(r.data||[]))}
+  const S=new Set(ids);
+  wRaw=wRaw.filter(x=>!S.has(x.id)).concat(got).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
+  ids.forEach(id=>{delete joins[id];delete prefs[id];delete invs[id];delete decls[id];delete reports[id]});
+  const f=got.map(x=>x.id);if(!f.length)return;
+  const by=async(tbl,cols)=>{const out=[];for(let i=0;i<f.length;i+=100){const r=await sb.from(tbl).select(cols).in("want_id",f.slice(i,i+100)).limit(5000);if(r.error)throw r.error;out.push(...(r.data||[]))}return out};
+  const [j,iv,dc]=await Promise.all([by("want_joins",rangeOk?"want_id,user_id,pref_at":"want_id,user_id"),visOk?by("want_invitees","want_id,user_id,added_by"):[],(visOk&&rangeOk)?by("want_declines","want_id,user_id"):[]]);
+  j.forEach(x=>{(joins[x.want_id]=joins[x.want_id]||[]).push(x.user_id);if(x.pref_at)(prefs[x.want_id]=prefs[x.want_id]||{})[x.user_id]=x.pref_at});
+  iv.forEach(x=>{(invs[x.want_id]=invs[x.want_id]||[]).push({u:x.user_id,by:x.added_by})});
+  dc.forEach(x=>{(decls[x.want_id]=decls[x.want_id]||[]).push(x.user_id)});
+  if(reportOk){const st=got.filter(x=>wantStart(x).getTime()<=Date.now()).map(x=>x.id);
+    for(let i=0;i<st.length;i+=100){const r=await sb.from("ride_reports").select("want_id,user_id,went,km,avg_kmh,rating,route_rating,tags,self,updated_at").in("want_id",st.slice(i,i+100));if(r.error)throw r.error;
+      (r.data||[]).forEach(x=>{(reports[x.want_id]=reports[x.want_id]||[]).push(x)})}}
+}
+async function syncProfiles(ids){
+  const cols=profExOk?"user_id,nick,gender,joined_at,avatar_at,media":genderOk?"user_id,nick,gender,joined_at":"user_id,nick";
+  const got=[];
+  for(let i=0;i<ids.length;i+=100){const r=await sb.from("profiles").select(cols).in("user_id",ids.slice(i,i+100));if(r.error)throw r.error;got.push(...(r.data||[]))}
+  ids.forEach(id=>{delete nicks[id];delete genders[id];delete joinedAt[id];delete avAt[id];delete medias[id]});
+  got.forEach(x=>{nicks[x.user_id]=x.nick;if(x.gender)genders[x.user_id]=x.gender;if(x.joined_at)joinedAt[x.user_id]=x.joined_at;if(x.avatar_at)avAt[x.user_id]=x.avatar_at;if(x.media)medias[x.user_id]=x.media});
+  me.nick=nicks[uid]||null;
+  if(profExOk)loadAvatars();
+}
+async function syncMe(){
+  const [nt,fv,tl]=await Promise.all([
+    visOk?sb.from("notifications").select("id,kind,want_id,actor,created_at,read_at").eq("user_id",uid).gte("created_at",new Date(Date.now()-30*864e5).toISOString()).order("created_at",{ascending:false}).limit(80):Promise.resolve({data:notifs}),
+    sb.from("favorites").select("fav_id").eq("user_id",uid).limit(1000),
+    sb.from("telegram_links").select("tg_name,linked_at").eq("user_id",uid).limit(1)]);
+  if(nt.error||fv.error)throw nt.error||fv.error;
+  notifs=nt.data||[];favOk=true;favs=new Set((fv.data||[]).map(x=>x.fav_id));
+  tgOk=!tl.error;tgLink=tgOk&&tl.data&&tl.data[0]||null;
+  await loadMyPriv();
+}
+async function syncFb(){
+  const fq=await sb.from("feedback").select("id,user_id,kind,rating,body,device,status,started_by,user_unread,admin_unread,created_at,updated_at").order("updated_at",{ascending:false}).limit(300);
+  if(fq.error)throw fq.error;fbOk=true;fbList=fq.data||[];
+  const fc=await sb.rpc("fb_done_counts");if(!fc.error){fbDone={};(fc.data||[]).forEach(x=>{fbDone[x.user_id]=+x.n||0})}
+  if(gearOpen&&/^fb/.test(gearView))renderGear();
+}
+// to, co robi się po każdym wczytaniu danych (pełnym i przyrostowym)
+async function afterData(){
+  maybePopup();
+  maybeHelp();
+  maybeFb();
+  maybeReport();
+  if(curTab===3)renderEvents();
+  if(session&&(seenFor!==uid||Date.now()-seenAt>15*60000)){seenFor=uid;seenAt=Date.now();Promise.resolve(sb.rpc("touch_seen")).catch(()=>{})}
+  // 1 h przed początkiem zakresu godzina ustala się sama (KROK 15) — robi to baza, wywołuje pierwszy, kto odświeży
+  if(session&&rangeOk&&Date.now()-autoAt>60000&&wants.some(w=>isOpen(w)&&new Date(w.range_from).getTime()<=Date.now()+36e5)){
+    autoAt=Date.now();
+    try{const r=await sb.rpc("want_autosettle");if(!r.error&&r.data)await syncNow()}catch(e){}
+  }
+}
+function snapClear(){try{localStorage.removeItem("snap")}catch(e){}}
+function snapSave(){
+  if(!session||!syncOk||syncN==null)return;
+  try{
+    const d={v:SNAP_V,uid,at:Date.now(),n:syncN,
+      sorted,rsvps,watchOk,watchN,flags,
+      myPriv,profExOk,genderOk,nicks,genders,joinedAt,avAt,medias,meNick:me.nick,
+      rbOk,bikeOk,placeOk,distOk,paceOk,wRouteOk,testOk,rangeOk,visOk,wCols,
+      wRaw,joins,prefs,invs,decls,notifs,reportOk,reports,lib,
+      adminIds,nickColors,nickBgs,favOk,favs:[...favs],supers:[...supers],testerOk,testerIds:[...testerIds],
+      evOk,evNewOk,evGeoOk,evExtraOk,evInvOk,evs,evDist,evPart,evLikes,evInv,
+      fbOk,fbList,fbDone,tgOk,tgLink,modOk,modBanned:[...modBanned],modHidden:[...modHidden],places,stealthOk,stealthIds:[...stealthIds]};
+    const t=JSON.stringify(d);
+    if(t.length>SNAP_MAX){snapClear();return}
+    localStorage.setItem("snap",t);
+  }catch(e){snapClear()}
+}
+// start z pamięci telefonu: true = dane wczytane, potem syncDelta dociąga zmiany od ostatniej wizyty
+function snapLoad(){
+  try{
+    const d=JSON.parse(localStorage.getItem("snap")||"null");
+    if(!d||d.v!==SNAP_V||d.uid!==uid||!(Date.now()-d.at<2.5*864e5)||d.n==null)return false;
+    sorted=d.sorted||[];rsvps=d.rsvps||{};watchOk=d.watchOk;watchN=d.watchN||{};flags=d.flags||{};flagsReady=true;
+    myPriv=d.myPriv;profExOk=d.profExOk;genderOk=d.genderOk;nicks=d.nicks||{};genders=d.genders||{};joinedAt=d.joinedAt||{};avAt=d.avAt||{};medias=d.medias||{};me.nick=d.meNick||null;
+    rbOk=d.rbOk;bikeOk=d.bikeOk;placeOk=d.placeOk;distOk=d.distOk;paceOk=d.paceOk;wRouteOk=d.wRouteOk;testOk=d.testOk;rangeOk=d.rangeOk;visOk=d.visOk;wCols=d.wCols;
+    wRaw=d.wRaw||[];joins=d.joins||{};prefs=d.prefs||{};invs=d.invs||{};decls=d.decls||{};notifs=d.notifs||[];reportOk=d.reportOk;reports=d.reports||{};lib=d.lib||[];
+    adminIds=d.adminIds||[];isAdmin=adminIds.includes(uid);nickColors=d.nickColors||{...DEF_COLORS};nickBgs=d.nickBgs||{...DEF_BGS};
+    favOk=d.favOk;favs=new Set(d.favs||[]);supers=new Set(d.supers||[]);testerOk=d.testerOk;testerIds=new Set(d.testerIds||[]);
+    evOk=d.evOk;evNewOk=d.evNewOk;evGeoOk=d.evGeoOk;evExtraOk=d.evExtraOk;evInvOk=d.evInvOk;evs=d.evs||[];evDist=d.evDist||{};evPart=d.evPart||{};evLikes=d.evLikes||{};evInv=d.evInv||[];
+    fbOk=d.fbOk;fbList=d.fbList||[];fbDone=d.fbDone||{};tgOk=d.tgOk;tgLink=d.tgLink||null;
+    modOk=d.modOk;modBanned=new Set(d.modBanned||[]);modHidden=new Set(d.modHidden||[]);places=d.places||[];stealthOk=d.stealthOk;stealthIds=new Set(d.stealthIds||[]);
+    if(!wCols)return false;
+    syncN=d.n;syncOk=true;syncTicks=0;
+    deriveWants();
+    startPresence();
+    if(profExOk)loadAvatars();
+    applyPresence();
+    renderBan();
+    return true;
+  }catch(e){snapClear();return false}
+}
+/* 🏁 imprezy masowe (KROK 40) — wczytanie wszystkich list imprez */
+async function loadEvents(){
+    const EVC="id,created_by,name,date_from,date_to,place,url,note,reg_until,reg_closed,delete_req_at,delete_req_by";
+    const [e1,e2,e3]=await Promise.all([sb.from("events").select(EVC+",lat,lon,created_at,changed_at,changed_by,changed_what").order("date_from").limit(1000).then(r=>{evNewOk=!r.error;evGeoOk=!r.error;return r.error?sb.from("events").select(EVC+",lat,lon").order("date_from").limit(1000).then(r2=>{evGeoOk=!r2.error;return r2.error?sb.from("events").select(EVC).order("date_from").limit(1000):r2}):r}),
+      sb.from("event_distances").select("id,event_id,bike,km,name,sort,elev,limit_min").limit(5000),sb.from("event_participants").select("event_id,user_id,distance_id,created_at").limit(10000)]);
+    evOk=!e1.error;evs=(e1.data||[]);evDist={};evPart={};evExtraOk=!e2.error;
+    if(e2.error){const r=await sb.from("event_distances").select("id,event_id,bike,km,name,sort").limit(5000);e2.data=r.data}
+    (e2.data||[]).forEach(x=>{(evDist[x.event_id]=evDist[x.event_id]||[]).push(x)});Object.values(evDist).forEach(a=>a.sort((p,q)=>p.sort-q.sort||p.km-q.km));
+    (e3.data||[]).forEach(x=>{(evPart[x.event_id]=evPart[x.event_id]||[]).push(x)});
+    const e4=await sb.from("event_likes").select("event_id,user_id").limit(20000);evLikes={};(e4.data||[]).forEach(x=>{(evLikes[x.event_id]=evLikes[x.event_id]||[]).push(x.user_id)});
+    const e5=await sb.from("event_invites").select("event_id,user_id,invited_by,msg,created_at").limit(5000);evInvOk=!e5.error;evInv=e5.data||[];   // ✉️ KROK 54
+  
+}
 async function loadRemote(selectId){
   const prevId=sorted[cur]&&sorted[cur].id;
+  // ⚡ KROK 56: numer ostatniego wpisu dziennika PRZED wczytaniem (zmiany w trakcie wczytania dociągnie następne odświeżenie)
+  let n0=null;
+  if(session){try{const r=await sb.rpc("sync_since",{n:null});syncOk=!r.error&&!!r.data;if(syncOk)n0=+r.data.last||0}catch(e){syncOk=false}}
   const since=new Date(Date.now()-120*864e5).toISOString();
   const NEW="id,title,starts_at,place,pace,owner_name,note,creator,edited_at,change_note,route_title,route_desc";
   const OLD="id,title,starts_at,place,pace,owner_name,note,creator";
@@ -6063,7 +6224,7 @@ async function loadRemote(selectId){
     if(p.error)p=await sb.from("profiles").select("user_id,nick").limit(1000);
     // zaproszenia tylko z ostatnich 7 dni i przyszłe (wcześniej: 200 najstarszych — nowe by znikały)
     const wSince=new Date(Date.now()-31*864e5).toISOString(); // + archiwum 30 dni (KROK 38)
-    const wq=cols=>sb.from("wants").select(cols).gte("starts_at",wSince).order("starts_at").limit(1000);
+    const wq=cols=>{wColsTry=cols;return sb.from("wants").select(cols).gte("starts_at",wSince).order("starts_at").limit(1000)};
     const WFULL="id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min,place,place_lat,place_lon,bike,place_city,place_area";
     let w=await wq(WFULL+",route_base_id");rbOk=!w.error;   // 🗺️ baza tras (KROK 47)
     if(w.error)w=await wq(WFULL);
@@ -6112,17 +6273,7 @@ async function loadRemote(selectId){
     const sp=await sb.from("superadmins").select("user_id");supers=new Set((sp&&!sp.error&&sp.data||[]).map(x=>x.user_id));
     const ts=await sb.from("testers").select("user_id");testerOk=!ts.error;testerIds=new Set((!ts.error&&ts.data||[]).map(x=>x.user_id));
     // 🏁 imprezy masowe (KROK 40) — tylko gdy zakładka dostępna
-    if(flags.tab_events&&tabOk(3)){
-      const EVC="id,created_by,name,date_from,date_to,place,url,note,reg_until,reg_closed,delete_req_at,delete_req_by";
-      const [e1,e2,e3]=await Promise.all([sb.from("events").select(EVC+",lat,lon,created_at,changed_at,changed_by,changed_what").order("date_from").limit(1000).then(r=>{evNewOk=!r.error;evGeoOk=!r.error;return r.error?sb.from("events").select(EVC+",lat,lon").order("date_from").limit(1000).then(r2=>{evGeoOk=!r2.error;return r2.error?sb.from("events").select(EVC).order("date_from").limit(1000):r2}):r}),
-        sb.from("event_distances").select("id,event_id,bike,km,name,sort,elev,limit_min").limit(5000),sb.from("event_participants").select("event_id,user_id,distance_id,created_at").limit(10000)]);
-      evOk=!e1.error;evs=(e1.data||[]);evDist={};evPart={};evExtraOk=!e2.error;
-      if(e2.error){const r=await sb.from("event_distances").select("id,event_id,bike,km,name,sort").limit(5000);e2.data=r.data}
-      (e2.data||[]).forEach(x=>{(evDist[x.event_id]=evDist[x.event_id]||[]).push(x)});Object.values(evDist).forEach(a=>a.sort((p,q)=>p.sort-q.sort||p.km-q.km));
-      (e3.data||[]).forEach(x=>{(evPart[x.event_id]=evPart[x.event_id]||[]).push(x)});
-      const e4=await sb.from("event_likes").select("event_id,user_id").limit(20000);evLikes={};(e4.data||[]).forEach(x=>{(evLikes[x.event_id]=evLikes[x.event_id]||[]).push(x.user_id)});
-      const e5=await sb.from("event_invites").select("event_id,user_id,invited_by,msg,created_at").limit(5000);evInvOk=!e5.error;evInv=e5.data||[];   // ✉️ KROK 54
-    }
+    if(flags.tab_events&&tabOk(3))await loadEvents();
     const fq=await sb.from("feedback").select("id,user_id,kind,rating,body,device,status,started_by,user_unread,admin_unread,created_at,updated_at").order("updated_at",{ascending:false}).limit(300);fbOk=!fq.error;fbList=fbOk?fq.data||[]:[];
     fbDone={};if(fbOk){const fc=await sb.rpc("fb_done_counts");if(!fc.error)(fc.data||[]).forEach(x=>{fbDone[x.user_id]=+x.n||0})}
     const tl=await sb.from("telegram_links").select("tg_name,linked_at").eq("user_id",uid).limit(1);tgOk=!tl.error;tgLink=tgOk&&tl.data&&tl.data[0]||null;
@@ -6136,12 +6287,11 @@ async function loadRemote(selectId){
       m=/^nick_bg_([KM])$/.exec(x.key);if(m&&(x.value==="none"||HEX_RE.test(x.value)))nickBgs[m[1]]=x.value;
     });
     if(!p.error&&needProfile()&&!pwMode&&nickAskedFor!==uid){nickAskedFor=uid;setTimeout(askNick,0)}
-    wants=ok(w)||[];
+    wants=ok(w)||[];wRaw=wants.slice();wCols=w.error?null:wColsTry;
     joins={};prefs={};(ok(j)||[]).forEach(x=>{(joins[x.want_id]=joins[x.want_id]||[]).push(x.user_id);if(x.pref_at)(prefs[x.want_id]=prefs[x.want_id]||{})[x.user_id]=x.pref_at});
     if(hideTest)wants=wants.filter(x=>!x.is_test||x.user_id===uid||(joins[x.id]||[]).includes(uid));
     lib=ok(l)||[];
     startPresence();
-    if(seenFor!==uid||Date.now()-seenAt>15*60000){seenFor=uid;seenAt=Date.now();Promise.resolve(sb.rpc("touch_seen")).catch(()=>{})}
     adminIds=(ok(ad)||[]).map(x=>x.user_id);isAdmin=adminIds.includes(uid);
     // 👑 moderacja (KROK 33): ⛔ zablokowani i 👻 ukryci — inni ich nie widzą (admin widzi)
     const md=await sb.from("moderation").select("user_id,banned_at,hidden");modOk=!md.error;
@@ -6155,27 +6305,23 @@ async function loadRemote(selectId){
     if(isAdmin){const sq=await sb.from("admin_stealth").select("user_id");stealthOk=!sq.error;stealthIds=new Set((ok(sq)||[]).map(x=>x.user_id))}else{stealthOk=false;stealthIds=new Set()}
     applyPresence();
     renderBan();
-  }else{favs=new Set();favOk=false;nicks={};genders={};me.nick=null;wants=[];joins={};prefs={};decls={};invs={};notifs=[];testerIds=new Set();testerOk=false;tgOk=false;tgLink=null;tgCode="";fbOk=false;fbList=[];fbDone={};lib=[];adminIds=[];isAdmin=false;stopPresence()}
+  }else{wRaw=[];syncN=null;snapClear();favs=new Set();favOk=false;nicks={};genders={};me.nick=null;wants=[];joins={};prefs={};decls={};invs={};notifs=[];testerIds=new Set();testerOk=false;tgOk=false;tgLink=null;tgCode="";fbOk=false;fbList=[];fbDone={};lib=[];adminIds=[];isAdmin=false;stopPresence()}
   sorted=a.data.map(r=>({id:r.id,title:r.title,when:r.starts_at,place:r.place,pace:r.pace,owner:r.owner_name,note:r.note,creator:r.creator,edited_at:r.edited_at||null,change_note:r.change_note||null,route_title:r.route_title||null,route_desc:r.route_desc||null}));
+  if(session&&syncOk&&n0!=null){syncN=n0;syncTicks=0;snapSave()}else if(session){syncN=null}
+  await loadTail(selectId,prevId);
+}
+
+// wspólny koniec wczytania (pełnego i z pamięci telefonu): wybór wieczorynki, powitanie, okienka, imprezy
+async function loadTail(selectId,prevId){
   const want=selectId||prevId;
   let idx=want?sorted.findIndex(r=>r.id===want):-1;
   if(idx<0)idx=pickDefault();
-  if(!selectId&&idx>=0&&sorted[idx].id===prevId){cur=idx;refreshUi()}
+  if(!selectId&&idx>=0&&sorted[idx]&&sorted[idx].id===prevId){cur=idx;refreshUi()}
   else showRide(idx);
   if(location.hash==="#powitanie"&&session&&nicks[uid]){try{history.replaceState(null,"",location.pathname+location.search);sessionStorage.setItem("helpShown","1")}catch(e){}
     welForce=true;show(0);openWelcome()}
-  maybePopup();
-  maybeHelp();
-  maybeFb();
-  maybeReport();
-  if(curTab===3)renderEvents();
-  // 1 h przed początkiem zakresu godzina ustala się sama (KROK 15) — robi to baza, wywołuje pierwszy, kto odświeży
-  if(session&&rangeOk&&Date.now()-autoAt>60000&&wants.some(w=>isOpen(w)&&new Date(w.range_from).getTime()<=Date.now()+36e5)){
-    autoAt=Date.now();
-    try{const r=await sb.rpc("want_autosettle");if(!r.error&&r.data)await loadRemote()}catch(e){}
-  }
+  await afterData();
 }
-
 /* ---------- WIECZORYNKI: akcje na karcie ---------- */
 $("ridecard").addEventListener("click",async e=>{
   const b=e.target.closest("button[data-act]");if(!b)return;
@@ -6405,7 +6551,9 @@ function show(n,dir){
 /* ---------- logowanie ---------- */
 let nickAskedFor="";
 function setSession(s){
+  const prevUid=uid;
   session=s;uid=s?s.user.id:"";
+  if(!s||prevUid&&prevUid!==uid){snapClear();syncN=null}
   if(!s){me.nick=null;isAdmin=false;adminIds=[]}
 }
 const amsg=e=>({"Invalid login credentials":"Nieprawidłowy e-mail lub hasło.","User already registered":"Konto z tym adresem już istnieje — zaloguj się."}[e.message]||e.message);
@@ -6477,10 +6625,16 @@ bootTimer=setTimeout(()=>bootFail(),8000);
   const m=/#ride=([0-9a-f-]{36})/i.exec(location.hash||"");
   const rp=/#report=([0-9a-f-]{36})/i.exec(location.hash||"");if(rp){repHash=rp[1];try{history.replaceState(null,"",location.pathname)}catch(e){}}
   const evh=/#event=([0-9a-f-]{36})/i.exec(location.hash||"");if(evh){try{history.replaceState(null,"",location.pathname)}catch(e){}}
-  try{await loadRemote(m?m[1]:null);$("dbnote").textContent="";bootDone();if(evh)evGo(evh[1])}
+  try{
+    const fromSnap=!!session&&!m&&snapLoad();   // ⚡ ostatni stan z telefonu — od razu na ekranie
+    if(fromSnap)await loadTail(null,null);else await loadRemote(m?m[1]:null);
+    $("dbnote").textContent="";bootDone();if(evh)evGo(evh[1]);
+    if(fromSnap)setTimeout(()=>syncDelta().catch(()=>{}),0);
+  }
   catch(e){$("dbnote").textContent="Nie udało się połączyć ze wspólną bazą (sprawdź internet i konfigurację Supabase).";bootFail()}
   ready=true;
-  setInterval(()=>{if(!document.hidden)loadRemote().catch(()=>{})},60000);
+  setInterval(()=>{if(!document.hidden){lastTick=Date.now();tick().catch(()=>{})}},60000);
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden&&ready&&Date.now()-lastTick>60000){lastTick=Date.now();tick().catch(()=>{})}});
 })();
 </script>
 </body>
