@@ -24,7 +24,6 @@
 <meta property="og:image:height" content="512">
 <meta property="og:image:alt" content="Logo PrzylesieGo! — dwa koła">
 <meta name="twitter:card" content="summary">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 <style>
 :root{color-scheme:light;--bg:#f5f5f7;--card:#fff;--fill:#f2f2f7;--ink:#1d1d1f;--mut:#6e6e73;--line:#e5e5ea;--acc:#248a3d;--accbtn:#248a3d;--acc2:#e8f5ec;--navbg:#e4e4e9;--navon:#fff;--bad:#d64545;--good:#2a9d5c;--warn:#fff6dc;--hdrbg:rgba(245,245,247,.82);--shadow:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.05)}
 html[data-theme=dark]{color-scheme:dark;--bg:#1c1c1e;--card:#2c2c2e;--fill:#3a3a3c;--ink:#f5f5f7;--mut:#a1a1a6;--line:#3a3a3c;--acc:#4cd964;--accbtn:#2e9e4e;--acc2:#1f3a29;--navbg:#3a3a3c;--navon:#636366;--warn:#3d3519;--hdrbg:rgba(28,28,30,.82);--shadow:0 1px 2px rgba(0,0,0,.4)}
@@ -1124,8 +1123,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 <button type="button" class="fab hide" id="fab" aria-label="Zaproś na rower — nowe zaproszenie"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.5v15M4.5 12h15" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><span class="fabt">Zaproś na rower</span><b class="fbadge hide" id="wbadge"></b></button>
 <div class="toast hide" id="toast"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
 <script>
 const SUPABASE_URL="https://onhdnsjtszrbvlmqfgvi.supabase.co";
 const SUPABASE_KEY="sb_publishable_ms2InCwXXoczxIqwkuAm1Q_HPS4uZv6";
@@ -1239,6 +1237,23 @@ async function getWind(lat,lon,when){
 
 /* ---------- mapa (Leaflet + OpenStreetMap) ---------- */
 const COL={head:"#d64545",side:"#e0b83a",tail:"#2a9d5c",plain:"#2f7fd1"};
+// Leaflet wczytywany dopiero przy pierwszej mapie, z sumą kontrolną (integrity) — oficjalne hashe Leaflet 1.9.4
+const L_SRC={css:["https://unpkg.com/leaflet@1.9.4/dist/leaflet.css","sha512-Zcn6bjR/8RZbLEpLIeOwNtzREBAJnUKESxces60Mpoj+2okopSAcSUIUOseddDm0cxnGQzxIR7vJgsLZbdLE3w=="],
+  js:["https://unpkg.com/leaflet@1.9.4/dist/leaflet.js","sha512-BwHfrr4c9kmRkLw6iXFdzcdWV/PGkVgiIyIWLLlTSXzWQzxuSg4DiQUCpauz/EWjgk5TYQqX/kvn9pG1NpYfqg=="]};
+let lLoad=null;
+function needL(){
+  if(window.L)return Promise.resolve(true);
+  if(lLoad)return lLoad;
+  lLoad=new Promise(res=>{
+    if(!document.getElementById("lcss")){const c=document.createElement("link");c.id="lcss";c.rel="stylesheet";c.href=L_SRC.css[0];c.integrity=L_SRC.css[1];c.crossOrigin="anonymous";document.head.appendChild(c)}
+    const s=document.createElement("script");s.src=L_SRC.js[0];s.integrity=L_SRC.js[1];s.crossOrigin="anonymous";
+    s.onload=()=>res(!!window.L);
+    s.onerror=()=>{s.remove();lLoad=null;res(false)};   // brak sieci / zła suma — następna mapa spróbuje ponownie
+    setTimeout(()=>{if(!window.L)lLoad=null;res(!!window.L)},20000);
+    document.head.appendChild(s);
+  });
+  return lLoad;
+}
 function makeMap(elId){
   if(!window.L)return null;
   try{
@@ -3050,6 +3065,7 @@ async function openRouteSheet(w){
   if(tok!==rsTok)return;
   if(!pts){$("windinfo3").textContent="To zaproszenie nie ma już trasy.";return}
   let an=analyze(pts,0,0,wPaceKmh(w.pace),false);$("stats3").innerHTML=statsHtml(an);
+  await needL();if(tok!==rsTok)return;
   rsMap=makeMap("map3");
   if(rsMap){setTimeout(()=>{if(rsMap){rsMap.m.invalidateSize();drawRoute(rsMap,pts,null,true)}},60)}
   else $("map3").outerHTML='<div class="note">Nie udało się załadować mapy (sprawdź internet).</div>';
@@ -3604,6 +3620,7 @@ async function renderRbDetail(){
   if(!pts){$("windinfo4").textContent="Nie udało się wczytać trasy.";return}
   rbPts=pts;
   const an=analyze(rb.rev?pts.slice().reverse():pts,0,0,20,false);$("stats4").innerHTML=statsHtml(an);
+  await needL();if(tok!==rbTok)return;
   rbMap=makeMap("map4");
   if(rbMap)setTimeout(()=>{if(rbMap&&tok===rbTok){rbMap.m.invalidateSize();drawRoute(rbMap,rb.rev?pts.slice().reverse():pts,null,true);rbTowns(tok);rbOsmShow(tok);pwHrsCenter();pwUpdate()}},60);
   else{$("map4").outerHTML='<div class="note">Nie udało się załadować mapy (sprawdź internet).</div>';rbTowns(tok);rbOsmShow(tok);pwHrsCenter();pwUpdate()}
@@ -4675,13 +4692,14 @@ function openPlaceMap(ctx){
    +'<button type="button" class="b big" data-mp="ok">Gotowe</button></div>';
   p.classList.remove("hide");
   const c=la!=null?[+la,+lo]:(()=>{const k=places.find(x=>x.lat!=null);return k?[+k.lat,+k.lon]:[52.7031,21.0838]})();
-  setTimeout(()=>{
+  needL().then(()=>setTimeout(()=>{
+    if(!$("pickmap"))return;
     try{pickMap=L.map("pickmap",{zoomControl:true}).setView(c,la!=null?17:15);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(pickMap);
       pickMk=L.marker(c,{draggable:true}).addTo(pickMap);
       pickMap.on("click",e=>pickMk.setLatLng(e.latlng));
-    }catch(e){$("pickmap").innerHTML='<div class="note" style="padding:20px">Nie udało się wczytać mapy.</div>'}
-  },60);
+    }catch(e){$("pickmap").innerHTML='<div class="note" style="padding:20px">Nie udało się wczytać mapy (sprawdź internet).</div>'}
+  },60));
 }
 function closePlaceMap(){const p=$("mapsheet");try{pickMap&&pickMap.remove()}catch(e){}pickMap=null;pickMk=null;p.classList.add("hide");p.innerHTML=""}
 $("mapsheet").addEventListener("click",e=>{
@@ -5994,7 +6012,7 @@ async function showRide(idx){
   const ri=$("routeinfo1");
   if(r.route_title||r.route_desc){ri.innerHTML='<b>Trasa: '+esc(r.route_title||"")+'</b>'+(r.route_desc?'<div>'+esc(r.route_desc)+'</div>':'');ri.classList.remove("hide")}
   else ri.classList.add("hide");
-  if(!map1)map1=makeMap("map1");
+  if(!map1){await needL();if(token!==viewToken)return;map1=makeMap("map1")}
   if(!map1){wrap.classList.add("hide");$("windinfo1").textContent="Nie udało się załadować mapy (sprawdź połączenie z internetem).";return}
   const bs=paceKmh(r.pace);
   let an=analyze(pts,0,0,bs,false);
@@ -6292,6 +6310,7 @@ function advRender(fit){
   $("wdv").textContent=windLabel(wf);
   if(advPts.length<2){wrap.classList.add("hide");$("empty2").classList.remove("hide");$("stats2").innerHTML="";$("tip2").classList.add("hide");return}
   $("empty2").classList.add("hide");wrap.classList.remove("hide");
+  if(!map2&&!window.L){needL().then(ok=>{if(ok)advRender(fit);else{$("empty2").textContent="Nie udało się załadować mapy (sprawdź połączenie z internetem).";$("empty2").classList.remove("hide");wrap.classList.add("hide")}});return}
   if(!map2)map2=makeMap("map2");
   if(!map2){$("empty2").textContent="Nie udało się załadować mapy (sprawdź połączenie z internetem).";$("empty2").classList.remove("hide");wrap.classList.add("hide");return}
   const ws=Math.max(0,+$("ws").value||0),bs=Math.max(8,+$("bs").value||24);
