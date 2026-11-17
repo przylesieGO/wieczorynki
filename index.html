@@ -199,6 +199,15 @@ html[data-theme=dark] .ftile:not(.today) .fh,html[data-theme=dark] .ftile:not(.t
 .ftile.flipping .ft{animation:ftflip .5s cubic-bezier(.4,0,.2,1)}
 @keyframes ftflip{0%{transform:rotateX(0)}45%{transform:rotateX(-90deg);filter:brightness(.6)}55%{transform:rotateX(-90deg);filter:brightness(.6)}100%{transform:rotateX(0)}}
 @media (prefers-reduced-motion:reduce){.ftile.flipping .ft{animation:none}}
+.ftile .ftlogo,.ftile .ftrwa{display:none}
+.ftile.live{background:linear-gradient(180deg,#3cb55e 0%,#2e9e4e 55%,#1f7a37 100%)}
+.ftile.live .fu,.ftile.live .ft,.ftile.live .fb,.ftile.live .fs,.ftile.live .fh,.ftile.live .fh2{display:none}
+.ftile.live .ftlogo{display:block;position:absolute;left:4px;top:0;width:50px;height:40px}
+.ftile.live .ftrwa{display:flex;position:absolute;left:0;right:0;bottom:0;height:23px;align-items:center;justify-content:center;font:700 11px "SF Mono",ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em;padding-left:.12em;color:#fff;background:rgba(0,0,0,.18);border-radius:0 0 9px 9px}
+.ftrwa i{display:inline-block;width:3px;height:3px;border-radius:50%;background:#fff;margin-left:2px;animation:ftdot 1.2s infinite}
+.ftrwa i:nth-of-type(2){animation-delay:.2s}.ftrwa i:nth-of-type(3){animation-delay:.4s}
+@keyframes ftdot{0%,60%,100%{opacity:.25}30%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.ftrwa i{animation:none;opacity:.7}}
 .wtx{flex:1;min-width:0}
 .wl1{font-size:19px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wl1 i{font-style:normal;font-weight:500;color:var(--mut)}
 .wl2{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--mut);margin-top:2px;white-space:nowrap}
@@ -4496,6 +4505,7 @@ function renderWants0(){
     d.ws.push(w);
   });
   // tylko jedna karta rozwinięta: zapamiętana, a na start najbliższy dzień
+  wdayWs={};days.forEach(d=>{wdayWs[d.k]=d.ws});
   const openDay=wantOpenDay===undefined||(wantOpenDay&&!days.some(x=>x.k===wantOpenDay))?days[0].k:wantOpenDay;
   box.innerHTML=days.map((d,i)=>{
     const dt=new Date(d.ws[0].starts_at),n=dayDiff(dt);
@@ -4510,7 +4520,7 @@ function renderWants0(){
     const mineTop=ord0.filter(wAbove),ord=ord0.filter(w=>!wAbove(w));
     const l1=n>=0&&n<=2?esc(["Dziś","Jutro","Pojutrze"][n])+' <i>· '+esc(wd)+'</i>':esc(wd.charAt(0).toUpperCase()+wd.slice(1));
     return '<details class="wday" data-day="'+d.k+'"'+(open?' open':'')+'><summary>'
-     +'<div class="ftile'+(n===0?' today':'')+'"><div class="fu">'+pad(dt.getDate())+'</div><div class="ft">'+pad(dt.getDate())+'</div><div class="fb">'+MON3[dt.getMonth()]+'</div><div class="fs"></div><div class="fh"></div><div class="fh2"></div></div>'
+     +'<div class="ftile'+(n===0?' today':'')+(d.ws.some(wLive)?' live':'')+'">'+ftInner(dt)+'</div>'
      +'<div class="wtx"><div class="wl1">'+l1+'</div>'
      +'<div class="wl2"><span class="whrs">'+hrs.slice(0,4).map(h=>'<b>'+h+'</b>').join("")+(hrs.length>4?'<b>+'+(hrs.length-4)+'</b>':'')+'</span>· '+ppl.size+' '+os+(me?'<span class="wme">Ty</span>':'')+'</div>'
      +(fn.length?'<div class="wl3">⭐ '+esc(fn.join(", "))+'</div>':'')+'</div>'
@@ -4749,6 +4759,12 @@ const wPaceKmh=p=>{if(PACES[p])return PACES[p].v;const n=String(p||"").match(/\d
 // ⏱ czas jazdy (KROK 29): trasa/dystans ÷ prędkość tempa (bez tempa 19 km/h), inaczej „na ile jedziesz” (domyślnie 2 h)
 let distOk=false;const DUR_DEF=120,RIDE_GAP=15;
 // stan jazdy: trwa (od startu do końca czasu jazdy) / zakończona (→ archiwum)
+// kafelek daty; w trakcie jazdy (.live) zamienia się w logo z kręcącymi się kołami + „TRWA”
+let wdayWs={};
+const FT_LIVE='<svg class="ftlogo" viewBox="0 0 120 120" aria-hidden="true"><g class="bw1"><circle cx="44" cy="62" r="25" fill="none" stroke="#fff" stroke-width="9" stroke-dasharray="118 39"/></g><g class="bw2"><circle cx="76" cy="62" r="25" fill="none" stroke="#fbbf24" stroke-width="9" stroke-dasharray="118 39"/></g><circle cx="44" cy="62" r="4" fill="#fff"/><circle cx="76" cy="62" r="4" fill="#fbbf24"/></svg><div class="ftrwa">TRWA<i></i><i></i><i></i></div>';
+function ftInner(dt){return '<div class="fu">'+pad(dt.getDate())+'</div><div class="ft">'+pad(dt.getDate())+'</div><div class="fb">'+MON3[dt.getMonth()]+'</div><div class="fs"></div><div class="fh"></div><div class="fh2"></div>'+FT_LIVE}
+// co minutę: start/koniec jazdy przełącza kafelek bez przeładowania listy
+function ftLiveSync(){document.querySelectorAll("details.wday[data-day]").forEach(el=>{const ws=wdayWs[el.dataset.day];const t=el.querySelector(".ftile");if(ws&&t)t.classList.toggle("live",ws.some(wLive))})}
 const wLive=w=>{const n=Date.now();return wantStart(w).getTime()<=n&&wantEnd(w).getTime()>n};
 const wDone=w=>wantEnd(w).getTime()<=Date.now();
 const trwaTag=()=>'<span class="trwa">🚴 TRWA<span class="tdots" aria-hidden="true"><i></i><i></i><i></i></span></span>';
@@ -6855,7 +6871,7 @@ bootTimer=setTimeout(()=>bootFail(),8000);
   }
   catch(e){$("dbnote").textContent="Nie udało się połączyć ze wspólną bazą (sprawdź internet i konfigurację Supabase).";bootFail()}
   ready=true;
-  setInterval(()=>{if(!document.hidden){lastTick=Date.now();tick().catch(()=>{})}},60000);
+  setInterval(()=>{if(!document.hidden){lastTick=Date.now();try{ftLiveSync()}catch(e){}tick().catch(()=>{})}},60000);
   document.addEventListener("visibilitychange",()=>{if(!document.hidden&&ready&&Date.now()-lastTick>60000){lastTick=Date.now();tick().catch(()=>{})}});
 })();
 </script>
