@@ -288,7 +288,7 @@ html[data-theme=dark] .fcard::after{background:rgba(0,0,0,.25);box-shadow:0 1px 
 .roundbtn:active{transform:scale(.96)}.roundbtn .ri{display:flex;align-items:center;justify-content:center;width:86px;height:58px;border-radius:29px;background:rgba(255,255,255,.16);box-shadow:inset 0 0 0 1px rgba(255,255,255,.22);margin-bottom:10px}.roundbtn .ri svg{width:66px;height:39px}
 .roundbtn .rb1{font-size:21px;font-weight:800;line-height:1.15;letter-spacing:-.01em;margin-top:4px}.roundbtn .rb2{font-size:14px;font-weight:600;opacity:.92}
 .pw{position:relative}.pw input{padding-right:46px}
-.eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:38px;height:38px;border:0;background:transparent;font-size:19px;cursor:pointer;border-radius:50%}
+.eye svg{width:21px;height:21px}.eye{color:var(--mut);display:flex;align-items:center;justify-content:center;position:absolute;right:4px;top:50%;transform:translateY(-50%);width:38px;height:38px;border:0;background:transparent;font-size:19px;cursor:pointer;border-radius:50%}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:700px){.grid{grid-template-columns:1fr}}
 label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
@@ -917,7 +917,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
  <div class="card wcard">
   <div class="wch">Zaloguj się</div>
   <label for="ae">E-mail</label><input id="ae" type="email" autocomplete="email">
-  <label for="ap">Hasło</label><div class="pw"><input id="ap" type="password" autocomplete="current-password"><button type="button" class="eye" data-eye="ap" aria-label="Pokaż hasło" title="Pokaż / ukryj hasło">👁️</button></div>
+  <label for="ap">Hasło</label><div class="pw"><input id="ap" type="password" autocomplete="current-password"><button type="button" class="eye" data-eye="ap" aria-label="Pokaż hasło" title="Pokaż / ukryj hasło"></button></div>
   <div class="wfg"><button type="button" class="lnk" id="forgot">Nie pamiętam hasła</button></div>
   <button class="b big" id="login">Zaloguj</button>
   <div class="wor">pierwszy raz?</div>
@@ -997,7 +997,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 
 <div class="card hide" id="pwbox">
  <h2>Ustaw nowe hasło</h2>
- <div class="row"><div class="pw" style="flex:1;min-width:200px;max-width:320px"><input id="pw1" type="password" autocomplete="new-password" placeholder="Nowe hasło (min. 6 znaków)"><button type="button" class="eye" data-eye="pw1" aria-label="Pokaż hasło" title="Pokaż / ukryj hasło">👁️</button></div><button class="b" id="pwsave">Zapisz hasło</button></div>
+ <div class="row"><div class="pw" style="flex:1;min-width:200px;max-width:320px"><input id="pw1" type="password" autocomplete="new-password" placeholder="Nowe hasło (min. 6 znaków)"><button type="button" class="eye" data-eye="pw1" aria-label="Pokaż hasło" title="Pokaż / ukryj hasło"></button></div><button class="b" id="pwsave">Zapisz hasło</button></div>
  <div class="note" id="pwinfo" style="margin-top:6px"></div>
 </div>
 
@@ -1361,7 +1361,7 @@ document.addEventListener("click",e=>{
   const b=e.target.closest("[data-eye]");if(!b)return;
   const i=$(b.dataset.eye),show=i.type==="password";
   i.type=show?"text":"password";
-  b.textContent=show?"🙈":"👁️";
+  b.innerHTML=uiIcon(show?"eyeoff":"eye");
   b.setAttribute("aria-label",show?"Ukryj hasło":"Pokaż hasło");
 });
 
@@ -1476,6 +1476,7 @@ bot:'<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path
 paste:'<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>'
 };
 const uiIcon=k=>'<svg class="ui-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+UI_P[k]+'</svg>';
+document.querySelectorAll("button.eye[data-eye]").forEach(b=>{if(!b.innerHTML.trim())b.innerHTML=uiIcon("eye")});   // 👁 konturowe oko przy polach hasła (logowanie, nowe hasło)
 const UI_MAP=[["🔑","key"],["⬆️","up"],["⬆","up"],["📡","globe"],["🔁","repeat"],["🌿","tree"],["🚗","car"],["🙈","eyeoff"],["👻","eyeoff"],["📚","book"],["📖","book"],["✍️","pencil"],["✍","pencil"],["⬇️","download"],["⬇","download"],["🔍","search"],["✈️","send"],["✈","send"],["🌦","cloudsun"],["🎒","backpack"],["🌇","sunset"],["⚙️","gear"],["⚙","gear"],["🔔","bell"],["🔕","belloff"],["❓","help"],["✏️","pencil"],["⭐","starf"],["☆","star"],["💬","msg"],["🛡️","shield"],["🛡","shield"],["📣","mega"],["☀️","sun"],["🌙","moon"],["👤","user"],["🕖","clock"],["🌡","therm"],["🌬","wind"],["🌧","rain"],["📩","mail"],["✉️","mail"],["🌍","globe"],["🔒","lock"],["🙋","hand"],["🚴","bike"],["🚲","bike"],["👥","users"],["🐞","bug"],["💡","bulb"],["🗺️","map"],["🗺","map"],["🧪","flask"],["⏳","hourglass"],["👀","eye"],["📅","cal"],["🗓","cal"],["📊","chart"],["🎨","palette"],["👩","venus"],["👨","mars"],["📍","pin"],["📌","pushpin"],["🏁","flag"],["🪨","gravel"],["🛣️","road"],["🛣","road"],["⛰️","mtb"],["⛰","mtb"],["🏃","run"],["🚶","walk"],["🏊","swim"],["🏅","medal"],["📝","clip"],["❤️","heart"],["❤","heart"],["⧉","copy"],["🌐","globe"],["🗄️","archive"],["🗄","archive"],["🌳","tree"],["🌅","sunrise"],["☕","coffee"],["🛞","wheel"],["💨","windy"],["🏙️","city"],["🏙","city"],["📏","ruler"],["⏱","timer"],["⏰","alarm"],["🙅","xcircle"],["✅","check"],["⚠️","alert"],["🗑️","trash"],["👋","logout"],["📲","phone"],["🆕","sparkles"],["✨","sparkles"],["📈","trend"],["➕","plus"],["🚦","sliders"],["🧹","trash"],["🔗","link"],["💰","cash"],["🤖","bot"],["📋","paste"]];
 const UI_RE=new RegExp("("+UI_MAP.map(([e])=>e.replace(/[\u{FE0F}]/gu,"")).sort((a,b)=>b.length-a.length).map(e=>e.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")\uFE0F?","gu");
 const UI_K=Object.fromEntries(UI_MAP.map(([e,k])=>[e.replace(/\uFE0F/g,""),k]));
@@ -1716,7 +1717,7 @@ function nickHtml(){
 }
 // 🔑 zmiana hasła w profilu (decyzja właściciela 2026-11-17: najpierw obecne hasło; weryfikacja e-mail przy rejestracji — przed publicznym wydaniem)
 function pwdHtml(){
-  const f=(id,ph,ac)=>'<div class="pw" style="margin-top:8px"><input id="'+id+'" type="password" autocomplete="'+ac+'" placeholder="'+ph+'" maxlength="72"><button type="button" class="eye" data-eye="'+id+'" aria-label="Pokaż hasło" title="Pokaż / ukryj hasło">👁️</button></div>';
+  const f=(id,ph,ac)=>'<div class="pw" style="margin-top:8px"><input id="'+id+'" type="password" autocomplete="'+ac+'" placeholder="'+ph+'" maxlength="72"><button type="button" class="eye" data-eye="'+id+'" aria-label="Pokaż hasło" title="Pokaż / ukryj hasło">'+uiIcon("eye")+'</button></div>';
   return '<button class="sback" data-c="pwdback">‹ Profil</button><div class="sname" style="margin-top:26px">Zmień hasło</div>'
    +'<div class="smail">'+esc(session.user.email||"")+'</div>'
    +'<div class="sleft"><label for="gpw0" style="font-size:15px">Obecne hasło</label>'+f("gpw0","Obecne hasło","current-password")
@@ -2413,7 +2414,7 @@ function renderGear(){
   if(keepConf!=null&&$("gconf"))$("gconf").value=keepConf;
   if(keepDel&&$("gdel")){$("gdel").value=keepDel.v;$("gdelinfo").textContent=keepDel.i}
   if(keepNick&&$("gnick")){$("gnick").value=keepNick.v;$("gnickinfo").textContent=keepNick.i}
-  if(keepPw&&$("gpw0")){["gpw0","gpw1","gpw2"].forEach((i,k)=>{$(i).value=keepPw.v[k][0];$(i).type=keepPw.v[k][1]});$("gpwinfo").textContent=keepPw.i;if(keepPw.f&&$(keepPw.f))$(keepPw.f).focus()}
+  if(keepPw&&$("gpw0")){["gpw0","gpw1","gpw2"].forEach((i,k)=>{$(i).value=keepPw.v[k][0];$(i).type=keepPw.v[k][1];const eb=document.querySelector('[data-eye="'+i+'"]');if(eb)eb.innerHTML=uiIcon(keepPw.v[k][1]==="text"?"eyeoff":"eye")});$("gpwinfo").textContent=keepPw.i;if(keepPw.f&&$(keepPw.f))$(keepPw.f).focus()}
   if($("admq")){admFilter();if(keepAdmq!=null){const q=$("admq");q.focus();try{q.setSelectionRange(keepAdmq,keepAdmq)}catch(e){}}}
 }
 function tgHtml(){
