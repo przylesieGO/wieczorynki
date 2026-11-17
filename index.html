@@ -775,6 +775,16 @@ html[data-theme=dark] .rbmini{background:#24332a}.rbmini svg{position:absolute;i
 .evdx2{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:3px;font-size:12.5px;color:var(--mut)}.evdx2 i{font-style:normal;font-weight:700}.evdr select{flex:0 0 38%}.evdr input[data-efd="km"]{flex:0 0 64px;text-align:right}.evdr input[data-efd="name"]{flex:1;min-width:0}
 .evdx{border:0;background:var(--fill);color:var(--bad);border-radius:10px;width:34px;height:34px;font-weight:800;cursor:pointer}
 .evsim{margin-top:6px;border:1px dashed var(--acc);border-radius:10px;padding:7px 10px;font-size:13.5px;color:var(--acc)}
+/* 🔗 „Wypełnij z linku” (KROK 55) */
+.evimp{margin:2px 0 6px;padding:12px;border-radius:14px;background:var(--fill);border:1px solid var(--line)}.evimph{display:flex;align-items:center;gap:6px;font-size:15px}.evimph .note{margin-left:auto;font-size:12.5px}
+.evimpd{margin:4px 0 8px;font-size:13px;color:var(--mut);line-height:1.35}.evimpr{display:flex;gap:8px;align-items:stretch}.evimpr input{flex:1;min-width:0}.evimpr .b{flex:none;white-space:nowrap;padding-left:14px;padding-right:14px}
+.evimp textarea{width:100%;box-sizing:border-box;margin-bottom:8px}.evimp .b.wide{width:100%}.evimp .lnk{font-size:13.5px;padding:6px 0 0}
+.evimps{margin-top:8px;font-size:13.5px;line-height:1.4;border-radius:10px;padding:8px 10px}.evimps.busy{background:var(--card);color:var(--mut)}.evimps.err{background:#ffe9e9;color:#a12a2a}.evimps.ok{background:var(--acc2);color:var(--acc)}.evimps.warn{background:#fff3c4;color:#6b4a00}
+html[data-theme=dark] .evimps.err{background:#4a1f1f;color:#ffb3b3}html[data-theme=dark] .evimps.warn{background:#4a3f12;color:#ffe08a}
+.evimps .spin{display:inline-block;width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;vertical-align:-1px;margin-right:6px;animation:evspin .8s linear infinite}@keyframes evspin{to{transform:rotate(360deg)}}
+.evfbox .aif{background:#fff7cc!important;border-color:#e0b83a!important}.evfbox .aif.low{border-color:#ff9f0a!important;box-shadow:0 0 0 1px #ff9f0a}html[data-theme=dark] .evfbox .aif{background:#3d3519!important;border-color:#a8862a!important}
+.evfbox .aif.box{border-radius:12px;padding:6px;border:1px solid #e0b83a}.evfbox .aif.box input,.evfbox .aif.box select{background:transparent}
+.aitag{font-size:11.5px;font-weight:700;color:#8a5a00;margin-left:6px;white-space:nowrap}.aitag.low{color:#c25100}html[data-theme=dark] .aitag{color:#ffd666}html[data-theme=dark] .aitag.low{color:#ffb074}
 .evp-l{background:#fde2ea;color:#c0264f}html[data-theme=dark] .evp-l{background:#4a1f2a;color:#ff8fab}
 .ib.evlike{position:relative}.ib.evlike.on{color:#e0245e;background:#fde2ea}html[data-theme=dark] .ib.evlike.on{background:#4a1f2a;color:#ff6b8f}.ib.evlike.on svg path{fill:currentColor}
 .lkn{position:absolute;top:-5px;right:-5px;background:#e0245e;color:#fff;border-radius:999px;font-size:11px;font-weight:800;min-width:18px;height:18px;line-height:18px;padding:0 4px}
@@ -1452,10 +1462,14 @@ belloff:'<path d="M8.7 3A6 6 0 0 1 18 8a21.3 21.3 0 0 0 .6 5M17 17H3s3-2 3-9a4.6
 trend:'<path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>',
 plus:'<path d="M12 5v14M5 12h14"/>',
 send:'<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/>',
-sliders:'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>'
+sliders:'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
+link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+cash:'<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
+bot:'<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>',
+paste:'<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>'
 };
 const uiIcon=k=>'<svg class="ui-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+UI_P[k]+'</svg>';
-const UI_MAP=[["🔑","key"],["⬆️","up"],["⬆","up"],["📡","globe"],["🔁","repeat"],["🌿","tree"],["🚗","car"],["🙈","eyeoff"],["👻","eyeoff"],["📚","book"],["📖","book"],["✍️","pencil"],["✍","pencil"],["⬇️","download"],["⬇","download"],["🔍","search"],["✈️","send"],["✈","send"],["🌦","cloudsun"],["🎒","backpack"],["🌇","sunset"],["⚙️","gear"],["⚙","gear"],["🔔","bell"],["🔕","belloff"],["❓","help"],["✏️","pencil"],["⭐","starf"],["☆","star"],["💬","msg"],["🛡️","shield"],["🛡","shield"],["📣","mega"],["☀️","sun"],["🌙","moon"],["👤","user"],["🕖","clock"],["🌡","therm"],["🌬","wind"],["🌧","rain"],["📩","mail"],["✉️","mail"],["🌍","globe"],["🔒","lock"],["🙋","hand"],["🚴","bike"],["🚲","bike"],["👥","users"],["🐞","bug"],["💡","bulb"],["🗺️","map"],["🗺","map"],["🧪","flask"],["⏳","hourglass"],["👀","eye"],["📅","cal"],["🗓","cal"],["📊","chart"],["🎨","palette"],["👩","venus"],["👨","mars"],["📍","pin"],["📌","pushpin"],["🏁","flag"],["🪨","gravel"],["🛣️","road"],["🛣","road"],["⛰️","mtb"],["⛰","mtb"],["🏃","run"],["🚶","walk"],["🏊","swim"],["🏅","medal"],["📝","clip"],["❤️","heart"],["❤","heart"],["⧉","copy"],["🌐","globe"],["🗄️","archive"],["🗄","archive"],["🌳","tree"],["🌅","sunrise"],["☕","coffee"],["🛞","wheel"],["💨","windy"],["🏙️","city"],["🏙","city"],["📏","ruler"],["⏱","timer"],["⏰","alarm"],["🙅","xcircle"],["✅","check"],["⚠️","alert"],["🗑️","trash"],["👋","logout"],["📲","phone"],["🆕","sparkles"],["✨","sparkles"],["📈","trend"],["➕","plus"],["🚦","sliders"],["🧹","trash"]];
+const UI_MAP=[["🔑","key"],["⬆️","up"],["⬆","up"],["📡","globe"],["🔁","repeat"],["🌿","tree"],["🚗","car"],["🙈","eyeoff"],["👻","eyeoff"],["📚","book"],["📖","book"],["✍️","pencil"],["✍","pencil"],["⬇️","download"],["⬇","download"],["🔍","search"],["✈️","send"],["✈","send"],["🌦","cloudsun"],["🎒","backpack"],["🌇","sunset"],["⚙️","gear"],["⚙","gear"],["🔔","bell"],["🔕","belloff"],["❓","help"],["✏️","pencil"],["⭐","starf"],["☆","star"],["💬","msg"],["🛡️","shield"],["🛡","shield"],["📣","mega"],["☀️","sun"],["🌙","moon"],["👤","user"],["🕖","clock"],["🌡","therm"],["🌬","wind"],["🌧","rain"],["📩","mail"],["✉️","mail"],["🌍","globe"],["🔒","lock"],["🙋","hand"],["🚴","bike"],["🚲","bike"],["👥","users"],["🐞","bug"],["💡","bulb"],["🗺️","map"],["🗺","map"],["🧪","flask"],["⏳","hourglass"],["👀","eye"],["📅","cal"],["🗓","cal"],["📊","chart"],["🎨","palette"],["👩","venus"],["👨","mars"],["📍","pin"],["📌","pushpin"],["🏁","flag"],["🪨","gravel"],["🛣️","road"],["🛣","road"],["⛰️","mtb"],["⛰","mtb"],["🏃","run"],["🚶","walk"],["🏊","swim"],["🏅","medal"],["📝","clip"],["❤️","heart"],["❤","heart"],["⧉","copy"],["🌐","globe"],["🗄️","archive"],["🗄","archive"],["🌳","tree"],["🌅","sunrise"],["☕","coffee"],["🛞","wheel"],["💨","windy"],["🏙️","city"],["🏙","city"],["📏","ruler"],["⏱","timer"],["⏰","alarm"],["🙅","xcircle"],["✅","check"],["⚠️","alert"],["🗑️","trash"],["👋","logout"],["📲","phone"],["🆕","sparkles"],["✨","sparkles"],["📈","trend"],["➕","plus"],["🚦","sliders"],["🧹","trash"],["🔗","link"],["💰","cash"],["🤖","bot"],["📋","paste"]];
 const UI_RE=new RegExp("("+UI_MAP.map(([e])=>e.replace(/[\u{FE0F}]/gu,"")).sort((a,b)=>b.length-a.length).map(e=>e.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")\uFE0F?","gu");
 const UI_K=Object.fromEntries(UI_MAP.map(([e,k])=>[e.replace(/\uFE0F/g,""),k]));
 const UI_SKIP=".wpc,.wpace .e,.nk,.stars,.fbst,.ttag,.beta,#toast,.fbcnt,.cdbadge,.ui-i";
@@ -3111,6 +3125,7 @@ let evLikes={};
    „przeczytane” w tym urządzeniu (localStorage.evSeen: b = pierwsze uruchomienie, m = otwarte karty);
    po otwarciu karta zostaje na górze do wyjścia z zakładki (evStick), oznaczenie znika po 14 dniach */
 let evNewOk=false,evInvOk=false,evInv=[],evStick=new Set();
+let evPriceOk=false,evImpLeft=null;   // 💰 ceny i 🔗 „Wypełnij z linku” (KROK 55; evImpLeft = ile pobrań zostało dziś, null = brak/nie admin)
 const EV_WIN=14*864e5;
 function evSeenGet(){try{const o=JSON.parse(localStorage.getItem("evSeen")||"null");if(o&&o.b){o.m=o.m||{};return o}}catch(e){}
   const o={b:Date.now(),m:{}};try{localStorage.setItem("evSeen",JSON.stringify(o))}catch(e){}return o}
@@ -3199,6 +3214,7 @@ function evCard(e){
    +(myInv?'<div class="evl2">✉️ Zaprasza Cię '+nk(myInv.invited_by)+(myInv.msg?' — „'+esc(myInv.msg)+'”':'')+'</div>':'')
    +(sent.length?'<div class="evl2">👥 '+(genders[uid]==="K"?'Zaprosiłaś':'Zaprosiłeś')+': '+sent.map(id=>nk(id)+(P.some(p=>p.user_id===id)?' <span class="note">jedzie</span>':'')).join(" ")+'</div>':'')
    +(e.url?'<div class="evl2">🌐 <a href="'+esc(e.url)+'" target="_blank" rel="noopener">'+esc(e.url.replace(/^https?:\/\/(www\.)?/i,"").replace(/\/$/,"").slice(0,48))+'</a></div>':'')
+   +(e.price_info?'<div class="evl2">💰 '+esc(e.price_info)+'</div>':'')
    +(e.note?'<div class="evl2">💬 '+esc(e.note)+'</div>':'')
    +(e.delete_req_at?'<div class="evdel">🗑 '+esc(nicks[e.delete_req_by]||"Autor")+' prosi o usunięcie tej imprezy — decyduje admin.'
        +(isAdmin?'<div class="evdelb"><button type="button" class="b" style="background:var(--bad)" data-ev="del" data-id="'+esc(e.id)+'">Usuń</button><button type="button" class="b g" data-ev="delno" data-id="'+esc(e.id)+'">Odrzuć prośbę</button></div>'
@@ -3367,15 +3383,16 @@ $("p3").addEventListener("click",async e=>{
 // formularz imprezy (okienko od dołu)
 function openEvForm(e,dup){
   ef={geo:e&&evHasGeo(e)?{lat:+e.lat,lon:+e.lon,name:""}:null,geoFor:e&&evHasGeo(e)&&e.place||"",geoAlt:[],geoBusy:false,
-    id:e?e.id:null,name:e?e.name:"",from:e?e.date_from:"",to:e&&e.date_to||"",place:e&&e.place||"",url:e&&e.url||"",note:e&&e.note||"",reg:e&&e.reg_closed?"closed":"open",regUntil:e&&e.reg_until||"",
+    id:e?e.id:null,name:e?e.name:"",from:e?e.date_from:"",to:e&&e.date_to||"",place:e&&e.place||"",url:e&&e.url||"",note:e&&e.note||"",price:e&&e.price_info||"",ai:{},imp:{mode:"url",url:"",text:"",busy:false,msg:"",ok:"",warn:"",dup:""},reg:e&&e.reg_closed?"closed":"open",regUntil:e&&e.reg_until||"",
     inv:[],invMsg:"",dist:e?(evDist[e.id]||[]).map(d=>({id:d.id,bike:d.bike,km:String(+d.km),name:d.name||"",elev:d.elev!=null?String(d.elev):"",lim:limEdit(d.limit_min)})):[{bike:"gravel",km:"",name:"",elev:"",lim:""}],join:"",dup:!!dup};
+  if(!e&&!dup&&isAdmin&&evImpLeft==null&&session)sb.rpc("ev_import_left").then(r=>{if(!r.error&&r.data!=null){evImpLeft=+r.data;if(ef&&!ef.id&&!ef.dup)efRender()}}).catch(()=>{});   // 🔗 start z pamięci telefonu — licznik jeszcze nieznany
   if(dup){
     // kopia jako nowa impreza: gdy minęła — rok w nazwie i daty +1; zapisy od nowa; popraw, co się nie zgadza
     const past=evPast(e),y=d=>{if(!d)return "";const x=new Date(d+"T12:00");x.setFullYear(x.getFullYear()+1);return localIso(x).slice(0,10)};
     ef.id=null;ef.dist.forEach(d=>delete d.id);ef.reg="open";ef.regUntil="";
-    if(past){ef.from=y(ef.from);ef.to=y(ef.to);ef.name=ef.name.replace(/\b(20\d\d)\b/,m=>String(+m+1))}
+    if(past){ef.from=y(ef.from);ef.to=y(ef.to);ef.name=ef.name.replace(/\b(20\d\d)\b/,m=>String(+m+1));ef.price=""}
     else ef.name=ef.name+" (kopia)";
-    ef.note=(ef.note||"").replace(/^🤖[^—]*—\s*/,"");
+    ef.note=(ef.note||"").replace(/^(🤖|AI z linku)[^—]*—\s*/,"");
   }
   renderEvForm();
 }
@@ -3383,16 +3400,18 @@ function renderEvForm(){
   const p=$("evsheet");p.classList.remove("hide");
   const sim=ef.name.trim().length>=3?evs.filter(x=>x.id!==ef.id&&lc(x.name).includes(lc(ef.name.trim().slice(0,12)))).slice(0,3):[];
   p.innerHTML='<div class="bsbox evfbox" role="dialog" aria-modal="true" aria-label="Impreza"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-ef="close">Anuluj</button><b>'+(ef.id?'Edytuj imprezę':ef.dup?'Duplikuj imprezę':'Dodaj imprezę')+'</b><span style="min-width:64px"></span></div><div class="bslist">'+(ef.dup?'<div class="evsim">⧉ Kopia — popraw nazwę, daty i to, co się nie zgadza. Zapisani się nie kopiują.</div>':'')
-   +'<div class="bsgrp">Nazwa</div><input id="efname" maxlength="80" placeholder="np. Ultra Duch Puszczy 2027" value="'+esc(ef.name)+'">'
+   +efImpHtml()
+   +'<div class="bsgrp">Nazwa'+ail("name")+'</div><input id="efname"'+aic("name")+' maxlength="80" placeholder="np. Ultra Duch Puszczy 2027" value="'+esc(ef.name)+'">'
    +'<div id="efsim">'+(sim.length?'<div class="evsim">Już są: '+sim.map(x=>'<b>'+esc(x.name)+'</b> ('+esc(evDates(x))+')').join(", ")+' — sprawdź, czy to nie ta sama.</div>':'')+'</div>'
-   +'<div class="evtwo"><div><div class="bsgrp">Od</div><input type="date" id="effrom" value="'+esc(ef.from)+'"></div><div><div class="bsgrp">Do <span class="note">(opcj.)</span></div><input type="date" id="efto" value="'+esc(ef.to)+'"></div></div>'
-   +'<div class="bsgrp">Gdzie (start / meta)</div><input id="efplace" maxlength="80" placeholder="np. Pułtusk, Przystań Miejska" value="'+esc(ef.place)+'">'
+   +'<div class="evtwo"><div><div class="bsgrp">Od'+ail("from")+'</div><input type="date" id="effrom"'+aic("from")+' value="'+esc(ef.from)+'"></div><div><div class="bsgrp">Do <span class="note">(opcj.)</span></div><input type="date" id="efto"'+aic("to")+' value="'+esc(ef.to)+'"></div></div>'
+   +'<div class="bsgrp">Gdzie (start / meta)'+ail("place")+'</div><input id="efplace"'+aic("place")+' maxlength="80" placeholder="np. Pułtusk, Przystań Miejska" value="'+esc(ef.place)+'">'
    +(evGeoOk?'<div id="efgeo">'+efGeoHtml()+'</div>':'')
-   +'<div class="bsgrp">Dystanse (rower + km'+(evExtraOk?', przewyższenie, limit':'')+')'+(ef.dist.length>1?' <span class="note">· przeciągnij ⋮⋮</span>':'')+'</div><div id="efdist">'+efDistHtml()+'</div><button type="button" class="lnk" data-ef="adddist">＋ dodaj dystans</button>'
-   +'<div class="bsgrp">Zapisy</div><div class="seg" id="efreg"><button type="button" data-ef="reg" data-v="open" class="'+(ef.reg==="open"?'on':'')+'">📝 Trwają</button><button type="button" data-ef="reg" data-v="closed" class="'+(ef.reg==="closed"?'on':'')+'">🔒 Zakończone</button></div>'
-   +(ef.reg==="open"?'<div class="evtwo"><div><div class="bsgrp">Zapisy do <span class="note">(opcj.)</span></div><input type="date" id="efregu" value="'+esc(ef.regUntil)+'"></div><div></div></div>':'')
-   +'<div class="bsgrp">Strona imprezy <span class="note">(opcj.)</span></div><input id="efurl" type="url" maxlength="300" placeholder="https://…" value="'+esc(ef.url)+'">'
-   +'<div class="bsgrp">Krótki komentarz <span class="note">(opcj.)</span></div><textarea id="efnote" maxlength="300" rows="2" placeholder="np. zapisy przez competit.pl, start grupami">'+esc(ef.note)+'</textarea>'
+   +'<div class="bsgrp">Dystanse (rower + km'+(evExtraOk?', przewyższenie, limit':'')+')'+(ef.dist.length>1?' <span class="note">· przeciągnij ⋮⋮</span>':'')+ail("dist")+'</div><div id="efdist"'+aic("dist","box")+'>'+efDistHtml()+'</div><button type="button" class="lnk" data-ef="adddist">＋ dodaj dystans</button>'
+   +'<div class="bsgrp">Zapisy'+ail("reg")+'</div><div'+aic("reg","seg")+' id="efreg"><button type="button" data-ef="reg" data-v="open" class="'+(ef.reg==="open"?'on':'')+'">📝 Trwają</button><button type="button" data-ef="reg" data-v="closed" class="'+(ef.reg==="closed"?'on':'')+'">🔒 Zakończone</button></div>'
+   +(ef.reg==="open"?'<div class="evtwo"><div><div class="bsgrp">Zapisy do <span class="note">(opcj.)</span></div><input type="date" id="efregu"'+aic("regUntil")+' value="'+esc(ef.regUntil)+'"></div><div></div></div>':'')
+   +'<div class="bsgrp">Strona imprezy <span class="note">(opcj.)</span></div><input id="efurl"'+aic("url")+' type="url" maxlength="300" placeholder="https://…" value="'+esc(ef.url)+'">'
+   +(evPriceOk?'<div class="bsgrp">Ceny / wpisowe <span class="note">(opcj.)</span>'+ail("price")+'</div><input id="efprice"'+aic("price")+' maxlength="200" placeholder="np. 150 zł do 31.03, potem 180 zł" value="'+esc(ef.price)+'">':'')
+   +'<div class="bsgrp">Krótki komentarz <span class="note">(opcj.)</span></div><textarea id="efnote"'+aic("note")+' maxlength="300" rows="2" placeholder="np. zapisy przez competit.pl, start grupami">'+esc(ef.note)+'</textarea>'
    +(!ef.id&&evInvOk?'<div class="bsgrp">Zaproś znajomych <span class="note">(opcj.)</span></div><button type="button" class="who'+(ef.inv.length?' priv':'')+'" data-ef="inv"><span class="wic">👥</span><span class="wtx"><b>'+(ef.inv.length?'Wybrane osoby ('+ef.inv.length+')':'Nikogo')+'</b><span>'+esc(ef.inv.length?favFirst(ef.inv).map(id=>nicks[id]).join(", ")+(ef.invMsg?' · „'+ef.invMsg+'”':''):'Dostaną powiadomienie — możesz też zaprosić później z karty imprezy')+'</span></span><span class="war">›</span></button>':'')
    +(ef.id?'':'<div class="bsgrp">Biorę udział</div><select id="efjoin"><option value="">— nie teraz —</option>'+ef.dist.map((d,i)=>'<option value="'+i+'"'+(ef.join===String(i)?' selected':'')+'>'+EV_BIKE[d.bike][0]+' '+esc(d.name||EV_BIKE[d.bike][1])+(d.km?' · '+esc(d.km)+' km':'')+'</option>').join("")+'</select>')
    +'</div><button type="button" class="b big" data-ef="save">'+(ef.id?'Zapisz zmiany':'Dodaj imprezę')+'</button></div>';
@@ -3418,12 +3437,88 @@ function efDistHtml(){return ef.dist.map((d,i)=>'<div class="evdw" data-i="'+i+'
   +(ef.dist.length>1?'<button type="button" class="evdx" data-ef="rmdist" data-i="'+i+'" aria-label="Usuń dystans">✕</button>':'')+'</div>'
   +(evExtraOk?'<div class="evdr evdr2'+(ef.dist.length>1?' ind':'')+'"><label>📈<input data-efd="elev" data-i="'+i+'" inputmode="numeric" maxlength="5" placeholder="przewyższ." value="'+esc(d.elev||"")+'"><em>m</em></label>'
     +'<label>⏱<input data-efd="lim" data-i="'+i+'" maxlength="8" placeholder="limit" value="'+esc(d.lim||"")+'"><em>h</em></label></div>':'')+'</div>').join("")}
-function efRead(){const v=id=>{const x=$(id);return x?x.value:""};ef.name=v("efname");ef.from=v("effrom");ef.to=v("efto");ef.place=v("efplace");ef.url=v("efurl");ef.note=v("efnote");if($("efregu"))ef.regUntil=v("efregu");if($("efjoin"))ef.join=v("efjoin")}
+function efRead(){const v=id=>{const x=$(id);return x?x.value:""};ef.name=v("efname");ef.from=v("effrom");ef.to=v("efto");ef.place=v("efplace");ef.url=v("efurl");ef.note=v("efnote");if($("efregu"))ef.regUntil=v("efregu");if($("efjoin"))ef.join=v("efjoin");
+  if($("efprice"))ef.price=v("efprice");if($("efimpurl"))ef.imp.url=v("efimpurl");if($("efimptxt"))ef.imp.text=v("efimptxt")}
+/* ---------- 🔗 „Wypełnij z linku” (KROK 55; decyzje właściciela 2026-11-17 00:12–00:15) ----------
+   tylko admini; Edge Function „impreza-z-linku” pobiera stronę i pyta Claude Haiku; pola od AI na żółto
+   („⚠️ sprawdź” = AI niepewne), nic nie zapisuje się samo — admin poprawia i klika „Dodaj imprezę” */
+const EF_AIK={efname:"name",effrom:"from",efto:"to",efplace:"place",efregu:"regUntil",efurl:"url",efnote:"note",efprice:"price"};
+const aiK=k=>ef&&ef.ai&&ef.ai[k];
+const aic=(k,base)=>{const c=((base||"")+(aiK(k)?" aif"+(aiK(k)==="low"?" low":""):"")).trim();return c?' class="'+c+'"':""};
+const ail=k=>aiK(k)?'<span class="aitag'+(aiK(k)==="low"?' low':'')+'">'+(aiK(k)==="low"?'⚠️ sprawdź':'🤖 z linku')+'</span>':"";
+function efRender(){const L=$("evsheet").querySelector(".bslist"),st=L?L.scrollTop:0;renderEvForm();const L2=$("evsheet").querySelector(".bslist");if(L2)L2.scrollTop=st}
+function efImpHtml(){
+  if(ef.id||ef.dup||evImpLeft==null||!isAdmin)return "";
+  const m=ef.imp,url=m.mode==="url",off=m.busy||!evImpLeft?' disabled':'';
+  return '<div class="evimp"><div class="evimph">🔗 <b>Wypełnij z linku</b><span class="note">AI · zostało '+evImpLeft+' dziś</span></div>'
+   +'<div class="evimpd">'+(url?'Wklej link do strony organizatora — uzupełnię nazwę, daty, miejsce, dystanse i ceny. Sprawdź je przed zapisem.':'Wklej opis imprezy (np. z Facebooka albo z regulaminu PDF) — wyciągnę z niego dane.')+'</div>'
+   +(url?'<div class="evimpr"><input id="efimpurl" type="url" inputmode="url" maxlength="300" placeholder="https://…" value="'+esc(m.url)+'"'+(m.busy?' disabled':'')+'><button type="button" class="b" data-ef="imp"'+off+'>Pobierz dane</button></div>'
+       :'<textarea id="efimptxt" rows="5" maxlength="30000" placeholder="Wklej tutaj tekst ze strony…"'+(m.busy?' disabled':'')+'>'+esc(m.text)+'</textarea><button type="button" class="b wide" data-ef="imp"'+off+'>Wypełnij z tekstu</button>')
+   +(m.busy?'<div class="evimps busy" role="status"><span class="spin"></span>'+(url?'Czytam stronę i szukam danych… (do ok. 30 s)':'Szukam danych w tekście…')+'</div>':'')
+   +(m.msg?'<div class="evimps err" role="alert">'+esc(m.msg)+'</div>':'')
+   +(m.ok?'<div class="evimps ok">✅ '+esc(m.ok)+'</div>':'')
+   +(m.dup?'<div class="evimps warn">⚠️ Podobna impreza już jest: <b>'+esc(m.dup)+'</b> — sprawdź, czy to nie ta sama.</div>':'')
+   +(m.warn?'<div class="evimps warn">⚠️ '+esc(m.warn)+'</div>':'')
+   +(m.busy?'':'<button type="button" class="lnk" data-ef="impmode">'+(url?'📋 Strona się nie pobiera? Wklej tekst':'🔗 Wróć do linku')+'</button>')
+   +'</div>';
+}
+async function efImport(){
+  const my=ef,m=ef.imp;if(m.busy)return;
+  const url=m.mode==="url"?m.url.trim():"",text=m.mode==="text"?m.text.trim():"";
+  m.msg="";m.ok="";m.warn="";m.dup="";
+  if(m.mode==="url"&&!/^https?:\/\/\S+\.\S+/i.test(url)){m.msg="Wklej pełny link do strony (zaczyna się od https://).";efRender();return}
+  if(m.mode==="text"&&text.length<40){m.msg="Wklej więcej tekstu — co najmniej kilka zdań z datą i dystansami.";efRender();return}
+  m.busy=true;efRender();
+  let j=null,err="";
+  try{
+    const r=await sb.functions.invoke("impreza-z-linku",{body:url?{url}:{text}});
+    j=r.data;
+    if(r.error){const ctx=r.error.context;let st=0;
+      if(ctx&&typeof ctx.json==="function"){st=ctx.status||0;try{j=await ctx.json()}catch(_){j=null}}
+      if(!j||j.ok===undefined){
+        err=st===404?"Funkcja „impreza-z-linku” nie jest jeszcze wdrożona w Supabase (instrukcja: INSTRUKCJA_impreza_z_linku.md)."
+          :st===401?"Supabase odrzucił zapytanie (401). W ustawieniach funkcji „impreza-z-linku” wyłącz „Verify JWT” — funkcja sama sprawdza zalogowanie."
+          :/Failed to send|fetch|network/i.test(r.error.message||"")?"Brak połączenia z funkcją „impreza-z-linku” — sprawdź internet albo czy funkcja jest wdrożona."
+          :"Błąd funkcji: "+(r.error.message||st);j=null}}
+    if(typeof j==="string"){try{j=JSON.parse(j)}catch(_){j=null}}
+  }catch(e){err="Nie udało się: "+(e&&e.message?e.message:"błąd")}
+  if(ef!==my)return;                       // formularz zamknięty w trakcie
+  m.busy=false;
+  if(j&&j.ok){efApply(j.data,url?(j.url||url):"");if(j.left!=null)evImpLeft=+j.left}
+  else{m.msg=(j&&j.msg)||err||"Nie udało się pobrać danych.";if(j&&j.error==="LIMIT")evImpLeft=0}
+  efRender();
+  if(j&&j.ok&&evGeoOk&&ef.place.trim())efGeocode();
+}
+function efApply(d,url){
+  const A={},m=ef.imp,low=k=>d.confidence&&d.confidence[k]==="low";
+  const put=(f,v,lw)=>{if(v==null||v==="")return;ef[f]=String(v);A[f]=lw?"low":"ai"};
+  put("name",d.name);put("from",d.date_from,low("dates"));
+  if(d.date_from){ef.to=d.date_to||"";if(d.date_to)A.to=low("dates")?"low":"ai"}
+  put("place",d.place,low("place"));
+  if(d.reg_closed){ef.reg="closed";ef.regUntil="";A.reg="ai"}
+  else if(d.reg_until){ef.reg="open";ef.regUntil=d.reg_until;A.reg="ai";A.regUntil="ai"}
+  if(url&&!ef.url.trim()){ef.url=url;A.url="ai"}
+  if(evPriceOk)put("price",d.price_info,low("price"));
+  if(d.note){const t=new Date();ef.note=("AI z linku "+String(t.getDate()).padStart(2,"0")+"."+String(t.getMonth()+1).padStart(2,"0")+"."+t.getFullYear()+", do sprawdzenia — "+d.note).slice(0,300);A.note="ai"}
+  const D=(d.distances||[]).filter(x=>EV_BIKE[x.bike]&&+x.km>0);
+  if(D.length){ef.dist=D.map(x=>({bike:x.bike,km:String(x.km),name:x.name||"",elev:x.elev!=null?String(x.elev):"",lim:x.limit_min!=null?limEdit(x.limit_min):""}));ef.join="";A.dist=low("distances")?"low":"ai"}
+  ef.ai=A;ef.geo=null;ef.geoFor="";ef.geoAlt=[];
+  const n=Object.keys(A).length,nl=Object.values(A).filter(v=>v==="low").length;
+  m.ok=n?"Uzupełniono "+n+" "+plf(n,["pole","pola","pól"])+" (na żółto)"+(nl?", "+nl+" do sprawdzenia":"")+". Popraw, co trzeba, i zapisz.":"";
+  if(!n)m.msg="Nie znalazłem danych do uzupełnienia.";
+  m.warn=d.warnings||(!D.length?"Nie znalazłem dystansów — dodaj je ręcznie.":"");
+  // 🔁 czy to nie duplikat: ten sam link albo ta sama data i podobna nazwa
+  const nu=x=>String(x||"").toLowerCase().replace(/^https?:\/\/(www\.)?/,"").replace(/[?#].*$/,"").replace(/\/+$/,"");
+  const dupE=evs.find(x=>url&&x.url&&nu(x.url)===nu(url))||evs.find(x=>ef.from&&x.date_from===ef.from&&ef.name&&lc(x.name).slice(0,10)===lc(ef.name).slice(0,10));
+  m.dup=dupE?dupE.name+" ("+evDates(dupE)+")":"";
+}
 function closeEvForm(){const p=$("evsheet");p.classList.add("hide");p.innerHTML="";ef=null}
 $("evsheet").addEventListener("input",e=>{if(!ef)return;const t=e.target;
+  const aik=t.dataset.efd?"dist":EF_AIK[t.id];if(aik&&ef.ai[aik]){delete ef.ai[aik];(aik==="dist"?$("efdist"):t).classList.remove("aif","low")}   // 🔗 poprawione ręcznie — bez żółtego tła
   if(t.dataset.efd){const d=ef.dist[+t.dataset.i];if(d)d[t.dataset.efd]=t.value;return}
   if(t.id==="efname"){ef.name=t.value;const sim=ef.name.trim().length>=3?evs.filter(x=>x.id!==ef.id&&lc(x.name).includes(lc(ef.name.trim().slice(0,12)))).slice(0,3):[];
     $("efsim").innerHTML=sim.length?'<div class="evsim">Już są: '+sim.map(x=>'<b>'+esc(x.name)+'</b> ('+esc(evDates(x))+')').join(", ")+' — sprawdź, czy to nie ta sama.</div>':''}});
+$("evsheet").addEventListener("keydown",e=>{if(ef&&e.key==="Enter"&&e.target.id==="efimpurl"){e.preventDefault();efRead();efImport()}});
 $("evsheet").addEventListener("focusout",e=>{if(ef&&e.target.id==="efplace"){ef.place=e.target.value;if(evGeoOk&&ef.place.trim()&&ef.geoFor!==ef.place.trim())efGeocode()}});
 $("evsheet").addEventListener("change",e=>{if(!ef)return;const t=e.target;if(t.dataset.efd==="bike"){const d=ef.dist[+t.dataset.i];if(d)d.bike=t.value}});
 // ↕ zmiana kolejności dystansów — przeciąganie uchwytu (mysz i dotyk)
@@ -3451,6 +3546,8 @@ $("evsheet").addEventListener("click",async e=>{
   if(k==="geo"){efGeocode();return}
   if(k==="geopick"){const x=ef.geoAlt[+b.dataset.i];if(x){const old=ef.geo;ef.geo=x;ef.geoAlt=ef.geoAlt.filter(y=>y!==x);if(old)ef.geoAlt.unshift(old);const g=$("efgeo");if(g)g.innerHTML=efGeoHtml()}return}
   if(k==="inv"){openWho("evf");return}
+  if(k==="imp"){efImport();return}
+  if(k==="impmode"){ef.imp.mode=ef.imp.mode==="url"?"text":"url";ef.imp.msg="";efRender();const x=$(ef.imp.mode==="url"?"efimpurl":"efimptxt");if(x)x.focus();return}
   if(k==="save")saveEvent();
 });
 async function saveEvent(){
@@ -3466,6 +3563,7 @@ async function saveEvent(){
     if(d.l!==null&&!(d.l>0&&d.l<=20160)){say("Limit czasu podaj w godzinach, np. 72, 6:30 albo 45 min.");return}}
   if(evGeoOk&&ef.place.trim()&&ef.geoFor!==ef.place.trim())await efGeocode();
   const row={name,date_from:ef.from,date_to:ef.to&&ef.to!==ef.from?ef.to:null,place:ef.place.trim()||null,url:url||null,note:ef.note.trim()||null,reg_closed:ef.reg==="closed",reg_until:ef.reg==="open"&&ef.regUntil?ef.regUntil:null};
+  if(evPriceOk)row.price_info=String(ef.price||"").replace(/\s+/g," ").trim().slice(0,200)||null;   // 💰 KROK 55
   if(evGeoOk){const g=ef.place.trim()&&ef.geoFor===ef.place.trim()?ef.geo:null;row.lat=g?g.lat:null;row.lon=g?g.lon:null}
   try{
     let id=ef.id;
@@ -6154,7 +6252,7 @@ function snapSave(){
       rbOk,bikeOk,placeOk,distOk,paceOk,wRouteOk,testOk,rangeOk,visOk,wCols,
       wRaw,joins,prefs,invs,decls,notifs,reportOk,reports,lib,
       adminIds,nickColors,nickBgs,favOk,favs:[...favs],supers:[...supers],testerOk,testerIds:[...testerIds],
-      evOk,evNewOk,evGeoOk,evExtraOk,evInvOk,evs,evDist,evPart,evLikes,evInv,
+      evOk,evNewOk,evGeoOk,evExtraOk,evInvOk,evPriceOk,evs,evDist,evPart,evLikes,evInv,
       fbOk,fbList,fbDone,tgOk,tgLink,modOk,modBanned:[...modBanned],modHidden:[...modHidden],places,stealthOk,stealthIds:[...stealthIds]};
     const t=JSON.stringify(d);
     if(t.length>SNAP_MAX){snapClear();return}
@@ -6172,7 +6270,7 @@ function snapLoad(){
     wRaw=d.wRaw||[];joins=d.joins||{};prefs=d.prefs||{};invs=d.invs||{};decls=d.decls||{};notifs=d.notifs||[];reportOk=d.reportOk;reports=d.reports||{};lib=d.lib||[];
     adminIds=d.adminIds||[];isAdmin=adminIds.includes(uid);nickColors=d.nickColors||{...DEF_COLORS};nickBgs=d.nickBgs||{...DEF_BGS};
     favOk=d.favOk;favs=new Set(d.favs||[]);supers=new Set(d.supers||[]);testerOk=d.testerOk;testerIds=new Set(d.testerIds||[]);
-    evOk=d.evOk;evNewOk=d.evNewOk;evGeoOk=d.evGeoOk;evExtraOk=d.evExtraOk;evInvOk=d.evInvOk;evs=d.evs||[];evDist=d.evDist||{};evPart=d.evPart||{};evLikes=d.evLikes||{};evInv=d.evInv||[];
+    evOk=d.evOk;evNewOk=d.evNewOk;evGeoOk=d.evGeoOk;evExtraOk=d.evExtraOk;evInvOk=d.evInvOk;evPriceOk=!!d.evPriceOk;evs=d.evs||[];evDist=d.evDist||{};evPart=d.evPart||{};evLikes=d.evLikes||{};evInv=d.evInv||[];
     fbOk=d.fbOk;fbList=d.fbList||[];fbDone=d.fbDone||{};tgOk=d.tgOk;tgLink=d.tgLink||null;
     modOk=d.modOk;modBanned=new Set(d.modBanned||[]);modHidden=new Set(d.modHidden||[]);places=d.places||[];stealthOk=d.stealthOk;stealthIds=new Set(d.stealthIds||[]);
     if(!wCols)return false;
@@ -6196,7 +6294,10 @@ async function loadEvents(){
     (e3.data||[]).forEach(x=>{(evPart[x.event_id]=evPart[x.event_id]||[]).push(x)});
     const e4=await sb.from("event_likes").select("event_id,user_id").limit(20000);evLikes={};(e4.data||[]).forEach(x=>{(evLikes[x.event_id]=evLikes[x.event_id]||[]).push(x.user_id)});
     const e5=await sb.from("event_invites").select("event_id,user_id,invited_by,msg,created_at").limit(5000);evInvOk=!e5.error;evInv=e5.data||[];   // ✉️ KROK 54
-  
+    // 💰 ceny + 🔗 pobieranie z linku (KROK 55) — bez KROKU 55 pole „Ceny” i ramka „Wypełnij z linku” są ukryte
+    const [e6,e7]=await Promise.all([sb.from("events").select("id,price_info").not("price_info","is",null).limit(1000),sb.rpc("ev_import_left")]);
+    evPriceOk=!e6.error;if(evPriceOk){const pm={};(e6.data||[]).forEach(x=>{pm[x.id]=x.price_info});evs.forEach(x=>{x.price_info=pm[x.id]||null})}
+    evImpLeft=e7.error||e7.data==null?null:+e7.data;
 }
 async function loadRemote(selectId){
   const prevId=sorted[cur]&&sorted[cur].id;
