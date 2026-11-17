@@ -1700,7 +1700,8 @@ function nickHtml(){
   const head=short?'<div class="sname">✏️ Wybierz nowy nick</div><div class="smail">Nick „'+esc(me.nick)+'” jest za krótki. Wybierz taki, który ma co najmniej 3 litery — żeby inni wiedzieli, kto jedzie.</div>'
      :first?'<div class="sname">👋 Wybierz swój nick</div><div class="smail">Witaj w PrzylesieGo! Nick widzą inni przy zapisach na wieczorynki i zgłoszeniach.</div>'
      :incomplete?'<div class="sname">👋 Uzupełnij profil</div><div class="smail">Wybierz płeć — od niej zależy kolor Twojego nicku.</div>'
-     :'<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">'+(profExOk?'Edytuj profil':'✏️ Nick i płeć')+'</div>'+avEditHtml();
+     :'<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">'+(profExOk?'Edytuj profil':'✏️ Nick i płeć')+'</div>'+avEditHtml()
+       +'<div class="sleft">'+gGrp("Konto",[gRow("#636366","key","Zmień hasło",esc(session&&session.user.email||""),'','data-c="pwd"')])+'</div>';
   const gsel=genderOk?'<label style="font-size:15px;margin-top:14px">Płeć (obowiązkowo)</label><div class="seg" id="gsex" style="margin-top:4px">'
      +[["K","👩 Kobieta"],["M","👨 Mężczyzna"]].map(([k,t])=>'<button type="button" data-g="'+k+'" class="'+(selGender===k?"on":"")+'">'+t+'</button>').join("")+'</div>':'';
   return head
@@ -1712,6 +1713,37 @@ function nickHtml(){
    +(first||incomplete||short?'':profExHtml())
    +'<div class="note" id="gnickinfo" style="color:var(--bad);margin-top:8px"></div>'
    +'<button class="b sbtn" data-c="nicksave">Zapisz</button></div>';
+}
+// 🔑 zmiana hasła w profilu (decyzja właściciela 2026-11-17: najpierw obecne hasło; weryfikacja e-mail przy rejestracji — przed publicznym wydaniem)
+function pwdHtml(){
+  const f=(id,ph,ac)=>'<div class="pw" style="margin-top:8px"><input id="'+id+'" type="password" autocomplete="'+ac+'" placeholder="'+ph+'" maxlength="72"><button type="button" class="eye" data-eye="'+id+'" aria-label="Pokaż hasło" title="Pokaż / ukryj hasło">👁️</button></div>';
+  return '<button class="sback" data-c="pwdback">‹ Profil</button><div class="sname" style="margin-top:26px">Zmień hasło</div>'
+   +'<div class="smail">'+esc(session.user.email||"")+'</div>'
+   +'<div class="sleft"><label for="gpw0" style="font-size:15px">Obecne hasło</label>'+f("gpw0","Obecne hasło","current-password")
+   +'<label for="gpw1" style="font-size:15px;margin-top:14px;display:block">Nowe hasło</label>'+f("gpw1","Nowe hasło (min. 6 znaków)","new-password")+f("gpw2","Powtórz nowe hasło","new-password")
+   +'<div class="note" id="gpwinfo" style="color:var(--bad);margin-top:8px"></div>'
+   +'<button class="b sbtn" data-c="pwdsave">Zmień hasło</button>'
+   +'<p class="note" style="margin-top:12px">Nie pamiętasz obecnego hasła? Wyloguj się i na ekranie logowania kliknij „Nie pamiętam hasła” — link przyjdzie na Twój e-mail.</p></div>';
+}
+async function pwdSave(btn){
+  const a=$("gpw0").value,b=$("gpw1").value,c=$("gpw2").value,inf=$("gpwinfo");inf.textContent="";
+  if(!a){inf.textContent="Wpisz obecne hasło.";return}
+  if(b.length<6){inf.textContent="Nowe hasło musi mieć co najmniej 6 znaków.";return}
+  if(b!==c){inf.textContent="Nowe hasła się różnią — wpisz to samo dwa razy.";return}
+  if(b===a){inf.textContent="Nowe hasło musi być inne niż obecne.";return}
+  btn.disabled=true;btn.textContent="Sprawdzam…";
+  const done=()=>{btn.disabled=false;btn.textContent="Zmień hasło"};
+  try{
+    const r=await sb.auth.signInWithPassword({email:session.user.email,password:a});   // sprawdzenie obecnego hasła
+    if(r.error){done();inf.textContent=/invalid|credentials/i.test(r.error.message||"")?"Obecne hasło jest nieprawidłowe.":"Nie udało się sprawdzić hasła: "+r.error.message;return}
+    btn.textContent="Zapisuję…";
+    const u=await sb.auth.updateUser({password:b});
+    if(u.error){done();const m=u.error.message||"",k=u.error.code||"";
+      inf.textContent=k==="same_password"||/different/i.test(m)?"Nowe hasło musi być inne niż obecne."
+        :k==="weak_password"||/weak|short/i.test(m)?"Hasło jest za słabe — dodaj więcej znaków, cyfry albo znaki specjalne."
+        :"Nie udało się zmienić hasła: "+m;return}
+  }catch(e){done();inf.textContent="Brak połączenia — spróbuj jeszcze raz.";return}
+  gearView="nick";renderGear();say("✅ Hasło zmienione. Przy następnym logowaniu użyj nowego.");
 }
 const lastAdmin=()=>isAdmin&&adminIds.length<=1;
 // 👁 podgląd aplikacji dla 👑 (decyzja właściciela 2026-11-17 05:37–05:44): pv = "" | "user" | "tester"; gość — osobna karta ?jako=gosc
@@ -2323,6 +2355,7 @@ function renderGear(){
   const keepConf=gearView==="confdel"&&$("gconf")?$("gconf").value:null;
   const keepDel=gearView==="del"&&$("gdel")?{v:$("gdel").value,i:$("gdelinfo").textContent}:null;
   const keepNick=gearView==="nick"&&$("gnick")?{v:$("gnick").value,i:$("gnickinfo").textContent}:null;
+  const keepPw=gearView==="pwd"&&$("gpw0")?{v:["gpw0","gpw1","gpw2"].map(i=>[$(i).value,$(i).type]),i:$("gpwinfo").textContent,f:document.activeElement&&document.activeElement.id}:null;   // odświeżanie co minutę nie kasuje wpisanych haseł
   let body;
   if(gearView==="admin"){body=adminHtml();if(tgLinks===null&&!tgLoading){tgLoading=true;loadTgLinks().then(()=>{if(gearView==="admin")renderGear()})}}
   else if(gearView==="unick")body=unickHtml();
@@ -2344,6 +2377,7 @@ function renderGear(){
   else if(gearView==="fbadmin"&&session&&isAdmin&&fbOk)body=fbAdminHtml();
   else if(gearView==="fbmsg"&&session&&isAdmin&&nicks[fbTo])body=fbMsgHtml();
   else if(gearView==="nick"&&session)body=nickHtml();
+  else if(gearView==="pwd"&&session)body=pwdHtml();
   else if(gearView==="del"&&session)body=delHtml();
   else if(gearView==="inst")body=instHtml();
   // ⚙️ góra w stylu grup iPhone'a + wyróżniona „Baza tras” (wariant B, decyzja właściciela 2026-11-16 15:11)
@@ -2379,6 +2413,7 @@ function renderGear(){
   if(keepConf!=null&&$("gconf"))$("gconf").value=keepConf;
   if(keepDel&&$("gdel")){$("gdel").value=keepDel.v;$("gdelinfo").textContent=keepDel.i}
   if(keepNick&&$("gnick")){$("gnick").value=keepNick.v;$("gnickinfo").textContent=keepNick.i}
+  if(keepPw&&$("gpw0")){["gpw0","gpw1","gpw2"].forEach((i,k)=>{$(i).value=keepPw.v[k][0];$(i).type=keepPw.v[k][1]});$("gpwinfo").textContent=keepPw.i;if(keepPw.f&&$(keepPw.f))$(keepPw.f).focus()}
   if($("admq")){admFilter();if(keepAdmq!=null){const q=$("admq");q.focus();try{q.setSelectionRange(keepAdmq,keepAdmq)}catch(e){}}}
 }
 function tgHtml(){
@@ -2432,6 +2467,7 @@ function renderChrome(){
   $("pwbox").classList.toggle("hide",!(pwMode&&session));
 }
 $("gear").onclick=()=>{gearOpen=!gearOpen;gearView="main";renderGear()};
+$("gearpanel").addEventListener("keydown",e=>{if(e.key==="Enter"&&/^gpw[012]$/.test(e.target.id)){e.preventDefault();const b=$("gearpanel").querySelector('[data-c="pwdsave"]');if(b&&!b.disabled)pwdSave(b)}});
 $("gearpanel").addEventListener("click",async e=>{
   const gb=e.target.closest("button[data-g]");
   if(gb){selGender=gb.dataset.g;[...$("gsex").children].forEach(x=>x.classList.toggle("on",x===gb));return}
@@ -2555,6 +2591,9 @@ $("gearpanel").addEventListener("click",async e=>{
   }
   if(c==="help"){gearOpen=false;renderGear();openHelp();return}
   if(c==="inst"){gearView="inst";renderGear();return}
+  if(c==="pwd"){gearView="pwd";renderGear();setTimeout(()=>{const x=$("gpw0");if(x)x.focus()},50);return}
+  if(c==="pwdback"){gearView="nick";renderGear();return}
+  if(c==="pwdsave"){pwdSave(e.target.closest("[data-c]"));return}
   if(c==="pv"){const m=e.target.closest("[data-pv]").dataset.pv;
     if(m==="guest"){const w=window.open(location.pathname+"?jako=gosc","_blank","noopener");if(!w)say("Przeglądarka zablokowała nową kartę — zezwól na wyskakujące okna.");return}
     gearOpen=false;renderGear();pvSet(pv===m?"":m);return}
