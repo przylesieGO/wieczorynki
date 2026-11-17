@@ -1,9 +1,9 @@
 // Edge Function „impreza-z-linku” — 🔗 „Wypełnij z linku” w formularzu imprezy (KROK 55).
-//  • aplikacja wysyła { url } albo { text } (wklejony opis) z tokenem zalogowanego admina,
-//  • funkcja sprawdza uprawnienia i limit (30/dzień), pobiera stronę organizatora, zamienia ją na tekst
-//    i prosi Claude Haiku o dane imprezy w ustalonym formacie,
-//  • zwraca { ok:true, data:{…}, left } — aplikacja wypełnia pola na żółto, admin sprawdza i zapisuje.
-//    Funkcja NIC nie zapisuje w tabelach imprez.
+//   • aplikacja wysyła { url } albo { text } (wklejony opis) z tokenem zalogowanego admina,
+//   • funkcja sprawdza uprawnienia i limit (30/dzień), pobiera stronę organizatora, zamienia ją na tekst
+//     i prosi Claude Haiku o dane imprezy w ustalonym formacie,
+//   • zwraca { ok:true, data:{…}, left } — aplikacja wypełnia pola na żółto, admin sprawdza i zapisuje.
+//     Funkcja NIC nie zapisuje w tabelach imprez.
 // Sekrety (Edge Functions → Secrets): ANTHROPIC_API_KEY (klucz z platform.claude.com).
 //   Opcjonalnie ANTHROPIC_MODEL (domyślnie claude-haiku-5-5).
 // SUPABASE_URL i SUPABASE_SERVICE_ROLE_KEY Supabase podaje sam.
@@ -36,7 +36,7 @@ class Fail extends Error {
 function badHost(h: string): boolean {
   h = h.toLowerCase().replace(/^\[|\]$/g, "");
   if (!h || h === "localhost" || /\.(localhost|local|internal|lan|home|arpa)$/.test(h) || !h.includes(".")) return true;
-  if (h.includes(":")) return true;                                  // adresy IPv6 podane wprost — nie
+  if (h.includes(":")) return true;                             // adresy IPv6 podane wprost — nie
   const m = h.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/);
   if (m) {
     const [a, b] = [+m[1], +m[2]];
@@ -169,7 +169,7 @@ export function htmlToText(html: string, base: string): { text: string; links: s
     .replace(/<[^>]+>/g, " ");
   const lines: string[] = [];
   for (let l of decodeEnt(h).split("\n")) {
-    l = l.replace(/[ \t |]+/g, (m) => (m.includes("|") ? " | " : " ")).replace(/^\s*\|\s*|\s*\|\s*$/g, "").trim();
+    l = l.replace(/[ \t |]+/g, (m) => (m.includes("|") ? " | " : " ")).replace(/^\s*\|\s*|\s*\|\s*$/g, "").trim();
     if (!l) continue;
     if (lines.length && lines[lines.length - 1] === l) continue;
     lines.push(l);
@@ -214,6 +214,7 @@ const TOOL = {
       confidence: {
         type: "object",
         properties: { dates: CONF, distances: CONF, price: CONF, place: CONF },
+        required: ["dates", "distances", "price", "place"]
       },
       warnings: { type: ["string", "null"], description: "krótko po polsku, co admin powinien sprawdzić; do 200 znaków" },
     },
