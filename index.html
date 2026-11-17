@@ -5541,12 +5541,15 @@ const nuMarkSeen=()=>{try{localStorage.setItem("nuSeen",String(Date.now()))}catc
 function nuRow(id,un){const d=new Date(joinedAt[id]);
   return '<div class="nit'+(un?' new':'')+'" data-nu="'+esc(id)+'"><div class="ic">🆕</div><div class="tx">'+nk(id)+'<div class="w">'+(genders[id]==="K"?'dołączyła':'dołączył')+' '+esc(relDayPast(d).toLowerCase())+', '+esc(hhmm(d))+(tgLinks&&tgLinks.has(id)?' · ✈️ Telegram':'')+'</div></div>'+(un?'<span class="dot"></span>':'')+'</div>'}
 // 🔑 ostatnie logowania i 🟢 ostatnio w aplikacji (tylko admini, KROK 49) — ładowane przy otwarciu 🔔
-let lgOk=null,lgList=[],lsList=[],lgAt=0,lgBusy=false;
+let lgOk=null,lgList=[],lsList=[],lgAt=0,lgBusy=false,dlList=[];
 async function lgLoad(force){
   if(!session||!isAdmin||lgOk===false||lgBusy||(!force&&Date.now()-lgAt<60000))return;
   lgBusy=true;
   try{const [a,b]=await Promise.all([sb.rpc("admin_logins",{days:14}),sb.rpc("admin_last_seen",{days:14})]);
     if(a.error||b.error){lgOk=false}else{lgOk=true;lgList=a.data||[];lsList=b.data||[];lgAt=Date.now()}
+    // 🗑 usunięte zaproszenia (KROK 58) — bez KROKU 58 lista po prostu pusta
+    const d=await sb.from("activity").select("id,created_at,user_id,ref_id,meta").eq("kind","want_deleted").gte("created_at",new Date(Date.now()-14*864e5).toISOString()).order("created_at",{ascending:false}).limit(30);
+    dlList=d.error?[]:(d.data||[]);
   }catch(e){lgOk=false}
   lgBusy=false;
   if(!$("bellsheet").classList.contains("hide"))renderBellSheet();
@@ -5555,6 +5558,16 @@ const lgSeen=()=>{try{const v=localStorage.getItem("lgSeen");return v?+v:Date.no
 const lgRows=()=>lgOk?lgList.filter(x=>x.user_id!==uid&&nicks[x.user_id]):[];
 const lgUnread=()=>{const s=lgSeen();return lgRows().filter(x=>!x.backfill&&new Date(x.at).getTime()>s)};
 const lgWhen=d=>relDayPast(d).toLowerCase()+', '+hhmm(d);
+// 🗑 usunięte zaproszenia (KROK 58; zgłoszenie właściciela 2026-11-17 11:01) — tylko admini, bez własnych usunięć
+const dlSeen=()=>{try{const v=localStorage.getItem("dlSeen");return v?+v:Date.now()-864e5}catch(e){return 0}};
+const dlRows=()=>lgOk?dlList.filter(x=>x.user_id!==uid):[];
+const dlUnread=()=>{const s=dlSeen();return dlRows().filter(x=>new Date(x.created_at).getTime()>s)};
+function dlRow(x,un){const m=x.meta||{},d=new Date(x.created_at),k=genders[x.user_id]==="K",au=m.author;
+  const who=nicks[x.user_id]?nk(x.user_id):'<b>ktoś</b>';
+  const what=m.by_admin?' (admin) '+(k?'usunęła':'usunął')+' zaproszenie od '+(au&&nicks[au]?esc(nicks[au]):'ktoś'):' '+(k?'usunęła':'usunął')+' swoje zaproszenie';
+  const st=m.starts_at?new Date(m.starts_at):null;
+  const det=[st?'jazda: '+(st<new Date()?relDayPast(st):relDay(st)).toLowerCase()+' '+hhmm(st):'',m.joined?'zapisani: '+m.joined:'nikt nie był zapisany',m.private?'🔒 prywatne':'',m.test?'testowe':''].filter(Boolean).join(' · ');
+  return '<div class="nit'+(un?' new':'')+'" data-nu="'+esc(x.user_id)+'"><div class="ic">🗑️</div><div class="tx">'+who+esc(what)+'<div class="w">'+esc(lgWhen(d))+' · '+esc(det)+'</div></div>'+(un?'<span class="dot"></span>':'')+'</div>'}
 function lgRow(x,un){const d=new Date(x.at),k=genders[x.user_id]==="K";
   return '<div class="nit'+(un?' new':'')+'" data-nu="'+esc(x.user_id)+'"><div class="ic">🔑</div><div class="tx">'+nk(x.user_id)+'<div class="w">'+(k?'zalogowała się':'zalogował się')+' '+esc(lgWhen(d))
    +(x.backfill?'':x.prev_at?' · poprzednio: '+esc(agoTxt(x.prev_at)):' · ✨ pierwsze logowanie')+'</div></div>'+(un?'<span class="dot"></span>':'')+'</div>'}
@@ -5589,7 +5602,7 @@ function renderBellSheet(){
   const ord=(a,b)=>((wUnread(b).length?1:0)-(wUnread(a).length?1:0))||((wNeedsAct(b)?1:0)-(wNeedsAct(a)?1:0))||(new Date(a.starts_at)-new Date(b.starts_at));
   const forMe=wants.filter(w=>w.user_id!==uid&&act(w)&&(w.visibility!=="private"||invIds(w).includes(uid)||(joins[w.id]||[]).includes(uid))).sort(ord);
   const mine=wants.filter(w=>w.user_id===uid&&act(w)).sort(ord);
-  const keep=p.querySelector(".bslist"),st=keep?keep.scrollTop:0,nu=bellUnread().length+nuUnread().length+lgUnread().length+evBellUn().length,EVB=evBellItems(),EVBs=evBellSeen(),LG=lgRows(),LGu=new Set(lgUnread()),LS=lsRows(),NU=nuList(),NUu=new Set(nuUnread()),SA=stepsAvail()?stepsList():[],SL=SA.filter(x=>!x.ok);
+  const keep=p.querySelector(".bslist"),st=keep?keep.scrollTop:0,nu=bellUnread().length+nuUnread().length+lgUnread().length+dlUnread().length+evBellUn().length,EVB=evBellItems(),EVBs=evBellSeen(),LG=lgRows(),LGu=new Set(lgUnread()),DL=dlRows(),DLu=new Set(dlUnread()),LS=lsRows(),NU=nuList(),NUu=new Set(nuUnread()),SA=stepsAvail()?stepsList():[],SL=SA.filter(x=>!x.ok);
   p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Powiadomienia"><div class="bsgrab"></div>'
    +'<div class="bshead"><button type="button" class="lnk" data-bk="close">Zamknij</button><b>🔔 Powiadomienia</b>'
    +(nu?'<button type="button" class="lnk" data-bk="all" style="text-align:right">✓ Przeczytane</button>':'<span style="min-width:64px"></span>')+'</div>'
@@ -5604,6 +5617,8 @@ function renderBellSheet(){
    +(LG.length?bsSec("lg",'🔑 Ostatnie logowania',LGu.size,LG.length,LG.slice(0,6).map(x=>lgRow(x,LGu.has(x))).join("")
       +(LG.length>6?'<div class="bsempty">i jeszcze '+(LG.length-6)+' z ostatnich 14 dni</div>':'')
       +'<div class="bsempty">Liczy się wpisanie e-maila i hasła — z zainstalowanej aplikacji ludzie zwykle logują się raz.</div>'):'')
+   +(DL.length?bsSec("dl",'🗑️ Usunięte zaproszenia',DLu.size,DL.length,DL.slice(0,6).map(x=>dlRow(x,DLu.has(x))).join("")
+      +(DL.length>6?'<div class="bsempty">i jeszcze '+(DL.length-6)+' z ostatnich 14 dni</div>':'')):'')
    +(LS.length?bsSec("ls",'🟢 Ostatnio w aplikacji',0,LS.length,LS.slice(0,8).map(lsRow).join("")
       +(LS.length>8?'<div class="bsempty">i jeszcze '+(LS.length-8)+' z ostatnich 14 dni</div>':'')
       +'<div class="bsempty">Czas odświeża się co ok. 15 min, gdy ktoś ma otwartą aplikację.</div>'):'')
@@ -5629,6 +5644,7 @@ function closeBell(){
   const ids=bellUnread().filter(n=>!nNeedsAct(n)).map(n=>n.id);
   if(nuUnread().length)nuMarkSeen();
   if(lgUnread().length)lsSet("lgSeen",String(Date.now()));
+  if(dlUnread().length)lsSet("dlSeen",String(Date.now()));
   if(evBellUn().length)lsSet("evBell",String(Date.now()));
   if(stepsLeft().length)lsSet("stepsSeen","1");
   $("bellsheet").classList.add("hide");$("bellsheet").innerHTML="";
@@ -5669,7 +5685,7 @@ $("bellsheet").addEventListener("click",async e=>{
   if(k){
     if(k.dataset.bk==="close")closeBell();
     else if(k.dataset.bk==="new"){closeBell();show(0);openWantForm(null)}
-    else{nuMarkSeen();lsSet("lgSeen",String(Date.now()));lsSet("evBell",String(Date.now()));await markRead(bellUnread().map(n=>n.id));renderBell();renderBellSheet()}
+    else{nuMarkSeen();lsSet("lgSeen",String(Date.now()));lsSet("dlSeen",String(Date.now()));lsSet("evBell",String(Date.now()));await markRead(bellUnread().map(n=>n.id));renderBell();renderBellSheet()}
     return;
   }
   const a=e.target.closest("button[data-na]");
