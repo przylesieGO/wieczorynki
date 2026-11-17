@@ -3125,7 +3125,8 @@ let evLikes={};
    „przeczytane” w tym urządzeniu (localStorage.evSeen: b = pierwsze uruchomienie, m = otwarte karty);
    po otwarciu karta zostaje na górze do wyjścia z zakładki (evStick), oznaczenie znika po 14 dniach */
 let evNewOk=false,evInvOk=false,evInv=[],evStick=new Set();
-let evPriceOk=false,evImpLeft=null;   // 💰 ceny i 🔗 „Wypełnij z linku” (KROK 55; evImpLeft = ile pobrań zostało dziś, null = brak/nie admin)
+let evPriceOk=false,evImpLeft=null;
+let evLoaded=false,evLoading=false;   // 🏁 czy listy imprez są wczytane (np. zakładka włączona dopiero po starcie z pamięci telefonu)   // 💰 ceny i 🔗 „Wypełnij z linku” (KROK 55; evImpLeft = ile pobrań zostało dziś, null = brak/nie admin)
 const EV_WIN=14*864e5;
 function evSeenGet(){try{const o=JSON.parse(localStorage.getItem("evSeen")||"null");if(o&&o.b){o.m=o.m||{};return o}}catch(e){}
   const o={b:Date.now(),m:{}};try{localStorage.setItem("evSeen",JSON.stringify(o))}catch(e){}return o}
@@ -3311,6 +3312,8 @@ function evMatch(e){
   return (evDist[e.id]||[]).some(d=>d.bike===evFlt||d.bike==="any");
 }
 function renderEvents(){
+  // zakładka Imprezy włączona później (np. „Funkcje testowe: Pokaż” po starcie z pamięci telefonu) — dociągnij imprezy raz
+  if(!evLoaded&&!evLoading&&session&&tabOk(3)){evLoading=true;loadEvents().then(()=>{evLoading=false;renderEvents();try{snapSave()}catch(e){}}).catch(()=>{evLoading=false})}
   const box=$("evlist");if(!box)return;
   $("evbeta").innerHTML=betaTag("tab_events");
   $("evchips").innerHTML=(evGeoOk?'<button type="button" class="fch near'+(evNearOn?' on':'')+'" data-evnear="1">📍 W okolicy'+(evNearOn?' · '+evNearR+' km':'')+'</button>':'')+[["","Wszystkie"],["gravel","🪨 Gravel"],["road","🛣 Szosa"],["mtb","⛰ MTB"],["run","🏃 Bieg"],["walk","🚶 Marsz"],["mine","🙋 Moje"]].concat(isAdmin&&evs.some(x=>x.delete_req_at)?[["delreq","🗑 Do usunięcia ("+evs.filter(x=>x.delete_req_at).length+")"]]:[]).map(([v,t])=>'<button type="button" class="fch'+(evFlt===v?' on':'')+'" data-evf="'+v+'">'+t+'</button>').join("");
@@ -6252,7 +6255,7 @@ function snapSave(){
       rbOk,bikeOk,placeOk,distOk,paceOk,wRouteOk,testOk,rangeOk,visOk,wCols,
       wRaw,joins,prefs,invs,decls,notifs,reportOk,reports,lib,
       adminIds,nickColors,nickBgs,favOk,favs:[...favs],supers:[...supers],testerOk,testerIds:[...testerIds],
-      evOk,evNewOk,evGeoOk,evExtraOk,evInvOk,evPriceOk,evs,evDist,evPart,evLikes,evInv,
+      evOk,evNewOk,evGeoOk,evExtraOk,evInvOk,evPriceOk,evLoaded,evs,evDist,evPart,evLikes,evInv,
       fbOk,fbList,fbDone,tgOk,tgLink,modOk,modBanned:[...modBanned],modHidden:[...modHidden],places,stealthOk,stealthIds:[...stealthIds]};
     const t=JSON.stringify(d);
     if(t.length>SNAP_MAX){snapClear();return}
@@ -6270,7 +6273,7 @@ function snapLoad(){
     wRaw=d.wRaw||[];joins=d.joins||{};prefs=d.prefs||{};invs=d.invs||{};decls=d.decls||{};notifs=d.notifs||[];reportOk=d.reportOk;reports=d.reports||{};lib=d.lib||[];
     adminIds=d.adminIds||[];isAdmin=adminIds.includes(uid);nickColors=d.nickColors||{...DEF_COLORS};nickBgs=d.nickBgs||{...DEF_BGS};
     favOk=d.favOk;favs=new Set(d.favs||[]);supers=new Set(d.supers||[]);testerOk=d.testerOk;testerIds=new Set(d.testerIds||[]);
-    evOk=d.evOk;evNewOk=d.evNewOk;evGeoOk=d.evGeoOk;evExtraOk=d.evExtraOk;evInvOk=d.evInvOk;evPriceOk=!!d.evPriceOk;evs=d.evs||[];evDist=d.evDist||{};evPart=d.evPart||{};evLikes=d.evLikes||{};evInv=d.evInv||[];
+    evOk=d.evOk;evNewOk=d.evNewOk;evGeoOk=d.evGeoOk;evExtraOk=d.evExtraOk;evInvOk=d.evInvOk;evPriceOk=!!d.evPriceOk;evLoaded=!!d.evLoaded;evs=d.evs||[];evDist=d.evDist||{};evPart=d.evPart||{};evLikes=d.evLikes||{};evInv=d.evInv||[];
     fbOk=d.fbOk;fbList=d.fbList||[];fbDone=d.fbDone||{};tgOk=d.tgOk;tgLink=d.tgLink||null;
     modOk=d.modOk;modBanned=new Set(d.modBanned||[]);modHidden=new Set(d.modHidden||[]);places=d.places||[];stealthOk=d.stealthOk;stealthIds=new Set(d.stealthIds||[]);
     if(!wCols)return false;
@@ -6298,6 +6301,7 @@ async function loadEvents(){
     const [e6,e7]=await Promise.all([sb.from("events").select("id,price_info").not("price_info","is",null).limit(1000),sb.rpc("ev_import_left")]);
     evPriceOk=!e6.error;if(evPriceOk){const pm={};(e6.data||[]).forEach(x=>{pm[x.id]=x.price_info});evs.forEach(x=>{x.price_info=pm[x.id]||null})}
     evImpLeft=e7.error||e7.data==null?null:+e7.data;
+    evLoaded=true;
 }
 async function loadRemote(selectId){
   const prevId=sorted[cur]&&sorted[cur].id;
