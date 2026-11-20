@@ -110,9 +110,9 @@ const FLAG_GUESTS=["tab_events"];
 function fGuestHtml(f){
   if(!FLAG_GUESTS.includes(f.key)||!("guests" in f))return "";
   const on=!!f.guests,all=f.state==="all";
-  return '<div class="fgst'+(all?'':' dis')+'"><span>👤 Goście (bez logowania)</span><div class="ios-seg fseg">'
-   +[[0,"Nie widzą","off"],[1,"Widzą","all"]].map(([v,t,c])=>'<button type="button" data-fg="'+esc(f.key)+'" data-fgv="'+v+'" class="fs-'+c+((+on===v)?' on':'')+'"'+(all?'':' disabled')+'>'+t+'</button>').join("")+'</div>'
-   +'<small>'+(all?'Goście widzą imprezy i liczbę osób, które jadą — bez nicków.':'Działa tylko przy ustawieniu „Wszyscy”.')+'</small></div>';
+  const sub=!all?'Działa tylko przy ustawieniu „Wszyscy”':on?'Widzą imprezy i liczbę jadących — bez nicków':'Nie widzą tej zakładki';
+  return '<div class="fgst'+(all?'':' dis')+'"><span class="ios-ic" style="background:#0a84ff">'+uiIcon("user")+'</span><span class="ios-t">Goście (bez logowania)<small>'+sub+'</small></span>'
+   +'<button type="button" class="ios-sw'+(on?' on':'')+'" role="switch" aria-checked="'+on+'" aria-label="Goście widzą zakładkę" data-fg="'+esc(f.key)+'" data-fgv="'+(on?0:1)+'"'+(all?'':' disabled')+'></button></div>';
 }
 const evGuest=()=>{const f=flags.tab_events;return !!f&&f.state==="all"&&!!f.guests};
 let testDelN=null;
