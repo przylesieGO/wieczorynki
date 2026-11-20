@@ -421,11 +421,12 @@ body.wfopen .toast{bottom:calc(var(--wffh,130px) + 12px);width:max-content;max-w
 .sigfab{position:fixed;right:max(calc(21px + env(safe-area-inset-right,0px)),calc((100vw - 900px)/2 + 21px));bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:1500;width:48px;height:48px;padding:0;border:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--card);color:var(--card);cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 6px 16px rgba(0,0,0,.18),0 1px 3px rgba(0,0,0,.12);transition:transform .12s,background .2s}
 .sigfab svg{width:32px;height:32px;animation:sigspin 6s ease-in-out infinite}
 /* dymek „Mam ochotę” nad kołem: półprzezroczysty (nie narzuca się); komputer — po najechaniu / fokusie, telefon — raz dziennie na kilka sekund (js/11) */
-.sigtip{position:fixed;right:max(calc(21px + env(safe-area-inset-right,0px)),calc((100vw - 900px)/2 + 21px));bottom:calc(144px + env(safe-area-inset-bottom,0px));z-index:1500;pointer-events:none;opacity:0;transition:opacity .25s;font-size:12.5px;font-weight:600;white-space:nowrap;padding:5px 11px;border-radius:9px;color:rgba(30,30,32,.85);background:rgba(255,255,255,.55);border:1px solid rgba(0,0,0,.14);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
-html[data-theme=dark] .sigtip{color:rgba(255,255,255,.88);background:rgba(44,44,46,.5);border-color:rgba(255,255,255,.2)}
+.sigtip{position:fixed;right:max(calc(21px + env(safe-area-inset-right,0px)),calc((100vw - 900px)/2 + 21px));bottom:calc(144px + env(safe-area-inset-bottom,0px));z-index:1500;pointer-events:none;opacity:0;transition:opacity .25s;font-size:12.5px;font-weight:700;white-space:nowrap;padding:5px 11px;border-radius:9px;color:#3a2a00;background:rgba(245,184,46,.5);border:1px solid rgba(245,184,46,.85);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+html[data-theme=dark] .sigtip{color:#fff3d1;background:rgba(245,184,46,.42);border-color:rgba(245,184,46,.8)}
 .sigtip::after{content:"";position:absolute;right:20px;bottom:-5px;width:8px;height:8px;transform:rotate(45deg);background:inherit;border:inherit;border-left:0;border-top:0}
 .sigfab.hide+.sigtip{display:none}
 .sigtip.show{opacity:1}
+@media (hover:none){.sigfab:not(.hide)+.sigtip{opacity:1}}
 @media (hover:hover){.sigfab:hover+.sigtip,.sigfab:focus-visible+.sigtip{opacity:1}}
 @media (prefers-reduced-motion:reduce){.sigtip{transition:none}}
 .sigfab:active{transform:scale(.92)}
