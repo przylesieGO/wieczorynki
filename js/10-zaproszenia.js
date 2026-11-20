@@ -39,8 +39,10 @@ function autoTitle(d,bike){if(!d)return "";
   const dw=(d.getDay()+6)%7,h=d.getHours(),st=["Poniedziałkow","Wtorkow","Środow","Czwartkow","Piątkow","Sobotn","Niedzieln"][dw],soft=dw===5;
   const [g,pora]=h<5?["f","nocna jazda"]:h<10?["m","poranek"]:h<13?["n","przedpołudnie"]:h<17?["n","popołudnie"]:h<21?["m","wieczór"]:["f","nocna jazda"];
   return st+(soft?{m:"i",n:"ie",f:"ia"}[g]:{m:"y",n:"e",f:"a"}[g])+" "+pora+({road:" na szosie",gravel:" na gravelu",mtb:" w terenie",trekking:" turystycznie"}[bike]||"")}
-function wfTitleHint(){const el=$("wtitlehint");if(!el)return;const own=$("wtitle").value.trim(),t=autoTitle(wfDate(),wf.bike);
-  el.textContent=own?"":t?"Bez tytułu: „"+t+"”":"";el.classList.toggle("hide",!titleOk||!!own||!t)}
+// tytuł domyślny wpisany w pole; dopóki autor go nie zmieni, nadąża za dniem, godziną i rowerem
+function wfTitleHint(){const el=$("wtitlehint"),inp=$("wtitle");if(!el||!inp)return;
+  if(wf.titleAuto)inp.value=autoTitle(wfDate(),wf.bike);
+  el.textContent="Ułożony automatycznie — możesz go zmienić.";el.classList.toggle("hide",!titleOk||!wf.titleAuto||!inp.value)}
 const wTitleHtml=w=>w.title?'<div class="wtl">'+uiIcon("tag")+'<span>'+esc(w.title)+'</span></div>':'';
 function repBellRow(w){const d=new Date(w.starts_at);
   return '<div class="nit stn"><div class="ic">🚴</div><div class="tx">'+wTitleHtml(w)+'<b>'+esc(relDayPast(d)+' · '+hhmm(d))+'</b>'
@@ -616,7 +618,8 @@ function openWantForm(w,preset){
   wf.h2=e.getHours();wf.m2=e.getMinutes();$("fch2").textContent=pad(wf.h2);$("fcm2").textContent=pad(wf.m2);
   $("wmode").classList.toggle("hide",!rangeOk||(!!w&&fromRange(w)));
   wfSetMode(rangeEdit||(wf.sigFor&&rangeOk)?"range":"one");
-  $("wnote").value=w?(w.note||""):"";wfNoteSync();$("wtitle").value=w&&!w.title_auto?(w.title||""):"";$("wtitlewrap").classList.toggle("hide",!titleOk);
+  $("wnote").value=w?(w.note||""):"";wfNoteSync();wf.noAuto=!!w&&!w.title&&!w.title_auto;   // starsze zaproszenie bez tytułu — bez domyślnego (decyzja: tylko nowe)
+  wf.titleAuto=!wf.noAuto&&(!w||!!w.title_auto);$("wtitle").value=w&&!wf.titleAuto?(w.title||""):"";wfTitleHint();$("wtitlewrap").classList.toggle("hide",!titleOk);
   const L=lastWant();
   $("wlast").classList.toggle("hide",!L||!!w);
   if(L)$("wlast").textContent="↺ Jak ostatnio: "+pad(L.h)+":"+pad(L.m)+(L.note?" · "+L.note:"");
@@ -807,7 +810,7 @@ async function savePlaceToList(){
   if(places.some(x=>x.name.toLowerCase()===wf.place.toLowerCase()))return;
   try{const row={name:wf.place,lat:wf.plat,lon:wf.plon};if(bikeOk&&wf.pcity){row.city=wf.pcity;row.area=wf.parea||null}const r=await sb.from("places").insert(row).select(bikeOk?"id,name,lat,lon,created_by,city,area":"id,name,lat,lon,created_by").single();if(!r.error&&r.data)places.push(r.data)}catch(e){}
 }
-function wfSnap(){return JSON.stringify([wf.day,$("wdt").value,wf.mode,wf.h,wf.m,wf.h2,wf.m2,wf.vis,[...wf.pick].sort(),wf.test,wf.pace,wf.bike,wf.km,wf.dur,wf.place,wf.plat,$("wtitle").value.trim(),$("wnote").value.trim(),!!wf.route,wf.routeTouched])}
+function wfSnap(){return JSON.stringify([wf.day,$("wdt").value,wf.mode,wf.h,wf.m,wf.h2,wf.m2,wf.vis,[...wf.pick].sort(),wf.test,wf.pace,wf.bike,wf.km,wf.dur,wf.place,wf.plat,(wf.titleAuto?"":$("wtitle").value.trim()),$("wnote").value.trim(),!!wf.route,wf.routeTouched])}
 function wfTryClose(){
   if($("wantform").classList.contains("hide"))return;
   if(wf.snap0&&wfSnap()!==wf.snap0){
@@ -942,7 +945,9 @@ $("wquick").addEventListener("click",e=>{
   wfSetTime(d.getHours(),d.getMinutes());
   if(wfRange()&&wf.h2*60+wf.m2<=wf.h*60+wf.m){const e=new Date(d.getTime()+2*36e5);if(e.getDate()===d.getDate())wfSetTime2(e.getHours(),e.getMinutes());else wfSetTime2(23,45)}
 });
-$("wtitle").addEventListener("input",wfTitleHint);
+$("wtitle").addEventListener("input",()=>{wf.titleAuto=false;wfTitleHint()});
+$("wtitle").addEventListener("focus",()=>{if(wf.titleAuto)$("wtitle").select()});
+$("wtitle").addEventListener("blur",()=>{if(!$("wtitle").value.trim()&&!wf.noAuto){wf.titleAuto=true;wfTitleHint()}});
 $("wnotesel").addEventListener("change",()=>{
   const v=$("wnotesel").value;
   if(v==="*"){$("wnote").value="";$("wnote").classList.remove("hide");$("wnote").focus()}
@@ -963,7 +968,7 @@ $("wsave").onclick=async()=>{
   const rng=wfRange(),d2=rng?wfDate2():null;
   if(rng&&(d2<=d||d2-d>12*36e5)){say("Koniec zakresu musi być później niż początek (tego samego dnia, maks. 12 h).");return}
   if(rng&&d.getTime()<Date.now()+65*60000){say("Zakres zaczyna się za mniej niż godzinę — wtedy godzina ustala się sama i nikt nie może zaproponować swojej. Przesuń początek zakresu albo wybierz „Godzina”.");return}
-  const note=$("wnote").value.trim()||null,title=$("wtitle").value.trim()||null,k=localIso(d).slice(0,10);
+  const note=$("wnote").value.trim()||null,title=wf.titleAuto?null:($("wtitle").value.trim()||null),k=localIso(d).slice(0,10);
   if(title&&title.length<6){say("Tytuł: co najmniej 6 znaków — albo zostaw puste (tytuł ułoży się sam).");return}
   // kilka zaproszeń dziennie wolno (decyzja 2026-11-15) — blokada tylko dla tej samej godziny startu
   const same=wants.find(w=>w.user_id===uid&&w.id!==wf.editId&&Math.abs(new Date(w.starts_at).getTime()-d.getTime())<60000);
