@@ -50,9 +50,10 @@ function bellRowHtml(w){
   return '<div class="nit'+(mine?' mine':'')+(un.length?' new':'')+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'"><div class="ic">'+(mine?'🙋':isPriv(w)?'📩':'🌍')+'</div>'
    +'<div class="tx">'+testTag(w)+wTitleHtml(w)+title+'<div class="w">'+sub+'</div>'+news+btns+'</div>'+(un.length?(act?'<span class="dot"></span>':bsMk("w:"+w.id)):'')+'</div>';
 }
-// 🆕 nowi użytkownicy (tylko admini): konta z nickiem z ostatnich 14 dni; „przeczytane” zapamiętane w tym urządzeniu
-const nuList=()=>{if(!isAdmin)return [];const lim=Date.now()-14*864e5;
-  return Object.keys(nicks).filter(id=>id!==uid&&joinedAt[id]&&new Date(joinedAt[id]).getTime()>lim).sort((a,b)=>new Date(joinedAt[b])-new Date(joinedAt[a]))};
+// 🆕 nowi użytkownicy (wszyscy zalogowani — decyzja 2026-11-20): konta z nickiem z ostatnich 14 dni,
+// bez ukrytych/zablokowanych (admini widzą wszystkich); „przeczytane” zapamiętane w tym urządzeniu
+const nuList=()=>{if(!session)return [];const lim=Date.now()-14*864e5;
+  return Object.keys(nicks).filter(id=>id!==uid&&joinedAt[id]&&new Date(joinedAt[id]).getTime()>lim&&(isAdmin||!modGone(id))).sort((a,b)=>new Date(joinedAt[b])-new Date(joinedAt[a]))};
 const nuSeen=()=>{try{const v=localStorage.getItem("nuSeen");return v?+v:Date.now()-3*864e5}catch(e){return 0}};
 const nuUnread=()=>{const s=nuSeen(),D=bsDone();return nuList().filter(id=>new Date(joinedAt[id]).getTime()>s&&!D.has("nu:"+id))};
 const nuMarkSeen=()=>{try{localStorage.setItem("nuSeen",String(Date.now()))}catch(e){}};
