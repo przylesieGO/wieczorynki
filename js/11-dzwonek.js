@@ -25,7 +25,7 @@ function newsTxt(n,w){
   switch(n.kind){
     case "invite":return a!==w.user_id?who+' '+v("doprosił","doprosiła")+' Cię':'nowe zaproszenie';
     case "time":return who+' '+v("zmienił","zmieniła")+' godzinę';
-    case "info":return who+' '+v("zmienił","zmieniła")+' szczegóły jazdy (tempo, dystans albo trasę)';
+    case "info":return who+' '+v("zmienił","zmieniła")+' szczegóły jazdy (tytuł, tempo, miejsce, dystans albo trasę)';
     case "set":return who+' '+v("ustalił","ustaliła")+' godzinę: <b>'+esc(hhmm(new Date(w.starts_at)))+'</b>';
     case "join":return who+' '+v("dołączył","dołączyła")+(pf&&isOpen(w)?' · pasuje <b>'+esc(hhmm(new Date(pf)))+'</b>':'');
     case "pref":return who+' '+v("zmienił","zmieniła")+' godzinę'+(pf?' · pasuje <b>'+esc(hhmm(new Date(pf)))+'</b>':'');
@@ -48,7 +48,7 @@ function bellRowHtml(w){
       :'<button type="button" class="b" data-na="join" data-wid="'+esc(w.id)+'">Jadę! · '+esc(hhmm(new Date(w.starts_at)))+'</button>')
     +'<button type="button" class="b w" data-na="no" data-wid="'+esc(w.id)+'">Nie dam rady</button></div>':'';
   return '<div class="nit'+(mine?' mine':'')+(un.length?' new':'')+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'"><div class="ic">'+(mine?'🙋':isPriv(w)?'📩':'🌍')+'</div>'
-   +'<div class="tx">'+testTag(w)+title+'<div class="w">'+sub+'</div>'+news+btns+'</div>'+(un.length?(act?'<span class="dot"></span>':bsMk("w:"+w.id)):'')+'</div>';
+   +'<div class="tx">'+testTag(w)+wTitleHtml(w)+title+'<div class="w">'+sub+'</div>'+news+btns+'</div>'+(un.length?(act?'<span class="dot"></span>':bsMk("w:"+w.id)):'')+'</div>';
 }
 // 🆕 nowi użytkownicy (tylko admini): konta z nickiem z ostatnich 14 dni; „przeczytane” zapamiętane w tym urządzeniu
 const nuList=()=>{if(!isAdmin)return [];const lim=Date.now()-14*864e5;

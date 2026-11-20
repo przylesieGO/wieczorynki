@@ -5,8 +5,8 @@
    Pełne wczytanie też co 15 minut otwartej aplikacji (siatka bezpieczeństwa).
    Ostatni stan zapisany w telefonie (localStorage „snap”) — start pokazuje go od razu i dociąga zmiany.
    Bez KROKU 56 (błąd sync_since) — jak dawniej: pełne wczytanie co minutę. */
-let lastTick=Date.now(),syncN=null,syncOk=false,syncTicks=0,syncP=null,syncAgain=false,wRaw=[],wCols=null,wColsTry=null;
-const SNAP_V=1,SNAP_MAX=2500000,SYNC_FULL_EVERY=15;
+let lastTick=Date.now(),syncN=null,syncOk=false,syncTicks=0,syncP=null,syncAgain=false,wRaw=[],wCols=null,wColsTry=null,titleOk=false;
+const SNAP_V=2,SNAP_MAX=2500000,SYNC_FULL_EVERY=15;
 function deriveWants(){
   const since=Date.now()-31*864e5;
   let a=wRaw.filter(x=>new Date(x.starts_at).getTime()>=since);
@@ -131,7 +131,7 @@ function snapSave(){
     const d={v:SNAP_V,uid,at:Date.now(),n:syncN,
       sorted,rsvps,watchOk,watchN,flags,
       myPriv,profExOk,genderOk,nicks,genders,joinedAt,avAt,medias,meNick:me.nick,
-      rbOk,bikeOk,placeOk,distOk,paceOk,wRouteOk,testOk,rangeOk,visOk,wCols,
+      rbOk,titleOk,bikeOk,placeOk,distOk,paceOk,wRouteOk,testOk,rangeOk,visOk,wCols,
       wRaw,joins,prefs,invs,decls,notifs,reportOk,reports,lib,
       adminIds,nickColors,nickBgs,favOk,favs:[...favs],supers:[...supers],testerOk,testerIds:[...testerIds],
       evOk,evNewOk,evGeoOk,evExtraOk,evInvOk,evPriceOk,evLoaded,evs,evDist,evPart,evLikes,evInv,
@@ -148,7 +148,7 @@ function snapLoad(){
     if(!d||d.v!==SNAP_V||d.uid!==uid||!(Date.now()-d.at<2.5*864e5)||d.n==null)return false;
     sorted=d.sorted||[];rsvps=d.rsvps||{};watchOk=d.watchOk;watchN=d.watchN||{};flags=d.flags||{};flagsReady=true;
     myPriv=d.myPriv;profExOk=d.profExOk;genderOk=d.genderOk;nicks=d.nicks||{};genders=d.genders||{};joinedAt=d.joinedAt||{};avAt=d.avAt||{};medias=d.medias||{};me.nick=d.meNick||null;
-    rbOk=d.rbOk;bikeOk=d.bikeOk;placeOk=d.placeOk;distOk=d.distOk;paceOk=d.paceOk;wRouteOk=d.wRouteOk;testOk=d.testOk;rangeOk=d.rangeOk;visOk=d.visOk;wCols=d.wCols;
+    rbOk=d.rbOk;titleOk=!!d.titleOk;bikeOk=d.bikeOk;placeOk=d.placeOk;distOk=d.distOk;paceOk=d.paceOk;wRouteOk=d.wRouteOk;testOk=d.testOk;rangeOk=d.rangeOk;visOk=d.visOk;wCols=d.wCols;
     wRaw=d.wRaw||[];joins=d.joins||{};prefs=d.prefs||{};invs=d.invs||{};decls=d.decls||{};notifs=d.notifs||[];reportOk=d.reportOk;reports=d.reports||{};lib=d.lib||[];
     adminIds=d.adminIds||[];isAdmin=adminIds.includes(uid)&&!pv;nickColors=d.nickColors||{...DEF_COLORS};nickBgs=d.nickBgs||{...DEF_BGS};
     favOk=d.favOk;favs=new Set(d.favs||[]);supers=new Set(d.supers||[]);testerOk=d.testerOk;testerIds=new Set(d.testerIds||[]);
@@ -225,7 +225,9 @@ async function loadRemote(selectId){
     const wSince=new Date(Date.now()-31*864e5).toISOString(); // + archiwum 30 dni (KROK 38)
     const wq=cols=>{wColsTry=cols;return sb.from("wants").select(cols).gte("starts_at",wSince).order("starts_at").limit(1000)};
     const WFULL="id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min,place,place_lat,place_lon,bike,place_city,place_area";
-    let w=await wq(WFULL+",route_base_id");rbOk=!w.error;   // 🗺️ baza tras (KROK 47)
+    let w=await wq(WFULL+",route_base_id,title,title_auto");titleOk=!w.error;   // 🏷 tytuł zaproszenia (KROK 65)
+    if(w.error)w=await wq(WFULL+",route_base_id");
+    rbOk=!w.error;   // 🗺️ baza tras (KROK 47)
     if(w.error)w=await wq(WFULL);
     bikeOk=!w.error;
     if(w.error)w=await wq("id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min,place,place_lat,place_lon");

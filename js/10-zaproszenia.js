@@ -33,8 +33,17 @@ function repBell(){
   return {n:all.length,rated:all.filter(w=>myRep(w)).length,todo};
 }
 const repTodoN=()=>{const r=repBell();return r?r.todo.length:0};
+// 🏷 tytuł zaproszenia — jeden wspólny element na kartach, w 🔔, w „Jak poszło?”, w Archiwum
+// tytuł domyślny — ta sama zasada co want_auto_title() w bazie (KROK 65): dzień + pora + rower
+function autoTitle(d,bike){if(!d)return "";
+  const dw=(d.getDay()+6)%7,h=d.getHours(),st=["Poniedziałkow","Wtorkow","Środow","Czwartkow","Piątkow","Sobotn","Niedzieln"][dw],soft=dw===5;
+  const [g,pora]=h<5?["f","nocna jazda"]:h<10?["m","poranek"]:h<13?["n","przedpołudnie"]:h<17?["n","popołudnie"]:h<21?["m","wieczór"]:["f","nocna jazda"];
+  return st+(soft?{m:"i",n:"ie",f:"ia"}[g]:{m:"y",n:"e",f:"a"}[g])+" "+pora+({road:" na szosie",gravel:" na gravelu",mtb:" w terenie",trekking:" turystycznie"}[bike]||"")}
+function wfTitleHint(){const el=$("wtitlehint");if(!el)return;const own=$("wtitle").value.trim(),t=autoTitle(wfDate(),wf.bike);
+  el.textContent=own?"":t?"Bez tytułu: „"+t+"”":"";el.classList.toggle("hide",!titleOk||!!own||!t)}
+const wTitleHtml=w=>w.title?'<div class="wtl">'+uiIcon("tag")+'<span>'+esc(w.title)+'</span></div>':'';
 function repBellRow(w){const d=new Date(w.starts_at);
-  return '<div class="nit stn"><div class="ic">🚴</div><div class="tx"><b>'+esc(relDayPast(d)+' · '+hhmm(d))+'</b>'
+  return '<div class="nit stn"><div class="ic">🚴</div><div class="tx">'+wTitleHtml(w)+'<b>'+esc(relDayPast(d)+' · '+hhmm(d))+'</b>'
    +'<div class="w">'+(w.user_id===uid?'Twoje zaproszenie':'z '+esc(nickOf(w.user_id)))+(w.place?' · '+esc(w.place):w.note?' · '+esc(w.note.slice(0,40)):'')+(isTest(w)?' · test':'')+'</div></div>'
    +'<button type="button" class="lnk stgo" data-rep="'+esc(w.id)+'">Oceń ›</button></div>'}
 function repBellHtml(){
@@ -65,7 +74,7 @@ function renderRep(){
   p.innerHTML='<div class="bsbox repbox" role="dialog" aria-modal="true" aria-label="Jak poszło?"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-rs="later">Później</button><b>🚴 Jak poszło?</b><span style="min-width:64px;text-align:right" class="note">'+(pend.length>1&&idx>=0?(idx+1)+' z '+pend.length:'')+'</span></div>'
    +'<div class="bslist">'
    +(isTest(w)?'<div class="rtest"><span class="ttag">🧪 TEST</span> Testowa jazda — odpowiedź na próbę, nie liczy się do statystyk.</div>':'')
-   +'<div class="rsub">'+esc(relDayPast(new Date(w.starts_at))+" · "+hhmm(new Date(w.starts_at)))+(w.place?' · 📍 '+esc(w.place):'')+'<br>'+nk(w.user_id)+(own?' <span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
+   +wTitleHtml(w)+'<div class="rsub">'+esc(relDayPast(new Date(w.starts_at))+" · "+hhmm(new Date(w.starts_at)))+(w.place?' · 📍 '+esc(w.place):'')+'<br>'+nk(w.user_id)+(own?' <span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
    +(myRep(w)?'<div class="myrep" style="margin-top:10px">✏️ '+(genders[uid]==="K"?'Odpowiedziałaś':'Odpowiedziałeś')+(myRep(w).updated_at?' '+esc(new Date(myRep(w).updated_at).toLocaleDateString("pl-PL",{day:"numeric",month:"numeric"})):'')+' — możesz zmienić i zapisać ponownie.</div>':'')
    +'<div class="bsgrp">'+(genders[uid]==="K"?'Pojechałaś?':'Pojechałeś?')+'</div><div class="seg rseg"><button type="button" data-rs="went" data-v="1" class="'+(rs.went===true?'on':'')+'">✅ Tak</button><button type="button" data-rs="went" data-v="0" class="'+(rs.went===false?'on':'')+'">❌ '+(genders[uid]==="K"?'Nie dałam rady':'Nie dałem rady')+'</button></div>'
    +(rs.went?'<div class="bsgrp">Ile km?</div><div class="fchips">'+(plan?[["plan","Jak w planie · "+String(plan).replace(".",",")+" km"],["less","Mniej"],["more","Więcej"]]:[]).map(([v,t])=>'<button type="button" class="fch'+(rs.kmMode===v?' on':'')+'" data-rs="km" data-v="'+v+'">'+esc(t)+'</button>').join("")+'</div>'
@@ -157,7 +166,7 @@ function archSum(L){
 function archItem(w){
   const d=new Date(w.starts_at),ex=wExpired(w),pp=wPeople(w),k=kmOf(w);
   const dd=dayDiff(d),dt=(dd===0?"Dziś":dd===-1?"Wczoraj":d.toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"}))+" · "+(isOpen(w)?wTime(w):hhmm(d));
-  return '<div class="ai'+(isTest(w)?' test':'')+'"><div class="ait"><b>'+esc(dt)+'</b>'+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+'<span class="'+(ex?'aex':'aok')+'">'+(ex?'⌛ wygasło':'zakończone')+'</span></div>'
+  return '<div class="ai'+(isTest(w)?' test':'')+'">'+wTitleHtml(w)+'<div class="ait"><b>'+esc(dt)+'</b>'+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+'<span class="'+(ex?'aex':'aok')+'">'+(ex?'⌛ wygasło':'zakończone')+'</span></div>'
    +'<div class="ail">'+nk(w.user_id)+(w.place?' · 📍 '+esc(w.place+(w.place_city?' · '+w.place_city:'')):'')+'</div>'
    +(ex?'<div class="ail note">Godzina nieustalona, nikt nie dołączył.</div>':(()=>{const S=repSum(w);
      return (S?'<div class="ail">✅ Potwierdziło '+S.yes.length+' z '+pp.length+': '+S.yes.map(id=>nk(id)).join(" ")+'</div>'+(pp.length>S.n?'<div class="ail note">❓ bez odpowiedzi: '+(pp.length-S.n)+'</div>':'')
@@ -457,7 +466,7 @@ function wantHtml(w){
     // admin widzi cudze prywatne zaproszenie tylko podglądowo (bez „Jadę!”), chyba że jest zaproszony
     const peek=priv&&!mine&&!invIds(w).includes(uid)&&!joined;
     const open=isOpen(w)&&!wLive(w),myp=(prefs[w.id]||{})[uid],dec=(decls[w.id]||[]).includes(uid),live=wLive(w);
-    return '<div class="want'+(mine?' mine':'')+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'">'+(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+'<div class="wtop">'+nk(w.user_id)+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="lockt">do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?'<span class="lockt">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>':'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
+    return '<div class="want'+(mine?' mine':'')+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'">'+(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+'<div class="wtop">'+nk(w.user_id)+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="lockt">do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?'<span class="lockt">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>':'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
      +(live?liveHtml(w):'')
      +paceHtml(w)+bikeHtml(w)+(live?'':durLineHtml(w))+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+(live?'':wxHtml(w))+routeBoxHtml(w)
      +invitedHtml(w)
@@ -538,6 +547,7 @@ function wfTestSync(){try{wfRbSync()}catch(e){}
 }
 let wxTimer=null;
 function wfUpdate(){
+  wfTitleHint();
   const d=wfDate(),btn=$("wsave");
   const tst=!wf.editId&&testOk&&wf.test;
   btn.classList.toggle("tbtn",tst);
@@ -606,7 +616,7 @@ function openWantForm(w,preset){
   wf.h2=e.getHours();wf.m2=e.getMinutes();$("fch2").textContent=pad(wf.h2);$("fcm2").textContent=pad(wf.m2);
   $("wmode").classList.toggle("hide",!rangeOk||(!!w&&fromRange(w)));
   wfSetMode(rangeEdit||(wf.sigFor&&rangeOk)?"range":"one");
-  $("wnote").value=w?(w.note||""):"";wfNoteSync();
+  $("wnote").value=w?(w.note||""):"";wfNoteSync();$("wtitle").value=w&&!w.title_auto?(w.title||""):"";$("wtitlewrap").classList.toggle("hide",!titleOk);
   const L=lastWant();
   $("wlast").classList.toggle("hide",!L||!!w);
   if(L)$("wlast").textContent="↺ Jak ostatnio: "+pad(L.h)+":"+pad(L.m)+(L.note?" · "+L.note:"");
@@ -797,7 +807,7 @@ async function savePlaceToList(){
   if(places.some(x=>x.name.toLowerCase()===wf.place.toLowerCase()))return;
   try{const row={name:wf.place,lat:wf.plat,lon:wf.plon};if(bikeOk&&wf.pcity){row.city=wf.pcity;row.area=wf.parea||null}const r=await sb.from("places").insert(row).select(bikeOk?"id,name,lat,lon,created_by,city,area":"id,name,lat,lon,created_by").single();if(!r.error&&r.data)places.push(r.data)}catch(e){}
 }
-function wfSnap(){return JSON.stringify([wf.day,$("wdt").value,wf.mode,wf.h,wf.m,wf.h2,wf.m2,wf.vis,[...wf.pick].sort(),wf.test,wf.pace,wf.bike,wf.km,wf.dur,wf.place,wf.plat,$("wnote").value.trim(),!!wf.route,wf.routeTouched])}
+function wfSnap(){return JSON.stringify([wf.day,$("wdt").value,wf.mode,wf.h,wf.m,wf.h2,wf.m2,wf.vis,[...wf.pick].sort(),wf.test,wf.pace,wf.bike,wf.km,wf.dur,wf.place,wf.plat,$("wtitle").value.trim(),$("wnote").value.trim(),!!wf.route,wf.routeTouched])}
 function wfTryClose(){
   if($("wantform").classList.contains("hide"))return;
   if(wf.snap0&&wfSnap()!==wf.snap0){
@@ -813,7 +823,7 @@ $("wpacesel").addEventListener("change",()=>{const v=$("wpacesel").value;
   wfRouteSync()});
 const WBIKE=[["","bike","Każdy"],["road","road","Szosa"],["gravel","gravel","Gravel"],["mtb","mtb","MTB"],["trekking","tree","Trekking"]];
 function wbikeRender(){const el=$("wbikesel");if(!el)return;el.innerHTML=WBIKE.map(([v,k,t])=>'<button type="button" class="wbk'+((wf.bike||"")===v?' on':'')+'" data-wbk="'+v+'" aria-pressed="'+((wf.bike||"")===v)+'">'+uiIcon(k)+'<span>'+t+'</span></button>').join("")}
-$("wbikesel").addEventListener("click",e=>{const b=e.target.closest("[data-wbk]");if(!b)return;wf.bike=b.dataset.wbk||null;wbikeRender()});
+$("wbikesel").addEventListener("click",e=>{const b=e.target.closest("[data-wbk]");if(!b)return;wf.bike=b.dataset.wbk||null;wbikeRender();wfTitleHint()});
 $("wpaceown").addEventListener("input",()=>{wf.pace=$("wpaceown").value.trim().slice(0,30)||null;wfRouteSync()});
 const wfJump=e=>{
   if(e.target.closest(".wtom")){wfSetDay("1");wfUpdate();try{navigator.vibrate&&navigator.vibrate(8)}catch(x){}return}
@@ -932,6 +942,7 @@ $("wquick").addEventListener("click",e=>{
   wfSetTime(d.getHours(),d.getMinutes());
   if(wfRange()&&wf.h2*60+wf.m2<=wf.h*60+wf.m){const e=new Date(d.getTime()+2*36e5);if(e.getDate()===d.getDate())wfSetTime2(e.getHours(),e.getMinutes());else wfSetTime2(23,45)}
 });
+$("wtitle").addEventListener("input",wfTitleHint);
 $("wnotesel").addEventListener("change",()=>{
   const v=$("wnotesel").value;
   if(v==="*"){$("wnote").value="";$("wnote").classList.remove("hide");$("wnote").focus()}
@@ -952,7 +963,8 @@ $("wsave").onclick=async()=>{
   const rng=wfRange(),d2=rng?wfDate2():null;
   if(rng&&(d2<=d||d2-d>12*36e5)){say("Koniec zakresu musi być później niż początek (tego samego dnia, maks. 12 h).");return}
   if(rng&&d.getTime()<Date.now()+65*60000){say("Zakres zaczyna się za mniej niż godzinę — wtedy godzina ustala się sama i nikt nie może zaproponować swojej. Przesuń początek zakresu albo wybierz „Godzina”.");return}
-  const note=$("wnote").value.trim()||null,k=localIso(d).slice(0,10);
+  const note=$("wnote").value.trim()||null,title=$("wtitle").value.trim()||null,k=localIso(d).slice(0,10);
+  if(title&&title.length<6){say("Tytuł: co najmniej 6 znaków — albo zostaw puste (tytuł ułoży się sam).");return}
   // kilka zaproszeń dziennie wolno (decyzja 2026-11-15) — blokada tylko dla tej samej godziny startu
   const same=wants.find(w=>w.user_id===uid&&w.id!==wf.editId&&Math.abs(new Date(w.starts_at).getTime()-d.getTime())<60000);
   if(same){say("Masz już zaproszenie na "+wfLabel(d).toLowerCase()+" — wybierz inną godzinę albo zmień tamto.");return}
@@ -984,7 +996,7 @@ $("wsave").onclick=async()=>{
         if(r){rbUse=r.id;if(r.isNew)rbNew=r.id}}
     }
     if(wf.editId){
-      const ow0=wants.find(x=>x.id===wf.editId),upd={starts_at:d.toISOString(),note};if(paceOk)upd.pace=wf.pace||null;if(placeOk){upd.place=wf.place||null;upd.place_lat=wf.place?wf.plat:null;upd.place_lon=wf.place?wf.plon:null}if(bikeOk){upd.bike=wf.bike||null;upd.place_city=wf.place&&wf.pcity||null;upd.place_area=wf.place&&wf.parea||null}if(distOk){const R=wf.route||(!wf.routeTouched&&hasRoute(ow0));upd.km=R?null:wf.km||null;upd.dur_min=R||wf.km?null:wf.dur||DUR_DEF}
+      const ow0=wants.find(x=>x.id===wf.editId),upd={starts_at:d.toISOString(),note};if(titleOk)upd.title=title;if(paceOk)upd.pace=wf.pace||null;if(placeOk){upd.place=wf.place||null;upd.place_lat=wf.place?wf.plat:null;upd.place_lon=wf.place?wf.plon:null}if(bikeOk){upd.bike=wf.bike||null;upd.place_city=wf.place&&wf.pcity||null;upd.place_area=wf.place&&wf.parea||null}if(distOk){const R=wf.route||(!wf.routeTouched&&hasRoute(ow0));upd.km=R?null:wf.km||null;upd.dur_min=R||wf.km?null:wf.dur||DUR_DEF}
       if(wRouteOk&&wf.routeTouched){upd.route=wf.route?routeJson(wf.route):null;upd.route_km=wf.route?+routeKm(wf.route).toFixed(1):null;delete wRouteCache[wf.editId];if(rbOk)upd.route_base_id=wf.route?rbUse:null}
       if(rbNew)sb.from("route_base").update({src_want:wf.editId}).eq("id",rbNew).then(()=>{},()=>{});
       if(rng){upd.range_from=d.toISOString();upd.range_to=d2.toISOString();upd.settled_at=null}
@@ -1005,7 +1017,7 @@ $("wsave").onclick=async()=>{
           if(rem.length)visMsg+=" Usunięto z zaproszonych: "+rem.length+".";}
       }
     }else{
-      const row={starts_at:d.toISOString(),note};if(paceOk&&wf.pace)row.pace=wf.pace;if(placeOk&&wf.place){row.place=wf.place;if(wf.plat!=null){row.place_lat=wf.plat;row.place_lon=wf.plon}}if(bikeOk){if(wf.bike)row.bike=wf.bike;if(wf.place&&wf.pcity){row.place_city=wf.pcity;if(wf.parea)row.place_area=wf.parea}}if(distOk&&!wf.route){if(wf.km)row.km=wf.km;else row.dur_min=wf.dur||DUR_DEF}if(priv)row.visibility="private";if(testOk)row.is_test=!!wf.test;if(wRouteOk&&wf.route){row.route=routeJson(wf.route);row.route_km=+routeKm(wf.route).toFixed(1)}if(rbOk&&rbUse)row.route_base_id=rbUse;
+      const row={starts_at:d.toISOString(),note};if(titleOk&&title)row.title=title;if(paceOk&&wf.pace)row.pace=wf.pace;if(placeOk&&wf.place){row.place=wf.place;if(wf.plat!=null){row.place_lat=wf.plat;row.place_lon=wf.plon}}if(bikeOk){if(wf.bike)row.bike=wf.bike;if(wf.place&&wf.pcity){row.place_city=wf.pcity;if(wf.parea)row.place_area=wf.parea}}if(distOk&&!wf.route){if(wf.km)row.km=wf.km;else row.dur_min=wf.dur||DUR_DEF}if(priv)row.visibility="private";if(testOk)row.is_test=!!wf.test;if(wRouteOk&&wf.route){row.route=routeJson(wf.route);row.route_km=+routeKm(wf.route).toFixed(1)}if(rbOk&&rbUse)row.route_base_id=rbUse;
       if(rng){row.range_from=d.toISOString();row.range_to=d2.toISOString()}
       const res=await sb.from("wants").insert(row).select("id").single();
       if(res.error)throw res.error;
@@ -1020,7 +1032,7 @@ $("wsave").onclick=async()=>{
     try{localStorage.setItem("lastWant",JSON.stringify({h:wf.h,m:wf.m,note}))}catch(e){}
     try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}
     const wasEdit=!!wf.editId;
-    closeWantForm();$("wnote").value="";
+    closeWantForm();$("wnote").value="";$("wtitle").value="";
     await syncNow();
     const lbl=wfLabel(d)+(rng?"–"+hhmm(d2):"");
     if(sigInv){say("Wysłane ✔ "+lbl+" — "+(nicks[sigInv]||"ta osoba")+" dostanie zaproszenie.");return}
@@ -1054,13 +1066,13 @@ function renderMyWant(){
     const priv=isPriv(w),ni=(invs[w.id]||[]).length;
     const live=wLive(w);
     if(live)return '<div class="mywant live'+(isTest(w)?' test':'')+'" data-i="'+i+'" data-wid="'+esc(w.id)+'"><div class="myh">🙋 Ty zapraszasz '+trwaTag()+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+(mine.length>1?' · '+(i+1)+' z '+mine.length:'')+'</div>'
-     +'<div class="myt">'+esc(relDay(new Date(w.starts_at))+" "+hhmm(new Date(w.starts_at)))+'</div>'+liveHtml(w)
+     +wTitleHtml(w)+'<div class="myt">'+esc(relDay(new Date(w.starts_at))+" "+hhmm(new Date(w.starts_at)))+'</div>'+liveHtml(w)
      +paceHtml(w)+bikeHtml(w)+placeHtml(w)+(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')
      +'<div class="mym">'+joinedHtml("my"+w.id,j,'Jedziesz sam(a).')+'</div>'
      +'<div class="linfo">🔒 Jazda trwa — nie można już edytować, dołączać ani doprosić. Po zakończeniu trafi do archiwum.</div>'
      +'<div class="acts"><button class="b g join" data-my="share" data-id="'+esc(w.id)+'">Udostępnij</button><button class="ib del" data-my="del" data-id="'+esc(w.id)+'" title="Usuń zaproszenie" aria-label="Usuń zaproszenie">'+ICON.del+'</button></div></div>';
     return '<div class="mywant'+(isTest(w)?' test':'')+'" data-i="'+i+'" data-wid="'+esc(w.id)+'"><div class="myh">🙋 Ty zapraszasz'+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+(mine.length>1?' · '+(i+1)+' z '+mine.length:'')+(priv?'<span class="lockt">🔒 dla '+ni+' '+osob(ni)+'</span>':'')+'</div>'
-     +'<div class="myt'+(isOpen(w)?' rng':'')+'">'+esc(n>=0&&n<=2?["Dziś","Jutro","Pojutrze"][n]+" "+wTime(w):wd.charAt(0).toUpperCase()+wd.slice(1)+" "+wTime(w))+(n>=0&&n<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
+     +wTitleHtml(w)+'<div class="myt'+(isOpen(w)?' rng':'')+'">'+esc(n>=0&&n<=2?["Dziś","Jutro","Pojutrze"][n]+" "+wTime(w):wd.charAt(0).toUpperCase()+wd.slice(1)+" "+wTime(w))+(n>=0&&n<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
      +(isOpen(w)?'<div class="mym">🕖 Godzina do ustalenia'+(new Date(w.range_from).getTime()>Date.now()+36e5?' — ustali się sama '+esc(hhmm(new Date(new Date(w.range_from).getTime()-36e5)))+', jeśli jej nie wybierzesz':'')+'</div>':fromRange(w)?'<div class="mym">✅ Godzina ustalona</div>':'')
      +paceHtml(w)+bikeHtml(w)+durLineHtml(w)+placeHtml(w)+(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')+wxHtml(w)+routeBoxHtml(w)
      +(priv?'<div class="mym">'+invitedHtml(w)+'</div>':'')
@@ -1109,7 +1121,7 @@ async function myClick(e){
   }
   if(b.dataset.my==="share"){
     const d=new Date(w.starts_at),url=location.origin+location.pathname;
-    const t="🚴 Idziemy na rower? "+wfLabel(d)+(w.note?" · "+w.note:"")+"\nDołącz w PrzylesieGo!";
+    const t="🚴 Idziemy na rower? "+(w.title?"„"+w.title+"” · ":"")+wfLabel(d)+(w.note?" · "+w.note:"")+"\nDołącz w PrzylesieGo!";
     if(navigator.share){try{await navigator.share({title:"Idziemy na rower?",text:t,url});return}catch(err){if(err&&err.name==="AbortError")return}}
     try{await navigator.clipboard.writeText(t+"\n"+url);say("Skopiowano zaproszenie — wklej je znajomym.")}catch(err){say(t+" "+url)}
     return;
@@ -1355,7 +1367,7 @@ function renderPick(){
   p.innerHTML='<div class="sheetbox popbox" role="dialog" aria-modal="true"><button class="sclose" data-k="close" aria-label="Zamknij">✕</button>'
    +'<span class="ptag">'+(settle?'✅ USTAL GODZINĘ':'🕖 KIEDY MOŻESZ?')+'</span>'
    +'<div class="ph">'+(settle?'Twoje zaproszenie':nk(w.user_id)+' zaprasza na rower')+'</div>'
-   +'<div class="pwhen">'+esc(relDay(d)+" "+wTime(w))+'<span>'+esc(wd)+'</span></div>'
+   +wTitleHtml(w)+'<div class="pwhen">'+esc(relDay(d)+" "+wTime(w))+'<span>'+esc(wd)+'</span></div>'
    +(w.note?'<div class="pnote">💬 '+esc(w.note)+'</div>':'')
    +'<div class="pmeta">'+(settle?'Liczba = ilu osobom pasuje. Wybierz godzinę startu:':'Wybierz godzinę (liczba = ilu już ją wybrało):')+'</div>'
    +slotsHtml(w,pk.sel,pk.other)

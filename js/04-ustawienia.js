@@ -521,7 +521,7 @@ let kArch=null,kArchAll=false;
 async function loadKArch(){
   try{
     const since=new Date(Date.now()-30*864e5).toISOString();
-    const r=await sb.from("wants").select("id,user_id,starts_at,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min,place,place_city").lt("starts_at",since).order("starts_at",{ascending:false}).limit(1000);
+    const r=await sb.from("wants").select("id,user_id,starts_at,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min,place,place_city"+(titleOk?",title,title_auto":"")).lt("starts_at",since).order("starts_at",{ascending:false}).limit(1000);
     if(r.error)throw r.error;const old=r.data||[],jj={};
     for(let i=0;i<old.length;i+=100){const q=await sb.from("want_joins").select("want_id,user_id").in("want_id",old.slice(i,i+100).map(x=>x.id));(q.data||[]).forEach(x=>{(jj[x.want_id]=jj[x.want_id]||[]).push(x.user_id)})}
     kArch={old,jj};
@@ -642,13 +642,14 @@ function tkOpen(id,back){
   tkId=id;userId=id;tkBack=back||"user";tkFrom=true;gearOpen=true;gearView="teczka";
   delete tkData[id];renderGear();tkLoad(id);
 }
+const tkTitle=x=>x.t?' · <b>„'+esc(x.t)+'”</b>':'';   // 🏷 tytuł zaproszenia (KROK 65)
 function tkActTxt(x,id){
   const m=x.meta||{};
   if(x.kind==="want_deleted"){
     const who=x.by&&x.by!==id?' — usunął(a) '+esc(nickOf(x.by)):'';
-    return (x.by&&x.by!==id?'🗑 jej/jego zaproszenie zostało usunięte':'🗑 usunął(a) zaproszenie')+who+(m.joined?' · zapisanych: '+(+m.joined):'')+(m.test?' · 🧪':'');
+    return (x.by&&x.by!==id?'🗑 jej/jego zaproszenie zostało usunięte':'🗑 usunął(a) zaproszenie')+who+tkTitle(x)+(m.joined?' · zapisanych: '+(+m.joined):'')+(m.test?' · 🧪':'');
   }
-  return esc(ACT_TXT[x.kind]||x.kind);
+  return esc(ACT_TXT[x.kind]||x.kind)+tkTitle(x);
 }
 function teczkaHtml(){
   const id=tkId,d=tkData[id],g=genders[id],ux=uxCache[id]||{};

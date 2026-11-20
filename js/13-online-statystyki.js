@@ -242,16 +242,17 @@ function urStatsHtml(d){
 // 📅 kalendarz: Odbyte (12 tygodni) / Planowane (od tygodnia wstecz, 9 tygodni); imprezy na granatowo
 function urCalHtml(d){
   const day=864e5,today=startOfDay(new Date()).getTime(),mon=today-((new Date().getDay()+6)%7)*day,iso=t=>localIso(new Date(t)).slice(0,10);
-  const plan=urCalMode==="plan",first=plan?mon-7*day:mon-11*7*day,W=plan?9:12,by={},ev={};
-  if(plan)(d.plan||[]).forEach(p=>{const k=startOfDay(new Date(p.at)).getTime();by[k]=(by[k]||0)+1});
-  else (d.days||[]).forEach(x=>{by[new Date(x.d+"T00:00").getTime()]=+x.n||0});
+  const plan=urCalMode==="plan",first=plan?mon-7*day:mon-11*7*day,W=plan?9:12,by={},ev={},tt={};
+  const tAdd=(k,t)=>{if(t&&!(tt[k]=tt[k]||[]).includes(t))tt[k].push(t)};   // 🏷 tytuły jazd (KROK 65)
+  if(plan)(d.plan||[]).forEach(p=>{const k=startOfDay(new Date(p.at)).getTime();by[k]=(by[k]||0)+1;tAdd(k,p.title)});
+  else (d.days||[]).forEach(x=>{const k=new Date(x.d+"T00:00").getTime();by[k]=+x.n||0;(x.tt||[]).forEach(t=>tAdd(k,t))});
   (d.events||[]).forEach(e=>{for(let t=new Date(e.from+"T00:00").getTime();t<=new Date(e.to+"T00:00").getTime();t+=day)(ev[startOfDay(new Date(t)).getTime()]=ev[startOfDay(new Date(t)).getTime()]||[]).push(e.name)});
   const seas=new Date((d.season||"2000-01-01")+"T00:00").getTime(),cw=plan?30:22.5;
   let cells="";
   for(let w=0;w<W;w++)for(let dd=0;dd<7;dd++){const t=first+(w*7+dd)*day;if(!plan&&t>today)continue;if(plan&&t<today-7*day)continue;
     const n=by[t]||0,e=ev[t],out=!plan&&t<seas;
     cells+='<rect class="hc '+(e?'ev':'l'+(n?Math.min(4,n+1):0))+(out?' out':'')+(t===today?' td':'')+'" x="'+(26+w*cw)+'" y="'+(2+dd*15)+'" width="'+(cw-3.5)+'" height="12.5" rx="3"><title>'
-      +esc(new Date(t).toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"}))+(n?': '+n+' '+plf(n,plan?["jazda w planie","jazdy w planie","jazd w planie"]:["jazda","jazdy","jazd"]):'')+(e?' · 🏁 '+esc(e.join(", ")):'')+'</title></rect>'}
+      +esc(new Date(t).toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"}))+(n?': '+n+' '+plf(n,plan?["jazda w planie","jazdy w planie","jazd w planie"]:["jazda","jazdy","jazd"]):'')+(tt[t]?' · 🏷 '+esc(tt[t].join(", ")):'')+(e?' · 🏁 '+esc(e.join(", ")):'')+'</title></rect>'}
   const nE=Object.keys(ev).filter(k=>plan?+k>=today-7*day:+k>=first&&+k<=today).length;
   return '<div class="ios-seg urseg">'+[["done","Odbyte"],["plan","Planowane"]].map(([k,n])=>'<button type="button" data-urc="'+k+'" class="'+(urCalMode===k?"on":"")+'">'+n+'</button>').join("")+'</div>'
    +'<svg class="hcal" viewBox="0 0 300 108" role="img" aria-label="'+(plan?'Planowane jazdy: od tygodnia wstecz do 8 tygodni naprzód':'Odbyte jazdy z 12 tygodni')+'">'
