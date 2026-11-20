@@ -463,7 +463,7 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="perms"){gearView="perms";renderGear();return}
   if(c==="onlineadm"||c==="onlinestats"){onlBack=c==="onlinestats"?"stats":"admin";gearView="online";renderGear();return}
   if(c==="onlback"){gearView=onlBack||"admin";onlBack="";renderGear();return}
-  if(c==="ufilter"){usersBack="stats";admF=b.dataset.f||"";admQ="";gearView="users";renderGear();return}
+  if(c==="ufilter"){usersBack="stats";admF=b.dataset.uf||"";admQ="";gearView="users";renderGear();return}
   if(c==="wantstoday"){gearOpen=false;renderGear();show(0);return}
   if(c==="tkret"){gearView="teczka";renderGear();return}
   if(c==="allw"){gearView="allw";renderGear();return}

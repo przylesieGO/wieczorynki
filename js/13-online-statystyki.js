@@ -68,16 +68,44 @@ function newAccHtml(part){
   const when=t=>{const d=new Date(t),dd=dayDiff(d);return dd===0?"dziś "+hhmm(d):dd===-1?"wczoraj "+hhmm(d):d.toLocaleDateString("pl-PL",{day:"numeric",month:"short",year:"numeric"})};
   const ago=t=>{const n=Math.floor((Date.now()-new Date(t))/864e5);return n<1?"":n+" "+(n===1?"dzień":"dni")};
   const rows=(statsAllAcc?L:L.slice(0,8)).map(([id,t])=>'<div class="nacc"><span>'+nk(id)+(Date.now()-new Date(t)<864e5?'<span class="nnew">'+(genders[id]==="K"?"NOWA":"NOWY")+'</span>':'')+'</span><span class="note">'+esc(when(t))+(ago(t)?'<br>'+esc(ago(t)):'')+'</span></div>').join("");
-  if(part==="chart")return '<div class="nbars">'+bins.map(b=>'<i title="'+b.n+'" style="height:'+Math.max(4,Math.round(100*b.n/mx))+'%"><b>'+(b.n||'')+'</b></i>').join("")+'</div>'
+  if(part==="chart")return growthSvg(L)
    +'<div class="nbl"><span>'+esc(new Date(bins[0].t).toLocaleDateString("pl-PL",{day:"numeric",month:"short"}))+'</span><span>ten tydzień (od pon.): '+bins[7].n+'</span></div>';
   return '<div class="naccs">'+rows+'</div>'
    +(L.length>8?'<button class="lnk" data-c="accall" style="display:block;margin:8px auto 0">'+(statsAllAcc?'Zwiń ▴':'Pokaż wszystkich ('+L.length+') ›')+'</button>':'');
 }
+// 📈 wariant A (decyzja właściciela 2026-11-20 04:59): liczba kont narastająco, 8 tygodni — linia z wypełnieniem, kropka = dziś
+function growthSvg(L){
+  const D=56,day=864e5,end=startOfDay(new Date()).getTime()+day;
+  const pts=[...Array(D+1)].map((_,i)=>{const tt=end-(D-i)*day;return L.filter(([,t])=>new Date(t).getTime()<tt).length});
+  const mn=Math.min(...pts),mx=Math.max(mn+1,...pts),W=300,H=112,px=i=>8+i*(W-16)/D,py=n=>H-12-(n-mn)/(mx-mn)*(H-36);
+  const d=pts.map((n,i)=>(i?'L':'M')+px(i).toFixed(1)+' '+py(n).toFixed(1)).join(' ');
+  return '<svg class="lch" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Konta narastająco przez 8 tygodni: od '+pts[0]+' do '+pts[D]+'">'
+   +[0,.5,1].map(f=>'<line class="lg" x1="8" x2="'+(W-8)+'" y1="'+(24+f*(H-36)).toFixed(1)+'" y2="'+(24+f*(H-36)).toFixed(1)+'"/>').join("")
+   +'<path class="la" d="'+d+' L'+px(D).toFixed(1)+' '+(H-12)+' L8 '+(H-12)+' Z"/><path class="ll" d="'+d+'"/>'
+   +'<circle class="ld" cx="'+px(D).toFixed(1)+'" cy="'+py(pts[D]).toFixed(1)+'" r="4.5"/>'
+   +'<text class="lt" x="'+(px(D)-6).toFixed(1)+'" y="'+(py(pts[D])-9).toFixed(1)+'" text-anchor="end">'+pts[D]+' dziś</text></svg>';
+}
+// 🗓 wariant B: „Kiedy jeździmy” — kalendarz 12 tygodni z „Jak poszło?” (jazdy potwierdzone, bez testowych)
+function rideCalHtml(){
+  if(!repStats||repStats.loading)return '<div class="smail">Ładuję…</div>';
+  const day=864e5,by={};
+  repStats.L.filter(r=>r.went&&r.ride_at).forEach(r=>{const k=startOfDay(new Date(r.ride_at)).getTime();(by[k]=by[k]||{w:new Set(),p:new Set()});by[k].w.add(r.want_id);by[k].p.add(r.user_id)});
+  const today=startOfDay(new Date()).getTime(),mon=today-((new Date().getDay()+6)%7)*day,first=mon-11*7*day;
+  const lvl=n=>!n?0:n<=2?1:n<=5?2:n<=9?3:4,DN=["pon.","wt.","śr.","czw.","pt.","sob.","niedz."],dow=[0,0,0,0,0,0,0];
+  let cells="",nR=0;
+  for(let w=0;w<12;w++)for(let dd=0;dd<7;dd++){const t=first+(w*7+dd)*day;if(t>today)continue;const b=by[t],np=b?b.p.size:0,nw=b?b.w.size:0;nR+=nw;dow[dd]+=nw;
+    cells+='<rect class="hc l'+lvl(np)+'" x="'+(26+w*22.5)+'" y="'+(2+dd*15)+'" width="19" height="12.5" rx="3"><title>'+esc(new Date(t).toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"}))+(nw?': '+nw+' '+plf(nw,["jazda","jazdy","jazd"])+', '+np+' '+plf(np,["osoba","osoby","osób"]):': bez jazdy')+'</title></rect>'}
+  const top=Math.max(...dow),best=top?DN[dow.indexOf(top)]:"";
+  return '<svg class="hcal" viewBox="0 0 300 108" role="img" aria-label="Kalendarz jazd z 12 tygodni">'
+   +[[0,"pn"],[2,"śr"],[4,"pt"],[6,"nd"]].map(([i,t])=>'<text class="lt" x="0" y="'+(12+i*15)+'">'+t+'</text>').join("")+cells+'</svg>'
+   +'<div class="nbl"><span>'+(nR?nR+' '+plf(nR,["jazda","jazdy","jazd"])+(best?' · najczęściej: '+best:''):'Brak potwierdzonych jazd')+'</span><span class="hleg">mniej <i class="hc l1"></i><i class="hc l2"></i><i class="hc l3"></i><i class="hc l4"></i> więcej</span></div>'
+   +'<p class="note">Kolor = ile osób potwierdziło jazdę w „Jak poszło?”. Dotknij kratki, żeby zobaczyć szczegóły.</p>';
+}
 let repStats=null;
 function repStatsHtml(t){
   if(!reportOk)return "";
-  if(!repStats){repStats={loading:1};sb.from("ride_reports").select("want_id,user_id,went,km,avg_kmh,rating,route_rating,self").eq("ride_test",false).limit(10000)
-    .then(r=>r&&r.error?sb.from("ride_reports").select("want_id,user_id,went,km,avg_kmh,rating,route_rating,self").limit(10000):r).then(r=>{repStats={L:(r&&r.data)||[]};if(gearOpen&&gearView==="stats")renderGear()});return ""}
+  if(!repStats){repStats={loading:1};sb.from("ride_reports").select("want_id,user_id,went,km,avg_kmh,rating,route_rating,self,ride_at").eq("ride_test",false).limit(10000)
+    .then(r=>r&&r.error?sb.from("ride_reports").select("want_id,user_id,went,km,avg_kmh,rating,route_rating,self,ride_at").limit(10000):r).then(r=>{repStats={L:(r&&r.data)||[]};if(gearOpen&&gearView==="stats")renderGear()});return ""}
   if(repStats.loading)return '<div class="smail">Ładuję…</div>';
   const L=repStats.L;if(!L.length)return '<p class="note">Jeszcze nikt nie odpowiedział po jeździe.</p>';
   const yes=L.filter(r=>r.went),rides=new Set(yes.map(r=>r.want_id)),km=Math.round(yes.reduce((a,r)=>a+(+r.km||0),0)),rt=L.filter(r=>r.rating).map(r=>r.rating);
@@ -89,7 +117,7 @@ function adminStatsHtml(){
   if(!statsData)return head+'<div class="smail">Ładuję…</div>';
   const d=statsData,t=(v,l)=>'<div class="st"><b>'+esc(v==null?"—":v)+'</b><span>'+l+'</span></div>';
   // kafelek klikalny: lista osób z filtrem albo „Online”
-  const tc=(v,l,c,f)=>'<button type="button" class="st stb" data-c="'+c+'"'+(f!=null?' data-f="'+f+'"':'')+'><b>'+esc(v==null?"—":v)+'</b><span>'+l+' ›</span></button>';
+  const tc=(v,l,c,f)=>'<button type="button" class="st stb" data-c="'+c+'"'+(f!=null?' data-uf="'+f+'"':'')+'><b>'+esc(v==null?"—":v)+'</b><span>'+l+' ›</span></button>';
   // sekcja zwijana — domyślnie zwinięta (decyzja właściciela 2026-11-20 04:50); po prawej krótkie podsumowanie
   const sec=(k,h,sum,body)=>body?'<details class="stsec" data-j="st_'+k+'"'+(joinOpen.has("st_"+k)?' open':'')+'><summary><span>'+h+'</span>'+(sum!==""&&sum!=null?'<span class="stsum">'+sum+'</span>':'')+'</summary><div class="stbody">'+body+'</div></details>':'';
   const since=d.since?new Date(d.since).toLocaleDateString("pl-PL",{day:"numeric",month:"long",year:"numeric"}):"";
@@ -98,8 +126,9 @@ function adminStatsHtml(){
   return head+'<div class="sleft">'
    +sec("konta","Konta",esc(d.profiles==null?"":d.profiles+" z nickiem"),'<div class="stats">'+t(d.accounts,"założone konta")+tc(d.profiles,"z nickiem","ufilter","")+'</div>'
       +(J.length?'<h3>Nowi (z nickiem)</h3><div class="stats">'+tc(n7,"ostatnie 7 dni","ufilter","new7")+tc(n30,"ostatnie 30 dni","ufilter","new30")+'</div>':''))
-   +sec("wykres","Nowe konta — 8 tygodni",n7?"+"+n7+" w 7 dni":"",newAccHtml("chart"))
+   +sec("wykres","Konta — 8 tygodni",n7?"+"+n7+" w 7 dni":"",newAccHtml("chart"))
    +sec("kto","Kto i kiedy założył konto",nAcc||"",newAccHtml("list"))
+   +(reportOk?sec("kiedy","Kiedy jeździmy — 12 tygodni","",rideCalHtml()):'')
    +(reportOk?sec("rep","🚴 Jak poszło?","",repStatsHtml(t)||'<div class="smail">Ładuję…</div>'):'')
    +sec("akt","Aktywność",onlineIds.length+" online",'<div class="stats">'+tc(onlineIds.length,"teraz online","onlinestats")+tc(d.active7,"aktywni 7 dni","ufilter","a7")+tc(d.active30,"aktywni 30 dni","ufilter","a30")+'</div>'
       +'<p class="note">Aktywny = otworzył aplikację zalogowany w danym okresie.'+(since?' Aktywność zapisywana od '+esc(since)+'.':'')+'</p>')
@@ -151,3 +180,5 @@ async function showRide(idx){
   }
 }
 
+// 🗓 kalendarz jazd: dotknięcie kratki pokazuje dzień i liczbę jazd (na telefonie nie ma podpowiedzi po najechaniu)
+document.addEventListener("click",e=>{const r=e.target.closest(".hcal rect");if(!r)return;const t=r.querySelector("title");if(t)say(t.textContent)});
