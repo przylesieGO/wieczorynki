@@ -302,9 +302,12 @@ $("popsheet").addEventListener("click",async e=>{
     if(st.dataset.t==="othok"){const v=otherTime(it.w);if(v==null){say("Podaj godzinę w dniu zaproszenia (nie w przeszłości).");return}popSel=v;popOther=false;renderPop();return}
     popSel=+st.dataset.t;renderPop();return;
   }
-  const b=e.target.closest("button[data-q]");if(!b||!it||popBusy)return;
-  const q=b.dataset.q,chosen=popSel;
-  if(q==="later"){popIds(it).forEach(i=>popSnooze.add(i));saveSnooze();popNext();say("Przypomnę przy następnym wejściu. Zaproszenie jest też na Starcie.");return}
+  const b=e.target.closest("button[data-q]");if(!b||!it)return;
+  const q=b.dataset.q;
+  // ✕ / „Przypomnij później" musi działać zawsze, nawet gdy popBusy wisi po zawieszonym zapytaniu (np. brak sieci)
+  if(q==="later"){popIds(it).forEach(i=>popSnooze.add(i));saveSnooze();popBusy=false;popNext();say("Przypomnę przy następnym wejściu. Zaproszenie jest też na Starcie.");return}
+  if(popBusy)return;
+  const chosen=popSel;
   popBusy=true;
   try{
     if(q==="join"&&!(joins[it.w.id]||[]).includes(uid)){
