@@ -563,6 +563,7 @@ function openWantForm(w,preset){
   if(!session){say("Najpierw zaloguj się.");return}
   if(needProfile()){askNick();return}
   wf.editId=w?w.id:null;
+  wf.sigFor=!w&&preset&&preset.sig||null;   // 🟡 zaproszenie z „Mam ochotę” — ta osoba zostanie zaproszona
   wf.vis="all";wf.pick=new Set();
   wf.test=true;$("wtestwrap").classList.toggle("hide",!!w||!testOk);wfTestSync();
   wf.route=null;wf.routeName="";wf.routeHad=hasRoute(w);wf.routeTouched=false;$("wrfile").value="";
@@ -594,7 +595,7 @@ function openWantForm(w,preset){
   if(rangeEdit){const f=new Date(w.range_from);$("fch").textContent=pad(f.getHours());$("fcm").textContent=pad(f.getMinutes());wf.h=f.getHours();wf.m=f.getMinutes()}
   wf.h2=e.getHours();wf.m2=e.getMinutes();$("fch2").textContent=pad(wf.h2);$("fcm2").textContent=pad(wf.m2);
   $("wmode").classList.toggle("hide",!rangeOk||(!!w&&fromRange(w)));
-  wfSetMode(rangeEdit?"range":"one");
+  wfSetMode(rangeEdit||(wf.sigFor&&rangeOk)?"range":"one");
   $("wnote").value=w?(w.note||""):"";wfNoteSync();
   const L=lastWant();
   $("wlast").classList.toggle("hide",!L||!!w);
@@ -846,6 +847,7 @@ function updateFab(){
   f.classList.toggle("hide",!on);f.classList.toggle("off",!session);
   f.setAttribute("aria-disabled",session?"false":"true");
   document.body.classList.toggle("hasfab",on);
+  if(typeof sigFabSync==="function")sigFabSync(on);   // 🟡 „Mam ochotę” (KROK 64)
   updateTop();
 }
 // ⬆ „Na górę”: po przewinięciu ponad ok. 1 ekran; chowa się przy okienkach
@@ -959,7 +961,7 @@ $("wsave").onclick=async()=>{
   // prywatne → wszyscy: potwierdzenie (ogłoszenie na kanale Telegram nie da się cofnąć; baza wysyła je tylko raz — KROK 52)
   if(ow1&&visOk&&isPriv(ow1)&&!ePriv&&!confirm("Zaproszenie zobaczą wszyscy zalogowani.\n\nJeśli jeszcze nie było na kanale Telegram, trafi tam teraz — wiadomości z kanału nie da się cofnąć (nawet gdy później znów zrobisz je prywatnym).\n\nZapisać?"))return;
   if(priv&&!ids.length){say(wf.vis==="fav"?"Nie masz jeszcze ulubionych — wybierz osoby w „Kto zobaczy”.":"Wybierz co najmniej jedną osobę w „Kto zobaczy”.");return}
-  let editedPriv=false;
+  let editedPriv=false,sigInv=null;
   try{
     await savePlaceToList();
     // 📚 baza tras: trasa wybrana z bazy albo dodana przełącznikiem „Dodaj do bazy tras”
@@ -1001,6 +1003,8 @@ $("wsave").onclick=async()=>{
         const r2=await sb.from("want_invitees").insert(ids.map(u=>({want_id:res.data.id,user_id:u,added_by:uid})));
         if(r2.error){await sb.from("wants").delete().eq("id",res.data.id);throw r2.error}
       }
+      // 🟡 z „Mam ochotę”: osoba, która dała znać, dostaje zaproszenie (także przy publicznym)
+      if(wf.sigFor&&wf.sigFor!==uid&&!ids.includes(wf.sigFor)){const r3=await sb.from("want_invitees").insert({want_id:res.data.id,user_id:wf.sigFor,added_by:uid});if(!r3.error)sigInv=wf.sigFor}
     }
     try{localStorage.setItem("lastWant",JSON.stringify({h:wf.h,m:wf.m,note}))}catch(e){}
     try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}
@@ -1008,6 +1012,7 @@ $("wsave").onclick=async()=>{
     closeWantForm();$("wnote").value="";
     await syncNow();
     const lbl=wfLabel(d)+(rng?"–"+hhmm(d2):"");
+    if(sigInv){say("Wysłane ✔ "+lbl+" — "+(nicks[sigInv]||"ta osoba")+" dostanie zaproszenie.");return}
     say(wasEdit?"Zapisano ✔ "+lbl+(visMsg||(editedPriv&&visOk?" — zaproszeni dostaną powiadomienie.":""))
       :priv?"Wysłane 🔒 do "+ids.length+" "+osob(ids.length)+" ✔ Dostaną powiadomienie w aplikacji.":testOk&&wf.test?"Wysłane 🧪 testowe zaproszenie na "+lbl+" ✔ (na kanale Telegram z oznaczeniem TESTOWE)":"Wysłane ✔ Zaproszenie na "+lbl+" jest też na kanale Telegram.");
   }catch(e){say("Nie udało się: "+(e&&e.message?e.message:"błąd"))}

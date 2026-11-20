@@ -73,6 +73,7 @@ async function syncProfiles(ids){
   ids.forEach(id=>{delete nicks[id];delete genders[id];delete joinedAt[id];delete avAt[id];delete medias[id]});
   got.forEach(x=>{nicks[x.user_id]=x.nick;if(x.gender)genders[x.user_id]=x.gender;if(x.joined_at)joinedAt[x.user_id]=x.joined_at;if(x.avatar_at)avAt[x.user_id]=x.avatar_at;if(x.media)medias[x.user_id]=x.media});
   me.nick=nicks[uid]||null;
+  sigDirty=true;   // 🟡 „Mam ochotę” — sygnały odświeżają się w grupie „prof” (KROK 64)
   if(profExOk)loadAvatars();
 }
 async function syncMe(){
@@ -93,10 +94,13 @@ async function syncFb(){
 }
 // to, co robi się po każdym wczytaniu danych (pełnym i przyrostowym)
 async function afterData(){
+  try{await sigLoad()}catch(e){sigOk=false}   // 🟡 „Mam ochotę” (KROK 64)
+  sigFabSync();if(sigOn())renderBell();
   maybePopup();
   maybeHelp();
   maybeFb();
   maybeReport();
+  maybeSigIntro();
   if(curTab===3)renderEvents();
   if(session&&(seenFor!==uid||Date.now()-seenAt>15*60000)){seenFor=uid;seenAt=Date.now();Promise.resolve(sb.rpc("touch_seen")).catch(()=>{})}
   // 1 h przed początkiem zakresu godzina ustala się sama (KROK 15) — robi to baza, wywołuje pierwszy, kto odświeży
@@ -190,6 +194,7 @@ async function loadEventsPub(){
 }
 async function loadRemote(selectId){
   const prevId=sorted[cur]&&sorted[cur].id;
+  sigDirty=true;
   // ⚡ KROK 56: numer ostatniego wpisu dziennika PRZED wczytaniem (zmiany w trakcie wczytania dociągnie następne odświeżenie)
   let n0=null;
   if(session){try{const r=await sb.rpc("sync_since",{n:null});syncOk=!r.error&&!!r.data;if(syncOk)n0=+r.data.last||0}catch(e){syncOk=false}}

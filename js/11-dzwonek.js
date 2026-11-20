@@ -93,7 +93,7 @@ function lsRow(x){
 const bellUnread=()=>notifs.filter(n=>!n.read_at&&nWant(n)&&(ME_KINDS.includes(n.kind)||OWN_KINDS.includes(n.kind)));
 function renderBell(){
   const b=$("bellbtn");if(!b)return;
-  const on=!!session&&visOk,n=on?bellUnread().length+fbMineUnread().length+fbAdmUnread().length+nuUnread().length+stepsBadge()+evBellUn().length+repTodoN():0,bd=$("bellbadge");
+  const on=!!session&&visOk,n=on?bellUnread().length+fbMineUnread().length+fbAdmUnread().length+nuUnread().length+stepsBadge()+evBellUn().length+repTodoN()+sigUnread().length:0,bd=$("bellbadge");
   b.classList.toggle("hide",!on);
   bd.textContent=n>9?"9+":String(n);bd.classList.toggle("hide",!n);
   b.setAttribute("aria-label",n?"Powiadomienia — nowe: "+n:"Powiadomienia");
@@ -116,7 +116,7 @@ function renderBellSheet(){
   const ord=(a,b)=>((wUnread(b).length?1:0)-(wUnread(a).length?1:0))||((wNeedsAct(b)?1:0)-(wNeedsAct(a)?1:0))||(new Date(a.starts_at)-new Date(b.starts_at));
   const forMe=wants.filter(w=>w.user_id!==uid&&act(w)&&(w.visibility!=="private"||invIds(w).includes(uid)||(joins[w.id]||[]).includes(uid))).sort(ord);
   const mine=wants.filter(w=>w.user_id===uid&&act(w)).sort(ord);
-  const keep=p.querySelector(".bslist"),st=keep?keep.scrollTop:0,nu=bellUnread().length+nuUnread().length+lgUnread().length+dlUnread().length+evBellUn().length,EVB=evBellItems(),EVBs=evBellSeen(),LG=lgRows(),LGu=new Set(lgUnread()),DL=dlRows(),DLu=new Set(dlUnread()),LS=lsRows(),NU=nuList(),NUu=new Set(nuUnread()),SA=stepsAvail()?stepsList():[],SL=SA.filter(x=>!x.ok);
+  const keep=p.querySelector(".bslist"),st=keep?keep.scrollTop:0,nu=bellUnread().length+nuUnread().length+lgUnread().length+dlUnread().length+evBellUn().length+sigUnread().length,EVB=evBellItems(),EVBs=evBellSeen(),LG=lgRows(),LGu=new Set(lgUnread()),DL=dlRows(),DLu=new Set(dlUnread()),LS=lsRows(),NU=nuList(),NUu=new Set(nuUnread()),SA=stepsAvail()?stepsList():[],SL=SA.filter(x=>!x.ok);
   p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Powiadomienia"><div class="bsgrab"></div>'
    +'<div class="bshead"><button type="button" class="lnk" data-bk="close">Zamknij</button><b>🔔 Powiadomienia</b>'
    +(nu?'<button type="button" class="lnk" data-bk="all" style="text-align:right">✓ Przeczytane</button>':'<span style="min-width:64px"></span>')+'</div>'
@@ -125,6 +125,7 @@ function renderBellSheet(){
       SL.map(x=>'<div class="nit stn"><div class="ic">'+({inst:"📲",ride:"🚴",tg:"🔔",fav:"⭐"}[x.k]||"✨")+'</div><div class="tx"><b>'+x.t.replace(" ⭐","")+'</b></div>'+(x.go?'<button type="button" class="lnk stgo" data-sb="'+x.k+'">'+x.go+' ›</button>':'')+'</div>').join("")
       +(lsGet("stepsHide")==="1"?'<div class="bsempty"><button type="button" class="lnk" data-sb="show">Pokaż z powrotem w Zaproszeniach ›</button></div>':'')):'')
    +repBellHtml()
+   +sigBellHtml()
    +(fbMineUnread().length?bsSec("msg",'💬 Wiadomości',fbMineUnread().length,fbMineUnread().length,fbMineUnread().map(f=>fbRow(f,false)).join("")):'')
    +(fbAdmUnread().length?bsSec("adm",'🛡️ Zgłoszenia',fbAdmUnread().length,fbAdmUnread().length,fbAdmUnread().slice(0,5).map(f=>fbRow(f,true)).join("")):'')
    +(NU.length?bsSec("nu",'🆕 Nowi użytkownicy',NUu.size,NU.length,NU.slice(0,6).map(id=>nuRow(id,NUu.has(id))).join("")
@@ -162,6 +163,7 @@ function closeBell(){
   if(dlUnread().length)lsSet("dlSeen",String(Date.now()));
   if(evBellUn().length)lsSet("evBell",String(Date.now()));
   if(stepsLeft().length)lsSet("stepsSeen","1");
+  if(sigUnread().length)lsSet("sigSeen",new Date().toISOString());
   $("bellsheet").classList.add("hide");$("bellsheet").innerHTML="";
   if(ids.length)markRead(ids);else renderBell();
 }
@@ -191,6 +193,8 @@ $("bellsheet").addEventListener("click",async e=>{
   const stb=e.target.closest("[data-sb]");   // „Dokończ start” (nie nazywać „sb” — to połączenie z bazą)
   if(stb){const k=stb.dataset.sb;closeBell();renderBell();stepGo(k);return}
   const evb=e.target.closest("[data-evb]");if(evb){closeBell();evGo(evb.dataset.evb);return}
+  const sgz=e.target.closest("[data-sgz]");if(sgz){const id=sgz.dataset.sgz;closeBell();show(0);openWantForm(null,{sig:id});return}
+  if(e.target.closest("[data-sgx]")){closeBell();sigCancel();return}
   const rpb=e.target.closest("[data-rep]");if(rpb){const id=rpb.dataset.rep;closeBell();repAskedAdd(id);openReport(id);return}
   const sc=e.target.closest("[data-bsec]");
   if(sc){const k=sc.dataset.bsec,st=bsColGet(),col=!sc.classList.contains("col");st[k]=col;try{localStorage.setItem("bellCol",JSON.stringify(st))}catch(err){}
@@ -201,7 +205,7 @@ $("bellsheet").addEventListener("click",async e=>{
   if(k){
     if(k.dataset.bk==="close")closeBell();
     else if(k.dataset.bk==="new"){closeBell();show(0);openWantForm(null)}
-    else{nuMarkSeen();lsSet("lgSeen",String(Date.now()));lsSet("dlSeen",String(Date.now()));lsSet("evBell",String(Date.now()));await markRead(bellUnread().map(n=>n.id));renderBell();renderBellSheet()}
+    else{nuMarkSeen();lsSet("lgSeen",String(Date.now()));lsSet("dlSeen",String(Date.now()));lsSet("evBell",String(Date.now()));lsSet("sigSeen",new Date().toISOString());await markRead(bellUnread().map(n=>n.id));renderBell();renderBellSheet()}
     return;
   }
   const a=e.target.closest("button[data-na]");
@@ -331,3 +335,107 @@ $("popsheet").addEventListener("click",async e=>{
   finally{popBusy=false}
 });
 
+/* ---------- 🟡 „Mam ochotę” (KROK 64): sygnał „mam dziś ochotę pojeździć / pobiegać / na spacer / na wędrówkę” ----------
+   Okrągły przycisk z kołem nad ➕ — tylko gdy na dziś nie ma zaproszeń i nie dałeś jeszcze znać.
+   Pod 🔔 sekcja „Mają ochotę dziś” (przy rowerze „Zaproś” → zaproszenie publiczne z zakresem godzin, ta osoba zaproszona).
+   Pop-up z zachętą przy pierwszych 3 wejściach. Przełącznik w 🚦 Funkcje testowe: „mam_ochote”. Kanał Telegram wysyła baza. */
+const SIG_ACT={bike:["bike","Rower","pojeździć na rowerze"],run:["run","Bieg","pobiegać"],walk:["walk","Spacer","na spacer"],hike:["tree","Trekking","na wędrówkę"]};
+let sigs=[],sigOk=false,sigDirty=true,sigDay="",sigBusy=false,sigPick="bike",sigView="",sigDoneT=0;
+const sigToday=()=>localIso(new Date()).slice(0,10);
+const sigOn=()=>!!session&&visOk&&feat("mam_ochote");
+async function sigLoad(){
+  if(!sigOn()){sigs=[];return}
+  const t=sigToday();if(!sigDirty&&sigDay===t)return;
+  const r=await sb.from("ride_signals").select("user_id,activity,is_test,created_at,cancelled_at").eq("day",t).limit(500);
+  sigOk=!r.error;sigs=sigOk?(r.data||[]):[];sigDay=t;sigDirty=false;
+}
+const sigMine=()=>sigs.find(x=>x.user_id===uid);
+// widoczne sygnały: bez wycofanych, ukrytych / zablokowanych i (przy „ukryj testowe”) cudzych testowych
+const sigList=()=>sigs.filter(x=>!x.cancelled_at&&(x.user_id===uid||!modGone(x.user_id))&&!(hideTest&&x.is_test&&x.user_id!==uid))
+  .sort((a,b)=>(a.user_id===uid?-1:b.user_id===uid?1:0)||String(b.created_at).localeCompare(String(a.created_at)));
+const sigUnread=()=>{if(!sigOn())return [];const s=lsGet("sigSeen")||"";return sigList().filter(x=>x.user_id!==uid&&x.created_at>s)};
+const sigTodayBusy=()=>wants.some(w=>dayDiff(new Date(w.starts_at))===0&&!wDone(w));
+const sigFabOn=()=>sigOn()&&sigOk&&!is_banned_me()&&!sigTodayBusy()&&!(sigMine()&&!sigMine().cancelled_at);
+function is_banned_me(){return typeof modBanned!=="undefined"&&modBanned.has(uid)}
+function sigFabSync(fabOn){
+  const b=$("sigfab");if(!b)return;
+  if(fabOn===undefined)fabOn=!$("fab").classList.contains("hide");
+  const done=Date.now()<sigDoneT;
+  b.classList.toggle("hide",!fabOn||!(sigFabOn()||done));b.classList.toggle("done",done);
+}
+const sigWheel='<svg viewBox="0 0 30 30" fill="none" aria-hidden="true"><circle cx="15" cy="15" r="10.5" stroke="#f5b82e" stroke-width="4.5"/><circle cx="15" cy="15" r="2" fill="#f5b82e"/><path d="M15 3.5v4.5" stroke="currentColor" stroke-width="2.2"/></svg>';
+const sigCheck='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function sigFabHtml(){const b=$("sigfab");if(b)b.innerHTML=Date.now()<sigDoneT?sigCheck:sigWheel}
+function closeSig(){$("sigsheet").classList.add("hide");$("sigsheet").innerHTML="";sigView=""}
+function openSig(view){if(!session)return;sigView=view||"pick";const m=sigMine();if(m&&SIG_ACT[m.activity])sigPick=m.activity;renderSig()}
+function renderSig(){
+  const p=$("sigsheet"),intro=sigView==="intro",tg=flags.mam_ochote&&flags.mam_ochote.state==="all";
+  // jedno okienko: przy pierwszych wejściach (intro) z zachętą i podpowiedzią, gdzie jest koło; z koła — sam wybór
+  p.innerHTML='<div class="sheetbox popbox sigbox" role="dialog" aria-modal="true"><button class="sclose" data-sg="later" aria-label="Zamknij">✕</button>'
+   +'<span class="ptag">MAM OCHOTĘ</span>'
+   +'<div class="ph">'+(intro?'Nie masz pomysłu na jazdę, ale masz ochotę pojeździć?':'Na co masz dziś ochotę?')+'</div>'
+   +'<div class="pmeta">'+(intro?'Daj znać innym — bez godziny i trasy. Zobaczą to pod 🔔'+(tg?' i na kanale Telegram':'')+' i mogą Cię zaprosić.'
+      :'Bez godziny i trasy. Inni zobaczą to pod 🔔'+(tg?' i na kanale Telegram':'')+'.')+'</div>'
+   +'<div class="wbike sigacts">'+Object.keys(SIG_ACT).map(k=>'<button type="button" class="wbk'+(sigPick===k?' on':'')+'" data-sga="'+k+'" aria-pressed="'+(sigPick===k)+'">'+uiIcon(SIG_ACT[k][0])+'<span>'+SIG_ACT[k][1]+'</span></button>').join("")+'</div>'
+   +'<button type="button" class="b big" data-sg="send"'+(sigBusy?' disabled':'')+'>Daj znać</button>'
+   +'<div class="pbtns"><button type="button" class="b w" data-sg="later">'+(intro?'Później':'Nie teraz')+'</button></div>'
+   +(intro?'<div class="signote"><span class="sigmini">'+sigWheel+'</span>Później znajdziesz to pod kołem w prawym dolnym rogu ekranu.</div>':'')
+   +'</div>';
+  p.classList.remove("hide");
+}
+async function sigSend(){
+  if(sigBusy)return;sigBusy=true;renderSig();
+  try{
+    const m=sigMine();let r;
+    if(m)r=await sb.from("ride_signals").update({activity:sigPick,cancelled_at:null}).eq("user_id",uid).eq("day",sigDay||sigToday()).select("user_id");
+    else r=await sb.from("ride_signals").insert({activity:sigPick}).select("user_id");
+    if(r.error)throw r.error;
+    if(!r.data||!r.data.length)throw new Error("funkcja jest jeszcze tylko dla testerów");
+    sigBusy=false;closeSig();
+    try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}
+    sigDoneT=Date.now()+2600;sigFabHtml();sigFabSync();
+    setTimeout(()=>{sigFabHtml();sigFabSync()},2700);
+    say((genders[uid]==="K"?"Dałaś":"Dałeś")+" znać ✔ "+SIG_ACT[sigPick][1]+", dziś — inni zobaczą pod 🔔.");
+    sigDirty=true;await syncNow();
+  }catch(e){sigBusy=false;renderSig();
+    say(e&&/BANNED/.test(e.message||"")?"Konto zablokowane — napisz do administratora.":"Nie udało się: "+(e&&e.message?e.message:"błąd"))}
+}
+async function sigCancel(){
+  try{const r=await sb.from("ride_signals").update({cancelled_at:new Date().toISOString()}).eq("user_id",uid).eq("day",sigDay||sigToday()).select("user_id");
+    if(r.error)throw r.error;sigDirty=true;await syncNow();say("Wycofane — przycisk z kołem wrócił nad ➕.")}
+  catch(e){say("Nie udało się: "+(e&&e.message?e.message:"błąd"))}
+}
+// 🔔 sekcja „Mają ochotę dziś”
+function sigRow(x,un){
+  const a=SIG_ACT[x.activity]||SIG_ACT.bike,me=x.user_id===uid,d=new Date(x.created_at);
+  const btn=me?'<button type="button" class="lnk stgo" data-sgx="1">Wycofaj</button>'
+    :x.activity==="bike"?'<button type="button" class="lnk stgo" data-sgz="'+esc(x.user_id)+'">Zaproś ›</button>':'';
+  return '<div class="nit stn sgrow'+(un?' new':'')+'"><div class="ic">'+uiIcon(a[0])+'</div><div class="tx">'+(me?'<b>Ty</b>':nk(x.user_id))
+    +(x.is_test?' <span class="ttag">🧪 TEST</span>':'')+'<div class="w">'+esc(a[1].toLowerCase())+' · '+esc(hhmm(d))+'</div></div>'+btn+'</div>';
+}
+function sigBellHtml(){
+  if(!sigOn())return "";
+  const L=sigList();if(!L.length)return "";
+  const U=new Set(sigUnread());
+  return bsSec("sig",'🚲 Mają ochotę dziś',U.size,L.length,L.map(x=>sigRow(x,U.has(x))).join("")
+    +'<div class="bsempty">Bez godziny i trasy. „Zaproś” otwiera zaproszenie na dziś z zakresem godzin — ta osoba dostanie powiadomienie.</div>');
+}
+// pop-up z zachętą: pierwsze 3 wejścia (raz na uruchomienie), tylko gdy przycisk z kołem jest widoczny
+// (gdy przy starcie otwarta jest Pomoc albo inne okienko — pokazuje się zaraz po jego zamknięciu, najpóźniej 3 min od startu)
+let sigIntroDone=false;const sigT0=Date.now();
+function maybeSigIntro(){
+  if(sigIntroDone||Date.now()-sigT0>18e4||!sigFabOn()||$("fab").classList.contains("hide"))return;
+  const n=+(lsGet("sigIntro")||0);if(n>=3){sigIntroDone=true;return}
+  if([...document.querySelectorAll(".sheet")].some(x=>!x.classList.contains("hide"))||gearOpen||needProfile()||pwMode||!$("wantform").classList.contains("hide"))return;
+  sigIntroDone=true;lsSet("sigIntro",String(n+1));openSig("intro");
+}
+{const mo=new MutationObserver(()=>{if(!sigIntroDone)setTimeout(maybeSigIntro,450)});document.querySelectorAll(".sheet").forEach(el=>{if(el.id!=="sigsheet")mo.observe(el,{attributes:true,attributeFilter:["class"]})})}
+$("sigfab").innerHTML=sigWheel;
+$("sigfab").onclick=()=>{if(Date.now()<sigDoneT)return;openSig("pick")};
+$("sigsheet").addEventListener("click",e=>{
+  if(e.target===$("sigsheet")){closeSig();return}
+  const a=e.target.closest("[data-sga]");if(a){sigPick=a.dataset.sga;renderSig();return}
+  const b=e.target.closest("[data-sg]");if(!b)return;
+  const k=b.dataset.sg;
+  if(k==="later")closeSig();else if(k==="send")sigSend();
+});

@@ -409,6 +409,17 @@ body.hasfab .wrap{padding-bottom:110px}
 body.hasfab .toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
 body.wfopen .toast{bottom:calc(var(--wffh,130px) + 12px);width:max-content;max-width:min(88vw,520px);text-align:center;font-weight:600;padding:12px 18px;box-shadow:0 8px 28px rgba(0,0,0,.35)}
 @media (prefers-reduced-motion:reduce){.fab,.fab .fabt{transition:none}}
+/* 🟡 „Mam ochotę” (KROK 64): okrągły przycisk z kołem z logo nad ➕ — mniejszy, żeby ➕ został głównym */
+.sigfab{position:fixed;right:max(calc(21px + env(safe-area-inset-right,0px)),calc((100vw - 900px)/2 + 21px));bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:1500;width:48px;height:48px;padding:0;border:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--card);color:var(--card);cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 6px 16px rgba(0,0,0,.18),0 1px 3px rgba(0,0,0,.12);transition:transform .12s,background .2s}
+.sigfab svg{width:32px;height:32px;animation:sigspin 6s ease-in-out infinite}
+.sigfab:active{transform:scale(.92)}
+.sigfab.done{background:#248a3d}.sigfab.done svg{width:26px;height:26px;animation:none}
+html[data-theme=dark] .sigfab{box-shadow:0 6px 16px rgba(0,0,0,.5)}
+@keyframes sigspin{0%,72%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+.signote{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--mut);line-height:1.35}.sigmini{flex:none;width:26px;height:26px;border-radius:50%;background:var(--card);color:var(--card);box-shadow:0 1px 4px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center}.sigmini svg{width:19px;height:19px}
+.sigacts{grid-template-columns:repeat(4,1fr);margin-top:12px}
+.sgrow .ic .ui-i{width:21px;height:21px;color:var(--acc)}
+@media (prefers-reduced-motion:reduce){.sigfab svg{animation:none}}
 /* ikony konturowe (styl App Store / SF Symbols) */
 .ui-i{width:1.05em;height:1.05em;vertical-align:-.17em;display:inline-block;flex:none}
 .gear{display:flex;align-items:center;justify-content:center}.gear .ui-i{width:22px;height:22px;vertical-align:middle}
