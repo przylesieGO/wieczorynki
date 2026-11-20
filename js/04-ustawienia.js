@@ -196,9 +196,10 @@ function nickEditHtml(){
      +[["K","Kobieta"],["M","Mężczyzna"]].map(([k,t])=>'<button type="button" data-g="'+k+'" class="'+(selGender===k?"on":"")+'">'+t+'</button>').join("")+'</span></div>']):'';
   return '<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">'+(profExOk?'Edytuj profil':'Nick i płeć')+'</div>'+avEditHtml()
    +'<div class="sleft">'
-   +gGrp("Nick",[rowIn("#0a84ff","user",'<input class="pe-in" id="gnick" maxlength="20" autocomplete="off" value="'+esc(me.nick||"")+'" placeholder="np. GAWRON" aria-label="Nick">')])
-   +'<p class="note pe-note">Najlepiej <b>imię + litera nazwiska</b> albo ksywka, np. <i>Ania K</i>, <i>Marek z Bielan</i>. Co najmniej 3 litery, do 20 znaków: litery, cyfry, spacja, kropka, _ lub -. Nick musi być unikalny; widzą go inni zalogowani.</p>'
-   +'<div class="nsug hide" id="gnicksug"></div>'
+   +'<div class="pe-nickline"><button type="button" class="lnk" data-c="nickopen" aria-expanded="'+nickOpen+'" aria-label="Zmień nick">'+esc((nickDraft!=null&&nickDraft.trim()?nickDraft:me.nick||"").trim())+' '+uiIcon("pencil")+'</button></div>'
+   +(nickOpen?gGrp("Nick",[rowIn("#0a84ff","user",'<input class="pe-in" id="gnick" maxlength="20" autocomplete="off" value="'+esc(nickDraft!=null?nickDraft:me.nick||"")+'" placeholder="np. GAWRON" aria-label="Nick">')])
+     +'<p class="note pe-note">Najlepiej <b>imię + litera nazwiska</b> albo ksywka, np. <i>Ania K</i>, <i>Marek z Bielan</i>. Co najmniej 3 litery, do 20 znaków: litery, cyfry, spacja, kropka, _ lub -. Nick musi być unikalny; widzą go inni zalogowani.</p>'
+     +'<div class="nsug hide" id="gnicksug"></div>':'')
    +sex
    +profHubHtml()
    +gGrp("Konto",[gRow("#636366","key","Zmień hasło",esc(session&&session.user.email||""),'','data-c="pwd"')])
@@ -380,6 +381,7 @@ function avFromFile(f){return new Promise((res,rej)=>{
       if(d.length>58000)return rej(new Error("Zdjęcie jest za duże."));res(d)}catch(e){rej(e)}};
   img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error("Nie udało się wczytać zdjęcia."))};img.src=url})}
 function peStart(){pe={av:avData[uid]?avData[uid].d:null,avCh:false,media:Object.assign({},medias[uid]||{}),phone:myPriv&&myPriv.phone||"",pvis:myPriv&&myPriv.phone_vis||"off",cvis:!!(myPriv&&myPriv.city_vis)}}
+let nickOpen=false,nickDraft=null;   // Edytuj profil: nick jako tekst pod zdjęciem; pole rozwija się po kliknięciu
 let mediaOpen=false;   // „Moje media” w Edytuj profil: domyślnie zwinięte
 // wiersze do grupy „Profil” w Edytuj profil: miejscowość (+ pokazuj innym), telefon (+ pokazuj innym), Moje media (rozwijane)
 function profExRows(){

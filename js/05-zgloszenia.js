@@ -241,6 +241,7 @@ function renderGear(){
   const keepUnick=gearView==="unick"&&$("gunick")?{v:$("gunick").value,i:$("gunickinfo").textContent}:null;
   const keepConf=gearView==="confdel"&&$("gconf")?$("gconf").value:null;
   const keepDel=gearView==="del"&&$("gdel")?{v:$("gdel").value,i:$("gdelinfo").textContent}:null;
+  if(gearView==="nick"&&$("gnick"))nickDraft=$("gnick").value;   // zapamiętaj wpisany nick, gdy pole się zwija / ekran się odświeża
   const keepNick=gearView==="nick"&&$("gnick")?{v:$("gnick").value,i:$("gnickinfo").textContent}:null;
   const keepPw=gearView==="pwd"&&$("gpw0")?{v:["gpw0","gpw1","gpw2"].map(i=>[$(i).value,$(i).type]),i:$("gpwinfo").textContent,f:document.activeElement&&document.activeElement.id}:null;   // odświeżanie co minutę nie kasuje wpisanych haseł
   let body;
@@ -559,7 +560,8 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="userback"){gearView=userBack||"main";renderGear();return}
   if(c==="coldef"){["K","M"].forEach(g=>{$("col"+g).value=DEF_COLORS[g];$("bg"+g).value=DEF_BGS[g];$("nob"+g).checked=false});colorsPreview();return}
   if(c==="colsave"){await saveColors();return}
-  if(c==="nick"){selGender=genders[uid]||"";peStart();gearView="nick";renderGear();return}
+  if(c==="nickopen"){nickOpen=!nickOpen;renderGear();if(nickOpen){const i=$("gnick");if(i)i.focus()}return}
+  if(c==="nick"){selGender=genders[uid]||"";nickOpen=false;nickDraft=null;peStart();gearView="nick";renderGear();return}
   if(c==="nicksave"){if(!needProfile()&&!nickShort()&&!(await saveProfEx()))return;await gearSaveNick();return}
   if(c==="pephoto"){const f=$("pefile");if(f)f.click();return}
   if(c==="pephotodel"){if(pe){pe.av=null;pe.avCh=true;renderGear()}return}
@@ -642,8 +644,8 @@ function nickSuggest(n){
   return c.slice(0,3);
 }
 async function gearSaveNick(){
-  const i=$("gnick");if(!i)return;
-  const n=i.value.trim();
+  const i=$("gnick");if(!i&&gearView!=="nick")return;
+  const n=(i?i.value:(nickDraft!=null?nickDraft:me.nick||"")).trim();
   const sg=$("gnicksug");if(sg){sg.classList.add("hide");sg.innerHTML=""}
   if(genderOk&&!selGender){$("gnickinfo").textContent="Wybierz płeć: Kobieta albo Mężczyzna.";return}
   if(nickShort()&&n===me.nick){$("gnickinfo").textContent="Wybierz nowy nick — co najmniej 3 litery.";return}
