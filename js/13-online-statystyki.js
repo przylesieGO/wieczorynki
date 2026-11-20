@@ -104,8 +104,10 @@ function rideCalHtml(){
 let repStats=null;
 function repStatsHtml(t){
   if(!reportOk)return "";
-  if(!repStats){repStats={loading:1};sb.from("ride_reports").select("want_id,user_id,went,km,avg_kmh,rating,route_rating,self,ride_at").eq("ride_test",false).limit(10000)
-    .then(r=>r&&r.error?sb.from("ride_reports").select("want_id,user_id,went,km,avg_kmh,rating,route_rating,self,ride_at").limit(10000):r).then(r=>{repStats={L:(r&&r.data)||[]};if(gearOpen&&gearView==="stats")renderGear()});return ""}
+  // 📊 KROK 62: zbiorcze dane z ride_group_stats() (osoba = pseudonim); bez KROKU 62 — jak dotąd
+  if(!repStats){repStats={loading:1};sb.rpc("ride_group_stats").then(r=>{if(r.error||!Array.isArray(r.data))throw 0;
+    repStats={L:r.data.map(x=>Object.assign({user_id:x.pk},x))};if(gearOpen&&gearView==="stats")renderGear()}).catch(()=>sb.from("ride_reports").select("want_id,user_id,went,km,avg_kmh,rating,route_rating,self,ride_at").eq("ride_test",false).limit(10000)
+    .then(r=>r&&r.error?sb.from("ride_reports").select("want_id,user_id,went,km,avg_kmh,rating,route_rating,self,ride_at").limit(10000):r).then(r=>{repStats={L:(r&&r.data)||[]};if(gearOpen&&gearView==="stats")renderGear()}));return ""}
   if(repStats.loading)return '<div class="smail">Ładuję…</div>';
   const L=repStats.L;if(!L.length)return '<p class="note">Jeszcze nikt nie odpowiedział po jeździe.</p>';
   const yes=L.filter(r=>r.went),rides=new Set(yes.map(r=>r.want_id)),km=Math.round(yes.reduce((a,r)=>a+(+r.km||0),0)),rt=L.filter(r=>r.rating).map(r=>r.rating);
