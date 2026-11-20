@@ -377,8 +377,8 @@ function renderWants0(){
      +'<div class="ftile'+(n===0?' today':'')+(d.ws.some(wLive)?' live':'')+'">'+ftInner(dt)+'</div>'
      +'<div class="wtx"><div class="wl1">'+l1+'</div>'
      +'<div class="wl2"><span class="whrs">'+hrs.slice(0,4).join("")+(hrs.length>4?'<b>+'+(hrs.length-4)+'</b>':'')+'</span></div>'
-     +'<div class="wl2">'+pplHtml+'</div>'
-     +'<div class="wl3">Od: '+esc(authTxt)+'</div></div>'
+     +'<div class="wl3">Od: '+esc(authTxt)+'</div>'
+     +'<div class="wl2">'+pplHtml+'</div></div>'
      +'</summary>'+mineTop.map(wantDayHtml).join("")+(ord.length>1
        ?'<div class="dcar" data-day="'+d.k+'">'+ord.map(wantHtml).join("")+'</div><div class="mydots ddots">'+ord.map((_,i)=>'<button type="button" data-ddot="'+i+'" class="'+(i===(dayIdx[d.k]||0)?'on':'')+'" aria-label="Zaproszenie '+(i+1)+'"></button>').join("")+'<span>'+(Math.min(dayIdx[d.k]||0,ord.length-1)+1)+' z '+ord.length+'</span></div>'
        :ord.length?wantHtml(ord[0]):'')+'</details>';
