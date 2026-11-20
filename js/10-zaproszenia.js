@@ -379,17 +379,13 @@ function renderWants0(){
     const ty='<span class="wme">Ty</span>';
     const pplHtml=me?(others>0?ty+" i "+others+" "+osFor(others)+" jadą":ty+" jedziesz"):esc(ppl.size+" "+osFor(ppl.size)+" jadą");
     // trwająca jazda: jej godzina na pomarańczowo (jak znacznik TRWA) i zawsze na początku listy
-    const hw=d.ws.filter(wLive).concat(d.ws.filter(w=>!wLive(w)));
-    const hrs=hw.map(w=>wLive(w)?'<b class="hlive" title="Trwa">'+wTime(w)+'</b>':'<b>'+wTime(w)+'</b>');
-    const ord0=d.ws.slice().sort((a,b)=>((isFav(b.user_id)?1:0)-(isFav(a.user_id)?1:0))||(new Date(a.starts_at)-new Date(b.starts_at)));
-    const mineTop=ord0.filter(wAbove),ord=ord0.filter(w=>!wAbove(w));
+    // karuzela w kolejności czasu (⭐ ulubieni widać przy nicku na karcie — nk()); godziny u góry: klik przewija/otwiera właściwe zaproszenie
+    const mineTop=d.ws.filter(wAbove),ord=d.ws.filter(w=>!wAbove(w));
     const wdCap=wd.charAt(0).toUpperCase()+wd.slice(1);
     const l1=n>=0&&n<=2?esc(["Dziś","Jutro","Pojutrze"][n])+' <i>· '+esc(wdCap)+'</i>':esc(wdCap);
-    // godziny zawsze za nazwą dnia — jeśli się nie zmieszczą, przeglądarka sama zawija do kolejnej linii (responsywnie)
-    const hrsHtml=hrs.slice(0,4).join("")+(hrs.length>4?'<b>+'+(hrs.length-4)+'</b>':'');
     return '<details class="wday" data-day="'+d.k+'"'+(open?' open':'')+'><summary>'
      +'<div class="ftile'+(n===0?' today':'')+(d.ws.some(wLive)?' live':'')+'">'+ftInner(dt)+'</div>'
-     +'<div class="wtx"><div class="wl1">'+l1+' · <span class="whrs">'+hrsHtml+'</span></div>'
+     +'<div class="wtx"><div class="wl1">'+l1+' · <span class="whrs'+(open?' whrsall':'')+'">'+wHrsHtml(d.ws,open)+'</span></div>'
      +'<div class="wl3">Od: '+esc(authTxt)+'</div>'
      +'<div class="wl2">'+pplHtml+'</div></div>'
      +'</summary>'+mineTop.map(wantDayHtml).join("")+(ord.length>1
@@ -400,11 +396,24 @@ function renderWants0(){
   fillWx();
   wsecSync();
 }
+/* godziny w nagłówku karty dnia: zwinięta karta — 4 + „+N” (etykieta); rozwinięta — wszystkie, klikalne (przewijają/otwierają właściwe zaproszenie w karuzeli) */
+function wHrsHtml(ws,open){
+  const hw=ws.filter(wLive).concat(ws.filter(w=>!wLive(w)));
+  const mk=w=>'<button type="button" class="whb'+(wLive(w)?' hlive':'')+'" data-whr="'+esc(w.id)+'"'+(wLive(w)?' title="Trwa"':'')+'>'+wTime(w)+'</button>';
+  return open?hw.map(mk).join(""):hw.slice(0,4).map(mk).join("")+(hw.length>4?'<b class="whmore">+'+(hw.length-4)+'</b>':'');
+}
 /* karuzela zaproszeń w karcie dnia */
 const dayIdx={};
+function dcarGoto(c,idx,smooth){
+  const it=c.children[idx];if(!it)return;
+  const left=it.offsetLeft-c.offsetLeft-(c.clientWidth-it.offsetWidth)/2;
+  if(smooth)c.scrollTo({left,behavior:"smooth"});else c.scrollLeft=left;
+  dayIdx[c.dataset.day]=idx;
+  const dots=c.nextElementSibling;if(dots){[...dots.querySelectorAll("button")].forEach((b,i)=>b.classList.toggle("on",i===idx));const sp=dots.querySelector("span");if(sp)sp.textContent=(idx+1)+" z "+c.children.length}
+}
 function dcarRestore(c){
-  const n=c.children.length,i=Math.min(dayIdx[c.dataset.day]||0,n-1),it=c.children[i];
-  if(it&&c.clientWidth)c.scrollLeft=it.offsetLeft-c.offsetLeft-(c.clientWidth-it.offsetWidth)/2;
+  const i=Math.min(dayIdx[c.dataset.day]||0,c.children.length-1);
+  if(c.clientWidth)dcarGoto(c,i,false);
 }
 $("wantlist").addEventListener("scroll",e=>{
   const c=e.target;if(!(c.classList&&c.classList.contains("dcar")))return;
@@ -415,14 +424,29 @@ $("wantlist").addEventListener("scroll",e=>{
 },true);
 $("wantlist").addEventListener("click",e=>{
   const b=e.target.closest("button[data-ddot]");if(!b)return;
-  const c=b.closest(".ddots").previousElementSibling,it=c&&c.children[+b.dataset.ddot];
-  if(it)c.scrollTo({left:it.offsetLeft-c.offsetLeft-(c.clientWidth-it.offsetWidth)/2,behavior:"smooth"});
+  const c=b.closest(".ddots").previousElementSibling;if(c)dcarGoto(c,+b.dataset.ddot,true);
+});
+// 🕖 klik w godzinę u góry karty dnia: otwiera dzień (jeśli zwinięty) i przewija do tego zaproszenia — w karuzeli albo wśród „Twoich” przypiętych wyżej
+$("wantlist").addEventListener("click",e=>{
+  const hb=e.target.closest("button.whb");if(!hb)return;
+  e.preventDefault();e.stopPropagation();
+  const d=hb.closest("details.wday");if(!d)return;
+  const wid=hb.dataset.whr,dc=d.querySelector(".dcar");
+  const idx=dc?[...dc.children].findIndex(x=>x.dataset.wid===wid):-1;
+  if(idx>=0){
+    if(d.open)dcarGoto(dc,idx,true);else{dayIdx[d.dataset.day]=idx;d.open=true}
+  }else{
+    const pin=d.querySelector('[data-wid="'+CSS.escape(wid)+'"]');
+    if(!d.open)d.open=true;
+    if(pin)requestAnimationFrame(()=>pin.scrollIntoView({block:"nearest",behavior:"smooth"}));
+  }
 });
 let wantOpenDay;// undefined = domyślnie najbliższy dzień, null = wszystkie zwinięte
 const MON3=["STY","LUT","MAR","KWI","MAJ","CZE","LIP","SIE","WRZ","PAŹ","LIS","GRU"];
 $("wantlist").addEventListener("toggle",e=>{
   const d=e.target;if(!(d.classList&&d.classList.contains("wday")))return;
   const byUser=d.dataset.user==="1";delete d.dataset.user;
+  const wh=d.querySelector(".whrs");if(wh){wh.classList.toggle("whrsall",d.open);wh.innerHTML=wHrsHtml(wdayWs[d.dataset.day]||[],d.open)}
   if(d.open){
     wantOpenDay=d.dataset.day;
     const dc=d.querySelector(".dcar");if(dc)requestAnimationFrame(()=>dcarRestore(dc));
@@ -433,7 +457,7 @@ $("wantlist").addEventListener("toggle",e=>{
   // animacja przewracania kartki tylko przy ręcznym rozwinięciu
   if(d.open&&byUser){const t=d.querySelector(".ftile");if(t){t.classList.remove("flipping");void t.offsetWidth;t.classList.add("flipping");setTimeout(()=>t.classList.remove("flipping"),600)}}
 },true);
-$("wantlist").addEventListener("click",e=>{const s=e.target.closest("details.wday>summary");if(s)s.parentElement.dataset.user="1"});
+$("wantlist").addEventListener("click",e=>{const s=e.target.closest("details.wday>summary");if(s&&!e.target.closest(".whb"))s.parentElement.dataset.user="1"});
 /* dołączeni: do 2 osób pigułki, od 3 — zwinięta lista (ulubieni na początku) */
 const joinOpen=new Set();
 function joinedHtml(wid,ids,empty,few,many){

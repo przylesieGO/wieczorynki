@@ -336,7 +336,9 @@ details.jlist[open]>summary{border-radius:11px 11px 0 0}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);max-width:90vw;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:3000;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,.25)}
 .leaflet-container{z-index:0}
 /* godziny w karcie dnia, karuzela zaproszeń dnia, kosz admina, logo */
-.wl2{flex-wrap:wrap;row-gap:2px}.whrs{display:inline-flex;gap:4px;flex:none}.whrs b{font-size:13px;font-weight:800;color:var(--ink);background:var(--fill);border-radius:7px;padding:1px 7px}.whrs b.hlive{background:#ff9f0a;color:#fff}
+.wl2{flex-wrap:wrap;row-gap:2px}.whrs{display:inline-flex;gap:4px;flex:none}.whrs.whrsall{flex-wrap:wrap;row-gap:4px}
+.whrs b,.whb{font:inherit;font-size:13px;font-weight:800;color:var(--ink);background:var(--fill);border:0;border-radius:7px;padding:1px 7px;line-height:1.5}
+.whb{cursor:pointer;-webkit-tap-highlight-color:transparent}.whb:active{background:var(--navon)}.whrs b.hlive,.whb.hlive{background:#ff9f0a;color:#fff}
 .dcar{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:0 10px 4px}
 .dcar::-webkit-scrollbar{display:none}
 details.wday .dcar .want{flex:0 0 calc(100% - 26px);min-width:0;margin:0;scroll-snap-align:center;box-sizing:border-box}
