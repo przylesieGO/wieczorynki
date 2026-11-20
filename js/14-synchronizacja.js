@@ -106,16 +106,20 @@ async function afterData(){
   }
 }
 const PV_LBL={user:"użytkownik bez funkcji testowych",tester:"tester (z funkcjami testowymi)"};
-function pvBar(){const b=$("pvbar");if(!b)return;const on=!!pv||PV_GUEST;
+function pvBar(){const b=$("pvbar");if(!b)return;const on=!!pv||PV_GUEST||KONTO;
   b.classList.toggle("hide",!on);document.body.classList.toggle("pvon",on);
-  b.innerHTML=on?uiIcon("eye")+'<span>Podgląd: '+(PV_GUEST?'gość':PV_LBL[pv])+'</span><button type="button" id="pvend">'+(PV_GUEST?'Zamknij':'Zakończ')+'</button>':''}
+  const txt=PV_GUEST?'gość':pv?PV_LBL[pv]:'konto „'+KONTO+'” w tej karcie';
+  const btn=PV_GUEST?'Zamknij':pv?'Zakończ':'Konto podstawowe';
+  b.innerHTML=on?uiIcon("eye")+'<span>Podgląd: '+esc(txt)+'</span><button type="button" id="pvend">'+btn+'</button>':''}
 function pvSet(m){
   pv=m||"";isAdmin=adminIds.includes(uid)&&!pv;
   deriveWants();pvBar();refreshUi();try{renderEvents()}catch(e){}try{renderSteps()}catch(e){}
   if(pv)say("👁 Podgląd: "+PV_LBL[pv]+". Akcje (np. „Jadę!”) działają naprawdę na Twoim koncie.");else say("Koniec podglądu.");
 }
 document.addEventListener("click",e=>{if(!e.target.closest("#pvend"))return;
-  if(PV_GUEST){window.close();setTimeout(()=>{location.href=location.pathname},150);return}pvSet("")});
+  if(PV_GUEST){window.close();setTimeout(()=>{location.href=location.pathname},150);return}
+  if(KONTO&&!pv){location.href=location.pathname;return}
+  pvSet("")});
 function snapClear(){if(PV_GUEST)return;try{localStorage.removeItem("snap")}catch(e){}}
 function snapSave(){
   if(!session||!syncOk||syncN==null)return;

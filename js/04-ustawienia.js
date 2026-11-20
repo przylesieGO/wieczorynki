@@ -184,6 +184,9 @@ async function pwdSave(btn){
 const lastAdmin=()=>isAdmin&&adminIds.length<=1;
 // 👁 podgląd aplikacji dla 👑 (decyzja właściciela 2026-11-17 05:37–05:44): pv = "" | "user" | "tester"; gość — osobna karta ?jako=gosc
 let pv="";const PV_GUEST=/[?&]jako=gosc(&|$)/.test(location.search);
+// 🧪 kilka kont naraz w jednej przeglądarce (karty): ?konto=2 / ?konto=ania — osobne miejsce na zalogowanie,
+// nie rusza logowania bez tego dopisku ani innych wartości „konto”; tylko litery/cyfry/_-, max 12 znaków
+const KONTO=(location.search.match(/[?&]konto=([A-Za-z0-9_-]{1,12})(&|$)/)||[])[1]||"";
 let supers=new Set();const isSuper=id=>supers.has(id)&&!(pv&&id===uid);const isKingReal=()=>!!session&&supers.has(uid);
 /* 🔔 Telegram w prywatnej wiadomości (KROK 18, funkcja testowa telegram_dm) */
 let tgOk=false,tgLink=null,tgCode="",tgPoll=null,tgPollEnd=0;

@@ -108,9 +108,11 @@ bootTimer=setTimeout(()=>bootFail(),8000);
   advRender(false);refreshUi();
   if(!window.supabase){$("dbnote").textContent="Nie udało się załadować biblioteki bazy danych — sprawdź połączenie z internetem i odśwież stronę.";bootFail(navigator.onLine===false?"📡 Brak połączenia z internetem":"📡 Nie udało się wczytać aplikacji");return}
   // 👁 podgląd gościa: osobny klient bez sesji (nie rusza logowania 👑 w innych kartach)
+  // 🧪 ?konto=N: osobne miejsce na zalogowanie dla tej karty (kilka kont naraz w jednej przeglądarce)
   sb=PV_GUEST?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:"pv-guest"}})
+    :KONTO?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{storageKey:"konto-"+KONTO}})
     :window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-  if(PV_GUEST)pvBar();
+  if(PV_GUEST||KONTO)pvBar();
   try{const r=await sb.auth.getSession();setSession(r.data.session)}catch(e){}
   if(RECOVERY&&session)pwMode=true;
   if(HASH_EXPIRED&&!session){$("ainfo").textContent="Link z maila wygasł albo został już użyty. Wpisz e-mail i kliknij „Nie pamiętam hasła”, żeby wysłać nowy.";try{history.replaceState(null,"",location.pathname)}catch(e){}}
