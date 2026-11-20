@@ -117,9 +117,9 @@ function evCard(e){
    +(evPub&&!past?'<div class="note cdnote">Żeby się zapisać i zobaczyć, kto z nas jedzie, <button type="button" class="lnk" data-ev="login">zaloguj się ›</button></div>':'')
    +(noD.length?'<div class="evl2">👥 Bez dystansu: '+noD.map(id=>nk(id)).join(" ")+'</div>':'')
    +(mine&&!past?'<button type="button" class="lnk evlv" data-ev="leave" data-id="'+esc(e.id)+'">Rezygnuję</button>':'')
-   +'<div class="acts evacts">'+(evPub?'':(evInvOk&&!past?'<button class="ib" data-ev="inv" data-id="'+esc(e.id)+'" title="Zaproś na imprezę" aria-label="Zaproś na imprezę">'+ICON.addp+'</button>':'')+'<button class="ib evlike'+((evLikes[e.id]||[]).includes(uid)?' on':'')+'" data-ev="like" data-id="'+esc(e.id)+'" title="Lubię" aria-label="Lubię">'+ICON.heart+((evLikes[e.id]||[]).length?'<span class="lkn">'+(evLikes[e.id]||[]).length+'</span>':'')+'</button>')+'<button class="ib" data-ev="gcal" data-id="'+esc(e.id)+'" title="Google Kalendarz" aria-label="Google Kalendarz">'+ICON.gcal+'</button><button class="ib" data-ev="share" data-id="'+esc(e.id)+'" title="Udostępnij" aria-label="Udostępnij">'+ICON.share+'</button>'
-   +(evPub?'':'<button class="ib" data-ev="dup" data-id="'+esc(e.id)+'" title="Duplikuj (np. kolejna edycja)" aria-label="Duplikuj">'+ICON.dup+'</button>')
-   +(evCanEdit(e)?'<button class="ib" data-ev="edit" data-id="'+esc(e.id)+'" title="Edytuj" aria-label="Edytuj">'+ICON.edit+'</button>'+((isAdmin||!e.delete_req_at)?'<button class="ib del'+(e.created_by===uid&&!isAdmin?'':' adm')+'" data-ev="'+(isAdmin?'del':'delreq')+'" data-id="'+esc(e.id)+'" title="'+(isAdmin?'Usuń':'Poproś o usunięcie')+'" aria-label="Usuń">'+ICON.del+'</button>':''):'')+'</div>'
+   +(evPub?'':'<div class="acts evacts">'+(evInvOk&&!past?'<button class="ib" data-ev="inv" data-id="'+esc(e.id)+'" title="Zaproś na imprezę" aria-label="Zaproś na imprezę">'+ICON.addp+'</button>':'')+'<button class="ib evlike'+((evLikes[e.id]||[]).includes(uid)?' on':'')+'" data-ev="like" data-id="'+esc(e.id)+'" title="Lubię" aria-label="Lubię">'+ICON.heart+((evLikes[e.id]||[]).length?'<span class="lkn">'+(evLikes[e.id]||[]).length+'</span>':'')+'</button><button class="ib" data-ev="gcal" data-id="'+esc(e.id)+'" title="Google Kalendarz" aria-label="Google Kalendarz">'+ICON.gcal+'</button><button class="ib" data-ev="share" data-id="'+esc(e.id)+'" title="Udostępnij" aria-label="Udostępnij">'+ICON.share+'</button>'
+   +('<button class="ib" data-ev="dup" data-id="'+esc(e.id)+'" title="Duplikuj (np. kolejna edycja)" aria-label="Duplikuj">'+ICON.dup+'</button>')
+   +(evCanEdit(e)?'<button class="ib" data-ev="edit" data-id="'+esc(e.id)+'" title="Edytuj" aria-label="Edytuj">'+ICON.edit+'</button>'+((isAdmin||!e.delete_req_at)?'<button class="ib del'+(e.created_by===uid&&!isAdmin?'':' adm')+'" data-ev="'+(isAdmin?'del':'delreq')+'" data-id="'+esc(e.id)+'" title="'+(isAdmin?'Usuń':'Poproś o usunięcie')+'" aria-label="Usuń">'+ICON.del+'</button>':''):'')+'</div>')
    +(e.created_by&&nicks[e.created_by]?'<div class="note" style="margin-top:6px">Dodał(a): '+esc(nicks[e.created_by])+'</div>':'')
    +evLastChg(e)+'</div></div>';
 }
@@ -263,7 +263,7 @@ $("p3").addEventListener("click",async e=>{
   if(b.dataset.ev==="seenall"){evSeenMark(evs.filter(x=>evState(x)).map(x=>x.id));lsSet("evBell",String(Date.now()));evStick=new Set();renderEvents();renderBell();return}
   const ev=evs.find(x=>x.id===b.dataset.id);if(!ev)return;
   const a=b.dataset.ev;
-  if(!session&&a!=="tog"&&a!=="gcal"&&a!=="share")return;   // 👤 gość: tylko podgląd, kalendarz i udostępnianie
+  if(!session&&a!=="tog")return;   // 👤 gość: tylko podgląd (bez zapisów, kalendarza i udostępniania)
   if(a==="tog"){evOpen=evOpen===ev.id?"":ev.id;if(evOpen&&evState(ev)){evSeenMark([ev.id]);evStick.add(ev.id);renderBell()}renderEvents();return}
   if(a==="inv"){if(!evInvOk){say("Zapraszanie na imprezy wymaga KROKU 54 w bazie.");return}openWho("ev",ev.id);return}
   if(a==="join"){evJoin(ev,b.dataset.d);return}

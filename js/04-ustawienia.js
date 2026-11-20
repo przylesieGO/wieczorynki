@@ -129,8 +129,8 @@ function flagsHtml(){
   return '<button class="sback" data-c="backadmin">‹ Administracja</button>'
    +'<div class="sname" style="margin-top:26px">🚦 Funkcje testowe</div>'
    +'<div class="smail">Dla każdej funkcji: wyłączona, tylko dla testerów (🧪 BETA) albo dla wszystkich. Zmiana działa od razu, bez nowej wersji aplikacji.</div>'
-   +'<div class="sleft">'+(L.length?'<div class="ios-grp">'+L.map(f=>'<div class="ios-it ffl"><div class="ios-t"><b>'+esc(f.name)+'</b>'+(f.description?'<small>'+esc(f.description)+'</small>':'')+'</div>'
-     +'<div class="ios-seg fseg">'+FSTATE.map(([k,t])=>'<button type="button" data-f="'+esc(f.key)+'" data-fs="'+k+'" class="fs-'+k+(f.state===k?' on':'')+'">'+({off:"Wyłączona",testers:"Testerzy",all:"Wszyscy"}[k]||t)+'</button>').join("")+'</div>'+fGuestHtml(f)+'</div>').join("")+'</div>'
+   +'<div class="sleft">'+(L.length?'<div class="fgrps">'+L.map(f=>'<div class="ios-grp"><div class="ios-it ffl"><div class="ios-t"><b>'+esc(f.name)+'</b>'+(f.description?'<small>'+esc(f.description)+'</small>':'')+'</div>'
+     +'<div class="ios-seg fseg">'+FSTATE.map(([k,t])=>'<button type="button" data-f="'+esc(f.key)+'" data-fs="'+k+'" class="fs-'+k+(f.state===k?' on':'')+'">'+({off:"Wyłączona",testers:"Testerzy",all:"Wszyscy"}[k]||t)+'</button>').join("")+'</div>'+fGuestHtml(f)+'</div></div>').join("")+'</div>'
      :'<div class="note">Na razie brak funkcji testowych. Każda nowa funkcja dopisuje się tutaj w swoim kroku SQL.</div>')
    +'<p class="note">Wyłączona — nikt nie widzi (także testerzy i 👑) · Testerzy — tylko 🧪 testerzy i 👑, z plakietką BETA · Wszyscy — każdy (Imprezy: osoby bez logowania tylko przy 👤 Goście „Widzą”).</p></div>';
 }
