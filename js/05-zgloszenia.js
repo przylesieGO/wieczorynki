@@ -223,7 +223,7 @@ function renderGear(){
   const p=$("gearpanel");
   if(!gearOpen){p.classList.add("hide");gearView="main";tkFrom=false;return}
   p.classList.remove("hide");
-  if((gearView==="admin"||gearView==="unick"||gearView==="colors"||gearView==="stats"||gearView==="flags"||gearView==="testdel")&&!(session&&isAdmin))gearView="main";
+  if((gearView==="admin"||gearView==="users"||gearView==="perms"||gearView==="unick"||gearView==="colors"||gearView==="stats"||gearView==="flags"||gearView==="testdel")&&!(session&&isAdmin))gearView="main";
   if(gearView==="flags"&&!isSuper(uid))gearView="admin";
   if(gearView==="unick"&&!nicks[unickId])gearView="admin";
   const keepSel=$("adminsel")?$("adminsel").value:"";
@@ -237,6 +237,8 @@ function renderGear(){
   const keepPw=gearView==="pwd"&&$("gpw0")?{v:["gpw0","gpw1","gpw2"].map(i=>[$(i).value,$(i).type]),i:$("gpwinfo").textContent,f:document.activeElement&&document.activeElement.id}:null;   // odświeżanie co minutę nie kasuje wpisanych haseł
   let body;
   if(gearView==="admin"){body=adminHtml();if(tgLinks===null&&!tgLoading){tgLoading=true;loadTgLinks().then(()=>{if(gearView==="admin")renderGear()})}}
+  else if(gearView==="users"){body=usersHtml();if(tgLinks===null&&!tgLoading){tgLoading=true;loadTgLinks().then(()=>{if(gearView==="users")renderGear()})}}
+  else if(gearView==="perms")body=permsHtml();
   else if(gearView==="unick")body=unickHtml();
   else if(gearView==="colors")body=colorsHtml();
   else if(gearView==="stats")body=adminStatsHtml();
@@ -262,7 +264,9 @@ function renderGear(){
   else if(gearView==="inst")body=instHtml();
   // ⚙️ góra w stylu grup iPhone'a + wyróżniona „Baza tras” (wariant B, decyzja właściciela 2026-11-16 15:11)
   else body=session
-    ?profCardHtml()+rbHeroHtml()+testerCardHtml()
+    ?profCardHtml()
+     +(isAdmin?gGrp("Administracja",[gRow("#8e8e93","shield","Administracja","Użytkownicy, zgłoszenia, statystyki, uprawnienia",fbAdmUnread().length?'<span class="ios-bdg">'+fbAdmUnread().length+'</span>':'','data-c="admin"')]):'')
+     +rbHeroHtml()+testerCardHtml()
      +gGrp("Ludzie i okolica",[favOk?gRow("#ffcc00","starf","Ulubieni","Zawsze na górze list",favs.size?'<span class="ios-v">'+favs.size+'</span>':'','data-c="favs"'):"",
         (evGeoOk&&tabOk(3))||rbOk?gRow("#ff9f0a","pin","Moja miejscowość",rbOk&&!(evGeoOk&&tabOk(3))?"Odległość do tras":"Odległość do imprez i tras",'<span class="ios-v">'+(homeGet()?esc(homeGet().name):'Ustaw')+'</span>','data-home="1"'):""])
      +gGrp("Powiadomienia",[tgOn()?gRow("#0a84ff","send","Telegram"+betaTag("telegram_dm"),"Powiadomienia prosto na telefon",tgLink?'<span class="ios-v ok">'+uiIcon("check")+'Połączony</span>':'<span class="ios-v">Połącz</span>','data-c="tg"'):"",
@@ -274,7 +278,6 @@ function renderGear(){
         gRow("#8e8e93","user","Jak widzi gość","Nowa karta bez logowania",'','data-c="pv" data-pv="guest"'),
         gRow("#0a84ff","users","Jak widzi użytkownik","Bez funkcji testowych i bez uprawnień admina",pv==="user"?'<span class="ios-v ok">'+uiIcon("check")+'Teraz</span>':'','data-c="pv" data-pv="user"'),
         gRow("#bf5af2","flask","Jak widzi tester","Z funkcjami testowymi (🧪 BETA), bez uprawnień admina",pv==="tester"?'<span class="ios-v ok">'+uiIcon("check")+'Teraz</span>':'','data-c="pv" data-pv="tester"')]):'')
-     +(isAdmin?gGrp("Administracja",[gRow("#8e8e93","shield","Administracja","Użytkownicy, zgłoszenia, funkcje testowe",fbAdmUnread().length?'<span class="ios-bdg">'+fbAdmUnread().length+'</span>':'','data-c="admin"')]):'')
      +setGroupsHtml(false)
      +'<div class="ios-grp" style="margin-top:22px"><button type="button" class="ios-it ios-row ios-out" data-c="out">Wyloguj</button></div>'
      +'<button class="sdanger" data-c="del">Usuń konto…</button>'
@@ -421,6 +424,9 @@ $("gearpanel").addEventListener("click",async e=>{
       catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
       return}
     if(a.dataset.a==="tk"){tkOpen(a.dataset.id,gearView==="admin"?"admin":"user");return}
+    if(a.dataset.a==="urow"&&isAdmin){const id=a.dataset.id;if(!nicks[id])return;
+      if(isKingReal()){tkOpen(id,"users");return}
+      userBack="users";tkFrom=false;userId=id;gearView="user";renderGear();delete admInfo[id];loadAdmInfo(id);return}
     if(a.dataset.a==="tkmore"&&isKingReal()){tkLoad(a.dataset.id,true);return}
     if(a.dataset.a==="tkfb"&&isKingReal()){fbOpen(a.dataset.id,"teczka");return}
     if(a.dataset.a==="tkride"){const i=sorted.findIndex(r=>r.id===a.dataset.id);if(i<0||!tabOk(1)){say("Tej wieczorynki nie ma już na liście.");return}gearOpen=false;renderGear();show(1);showRide(i);return}
@@ -452,7 +458,13 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="colors"){gearView="colors";renderGear();return}
   if(c==="stats"){gearView="stats";loadStats();return}
   if(c==="userback2m"){gearView=tkFrom&&tkId===modDelId?"teczka":"user";renderGear();return}
-  if(c==="tkback"){tkFrom=false;gearView=tkBack==="admin"?"admin":"user";renderGear();return}
+  if(c==="tkback"){tkFrom=false;gearView=["admin","users","stats"].includes(tkBack)?tkBack:"user";renderGear();return}
+  if(c==="users"){usersBack="admin";gearView="users";renderGear();return}
+  if(c==="perms"){gearView="perms";renderGear();return}
+  if(c==="onlineadm"||c==="onlinestats"){onlBack=c==="onlinestats"?"stats":"admin";gearView="online";renderGear();return}
+  if(c==="onlback"){gearView=onlBack||"admin";onlBack="";renderGear();return}
+  if(c==="ufilter"){usersBack="stats";admF=b.dataset.f||"";admQ="";gearView="users";renderGear();return}
+  if(c==="wantstoday"){gearOpen=false;renderGear();show(0);return}
   if(c==="tkret"){gearView="teczka";renderGear();return}
   if(c==="allw"){gearView="allw";renderGear();return}
   if(c==="evdelreq"){gearOpen=false;renderGear();evFlt="delreq";show(3);return}
@@ -467,7 +479,7 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="places"){gearView="places";renderGear();return}
   if(c==="backadm"){gearView="admin";renderGear();return}
   if(c==="accall"){statsAllAcc=!statsAllAcc;renderGear();return}
-  if(c==="online"){if(!session)return;gearOpen=true;gearView="online";renderGear();return}
+  if(c==="online"){if(!session)return;onlBack="";gearOpen=true;gearView="online";renderGear();return}
   if(c==="flags"){gearView="flags";renderGear();return}
   if(c==="testdel"){testDelN=null;gearView="testdel";renderGear();try{const r=await sb.rpc("admin_test_wants",{do_delete:false});if(r.error)throw r.error;testDelN=+r.data||0}catch(err){testDelN=0;say("Nie udało się policzyć: "+(err&&err.message?err.message:"błąd"))}if(gearView==="testdel")renderGear();return}
   if(c==="testdelgo"){

@@ -434,7 +434,7 @@ function joinedHtml(wid,ids,empty,few,many){
    +'<div class="jv">'+favFirst(ids).map(id=>'<div>'+nk(id)+(onlineIds.includes(id)?'<span class="note">🟢 teraz</span>':'')+'</div>').join("")+'</div></details>';
 }
 document.addEventListener("toggle",e=>{
-  const d=e.target;if(!(d.classList&&(d.classList.contains("jlist")||d.classList.contains("chg"))))return;
+  const d=e.target;if(!(d.classList&&(d.classList.contains("jlist")||d.classList.contains("chg")||d.classList.contains("stsec"))))return;
   d.open?joinOpen.add(d.dataset.j):joinOpen.delete(d.dataset.j);
 },true);
 // w karcie dnia: Twoje zaproszenie jest już pełne na górze („Twoje zaproszenia”) — tu tylko krótka linia z przejściem w górę

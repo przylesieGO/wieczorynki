@@ -58,7 +58,7 @@ async function loadStats(){
 }
 // 📊 nowe konta: 8 tygodni + kto i kiedy (z profiles.joined_at — KROK 25)
 let statsAllAcc=false;
-function newAccHtml(){
+function newAccHtml(part){
   const L=Object.entries(joinedAt).filter(([id])=>nicks[id]).sort((a,b)=>new Date(b[1])-new Date(a[1]));
   if(!L.length)return "";
   const wk=d=>{const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return x.getTime()};
@@ -68,9 +68,9 @@ function newAccHtml(){
   const when=t=>{const d=new Date(t),dd=dayDiff(d);return dd===0?"dziś "+hhmm(d):dd===-1?"wczoraj "+hhmm(d):d.toLocaleDateString("pl-PL",{day:"numeric",month:"short",year:"numeric"})};
   const ago=t=>{const n=Math.floor((Date.now()-new Date(t))/864e5);return n<1?"":n+" "+(n===1?"dzień":"dni")};
   const rows=(statsAllAcc?L:L.slice(0,8)).map(([id,t])=>'<div class="nacc"><span>'+nk(id)+(Date.now()-new Date(t)<864e5?'<span class="nnew">'+(genders[id]==="K"?"NOWA":"NOWY")+'</span>':'')+'</span><span class="note">'+esc(when(t))+(ago(t)?'<br>'+esc(ago(t)):'')+'</span></div>').join("");
-  return '<h3>Nowe konta — 8 tygodni</h3><div class="nbars">'+bins.map(b=>'<i title="'+b.n+'" style="height:'+Math.max(4,Math.round(100*b.n/mx))+'%"><b>'+(b.n||'')+'</b></i>').join("")+'</div>'
-   +'<div class="nbl"><span>'+esc(new Date(bins[0].t).toLocaleDateString("pl-PL",{day:"numeric",month:"short"}))+'</span><span>ten tydzień: '+bins[7].n+'</span></div>'
-   +'<h3>Kto i kiedy założył konto ('+L.length+')</h3><div class="naccs">'+rows+'</div>'
+  if(part==="chart")return '<div class="nbars">'+bins.map(b=>'<i title="'+b.n+'" style="height:'+Math.max(4,Math.round(100*b.n/mx))+'%"><b>'+(b.n||'')+'</b></i>').join("")+'</div>'
+   +'<div class="nbl"><span>'+esc(new Date(bins[0].t).toLocaleDateString("pl-PL",{day:"numeric",month:"short"}))+'</span><span>ten tydzień (od pon.): '+bins[7].n+'</span></div>';
+  return '<div class="naccs">'+rows+'</div>'
    +(L.length>8?'<button class="lnk" data-c="accall" style="display:block;margin:8px auto 0">'+(statsAllAcc?'Zwiń ▴':'Pokaż wszystkich ('+L.length+') ›')+'</button>':'');
 }
 let repStats=null;
@@ -78,26 +78,34 @@ function repStatsHtml(t){
   if(!reportOk)return "";
   if(!repStats){repStats={loading:1};sb.from("ride_reports").select("want_id,user_id,went,km,avg_kmh,rating,route_rating,self").eq("ride_test",false).limit(10000)
     .then(r=>r&&r.error?sb.from("ride_reports").select("want_id,user_id,went,km,avg_kmh,rating,route_rating,self").limit(10000):r).then(r=>{repStats={L:(r&&r.data)||[]};if(gearOpen&&gearView==="stats")renderGear()});return ""}
-  if(repStats.loading)return '<h3>🚴 Jak poszło?</h3><div class="smail">Ładuję…</div>';
-  const L=repStats.L;if(!L.length)return '<h3>🚴 Jak poszło?</h3><p class="note">Jeszcze nikt nie odpowiedział po jeździe.</p>';
+  if(repStats.loading)return '<div class="smail">Ładuję…</div>';
+  const L=repStats.L;if(!L.length)return '<p class="note">Jeszcze nikt nie odpowiedział po jeździe.</p>';
   const yes=L.filter(r=>r.went),rides=new Set(yes.map(r=>r.want_id)),km=Math.round(yes.reduce((a,r)=>a+(+r.km||0),0)),rt=L.filter(r=>r.rating).map(r=>r.rating);
-  return '<h3>🚴 Jak poszło? (odpowiedzi)</h3><div class="stats">'+t(rides.size,"jazd z potwierdzeniem")+t(km.toLocaleString("pl-PL")+" km","przejechane (deklaracje)")+t(Math.round(yes.length/L.length*100)+"%","frekwencja")+t(rt.length?fmt1(rt.reduce((a,b)=>a+b,0)/rt.length)+" ★":"—","średnia ocena jazd")+(()=>{const v=yes.filter(r=>r.avg_kmh!=null).map(r=>+r.avg_kmh);return t(v.length?fmt1(v.reduce((a,b)=>a+b,0)/v.length)+" km/h":"—","średnia prędkość")})()+'</div>';
+  return '<div class="stats">'+t(rides.size,"jazd z potwierdzeniem")+t(km.toLocaleString("pl-PL")+" km","przejechane (deklaracje)")+t(Math.round(yes.length/L.length*100)+"%","frekwencja")+t(rt.length?fmt1(rt.reduce((a,b)=>a+b,0)/rt.length)+" ★":"—","średnia ocena jazd")+(()=>{const v=yes.filter(r=>r.avg_kmh!=null).map(r=>+r.avg_kmh);return t(v.length?fmt1(v.reduce((a,b)=>a+b,0)/v.length)+" km/h":"—","średnia prędkość")})()+'</div>';
 }
 function adminStatsHtml(){
   const head='<button class="sback" data-c="backadmin">‹ Administracja</button><div class="sname" style="margin-top:26px">📊 Statystyki</div>';
   if(statsErr)return head+'<div class="sleft"><div class="changed">'+esc(statsErr)+'</div></div>';
   if(!statsData)return head+'<div class="smail">Ładuję…</div>';
   const d=statsData,t=(v,l)=>'<div class="st"><b>'+esc(v==null?"—":v)+'</b><span>'+l+'</span></div>';
+  // kafelek klikalny: lista osób z filtrem albo „Online”
+  const tc=(v,l,c,f)=>'<button type="button" class="st stb" data-c="'+c+'"'+(f!=null?' data-f="'+f+'"':'')+'><b>'+esc(v==null?"—":v)+'</b><span>'+l+' ›</span></button>';
+  // sekcja zwijana — domyślnie zwinięta (decyzja właściciela 2026-11-20 04:50); po prawej krótkie podsumowanie
+  const sec=(k,h,sum,body)=>body?'<details class="stsec" data-j="st_'+k+'"'+(joinOpen.has("st_"+k)?' open':'')+'><summary><span>'+h+'</span>'+(sum!==""&&sum!=null?'<span class="stsum">'+sum+'</span>':'')+'</summary><div class="stbody">'+body+'</div></details>':'';
   const since=d.since?new Date(d.since).toLocaleDateString("pl-PL",{day:"numeric",month:"long",year:"numeric"}):"";
+  const J=Object.values(joinedAt),n7=J.filter(x=>Date.now()-new Date(x)<7*864e5).length,n30=J.filter(x=>Date.now()-new Date(x)<30*864e5).length;
+  const nAcc=Object.keys(joinedAt).filter(id=>nicks[id]).length;
   return head+'<div class="sleft">'
-   +'<h3>Konta</h3><div class="stats">'+t(d.accounts,"założone konta")+t(d.profiles,"z nickiem")+'</div>'
-   +(Object.keys(joinedAt).length?'<h3>Nowi (z nickiem)</h3><div class="stats">'+t(Object.values(joinedAt).filter(x=>Date.now()-new Date(x)<7*864e5).length,"ostatnie 7 dni")+t(Object.values(joinedAt).filter(x=>Date.now()-new Date(x)<30*864e5).length,"ostatnie 30 dni")+'</div>':'')
-   +newAccHtml()
-   +repStatsHtml(t)
-   +'<h3>Aktywność</h3><div class="stats">'+t(onlineIds.length,"teraz online")+t(d.active7,"aktywni 7 dni")+t(d.active30,"aktywni 30 dni")+'</div>'
-   +(tgLinks?'<h3>Telegram</h3><div class="stats">'+t(tgLinks.size,"połączony bot")+t(Math.max(0,(d.profiles||0)-tgLinks.size),"bez bota")+'</div>':'')
-   +'<h3>Płeć</h3><div class="stats">'+t(d.women,"👩 kobiety")+t(d.men,"👨 mężczyźni")+(d.nogender?t(d.nogender,"bez płci"):"")+'</div>'
-   +'<p class="note">Aktywny = otworzył aplikację zalogowany w danym okresie.'+(since?' Aktywność zapisywana od '+esc(since)+'.':'')+' Konta bez nicku liczą się tylko w „założone konta”.</p>'
+   +sec("konta","Konta",esc(d.profiles==null?"":d.profiles+" z nickiem"),'<div class="stats">'+t(d.accounts,"założone konta")+tc(d.profiles,"z nickiem","ufilter","")+'</div>'
+      +(J.length?'<h3>Nowi (z nickiem)</h3><div class="stats">'+tc(n7,"ostatnie 7 dni","ufilter","new7")+tc(n30,"ostatnie 30 dni","ufilter","new30")+'</div>':''))
+   +sec("wykres","Nowe konta — 8 tygodni",n7?"+"+n7+" w 7 dni":"",newAccHtml("chart"))
+   +sec("kto","Kto i kiedy założył konto",nAcc||"",newAccHtml("list"))
+   +(reportOk?sec("rep","🚴 Jak poszło?","",repStatsHtml(t)||'<div class="smail">Ładuję…</div>'):'')
+   +sec("akt","Aktywność",onlineIds.length+" online",'<div class="stats">'+tc(onlineIds.length,"teraz online","onlinestats")+tc(d.active7,"aktywni 7 dni","ufilter","a7")+tc(d.active30,"aktywni 30 dni","ufilter","a30")+'</div>'
+      +'<p class="note">Aktywny = otworzył aplikację zalogowany w danym okresie.'+(since?' Aktywność zapisywana od '+esc(since)+'.':'')+'</p>')
+   +(tgLinks?sec("tg","Telegram",tgLinks.size+" z botem",'<div class="stats">'+tc(tgLinks.size,"połączony bot","ufilter","tg")+t(Math.max(0,(d.profiles||0)-tgLinks.size),"bez bota")+'</div>'):'')
+   +sec("plec","Płeć","",'<div class="stats">'+t(d.women,"👩 kobiety")+t(d.men,"👨 mężczyźni")+(d.nogender?t(d.nogender,"bez płci"):"")+'</div>')
+   +'<p class="note">Konta bez nicku liczą się tylko w „założone konta”. Kafelek ze strzałką › pokazuje osoby.</p>'
    +'<button class="b sbtn g" data-c="stats">↻ Odśwież</button></div>';
 }
 

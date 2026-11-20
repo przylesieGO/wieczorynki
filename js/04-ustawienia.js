@@ -22,11 +22,16 @@ function renderMeNick(){const el=$("menick");if(!el)return;const on=showNick&&!!
 try{guestMode=sessionStorage.getItem("guest")==="1"}catch(e){}
 const setGuest=v=>{guestMode=v;try{v?sessionStorage.setItem("guest","1"):sessionStorage.removeItem("guest")}catch(e){}};
 // 🔍 wyszukiwanie użytkowników w Administracji (po nicku, bez polskich znaków i wielkości liter) + szybkie filtry
-let admQ="",admF="";
+let usersBack="admin",admQ="",admF="",admSeen=null,admSeenLoading=false;
+// „ostatnio w aplikacji” do filtrów Aktywni 7 / 30 dni (KROK 49; bez 👑, maks. 100 osób)
+async function loadAdmSeen(){if(admSeenLoading||!isAdmin)return;admSeenLoading=true;
+  try{const r=await sb.rpc("admin_last_seen",{days:30});admSeen=r.error?{}:Object.fromEntries((r.data||[]).map(x=>[x.user_id,x.last_seen]))}catch(e){admSeen={}}
+  admSeenLoading=false;if(gearOpen&&gearView==="users")renderGear()}
 function admMatch(id){
   const q=nickKey(admQ.trim());if(q&&!nickKey(nicks[id]||"").includes(q)&&!lc(nicks[id]||"").includes(lc(admQ.trim())))return false;
   if(admF==="on")return onlineIds.includes(id);
-  if(admF==="new")return !!joinedAt[id]&&Date.now()-new Date(joinedAt[id]).getTime()<14*864e5;
+  if(admF==="new7"||admF==="new30")return !!joinedAt[id]&&Date.now()-new Date(joinedAt[id]).getTime()<(admF==="new7"?7:30)*864e5;
+  if(admF==="a7"||admF==="a30"){const t=(admSeen||{})[id]||(id===uid?Date.now():0);return !!t&&Date.now()-new Date(t).getTime()<(admF==="a7"?7:30)*864e5}
   if(admF==="tg")return !!(tgLinks&&tgLinks.has(id));
   if(admF==="ban")return modBanned.has(id);
   if(admF==="hid")return modHidden.has(id);
@@ -36,31 +41,54 @@ function admFilter(){let n=0,t=0;document.querySelectorAll("[data-admu]").forEac
   const c=$("admqn");if(c)c.textContent=(admQ.trim()||admF)?n+" z "+t:"";}
 document.addEventListener("input",e=>{if(e.target.id==="admq"){admQ=e.target.value;admFilter()}});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-admf]");if(!b)return;admF=b.dataset.admf;document.querySelectorAll("[data-admf]").forEach(x=>x.classList.toggle("on",x===b));admFilter()});
+const ADM_F=[["","Wszyscy"],["on","🟢 Online"],["new7","Nowi 7 dni"],["new30","Nowi 30 dni"],["a7","Aktywni 7 dni"],["a30","Aktywni 30 dni"],["tg","Telegram"],["ban","Zablokowani"],["hid","Ukryci"]];
+// licznik przy filtrze (bez wpisanego tekstu w szukajce)
+const admCount=k=>{const q=admQ,f=admF;admQ="";admF=k;const n=Object.keys(nicks).filter(admMatch).length;admQ=q;admF=f;return n};
 function adminHtml(){
-  const rows=adminIds.map(id=>'<div class="arow">'+nk(id)+(isSuper(id)?'<span class="note">👑 główny admin'+(id===uid?' (Ty)':'')+'</span>':id===uid?'<span class="note">(Ty)</span>':'<span class="arbtns">'+(stealthOk&&isSuper(uid)?'<button class="b g small'+(stealthIds.has(id)?' on':'')+'" data-a="stealth" data-id="'+esc(id)+'" title="Czy ten admin może ukryć swoją obecność online">'+(stealthIds.has(id)?'👻 może się ukryć ✓':'👻 ukrywanie: nie')+'</button>':'')+'<button class="b g small" data-a="rm" data-id="'+esc(id)+'">Odbierz uprawnienia</button></span>')+'</div>').join("")||'<div class="note">Brak.</div>';
-  const cand=Object.keys(nicks).filter(id=>!adminIds.includes(id)).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl"));
-  const add=cand.length
-    ?'<select id="adminsel">'+cand.map(id=>'<option value="'+esc(id)+'">'+esc(nicks[id])+'</option>').join("")+'</select><button class="b sbtn" data-c="adminadd">Nadaj uprawnienia</button>'
-    :'<div class="note">Brak użytkowników z nickiem, którym można nadać uprawnienia.</div>';
+  const onl=onlineIds.filter(id=>nicks[id]).length,fbN=fbOk?fbAdmUnread().length:0;
+  const today=wants.filter(w=>w.starts_at&&dayDiff(new Date(w.starts_at))===0).length;
+  const t=(v,l,c)=>'<button type="button" class="st stb" data-c="'+c+'"><b>'+v+'</b><span>'+l+' ›</span></button>';
   return '<button class="sback" data-c="back">‹ Ustawienia</button>'
    +'<div class="sname" style="margin-top:26px">🛡️ Administracja</div>'
+   +'<div class="stats admbar">'+t(onl,"teraz online","onlineadm")+(fbOk?t(fbN,fbN===1?"nowe zgłoszenie":"nowych zgłoszeń","fbadmin"):'')+t(today,"zaproszeń dziś","wantstoday")+'</div>'
    +(evs.some(x=>x.delete_req_at)?gGrp("Do zrobienia",[gRow("#ff3b30","trash","Prośby o usunięcie imprez","Autorzy chcą usunąć swoje imprezy",'<span class="ios-bdg">'+evs.filter(x=>x.delete_req_at).length+'</span>','data-c="evdelreq"')]):'')
    +gGrp("Narzędzia",[gRow("#0a84ff","chart","Statystyki","Aktywność, jazdy, logowania","",'data-c="stats"'),
-      fbOk?gRow("#bf5af2","msg","Zgłoszenia","Uwagi i błędy od użytkowników",fbAdmUnread().length?'<span class="ios-bdg">'+fbAdmUnread().length+'</span>':'','data-c="fbadmin"'):'',
+      fbOk?gRow("#bf5af2","msg","Zgłoszenia","Uwagi i błędy od użytkowników",fbN?'<span class="ios-bdg">'+fbN+'</span>':'','data-c="fbadmin"'):'',
+      gRow("#30b0c7","users","Użytkownicy",isKingReal()?"Szukaj, filtruj, otwórz teczkę":"Szukaj, filtruj, karta osoby",'<span class="ios-v">'+Object.keys(nicks).length+'</span>','data-c="users"'),
+      gRow("#34c759","shield","Uprawnienia","Administratorzy"+(testerOk?" i testerzy":""),'<span class="ios-v">'+adminIds.filter(id=>nicks[id]).length+(testerOk?' / '+testerIds.size:'')+'</span>','data-c="perms"'),
+      testerOk&&isSuper(uid)?gRow("#5e5ce6","flask","Funkcje testowe","Kto widzi nowe funkcje: nikt, testerzy, wszyscy","",'data-c="flags"'):'',
       genderOk?gRow("#ff2d55","palette","Kolory nicków","","",'data-c="colors"'):'',
       placeOk?gRow("#ff9f0a","pin","Miejsca zbiórki","",'<span class="ios-v">'+places.length+'</span>','data-c="places"'):''])
    +(isSuper(uid)?gGrp("Zaproszenia",[gRow("#30d158","eye","Wszystkie zaproszenia","Także prywatne i testowe",'<span class="ios-v">'+wantsAll.filter(w=>wantEnd(w).getTime()>Date.now()).length+'</span>','data-c="allw"'),
-      gRow("#8e8e93","archive","Archiwum zaproszeń","Zakończone jazdy","",'data-c="karch"')]):'')
-   +'<div class="sleft"><h3>Administratorzy</h3>'+rows
+      gRow("#8e8e93","archive","Archiwum zaproszeń","Zakończone jazdy","",'data-c="karch"'),
+      testOk?gRow("#ff3b30","trash","Usuń testowe zaproszenia","Tylko oznaczone 🧪 TEST — prawdziwe zostają","",'data-c="testdel"'):'']):'');
+}
+// 🛡️ → Uprawnienia: administratorzy i testerzy
+function permsHtml(){
+  const rows=adminIds.map(id=>'<div class="arow">'+nk(id)+(isSuper(id)?'<span class="note">👑 główny admin'+(id===uid?' (Ty)':'')+'</span>':id===uid?'<span class="note">(Ty)</span>':'<span class="arbtns">'+(stealthOk&&isSuper(uid)?'<button class="b g small'+(stealthIds.has(id)?' on':'')+'" data-a="stealth" data-id="'+esc(id)+'" title="Czy ten admin może ukryć swoją obecność online">'+(stealthIds.has(id)?'👻 może się ukryć ✓':'👻 ukrywanie: nie')+'</button>':'')+'<button class="b g small" data-a="rm" data-id="'+esc(id)+'">Odbierz uprawnienia</button></span>')+'</div>').join("")||'<div class="note">Brak.</div>';
+  const cand=Object.keys(nicks).filter(id=>!adminIds.includes(id)).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl"));
+  const add=cand.length
+    ?'<select id="adminsel">'+cand.map(id=>'<option value="'+esc(id)+'">'+esc(nicks[id])+'</option>').join("")+'</select><button class="b sbtn" data-c="adminadd">Nadaj uprawnienia administratora</button>'
+    :'<div class="note">Brak użytkowników z nickiem, którym można nadać uprawnienia.</div>';
+  return '<button class="sback" data-c="backadmin">‹ Administracja</button>'
+   +'<div class="sname" style="margin-top:26px">🛡️ Uprawnienia</div>'
+   +'<div class="sleft"><h3>Administratorzy ('+adminIds.filter(id=>nicks[id]).length+')</h3>'+rows
    +(stealthOk&&isSuper(uid)?'<p class="note">👻 = admin może w Ustawieniach wyłączyć widoczność online (domyślnie każdy jest widoczny). Ty jako 👑 masz to zawsze.</p>':'')
-   +'<h3>Nadaj uprawnienia administratora</h3>'+add
+   +add
    +'<p class="note">Administrator może edytować i usuwać każdą wieczorynkę, zgłoszenie i trasę oraz zarządzać administratorami.</p>'
-   +testersHtml()
-   +(isSuper(uid)&&testOk?'<h3>🧪 Zaproszenia testowe</h3><button class="b sbtn" style="background:var(--bad)" data-c="testdel">🧹 Usuń wszystkie testowe zaproszenia…</button><p class="note">Usuwa tylko zaproszenia oznaczone 🧪 TEST (z dołączeniami i powiadomieniami). Prawdziwe zostają.</p>':'')
-   +'<h3>Użytkownicy ('+Object.keys(nicks).length+')</h3>'+(tgLinks?'<p class="note">✈️ = połączony bot Telegram ('+tgLinks.size+'). Dotknij nicku — karta osoby z aktywnością.</p>':'')
+   +testersHtml()+'</div>';
+}
+// 🛡️ → Użytkownicy: szukajka, filtry z licznikami, wiersz → teczka (👑) albo karta osoby
+function usersHtml(){
+  if(admSeen===null)loadAdmSeen();
+  const ids=Object.keys(nicks).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl"));
+  return (usersBack==="stats"?'<button class="sback" data-c="stats">‹ Statystyki</button>':'<button class="sback" data-c="backadmin">‹ Administracja</button>')
+   +'<div class="sname" style="margin-top:26px">👥 Użytkownicy ('+ids.length+')</div>'
+   +'<div class="sleft">'+(tgLinks?'<p class="note">✈️ = połączony bot Telegram. '+(isKingReal()?'Dotknij osoby — teczka.':'Dotknij osoby — karta z aktywnością.')+'</p>':'')
    +'<div class="admq"><input id="admq" type="search" class="srch" placeholder="Szukaj po nicku" value="'+esc(admQ)+'" autocomplete="off" enterkeyhint="search"><span class="note" id="admqn"></span></div>'
-   +'<div class="fchips admqf">'+[["","Wszyscy"],["on","🟢 Online"],["new","🆕 Nowi (14 dni)"],["tg","Telegram"],["ban","Zablokowani"],["hid","Ukryci"]].map(([k,t])=>'<button type="button" class="fch'+(admF===k?' on':'')+'" data-admf="'+k+'">'+t+'</button>').join("")+'</div>'
-   +(Object.keys(nicks).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")).map(id=>'<div class="arow" data-admu="'+esc(id)+'"'+(admMatch(id)?'':' style="display:none"')+'><span>'+nk(id)+(tgLinks&&tgLinks.has(id)?' <span class="tgm" title="Telegram połączony">✈️</span>':'')+(modBanned.has(id)?' <span class="tgm" title="Zablokowany">⛔</span>':'')+(modHidden.has(id)?' <span class="tgm" title="Ukryty">👻</span>':'')+(joinedAt[id]?'<br><span class="note">od '+esc(new Date(joinedAt[id]).toLocaleDateString("pl-PL",{day:"numeric",month:"short",year:"numeric"}))+'</span>':'')+'</span>'+(isKingReal()?'<span class="arbtns"><button class="b g small" data-a="tk" data-id="'+esc(id)+'" title="Teczka" aria-label="Teczka">📁</button>':'')+(id===uid?'<span class="note">(Ty)</span>':isSuper(id)?'<span class="note">👑</span>':'<button class="b g small" data-a="unick" data-id="'+esc(id)+'">Zmień nick</button>')+(isKingReal()?'</span>':'')+'</div>').join("")||'<div class="note">Brak użytkowników z nickiem.</div>')
+   +'<div class="fchips admqf">'+ADM_F.filter(([k])=>k!=="tg"||tgLinks).map(([k,tx])=>'<button type="button" class="fch'+(admF===k?' on':'')+'" data-admf="'+k+'">'+tx+(k?' <span class="fcn">'+((k==="a7"||k==="a30")&&admSeen===null?'…':admCount(k))+'</span>':'')+'</button>').join("")+'</div>'
+   +'<div class="ulist">'+(ids.map(id=>'<button type="button" class="arow urow" data-a="urow" data-id="'+esc(id)+'" data-admu="'+esc(id)+'"'+(admMatch(id)?'':' style="display:none"')+'><span>'+nk(id)+(tgLinks&&tgLinks.has(id)?' <span class="tgm" title="Telegram połączony">✈️</span>':'')+(modBanned.has(id)?' <span class="tgm" title="Zablokowany">⛔</span>':'')+(modHidden.has(id)?' <span class="tgm" title="Ukryty">👻</span>':'')+(joinedAt[id]?'<br><span class="note">od '+esc(new Date(joinedAt[id]).toLocaleDateString("pl-PL",{day:"numeric",month:"short",year:"numeric"}))+'</span>':'')+'</span>'
+      +'<span class="note">'+(id===uid?'(Ty) ':isSuper(id)?'👑 ':adminIds.includes(id)?'🛡️ ':'')+'<span class="ios-chev" aria-hidden="true">›</span></span></button>').join("")||'<div class="note">Brak użytkowników z nickiem.</div>')+'</div>'
    +'</div>';
 }
 /* 🧪 testerzy i funkcje testowe (KROK 16) — nadaje/odbiera i przełącza tylko 👑 */
@@ -72,7 +100,7 @@ function testersHtml(){
   const cand=Object.keys(nicks).filter(id=>!testerIds.has(id)&&!isSuper(id)).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl"));
   return '<h3>🧪 Testerzy ('+ids.length+')</h3>'+(rows||'<div class="note">Brak testerów.</div>')
    +(king?(cand.length?'<select id="testersel">'+cand.map(id=>'<option value="'+esc(id)+'">'+esc(nicks[id])+'</option>').join("")+'</select><button class="b sbtn" data-c="testeradd">Nadaj prawa testera</button>':'')
-     +'<div class="ios-grp" style="margin-top:12px">'+gRow("#5e5ce6","flask","Funkcje testowe","Kto widzi nowe funkcje: nikt, testerzy, wszyscy","",'data-c="flags"')+'</div>'
+
      :'<p class="note">Prawa testera nadaje i odbiera tylko 👑 główny administrator.</p>')
    +'<p class="note">Tester widzi funkcje w fazie testów (z plakietką 🧪 BETA), zanim dostaną je wszyscy. 🧪 przy nicku oznacza testera.</p>';
 }
@@ -383,7 +411,7 @@ function applyPresence(){if(!presCh)return;try{stealthOn()?presCh.untrack():pres
 const stealthHtml=()=>canStealth()?'<div class="note" style="margin-top:14px">Pokazuj mnie jako online (🛡️ admin)</div><div class="seg">'+[["0","Tak"],["1","Nie — niewidoczny 👻"]].map(([k,t])=>'<button data-ho="'+k+'" class="'+((hideOnline?"1":"0")===k?"on":"")+'">'+t+'</button>').join("")+'</div><div class="note" style="margin-top:6px">'+(hideOnline?'Inni nie widzą Cię w „online” ani zielonej obwódki. Ty widzisz wszystkich.':'Domyślnie jesteś widoczny jak wszyscy.')+'</div>':'';
 let modDelId="",modOk=false,modBanned=new Set(),modHidden=new Set(),modPrev=null,modBusy=false;
 const modGone=id=>id!==uid&&(modBanned.has(id)||modHidden.has(id));
-let tgLinks=null,admInfo={},tgLoading=false;
+let tgLinks=null,admInfo={},tgLoading=false,onlBack="";
 async function loadTgLinks(){if(!isAdmin)return;try{const r=await sb.rpc("admin_tg_links");tgLinks=r.error?null:new Map((r.data||[]).map(x=>[x.user_id,x.linked_at]))}catch(e){tgLinks=null}}
 async function loadAdmInfo(id){
   try{const r=await sb.rpc("admin_user_info",{u:id});admInfo[id]=r.error?{err:1}:r.data||{}}catch(e){admInfo[id]={err:1}}
@@ -402,7 +430,7 @@ function admInfoHtml(id){
    +((a.recent||[]).length?'<div class="admrec">'+a.recent.map(x=>'<div><span>'+esc(ACT_TXT[x.kind]||x.kind)+'</span><span class="note">'+esc(agoTxt(x.at))+'</span></div>').join("")+'</div>':'<div class="note">Brak wpisów w dzienniku.</div>')
    +'</div>';
 }
-document.addEventListener("click",e=>{if(!e.target.closest("#onlbtn,#honl")||!session)return;e.preventDefault();e.stopPropagation();gearOpen=true;gearView="online";renderGear()},true);
+document.addEventListener("click",e=>{if(!e.target.closest("#onlbtn,#honl")||!session)return;e.preventDefault();e.stopPropagation();onlBack="";gearOpen=true;gearView="online";renderGear()},true);
 function modDelHtml(){
   const p=modPrev,li=(n,t)=>n?'<li>'+t+'</li>':'';
   return '<button class="sback" data-c="userback2m">‹ '+esc(nickOf(modDelId))+'</button><div class="sname" style="margin-top:26px">🗑 Usuń konto</div>'
@@ -487,7 +515,8 @@ function placesHtml(){
 function onlineHtml(){
   const ids=favFirst(onlineIds.filter(id=>nicks[id]&&(isAdmin||!modGone(id))));
   if(stealthOn()&&!ids.includes(uid)&&nicks[uid])ids.push(uid);
-  return '<div class="sname" style="margin-top:6px">🟢 Teraz w aplikacji ('+ids.length+')</div>'
+  return (onlBack?'<button class="sback" data-c="onlback">‹ '+(onlBack==="stats"?"Statystyki":"Administracja")+'</button>':'')
+   +'<div class="sname" style="margin-top:'+(onlBack?'26px':'6px')+'">🟢 Teraz w aplikacji ('+ids.length+')</div>'
    +'<div class="sleft">'+(ids.length?ids.map(id=>'<div class="arow"><span>'+nk(id)+'</span>'+(id===uid?'<span class="note">'+(stealthOn()&&!onlineIds.includes(uid)?'(Ty — ukryty 👻)':'(Ty)')+'</span>':'')+'</div>').join(""):'<div class="note">Nikogo poza Tobą.</div>')
    +(presOk?'':'<p class="note" style="color:var(--bad)">Brak połączenia z listą online — łączę ponownie… (pomaga wyłączenie blokera reklam dla tej strony)</p>')
    +'<p class="note">Dotknij nicku, żeby zobaczyć kartę osoby i zaprosić ją na rower. Lista odświeża się na bieżąco.</p></div>';
@@ -530,7 +559,7 @@ function userPubStats(id){
 function userHtml(){
   const g=genders[userId],fav=isFav(userId),ux=uxCache[userId]||{},mu=MEDIA.filter(m=>(medias[userId]||{})[m[0]]);
   if(profExOk&&session&&!(userId in uxCache)){uxCache[userId]={};loadUx(userId)}
-  return (userBack?'<button class="sback" data-c="userback">‹ '+({favs:"Ulubieni",online:"Online",admin:"Administracja"}[userBack]||"Ustawienia")+'</button>':'')
+  return (userBack?'<button class="sback" data-c="userback">‹ '+({favs:"Ulubieni",online:"Online",admin:"Administracja",users:"Użytkownicy",perms:"Uprawnienia",stats:"Statystyki"}[userBack]||"Ustawienia")+'</button>':'')
    +(avData[userId]?'<div class="ucav" style="margin-top:'+(userBack?'30px':'8px')+'">'+avImg(userId,"")+'</div>':'')
    +'<div class="bigpill" style="margin-top:'+(avData[userId]?'8px':userBack?'26px':'6px')+'">'+nk(userId)+'</div>'
    +'<div class="smail">'+(g==="K"?"👩 Kobieta":g==="M"?"👨 Mężczyzna":"")+(onlineIds.includes(userId)?(g?" · ":"")+"🟢 teraz w aplikacji":"")+'</div>'
@@ -581,7 +610,8 @@ function teczkaHtml(){
   if(profExOk&&!(id in uxCache)){uxCache[id]={};loadUx(id)}
   const ln=(l,v)=>'<div class="admln">'+l+': <b>'+v+'</b></div>',box=(h,b)=>'<div class="admbox"><b>'+h+'</b>'+b+'</div>';
   const dt=t=>t?esc(new Date(t).toLocaleDateString("pl-PL",{day:"numeric",month:"short",year:"numeric"})):'—';
-  const head=(tkBack==="admin"?'<button class="sback" data-c="tkback">‹ Administracja</button>':'<button class="sback" data-c="tkback">‹ '+esc(nickOf(id))+'</button>')
+  const TKB={admin:"Administracja",users:"Użytkownicy",stats:"Statystyki"};
+  const head='<button class="sback" data-c="tkback">‹ '+esc(TKB[tkBack]||nickOf(id))+'</button>'
    +'<div class="sname" style="margin-top:26px">📁 Teczka</div><div class="bigpill">'+nk(id)+'</div>';
   if(!d)return head+'<div class="note">Wczytuję…</div>';
   if(d.err)return head+'<div class="changed">'+esc(d.err)+'</div>';
@@ -654,7 +684,8 @@ async function toggleFav(id){
 document.addEventListener("click",e=>{
   const p=e.target.closest(".nk[data-u]");if(!p||!session||!favOk)return;
   const inPanel=!!p.closest("#gearpanel");
-  if(inPanel&&!["favs","online","admin"].includes(gearView))return;
+  if(inPanel&&!["favs","online","admin","perms","stats"].includes(gearView))return;
+  if(inPanel&&gearView==="stats"&&isKingReal()){tkOpen(p.dataset.u,"stats");return}
   if(inPanel&&p.dataset.u===uid)return;
   userBack=inPanel?gearView:"";tkFrom=false;userId=p.dataset.u;gearOpen=true;gearView="user";renderGear();
   if(isAdmin){delete admInfo[userId];loadAdmInfo(userId)}
