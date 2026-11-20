@@ -670,7 +670,7 @@ function userHtml(){
    +(visOk?'<button class="b sbtn" data-a="invite" data-id="'+esc(userId)+'">🚴 Zaproś na rower</button>':'')
    +gGrp("Ta osoba",[session?gRow("#0a84ff","cal","Pokaż zaproszenia z "+esc(nicks[userId]||"tą osobą"),"Filtr na liście zaproszeń","",'data-a="fltuser" data-id="'+esc(userId)+'"'):'',
       gRow("#ffcc00",fav?"starf":"star",fav?"W ulubionych":"Dodaj do ulubionych",fav?"Dotknij, aby usunąć":"Zawsze na górze list",fav?'<span class="ios-v ok">'+uiIcon("check")+'</span>':'','data-a="fav" data-id="'+esc(userId)+'"'),
-      plOk&&userId!==uid?(()=>{const L=plOfUser(userId);return gRow("#5ac8fa","users","Dodaj do listy…",L.length?"Na listach: "+esc(L.map(l=>l.name).join(", ")):"Np. MTB, Gravel, Wieczorynki",L.length?'<span class="ios-v">'+L.length+'</span>':'','data-a="pladd" data-id="'+esc(userId)+'"')})():''])
+      plOk&&userId!==uid?(()=>{const L=plOfUser(userId);return gRow("#5ac8fa","list","Dodaj do listy…",L.length?"Na listach: "+esc(L.map(l=>l.name).join(", ")):"Np. MTB, Gravel, Wieczorynki",L.length?'<span class="ios-v">'+L.length+'</span>':'','data-a="pladd" data-id="'+esc(userId)+'"')})():''])
    +(isAdmin?gGrp("Administrator",[isKingReal()?gRow("#5e5ce6","folder","Teczka","Wszystko o tej osobie w jednym miejscu","",'data-a="tk" data-id="'+esc(userId)+'"'):'',fbOk?gRow("#bf5af2","msg","Napisz wiadomość","Trafi do jej skrzynki zgłoszeń","",'data-a="fbmsg" data-id="'+esc(userId)+'"'):'',
       !isSuper(userId)?gRow("#ff9f0a","pencil","Zmień nick","","",'data-a="unick" data-id="'+esc(userId)+'"'):'']):'')
    +(isAdmin?admInfoHtml(userId):'')
@@ -785,7 +785,7 @@ async function toggleFav(id){
 let plOk=false,plists=[],plMem={},plId="";
 const PL_COL={blue:"#0a84ff",green:"#30d158",orange:"#ff9f0a",red:"#ff3b30",purple:"#bf5af2",teal:"#40c8e0",gray:"#8e8e93"};
 const plCol=l=>PL_COL[l&&l.color]||PL_COL.blue;
-const plDot=l=>'<span class="pldot" style="background:'+plCol(l)+'" aria-hidden="true"></span>';
+const plDot=l=>'<span class="plico" style="color:'+plCol(l)+'" aria-hidden="true">'+uiIcon("list")+'</span>';   // ikona listy w kolorze listy (kształt inny niż 🟢 online)
 const plById=id=>plists.find(l=>l.id===id)||null;
 const plIds=id=>(plMem[id]||[]).filter(u=>u!==uid&&nicks[u]&&!modGone(u));   // widoczne osoby z listy (bez ukrytych / zablokowanych)
 const plOfUser=u=>plists.filter(l=>(plMem[l.id]||[]).includes(u));
@@ -825,14 +825,16 @@ function plRefresh(){try{if(gearOpen)renderGear();if(!$("whosheet").classList.co
 
 /* 🔎 filtry osób (lista > 8 osób): szukajka + Kobiety / Mężczyźni / ⭐ Ulubieni / 🟢 Teraz — wspólne dla Ustawień i okna „Kogo zapraszasz?” */
 const pf={};
-const pfS=k=>pf[k]||(pf[k]={q:"",g:"",fav:false,on:false});
-const pfOn=k=>{const s=pfS(k);return !!(s.q||s.g||s.fav||s.on)};
+const pfS=k=>pf[k]||(pf[k]={q:"",g:"",fav:false,on:false,tst:false,adm:false});
+const pfOn=k=>{const s=pfS(k);return !!(s.q||s.g||s.fav||s.on||s.tst||s.adm)};
 function pfMatch(k,id){const s=pfS(k);
   if(s.g&&genders[id]!==s.g)return false;if(s.fav&&!isFav(id))return false;if(s.on&&!onlineIds.includes(id))return false;
+  if(s.tst&&!testerIds.has(id))return false;if(s.adm&&!adminIds.includes(id))return false;
   if(s.q&&!nickKey(nicks[id]||"").includes(nickKey(s.q)))return false;return true}
 function pfChips(k){const s=pfS(k),c=(v,on,h)=>'<button type="button" class="fch pfc'+(on?' on':'')+'" data-pfk="'+k+'" data-pfc="'+v+'">'+h+'</button>';
   return '<div class="pfrow">'+(genderOk?c("K",s.g==="K",uiIcon("venus")+" Kobiety")+c("M",s.g==="M",uiIcon("mars")+" Mężczyźni"):'')
-   +c("fav",s.fav,"⭐ Ulubieni")+c("on",s.on,"🟢 Teraz")+(pfOn(k)&&k!=="who"?'<button type="button" class="fch pfc pfx" data-pfk="'+k+'" data-pfc="x">✕ Wyczyść</button>':'')+'</div>'}
+   +c("fav",s.fav,"⭐ Ulubieni")+c("on",s.on,"🟢 Teraz")
+   +(testerIds.size?c("tst",s.tst,uiIcon("syringe")+" Testerzy"):'')+(adminIds.length?c("adm",s.adm,uiIcon("shield")+" Administratorzy"):'')+(pfOn(k)&&k!=="who"?'<button type="button" class="fch pfc pfx" data-pfk="'+k+'" data-pfc="x">✕ Wyczyść</button>':'')+'</div>'}
 const pfBar=(k,n)=>n>8?'<div class="pfbar" data-pfbar="'+k+'"><input class="bsq srch" type="search" data-pfq="'+k+'" placeholder="Szukaj nicku…" autocomplete="off" value="'+esc(pfS(k).q)+'">'+pfChips(k)+'</div>':'';
 // filtrowanie wierszy w Ustawieniach bez przerysowania panelu (pole szukania nie traci kursora)
 function pfApply(k){
@@ -844,7 +846,7 @@ document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-pfc]");if(!b)return;
   const k=b.dataset.pfk,v=b.dataset.pfc,s=pfS(k);
-  if(v==="x"){s.g="";s.fav=false;s.on=false;s.q="";const q=document.querySelector('[data-pfq="'+k+'"]');if(q)q.value=""}
+  if(v==="x"){s.g="";s.fav=false;s.on=false;s.tst=false;s.adm=false;s.q="";const q=document.querySelector('[data-pfq="'+k+'"]');if(q)q.value=""}
   else if(v==="K"||v==="M")s.g=s.g===v?"":v;else s[v]=!s[v];
   if(k==="who"){renderWho();return}
   const bar=document.querySelector('[data-pfbar="'+k+'"]');if(bar){const r=bar.querySelector(".pfrow");if(r)r.outerHTML=pfChips(k)}
@@ -871,7 +873,7 @@ function plistHtml(){
 function plRowsHtml(){
   if(!plOk)return '';
   return gGrp("Moje listy",plists.map(l=>{const ids=plIds(l.id),nm=ids.slice(0,3).map(u=>nicks[u]).join(", ")+(ids.length>3?"…":"");
-      return gRow(plCol(l),"users",esc(l.name),nm?esc(nm):"Pusta lista",'<span class="ios-v">'+ids.length+'</span>','data-c="plist" data-pl="'+esc(l.id)+'"')})
+      return gRow(plCol(l),"list",esc(l.name),nm?esc(nm):"Pusta lista",'<span class="ios-v">'+ids.length+'</span>','data-c="plist" data-pl="'+esc(l.id)+'"')})
     .concat([plists.length<20?gRow("#8e8e93","plus","Nowa lista","Np. MTB, Gravel, Wieczorynki","",'data-c="plnew"'):'']))
    +'<p class="note" style="margin:8px 14px 0;font-size:13px;text-align:left">Listy widzisz tylko Ty. Osoby z listy nie wiedzą, że na niej są. Wybierzesz je jednym kliknięciem przy zapraszaniu.</p>';
 }

@@ -1223,18 +1223,21 @@ const ws={mode:"form",vis:"all",pick:new Set(),want:null,q:""};
 const favIds=()=>[...favs].filter(id=>nicks[id]&&id!==uid);
 // 📋 osoby z listy, które da się zaznaczyć w tym oknie (bez już zaproszonych / niedostępnych)
 function whoPlAvail(lid){const P=new Set(whoPeople()),D=whoDis();return plIds(lid).filter(id=>P.has(id)&&!D.has(id))}
+// 📋 zwijana sekcja „Listy” (domyślnie zwinięta; w nagłówku nazwy zaznaczonych list) — kółko z ptaszkiem = cała lista zaznaczona
 function whoPlHtml(){
   if(!plOk)return "";
   const L=plists.filter(l=>!(ws.mode==="pl"&&l.id===ws.want)).map(l=>[l,whoPlAvail(l.id)]).filter(x=>x[1].length);
   if(!L.length)return "";
-  return '<div class="pfrow wspl"><span class="pflbl">Listy:</span>'+L.map(([l,A])=>{const on=ws.vis==="pick"&&A.every(id=>ws.pick.has(id));
-    return '<button type="button" class="fch pfc'+(on?' on':'')+'" data-wpl="'+esc(l.id)+'">'+plDot(l)+esc(l.name)+' <span class="fcn">'+A.length+'</span></button>'}).join("")+'</div>';
+  const on=([l,A])=>ws.vis==="pick"&&A.every(id=>ws.pick.has(id)),sel=L.filter(on).map(x=>x[0].name);
+  return '<button type="button" class="bsgrp gl wsplh" data-k="plt" aria-expanded="'+!!ws.plOpen+'"><span>'+uiIcon("list")+' Listy ('+L.length+')'+(sel.length?'<span class="wsplsel"> · '+esc(sel.join(", "))+'</span>':'')+'</span>'
+   +'<span class="lnk">'+(ws.plOpen?'Zwiń ▴':'Rozwiń ▾')+'</span></button>'
+   +(ws.plOpen?L.map(x=>'<button type="button" class="prow'+(on(x)?' on':'')+'" data-wpl="'+esc(x[0].id)+'"><span class="cbx">'+CHECK+'</span><span class="pnm">'+plDot(x[0])+esc(x[0].name)+'</span><span class="pon">'+x[1].length+' '+plf(x[1].length,["osoba","osoby","osób"])+'</span></button>').join(""):'');
 }
 function openWho(mode,wantId){
   if(!session)return;
   if(needProfile()){askNick();return}
   ws.mode=mode;ws.want=wantId||null;ws.q="";
-  ws.msg="";pf.who=null;   // 🔎 filtry od nowa przy każdym otwarciu
+  ws.msg="";pf.who=null;ws.plOpen=false;   // 🔎 filtry od nowa przy każdym otwarciu
   if(mode==="pl"){ws.vis="pick";ws.pick=new Set(plIds(wantId))}   // 📋 osoby na liście (KROK 68)
   else if(mode==="form"){ws.vis=wf.vis;ws.pick=new Set(wf.vis==="fav"?favIds():wf.pick);whoLocked().forEach(id=>ws.pick.add(id))}
   else if(mode==="evf"){ws.vis="pick";ws.pick=new Set(ef&&ef.inv||[]);ws.msg=ef&&ef.invMsg||""}
@@ -1283,7 +1286,7 @@ function renderWho(first){
      +(ws.mode==="form"?'<div class="seg" id="wsseg">'+[["all","🌍 Wszyscy"],["fav","⭐ Ulubieni"],["pick","👥 Wybieram"]].map(([k,t])=>'<button type="button" data-v="'+k+'">'+t+'</button>').join("")+'</div>'
        :(w?'<div class="note" style="margin-top:6px;text-align:center;font-size:14px">Zaproszenie: '+esc(wfLabel(new Date(w.starts_at)))+(w.user_id!==uid&&nicks[w.user_id]?' · od '+esc(nicks[w.user_id]):'')+'</div>':''))
      +'<div class="wsqrow" id="wsqrow"><input class="bsq srch" id="wsq" type="search" placeholder="Szukaj nicku…" autocomplete="off"><button type="button" class="lnk hide" data-k="clr" id="wsclr"></button></div>'
-     +'<div id="wspl"></div><div id="wspf"></div>'   // 📋 listy jednym kliknięciem + 🔎 filtry (KROK 68)
+     +'<div id="wspf"></div>'   // 🔎 filtry osób (KROK 68); 📋 listy — zwijana sekcja na górze listy osób
      +'<div class="bslist" id="wslist"></div><div id="wsplsave"></div>'
      +(whoEv()?'<textarea class="bsmsg" id="wsmsg" maxlength="120" rows="2" placeholder="Wiadomość (opcjonalnie), np. jedziemy razem 260?">'+esc(ws.msg||"")+'</textarea>':'')
      +'<div class="bshint" id="wshint"></div>'
@@ -1293,8 +1296,7 @@ function renderWho(first){
   $("wsqrow").classList.toggle("hide",ws.vis!=="pick");
   const nUn=[...ws.pick].filter(id=>!whoLocked().has(id)).length,cb=$("wsclr");
   cb.textContent="Wyczyść ("+nUn+")";cb.classList.toggle("hide",ws.vis!=="pick"||!nUn);
-  $("wslist").innerHTML=whoListHtml();
-  $("wspl").innerHTML=whoPlHtml();
+  $("wslist").innerHTML=whoPlHtml()+whoListHtml();
   $("wspf").innerHTML=ws.vis==="pick"&&whoPeople().length>8?pfChips("who"):"";
   const pm=ws.vis==="pick"&&ws.mode!=="pl"&&plOk&&ws.pick.size?plMatch([...ws.pick]):null;
   $("wsplsave").innerHTML=ws.vis==="pick"&&ws.mode!=="pl"&&plOk?(pm?'<div class="note wsplm">'+plDot(pm)+'To Twoja lista „'+esc(pm.name)+'”</div>'
@@ -1325,6 +1327,7 @@ $("whosheet").addEventListener("click",async e=>{
   }
   const k=e.target.closest("[data-k]");if(!k)return;
   if(k.dataset.k==="cancel"){closeWho();return}
+  if(k.dataset.k==="plt"){ws.plOpen=!ws.plOpen;renderWho();return}
   if(k.dataset.k==="plsave"){openPl("new",{ids:[...ws.pick].filter(id=>id!==uid)});return}
   if(ws.mode==="pl"){const l=plById(ws.want);if(!l){closeWho();return}
     const cur=new Set(plMem[l.id]||[]),add=[...ws.pick].filter(id=>!cur.has(id)),rm=plIds(l.id).filter(id=>!ws.pick.has(id));
@@ -1357,7 +1360,7 @@ $("whosheet").addEventListener("click",async e=>{
     say("Zaproszono: "+ids.map(id=>nicks[id]).join(", ")+" ✔ Dostaną powiadomienie.");
   }catch(err){k.disabled=false;say("Nie udało się zaprosić: "+(err&&err.message?err.message:"błąd"))}
 });
-$("whosheet").addEventListener("input",e=>{if(e.target.id==="wsmsg"){ws.msg=e.target.value;return}if(e.target.id==="wsq"){ws.q=e.target.value;$("wslist").innerHTML=whoListHtml()}});
+$("whosheet").addEventListener("input",e=>{if(e.target.id==="wsmsg"){ws.msg=e.target.value;return}if(e.target.id==="wsq"){ws.q=e.target.value;$("wslist").innerHTML=whoPlHtml()+whoListHtml()}});
 /* ---------- zakres godzin, „Pasuje mi o…”, „Ustal godzinę” (KROK 15) ---------- */
 let rangeOk=false,prefs={},decls={},autoAt=0;
 const isOpen=w=>rangeOk&&!!w&&!!w.range_to&&!w.settled_at;

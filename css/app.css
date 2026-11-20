@@ -946,7 +946,8 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 .pfrow{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin:8px 0 2px;-webkit-overflow-scrolling:touch}.pfrow::-webkit-scrollbar{display:none}
 .pfrow .fch{flex:none;white-space:nowrap;padding:7px 12px;font-size:14px;display:inline-flex;align-items:center;gap:5px}.pfrow .fch .ui-i{width:15px;height:15px}
 .pfrow .pfx{color:var(--bad)}.pflbl{flex:none;align-self:center;font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
-.pldot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:7px;vertical-align:1px;flex:none}.fch .pldot{margin-right:0}.fch.on .pldot{box-shadow:0 0 0 2px #fff}
+.plico{display:inline-flex;vertical-align:-3px;margin-right:6px;flex:none}.plico .ui-i{width:17px;height:17px}.sname .plico .ui-i{width:22px;height:22px}
+.wsplh{width:100%;border:0;background:none;font-family:inherit;cursor:pointer;text-align:left;padding:0}.wsplh>span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.wsplh .ui-i{width:14px;height:14px;vertical-align:-2px}.wsplsel{color:var(--acc);text-transform:none;letter-spacing:0}
 .wsplm{display:block;margin:8px 0 0;font-size:14px;font-weight:600;text-align:center}button.wsplm{width:100%;color:var(--acc)}
 .bsbox.bsauto{height:auto;max-height:min(86vh,760px)}.bsauto .bslist{max-height:52vh}
 .plform{margin-top:12px}.plform .bsq{margin:0}
