@@ -187,7 +187,7 @@ document.addEventListener("click",e=>{const r=e.target.closest(".hcal rect");if(
 /* ---------- 🚴 „Moje jazdy” + 🔒 Prywatność (KROK 62; SPEC_moje_jazdy.md, decyzje właściciela 2026-11-20 05:31–06:51) ----------
    dane: user_rides(u) — sumy zawsze; „Rekordy i seria” (priv_stats) i „Kalendarz i km” (priv_cal) u innych tylko,
    gdy osoba je włączyła; u siebie zawsze; sezon od 1 listopada; testowe jazdy liczą się (🧪 w podpisie) */
-let privOk=false,myPrivF={arch:false,stats:false,cal:false},urCalMode="done",privAdm=null;
+let privLoading=false,privOk=false,myPrivF={arch:false,stats:false,cal:false},urCalMode="done",privAdm=null;
 async function loadPrivFlags(){
   if(!session)return;
   const r=await sb.from("profiles").select("priv_arch,priv_stats,priv_cal").eq("user_id",uid).maybeSingle();
@@ -198,6 +198,8 @@ const PRIV=[["arch","#5856d6","archive","Moje wyniki w Archiwum","Każdy, kto wi
   ["cal","#34c759","cal","Kalendarz i km na mojej karcie","Inni widzą kalendarz jazd, imprezy i km w sezonie (planowane — tylko publiczne)","Tylko Ty"]];
 // grupa przełączników — w ⚙️ Ustawieniach i na dole „Moich jazd” (ten sam wygląd i działanie)
 function privGrpHtml(){
+  // start z pamięci telefonu nie wczytuje profilu od nowa — dociągnij przełączniki raz, przy pierwszym pokazaniu
+  if(session&&!privOk&&!privLoading){privLoading=true;loadPrivFlags().then(()=>{if(privOk&&gearOpen)renderGear()})}
   if(!session||!privOk)return "";
   const rows=PRIV.map(([k,col,ic,t,on,off])=>'<div class="ios-it"><span class="ios-ic" style="background:'+col+'">'+uiIcon(ic)+'</span><span class="ios-t">'+t+'<small>'+(myPrivF[k]?on:off)+'</small></span>'
     +'<button type="button" class="ios-sw'+(myPrivF[k]?' on':'')+'" role="switch" aria-checked="'+myPrivF[k]+'" aria-label="'+esc(t)+'" data-pvs="'+k+'" data-pvv="'+(myPrivF[k]?0:1)+'"></button></div>').join("");
