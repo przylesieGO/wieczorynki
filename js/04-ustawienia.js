@@ -174,11 +174,10 @@ function unickHtml(){
 let selGender="";
 function nickHtml(){
   const first=!me.nick,incomplete=needProfile(),short=nickShort();
+  if(!(first||incomplete||short))return nickEditHtml();   // ✏️ Edytuj profil — nowy układ w grupach
   const head=short?'<div class="sname">✏️ Wybierz nowy nick</div><div class="smail">Nick „'+esc(me.nick)+'” jest za krótki. Wybierz taki, który ma co najmniej 3 litery — żeby inni wiedzieli, kto jedzie.</div>'
      :first?'<div class="sname">👋 Wybierz swój nick</div><div class="smail">Witaj w PrzylesieGo! Nick widzą inni przy zapisach na wieczorynki i zgłoszeniach.</div>'
-     :incomplete?'<div class="sname">👋 Uzupełnij profil</div><div class="smail">Wybierz płeć — od niej zależy kolor Twojego nicku.</div>'
-     :'<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">'+(profExOk?'Edytuj profil':'✏️ Nick i płeć')+'</div>'+avEditHtml()
-       +'<div class="sleft">'+profHubHtml()+gGrp("Konto",[gRow("#636366","key","Zmień hasło",esc(session&&session.user.email||""),'','data-c="pwd"')])+'</div>';
+     :'<div class="sname">👋 Uzupełnij profil</div><div class="smail">Wybierz płeć — od niej zależy kolor Twojego nicku.</div>';
   const gsel=genderOk?'<label style="font-size:15px;margin-top:14px">Płeć (obowiązkowo)</label><div class="seg" id="gsex" style="margin-top:4px">'
      +[["K","👩 Kobieta"],["M","👨 Mężczyzna"]].map(([k,t])=>'<button type="button" data-g="'+k+'" class="'+(selGender===k?"on":"")+'">'+t+'</button>').join("")+'</div>':'';
   return head
@@ -187,7 +186,22 @@ function nickHtml(){
    +'<p class="note">Najlepiej <b>imię + litera nazwiska</b> albo ksywka, np. <i>Ania K</i>, <i>Marek z Bielan</i>. Co najmniej 3 litery (bez inicjałów typu „AK”), do 20 znaków: litery, cyfry, spacja, kropka, _ lub -. Nick musi być unikalny; widzą go inni zalogowani.</p>'
    +'<div class="nsug hide" id="gnicksug"></div>'
    +gsel
-   +(first||incomplete||short?'':profExHtml())
+   +'<div class="note" id="gnickinfo" style="color:var(--bad);margin-top:8px"></div>'
+   +'<button class="b sbtn" data-c="nicksave">Zapisz</button></div>';
+}
+// ✏️ Edytuj profil: zdjęcie → Nick i płeć → Profil (miejscowość, telefon, media, jazdy, ulubieni, prywatność) → Powiadomienia → Konto → Zapisz
+function nickEditHtml(){
+  const rowIn=(col,ico,inner)=>'<label class="ios-it pe-row"><span class="ios-ic" style="background:'+col+'">'+uiIcon(ico)+'</span>'+inner+'</label>';
+  const sex=genderOk?gGrp("Płeć",['<div class="ios-it pe-row"><span class="ios-ic" style="background:#ff2d55">'+uiIcon("users")+'</span><span class="ios-t">Płeć<small>Od niej zależy kolor nicku</small></span><span class="ios-seg" id="gsex">'
+     +[["K","Kobieta"],["M","Mężczyzna"]].map(([k,t])=>'<button type="button" data-g="'+k+'" class="'+(selGender===k?"on":"")+'">'+t+'</button>').join("")+'</span></div>']):'';
+  return '<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">'+(profExOk?'Edytuj profil':'Nick i płeć')+'</div>'+avEditHtml()
+   +'<div class="sleft">'
+   +gGrp("Nick",[rowIn("#0a84ff","user",'<input class="pe-in" id="gnick" maxlength="20" autocomplete="off" value="'+esc(me.nick||"")+'" placeholder="np. GAWRON" aria-label="Nick">')])
+   +'<p class="note pe-note">Najlepiej <b>imię + litera nazwiska</b> albo ksywka, np. <i>Ania K</i>, <i>Marek z Bielan</i>. Co najmniej 3 litery, do 20 znaków: litery, cyfry, spacja, kropka, _ lub -. Nick musi być unikalny; widzą go inni zalogowani.</p>'
+   +'<div class="nsug hide" id="gnicksug"></div>'
+   +sex
+   +profHubHtml()
+   +gGrp("Konto",[gRow("#636366","key","Zmień hasło",esc(session&&session.user.email||""),'','data-c="pwd"')])
    +'<div class="note" id="gnickinfo" style="color:var(--bad);margin-top:8px"></div>'
    +'<button class="b sbtn" data-c="nicksave">Zapisz</button></div>';
 }
@@ -366,19 +380,23 @@ function avFromFile(f){return new Promise((res,rej)=>{
       if(d.length>58000)return rej(new Error("Zdjęcie jest za duże."));res(d)}catch(e){rej(e)}};
   img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error("Nie udało się wczytać zdjęcia."))};img.src=url})}
 function peStart(){pe={av:avData[uid]?avData[uid].d:null,avCh:false,media:Object.assign({},medias[uid]||{}),phone:myPriv&&myPriv.phone||"",pvis:myPriv&&myPriv.phone_vis||"off",cvis:!!(myPriv&&myPriv.city_vis)}}
-function profExHtml(){
-  if(!profExOk||!pe)return "";
+let mediaOpen=false;   // „Moje media” w Edytuj profil: domyślnie zwinięte
+// wiersze do grupy „Profil” w Edytuj profil: miejscowość (+ pokazuj innym), telefon (+ pokazuj innym), Moje media (rozwijane)
+function profExRows(){
+  if(!profExOk||!pe)return [];
   const h=homeGet(),tg=(k,on)=>'<button type="button" class="tgl'+(on?' on':'')+'" data-pet="'+k+'" role="switch" aria-checked="'+on+'"><span></span></button>';
-  return gGrp("Miejscowość",[gRow("#ff9f0a","pin",h?esc(h.name):"Ustaw miejscowość","Do „najbliżej” w trasach i „W okolicy”",'','data-home="1"'),
-      '<div class="ios-it pe-row"><span class="ios-t">Pokazuj innym<small>Domyślnie ukryta</small></span>'+tg("cvis",pe.cvis)+'</div>'])
-   +'<div class="ios"><div class="ios-gh">Moje media <span class="pe-opt">(opcjonalnie)</span></div><div class="ios-grp">'
-   +MEDIA.map(([k,ic,t,col,ph])=>'<label class="ios-it pe-row"><span class="ios-ic" style="background:'+col+'">'+uiIcon(ic)+'</span><input class="pe-in" data-pe="'+k+'" value="'+esc(pe.media[k]?mediaShow(pe.media[k]):"")+'" placeholder="'+esc(t+" — "+ph)+'" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="url" maxlength="200"></label>').join("")+'</div></div>'
-   +'<div class="ios"><div class="ios-gh">Telefon</div><div class="ios-grp">'
-   +'<label class="ios-it pe-row"><span class="ios-ic" style="background:#30d158">'+uiIcon("phone")+'</span><input class="pe-in" data-pe="phone" value="'+esc(pe.phone)+'" placeholder="np. +48 600 123 456" inputmode="tel" autocomplete="tel" maxlength="20"></label>'
-   +'<div class="ios-it pe-row"><span class="ios-t">Pokazuj innym<small>Przycisk „Zadzwoń / SMS” na Twojej karcie</small></span>'+tg("pvis",pe.pvis!=="off")+'</div>'
-   +(pe.pvis!=="off"?'<div class="pe-seg"><div class="seg">'+[["fav",uiIcon("star")+" Tylko ulubieni"],["all","Wszyscy zalogowani"]].map(([k,t])=>'<button type="button" data-pev="'+k+'" class="'+(pe.pvis===k?"on":"")+'">'+t+'</button>').join("")+'</div></div>':'')
-   +'</div>'+(pe.pvis==="fav"?'<p class="note pe-note">„Ulubieni” = osoby, które <b>Ty</b> masz w ⭐ ulubionych.</p>':'')+'</div>'
-   +'<p class="note pe-note">'+uiIcon("lock")+' Zdjęcie i media widzą zalogowani. Miejscowość i telefon — tylko gdy włączysz. Goście nie widzą nic.</p>';
+  const filled=MEDIA.filter(m=>pe.media[m[0]]).length;
+  const rows=[
+    gRow("#ff9f0a","pin","Miejscowość","Do „najbliżej” w trasach i „W okolicy”",'<span class="ios-v">'+(h?esc(h.name):'Ustaw')+'</span>','data-home="1"'),
+    '<div class="ios-it pe-row"><span class="ios-t">Pokazuj innym<small>Miejscowość — domyślnie ukryta</small></span>'+tg("cvis",pe.cvis)+'</div>',
+    '<label class="ios-it pe-row"><span class="ios-ic" style="background:#30d158">'+uiIcon("phone")+'</span><input class="pe-in" data-pe="phone" value="'+esc(pe.phone)+'" placeholder="Telefon, np. +48 600 123 456" aria-label="Telefon" inputmode="tel" autocomplete="tel" maxlength="20"></label>',
+    '<div class="ios-it pe-row"><span class="ios-t">Pokazuj innym<small>Telefon — przycisk „Zadzwoń / SMS” na Twojej karcie</small></span>'+tg("pvis",pe.pvis!=="off")+'</div>'];
+  if(pe.pvis!=="off")rows.push('<div class="pe-seg"><div class="seg">'+[["fav",uiIcon("star")+" Tylko ulubieni"],["all","Wszyscy zalogowani"]].map(([k,t])=>'<button type="button" data-pev="'+k+'" class="'+(pe.pvis===k?"on":"")+'">'+t+'</button>').join("")+'</div>'
+    +(pe.pvis==="fav"?'<p class="note pe-note" style="margin:6px 0 0">„Ulubieni” = osoby, które <b>Ty</b> masz w ⭐ ulubionych.</p>':'')+'</div>');
+  rows.push('<button type="button" class="ios-it ios-row" data-pet="mopen" aria-expanded="'+mediaOpen+'"><span class="ios-ic" style="background:#bf5af2">'+uiIcon("link")+'</span><span class="ios-t">Moje media<small>Strava, Instagram, YouTube… (opcjonalnie)</small></span>'
+    +(filled?'<span class="ios-v">'+filled+'</span>':'')+'<span class="ios-chev" aria-hidden="true"'+(mediaOpen?' style="transform:rotate(90deg)"':'')+'>›</span></button>');
+  if(mediaOpen)MEDIA.forEach(([k,ic,t,col,ph])=>rows.push('<label class="ios-it pe-row"><span class="ios-ic" style="background:'+col+'">'+uiIcon(ic)+'</span><input class="pe-in" data-pe="'+k+'" value="'+esc(pe.media[k]?mediaShow(pe.media[k]):"")+'" placeholder="'+esc(t+" — "+ph)+'" aria-label="'+esc(t)+'" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="url" maxlength="200"></label>'));
+  return rows;
 }
 function avEditHtml(){
   if(!profExOk||!pe)return "";
@@ -387,10 +405,11 @@ function avEditHtml(){
    +'<div class="pe-avl"><button type="button" class="lnk" data-c="pephoto">'+(pe.av?'Zmień zdjęcie':'Dodaj zdjęcie')+'</button>'+(pe.av?'<button type="button" class="lnk pe-rm" data-c="pephotodel">Usuń</button>':'')+'</div>'
    +'<input type="file" id="pefile" accept="image/*" class="hide"></div>';
 }
-document.addEventListener("input",e=>{const t=e.target;if(!pe||!t.matches||!t.matches(".pe-in"))return;const k=t.dataset.pe;if(k==="phone")pe.phone=t.value;else pe.media[k]=t.value});
+document.addEventListener("input",e=>{const t=e.target;if(!pe||!t.matches||!t.matches(".pe-in"))return;const k=t.dataset.pe;if(!k)return;if(k==="phone")pe.phone=t.value;else pe.media[k]=t.value});
 document.addEventListener("click",e=>{
   const t=e.target.closest("[data-pet],[data-pev]");if(!t||!pe||!t.closest(".sheetbox"))return;
-  if(t.dataset.pet==="cvis"){if(!homeGet()&&!pe.cvis){say("Najpierw ustaw miejscowość.");return}pe.cvis=!pe.cvis}
+  if(t.dataset.pet==="mopen")mediaOpen=!mediaOpen;
+  else if(t.dataset.pet==="cvis"){if(!homeGet()&&!pe.cvis){say("Najpierw ustaw miejscowość.");return}pe.cvis=!pe.cvis}
   else if(t.dataset.pet==="pvis")pe.pvis=pe.pvis==="off"?"fav":"off";
   else if(t.dataset.pev)pe.pvis=t.dataset.pev;
   const sb2=t.closest(".sheetbox"),y=sb2?sb2.scrollTop:0;renderGear();const s3=document.querySelector("#gearsheet .sheetbox,.sheetbox");if(s3)s3.scrollTop=y;

@@ -221,8 +221,9 @@ function maybeFb(){
 }
 // 👤 ⚙️ → Edytuj profil: grupy „Profil” (Moje jazdy, Ulubieni, Moja miejscowość, Prywatność) i „Powiadomienia” (Telegram, kanał) — przeniesione z głównego ekranu
 function profHubHtml(){
-  return gGrp("Profil",[reportOk?gRow("#34c759","bike","Moje jazdy","Kalendarz, rekordy, km w sezonie",userRides[uid]&&userRides[uid].n?'<span class="ios-v">'+userRides[uid].n+'</span>':'','data-c="myrides"'):"",favOk?gRow("#ffcc00","starf","Ulubieni","Zawsze na górze list",favs.size?'<span class="ios-v">'+favs.size+'</span>':'','data-c="favs"'):"",
-  (evGeoOk&&tabOk(3))||rbOk?gRow("#ff9f0a","pin","Moja miejscowość",rbOk&&!(evGeoOk&&tabOk(3))?"Odległość do tras":"Odległość do imprez i tras",'<span class="ios-v">'+(homeGet()?esc(homeGet().name):'Ustaw')+'</span>','data-home="1"'):"",reportOk?gRow("#5856d6","lock","Prywatność","Kto widzi Twoje jazdy i rekordy","",'data-c="priv"'):""])
+  return gGrp("Profil",profExRows().concat([reportOk?gRow("#34c759","bike","Moje jazdy","Kalendarz, rekordy, km w sezonie",userRides[uid]&&userRides[uid].n?'<span class="ios-v">'+userRides[uid].n+'</span>':'','data-c="myrides"'):"",favOk?gRow("#ffcc00","starf","Ulubieni","Zawsze na górze list",favs.size?'<span class="ios-v">'+favs.size+'</span>':'','data-c="favs"'):"",
+  (profExOk&&pe?"":((evGeoOk&&tabOk(3))||rbOk?gRow("#ff9f0a","pin","Moja miejscowość",rbOk&&!(evGeoOk&&tabOk(3))?"Odległość do tras":"Odległość do imprez i tras",'<span class="ios-v">'+(homeGet()?esc(homeGet().name):'Ustaw')+'</span>','data-home="1"'):"")),reportOk?gRow("#5856d6","lock","Prywatność","Kto widzi Twoje jazdy i rekordy","",'data-c="priv"'):""]))
+   +(profExOk&&pe?'<p class="note pe-note">'+uiIcon("lock")+' Zdjęcie i media widzą zalogowani. Miejscowość i telefon — tylko gdy włączysz. Goście nie widzą nic.</p>':'')
    +gGrp("Powiadomienia",[tgOn()?gRow("#0a84ff","send","Telegram"+betaTag("telegram_dm"),"Powiadomienia prosto na telefon",tgLink?'<span class="ios-v ok">'+uiIcon("check")+'Połączony</span>':'<span class="ios-v">Połącz</span>','data-c="tg"'):"",
   gRow("#0a84ff","mega","Kanał @PrzylesieGo","Nowe jazdy dla wszystkich","",'href="https://t.me/PrzylesieGo" target="_blank" rel="noopener"',"a")]);
 }
