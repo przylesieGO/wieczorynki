@@ -27,7 +27,7 @@
 <meta property="og:image:height" content="512">
 <meta property="og:image:alt" content="Logo PrzylesieGo! — dwa koła">
 <meta name="twitter:card" content="summary">
-<link rel="stylesheet" href="css/app.css?v=23">
+<link rel="stylesheet" href="css/app.css?v=24">
 </head>
 <body>
 <!-- ===== EKRAN ŁADOWANIA (wariant A2 — kręcące się koła logo; znika po wczytaniu danych) ===== -->
@@ -71,7 +71,6 @@
  <div class="center" style="margin-top:18px"><button type="button" class="b wdemo" data-demo="1">👀 Zobacz przykład</button></div>
  <div class="center" style="margin-top:12px"><button type="button" class="lnk wguest" id="guestbtn">Rozejrzyj się bez logowania ›</button>
   <p class="note wnote" style="margin-top:2px">Zobaczysz najbliższą wieczorynkę i trasę. Zaproszenia i zapisy wymagają konta.</p>
-  <p class="wtg">📣 Bądź na bieżąco: <a href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">kanał PrzylesieGo na Telegramie</a></p>
  </div>
 </div>
 
@@ -99,6 +98,7 @@
     <div class="qchips" id="wquick"><button type="button" data-q="30">Za 30 min</button><button type="button" data-q="17:30">17:30</button><button type="button" data-q="18:00">18:00</button><button type="button" data-q="19:00">19:00</button></div>
     <div class="wdurinfo hide" id="wdurinfo"></div>
     <div class="wx hide" id="wwx"></div>
+    <div id="wwhowrap" class="hide"><div class="wlbl">Kto zobaczy zaproszenie?</div><button type="button" class="who" id="wwho"></button></div>
     <div id="wroutewrap" class="hide"><div class="wlbl">Proponowana trasa (opcjonalnie)</div>
      <div class="wrrow"><label class="wrfile"><input type="file" id="wrfile" accept=".gpx,application/gpx+xml,text/xml"><span id="wrlbl">🗺️ Dodaj plik GPX</span></label><button type="button" class="ib del hide" id="wrdel" aria-label="Usuń trasę" title="Usuń trasę"></button></div>
      <div class="row" id="wrinfo" style="margin-top:6px;gap:10px"></div>
@@ -113,7 +113,6 @@
         <label class="wpladd"><span>Dodaj do listy miejsc — zobaczą ją inni</span><button type="button" class="ios-sw" id="wpladd" role="switch" aria-checked="false"></button></label></div>
       <div class="wplinfo hide" id="wplinfo"></div></div>
     <div id="wtestwrap" class="hide"><div class="wlbl">Rodzaj zaproszenia</div><div class="seg" id="wtest"><button type="button" data-test="1" class="on">🧪 Testowe</button><button type="button" data-test="0">🚴 Prawdziwe</button></div><div class="note" id="wtestnote" style="margin-top:6px"></div></div>
-    <div id="wwhowrap" class="hide"><div class="wlbl">Kto zobaczy zaproszenie?</div><button type="button" class="who" id="wwho"></button></div>
     <div class="wlbl">Notatka</div>
     <select id="wnotesel"><option value="">— bez notatki —</option><option>W słusznej sprawie</option><option>Kebab RIDE</option><option>Na lody i pizza</option><option>SPEEDAY</option><option value="Coffee Ride ☕">Coffee Ride</option><option>Na godzinkę +/- :)</option><option>Trochę po mieście</option><option>Może do lasu</option><option>Nad rzekę</option><option>Nocna Wataha</option><option value="*">Własna… (wpisz)</option></select>
     <input id="wnote" class="hide" maxlength="200" placeholder="Napisz własną notatkę">
@@ -289,21 +288,21 @@
 <div class="toast hide" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
-<script src="js/01-podstawy.js?v=23"></script>
-<script src="js/02-ikony.js?v=23"></script>
-<script src="js/03-stan.js?v=23"></script>
-<script src="js/04-ustawienia.js?v=23"></script>
-<script src="js/05-zgloszenia.js?v=23"></script>
-<script src="js/06-pomoc-powitanie.js?v=23"></script>
-<script src="js/07-pogoda-zaproszen.js?v=23"></script>
-<script src="js/08-imprezy.js?v=23"></script>
-<script src="js/09-trasy.js?v=23"></script>
-<script src="js/10-zaproszenia.js?v=23"></script>
-<script src="js/11-dzwonek.js?v=23"></script>
-<script src="js/12-wieczorynki.js?v=23"></script>
-<script src="js/13-online-statystyki.js?v=23"></script>
-<script src="js/14-synchronizacja.js?v=23"></script>
-<script src="js/15-wieczorynki-formularz.js?v=23"></script>
-<script src="js/16-start.js?v=23"></script>
+<script src="js/01-podstawy.js?v=24"></script>
+<script src="js/02-ikony.js?v=24"></script>
+<script src="js/03-stan.js?v=24"></script>
+<script src="js/04-ustawienia.js?v=24"></script>
+<script src="js/05-zgloszenia.js?v=24"></script>
+<script src="js/06-pomoc-powitanie.js?v=24"></script>
+<script src="js/07-pogoda-zaproszen.js?v=24"></script>
+<script src="js/08-imprezy.js?v=24"></script>
+<script src="js/09-trasy.js?v=24"></script>
+<script src="js/10-zaproszenia.js?v=24"></script>
+<script src="js/11-dzwonek.js?v=24"></script>
+<script src="js/12-wieczorynki.js?v=24"></script>
+<script src="js/13-online-statystyki.js?v=24"></script>
+<script src="js/14-synchronizacja.js?v=24"></script>
+<script src="js/15-wieczorynki-formularz.js?v=24"></script>
+<script src="js/16-start.js?v=24"></script>
 </body>
 </html>

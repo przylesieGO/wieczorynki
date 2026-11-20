@@ -2,6 +2,10 @@
 const ME_KINDS=["invite","time","set","info"],OWN_KINDS=["join","pref","leave","decline","rejoin"];   // rejoin — KROK 46
 const N_ICON={invite:"📩",time:"🕖",set:"✅",info:"✏️",join:"🙋",pref:"🕖",leave:"👋",decline:"🙅",rejoin:"🔁"};
 const nWant=n=>wants.find(w=>w.id===n.want_id);
+// 🔔 „przeczytane” pojedynczych pozycji bez własnego stanu w bazie (logowania, nowi, usunięte, imprezy, chęci) — pamięć tego urządzenia
+const bsDone=()=>{try{return new Set(JSON.parse(localStorage.getItem("bellDone")||"[]"))}catch(e){return new Set()}};
+const bsDoneAdd=ks=>{const s=bsDone();ks.forEach(k=>s.add(k));try{localStorage.setItem("bellDone",JSON.stringify([...s].slice(-400)))}catch(e){}};
+const bsMk=k=>'<button type="button" class="nmk" data-mk="'+esc(k)+'" aria-label="Oznacz jako przeczytane" title="Oznacz jako przeczytane">'+uiIcon("check")+'</button>';
 // czy zaproszenie czeka na Twoją odpowiedź (skierowane do Ciebie, a Ty jeszcze nie odpowiedziałeś)
 function wNeedsAct(w){
   if(!w||w.user_id===uid||new Date(w.starts_at).getTime()<Date.now()-15*60000)return false;
@@ -44,16 +48,16 @@ function bellRowHtml(w){
       :'<button type="button" class="b" data-na="join" data-wid="'+esc(w.id)+'">Jadę! · '+esc(hhmm(new Date(w.starts_at)))+'</button>')
     +'<button type="button" class="b w" data-na="no" data-wid="'+esc(w.id)+'">Nie dam rady</button></div>':'';
   return '<div class="nit'+(mine?' mine':'')+(un.length?' new':'')+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'"><div class="ic">'+(mine?'🙋':isPriv(w)?'📩':'🌍')+'</div>'
-   +'<div class="tx">'+testTag(w)+title+'<div class="w">'+sub+'</div>'+news+btns+'</div>'+(un.length?'<span class="dot"></span>':'')+'</div>';
+   +'<div class="tx">'+testTag(w)+title+'<div class="w">'+sub+'</div>'+news+btns+'</div>'+(un.length?(act?'<span class="dot"></span>':bsMk("w:"+w.id)):'')+'</div>';
 }
 // 🆕 nowi użytkownicy (tylko admini): konta z nickiem z ostatnich 14 dni; „przeczytane” zapamiętane w tym urządzeniu
 const nuList=()=>{if(!isAdmin)return [];const lim=Date.now()-14*864e5;
   return Object.keys(nicks).filter(id=>id!==uid&&joinedAt[id]&&new Date(joinedAt[id]).getTime()>lim).sort((a,b)=>new Date(joinedAt[b])-new Date(joinedAt[a]))};
 const nuSeen=()=>{try{const v=localStorage.getItem("nuSeen");return v?+v:Date.now()-3*864e5}catch(e){return 0}};
-const nuUnread=()=>{const s=nuSeen();return nuList().filter(id=>new Date(joinedAt[id]).getTime()>s)};
+const nuUnread=()=>{const s=nuSeen(),D=bsDone();return nuList().filter(id=>new Date(joinedAt[id]).getTime()>s&&!D.has("nu:"+id))};
 const nuMarkSeen=()=>{try{localStorage.setItem("nuSeen",String(Date.now()))}catch(e){}};
 function nuRow(id,un){const d=new Date(joinedAt[id]);
-  return '<div class="nit'+(un?' new':'')+'" data-nu="'+esc(id)+'"><div class="ic">🆕</div><div class="tx">'+nk(id)+'<div class="w">'+(genders[id]==="K"?'dołączyła':'dołączył')+' '+esc(relDayPast(d).toLowerCase())+', '+esc(hhmm(d))+(tgLinks&&tgLinks.has(id)?' · ✈️ Telegram':'')+'</div></div>'+(un?'<span class="dot"></span>':'')+'</div>'}
+  return '<div class="nit'+(un?' new':'')+'" data-nu="'+esc(id)+'"><div class="ic">🆕</div><div class="tx">'+nk(id)+'<div class="w">'+(genders[id]==="K"?'dołączyła':'dołączył')+' '+esc(relDayPast(d).toLowerCase())+', '+esc(hhmm(d))+(tgLinks&&tgLinks.has(id)?' · ✈️ Telegram':'')+'</div></div>'+(un?bsMk("nu:"+id):'')+'</div>'}
 // 🔑 ostatnie logowania i 🟢 ostatnio w aplikacji (tylko admini, KROK 49) — ładowane przy otwarciu 🔔
 let lgOk=null,lgList=[],lsList=[],lgAt=0,lgBusy=false,dlList=[];
 async function lgLoad(force){
@@ -70,21 +74,22 @@ async function lgLoad(force){
 }
 const lgSeen=()=>{try{const v=localStorage.getItem("lgSeen");return v?+v:Date.now()-864e5}catch(e){return 0}};
 const lgRows=()=>lgOk?lgList.filter(x=>x.user_id!==uid&&nicks[x.user_id]):[];
-const lgUnread=()=>{const s=lgSeen();return lgRows().filter(x=>!x.backfill&&new Date(x.at).getTime()>s)};
+const lgKey=x=>"lg:"+x.user_id+"|"+x.at;
+const lgUnread=()=>{const s=lgSeen(),D=bsDone();return lgRows().filter(x=>!x.backfill&&new Date(x.at).getTime()>s&&!D.has(lgKey(x)))};
 const lgWhen=d=>relDayPast(d).toLowerCase()+', '+hhmm(d);
 // 🗑 usunięte zaproszenia (KROK 58; zgłoszenie właściciela 2026-11-17 11:01) — tylko admini, bez własnych usunięć
 const dlSeen=()=>{try{const v=localStorage.getItem("dlSeen");return v?+v:Date.now()-864e5}catch(e){return 0}};
 const dlRows=()=>lgOk?dlList.filter(x=>x.user_id!==uid):[];
-const dlUnread=()=>{const s=dlSeen();return dlRows().filter(x=>new Date(x.created_at).getTime()>s)};
+const dlUnread=()=>{const s=dlSeen(),D=bsDone();return dlRows().filter(x=>new Date(x.created_at).getTime()>s&&!D.has("dl:"+x.id))};
 function dlRow(x,un){const m=x.meta||{},d=new Date(x.created_at),k=genders[x.user_id]==="K",au=m.author;
   const who=nicks[x.user_id]?nk(x.user_id):'<b>ktoś</b>';
   const what=m.by_admin?' (admin) '+(k?'usunęła':'usunął')+' zaproszenie od '+(au&&nicks[au]?esc(nicks[au]):'ktoś'):' '+(k?'usunęła':'usunął')+' swoje zaproszenie';
   const st=m.starts_at?new Date(m.starts_at):null;
   const det=[st?'jazda: '+(st<new Date()?relDayPast(st):relDay(st)).toLowerCase()+' '+hhmm(st):'',m.joined?'zapisani: '+m.joined:'nikt nie był zapisany',m.private?'🔒 prywatne':'',m.test?'testowe':''].filter(Boolean).join(' · ');
-  return '<div class="nit'+(un?' new':'')+'" data-nu="'+esc(x.user_id)+'"><div class="ic">🗑️</div><div class="tx">'+who+esc(what)+'<div class="w">'+esc(lgWhen(d))+' · '+esc(det)+'</div></div>'+(un?'<span class="dot"></span>':'')+'</div>'}
+  return '<div class="nit'+(un?' new':'')+'" data-nu="'+esc(x.user_id)+'"><div class="ic">🗑️</div><div class="tx">'+who+esc(what)+'<div class="w">'+esc(lgWhen(d))+' · '+esc(det)+'</div></div>'+(un?bsMk("dl:"+x.id):'')+'</div>'}
 function lgRow(x,un){const d=new Date(x.at),k=genders[x.user_id]==="K";
   return '<div class="nit'+(un?' new':'')+'" data-nu="'+esc(x.user_id)+'"><div class="ic">🔑</div><div class="tx">'+nk(x.user_id)+'<div class="w">'+(k?'zalogowała się':'zalogował się')+' '+esc(lgWhen(d))
-   +(x.backfill?'':x.prev_at?' · poprzednio: '+esc(agoTxt(x.prev_at)):' · ✨ pierwsze logowanie')+'</div></div>'+(un?'<span class="dot"></span>':'')+'</div>'}
+   +(x.backfill?'':x.prev_at?' · poprzednio: '+esc(agoTxt(x.prev_at)):' · ✨ pierwsze logowanie')+'</div></div>'+(un?bsMk(lgKey(x)):'')+'</div>'}
 function lsRows(){if(!lgOk)return [];
   const on=onlineIds.filter(id=>id!==uid&&nicks[id]).map(id=>({user_id:id,now:true}));
   return on.concat(lsList.filter(x=>x.user_id!==uid&&nicks[x.user_id]&&!onlineIds.includes(x.user_id)))}
@@ -104,47 +109,55 @@ function renderBell(){
 // 🔔 sekcje zwijane: wybór zapamiętany w urządzeniu; bez wyboru — rozwinięta, gdy jest coś nowego
 // na zwiniętej: czerwone kółko z liczbą nieprzeczytanych (albo szare z liczbą pozycji, gdy nic nowego)
 const bsColGet=()=>{try{return JSON.parse(localStorage.getItem("bellCol")||"{}")}catch(e){return {}}};
+const BS_MK={nu:1,lg:1,dl:1,ev:1,sig:1,forme:1,mine:1};   // sekcje z przyciskiem „Oznacz sekcję jako przeczytane”
 function bsSec(k,title,un,total,body){
   const st=bsColGet(),col=k in st?!!st[k]:!un;
-  return '<button type="button" class="bsec bsect'+(col?' col':'')+'" data-bsec="'+k+'" aria-expanded="'+(!col)+'"><span class="bst">'+title+'</span>'
+  return '<button type="button" class="bsec bsect'+(col?' col':'')+(un?' unr':'')+'" data-bsec="'+k+'" aria-expanded="'+(!col)+'"><span class="bst">'+title+'</span>'
    +(un?'<span class="cnt">'+un+'</span>':col&&total?'<span class="cnt0">'+total+'</span>':'')
    +'<svg class="bschev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>'
-   +'<div class="bsecb'+(col?' hide':'')+'">'+body+'</div>';
+   +'<div class="bsecb'+(col?' hide':'')+'">'+(un&&BS_MK[k]?'<div class="bsmka"><button type="button" class="lnk" data-mks="'+k+'">'+uiIcon("check")+' Oznacz sekcję jako przeczytane</button></div>':'')+body+'</div>';
+}
+// zaproszenia widoczne w 🔔: „Do Ciebie” i „Twoje” — nieprzeczytane i czekające na odpowiedź na górze
+function bsWants(){
+  const act=w=>new Date(w.starts_at).getTime()>=Date.now()-3*36e5;
+  const ord=(a,b)=>((wUnread(b).length?1:0)-(wUnread(a).length?1:0))||((wNeedsAct(b)?1:0)-(wNeedsAct(a)?1:0))||(new Date(a.starts_at)-new Date(b.starts_at));
+  return {forme:wants.filter(w=>w.user_id!==uid&&act(w)&&(w.visibility!=="private"||invIds(w).includes(uid)||(joins[w.id]||[]).includes(uid))).sort(ord),
+    mine:wants.filter(w=>w.user_id===uid&&act(w)).sort(ord)};
 }
 function renderBellSheet(){
-  const p=$("bellsheet"),act=w=>new Date(w.starts_at).getTime()>=Date.now()-3*36e5;
-  const ord=(a,b)=>((wUnread(b).length?1:0)-(wUnread(a).length?1:0))||((wNeedsAct(b)?1:0)-(wNeedsAct(a)?1:0))||(new Date(a.starts_at)-new Date(b.starts_at));
-  const forMe=wants.filter(w=>w.user_id!==uid&&act(w)&&(w.visibility!=="private"||invIds(w).includes(uid)||(joins[w.id]||[]).includes(uid))).sort(ord);
-  const mine=wants.filter(w=>w.user_id===uid&&act(w)).sort(ord);
-  const keep=p.querySelector(".bslist"),st=keep?keep.scrollTop:0,nu=bellUnread().length+nuUnread().length+lgUnread().length+dlUnread().length+evBellUn().length+sigUnread().length,EVB=evBellItems(),EVBs=evBellSeen(),LG=lgRows(),LGu=new Set(lgUnread()),DL=dlRows(),DLu=new Set(dlUnread()),LS=lsRows(),NU=nuList(),NUu=new Set(nuUnread()),SA=stepsAvail()?stepsList():[],SL=SA.filter(x=>!x.ok);
+  const p=$("bellsheet"),{forme:forMe,mine}=bsWants();
+  const keep=p.querySelector(".bslist"),st=keep?keep.scrollTop:0,nu=bellUnread().length+nuUnread().length+lgUnread().length+dlUnread().length+evBellUn().length+sigUnread().length,EVB=evBellItems(),EVu=new Set(evBellUn().map(evKey)),LG=lgRows(),LGu=new Set(lgUnread()),DL=dlRows(),DLu=new Set(dlUnread()),LS=lsRows(),NU=nuList(),NUu=new Set(nuUnread()),SA=stepsAvail()?stepsList():[],SL=SA.filter(x=>!x.ok),uf=(L,U,g)=>L.slice().sort((a,b)=>(U.has(g(b))?1:0)-(U.has(g(a))?1:0)),sid=x=>x;
+  const SEC=[
+   (SL.length?bsSec("start",'✨ Dokończ start · '+(SA.length-SL.length)+' z '+SA.length,lsGet("stepsHide")==="1"?0:SL.length,SL.length,
+      SL.map(x=>'<div class="nit stn"><div class="ic">'+({inst:"📲",ride:"🚴",tg:"🔔",fav:"⭐"}[x.k]||"✨")+'</div><div class="tx"><b>'+x.t.replace(" ⭐","")+'</b></div>'+(x.go?'<button type="button" class="lnk stgo" data-sb="'+x.k+'">'+x.go+' ›</button>':'')+'</div>').join("")
+      +(lsGet("stepsHide")==="1"?'<div class="bsempty"><button type="button" class="lnk" data-sb="show">Pokaż z powrotem w Zaproszeniach ›</button></div>':'')):''),
+   repBellHtml(),
+   sigBellHtml(),
+   (fbMineUnread().length?bsSec("msg",'💬 Wiadomości',fbMineUnread().length,fbMineUnread().length,fbMineUnread().map(f=>fbRow(f,false)).join("")):''),
+   (fbAdmUnread().length?bsSec("adm",'🛡️ Zgłoszenia',fbAdmUnread().length,fbAdmUnread().length,fbAdmUnread().slice(0,5).map(f=>fbRow(f,true)).join("")):''),
+   (NU.length?bsSec("nu",'🆕 Nowi użytkownicy',NUu.size,NU.length,uf(NU,NUu,sid).slice(0,6).map(id=>nuRow(id,NUu.has(id))).join("")
+      +(NU.length>6?'<div class="bsempty">i jeszcze '+(NU.length-6)+' z ostatnich 14 dni — pełna lista: ⚙️ → 🛡️ Administracja</div>':'')):''),
+   (LG.length?bsSec("lg",'🔑 Ostatnie logowania',LGu.size,LG.length,uf(LG,LGu,sid).slice(0,6).map(x=>lgRow(x,LGu.has(x))).join("")
+      +(LG.length>6?'<div class="bsempty">i jeszcze '+(LG.length-6)+' z ostatnich 14 dni</div>':'')
+      +'<div class="bsempty">Liczy się wpisanie e-maila i hasła — z zainstalowanej aplikacji ludzie zwykle logują się raz.</div>'):''),
+   (DL.length?bsSec("dl",'🗑️ Usunięte zaproszenia',DLu.size,DL.length,uf(DL,DLu,sid).slice(0,6).map(x=>dlRow(x,DLu.has(x))).join("")
+      +(DL.length>6?'<div class="bsempty">i jeszcze '+(DL.length-6)+' z ostatnich 14 dni</div>':'')):''),
+   (LS.length?bsSec("ls",'🟢 Ostatnio w aplikacji',0,LS.length,LS.slice(0,8).map(lsRow).join("")
+      +(LS.length>8?'<div class="bsempty">i jeszcze '+(LS.length-8)+' z ostatnich 14 dni</div>':'')
+      +'<div class="bsempty">Czas odświeża się co ok. 15 min, gdy ktoś ma otwartą aplikację.</div>'):''),
+   (EVB.length?bsSec("ev",'🏁 Imprezy',EVu.size,EVB.length,uf(EVB,EVu,evKey).slice(0,8).map(x=>evBellRow(x,EVu.has(evKey(x)))).join("")
+      +(EVB.length>8?'<div class="bsempty">i jeszcze '+(EVB.length-8)+' — zobacz w zakładce Imprezy</div>':'')):''),
+   bsSec("forme",'📩 Do Ciebie',forMe.filter(w=>wUnread(w).length).length,forMe.length,
+      forMe.length?forMe.map(bellRowHtml).join(""):'<div class="bsempty">Na razie nikt nie zaprasza.</div>'),
+   bsSec("mine",'🙋 Twoje zaproszenia',mine.filter(w=>wUnread(w).length).length,mine.length,
+      mine.length?mine.map(bellRowHtml).join(""):'<div class="bsempty">Nie masz aktywnych zaproszeń. <button type="button" class="lnk" data-bk="new">Idziemy na rower? ›</button></div>')
+   
+  ].filter(Boolean),bsUn=h=>/class="bsec bsect[^"]*\bunr\b/.test(h);
+  SEC.sort((a,b)=>bsUn(b)-bsUn(a));   // sekcje z nowościami na górze
   p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Powiadomienia"><div class="bsgrab"></div>'
    +'<div class="bshead"><button type="button" class="lnk" data-bk="close">Zamknij</button><b>🔔 Powiadomienia</b>'
    +(nu?'<button type="button" class="lnk" data-bk="all" style="text-align:right">✓ Przeczytane</button>':'<span style="min-width:64px"></span>')+'</div>'
-   +'<div class="bslist">'
-   +(SL.length?bsSec("start",'✨ Dokończ start · '+(SA.length-SL.length)+' z '+SA.length,lsGet("stepsHide")==="1"?0:SL.length,SL.length,
-      SL.map(x=>'<div class="nit stn"><div class="ic">'+({inst:"📲",ride:"🚴",tg:"🔔",fav:"⭐"}[x.k]||"✨")+'</div><div class="tx"><b>'+x.t.replace(" ⭐","")+'</b></div>'+(x.go?'<button type="button" class="lnk stgo" data-sb="'+x.k+'">'+x.go+' ›</button>':'')+'</div>').join("")
-      +(lsGet("stepsHide")==="1"?'<div class="bsempty"><button type="button" class="lnk" data-sb="show">Pokaż z powrotem w Zaproszeniach ›</button></div>':'')):'')
-   +repBellHtml()
-   +sigBellHtml()
-   +(fbMineUnread().length?bsSec("msg",'💬 Wiadomości',fbMineUnread().length,fbMineUnread().length,fbMineUnread().map(f=>fbRow(f,false)).join("")):'')
-   +(fbAdmUnread().length?bsSec("adm",'🛡️ Zgłoszenia',fbAdmUnread().length,fbAdmUnread().length,fbAdmUnread().slice(0,5).map(f=>fbRow(f,true)).join("")):'')
-   +(NU.length?bsSec("nu",'🆕 Nowi użytkownicy',NUu.size,NU.length,NU.slice(0,6).map(id=>nuRow(id,NUu.has(id))).join("")
-      +(NU.length>6?'<div class="bsempty">i jeszcze '+(NU.length-6)+' z ostatnich 14 dni — pełna lista: ⚙️ → 🛡️ Administracja</div>':'')):'')
-   +(LG.length?bsSec("lg",'🔑 Ostatnie logowania',LGu.size,LG.length,LG.slice(0,6).map(x=>lgRow(x,LGu.has(x))).join("")
-      +(LG.length>6?'<div class="bsempty">i jeszcze '+(LG.length-6)+' z ostatnich 14 dni</div>':'')
-      +'<div class="bsempty">Liczy się wpisanie e-maila i hasła — z zainstalowanej aplikacji ludzie zwykle logują się raz.</div>'):'')
-   +(DL.length?bsSec("dl",'🗑️ Usunięte zaproszenia',DLu.size,DL.length,DL.slice(0,6).map(x=>dlRow(x,DLu.has(x))).join("")
-      +(DL.length>6?'<div class="bsempty">i jeszcze '+(DL.length-6)+' z ostatnich 14 dni</div>':'')):'')
-   +(LS.length?bsSec("ls",'🟢 Ostatnio w aplikacji',0,LS.length,LS.slice(0,8).map(lsRow).join("")
-      +(LS.length>8?'<div class="bsempty">i jeszcze '+(LS.length-8)+' z ostatnich 14 dni</div>':'')
-      +'<div class="bsempty">Czas odświeża się co ok. 15 min, gdy ktoś ma otwartą aplikację.</div>'):'')
-   +(EVB.length?bsSec("ev",'🏁 Imprezy',EVB.filter(x=>x.at>EVBs).length,EVB.length,EVB.slice(0,8).map(x=>evBellRow(x,x.at>EVBs)).join("")
-      +(EVB.length>8?'<div class="bsempty">i jeszcze '+(EVB.length-8)+' — zobacz w zakładce Imprezy</div>':'')):'')
-   +bsSec("forme",'📩 Do Ciebie',forMe.filter(w=>wUnread(w).length).length,forMe.length,
-      forMe.length?forMe.map(bellRowHtml).join(""):'<div class="bsempty">Na razie nikt nie zaprasza.</div>')
-   +bsSec("mine",'🙋 Twoje zaproszenia',mine.filter(w=>wUnread(w).length).length,mine.length,
-      mine.length?mine.map(bellRowHtml).join(""):'<div class="bsempty">Nie masz aktywnych zaproszeń. <button type="button" class="lnk" data-bk="new">Idziemy na rower? ›</button></div>')
-   +'</div><div class="bshint">Czerwona kropka = coś nowego. Dotknij nagłówka, żeby zwinąć albo rozwinąć sekcję.</div></div>';
+   +'<div class="bslist">'+SEC.join("")+'</div><div class="bshint">Podświetlone = nowe. Znaczek ✓ oznacza pozycję jako przeczytaną (albo całą sekcję). Dotknij nagłówka, żeby zwinąć lub rozwinąć.</div></div>';
   p.classList.remove("hide");
   const nl=p.querySelector(".bslist");if(nl)nl.scrollTop=st;
 }
@@ -156,16 +169,10 @@ async function markRead(ids){
   try{await sb.from("notifications").update({read_at:now}).in("id",ids)}catch(e){}
 }
 function closeBell(){
-  // informacje (bez potrzeby odpowiedzi) uznajemy za przeczytane po obejrzeniu listy
-  const ids=bellUnread().filter(n=>!nNeedsAct(n)).map(n=>n.id);
-  if(nuUnread().length)nuMarkSeen();
-  if(lgUnread().length)lsSet("lgSeen",String(Date.now()));
-  if(dlUnread().length)lsSet("dlSeen",String(Date.now()));
-  if(evBellUn().length)lsSet("evBell",String(Date.now()));
+  // od KROKU 64: zamknięcie 🔔 niczego nie oznacza jako przeczytane — robisz to sam (✓ przy pozycji, w sekcji albo „✓ Przeczytane”)
   if(stepsLeft().length)lsSet("stepsSeen","1");
-  if(sigUnread().length)lsSet("sigSeen",new Date().toISOString());
   $("bellsheet").classList.add("hide");$("bellsheet").innerHTML="";
-  if(ids.length)markRead(ids);else renderBell();
+  renderBell();
 }
 // przejście do karty zaproszenia (Start: Twoje zaproszenie albo karta dnia)
 function goToWant(w){
@@ -195,6 +202,17 @@ $("bellsheet").addEventListener("click",async e=>{
   const evb=e.target.closest("[data-evb]");if(evb){closeBell();evGo(evb.dataset.evb);return}
   const sgz=e.target.closest("[data-sgz]");if(sgz){const id=sgz.dataset.sgz;closeBell();show(0);openWantForm(null,{sig:id});return}
   if(e.target.closest("[data-sgx]")){closeBell();sigCancel();return}
+  const mk1=e.target.closest("[data-mk]");   // ✓ przy pozycji
+  if(mk1){const k=mk1.dataset.mk;
+    if(k.startsWith("w:")){const w=wants.find(x=>x.id===k.slice(2));if(w)markRead(wUnread(w).filter(n=>!nNeedsAct(n)).map(n=>n.id))}
+    else{bsDoneAdd([k]);renderBell()}
+    return}
+  const mks=e.target.closest("[data-mks]");   // ✓ cała sekcja
+  if(mks){const k=mks.dataset.mks;
+    if(k==="nu")nuMarkSeen();else if(k==="lg")lsSet("lgSeen",String(Date.now()));else if(k==="dl")lsSet("dlSeen",String(Date.now()));
+    else if(k==="ev")lsSet("evBell",String(Date.now()));else if(k==="sig")lsSet("sigSeen",new Date().toISOString());
+    else if(k==="forme"||k==="mine"){markRead(bsWants()[k].flatMap(w=>wUnread(w).filter(n=>!nNeedsAct(n)).map(n=>n.id)));return}
+    renderBell();return}
   const rpb=e.target.closest("[data-rep]");if(rpb){const id=rpb.dataset.rep;closeBell();repAskedAdd(id);openReport(id);return}
   const sc=e.target.closest("[data-bsec]");
   if(sc){const k=sc.dataset.bsec,st=bsColGet(),col=!sc.classList.contains("col");st[k]=col;try{localStorage.setItem("bellCol",JSON.stringify(st))}catch(err){}
@@ -353,7 +371,8 @@ const sigMine=()=>sigs.find(x=>x.user_id===uid);
 // widoczne sygnały: bez wycofanych, ukrytych / zablokowanych i (przy „ukryj testowe”) cudzych testowych
 const sigList=()=>sigs.filter(x=>!x.cancelled_at&&(x.user_id===uid||!modGone(x.user_id))&&!(hideTest&&x.is_test&&x.user_id!==uid))
   .sort((a,b)=>(a.user_id===uid?-1:b.user_id===uid?1:0)||String(b.created_at).localeCompare(String(a.created_at)));
-const sigUnread=()=>{if(!sigOn())return [];const s=lsGet("sigSeen")||"";return sigList().filter(x=>x.user_id!==uid&&x.created_at>s)};
+const sigKey=x=>"sg:"+x.user_id+"|"+x.created_at;
+const sigUnread=()=>{if(!sigOn())return [];const s=lsGet("sigSeen")||"",D=bsDone();return sigList().filter(x=>x.user_id!==uid&&x.created_at>s&&!D.has(sigKey(x)))};
 const sigTodayBusy=()=>wants.some(w=>dayDiff(new Date(w.starts_at))===0&&!wDone(w));
 const sigFabOn=()=>sigOn()&&sigOk&&!is_banned_me()&&!sigTodayBusy()&&!(sigMine()&&!sigMine().cancelled_at);
 function is_banned_me(){return typeof modBanned!=="undefined"&&modBanned.has(uid)}
@@ -411,13 +430,13 @@ function sigRow(x,un){
   const btn=me?'<button type="button" class="lnk stgo" data-sgx="1">Wycofaj</button>'
     :x.activity==="bike"?'<button type="button" class="lnk stgo" data-sgz="'+esc(x.user_id)+'">Zaproś ›</button>':'';
   return '<div class="nit stn sgrow'+(un?' new':'')+'"><div class="ic">'+uiIcon(a[0])+'</div><div class="tx">'+(me?'<b>Ty</b>':nk(x.user_id))
-    +(x.is_test?' <span class="ttag">🧪 TEST</span>':'')+'<div class="w">'+esc(a[1].toLowerCase())+' · '+esc(hhmm(d))+'</div></div>'+btn+'</div>';
+    +(x.is_test?' <span class="ttag">🧪 TEST</span>':'')+'<div class="w">'+esc(a[1].toLowerCase())+' · '+esc(hhmm(d))+'</div></div>'+btn+(un?bsMk(sigKey(x)):'')+'</div>';
 }
 function sigBellHtml(){
   if(!sigOn())return "";
   const L=sigList();if(!L.length)return "";
   const U=new Set(sigUnread());
-  return bsSec("sig",'🚲 Mają ochotę dziś',U.size,L.length,L.map(x=>sigRow(x,U.has(x))).join("")
+  return bsSec("sig",'🚲 Mają ochotę dziś',U.size,L.length,L.slice().sort((a,b)=>(U.has(b)?1:0)-(U.has(a)?1:0)).map(x=>sigRow(x,U.has(x))).join("")
     +'<div class="bsempty">Bez godziny i trasy. „Zaproś” otwiera zaproszenie na dziś z zakresem godzin — ta osoba dostanie powiadomienie.</div>');
 }
 // pop-up z zachętą: pierwsze 3 wejścia (raz na uruchomienie), tylko gdy przycisk z kołem jest widoczny

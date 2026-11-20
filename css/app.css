@@ -52,6 +52,11 @@ body.pvon{padding-top:30px}body.pvon .hdr{top:30px}.wbeta{border-radius:999px;wi
 .nit .tx{flex:1;min-width:0;font-size:15px;line-height:1.35;padding-right:12px}.nit .tx .nk{font-size:15px;padding:1px 8px}
 .nit .w{font-size:13px;color:var(--mut);margin-top:2px}
 .nit .dot{position:absolute;top:14px;right:10px;width:9px;height:9px;border-radius:50%;background:#ff3b30}
+.nit .nmk{position:absolute;top:9px;right:9px;width:30px;height:30px;padding:0;border-radius:50%;border:1.5px solid var(--line);background:var(--card);color:var(--acc);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.nit .nmk .ui-i{width:16px;height:16px}
+.nit.new .tx{padding-right:40px}.nit.stn.new .tx{padding-right:12px}.nit.stn .nmk{position:static;margin-left:8px;flex:none}
+.bsmka{display:flex;justify-content:flex-end;margin:2px 2px 0}.bsmka .lnk{font-size:13px;display:inline-flex;align-items:center;gap:5px}.bsmka .ui-i{width:15px;height:15px}
+.bsbox .bsect.unr{background:var(--acc2);box-shadow:inset 3px 0 0 var(--acc)}
 .nit .sb{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.nit .sb .b{padding:8px 12px;font-size:14px;border-radius:10px}
 .nit .nnews{font-size:14px;margin-top:6px;padding:6px 9px;border-radius:9px;background:var(--card)}.nit .nmore{color:var(--mut);font-weight:700}
 .bsbox .bsempty{padding:8px 4px;font-size:14px}.bsempty .lnk{font-size:14px;padding:0}
@@ -263,7 +268,6 @@ html[data-theme=dark] .fcard::after{background:rgba(0,0,0,.25);box-shadow:0 1px 
 .wor{display:flex;align-items:center;gap:10px;color:var(--mut);font-size:13px;margin:14px 0 2px}.wor:before,.wor:after{content:"";flex:1;height:1px;background:var(--line)}
 .wnote{font-size:13px;text-align:center;margin-top:8px}
 .wguest{font-size:16px}
-.wtg{font-size:14px;color:var(--mut);margin-top:14px}.wtg a{color:var(--acc);font-weight:600;text-decoration:none;border-bottom:1px solid currentColor}
 .sdanger{display:block;margin:16px auto 0;padding:8px;border:0;background:none;color:var(--bad);font:inherit;font-size:15px;cursor:pointer;text-decoration:underline}
 .sheetbox ul{margin:6px 0 0;padding-left:20px;font-size:15px}
 .arow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);font-size:17px}

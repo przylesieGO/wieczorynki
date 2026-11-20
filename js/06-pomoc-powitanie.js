@@ -154,7 +154,7 @@ function helpFullHtml(){
      "Po wejściu wyskakuje okienko, gdy ktoś zaprosił Cię prywatnie. Dowiesz się też, gdy ktoś zrezygnuje i <b>🔁 wróci</b> do Twojej jazdy.",
      "<b>Czerwona liczba na ➕</b> — ile zaproszeń <b>innych osób</b> jest na dziś (Twoich nie liczy). Po przewinięciu w dół przycisk zwija się do samego ➕.",
      tg?"<b>Bot Telegram</b> napisze prywatnie: zaproszenie, zmiana godziny i szczegółów, ustalenie startu, kto dołączył, przypomnienie ~1 h przed jazdą. Włączysz: ⚙️ → Połącz z Telegramem → w Telegramie START. Wyłączysz tam samo (Rozłącz).":"",
-     "<b>Kanał @PrzylesieGo</b> na Telegramie — ogłoszenia nowych jazd dla wszystkich."].filter(Boolean))
+     session?"<b>Kanał @PrzylesieGo</b> na Telegramie — ogłoszenia nowych jazd dla wszystkich.":""].filter(Boolean))
    +(tabOk(3)?sec("🏁 Imprezy",[
      "Rajdy, gravele, maratony, biegi i marsze. Na karcie: data, miejsce, dystanse (z przewyższeniem i limitem czasu), „🏁 start za 12 dni”, zapisy trwają / zakończone, kto z nas jedzie.",
      "<b>Rozwiń kartę</b>, wybierz dystans i kliknij „Jadę!” (przy biegu „Biegnę”, przy marszu „Idę”). ❤ Lubię, 📅 do Google Kalendarza, udostępnij.",
@@ -213,7 +213,7 @@ function helpHtml(){
    +(helpMore?helpFullHtml():'')
    +(tg&&session?(tgLink?'<div class="htg2">✅ Telegram połączony — bot napisze, gdy ktoś Cię zaprosi.</div>'
        :tgOn()?'<button type="button" class="b sbtn tgx" data-h="tg">'+uiIcon("send")+' Połącz z Telegramem<small>Powiadomienia prosto na telefon</small></button>':'')
-     :'<div class="htg2">📣 Nowe jazdy także na kanale <a href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">@PrzylesieGo ›</a></div>')
+     :'')
    +(session&&fbOk?'<button type="button" class="lnk" data-h="fb" style="display:block;margin:12px auto 0">💬 Coś nie działa albo masz pomysł? Napisz ›</button>':'')
    +'<label class="hoff"><input type="checkbox" id="helpoff"'+(helpOff?' checked':'')+'> Nie pokazuj przy starcie</label>'
    +'<div class="note hver">PrzylesieGo! · wersja '+esc(APP_VER)+' (BETA) · '+esc(APP_REL[0].d)+'</div>'

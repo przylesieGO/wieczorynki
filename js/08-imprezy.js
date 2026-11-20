@@ -44,13 +44,14 @@ function evBellItems(){
     if(!t||t<Date.parse(x.created_at)||Date.now()-t>EV_WIN)return;L.push({e,st:{k:"acc",u:x.user_id},at:t})});
   return L.sort((a,b)=>b.at-a.at)}
 const evBellSeen=()=>Math.max(+(lsGet("evBell")||0),evSeenGet().b);
-const evBellUn=()=>{const s=evBellSeen();return evBellItems().filter(x=>x.at>s)};
+const evKey=x=>"ev:"+x.e.id+"|"+x.at;
+const evBellUn=()=>{const s=evBellSeen(),D=bsDone();return evBellItems().filter(x=>x.at>s&&!D.has(evKey(x)))};
 function evBellRow(x,un){const e=x.e,st=x.st,ago=esc(agoTxt(new Date(x.at).toISOString()));
   const t=st.k==="inv"?'<b>'+esc(nicks[st.by]||"Ktoś")+'</b> zaprasza Cię: <b>'+esc(e.name)+'</b><div class="w">'+esc(evDates(e))+' · '+ago+'</div>'+(st.msg?'<div class="w">💬 „'+esc(st.msg)+'”</div>':'')
     :st.k==="new"?'Nowa impreza: <b>'+esc(e.name)+'</b><div class="w">'+esc(evDates(e))+(e.created_by&&nicks[e.created_by]?' · dodał(a) '+esc(nicks[e.created_by]):'')+' · '+ago+'</div>'
     :st.k==="chg"?'Zmieniona: <b>'+esc(e.name)+'</b><div class="w">'+esc((st.what||[]).join(", ")||"szczegóły")+' · '+ago+'</div>'
     :'<b>'+esc(nicks[st.u]||"Ktoś")+'</b> '+(genders[st.u]==="K"?'przyjęła':'przyjął')+' Twoje zaproszenie — jedzie: <b>'+esc(e.name)+'</b><div class="w">'+ago+'</div>';
-  return '<div class="nit'+(un?' new':'')+'" data-evb="'+esc(e.id)+'"><div class="ic">'+({inv:"✉️",new:"🏁",chg:"✏️",acc:"✅"}[st.k])+'</div><div class="tx">'+t+'</div>'+(un?'<span class="dot"></span>':'')+'</div>'}
+  return '<div class="nit'+(un?' new':'')+'" data-evb="'+esc(e.id)+'"><div class="ic">'+({inv:"✉️",new:"🏁",chg:"✏️",acc:"✅"}[st.k])+'</div><div class="tx">'+t+'</div>'+(un?bsMk(evKey(x)):'')+'</div>'}
 const todayIso=()=>localIso(new Date()).slice(0,10);
 const evEnd=e=>e.date_to||e.date_from;
 const evPast=e=>evEnd(e)<todayIso();

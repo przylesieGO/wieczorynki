@@ -287,7 +287,6 @@ function renderGear(){
     :'<div class="sname" style="margin-top:28px">Przeglądasz jako gość</div><div class="smail">Zaloguj się, żeby zapraszać na rower i dołączać do jazd.</div>'
      +'<button class="b sbtn" data-c="login">Zaloguj się / załóż konto</button>'
      +gGrp("Pomoc",[gRow("#30d158","help","Pomoc — co potrafi aplikacja","Wersja "+esc(APP_VER),relNew()?'<span class="ios-bdg">Nowości</span>':'','data-c="help"'),
-        gRow("#0a84ff","mega","Kanał @PrzylesieGo","Nowe jazdy dla wszystkich","",'href="https://t.me/PrzylesieGo" target="_blank" rel="noopener"',"a"),
         isStandalone()?"":gRow("#636366","phone","Zainstaluj aplikację","Ikona na ekranie telefonu","",'data-c="inst"')])
      +setGroupsHtml(true);
   p.innerHTML='<div class="sheetbox"><button class="sclose" data-c="close" aria-label="Zamknij">✕</button>'+body+'</div>';

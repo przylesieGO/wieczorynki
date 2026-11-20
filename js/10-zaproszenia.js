@@ -585,6 +585,8 @@ function openWantForm(w,preset){
     d=new Date();d.setSeconds(0,0);d.setMinutes(Math.ceil((d.getMinutes()+1)/15)*15);
     // z „Przed jazdą” w bazie tras: dzień i godzina sprawdzone przy pogodzie (jeśli jeszcze nie minęły)
     if(preset&&preset.at&&preset.at.getTime()>Date.now())d=new Date(preset.at);
+    // z „Mam ochotę”: zakres zaczyna się najwcześniej za ok. 1,5 h — wcześniejszy zakres ustala się sam (bez „Pasuje mi o…”)
+    if(wf.sigFor&&!(preset&&preset.at)){d=new Date(Date.now()+90*60000);d.setSeconds(0,0);d.setMinutes(Math.ceil(d.getMinutes()/15)*15)}
   }
   const n=dayDiff(d);
   if(n>=0&&n<=1)wfSetDay(String(n));else{$("wdt").value=localIso(d).slice(0,10);wfSetDay("x",true)}
@@ -941,6 +943,7 @@ $("wsave").onclick=async()=>{
   if(d.getTime()<Date.now()-5*60000){say("Ten termin już minął — wybierz późniejszą godzinę.");return}
   const rng=wfRange(),d2=rng?wfDate2():null;
   if(rng&&(d2<=d||d2-d>12*36e5)){say("Koniec zakresu musi być później niż początek (tego samego dnia, maks. 12 h).");return}
+  if(rng&&d.getTime()<Date.now()+65*60000){say("Zakres zaczyna się za mniej niż godzinę — wtedy godzina ustala się sama i nikt nie może zaproponować swojej. Przesuń początek zakresu albo wybierz „Godzina”.");return}
   const note=$("wnote").value.trim()||null,k=localIso(d).slice(0,10);
   // kilka zaproszeń dziennie wolno (decyzja 2026-11-15) — blokada tylko dla tej samej godziny startu
   const same=wants.find(w=>w.user_id===uid&&w.id!==wf.editId&&Math.abs(new Date(w.starts_at).getTime()-d.getTime())<60000);
