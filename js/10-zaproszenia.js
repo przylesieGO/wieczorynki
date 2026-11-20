@@ -1213,7 +1213,7 @@ function renderWhoBtn(){
   const ids=wf.vis==="all"?[]:wfInvIds(),names=favFirst(ids).map(id=>nicks[id]);
   const [ic,t,s]=wf.vis==="all"?["🌍","Wszyscy","Wszyscy zalogowani + kanał Telegram"]
     :wf.vis==="fav"?["⭐","Ulubieni ("+ids.length+")",names.join(", ")||"Nie masz jeszcze ulubionych"]
-    :["👥","Wybrane osoby ("+ids.length+")",names.join(", ")||"Nikogo nie wybrano"];
+    :(()=>{const l=plOk&&plMatch(ids);return l?["📋",l.name+" ("+ids.length+")",names.join(", ")]:["👥","Wybrane osoby ("+ids.length+")",names.join(", ")||"Nikogo nie wybrano"]})();
   b.className="who"+(wf.vis==="all"?"":" priv");
   b.innerHTML='<span class="wic">'+ic+'</span><span class="wtx"><b>'+esc(t)+'</b><span>'+esc(s)+'</span></span><span class="war">›</span>';
 }
@@ -1221,12 +1221,22 @@ $("wwho").onclick=()=>openWho("form");
 /* okno „Kogo zapraszasz?” (wysuwane od dołu): wybór do formularza albo dopraszanie do zaproszenia */
 const ws={mode:"form",vis:"all",pick:new Set(),want:null,q:""};
 const favIds=()=>[...favs].filter(id=>nicks[id]&&id!==uid);
+// 📋 osoby z listy, które da się zaznaczyć w tym oknie (bez już zaproszonych / niedostępnych)
+function whoPlAvail(lid){const P=new Set(whoPeople()),D=whoDis();return plIds(lid).filter(id=>P.has(id)&&!D.has(id))}
+function whoPlHtml(){
+  if(!plOk)return "";
+  const L=plists.filter(l=>!(ws.mode==="pl"&&l.id===ws.want)).map(l=>[l,whoPlAvail(l.id)]).filter(x=>x[1].length);
+  if(!L.length)return "";
+  return '<div class="pfrow wspl"><span class="pflbl">Listy:</span>'+L.map(([l,A])=>{const on=ws.vis==="pick"&&A.every(id=>ws.pick.has(id));
+    return '<button type="button" class="fch pfc'+(on?' on':'')+'" data-wpl="'+esc(l.id)+'">'+plDot(l)+esc(l.name)+' <span class="fcn">'+A.length+'</span></button>'}).join("")+'</div>';
+}
 function openWho(mode,wantId){
   if(!session)return;
   if(needProfile()){askNick();return}
   ws.mode=mode;ws.want=wantId||null;ws.q="";
-  ws.msg="";
-  if(mode==="form"){ws.vis=wf.vis;ws.pick=new Set(wf.vis==="fav"?favIds():wf.pick);whoLocked().forEach(id=>ws.pick.add(id))}
+  ws.msg="";pf.who=null;   // 🔎 filtry od nowa przy każdym otwarciu
+  if(mode==="pl"){ws.vis="pick";ws.pick=new Set(plIds(wantId))}   // 📋 osoby na liście (KROK 68)
+  else if(mode==="form"){ws.vis=wf.vis;ws.pick=new Set(wf.vis==="fav"?favIds():wf.pick);whoLocked().forEach(id=>ws.pick.add(id))}
   else if(mode==="evf"){ws.vis="pick";ws.pick=new Set(ef&&ef.inv||[]);ws.msg=ef&&ef.invMsg||""}
   else{ws.vis="pick";ws.pick=new Set()}
   renderWho(true);
@@ -1252,12 +1262,12 @@ const whoGrp=(t,ids,g)=>{if(!ids.length)return '';const D=whoDis();ids=ids.filte
   return '<div class="bsgrp gl"><span>'+t+'</span>'+(free?'<button type="button" class="lnk" data-k="grp" data-g="'+g+'">'+(all?'Odznacz':'Zaznacz wszystkich')+'</button>':'')+'</div>'};
 function whoListHtml(){
   if(ws.vis==="all")return '<div class="bsempty">🌍 Zaproszenie zobaczą wszyscy zalogowani, a wiadomość trafi na kanał Telegram.</div>';
-  const q=ws.vis==="pick"?nickKey(ws.q.trim()):"",all=whoPeople().filter(id=>!q||nickKey(nicks[id]).includes(q));
+  const q=ws.vis==="pick"?nickKey(ws.q.trim()):"",all=whoPeople().filter(id=>(!q||nickKey(nicks[id]).includes(q))&&(ws.vis!=="pick"||pfMatch("who",id)));
   if(ws.vis==="fav"){
     if(!favIds().length)return '<div class="bsempty">Nie masz jeszcze ulubionych. Dodasz ich, klikając czyjś nick → „☆ Dodaj do ulubionych”. Możesz też wybrać osoby ręcznie (👥 Wybieram).</div>';
     return '<div class="bsgrp">⭐ Ulubieni — zaproszeni wszyscy</div>'+all.filter(isFav).map(id=>whoRow(id,true)).join("");
   }
-  if(!all.length)return '<div class="bsempty">'+(q?'Nie znaleziono takiego nicku.':ws.mode==="add"?'Wszyscy są już zaproszeni.':whoEv()?'Nikt inny nie widzi jeszcze zakładki Imprezy (BETA — testerzy).':'Brak innych osób z nickiem.')+'</div>';
+  if(!all.length)return '<div class="bsempty">'+(q?'Nie znaleziono takiego nicku.':pfOn("who")?'Nikt nie pasuje do filtra.':ws.mode==="add"?'Wszyscy są już zaproszeni.':whoEv()?'Nikt inny nie widzi jeszcze zakładki Imprezy (BETA — testerzy).':'Brak innych osób z nickiem.')+'</div>';
   const f=all.filter(isFav),o=all.filter(id=>!isFav(id));
   return (f.length?whoGrp('⭐ Ulubieni',f,'f')+f.map(id=>whoRow(id,ws.pick.has(id))).join(""):'')
    +(o.length?whoGrp(f.length?'Pozostali':'Osoby',o,'o')+o.map(id=>whoRow(id,ws.pick.has(id))).join(""):'');
@@ -1267,12 +1277,14 @@ function renderWho(first){
   const p=$("whosheet");p.classList.remove("hide");
   if(first){
     const w=ws.mode==="add"?wants.find(x=>x.id===ws.want):null,ev=ws.mode==="ev"?evs.find(x=>x.id===ws.want):null;
-    p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-k="cancel">Anuluj</button><b>'+(ws.mode==="add"?"Zaproś kogoś jeszcze":whoEv()?"Zaproś na imprezę":"Kogo zapraszasz?")+'</b><span style="min-width:64px"></span></div>'
+    p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-k="cancel">Anuluj</button><b>'+(ws.mode==="pl"?"Osoby na liście":ws.mode==="add"?"Zaproś kogoś jeszcze":whoEv()?"Zaproś na imprezę":"Kogo zapraszasz?")+'</b><span style="min-width:64px"></span></div>'
+     +(ws.mode==="pl"&&plById(ws.want)?'<div class="note" style="margin-top:6px;text-align:center;font-size:14px">'+plDot(plById(ws.want))+esc(plById(ws.want).name)+'</div>':'')
      +(ev?'<div class="note" style="margin-top:6px;text-align:center;font-size:14px">🏁 '+esc(ev.name)+' · '+esc(evDates(ev))+'</div>':'')
      +(ws.mode==="form"?'<div class="seg" id="wsseg">'+[["all","🌍 Wszyscy"],["fav","⭐ Ulubieni"],["pick","👥 Wybieram"]].map(([k,t])=>'<button type="button" data-v="'+k+'">'+t+'</button>').join("")+'</div>'
        :(w?'<div class="note" style="margin-top:6px;text-align:center;font-size:14px">Zaproszenie: '+esc(wfLabel(new Date(w.starts_at)))+(w.user_id!==uid&&nicks[w.user_id]?' · od '+esc(nicks[w.user_id]):'')+'</div>':''))
      +'<div class="wsqrow" id="wsqrow"><input class="bsq srch" id="wsq" type="search" placeholder="Szukaj nicku…" autocomplete="off"><button type="button" class="lnk hide" data-k="clr" id="wsclr"></button></div>'
-     +'<div class="bslist" id="wslist"></div>'
+     +'<div id="wspl"></div><div id="wspf"></div>'   // 📋 listy jednym kliknięciem + 🔎 filtry (KROK 68)
+     +'<div class="bslist" id="wslist"></div><div id="wsplsave"></div>'
      +(whoEv()?'<textarea class="bsmsg" id="wsmsg" maxlength="120" rows="2" placeholder="Wiadomość (opcjonalnie), np. jedziemy razem 260?">'+esc(ws.msg||"")+'</textarea>':'')
      +'<div class="bshint" id="wshint"></div>'
      +'<button type="button" class="b big" id="wsok" data-k="ok"></button></div>';
@@ -1282,16 +1294,26 @@ function renderWho(first){
   const nUn=[...ws.pick].filter(id=>!whoLocked().has(id)).length,cb=$("wsclr");
   cb.textContent="Wyczyść ("+nUn+")";cb.classList.toggle("hide",ws.vis!=="pick"||!nUn);
   $("wslist").innerHTML=whoListHtml();
+  $("wspl").innerHTML=whoPlHtml();
+  $("wspf").innerHTML=ws.vis==="pick"&&whoPeople().length>8?pfChips("who"):"";
+  const pm=ws.vis==="pick"&&ws.mode!=="pl"&&plOk&&ws.pick.size?plMatch([...ws.pick]):null;
+  $("wsplsave").innerHTML=ws.vis==="pick"&&ws.mode!=="pl"&&plOk?(pm?'<div class="note wsplm">'+plDot(pm)+'To Twoja lista „'+esc(pm.name)+'”</div>'
+    :ws.pick.size>=2&&plists.length<20?'<button type="button" class="lnk wsplm" data-k="plsave">📋 Zapisz wybór jako listę</button>':''):'';
   const jn=ws.mode==="form"&&wf.editId?(joins[wf.editId]||[]).filter(x=>x!==uid).length:0;
-  $("wshint").textContent=whoEv()?"Dostaną powiadomienie w aplikacji i od bota na Telegramie (jeśli go połączyli). Zaprosić można osoby, które widzą zakładkę Imprezy.":ws.vis==="all"?"":ws.mode==="add"?"Dostaną powiadomienie i zobaczą to zaproszenie.":"🔒 Zaproszenie zobaczą tylko wybrane osoby (i kogo one doproszą). Nie trafi na publiczny kanał Telegram."+(jn?" Osoby, które już dołączyły ("+jn+"), zostaną zaproszone.":"");
+  $("wshint").textContent=ws.mode==="pl"?"📋 Tylko Ty widzisz tę listę. Osoby nie dostaną żadnego powiadomienia.":whoEv()?"Dostaną powiadomienie w aplikacji i od bota na Telegramie (jeśli go połączyli). Zaprosić można osoby, które widzą zakładkę Imprezy.":ws.vis==="all"?"":ws.mode==="add"?"Dostaną powiadomienie i zobaczą to zaproszenie.":"🔒 Zaproszenie zobaczą tylko wybrane osoby (i kogo one doproszą). Nie trafi na publiczny kanał Telegram."+(jn?" Osoby, które już dołączyły ("+jn+"), zostaną zaproszone.":"");
   const n=whoCount(),ok=$("wsok");
-  ok.textContent=ws.mode==="ev"?(n?"Zaproś · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.mode==="evf"?(n?"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]):"Gotowe · nikogo"):ws.mode==="add"?(n?"Zaproś · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.vis==="all"?"Gotowe · wszyscy":"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]);
+  ok.textContent=ws.mode==="pl"?"Zapisz · "+n+" "+plf(n,["osoba","osoby","osób"]):ws.mode==="ev"?(n?"Zaproś · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.mode==="evf"?(n?"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]):"Gotowe · nikogo"):ws.mode==="add"?(n?"Zaproś · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.vis==="all"?"Gotowe · wszyscy":"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]);
   ok.disabled=(ws.mode==="add"||ws.mode==="ev")&&!n;
 }
 $("whosheet").addEventListener("click",async e=>{
   if(e.target===$("whosheet")){closeWho();return}
   const v=e.target.closest("button[data-v]");
   if(v){if(v.dataset.v==="pick"&&ws.vis==="fav"&&!ws.pick.size)ws.pick=new Set(favIds());ws.vis=v.dataset.v;renderWho();return}
+  const lc=e.target.closest("[data-wpl]");   // 📋 lista jednym kliknięciem: zaznacz / odznacz wszystkich z listy
+  if(lc){const A=whoPlAvail(lc.dataset.wpl),L=whoLocked();if(!A.length)return;
+    if(ws.vis!=="pick"){ws.pick=new Set(ws.vis==="fav"?favIds():[]);whoLocked().forEach(id=>ws.pick.add(id));ws.vis="pick"}
+    const all=A.every(id=>ws.pick.has(id));A.forEach(id=>{if(all){if(!L.has(id))ws.pick.delete(id)}else ws.pick.add(id)});
+    renderWho();return}
   const r=e.target.closest(".prow");
   if(r){
     const id=r.dataset.p;
@@ -1303,9 +1325,17 @@ $("whosheet").addEventListener("click",async e=>{
   }
   const k=e.target.closest("[data-k]");if(!k)return;
   if(k.dataset.k==="cancel"){closeWho();return}
+  if(k.dataset.k==="plsave"){openPl("new",{ids:[...ws.pick].filter(id=>id!==uid)});return}
+  if(ws.mode==="pl"){const l=plById(ws.want);if(!l){closeWho();return}
+    const cur=new Set(plMem[l.id]||[]),add=[...ws.pick].filter(id=>!cur.has(id)),rm=plIds(l.id).filter(id=>!ws.pick.has(id));
+    k.disabled=true;
+    try{await plAdd(l.id,add);await plRemove(l.id,rm);closeWho();
+      say(add.length||rm.length?"📋 Lista „"+l.name+"”: "+[add.length?"dodano "+add.length:"",rm.length?"usunięto "+rm.length:""].filter(Boolean).join(", "):"Bez zmian na liście „"+l.name+"”")}
+    catch(err){k.disabled=false;say("Nie udało się: "+plErr(err))}
+    plRefresh();return}
   if(k.dataset.k==="clr"){const L=whoLocked();ws.pick=new Set([...ws.pick].filter(id=>L.has(id)));renderWho();return}
   if(k.dataset.k==="grp"){const L=whoLocked(),q=nickKey(ws.q.trim()),
-      D=whoDis(),ids=whoPeople().filter(id=>(!q||nickKey(nicks[id]).includes(q))&&(k.dataset.g==="f"?isFav(id):!isFav(id))&&!L.has(id)&&!D.has(id)),
+      D=whoDis(),ids=whoPeople().filter(id=>(!q||nickKey(nicks[id]).includes(q))&&pfMatch("who",id)&&(k.dataset.g==="f"?isFav(id):!isFav(id))&&!L.has(id)&&!D.has(id)),
       all=ids.every(id=>ws.pick.has(id));
     ids.forEach(id=>all?ws.pick.delete(id):ws.pick.add(id));renderWho();return}
   if(ws.mode==="evf"){if(ef){ef.inv=[...ws.pick];ef.invMsg=String(ws.msg||"").trim().slice(0,120);const L=$("evsheet").querySelector(".bslist"),st=L?L.scrollTop:0;renderEvForm();const L2=$("evsheet").querySelector(".bslist");if(L2)L2.scrollTop=st}closeWho();return}

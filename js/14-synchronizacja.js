@@ -83,6 +83,7 @@ async function syncMe(){
     sb.from("telegram_links").select("tg_name,linked_at").eq("user_id",uid).limit(1)]);
   if(nt.error||fv.error)throw nt.error||fv.error;
   notifs=nt.data||[];favOk=true;favs=new Set((fv.data||[]).map(x=>x.fav_id));
+  await plLoad();   // 📋 listy osób (KROK 68)
   tgOk=!tl.error;tgLink=tgOk&&tl.data&&tl.data[0]||null;
   await loadMyPriv();
 }
@@ -133,7 +134,7 @@ function snapSave(){
       myPriv,profExOk,genderOk,nicks,genders,joinedAt,avAt,medias,meNick:me.nick,
       rbOk,titleOk,bikeOk,placeOk,distOk,paceOk,wRouteOk,testOk,rangeOk,visOk,wCols,
       wRaw,joins,prefs,invs,decls,notifs,reportOk,reports,lib,
-      adminIds,nickColors,nickBgs,favOk,favs:[...favs],supers:[...supers],testerOk,testerIds:[...testerIds],
+      adminIds,nickColors,nickBgs,favOk,favs:[...favs],plOk,plists,plMem,supers:[...supers],testerOk,testerIds:[...testerIds],
       evOk,evNewOk,evGeoOk,evExtraOk,evInvOk,evPriceOk,evLoaded,evs,evDist,evPart,evLikes,evInv,
       fbOk,fbList,fbDone,tgOk,tgLink,modOk,modBanned:[...modBanned],modHidden:[...modHidden],places,stealthOk,stealthIds:[...stealthIds]};
     const t=JSON.stringify(d);
@@ -151,7 +152,7 @@ function snapLoad(){
     rbOk=d.rbOk;titleOk=!!d.titleOk;bikeOk=d.bikeOk;placeOk=d.placeOk;distOk=d.distOk;paceOk=d.paceOk;wRouteOk=d.wRouteOk;testOk=d.testOk;rangeOk=d.rangeOk;visOk=d.visOk;wCols=d.wCols;
     wRaw=d.wRaw||[];joins=d.joins||{};prefs=d.prefs||{};invs=d.invs||{};decls=d.decls||{};notifs=d.notifs||[];reportOk=d.reportOk;reports=d.reports||{};lib=d.lib||[];
     adminIds=d.adminIds||[];isAdmin=adminIds.includes(uid)&&!pv;nickColors=d.nickColors||{...DEF_COLORS};nickBgs=d.nickBgs||{...DEF_BGS};
-    favOk=d.favOk;favs=new Set(d.favs||[]);supers=new Set(d.supers||[]);testerOk=d.testerOk;testerIds=new Set(d.testerIds||[]);
+    favOk=d.favOk;favs=new Set(d.favs||[]);plOk=!!d.plOk;plists=d.plists||[];plMem=d.plMem||{};supers=new Set(d.supers||[]);testerOk=d.testerOk;testerIds=new Set(d.testerIds||[]);
     evOk=d.evOk;evNewOk=d.evNewOk;evGeoOk=d.evGeoOk;evExtraOk=d.evExtraOk;evInvOk=d.evInvOk;evPriceOk=!!d.evPriceOk;evLoaded=!!d.evLoaded;evs=d.evs||[];evDist=d.evDist||{};evPart=d.evPart||{};evLikes=d.evLikes||{};evInv=d.evInv||[];
     fbOk=d.fbOk;fbList=d.fbList||[];fbDone=d.fbDone||{};tgOk=d.tgOk;tgLink=d.tgLink||null;
     modOk=d.modOk;modBanned=new Set(d.modBanned||[]);modHidden=new Set(d.modHidden||[]);places=d.places||[];stealthOk=d.stealthOk;stealthIds=new Set(d.stealthIds||[]);
@@ -282,6 +283,7 @@ async function loadRemote(selectId){
     if(profExOk)loadAvatars();
     me.nick=nicks[uid]||null;
     favOk=!fv.error;favs=new Set((ok(fv)||[]).map(x=>x.fav_id));
+    await plLoad();   // 📋 listy osób (KROK 68)
     nickColors={...DEF_COLORS};nickBgs={...DEF_BGS};
     (ok(st)||[]).forEach(x=>{
       let m=/^nick_color_([KM])$/.exec(x.key);if(m&&HEX_RE.test(x.value))nickColors[m[1]]=x.value;
@@ -306,7 +308,7 @@ async function loadRemote(selectId){
     if(isAdmin){const sq=await sb.from("admin_stealth").select("user_id");stealthOk=!sq.error;stealthIds=new Set((ok(sq)||[]).map(x=>x.user_id))}else{stealthOk=false;stealthIds=new Set()}
     applyPresence();
     renderBan();
-  }else{wRaw=[];syncN=null;snapClear();favs=new Set();favOk=false;nicks={};genders={};me.nick=null;wants=[];joins={};prefs={};decls={};invs={};notifs=[];testerIds=new Set();testerOk=false;tgOk=false;tgLink=null;tgCode="";fbOk=false;fbList=[];fbDone={};lib=[];adminIds=[];isAdmin=false;stopPresence();
+  }else{wRaw=[];syncN=null;snapClear();favs=new Set();favOk=false;plOk=false;plists=[];plMem={};nicks={};genders={};me.nick=null;wants=[];joins={};prefs={};decls={};invs={};notifs=[];testerIds=new Set();testerOk=false;tgOk=false;tgLink=null;tgCode="";fbOk=false;fbList=[];fbDone={};lib=[];adminIds=[];isAdmin=false;stopPresence();
     // 👤 imprezy dla gości (KROK 61): same imprezy i liczby z events_pub(); bez przełącznika „Goście” — nic
     evPub=false;evLoaded=false;evOk=false;evs=[];evDist={};evPart={};evLikes={};evInv=[];evCnt={};
     if(tabOk(3))await loadEventsPub()}

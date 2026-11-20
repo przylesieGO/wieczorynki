@@ -327,9 +327,12 @@ let favsSnap=null;   // porządek listy Ulubieni zamrożony na czas otwarcia wid
 function favsHtml(){
   if(!favsSnap)favsSnap=new Set(favs);
   const ids=Object.keys(nicks).filter(id=>id!==uid).sort((a,b)=>((favsSnap.has(b)?1:0)-(favsSnap.has(a)?1:0))||nicks[a].localeCompare(nicks[b],"pl"));
-  return ''+backBtn()+'<div class="sname" style="margin-top:26px">⭐ Ulubieni</div>'
-   +'<div class="smail">Tylko Ty widzisz, kogo masz w ulubionych. Ulubieni są na początku list i widać ich w nagłówkach dni.</div>'
-   +'<div class="sleft">'+(ids.map(id=>'<div class="arow">'+nk(id)+starBtn(id)+'</div>').join("")||'<div class="note">Brak innych użytkowników z nickiem.</div>')+'</div>';
+  return ''+backBtn()+'<div class="sname" style="margin-top:26px">'+(plOk?'Ulubieni i listy':'⭐ Ulubieni')+'</div>'
+   +plRowsHtml()   // 📋 KROK 68
+   +(plOk?'<div class="ios"><div class="ios-gh">⭐ Ulubieni</div></div>':'')
+   +'<div class="smail"'+(plOk?' style="margin:0 14px 10px;font-size:14px;text-align:left"':'')+'>Tylko Ty widzisz, kogo masz w ulubionych. Ulubieni są na początku list i widać ich w nagłówkach dni.</div>'
+   +pfBar("favs",ids.length)
+   +'<div class="sleft" data-pfl="favs">'+(ids.map(id=>'<div class="arow" data-pu="'+esc(id)+'">'+nk(id)+starBtn(id)+'</div>').join("")+(ids.length>8?'<div class="note pfnone hide">Nikt nie pasuje do filtra.</div>':'')||'<div class="note">Brak innych użytkowników z nickiem.</div>')+'</div>';
 }
 /* 🗓 data dołączenia (KROK 25): „Z nami od 12 marca 2026 · 245 dni” */
 let joinedAt={};
@@ -654,7 +657,7 @@ function userPubStats(id){
 function userHtml(){
   const g=genders[userId],fav=isFav(userId),ux=uxCache[userId]||{},mu=MEDIA.filter(m=>(medias[userId]||{})[m[0]]);
   if(profExOk&&session&&!(userId in uxCache)){uxCache[userId]={};loadUx(userId)}
-  return (userBack?'<button class="sback" data-c="userback">‹ '+({favs:"Ulubieni",online:"Online",admin:"Administracja",users:"Użytkownicy",perms:"Uprawnienia",stats:"Statystyki"}[userBack]||"Ustawienia")+'</button>':'')
+  return (userBack?'<button class="sback" data-c="userback">‹ '+({favs:"Ulubieni",plist:"Lista",online:"Online",admin:"Administracja",users:"Użytkownicy",perms:"Uprawnienia",stats:"Statystyki"}[userBack]||"Ustawienia")+'</button>':'')
    +(avData[userId]?'<div class="ucav" style="margin-top:'+(userBack?'30px':'8px')+'">'+avImg(userId,"")+'</div>':'')
    +'<div class="bigpill" style="margin-top:'+(avData[userId]?'8px':userBack?'26px':'6px')+'">'+nk(userId)+'</div>'
    +'<div class="smail">'+(g==="K"?uiIcon("venus")+" Kobieta":g==="M"?uiIcon("mars")+" Mężczyzna":"")+(onlineIds.includes(userId)?(g?" · ":"")+"🟢 teraz w aplikacji":"")+'</div>'
@@ -666,7 +669,8 @@ function userHtml(){
    +((fbDone[userId]||0)?'<div class="staz">💡 Zrealizowane zgłoszenia: '+fbDone[userId]+(fbBulb(userId)?' — współtwórca aplikacji':'')+'</div>':'')
    +(visOk?'<button class="b sbtn" data-a="invite" data-id="'+esc(userId)+'">🚴 Zaproś na rower</button>':'')
    +gGrp("Ta osoba",[session?gRow("#0a84ff","cal","Pokaż zaproszenia z "+esc(nicks[userId]||"tą osobą"),"Filtr na liście zaproszeń","",'data-a="fltuser" data-id="'+esc(userId)+'"'):'',
-      gRow("#ffcc00",fav?"starf":"star",fav?"W ulubionych":"Dodaj do ulubionych",fav?"Dotknij, aby usunąć":"Zawsze na górze list",fav?'<span class="ios-v ok">'+uiIcon("check")+'</span>':'','data-a="fav" data-id="'+esc(userId)+'"')])
+      gRow("#ffcc00",fav?"starf":"star",fav?"W ulubionych":"Dodaj do ulubionych",fav?"Dotknij, aby usunąć":"Zawsze na górze list",fav?'<span class="ios-v ok">'+uiIcon("check")+'</span>':'','data-a="fav" data-id="'+esc(userId)+'"'),
+      plOk&&userId!==uid?(()=>{const L=plOfUser(userId);return gRow("#5ac8fa","users","Dodaj do listy…",L.length?"Na listach: "+esc(L.map(l=>l.name).join(", ")):"Np. MTB, Gravel, Wieczorynki",L.length?'<span class="ios-v">'+L.length+'</span>':'','data-a="pladd" data-id="'+esc(userId)+'"')})():''])
    +(isAdmin?gGrp("Administrator",[isKingReal()?gRow("#5e5ce6","folder","Teczka","Wszystko o tej osobie w jednym miejscu","",'data-a="tk" data-id="'+esc(userId)+'"'):'',fbOk?gRow("#bf5af2","msg","Napisz wiadomość","Trafi do jej skrzynki zgłoszeń","",'data-a="fbmsg" data-id="'+esc(userId)+'"'):'',
       !isSuper(userId)?gRow("#ff9f0a","pencil","Zmień nick","","",'data-a="unick" data-id="'+esc(userId)+'"'):'']):'')
    +(isAdmin?admInfoHtml(userId):'')
@@ -776,11 +780,183 @@ async function toggleFav(id){
     say(on?"Usunięto z ulubionych: "+nicks[id]:"⭐ Dodano do ulubionych: "+nicks[id]);
   }catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
 }
+/* 📋 Listy osób (KROK 68) — prywatne listy z nazwą (np. „MTB”, „Gravel”); widzi je tylko właściciel.
+   Okno #plsheet: „Listy” z karty osoby (zaznacz, na których listach jest osoba), „Nowa lista” (też „Zapisz wybór jako listę”), „Zmień nazwę lub kolor”. */
+let plOk=false,plists=[],plMem={},plId="";
+const PL_COL={blue:"#0a84ff",green:"#30d158",orange:"#ff9f0a",red:"#ff3b30",purple:"#bf5af2",teal:"#40c8e0",gray:"#8e8e93"};
+const plCol=l=>PL_COL[l&&l.color]||PL_COL.blue;
+const plDot=l=>'<span class="pldot" style="background:'+plCol(l)+'" aria-hidden="true"></span>';
+const plById=id=>plists.find(l=>l.id===id)||null;
+const plIds=id=>(plMem[id]||[]).filter(u=>u!==uid&&nicks[u]&&!modGone(u));   // widoczne osoby z listy (bez ukrytych / zablokowanych)
+const plOfUser=u=>plists.filter(l=>(plMem[l.id]||[]).includes(u));
+// lista, która dokładnie pasuje do wybranych osób (pole „Kto zobaczy”)
+function plMatch(ids){const S=new Set(ids);if(!S.size)return null;return plists.find(l=>{const L=plIds(l.id);return L.length===S.size&&L.every(u=>S.has(u))})||null}
+async function plLoad(){
+  if(!session){plOk=false;plists=[];plMem={};return}
+  const [a,b]=await Promise.all([
+    sb.from("people_lists").select("id,name,color,pos,created_at").order("pos").order("created_at").limit(50),
+    sb.from("people_list_members").select("list_id,user_id").limit(5000)]);
+  if(a.error||b.error){plOk=false;plists=[];plMem={};return}
+  plOk=true;plists=a.data||[];plMem={};plists.forEach(l=>{plMem[l.id]=[]});
+  (b.data||[]).forEach(x=>{if(plMem[x.list_id])plMem[x.list_id].push(x.user_id)});
+}
+const plErr=e=>{const m=e&&e.message||"błąd";return /people_lists_owner_name|duplicate/i.test(m)?"Masz już listę o tej nazwie.":/people_list|relation|schema/i.test(m)&&!/najwyżej/.test(m)?"Listy wymagają KROKU 68 w bazie.":m};
+async function plCreate(name,color,ids){
+  const r=await sb.from("people_lists").insert({name,color,pos:Math.min(plists.length,999)}).select("id,name,color,pos,created_at").single();
+  if(r.error)throw r.error;
+  plists.push(r.data);plMem[r.data.id]=[];
+  if(ids&&ids.length)await plAdd(r.data.id,ids);
+  return r.data;
+}
+async function plAdd(id,ids){
+  const ex=new Set(plMem[id]||[]);ids=ids.filter(u=>u!==uid&&!ex.has(u));
+  for(let i=0;i<ids.length;i+=100){const ch=ids.slice(i,i+100);
+    const r=await sb.from("people_list_members").insert(ch.map(u=>({list_id:id,user_id:u})));if(r.error)throw r.error;
+    plMem[id]=(plMem[id]||[]).concat(ch)}
+}
+async function plRemove(id,ids){
+  if(!ids.length)return;
+  for(let i=0;i<ids.length;i+=100){const ch=ids.slice(i,i+100);
+    const r=await sb.from("people_list_members").delete().eq("list_id",id).in("user_id",ch);if(r.error)throw r.error;
+    const S=new Set(ch);plMem[id]=(plMem[id]||[]).filter(u=>!S.has(u))}
+}
+// po każdej zmianie list — odśwież to, co je pokazuje
+function plRefresh(){try{if(gearOpen)renderGear();if(!$("whosheet").classList.contains("hide"))renderWho();if(!$("plsheet").classList.contains("hide"))renderPl();renderWhoBtn()}catch(e){}}
+
+/* 🔎 filtry osób (lista > 8 osób): szukajka + Kobiety / Mężczyźni / ⭐ Ulubieni / 🟢 Teraz — wspólne dla Ustawień i okna „Kogo zapraszasz?” */
+const pf={};
+const pfS=k=>pf[k]||(pf[k]={q:"",g:"",fav:false,on:false});
+const pfOn=k=>{const s=pfS(k);return !!(s.q||s.g||s.fav||s.on)};
+function pfMatch(k,id){const s=pfS(k);
+  if(s.g&&genders[id]!==s.g)return false;if(s.fav&&!isFav(id))return false;if(s.on&&!onlineIds.includes(id))return false;
+  if(s.q&&!nickKey(nicks[id]||"").includes(nickKey(s.q)))return false;return true}
+function pfChips(k){const s=pfS(k),c=(v,on,h)=>'<button type="button" class="fch pfc'+(on?' on':'')+'" data-pfk="'+k+'" data-pfc="'+v+'">'+h+'</button>';
+  return '<div class="pfrow">'+(genderOk?c("K",s.g==="K",uiIcon("venus")+" Kobiety")+c("M",s.g==="M",uiIcon("mars")+" Mężczyźni"):'')
+   +c("fav",s.fav,"⭐ Ulubieni")+c("on",s.on,"🟢 Teraz")+(pfOn(k)&&k!=="who"?'<button type="button" class="fch pfc pfx" data-pfk="'+k+'" data-pfc="x">✕ Wyczyść</button>':'')+'</div>'}
+const pfBar=(k,n)=>n>8?'<div class="pfbar" data-pfbar="'+k+'"><input class="bsq srch" type="search" data-pfq="'+k+'" placeholder="Szukaj nicku…" autocomplete="off" value="'+esc(pfS(k).q)+'">'+pfChips(k)+'</div>':'';
+// filtrowanie wierszy w Ustawieniach bez przerysowania panelu (pole szukania nie traci kursora)
+function pfApply(k){
+  const box=document.querySelector('[data-pfl="'+k+'"]');if(!box)return;
+  let n=0;box.querySelectorAll("[data-pu]").forEach(r=>{const v=pfMatch(k,r.dataset.pu);r.style.display=v?"":"none";if(v)n++});
+  const e=box.querySelector(".pfnone");if(e)e.classList.toggle("hide",!!n);
+}
+document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset.pfq;if(!k)return;pfS(k).q=e.target.value;pfApply(k)});
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-pfc]");if(!b)return;
+  const k=b.dataset.pfk,v=b.dataset.pfc,s=pfS(k);
+  if(v==="x"){s.g="";s.fav=false;s.on=false;s.q="";const q=document.querySelector('[data-pfq="'+k+'"]');if(q)q.value=""}
+  else if(v==="K"||v==="M")s.g=s.g===v?"":v;else s[v]=!s[v];
+  if(k==="who"){renderWho();return}
+  const bar=document.querySelector('[data-pfbar="'+k+'"]');if(bar){const r=bar.querySelector(".pfrow");if(r)r.outerHTML=pfChips(k)}
+  pfApply(k);
+});
+
+/* ⚙️ widok jednej listy (gearView "plist") */
+function plistHtml(){
+  const l=plById(plId);if(!l)return favsHtml();
+  const ids=plIds(l.id).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")),n=ids.length;
+  return '<button class="sback" data-c="plback">‹ Ulubieni i listy</button>'
+   +'<div class="sname" style="margin-top:26px">'+plDot(l)+esc(l.name)+'</div>'
+   +'<div class="smail">'+n+' '+plf(n,["osoba","osoby","osób"])+' · tylko Ty widzisz tę listę</div>'
+   +gGrp("Lista",[gRow(plCol(l),"users","Dodaj lub usuń osoby","Wybierz z listy wszystkich","",'data-c="plpick"'),
+      visOk&&n?gRow("#34c759","bike","Zaproś tę listę na rower","🔒 Prywatne zaproszenie dla "+n+" "+plf(n,["osoby","osób","osób"]),"",'data-c="plinv"'):'',
+      gRow("#8e8e93","pencil","Zmień nazwę lub kolor","Albo usuń listę","",'data-c="pledit"')])
+   +'<div class="ios"><div class="ios-gh">Osoby na liście</div></div>'+pfBar("pl",n)
+   +'<div class="sleft" data-pfl="pl">'+(n?ids.map(id=>'<div class="arow" data-pu="'+esc(id)+'">'+nk(id)+(onlineIds.includes(id)?'<span class="note">🟢 teraz</span>':'')
+      +'<button type="button" class="plrm" data-c="plrm" data-u="'+esc(id)+'" aria-label="Usuń z listy" title="Usuń z listy">'+uiIcon("xcircle")+'</button></div>').join("")
+      +'<div class="note pfnone hide">Nikt nie pasuje do filtra.</div>'
+     :'<div class="note">Lista jest pusta — dodaj osoby przyciskiem wyżej.</div>')+'</div>';
+}
+// wiersze list w „Ulubieni i listy”
+function plRowsHtml(){
+  if(!plOk)return '';
+  return gGrp("Moje listy",plists.map(l=>{const ids=plIds(l.id),nm=ids.slice(0,3).map(u=>nicks[u]).join(", ")+(ids.length>3?"…":"");
+      return gRow(plCol(l),"users",esc(l.name),nm?esc(nm):"Pusta lista",'<span class="ios-v">'+ids.length+'</span>','data-c="plist" data-pl="'+esc(l.id)+'"')})
+    .concat([plists.length<20?gRow("#8e8e93","plus","Nowa lista","Np. MTB, Gravel, Wieczorynki","",'data-c="plnew"'):'']))
+   +'<p class="note" style="margin:8px 14px 0;font-size:13px;text-align:left">Listy widzisz tylko Ty. Osoby z listy nie wiedzą, że na niej są. Wybierzesz je jednym kliknięciem przy zapraszaniu.</p>';
+}
+
+/* 📋 okno „Listy” (#plsheet) */
+const ps={mode:"user",u:"",ids:[],list:"",name:"",color:"blue",busy:false,newOpen:false,delAsk:false,after:null};
+function openPl(mode,o){
+  if(!session)return;
+  if(!plOk){say("Listy wymagają KROKU 68 w bazie.");return}
+  o=o||{};Object.assign(ps,{mode,u:o.u||"",ids:o.ids||[],list:o.list||"",after:o.after||null,busy:false,newOpen:mode==="new",delAsk:false});
+  const l=mode==="edit"?plById(ps.list):null;ps.name=l?l.name:"";ps.color=l?l.color:"blue";
+  renderPl(true);
+}
+function closePl(){const p=$("plsheet");p.classList.add("hide");p.innerHTML=""}
+function plFormHtml(btn){
+  return '<div class="plform"><input class="bsq" id="plname" type="text" maxlength="30" placeholder="Nazwa listy, np. MTB" autocomplete="off" value="'+esc(ps.name)+'">'
+   +'<div class="plcols" role="radiogroup" aria-label="Kolor listy">'+Object.keys(PL_COL).map(c=>'<button type="button" class="plcol'+(ps.color===c?' on':'')+'" data-plc="'+c+'" style="background:'+PL_COL[c]+'" aria-label="Kolor '+c+'"></button>').join("")+'</div>'
+   +'<div class="note plinfo" id="plinfo"></div>'+btn+'</div>';
+}
+function renderPl(first){
+  const p=$("plsheet");p.classList.remove("hide");
+  const keep=$("plname")?$("plname").value:null;if(keep!=null)ps.name=keep;
+  const tt=ps.mode==="user"?"Listy":ps.mode==="edit"?"Zmień listę":"Nowa lista";
+  let body="";
+  if(ps.mode==="user"){
+    body='<div class="note" style="margin-top:6px;text-align:center;font-size:14px">Na których listach ma być '+nk(ps.u)+'?</div><div class="bslist">'
+     +(plists.length?plists.map(l=>{const on=(plMem[l.id]||[]).includes(ps.u);
+        return '<button type="button" class="prow'+(on?' on':'')+'" data-pt="'+esc(l.id)+'"'+(ps.busy?' disabled':'')+'><span class="cbx">'+CHECK+'</span><span class="pnm">'+plDot(l)+esc(l.name)+'</span><span class="pon">'+plIds(l.id).length+'</span></button>'}).join("")
+       :'<div class="bsempty">Nie masz jeszcze list. Utwórz pierwszą — np. „MTB” albo „Wieczorynki”.</div>')
+     +(plists.length<20?(ps.newOpen?plFormHtml('<button type="button" class="b big" data-pk="create"'+(ps.busy?' disabled':'')+'>Utwórz i dodaj '+esc(nicks[ps.u]||"")+'</button>')
+        :'<button type="button" class="prow pladd" data-pk="newopen"><span class="cbx plplus">+</span><span class="pnm">Nowa lista</span></button>'):'<div class="note">Masz już 20 list — to limit.</div>')+'</div>'
+     +'<button type="button" class="b big" data-pk="close">Gotowe</button>';
+  }else if(ps.mode==="new"){
+    const n=ps.ids.length;
+    body=(n?'<div class="note" style="margin-top:6px;text-align:center;font-size:14px">Zapiszesz '+n+' '+plf(n,["osobę","osoby","osób"])+' jako listę — następnym razem wybierzesz je jednym kliknięciem.</div>':'')
+     +plFormHtml('<button type="button" class="b big" data-pk="create"'+(ps.busy?' disabled':'')+'>'+(n?'Zapisz listę · '+n+' '+plf(n,["osoba","osoby","osób"]):'Utwórz listę')+'</button>');
+  }else{
+    const l=plById(ps.list);if(!l){closePl();return}
+    body=plFormHtml('<button type="button" class="b big" data-pk="save"'+(ps.busy?' disabled':'')+'>Zapisz zmiany</button>')
+     +(ps.delAsk?'<div class="pldel"><div class="note">Usunąć listę „'+esc(l.name)+'”? Osoby zostaną w aplikacji, zniknie tylko lista.</div><div class="cfmb"><button type="button" class="cfmno" data-pk="delno">Zostaw</button><button type="button" class="cfmok bad" data-pk="delyes"'+(ps.busy?' disabled':'')+'>Usuń listę</button></div></div>'
+       :'<button type="button" class="lnk pldelask" data-pk="delask">Usuń listę…</button>');
+  }
+  p.innerHTML='<div class="bsbox bsauto" role="dialog" aria-modal="true"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-pk="close">'+(ps.mode==="user"?"Zamknij":"Anuluj")+'</button><b>'+tt+'</b><span style="min-width:64px"></span></div>'+body+'</div>';
+  if(first&&$("plname")&&ps.mode!=="user")setTimeout(()=>{const i=$("plname");if(i&&!ps.name)i.focus()},50);
+}
+function plNameOk(){const n=String(($("plname")||{}).value||"").trim();ps.name=n;
+  if(!n){const i=$("plinfo");if(i)i.textContent="Wpisz nazwę listy.";return null}
+  if(plists.some(l=>l.id!==ps.list&&l.name.toLowerCase()===n.toLowerCase())){const i=$("plinfo");if(i)i.textContent="Masz już listę o tej nazwie.";return null}
+  return n}
+$("plsheet").addEventListener("input",e=>{if(e.target.id==="plname"){ps.name=e.target.value;const i=$("plinfo");if(i)i.textContent=""}});
+$("plsheet").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="plname"){e.preventDefault();const b=$("plsheet").querySelector('[data-pk="create"],[data-pk="save"]');if(b&&!b.disabled)b.click()}});
+$("plsheet").addEventListener("click",async e=>{
+  if(e.target===$("plsheet")){closePl();return}
+  const c=e.target.closest("[data-plc]");if(c){ps.color=c.dataset.plc;$("plsheet").querySelectorAll(".plcol").forEach(x=>x.classList.toggle("on",x===c));return}
+  const t=e.target.closest("[data-pt]");
+  if(t&&!ps.busy){const id=t.dataset.pt,on=(plMem[id]||[]).includes(ps.u);ps.busy=true;renderPl();
+    try{on?await plRemove(id,[ps.u]):await plAdd(id,[ps.u]);const l=plById(id);say((on?"Usunięto z listy „":"Dodano do listy „")+(l?l.name:"")+"”: "+(nicks[ps.u]||""))}
+    catch(err){say("Nie udało się: "+plErr(err))}
+    ps.busy=false;plRefresh();return}
+  const k=e.target.closest("[data-pk]");if(!k||k.disabled)return;
+  const a=k.dataset.pk;
+  if(a==="close"){closePl();return}
+  if(a==="newopen"){ps.newOpen=true;ps.name="";renderPl();const i=$("plname");if(i)i.focus();return}
+  if(a==="delask"||a==="delno"){ps.delAsk=a==="delask";renderPl();return}
+  if(a==="create"){const n=plNameOk();if(!n)return;ps.busy=true;renderPl();
+    try{const l=await plCreate(n,ps.color,ps.mode==="user"?[ps.u]:ps.ids);ps.busy=false;
+      if(ps.mode==="user"){ps.newOpen=false;say("📋 Utworzono listę „"+l.name+"” i dodano: "+(nicks[ps.u]||""));plRefresh();return}
+      closePl();say("📋 Utworzono listę „"+l.name+"”"+(ps.ids.length?" · "+ps.ids.length+" "+plf(ps.ids.length,["osoba","osoby","osób"]):""));
+      const f=ps.after;plRefresh();if(f)f(l);
+    }catch(err){ps.busy=false;renderPl();const i=$("plinfo");if(i)i.textContent=plErr(err)}return}
+  if(a==="save"){const n=plNameOk();if(!n)return;ps.busy=true;renderPl();
+    try{const r=await sb.from("people_lists").update({name:n,color:ps.color}).eq("id",ps.list);if(r.error)throw r.error;
+      const l=plById(ps.list);if(l){l.name=n;l.color=ps.color}closePl();say("Zapisano listę „"+n+"”");plRefresh()}
+    catch(err){ps.busy=false;renderPl();const i=$("plinfo");if(i)i.textContent=plErr(err)}return}
+  if(a==="delyes"){ps.busy=true;renderPl();
+    try{const l=plById(ps.list),r=await sb.from("people_lists").delete().eq("id",ps.list);if(r.error)throw r.error;
+      plists=plists.filter(x=>x.id!==ps.list);delete plMem[ps.list];closePl();
+      if(gearOpen&&gearView==="plist"&&plId===ps.list)gearView="favs";say("Usunięto listę „"+(l?l.name:"")+"”");plRefresh()}
+    catch(err){ps.busy=false;renderPl();say("Nie udało się: "+plErr(err))}return}
+});
 // kliknięcie pigułki z nickiem (poza panelem) otwiera kartę osoby
 document.addEventListener("click",e=>{
   const p=e.target.closest(".nk[data-u]");if(!p||!session||!favOk)return;
   const inPanel=!!p.closest("#gearpanel");
-  if(inPanel&&!["favs","online","admin","perms","stats"].includes(gearView))return;
+  if(inPanel&&!["favs","plist","online","admin","perms","stats"].includes(gearView))return;
   if(inPanel&&gearView==="stats"&&isKingReal()){tkOpen(p.dataset.u,"stats");return}
   if(inPanel&&p.dataset.u===uid)return;
   userBack=inPanel?gearView:"";tkFrom=false;userId=p.dataset.u;gearOpen=true;gearView="user";renderGear();

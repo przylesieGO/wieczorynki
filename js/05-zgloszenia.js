@@ -221,7 +221,7 @@ function maybeFb(){
 }
 // 👤 ⚙️ → Edytuj profil: grupy „Profil” (Moje jazdy, Ulubieni, Moja miejscowość, Prywatność) i „Powiadomienia” (Telegram, kanał) — przeniesione z głównego ekranu
 function profHubHtml(){
-  return gGrp("Profil",profExRows().concat([reportOk?gRow("#34c759","bike","Moje jazdy","Kalendarz, rekordy, km w sezonie",userRides[uid]&&userRides[uid].n?'<span class="ios-v">'+userRides[uid].n+'</span>':'','data-c="myrides"'):"",favOk?gRow("#ffcc00","starf","Ulubieni","Zawsze na górze list",favs.size?'<span class="ios-v">'+favs.size+'</span>':'','data-c="favs"'):"",
+  return gGrp("Profil",profExRows().concat([reportOk?gRow("#34c759","bike","Moje jazdy","Kalendarz, rekordy, km w sezonie",userRides[uid]&&userRides[uid].n?'<span class="ios-v">'+userRides[uid].n+'</span>':'','data-c="myrides"'):"",favOk?gRow("#ffcc00","starf",plOk?"Ulubieni i listy":"Ulubieni",plOk&&plists.length?"Listy: "+plists.length+" · ulubieni zawsze na górze":"Zawsze na górze list",favs.size?'<span class="ios-v">'+favs.size+'</span>':'','data-c="favs"'):"",
   (profExOk&&pe?"":((evGeoOk&&tabOk(3))||rbOk?gRow("#ff9f0a","pin","Moja miejscowość",rbOk&&!(evGeoOk&&tabOk(3))?"Odległość do tras":"Odległość do imprez i tras",'<span class="ios-v">'+(homeGet()?esc(homeGet().name):'Ustaw')+'</span>','data-home="1"'):"")),reportOk?gRow("#5856d6","lock","Prywatność","Kto widzi Twoje jazdy i rekordy","",'data-c="priv"'):""]))
    +(profExOk&&pe?'<p class="note pe-note">'+uiIcon("lock")+' Zdjęcie i media widzą zalogowani. Miejscowość i telefon — tylko gdy włączysz. Goście nie widzą nic.</p>':'')
    +gGrp("Powiadomienia",[tgOn()?gRow("#0a84ff","send","Telegram"+betaTag("telegram_dm"),"Powiadomienia prosto na telefon",tgLink?'<span class="ios-v ok">'+uiIcon("check")+'Połączony</span>':'<span class="ios-v">Połącz</span>','data-c="tg"'):"",
@@ -232,6 +232,7 @@ function renderGear(){
   if(!gearOpen){p.classList.add("hide");gearView="main";gearFrom="";tkFrom=false;favsSnap=null;return}
   p.classList.remove("hide");
   if(gearView!=="favs")favsSnap=null;
+  if(gearView==="plist"&&!(session&&plById(plId)))gearView="favs";   // 📋 lista usunięta (np. na innym urządzeniu)
   if((gearView==="admin"||gearView==="users"||gearView==="perms"||gearView==="unick"||gearView==="colors"||gearView==="stats"||gearView==="flags"||gearView==="testdel"||gearView==="privadm"||gearView==="nickbans")&&!(session&&isAdmin))gearView="main";
   if(gearView==="flags"&&!isSuper(uid))gearView="admin";
   if(gearView==="unick"&&!nicks[unickId])gearView="admin";
@@ -260,6 +261,7 @@ function renderGear(){
   else if(gearView==="priv"&&session)body=privPageHtml();
   else if(gearView==="testdel"&&isSuper(uid))body=testDelHtml();
   else if(gearView==="favs"&&session)body=favsHtml();
+  else if(gearView==="plist"&&session)body=plistHtml();
   else if(gearView==="tg"&&tgOn())body=tgHtml();
   else if(gearView==="user"&&session&&nicks[userId])body=userHtml();
   else if(gearView==="teczka"&&session&&isKingReal()&&nicks[tkId])body=teczkaHtml();
@@ -309,6 +311,7 @@ function renderGear(){
   if(keepNb&&$("nbword")){$("nbword").value=keepNb.v;nbPreview();if($("nbq")){$("nbq").value=keepNb.q;nbFilter()}}
   if(keepNick&&$("gnick")){$("gnick").value=keepNick.v;$("gnickinfo").textContent=keepNick.i}
   if(keepPw&&$("gpw0")){["gpw0","gpw1","gpw2"].forEach((i,k)=>{$(i).value=keepPw.v[k][0];$(i).type=keepPw.v[k][1];const eb=document.querySelector('[data-eye="'+i+'"]');if(eb)eb.innerHTML=uiIcon(keepPw.v[k][1]==="text"?"eyeoff":"eye")});$("gpwinfo").textContent=keepPw.i;if(keepPw.f&&$(keepPw.f))$(keepPw.f).focus()}
+  pfApply("favs");pfApply("pl");   // 🔎 filtry osób zostają po odświeżeniu
   if($("admq")){admFilter();if(keepAdmq!=null){const q=$("admq");q.focus();try{q.setSelectionRange(keepAdmq,keepAdmq)}catch(e){}}}
 }
 function tgHtml(){
@@ -414,6 +417,7 @@ $("gearpanel").addEventListener("click",async e=>{
   const a=e.target.closest("button[data-a]");
   if(a){
     if(a.dataset.a==="fav"){await toggleFav(a.dataset.id);return}
+    if(a.dataset.a==="pladd"){openPl("user",{u:a.dataset.id});return}   // 📋 karta osoby → Listy
     if(a.dataset.a==="fbmsg"&&isAdmin){fbTo=a.dataset.id;fbMsgTxt="";gearView="fbmsg";renderGear();const i=$("fbmsgtext");if(i)i.focus();return}
     if(a.dataset.a==="fltuser"){const id=a.dataset.id;flt=fltEmpty();flt.user=id;fltSave();gearOpen=false;renderGear();show(0);renderWants();setTimeout(()=>{const c=$("fltbar");if(c)c.scrollIntoView({behavior:"smooth",block:"center"})},80);return}
     if(a.dataset.a==="invite"){const id=a.dataset.id;gearOpen=false;renderGear();show(0);openWantForm(null,{pick:[id]});return}
@@ -583,6 +587,16 @@ $("gearpanel").addEventListener("click",async e=>{
     return;
   }
   if(c==="confgo"){await confirmDelete();return}
+  // 📋 listy osób (KROK 68)
+  if(c==="plist"){plId=b.dataset.pl;pf.pl=null;gearView="plist";renderGear();return}
+  if(c==="plback"){gearView="favs";renderGear();return}
+  if(c==="plnew"){openPl("new",{after:l=>{plId=l.id;pf.pl=null;gearView="plist";renderGear();openWho("pl",l.id)}});return}
+  if(c==="pledit"){openPl("edit",{list:plId});return}
+  if(c==="plpick"){openWho("pl",plId);return}
+  if(c==="plinv"){const ids=plIds(plId);if(!ids.length)return;gearOpen=false;renderGear();show(0);openWantForm(null,{pick:ids});return}
+  if(c==="plrm"){const u=b.dataset.u,l=plById(plId);if(!l||b.disabled)return;b.disabled=true;
+    try{await plRemove(l.id,[u]);say("Usunięto z listy „"+l.name+"”: "+(nicks[u]||""))}catch(err){b.disabled=false;say("Nie udało się: "+plErr(err))}
+    plRefresh();return}
   if(c==="userback"){gearView=userBack||"main";renderGear();return}
   if(c==="coldef"){["K","M"].forEach(g=>{$("col"+g).value=DEF_COLORS[g];$("bg"+g).value=DEF_BGS[g];$("nob"+g).checked=false});colorsPreview();return}
   if(c==="colsave"){await saveColors();return}

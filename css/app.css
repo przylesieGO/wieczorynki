@@ -940,3 +940,21 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 .cfmb{display:flex;gap:10px;margin-top:20px}.cfmb button{flex:1;padding:12px 8px;border:0;border-radius:12px;font:inherit;font-size:16px;font-weight:600;cursor:pointer}.cfmno{background:var(--fill);color:var(--ink)}.cfmok{background:var(--accbtn);color:#fff}.cfmok.bad{background:var(--bad)}
 /* 💉 tester przy nicku: wyraźna konturowa strzykawka */
 .nktst{display:inline-flex;margin-left:.3em;color:#1f8f4e;vertical-align:-.12em}.nktst .ui-i{width:1em;height:1em;stroke-width:2.6;vertical-align:0}
+
+/* 📋 listy osób (KROK 68) + 🔎 filtry osób */
+.pfbar{margin:2px 0 4px}.pfbar .bsq{margin:0}
+.pfrow{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin:8px 0 2px;-webkit-overflow-scrolling:touch}.pfrow::-webkit-scrollbar{display:none}
+.pfrow .fch{flex:none;white-space:nowrap;padding:7px 12px;font-size:14px;display:inline-flex;align-items:center;gap:5px}.pfrow .fch .ui-i{width:15px;height:15px}
+.pfrow .pfx{color:var(--bad)}.pflbl{flex:none;align-self:center;font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+.pldot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:7px;vertical-align:1px;flex:none}.fch .pldot{margin-right:0}.fch.on .pldot{box-shadow:0 0 0 2px #fff}
+.wsplm{display:block;margin:8px 0 0;font-size:14px;font-weight:600;text-align:center}button.wsplm{width:100%;color:var(--acc)}
+.bsbox.bsauto{height:auto;max-height:min(86vh,760px)}.bsauto .bslist{max-height:52vh}
+.plform{margin-top:12px}.plform .bsq{margin:0}
+.plcols{display:flex;gap:12px;justify-content:center;margin:14px 0 4px}
+.plcol{width:32px;height:32px;border-radius:50%;border:0;cursor:pointer;box-shadow:inset 0 0 0 2px rgba(0,0,0,.08)}.plcol.on{box-shadow:0 0 0 3px var(--card),0 0 0 5px var(--ink)}
+.plinfo{min-height:18px;text-align:center;color:var(--bad);font-size:14px}
+.prow.pladd .pnm{color:var(--acc);font-weight:600}.cbx.plplus{border-style:dashed;color:var(--acc);font-weight:700}
+.pldel{margin-top:12px;text-align:center}.pldel .cfmb{margin-top:10px}.pldelask{display:block;margin:14px auto 0;color:var(--bad);font-weight:600}
+.arow[data-pu]{justify-content:flex-start}.arow[data-pu] .note{margin-left:6px;font-size:13px}.arow[data-pu] .starb,.plrm{margin-left:auto}
+.plrm{border:0;background:none;color:var(--mut);cursor:pointer;padding:6px;display:flex}.plrm .ui-i{width:22px;height:22px}
+#plsheet{z-index:4200}
