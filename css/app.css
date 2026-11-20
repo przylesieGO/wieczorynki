@@ -808,6 +808,8 @@ html[data-theme=dark] .evimps.err{background:#4a1f1f;color:#ffb3b3}html[data-the
 .ffl{flex-direction:column;align-items:stretch;gap:9px;padding-top:12px;padding-bottom:12px}.ffl .ios-t b{font-size:16px}
 .fseg{display:flex;width:100%}.fseg button{flex:1;padding:6px 4px}
 html .ios-seg.fseg button.on.fs-off{background:#8e8e93;color:#fff}html .ios-seg.fseg button.on.fs-testers{background:#8b5cf6;color:#fff}html .ios-seg.fseg button.on.fs-all{background:var(--accbtn);color:#fff}
+/* 👤 przełącznik „Goście” przy funkcji (KROK 61) */
+.fgst{display:flex;flex-direction:column;gap:6px;margin-top:2px;padding-top:10px;border-top:.5px solid var(--line)}.fgst>span{font-size:14px;font-weight:600}.fgst small{font-size:12.5px;color:var(--mut)}.fgst.dis .fseg{opacity:.45}.fseg button:disabled{cursor:default}
 .hmorebtn{display:block;margin:12px auto 0;font-weight:700;color:var(--acc)}
 .hfull{margin-top:10px;text-align:left;display:flex;flex-direction:column;gap:12px}
 .hfs b{font-size:15px}.hfs ul{margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:6px}.hfs li{font-size:14px;line-height:1.45}.hfs li b{font-size:inherit}

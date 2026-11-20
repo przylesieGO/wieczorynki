@@ -176,7 +176,17 @@ async function loadEvents(){
     const [e6,e7]=await Promise.all([sb.from("events").select("id,price_info").not("price_info","is",null).limit(1000),sb.rpc("ev_import_left")]);
     evPriceOk=!e6.error;if(evPriceOk){const pm={};(e6.data||[]).forEach(x=>{pm[x.id]=x.price_info});evs.forEach(x=>{x.price_info=pm[x.id]||null})}
     evImpLeft=e7.error||e7.data==null?null:+e7.data;
-    evLoaded=true;
+    evLoaded=true;evPub=false;evCnt={};
+}
+/* 👤 imprezy dla gości (KROK 61) — jedno wywołanie events_pub(): imprezy, dystanse i liczba zapisanych (bez nicków) */
+async function loadEventsPub(){
+  const r=await sb.rpc("events_pub");
+  if(evFlt==="mine"||evFlt==="delreq")evFlt="";
+  evPub=true;evs=[];evDist={};evPart={};evLikes={};evInv=[];evCnt={};evNewOk=false;evInvOk=false;evImpLeft=null;
+  evOk=!r.error&&Array.isArray(r.data);evGeoOk=evOk;evExtraOk=evOk;evPriceOk=evOk;
+  (evOk?r.data:[]).forEach(x=>{const e=Object.assign({},x);delete e.dist;delete e.n;evs.push(e);evCnt[e.id]=+x.n||0;
+    evDist[e.id]=(x.dist||[]).map(d=>Object.assign({event_id:e.id},d)).sort((p,q)=>p.sort-q.sort||p.km-q.km)});
+  evLoaded=true;
 }
 async function loadRemote(selectId){
   const prevId=sorted[cur]&&sorted[cur].id;
@@ -195,7 +205,8 @@ async function loadRemote(selectId){
   rsvps=g;
   // funkcje testowe — czytają wszyscy, także goście (KROK 16)
   const wc=await sb.rpc("ride_watch_counts");watchOk=!wc.error;watchN={};if(!wc.error)(wc.data||[]).forEach(x=>{watchN[x.ride_id]=+x.n||0});
-  const ff=await sb.from("feature_flags").select("key,name,description,state");
+  let ff=await sb.from("feature_flags").select("key,name,description,state,guests");   // 👤 guests — KROK 61
+  if(ff.error)ff=await sb.from("feature_flags").select("key,name,description,state");
   flags={};if(!ff.error)(ff.data||[]).forEach(f=>{flags[f.key]=f});flagsReady=true;
   if(session){
     const ok=r=>r.error?null:r.data;
@@ -288,7 +299,10 @@ async function loadRemote(selectId){
     if(isAdmin){const sq=await sb.from("admin_stealth").select("user_id");stealthOk=!sq.error;stealthIds=new Set((ok(sq)||[]).map(x=>x.user_id))}else{stealthOk=false;stealthIds=new Set()}
     applyPresence();
     renderBan();
-  }else{wRaw=[];syncN=null;snapClear();favs=new Set();favOk=false;nicks={};genders={};me.nick=null;wants=[];joins={};prefs={};decls={};invs={};notifs=[];testerIds=new Set();testerOk=false;tgOk=false;tgLink=null;tgCode="";fbOk=false;fbList=[];fbDone={};lib=[];adminIds=[];isAdmin=false;stopPresence()}
+  }else{wRaw=[];syncN=null;snapClear();favs=new Set();favOk=false;nicks={};genders={};me.nick=null;wants=[];joins={};prefs={};decls={};invs={};notifs=[];testerIds=new Set();testerOk=false;tgOk=false;tgLink=null;tgCode="";fbOk=false;fbList=[];fbDone={};lib=[];adminIds=[];isAdmin=false;stopPresence();
+    // 👤 imprezy dla gości (KROK 61): same imprezy i liczby z events_pub(); bez przełącznika „Goście” — nic
+    evPub=false;evLoaded=false;evOk=false;evs=[];evDist={};evPart={};evLikes={};evInv=[];evCnt={};
+    if(tabOk(3))await loadEventsPub()}
   sorted=a.data.map(r=>({id:r.id,title:r.title,when:r.starts_at,place:r.place,pace:r.pace,owner:r.owner_name,note:r.note,creator:r.creator,edited_at:r.edited_at||null,change_note:r.change_note||null,route_title:r.route_title||null,route_desc:r.route_desc||null}));
   if(session&&syncOk&&n0!=null){syncN=n0;syncTicks=0;snapSave()}else if(session){syncN=null}
   await loadTail(selectId,prevId);

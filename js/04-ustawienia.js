@@ -105,6 +105,16 @@ function testersHtml(){
    +'<p class="note">Tester widzi funkcje w fazie testów (z plakietką 🧪 BETA), zanim dostaną je wszyscy. 🧪 przy nicku oznacza testera.</p>';
 }
 const FSTATE=[["off","Wyłączona"],["testers","Tylko testerzy"],["all","Wszyscy"]];
+// 👤 przełącznik „Goście” (KROK 61) — tylko przy funkcjach, które gość może zobaczyć; działa przy stanie „Wszyscy”
+const FLAG_GUESTS=["tab_events"];
+function fGuestHtml(f){
+  if(!FLAG_GUESTS.includes(f.key)||!("guests" in f))return "";
+  const on=!!f.guests,all=f.state==="all";
+  return '<div class="fgst'+(all?'':' dis')+'"><span>👤 Goście (bez logowania)</span><div class="ios-seg fseg">'
+   +[[0,"Nie widzą","off"],[1,"Widzą","all"]].map(([v,t,c])=>'<button type="button" data-fg="'+esc(f.key)+'" data-fgv="'+v+'" class="fs-'+c+((+on===v)?' on':'')+'"'+(all?'':' disabled')+'>'+t+'</button>').join("")+'</div>'
+   +'<small>'+(all?'Goście widzą imprezy i liczbę osób, które jadą — bez nicków.':'Działa tylko przy ustawieniu „Wszyscy”.')+'</small></div>';
+}
+const evGuest=()=>{const f=flags.tab_events;return !!f&&f.state==="all"&&!!f.guests};
 let testDelN=null;
 function testDelHtml(){
   return '<button class="sback" data-c="backadmin">‹ Administracja</button><div class="sname" style="margin-top:26px">🧹 Usuń testowe zaproszenia</div>'
@@ -120,9 +130,9 @@ function flagsHtml(){
    +'<div class="sname" style="margin-top:26px">🚦 Funkcje testowe</div>'
    +'<div class="smail">Dla każdej funkcji: wyłączona, tylko dla testerów (🧪 BETA) albo dla wszystkich. Zmiana działa od razu, bez nowej wersji aplikacji.</div>'
    +'<div class="sleft">'+(L.length?'<div class="ios-grp">'+L.map(f=>'<div class="ios-it ffl"><div class="ios-t"><b>'+esc(f.name)+'</b>'+(f.description?'<small>'+esc(f.description)+'</small>':'')+'</div>'
-     +'<div class="ios-seg fseg">'+FSTATE.map(([k,t])=>'<button type="button" data-f="'+esc(f.key)+'" data-fs="'+k+'" class="fs-'+k+(f.state===k?' on':'')+'">'+({off:"Wyłączona",testers:"Testerzy",all:"Wszyscy"}[k]||t)+'</button>').join("")+'</div></div>').join("")+'</div>'
+     +'<div class="ios-seg fseg">'+FSTATE.map(([k,t])=>'<button type="button" data-f="'+esc(f.key)+'" data-fs="'+k+'" class="fs-'+k+(f.state===k?' on':'')+'">'+({off:"Wyłączona",testers:"Testerzy",all:"Wszyscy"}[k]||t)+'</button>').join("")+'</div>'+fGuestHtml(f)+'</div>').join("")+'</div>'
      :'<div class="note">Na razie brak funkcji testowych. Każda nowa funkcja dopisuje się tutaj w swoim kroku SQL.</div>')
-   +'<p class="note">Wyłączona — nikt nie widzi (także testerzy i 👑) · Testerzy — tylko 🧪 testerzy i 👑, z plakietką BETA · Wszyscy — każdy.</p></div>';
+   +'<p class="note">Wyłączona — nikt nie widzi (także testerzy i 👑) · Testerzy — tylko 🧪 testerzy i 👑, z plakietką BETA · Wszyscy — każdy (Imprezy: osoby bez logowania tylko przy 👤 Goście „Widzą”).</p></div>';
 }
 function colorsHtml(){
   const v=(m,d,k)=>HEX_RE.test(m[k]||"")?m[k]:d[k];
@@ -230,7 +240,7 @@ const betaTag=k=>flags[k]&&flags[k].state!=="all"?'<span class="beta">🧪 BETA<
 // zakładki pod przełącznikiem (KROK 17): brak wpisu w bazie = widoczna dla wszystkich (jak dotąd)
 const TAB_FLAG={1:"tab_rides",2:"tab_advanced",3:"tab_events"};
 // do czasu wczytania przełączników zakładki pod przełącznikiem są ukryte (bez mignięcia przy odświeżaniu)
-const tabOk=i=>{const k=TAB_FLAG[i];if(k&&!flagsReady)return false;if((i===2||i===3)&&!session)return false;if(i===3&&!flags[k])return false;return !k||!flags[k]||feat(k)};
+const tabOk=i=>{const k=TAB_FLAG[i];if(k&&!flagsReady)return false;if(i===2&&!session)return false;if(i===3&&!session&&!evGuest())return false;if(i===3&&!flags[k])return false;return !k||!flags[k]||feat(k)};
 const visTabs=()=>[0,3,1,2].filter(tabOk);
 function delHtml(){
   const head='<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">🗑️ Usuń konto</div>';

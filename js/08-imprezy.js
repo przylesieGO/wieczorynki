@@ -3,6 +3,7 @@ let evGeoOk=false,evExtraOk=false,evOk=false,evs=[],evDist={},evPart={},evOpen="
 const EV_BIKE={gravel:["🪨","Gravel","Jadę"],road:["🛣","Szosa","Jadę"],mtb:["⛰","MTB","Jadę"],any:["🚲","Dowolny rower","Jadę"],run:["🏃","Bieg","Biegnę"],walk:["🚶","Marsz","Idę"],tri:["🏊","Triathlon","Startuję"],other:["🏅","Inne","Biorę udział"]};
 const evVerb=b=>(EV_BIKE[b]||EV_BIKE.other)[2];
 let evLikes={};
+let evPub=false,evCnt={};   // 👤 imprezy dla gości (KROK 61): dane z events_pub(), evCnt = liczba zapisanych (bez nicków)
 /* ---------- 🏁 NOWA / ZMIENIONA / ZAPROSZENIE (KROK 54; makieta mak_imprezy_*.png, właściciel 22:33) ----------
    „przeczytane” w tym urządzeniu (localStorage.evSeen: b = pierwsze uruchomienie, m = otwarte karty);
    po otwarciu karta zostaje na górze do wyjścia z zakładki (evStick), oznaczenie znika po 14 dniach */
@@ -55,6 +56,7 @@ const evEnd=e=>e.date_to||e.date_from;
 const evPast=e=>evEnd(e)<todayIso();
 const evDays=e=>Math.round((new Date(e.date_from+"T12:00")-new Date(todayIso()+"T12:00"))/864e5);
 const evMine=e=>(evPart[e.id]||[]).find(x=>x.user_id===uid);
+const evN=e=>evPub?(evCnt[e.id]||0):(evPart[e.id]||[]).length;   // 👥 ile z nas jedzie (gość: sama liczba z bazy)
 const evCanEdit=e=>!!session&&(e.created_by===uid||isAdmin);
 function evDates(e){const a=new Date(e.date_from+"T12:00"),b=e.date_to&&e.date_to!==e.date_from?new Date(e.date_to+"T12:00"):null;
   const f=d=>d.toLocaleDateString("pl-PL",{day:"numeric",month:"numeric"});
@@ -93,13 +95,13 @@ function evCard(e){
   const head='<button type="button" class="evh" data-ev="tog" data-id="'+esc(e.id)+'"><span class="evdt"><b>'+d.getDate()+'</b><i>'+esc(d.toLocaleDateString("pl-PL",{month:"short"}).replace(".","").toUpperCase())+'</i></span><span class="evm"><span class="evn">'+esc(e.name)+'</span>'
    +'<span class="evl">'+(e.place?'📍 '+esc(e.place)+' · ':'')+esc(evDates(e))+'</span>'+(D.length?'<span class="evl">'+esc(evKmLine(e))+'</span>':'')
    +(st?evInfo(st):'')
-   +'<span class="evps">'+(st?evBadge(st):'')+(evKm(e)!=null&&!past?'<span class="evp evp-d">📍 '+(evKm(e)<1?'na miejscu':nearKm(evKm(e))+' km')+'</span>':'')+(evWhen(e)&&!past?'<span class="evp evp-t'+evWhenCls(e)+'">'+evWhen(e)+'</span>':'')+(P.length?'<span class="evp evp-u">👥 '+P.length+' z nas</span>':'')+evReg(e)+(mine?'<span class="evp evp-m">✓ '+esc(evVerb(((D.find(x=>x.id===mine.distance_id))||{}).bike).toLowerCase())+'</span>':'')+((evLikes[e.id]||[]).length?'<span class="evp evp-l">❤ '+(evLikes[e.id]||[]).length+'</span>':'')+(e.delete_req_at?'<span class="evp evp-x">🗑 prośba o usunięcie</span>':'')+'</span></span><span class="evch">'+(open?'⌃':'⌄')+'</span></button>';
+   +'<span class="evps">'+(st?evBadge(st):'')+(evKm(e)!=null&&!past?'<span class="evp evp-d">📍 '+(evKm(e)<1?'na miejscu':nearKm(evKm(e))+' km')+'</span>':'')+(evWhen(e)&&!past?'<span class="evp evp-t'+evWhenCls(e)+'">'+evWhen(e)+'</span>':'')+(evN(e)?'<span class="evp evp-u">👥 '+evN(e)+' z nas</span>':'')+evReg(e)+(mine?'<span class="evp evp-m">✓ '+esc(evVerb(((D.find(x=>x.id===mine.distance_id))||{}).bike).toLowerCase())+'</span>':'')+((evLikes[e.id]||[]).length?'<span class="evp evp-l">❤ '+(evLikes[e.id]||[]).length+'</span>':'')+(e.delete_req_at?'<span class="evp evp-x">🗑 prośba o usunięcie</span>':'')+'</span></span><span class="evch">'+(open?'⌃':'⌄')+'</span></button>';
   if(!open)return '<div class="ev'+(mine?' mine':'')+(past?' past':'')+(st?' nw':'')+'">'+head+'</div>';
   const rows=D.map(x=>{const on=P.filter(p=>p.distance_id===x.id).map(p=>p.user_id),me=mine&&mine.distance_id===x.id;
     return '<div class="evd'+(me?' me':'')+'"><div class="evdl"><b>'+EV_BIKE[x.bike][0]+' '+esc(x.name||EV_BIKE[x.bike][1]+' '+String(+x.km).replace(".",","))+'</b><span>'+EV_BIKE[x.bike][1]+' · '+String(+x.km).replace(".",",")+' km'+(on.length?' · '+on.length+' z nas':'')+'</span>'
      +(x.elev!=null||x.limit_min!=null?'<span class="evdx2">'+(x.elev!=null?'<i>📈 '+elevTxt(x.elev)+'</i>':'')+(x.limit_min!=null?'<i>⏱ limit '+limTxt(x.limit_min)+'</i>':'')+'</span>':'')
      +(on.length?'<div class="evdn">'+favFirst(on).map(id=>nk(id)).join(" ")+'</div>':'')+'</div>'
-     +(past?'':'<button type="button" class="b '+(me?'g':'')+' evj" data-ev="'+(me?'leave':'join')+'" data-id="'+esc(e.id)+'" data-d="'+esc(x.id)+'">'+(me?'✓ ':'')+esc(evVerb(x.bike))+'</button>')+'</div>'}).join("");
+     +(past||evPub?'':'<button type="button" class="b '+(me?'g':'')+' evj" data-ev="'+(me?'leave':'join')+'" data-id="'+esc(e.id)+'" data-d="'+esc(x.id)+'">'+(me?'✓ ':'')+esc(evVerb(x.bike))+'</button>')+'</div>'}).join("");
   const noD=P.filter(p=>!p.distance_id||!D.some(x=>x.id===p.distance_id)).map(p=>p.user_id);
   const myInv=evInv.find(x=>x.event_id===e.id&&x.user_id===uid),sent=evInv.filter(x=>x.event_id===e.id&&x.invited_by===uid).map(x=>x.user_id).filter(id=>nicks[id]);
   return '<div class="ev open'+(mine?' mine':'')+(past?' past':'')+(st?' nw':'')+'">'+head+'<div class="evb">'
@@ -111,11 +113,12 @@ function evCard(e){
    +(e.delete_req_at?'<div class="evdel">🗑 '+esc(nicks[e.delete_req_by]||"Autor")+' prosi o usunięcie tej imprezy — decyduje admin.'
        +(isAdmin?'<div class="evdelb"><button type="button" class="b" style="background:var(--bad)" data-ev="del" data-id="'+esc(e.id)+'">Usuń</button><button type="button" class="b g" data-ev="delno" data-id="'+esc(e.id)+'">Odrzuć prośbę</button></div>'
          :e.delete_req_by===uid?'<div class="evdelb"><button type="button" class="b g" data-ev="delno" data-id="'+esc(e.id)+'">Cofnij prośbę</button></div>':'')+'</div>':'')
-   +'<div class="bsgrp">Dystanse'+(past?'':' — wybierz i kliknij')+'</div>'+(rows||'<div class="note">Brak dystansów.</div>')
+   +'<div class="bsgrp">Dystanse'+(past||evPub?'':' — wybierz i kliknij')+'</div>'+(rows||'<div class="note">Brak dystansów.</div>')
+   +(evPub&&!past?'<div class="note cdnote">Żeby się zapisać i zobaczyć, kto z nas jedzie, <button type="button" class="lnk" data-ev="login">zaloguj się ›</button></div>':'')
    +(noD.length?'<div class="evl2">👥 Bez dystansu: '+noD.map(id=>nk(id)).join(" ")+'</div>':'')
    +(mine&&!past?'<button type="button" class="lnk evlv" data-ev="leave" data-id="'+esc(e.id)+'">Rezygnuję</button>':'')
-   +'<div class="acts evacts">'+(evInvOk&&!past?'<button class="ib" data-ev="inv" data-id="'+esc(e.id)+'" title="Zaproś na imprezę" aria-label="Zaproś na imprezę">'+ICON.addp+'</button>':'')+'<button class="ib evlike'+((evLikes[e.id]||[]).includes(uid)?' on':'')+'" data-ev="like" data-id="'+esc(e.id)+'" title="Lubię" aria-label="Lubię">'+ICON.heart+((evLikes[e.id]||[]).length?'<span class="lkn">'+(evLikes[e.id]||[]).length+'</span>':'')+'</button><button class="ib" data-ev="gcal" data-id="'+esc(e.id)+'" title="Google Kalendarz" aria-label="Google Kalendarz">'+ICON.gcal+'</button><button class="ib" data-ev="share" data-id="'+esc(e.id)+'" title="Udostępnij" aria-label="Udostępnij">'+ICON.share+'</button>'
-   +'<button class="ib" data-ev="dup" data-id="'+esc(e.id)+'" title="Duplikuj (np. kolejna edycja)" aria-label="Duplikuj">'+ICON.dup+'</button>'
+   +'<div class="acts evacts">'+(evPub?'':(evInvOk&&!past?'<button class="ib" data-ev="inv" data-id="'+esc(e.id)+'" title="Zaproś na imprezę" aria-label="Zaproś na imprezę">'+ICON.addp+'</button>':'')+'<button class="ib evlike'+((evLikes[e.id]||[]).includes(uid)?' on':'')+'" data-ev="like" data-id="'+esc(e.id)+'" title="Lubię" aria-label="Lubię">'+ICON.heart+((evLikes[e.id]||[]).length?'<span class="lkn">'+(evLikes[e.id]||[]).length+'</span>':'')+'</button>')+'<button class="ib" data-ev="gcal" data-id="'+esc(e.id)+'" title="Google Kalendarz" aria-label="Google Kalendarz">'+ICON.gcal+'</button><button class="ib" data-ev="share" data-id="'+esc(e.id)+'" title="Udostępnij" aria-label="Udostępnij">'+ICON.share+'</button>'
+   +(evPub?'':'<button class="ib" data-ev="dup" data-id="'+esc(e.id)+'" title="Duplikuj (np. kolejna edycja)" aria-label="Duplikuj">'+ICON.dup+'</button>')
    +(evCanEdit(e)?'<button class="ib" data-ev="edit" data-id="'+esc(e.id)+'" title="Edytuj" aria-label="Edytuj">'+ICON.edit+'</button>'+((isAdmin||!e.delete_req_at)?'<button class="ib del'+(e.created_by===uid&&!isAdmin?'':' adm')+'" data-ev="'+(isAdmin?'del':'delreq')+'" data-id="'+esc(e.id)+'" title="'+(isAdmin?'Usuń':'Poproś o usunięcie')+'" aria-label="Usuń">'+ICON.del+'</button>':''):'')+'</div>'
    +(e.created_by&&nicks[e.created_by]?'<div class="note" style="margin-top:6px">Dodał(a): '+esc(nicks[e.created_by])+'</div>':'')
    +evLastChg(e)+'</div></div>';
@@ -215,10 +218,10 @@ function evCountHtml(){
 }
 function renderEvents(){
   // zakładka Imprezy włączona później (np. „Funkcje testowe: Pokaż” po starcie z pamięci telefonu) — dociągnij imprezy raz
-  if(!evLoaded&&!evLoading&&session&&tabOk(3)){evLoading=true;loadEvents().then(()=>{evLoading=false;renderEvents();try{snapSave()}catch(e){}}).catch(()=>{evLoading=false})}
+  if(!evLoaded&&!evLoading&&tabOk(3)){evLoading=true;(session?loadEvents():loadEventsPub()).then(()=>{evLoading=false;renderEvents();try{snapSave()}catch(e){}}).catch(()=>{evLoading=false})}
   const box=$("evlist");if(!box)return;
-  $("evbeta").innerHTML=betaTag("tab_events");
-  $("evchips").innerHTML=(evGeoOk?'<button type="button" class="fch near'+(evNearOn?' on':'')+'" data-evnear="1">📍 W okolicy'+(evNearOn?' · '+evNearR+' km':'')+'</button>':'')+[["","Wszystkie"],["gravel","🪨 Gravel"],["road","🛣 Szosa"],["mtb","⛰ MTB"],["run","🏃 Bieg"],["walk","🚶 Marsz"],["mine","🙋 Moje"]].concat(isAdmin&&evs.some(x=>x.delete_req_at)?[["delreq","🗑 Do usunięcia ("+evs.filter(x=>x.delete_req_at).length+")"]]:[]).map(([v,t])=>'<button type="button" class="fch'+(evFlt===v?' on':'')+'" data-evf="'+v+'">'+t+'</button>').join("");
+  $("evbeta").innerHTML=betaTag("tab_events");$("evadd").classList.toggle("hide",!session);
+  $("evchips").innerHTML=(evGeoOk?'<button type="button" class="fch near'+(evNearOn?' on':'')+'" data-evnear="1">📍 W okolicy'+(evNearOn?' · '+evNearR+' km':'')+'</button>':'')+[["","Wszystkie"],["gravel","🪨 Gravel"],["road","🛣 Szosa"],["mtb","⛰ MTB"],["run","🏃 Bieg"],["walk","🚶 Marsz"]].concat(session?[["mine","🙋 Moje"]]:[]).concat(isAdmin&&evs.some(x=>x.delete_req_at)?[["delreq","🗑 Do usunięcia ("+evs.filter(x=>x.delete_req_at).length+")"]]:[]).map(([v,t])=>'<button type="button" class="fch'+(evFlt===v?' on':'')+'" data-evf="'+v+'">'+t+'</button>').join("");
   $("evnear").innerHTML=evNearHtml();
   $("evcnt").innerHTML=evOk?evCountHtml():"";
   if(!evOk){box.innerHTML='<div class="note" style="margin-top:12px">Imprezy jeszcze niedostępne (KROK 40 w bazie).</div>';$("evarch").innerHTML="";return}
@@ -229,7 +232,7 @@ function renderEvents(){
   up.filter(e=>!topSet.has(e.id)).forEach(e=>{const d=new Date(e.date_from+"T12:00"),k=d.toLocaleDateString("pl-PL",{month:"long",year:"numeric"});if(k!==m){m=k;h+='<div class="evmon">'+esc(k)+'</div>'}h+=evCard(e)});
   const noGeo=evNearOn&&evGeoOk&&originGet()?evs.filter(e=>!evPast(e)&&!evHasGeo(e)).length:0;
   box.innerHTML=(evNearOn&&evGeoOk&&!originGet()?'<div class="note" style="margin-top:12px">Ustaw swoją miejscowość albo użyj lokalizacji, żeby zobaczyć imprezy w okolicy.</div>':
-     h||'<div class="note" style="margin-top:12px">'+(evNearOn&&evGeoOk?'Brak imprez w promieniu '+evNearR+' km — zwiększ promień.':evFlt?'Brak imprez dla tego filtra.':'Nie ma jeszcze imprez. Dodaj pierwszą — „＋ Dodaj imprezę”.')+'</div>')
+     h||'<div class="note" style="margin-top:12px">'+(evNearOn&&evGeoOk?'Brak imprez w promieniu '+evNearR+' km — zwiększ promień.':evFlt?'Brak imprez dla tego filtra.':(session?'Nie ma jeszcze imprez. Dodaj pierwszą — „＋ Dodaj imprezę”.':'Nie ma jeszcze imprez.'))+'</div>')
    +(noGeo?'<div class="note evnogeo">'+noGeo+' '+plf(noGeo,["impreza","imprezy","imprez"])+' bez miejsca na mapie (np. „do ogłoszenia”) — nie wiadomo, czy '+(noGeo===1?'jest':'są')+' blisko.</div>':'');
   $("evarch").innerHTML=past.length?'<div class="arch"><button type="button" class="ah" data-ev="arch">🗄 Minione imprezy<span>'+past.length+' '+(evArchOpen?'⌃':'⌄')+'</span></button>'+(evArchOpen?past.map(evCard).join(""):'')+'</div>':'';
 }
@@ -253,12 +256,14 @@ $("p3").addEventListener("click",async e=>{
   const rr=e.target.closest("[data-evr]");if(rr){evNearR=+rr.dataset.evr;try{localStorage.setItem("evNearR",String(evNearR))}catch(err){}renderEvents();return}
   const eo=e.target.closest("[data-evo]");if(eo){const k=eo.dataset.evo;
     if(k==="set")openHome();else if(k==="gps")useGps();else if(k==="home"){try{sessionStorage.removeItem("gpsOrigin")}catch(err){}renderEvents()}return}
-  if(e.target.closest("#evadd")){openEvForm(null);return}
+  if(e.target.closest("#evadd")){if(!session)return;openEvForm(null);return}
   const b=e.target.closest("[data-ev]");if(!b)return;
+  if(b.dataset.ev==="login"){setGuest(false);renderChrome();return}   // 👤 gość → logowanie (jak przy odliczaniu)
   if(b.dataset.ev==="arch"){evArchOpen=!evArchOpen;renderEvents();return}
   if(b.dataset.ev==="seenall"){evSeenMark(evs.filter(x=>evState(x)).map(x=>x.id));lsSet("evBell",String(Date.now()));evStick=new Set();renderEvents();renderBell();return}
   const ev=evs.find(x=>x.id===b.dataset.id);if(!ev)return;
   const a=b.dataset.ev;
+  if(!session&&a!=="tog"&&a!=="gcal"&&a!=="share")return;   // 👤 gość: tylko podgląd, kalendarz i udostępnianie
   if(a==="tog"){evOpen=evOpen===ev.id?"":ev.id;if(evOpen&&evState(ev)){evSeenMark([ev.id]);evStick.add(ev.id);renderBell()}renderEvents();return}
   if(a==="inv"){if(!evInvOk){say("Zapraszanie na imprezy wymaga KROKU 54 w bazie.");return}openWho("ev",ev.id);return}
   if(a==="join"){evJoin(ev,b.dataset.d);return}

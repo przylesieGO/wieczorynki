@@ -381,6 +381,17 @@ $("gearpanel").addEventListener("click",async e=>{
     }catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
     return;
   }
+  const fg=e.target.closest("button[data-fg]");
+  if(fg){   // 👤 przełącznik „Goście” (KROK 61)
+    if(!isSuper(uid)||fg.disabled)return;
+    const k=fg.dataset.fg,v=fg.dataset.fgv==="1";
+    try{
+      const r=await sb.from("feature_flags").update({guests:v,updated_at:new Date().toISOString(),updated_by:uid}).eq("key",k).select("key");
+      if(r.error)throw r.error;if(!r.data||!r.data.length)throw new Error("brak uprawnień");
+      await syncNow();say("👤 "+(flags[k]?flags[k].name:k)+": goście "+(v?"widzą":"nie widzą"));
+    }catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+    return;
+  }
   if(e.target===$("gearpanel")){gearOpen=false;renderGear();return}
   const a=e.target.closest("button[data-a]");
   if(a){
