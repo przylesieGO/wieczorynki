@@ -605,7 +605,7 @@ function userHtml(){
   return (userBack?'<button class="sback" data-c="userback">‹ '+({favs:"Ulubieni",online:"Online",admin:"Administracja",users:"Użytkownicy",perms:"Uprawnienia",stats:"Statystyki"}[userBack]||"Ustawienia")+'</button>':'')
    +(avData[userId]?'<div class="ucav" style="margin-top:'+(userBack?'30px':'8px')+'">'+avImg(userId,"")+'</div>':'')
    +'<div class="bigpill" style="margin-top:'+(avData[userId]?'8px':userBack?'26px':'6px')+'">'+nk(userId)+'</div>'
-   +'<div class="smail">'+(g==="K"?"👩 Kobieta":g==="M"?"👨 Mężczyzna":"")+(onlineIds.includes(userId)?(g?" · ":"")+"🟢 teraz w aplikacji":"")+'</div>'
+   +'<div class="smail">'+(g==="K"?uiIcon("venus")+" Kobieta":g==="M"?uiIcon("mars")+" Mężczyzna":"")+(onlineIds.includes(userId)?(g?" · ":"")+"🟢 teraz w aplikacji":"")+'</div>'
    +(ux.city?'<div class="staz">'+uiIcon("pin")+' '+esc(ux.city)+'</div>':'')+(stazTxt(userId)?'<div class="staz">'+esc(stazTxt(userId))+'</div>':'')
    +(mu.length?'<div class="ucsoc">'+mu.map(([k,ic,t])=>'<a class="ucs" href="'+esc(medias[userId][k])+'" target="_blank" rel="noopener nofollow" title="'+esc(t)+'" aria-label="'+esc(t)+'">'+uiIcon(ic)+'</a>').join("")+'</div>':'')
    +(ux.phone&&userId!==uid?'<div class="uccall"><a class="ucb" href="tel:'+esc(ux.phone.replace(/[^0-9+]/g,""))+'">'+uiIcon("call")+' Zadzwoń</a><a class="ucb" href="sms:'+esc(ux.phone.replace(/[^0-9+]/g,""))+'">'+uiIcon("msg")+' SMS</a></div>'
@@ -665,7 +665,7 @@ function teczkaHtml(){
   // 1. konto
   const s1=box('Konto',
      ln('E-mail',d.email?'<a href="mailto:'+esc(d.email)+'">'+esc(d.email)+'</a>':'—')
-    +ln('Płeć',g==="K"?"kobieta":g==="M"?"mężczyzna":"—")
+    +ln('Płeć',g==="K"||g==="M"?uiIcon(g==="K"?"venus":"mars")+" "+(g==="K"?"Kobieta":"Mężczyzna"):"—")
     +ln('Konto założone',dt(d.created_at))+(stazTxt(id)?'<div class="note">'+esc(stazTxt(id))+'</div>':'')
     +(ux.city?ln('Miasto',esc(ux.city)):'')+(ux.phone?ln('Telefon','<a href="tel:'+esc(ux.phone.replace(/[^0-9+]/g,""))+'">'+esc(ux.phone)+'</a>'):'')
     +(mu.length?'<div class="ucsoc">'+mu.map(([k,ic,t])=>'<a class="ucs" href="'+esc(medias[id][k])+'" target="_blank" rel="noopener nofollow" title="'+esc(t)+'" aria-label="'+esc(t)+'">'+uiIcon(ic)+'</a>').join("")+'</div>':'')

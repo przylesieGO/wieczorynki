@@ -647,7 +647,7 @@ async function gearSaveNick(){
   const i=$("gnick");if(!i&&gearView!=="nick")return;
   const n=(i?i.value:(nickDraft!=null?nickDraft:me.nick||"")).trim();
   const sg=$("gnicksug");if(sg){sg.classList.add("hide");sg.innerHTML=""}
-  if(genderOk&&!selGender){$("gnickinfo").textContent="Wybierz płeć: Kobieta albo Mężczyzna.";return}
+  if(genderOk&&!selGender){$("gnickinfo").textContent="Wybierz płeć: K (kobieta) albo M (mężczyzna).";return}
   if(nickShort()&&n===me.nick){$("gnickinfo").textContent="Wybierz nowy nick — co najmniej 3 litery.";return}
   if(n===me.nick&&(!genderOk||selGender===genders[uid])){gearView="main";renderGear();return}
   const first=needProfile(),isNew=!nicks[uid];
