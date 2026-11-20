@@ -741,6 +741,7 @@ html[data-theme=dark] .evp-t.soon{background:#4d2a0e;color:#ffb074}@keyframes ev
 .pe-avb{position:relative;width:96px;height:96px;border-radius:50%;border:0;padding:0;background:none;cursor:pointer}
 .pe-avb img,.pe-avb .gav{width:96px;height:96px;border-radius:50%;object-fit:cover;display:flex;font-size:40px}
 .pe-cam{position:absolute;right:-2px;bottom:-2px;width:32px;height:32px;border-radius:50%;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px var(--card)}.pe-cam .ui-i{width:17px;height:17px}
+#gsex button{display:inline-flex;align-items:center;gap:3px}#gsex .ui-i{width:15px;height:15px}
 .pe-nickline{display:flex;justify-content:center;margin:0 0 6px}.pe-nickline .lnk{font-size:15px;font-weight:600;display:inline-flex;align-items:center;gap:6px}.pe-nickline .ui-i{width:14px;height:14px}
 .pe-avl{display:flex;gap:18px}.pe-avl .lnk{font-size:15px;font-weight:600}.pe-rm{color:var(--bad)!important}
 .pe-row{display:flex;align-items:center;gap:11px;cursor:default}.pe-in{flex:1;min-width:0;border:0!important;background:none!important;padding:6px 0!important;margin:0!important;font-size:15.5px!important;box-shadow:none!important;color:var(--ink)}

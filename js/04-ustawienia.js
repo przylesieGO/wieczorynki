@@ -179,7 +179,7 @@ function nickHtml(){
      :first?'<div class="sname">👋 Wybierz swój nick</div><div class="smail">Witaj w PrzylesieGo! Nick widzą inni przy zapisach na wieczorynki i zgłoszeniach.</div>'
      :'<div class="sname">👋 Uzupełnij profil</div><div class="smail">Wybierz płeć — od niej zależy kolor Twojego nicku.</div>';
   const gsel=genderOk?'<label style="font-size:15px;margin-top:14px">Płeć (obowiązkowo)</label><div class="seg" id="gsex" style="margin-top:4px">'
-     +[["K","👩 Kobieta"],["M","👨 Mężczyzna"]].map(([k,t])=>'<button type="button" data-g="'+k+'" class="'+(selGender===k?"on":"")+'">'+t+'</button>').join("")+'</div>':'';
+     +["K","M"].map(sexBtn).join("")+'</div>':'';
   return head
    +'<div class="sleft"><label for="gnick" style="font-size:15px">'+(first?'Twój nick':'Nick')+'</label>'
    +'<input id="gnick" maxlength="20" autocomplete="off" value="'+esc(me.nick||"")+'" placeholder="np. GAWRON">'
@@ -193,7 +193,7 @@ function nickHtml(){
 function nickEditHtml(){
   const rowIn=(col,ico,inner)=>'<label class="ios-it pe-row"><span class="ios-ic" style="background:'+col+'">'+uiIcon(ico)+'</span>'+inner+'</label>';
   const sex=genderOk?gGrp("Płeć",['<div class="ios-it pe-row"><span class="ios-ic" style="background:#ff2d55">'+uiIcon("users")+'</span><span class="ios-t">Płeć<small>Od niej zależy kolor nicku</small></span><span class="ios-seg" id="gsex">'
-     +[["K","Kobieta"],["M","Mężczyzna"]].map(([k,t])=>'<button type="button" data-g="'+k+'" class="'+(selGender===k?"on":"")+'">'+t+'</button>').join("")+'</span></div>']):'';
+     +["K","M"].map(sexBtn).join("")+'</span></div>']):'';
   return '<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">'+(profExOk?'Edytuj profil':'Nick i płeć')+'</div>'+avEditHtml()
    +'<div class="sleft">'
    +'<div class="pe-nickline"><button type="button" class="lnk" data-c="nickopen" aria-expanded="'+nickOpen+'" aria-label="Zmień nick">'+esc((nickDraft!=null&&nickDraft.trim()?nickDraft:me.nick||"").trim())+' '+uiIcon("pencil")+'</button></div>'
@@ -381,6 +381,8 @@ function avFromFile(f){return new Promise((res,rej)=>{
       if(d.length>58000)return rej(new Error("Zdjęcie jest za duże."));res(d)}catch(e){rej(e)}};
   img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error("Nie udało się wczytać zdjęcia."))};img.src=url})}
 function peStart(){pe={av:avData[uid]?avData[uid].d:null,avCh:false,media:Object.assign({},medias[uid]||{}),phone:myPriv&&myPriv.phone||"",pvis:myPriv&&myPriv.phone_vis||"off",cvis:!!(myPriv&&myPriv.city_vis)}}
+// przełącznik płci: grafika Wenus / Mars + litera K / M (wspólny dla Edytuj profil i pierwszego uzupełniania profilu)
+const sexBtn=k=>'<button type="button" data-g="'+k+'" class="'+(selGender===k?"on":"")+'" title="'+(k==="K"?"Kobieta":"Mężczyzna")+'" aria-label="'+(k==="K"?"Kobieta":"Mężczyzna")+'">'+uiIcon(k==="K"?"venus":"mars")+" "+k+'</button>';
 let nickOpen=false,nickDraft=null;   // Edytuj profil: nick jako tekst pod zdjęciem; pole rozwija się po kliknięciu
 let mediaOpen=false;   // „Moje media” w Edytuj profil: domyślnie zwinięte
 // wiersze do grupy „Profil” w Edytuj profil: miejscowość (+ pokazuj innym), telefon (+ pokazuj innym), Moje media (rozwijane)
