@@ -223,7 +223,7 @@ function renderGear(){
   const p=$("gearpanel");
   if(!gearOpen){p.classList.add("hide");gearView="main";tkFrom=false;return}
   p.classList.remove("hide");
-  if((gearView==="admin"||gearView==="users"||gearView==="perms"||gearView==="unick"||gearView==="colors"||gearView==="stats"||gearView==="flags"||gearView==="testdel")&&!(session&&isAdmin))gearView="main";
+  if((gearView==="admin"||gearView==="users"||gearView==="perms"||gearView==="unick"||gearView==="colors"||gearView==="stats"||gearView==="flags"||gearView==="testdel"||gearView==="privadm")&&!(session&&isAdmin))gearView="main";
   if(gearView==="flags"&&!isSuper(uid))gearView="admin";
   if(gearView==="unick"&&!nicks[unickId])gearView="admin";
   const keepSel=$("adminsel")?$("adminsel").value:"";
@@ -243,6 +243,8 @@ function renderGear(){
   else if(gearView==="colors")body=colorsHtml();
   else if(gearView==="stats")body=adminStatsHtml();
   else if(gearView==="flags")body=flagsHtml();
+  else if(gearView==="privadm")body=privAdmHtml();
+  else if(gearView==="myrides"&&session)body=myRidesHtml();
   else if(gearView==="testdel"&&isSuper(uid))body=testDelHtml();
   else if(gearView==="favs"&&session)body=favsHtml();
   else if(gearView==="tg"&&tgOn())body=tgHtml();
@@ -265,6 +267,7 @@ function renderGear(){
   // ⚙️ góra w stylu grup iPhone'a + wyróżniona „Baza tras” (wariant B, decyzja właściciela 2026-11-16 15:11)
   else body=session
     ?profCardHtml()
+     +(reportOk?gGrp("Profil",[gRow("#34c759","bike","Moje jazdy","Kalendarz, rekordy, km w sezonie",userRides[uid]&&userRides[uid].n?'<span class="ios-v">'+userRides[uid].n+'</span>':'','data-c="myrides"')]):'')   // 🚴 KROK 62
      +(isAdmin?gGrp("Administracja",[gRow("#8e8e93","shield","Administracja","Użytkownicy, zgłoszenia, statystyki, uprawnienia",fbAdmUnread().length?'<span class="ios-bdg">'+fbAdmUnread().length+'</span>':'','data-c="admin"')]):'')
      +rbHeroHtml()+testerCardHtml()
      +gGrp("Ludzie i okolica",[favOk?gRow("#ffcc00","starf","Ulubieni","Zawsze na górze list",favs.size?'<span class="ios-v">'+favs.size+'</span>':'','data-c="favs"'):"",
@@ -278,7 +281,7 @@ function renderGear(){
         gRow("#8e8e93","user","Jak widzi gość","Nowa karta bez logowania",'','data-c="pv" data-pv="guest"'),
         gRow("#0a84ff","users","Jak widzi użytkownik","Bez funkcji testowych i bez uprawnień admina",pv==="user"?'<span class="ios-v ok">'+uiIcon("check")+'Teraz</span>':'','data-c="pv" data-pv="user"'),
         gRow("#bf5af2","flask","Jak widzi tester","Z funkcjami testowymi (🧪 BETA), bez uprawnień admina",pv==="tester"?'<span class="ios-v ok">'+uiIcon("check")+'Teraz</span>':'','data-c="pv" data-pv="tester"')]):'')
-     +setGroupsHtml(false)
+     +setGroupsHtml(false)+privGrpHtml()   // 🔒 KROK 62
      +'<div class="ios-grp" style="margin-top:22px"><button type="button" class="ios-it ios-row ios-out" data-c="out">Wyloguj</button></div>'
      +'<button class="sdanger" data-c="del">Usuń konto…</button>'
     :'<div class="sname" style="margin-top:28px">Przeglądasz jako gość</div><div class="smail">Zaloguj się, żeby zapraszać na rower i dołączać do jazd.</div>'
@@ -381,6 +384,10 @@ $("gearpanel").addEventListener("click",async e=>{
     }catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
     return;
   }
+  const pvs=e.target.closest("button[data-pvs]");   // 🔒 przełączniki prywatności (KROK 62)
+  if(pvs){await setPriv(pvs.dataset.pvs,pvs.dataset.pvv==="1");return}
+  const urc=e.target.closest("button[data-urc]");   // 📅 Odbyte / Planowane
+  if(urc){urCalMode=urc.dataset.urc;renderGear();return}
   const fg=e.target.closest("button[data-fg]");
   if(fg){   // 👤 przełącznik „Goście” (KROK 61)
     if(!isSuper(uid)||fg.disabled)return;
@@ -468,6 +475,8 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="admin"){gearView="admin";renderGear();return}
   if(c==="colors"){gearView="colors";renderGear();return}
   if(c==="stats"){gearView="stats";loadStats();return}
+  if(c==="myrides"){delete userRides[uid];gearView="myrides";renderGear();return}   // 🚴 KROK 62 — zawsze świeże dane
+  if(c==="privadm"){privAdm=null;gearView="privadm";renderGear();return}
   if(c==="userback2m"){gearView=tkFrom&&tkId===modDelId?"teczka":"user";renderGear();return}
   if(c==="tkback"){tkFrom=false;gearView=["admin","users","stats"].includes(tkBack)?tkBack:"user";renderGear();return}
   if(c==="users"){usersBack="admin";gearView="users";renderGear();return}

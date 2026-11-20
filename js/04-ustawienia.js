@@ -55,6 +55,7 @@ function adminHtml(){
    +gGrp("Narzędzia",[gRow("#0a84ff","chart","Statystyki","Aktywność, jazdy, logowania","",'data-c="stats"'),
       fbOk?gRow("#bf5af2","msg","Zgłoszenia","Uwagi i błędy od użytkowników",fbN?'<span class="ios-bdg">'+fbN+'</span>':'','data-c="fbadmin"'):'',
       gRow("#30b0c7","users","Użytkownicy",isKingReal()?"Szukaj, filtruj, otwórz teczkę":"Szukaj, filtruj, karta osoby",'<span class="ios-v">'+Object.keys(nicks).length+'</span>','data-c="users"'),
+      gRow("#5856d6","lock","Prywatność","Kto co widzi, ile osób co włączyło","",'data-c="privadm"'),
       gRow("#34c759","shield","Uprawnienia","Administratorzy"+(testerOk?" i testerzy":""),'<span class="ios-v">'+adminIds.filter(id=>nicks[id]).length+(testerOk?' / '+testerIds.size:'')+'</span>','data-c="perms"'),
       testerOk&&isSuper(uid)?gRow("#5e5ce6","flask","Funkcje testowe","Kto widzi nowe funkcje: nikt, testerzy, wszyscy","",'data-c="flags"'):'',
       genderOk?gRow("#ff2d55","palette","Kolory nicków","","",'data-c="colors"'):'',
@@ -339,6 +340,7 @@ async function loadAvatars(){
 }
 async function loadMyPriv(){
   if(!session)return;
+  await loadPrivFlags();   // 🔒 KROK 62
   const r=await sb.from("profile_private").select("phone,phone_vis,city,city_lat,city_lon,city_vis").eq("user_id",uid).maybeSingle();
   if(r.error){profExOk=false;return}
   profExOk=true;myPriv=r.data||null;
@@ -548,7 +550,7 @@ function userRidesHtml(id){
   // 🚴 KROK 62: liczby z user_rides() (cudze odpowiedzi nie są już czytelne wprost); bez KROKU 62 — jak dotąd
   if(s===undefined){userRides[id]=null;sb.rpc("user_rides",{u:id}).then(r=>{if(r.error||!r.data)throw 0;const d=r.data;
     userRides[id]={n:+d.n||0,km:Math.round(+d.km||0),n30:+d.d30_n||0,km30:Math.round(+d.d30_km||0),kmh:d.avg_kmh!=null?+d.avg_kmh:null,ur:d};
-    if(gearOpen&&(gearView==="user"||gearView==="teczka")&&userId===id)renderGear()}).catch(()=>{sb.from("ride_reports").select("went,km,avg_kmh,ride_at").eq("user_id",id).eq("went",true).eq("ride_test",false).limit(2000)
+    if(gearOpen&&(gearView==="user"||gearView==="teczka")&&userId===id)renderGear();if(gearOpen&&gearView==="myrides"&&id===uid)renderGear()}).catch(()=>{sb.from("ride_reports").select("went,km,avg_kmh,ride_at").eq("user_id",id).eq("went",true).eq("ride_test",false).limit(2000)
     .then(r=>r&&r.error?sb.from("ride_reports").select("went,km,avg_kmh,ride_at").eq("user_id",id).eq("went",true).limit(2000):r).then(r=>{
     const L=(r&&r.data)||[],m=Date.now()-30*864e5;userRides[id]={n:L.length,km:Math.round(L.reduce((a,x)=>a+(+x.km||0),0)),n30:L.filter(x=>x.ride_at&&new Date(x.ride_at).getTime()>m).length,km30:Math.round(L.filter(x=>x.ride_at&&new Date(x.ride_at).getTime()>m).reduce((a,x)=>a+(+x.km||0),0)),kmh:(()=>{const v=L.filter(x=>x.avg_kmh!=null).map(x=>+x.avg_kmh);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null})()};
     if(gearOpen&&(gearView==="user"||gearView==="teczka")&&userId===id)renderGear()})});return ""}
@@ -580,7 +582,7 @@ function userHtml(){
    +(mu.length?'<div class="ucsoc">'+mu.map(([k,ic,t])=>'<a class="ucs" href="'+esc(medias[userId][k])+'" target="_blank" rel="noopener nofollow" title="'+esc(t)+'" aria-label="'+esc(t)+'">'+uiIcon(ic)+'</a>').join("")+'</div>':'')
    +(ux.phone&&userId!==uid?'<div class="uccall"><a class="ucb" href="tel:'+esc(ux.phone.replace(/[^0-9+]/g,""))+'">'+uiIcon("call")+' Zadzwoń</a><a class="ucb" href="sms:'+esc(ux.phone.replace(/[^0-9+]/g,""))+'">'+uiIcon("msg")+' SMS</a></div>'
        +'<div class="ucwhy">'+esc(ux.phone)+(ux.why==="fav"?' · widzisz, bo jesteś w '+(g==="K"?"jej":"jego")+' ulubionych':'')+'</div>':'')
-   +userRidesHtml(userId)
+   +userRidesHtml(userId)+urSectionsHtml(userRides[userId]&&userRides[userId].ur,userId===uid)   // 🚴 KROK 62: rekordy / kalendarz, gdy osoba pozwoliła
    +((fbDone[userId]||0)?'<div class="staz">💡 Zrealizowane zgłoszenia: '+fbDone[userId]+(fbBulb(userId)?' — współtwórca aplikacji':'')+'</div>':'')
    +(visOk?'<button class="b sbtn" data-a="invite" data-id="'+esc(userId)+'">🚴 Zaproś na rower</button>':'')
    +gGrp("Ta osoba",[session?gRow("#0a84ff","cal","Pokaż zaproszenia z "+esc(nicks[userId]||"tą osobą"),"Filtr na liście zaproszeń","",'data-a="fltuser" data-id="'+esc(userId)+'"'):'',

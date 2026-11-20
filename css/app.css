@@ -530,6 +530,11 @@ details.stsec[open]>summary::after{transform:rotate(90deg)}
 .lch .ll{fill:none;stroke:var(--acc);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
 .lch .ld{fill:var(--acc);stroke:var(--card);stroke-width:2}.lt{font-size:11px;fill:var(--mut)}
 .hc.l0{fill:var(--line)}.hc.l1{fill:var(--acc);fill-opacity:.3}.hc.l2{fill:var(--acc);fill-opacity:.55}.hc.l3{fill:var(--acc);fill-opacity:.8}.hc.l4{fill:var(--acc)}
+/* 🚴 Moje jazdy (KROK 62): imprezy na granatowo (czytelne w obu motywach), poza sezonem przygaszone, dziś obwiedzione */
+.hc.ev{fill:#1e3a8a}html[data-theme=dark] .hc.ev{fill:#6b8cff}.hc.out{opacity:.35}.hc.td{stroke:var(--ink);stroke-width:1.2}
+.hleg i.ev{background:#1e3a8a}html[data-theme=dark] .hleg i.ev{background:#6b8cff}
+.urseg{display:flex;width:100%;margin:0 0 8px}.urseg button{flex:1}
+.urln{font-size:14px;margin:8px 2px 4px}.urrec{background:var(--card);border-radius:12px;padding:8px 12px;font-size:14px;line-height:1.5}.urrec>div+div{border-top:.5px solid var(--line);padding-top:4px;margin-top:4px}
 .hleg{display:flex;align-items:center;gap:3px}.hleg i{display:inline-block;width:10px;height:10px;border-radius:2px}
 .hleg i.l1{background:var(--acc);opacity:.3}.hleg i.l2{background:var(--acc);opacity:.55}.hleg i.l3{background:var(--acc);opacity:.8}.hleg i.l4{background:var(--acc)}
 .tkdet{margin-top:6px;font-size:14px}.tkdet summary{cursor:pointer;color:var(--acc);margin-bottom:6px}

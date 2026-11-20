@@ -184,3 +184,130 @@ async function showRide(idx){
 
 // 🗓 kalendarz jazd: dotknięcie kratki pokazuje dzień i liczbę jazd (na telefonie nie ma podpowiedzi po najechaniu)
 document.addEventListener("click",e=>{const r=e.target.closest(".hcal rect");if(!r)return;const t=r.querySelector("title");if(t)say(t.textContent)});
+/* ---------- 🚴 „Moje jazdy” + 🔒 Prywatność (KROK 62; SPEC_moje_jazdy.md, decyzje właściciela 2026-11-20 05:31–06:51) ----------
+   dane: user_rides(u) — sumy zawsze; „Rekordy i seria” (priv_stats) i „Kalendarz i km” (priv_cal) u innych tylko,
+   gdy osoba je włączyła; u siebie zawsze; sezon od 1 listopada; testowe jazdy liczą się (🧪 w podpisie) */
+let privOk=false,myPrivF={arch:false,stats:false,cal:false},urCalMode="done",privAdm=null;
+async function loadPrivFlags(){
+  if(!session)return;
+  const r=await sb.from("profiles").select("priv_arch,priv_stats,priv_cal").eq("user_id",uid).maybeSingle();
+  privOk=!r.error;if(privOk&&r.data)myPrivF={arch:!!r.data.priv_arch,stats:!!r.data.priv_stats,cal:!!r.data.priv_cal};
+}
+const PRIV=[["arch","#5856d6","archive","Moje wyniki w Archiwum","Każdy, kto widzi jazdę, zobaczy, że pojechałeś(-aś), km i średnią","Widzą tylko uczestnicy tej jazdy"],
+  ["stats","#ff9500","medal","Rekordy i seria na mojej karcie","Inni widzą: 30 dni, śr. km/h, serię, ulubiony dzień, rekordy","Inni widzą tylko sumy: jazdy i km"],
+  ["cal","#34c759","cal","Kalendarz i km na mojej karcie","Inni widzą kalendarz jazd, imprezy i km w sezonie (planowane — tylko publiczne)","Tylko Ty"]];
+// grupa przełączników — w ⚙️ Ustawieniach i na dole „Moich jazd” (ten sam wygląd i działanie)
+function privGrpHtml(){
+  if(!session||!privOk)return "";
+  const rows=PRIV.map(([k,col,ic,t,on,off])=>'<div class="ios-it"><span class="ios-ic" style="background:'+col+'">'+uiIcon(ic)+'</span><span class="ios-t">'+t+'<small>'+(myPrivF[k]?on:off)+'</small></span>'
+    +'<button type="button" class="ios-sw'+(myPrivF[k]?' on':'')+'" role="switch" aria-checked="'+myPrivF[k]+'" aria-label="'+esc(t)+'" data-pvs="'+k+'" data-pvv="'+(myPrivF[k]?0:1)+'"></button></div>').join("");
+  return '<div class="ios"><div class="ios-gh">'+uiIcon("lock")+' Prywatność</div><div class="ios-grp">'+rows+'</div></div>'
+   +'<p class="note" style="margin:6px 4px 0">Domyślnie wszystko wyłączone. Zmieniasz tylko Ty — administrator też nie może.</p>';
+}
+async function setPriv(k,v){
+  if(!session||!PRIV.some(p=>p[0]===k))return;
+  const row={};row["priv_"+k]=v;
+  try{const r=await sb.from("profiles").update(row).eq("user_id",uid).select("user_id");if(r.error)throw r.error;if(!r.data||!r.data.length)throw new Error("brak uprawnień");
+    myPrivF[k]=v;delete userRides[uid];renderGear();say("🔒 "+PRIV.find(p=>p[0]===k)[3]+": "+(v?"widoczne dla innych":"ukryte"))}
+  catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+}
+// odległości „jak z Pułtuska do…” (w linii drogowej, w przybliżeniu)
+const KM_FUN=[[60,"Warszawy"],[150,"Olsztyna"],[300,"Gdańska"],[340,"Krakowa"],[600,"Berlina"],[650,"Pragi"],[760,"Wiednia"],[1450,"Paryża"],[1750,"Rzymu"],[2900,"Lizbony"],[5000,"Kairu"]];
+function kmFun(km){const x=KM_FUN.filter(f=>f[0]<=km).pop();return x?'Tyle co z Pułtuska do '+x[1]+' (ok. '+x[0].toLocaleString("pl-PL")+' km)'+(km>=2*x[0]?' — '+Math.floor(km/x[0])+' razy':''):''}
+const fmtD=d=>new Date(d+"T12:00").toLocaleDateString("pl-PL",{day:"numeric",month:"short",year:"numeric"});
+const DOWN=["poniedziałek","wtorek","środa","czwartek","piątek","sobota","niedziela"];
+// 🏆 rekordy i seria
+function urStatsHtml(d){
+  const t=(v,l)=>'<div class="st"><b>'+v+'</b><span>'+l+'</span></div>';
+  const dow=d.dow||[],dm=Math.max(0,...dow),part=d.part||{},pk=Object.keys(part).sort((a,b)=>part[b]-part[a])[0];
+  const PN={rano:"rano",popoludnie:"po południu",wieczor:"wieczorem"};
+  const rec=[d.rec_km?uiIcon("ruler")+' Najdłuższa: <b>'+fmt1(+d.rec_km.km)+' km</b> · '+esc(fmtD(d.rec_km.d)):'',
+    d.rec_kmh?uiIcon("bolt")+' Najszybsza: <b>'+fmt1(+d.rec_kmh.kmh)+' km/h</b> · '+esc(fmtD(d.rec_kmh.d)):'',
+    d.rec_week?uiIcon("cal")+' Najlepszy tydzień: <b>'+fmt1(+d.rec_week.km)+' km</b> · od '+esc(fmtD(d.rec_week.d)):'',
+    d.rec_month?uiIcon("chart")+' Najlepszy miesiąc: <b>'+fmt1(+d.rec_month.km)+' km</b> · '+esc(new Date(d.rec_month.d+"T12:00").toLocaleDateString("pl-PL",{month:"long",year:"numeric"})):''].filter(Boolean);
+  return '<div class="stats">'+t(uiIcon("flame")+' '+(+d.streak||0),plf(+d.streak||0,["tydzień","tygodnie","tygodni"])+' z rzędu')+t(+d.streak_best||0,'najdłuższa seria')
+    +t(+d.d30_n||0,'jazd w 30 dni'+(+d.d30_km?' · '+Math.round(+d.d30_km)+' km':''))+t(d.avg_kmh!=null?fmt1(+d.avg_kmh):'—','śr. km/h')+'</div>'
+   +(dm?'<div class="urln">'+uiIcon("heart")+' Najczęściej: <b>'+DOWN[dow.indexOf(dm)]+'</b>'+(pk&&part[pk]?', <b>'+PN[pk]+'</b>':'')+'</div>':'')
+   +(rec.length?'<div class="urrec">'+rec.map(x=>'<div>'+x+'</div>').join("")+'</div>':'<p class="note">Rekordy pojawią się po pierwszych jazdach z km.</p>')
+   +'<p class="note">Seria = kolejne tygodnie (pon.–niedz.) z co najmniej jedną jazdą; liczy się też ten i poprzedni tydzień.</p>';
+}
+// 📅 kalendarz: Odbyte (12 tygodni) / Planowane (od tygodnia wstecz, 9 tygodni); imprezy na granatowo
+function urCalHtml(d){
+  const day=864e5,today=startOfDay(new Date()).getTime(),mon=today-((new Date().getDay()+6)%7)*day,iso=t=>localIso(new Date(t)).slice(0,10);
+  const plan=urCalMode==="plan",first=plan?mon-7*day:mon-11*7*day,W=plan?9:12,by={},ev={};
+  if(plan)(d.plan||[]).forEach(p=>{const k=startOfDay(new Date(p.at)).getTime();by[k]=(by[k]||0)+1});
+  else (d.days||[]).forEach(x=>{by[new Date(x.d+"T00:00").getTime()]=+x.n||0});
+  (d.events||[]).forEach(e=>{for(let t=new Date(e.from+"T00:00").getTime();t<=new Date(e.to+"T00:00").getTime();t+=day)(ev[startOfDay(new Date(t)).getTime()]=ev[startOfDay(new Date(t)).getTime()]||[]).push(e.name)});
+  const seas=new Date((d.season||"2000-01-01")+"T00:00").getTime(),cw=plan?30:22.5;
+  let cells="";
+  for(let w=0;w<W;w++)for(let dd=0;dd<7;dd++){const t=first+(w*7+dd)*day;if(!plan&&t>today)continue;if(plan&&t<today-7*day)continue;
+    const n=by[t]||0,e=ev[t],out=!plan&&t<seas;
+    cells+='<rect class="hc '+(e?'ev':'l'+(n?Math.min(4,n+1):0))+(out?' out':'')+(t===today?' td':'')+'" x="'+(26+w*cw)+'" y="'+(2+dd*15)+'" width="'+(cw-3.5)+'" height="12.5" rx="3"><title>'
+      +esc(new Date(t).toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"}))+(n?': '+n+' '+plf(n,plan?["jazda w planie","jazdy w planie","jazd w planie"]:["jazda","jazdy","jazd"]):'')+(e?' · 🏁 '+esc(e.join(", ")):'')+'</title></rect>'}
+  const nE=Object.keys(ev).filter(k=>plan?+k>=today-7*day:+k>=first&&+k<=today).length;
+  return '<div class="ios-seg urseg">'+[["done","Odbyte"],["plan","Planowane"]].map(([k,n])=>'<button type="button" data-urc="'+k+'" class="'+(urCalMode===k?"on":"")+'">'+n+'</button>').join("")+'</div>'
+   +'<svg class="hcal" viewBox="0 0 300 108" role="img" aria-label="'+(plan?'Planowane jazdy: od tygodnia wstecz do 8 tygodni naprzód':'Odbyte jazdy z 12 tygodni')+'">'
+   +[[0,"pn"],[2,"śr"],[4,"pt"],[6,"nd"]].map(([i,t])=>'<text class="lt" x="0" y="'+(12+i*15)+'">'+t+'</text>').join("")+cells+'</svg>'
+   +'<div class="nbl"><span>'+(plan?((d.plan||[]).length?(d.plan||[]).length+' '+plf((d.plan||[]).length,["jazda w planie","jazdy w planie","jazd w planie"]):'Brak planowanych jazd'):'Od '+esc(new Date(first).toLocaleDateString("pl-PL",{day:"numeric",month:"short"})))+'</span>'
+   +'<span class="hleg">'+(plan?'':'mniej <i class="hc l1"></i><i class="hc l2"></i><i class="hc l4"></i> więcej · ')+'<i class="hc ev"></i> impreza'+(nE?'':'')+'</span></div>'
+   +(plan&&(d.plan||[]).some(p=>p.test)?'<p class="note">W planie są też '+uiIcon("flask")+' testowe zaproszenia.</p>':'');
+}
+// 📈 km narastająco w sezonie (od 1 listopada)
+function urKmHtml(d){
+  const day=864e5,s=new Date((d.season||"2000-01-01")+"T00:00").getTime(),end=startOfDay(new Date()).getTime(),D=Math.max(1,Math.round((end-s)/day));
+  const km={};(d.days||[]).forEach(x=>{km[new Date(x.d+"T00:00").getTime()]=+x.km||0});
+  let c=0;const pts=[...Array(D+1)].map((_,i)=>{c+=km[s+i*day]||0;return c}),tot=pts[D];
+  const W=300,H=112,mx=Math.max(1,tot),px=i=>8+i*(W-16)/D,py=n=>H-12-n/mx*(H-36),p=pts.map((n,i)=>(i?'L':'M')+px(i).toFixed(1)+' '+py(n).toFixed(1)).join(' ');
+  const tn=(d.days||[]).reduce((a,x)=>a+(+x.t||0),0);
+  return '<svg class="lch" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Kilometry narastająco od '+esc(fmtD(d.season))+': '+Math.round(tot)+' km">'
+   +[0,.5,1].map(f=>'<line class="lg" x1="8" x2="'+(W-8)+'" y1="'+(24+f*(H-36)).toFixed(1)+'" y2="'+(24+f*(H-36)).toFixed(1)+'"/>').join("")
+   +'<path class="la" d="'+p+' L'+px(D).toFixed(1)+' '+(H-12)+' L8 '+(H-12)+' Z"/><path class="ll" d="'+p+'"/>'
+   +'<circle class="ld" cx="'+px(D).toFixed(1)+'" cy="'+py(tot).toFixed(1)+'" r="4.5"/>'
+   +'<text class="lt" x="'+(px(D)-6).toFixed(1)+'" y="'+(py(tot)-9).toFixed(1)+'" text-anchor="end">'+Math.round(tot).toLocaleString("pl-PL")+' km</text></svg>'
+   +'<div class="nbl"><span>od '+esc(new Date(s).toLocaleDateString("pl-PL",{day:"numeric",month:"short"}))+'</span><span>dziś</span></div>'
+   +(kmFun(tot)?'<div class="urln">'+uiIcon("map")+' '+esc(kmFun(tot))+'</div>':'')
+   +(tn?'<p class="note">W tym '+uiIcon("flask")+' '+tn+' '+plf(tn,["testowa jazda","testowe jazdy","testowych jazd"])+' — znikną po „Usuń testowe zaproszenia”.</p>':'');
+}
+// sekcje rozwijane (jak w Statystykach) — u siebie i na cudzej karcie, gdy osoba pozwoliła
+function urSectionsHtml(d,own){
+  if(!d)return "";
+  const sec=(k,h,sum,body)=>'<details class="stsec" data-j="ur_'+k+'"'+(joinOpen.has("ur_"+k)?' open':'')+'><summary><span>'+h+'</span>'+(sum!==""&&sum!=null?'<span class="stsum">'+sum+'</span>':'')+'</summary><div class="stbody">'+body+'</div></details>';
+  let h="";
+  if("streak" in d)h+=sec("rek",uiIcon("trophy")+" Rekordy i seria",(+d.streak||0)?uiIcon("flame")+' '+d.streak+' '+plf(+d.streak,["tydz.","tyg.","tyg."]):'',urStatsHtml(d));
+  if("days" in d){h+=sec("cal",uiIcon("cal")+" Kalendarz jazd","",urCalHtml(d));
+    const kmS=(d.days||[]).reduce((a,x)=>a+(+x.km||0),0);h+=sec("km",uiIcon("trend")+" Km w sezonie",Math.round(kmS).toLocaleString("pl-PL")+' km',urKmHtml(d))}
+  if(!own&&!h)return "";
+  return h;
+}
+// ekran ⚙️ → „Moje jazdy”
+function myRidesHtml(){
+  const head='<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">'+uiIcon("bike")+' Moje jazdy</div>';
+  const s0=userRides[uid];if(s0===undefined)userRidesHtml(uid);
+  if(!s0)return head+'<div class="smail">Ładuję…</div>';
+  if(!s0.ur)return head+'<div class="sleft"><div class="changed">Wymaga KROKU 62 w bazie.</div></div>';
+  const d=userRides[uid].ur,t=(v,l)=>'<div class="st"><b>'+v+'</b><span>'+l+'</span></div>';
+  return head+'<div class="smail">Twoje jazdy z „Jak poszło?”. Sezon od 1 listopada.</div><div class="sleft">'
+   +'<div class="stats">'+t(+d.n||0,plf(+d.n||0,["jazda","jazdy","jazd"]))+t((Math.round(+d.km||0)).toLocaleString("pl-PL"),"km")+(+d.test_n?t(uiIcon("flask")+' '+d.test_n,'w tym testowych'):'')+'</div>'
+   +urSectionsHtml(d,true)
+   +privGrpHtml()+'</div>';
+}
+// 🛡️ Administracja → „Prywatność”: zasady + ile osób co włączyło (bez listy osób; zmieniać nie można)
+async function loadPrivAdm(){
+  const r=await sb.from("profiles").select("priv_arch,priv_stats,priv_cal").limit(5000);
+  privAdm=r.error?{err:1}:{n:(r.data||[]).length,arch:(r.data||[]).filter(x=>x.priv_arch).length,stats:(r.data||[]).filter(x=>x.priv_stats).length,cal:(r.data||[]).filter(x=>x.priv_cal).length};
+  if(gearView==="privadm")renderGear();
+}
+function privAdmHtml(){
+  const head='<button class="sback" data-c="backadmin">‹ Administracja</button><div class="sname" style="margin-top:26px">'+uiIcon("lock")+' Prywatność</div>';
+  if(!privAdm){loadPrivAdm();return head+'<div class="smail">Ładuję…</div>'}
+  if(privAdm.err)return head+'<div class="sleft"><div class="changed">Brak KROKU 62 w bazie.</div></div>';
+  const t=(v,l)=>'<div class="st"><b>'+v+'</b><span>'+l+'</span></div>';
+  return head+'<div class="smail">Każdy sam decyduje, co pokazuje innym. Domyślnie wszystko jest ukryte. Administrator nie może zmienić cudzych ustawień.</div><div class="sleft">'
+   +'<h3>Ile osób włączyło (z '+privAdm.n+')</h3><div class="stats">'+t(privAdm.arch,"wyniki w Archiwum")+t(privAdm.stats,"rekordy i seria")+t(privAdm.cal,"kalendarz i km")+'</div>'
+   +'<h3>Kto co widzi</h3><div class="urrec">'
+   +'<div>'+uiIcon("user")+' <b>Gość</b> — tylko imprezy (gdy włączone) i liczbę jadących; nie widzi kart osób ani jazd.</div>'
+   +'<div>'+uiIcon("users")+' <b>Zalogowany</b> — na cudzej karcie: zaproszenia, dołączenia, jazdy, km. Resztę tylko za zgodą osoby.</div>'
+   +'<div>'+uiIcon("archive")+' <b>Archiwum</b> — wyniki „Jak poszło?” widzą uczestnicy jazdy, admini i 👑; pozostali — gdy osoba włączy „Moje wyniki w Archiwum”.</div>'
+   +'<div>'+uiIcon("shield")+' <b>Admin i 👑</b> — rekordy, serię i kalendarz innych widzą tylko za zgodą osoby; Statystyki — bez danych osób.</div></div>'
+   +'<p class="note">Ochrona jest w bazie (reguły dostępu), nie tylko w wyglądzie aplikacji.</p></div>';
+}
