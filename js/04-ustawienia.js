@@ -52,6 +52,7 @@ function adminHtml(){
    +'<div class="sname" style="margin-top:26px">🛡️ Administracja</div>'
    +'<div class="stats admbar">'+t(onl,"teraz online","onlineadm")+(fbOk?t(fbN,fbN===1?"nowe zgłoszenie":"nowych zgłoszeń","fbadmin"):'')+t(today,"zaproszeń dziś","wantstoday")+'</div>'
    +(evs.some(x=>x.delete_req_at)?gGrp("Do zrobienia",[gRow("#ff3b30","trash","Prośby o usunięcie imprez","Autorzy chcą usunąć swoje imprezy",'<span class="ios-bdg">'+evs.filter(x=>x.delete_req_at).length+'</span>','data-c="evdelreq"')]):'')
+   +(canStealth()?gGrp("Moja widoczność",[iosIt("#636366","eye","Widoczny online",hideOnline?"Wyłączony: nikt nie widzi Cię w „online”. Ty widzisz wszystkich.":"Inni widzą Cię jako online",iosSw(!hideOnline,"data-ho",hideOnline?"0":"1"))]):'')
    +gGrp("Narzędzia",[gRow("#0a84ff","chart","Statystyki","Aktywność, jazdy, logowania","",'data-c="stats"'),
       fbOk?gRow("#bf5af2","msg","Zgłoszenia","Uwagi i błędy od użytkowników",fbN?'<span class="ios-bdg">'+fbN+'</span>':'','data-c="fbadmin"'):'',
       gRow("#30b0c7","users","Użytkownicy",isKingReal()?"Szukaj, filtruj, otwórz teczkę":"Szukaj, filtruj, karta osoby",'<span class="ios-v">'+Object.keys(nicks).length+'</span>','data-c="users"'),

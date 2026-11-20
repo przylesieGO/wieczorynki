@@ -245,6 +245,7 @@ function renderGear(){
   else if(gearView==="flags")body=flagsHtml();
   else if(gearView==="privadm")body=privAdmHtml();
   else if(gearView==="myrides"&&session)body=myRidesHtml();
+  else if(gearView==="priv"&&session)body=privPageHtml();
   else if(gearView==="testdel"&&isSuper(uid))body=testDelHtml();
   else if(gearView==="favs"&&session)body=favsHtml();
   else if(gearView==="tg"&&tgOn())body=tgHtml();
@@ -267,28 +268,28 @@ function renderGear(){
   // ⚙️ góra w stylu grup iPhone'a + wyróżniona „Baza tras” (wariant B, decyzja właściciela 2026-11-16 15:11)
   else body=session
     ?profCardHtml()
-     +(reportOk?gGrp("Profil",[gRow("#34c759","bike","Moje jazdy","Kalendarz, rekordy, km w sezonie",userRides[uid]&&userRides[uid].n?'<span class="ios-v">'+userRides[uid].n+'</span>':'','data-c="myrides"')]):'')   // 🚴 KROK 62
-     +(isAdmin?gGrp("Administracja",[gRow("#8e8e93","shield","Administracja","Użytkownicy, zgłoszenia, statystyki, uprawnienia",fbAdmUnread().length?'<span class="ios-bdg">'+fbAdmUnread().length+'</span>':'','data-c="admin"')]):'')
-     +rbHeroHtml()+testerCardHtml()
-     +gGrp("Ludzie i okolica",[favOk?gRow("#ffcc00","starf","Ulubieni","Zawsze na górze list",favs.size?'<span class="ios-v">'+favs.size+'</span>':'','data-c="favs"'):"",
-        (evGeoOk&&tabOk(3))||rbOk?gRow("#ff9f0a","pin","Moja miejscowość",rbOk&&!(evGeoOk&&tabOk(3))?"Odległość do tras":"Odległość do imprez i tras",'<span class="ios-v">'+(homeGet()?esc(homeGet().name):'Ustaw')+'</span>','data-home="1"'):""])
+     +gGrp("Profil",[reportOk?gRow("#34c759","bike","Moje jazdy","Kalendarz, rekordy, km w sezonie",userRides[uid]&&userRides[uid].n?'<span class="ios-v">'+userRides[uid].n+'</span>':'','data-c="myrides"'):"",favOk?gRow("#ffcc00","starf","Ulubieni","Zawsze na górze list",favs.size?'<span class="ios-v">'+favs.size+'</span>':'','data-c="favs"'):"",
+        (evGeoOk&&tabOk(3))||rbOk?gRow("#ff9f0a","pin","Moja miejscowość",rbOk&&!(evGeoOk&&tabOk(3))?"Odległość do tras":"Odległość do imprez i tras",'<span class="ios-v">'+(homeGet()?esc(homeGet().name):'Ustaw')+'</span>','data-home="1"'):"",reportOk?gRow("#5856d6","lock","Prywatność","Kto widzi Twoje jazdy i rekordy","",'data-c="priv"'):""])
+     +rbHeroHtml()+testerCardHtml()+setRidesHtml()
      +gGrp("Powiadomienia",[tgOn()?gRow("#0a84ff","send","Telegram"+betaTag("telegram_dm"),"Powiadomienia prosto na telefon",tgLink?'<span class="ios-v ok">'+uiIcon("check")+'Połączony</span>':'<span class="ios-v">Połącz</span>','data-c="tg"'):"",
         gRow("#0a84ff","mega","Kanał @PrzylesieGo","Nowe jazdy dla wszystkich","",'href="https://t.me/PrzylesieGo" target="_blank" rel="noopener"',"a")])
-     +gGrp("Pomoc i opinie",[gRow("#30d158","help","Pomoc — co potrafi aplikacja","Wersja "+esc(APP_VER),relNew()?'<span class="ios-bdg">Nowości</span>':'','data-c="help"'),
-        fbOk?gRow("#bf5af2","msg","Oceń aplikację / zgłoś błąd","Błąd, pomysł albo ocena — odpisujemy",fbMineUnread().length?'<span class="ios-bdg">'+fbMineUnread().length+'</span>':'','data-c="fb"'):"",
-        isStandalone()?"":gRow("#636366","phone","Zainstaluj aplikację","Ikona na ekranie telefonu","",'data-c="inst"')])
-     +(isKingReal()?gGrp("👑 Podgląd aplikacji",[
+     +setLookHtml(false)
+     +setTestHtml()
+     +(isAdmin?gGrp("Narzędzia",[gRow("#8e8e93","shield","Administracja","Użytkownicy, zgłoszenia, statystyki, uprawnienia",fbAdmUnread().length?'<span class="ios-bdg">'+fbAdmUnread().length+'</span>':'','data-c="admin"')]):'')
+     +(isKingReal()?gGrp("Podgląd aplikacji",[
         gRow("#8e8e93","user","Jak widzi gość","Nowa karta bez logowania",'','data-c="pv" data-pv="guest"'),
         gRow("#0a84ff","users","Jak widzi użytkownik","Bez funkcji testowych i bez uprawnień admina",pv==="user"?'<span class="ios-v ok">'+uiIcon("check")+'Teraz</span>':'','data-c="pv" data-pv="user"'),
         gRow("#bf5af2","flask","Jak widzi tester","Z funkcjami testowymi (🧪 BETA), bez uprawnień admina",pv==="tester"?'<span class="ios-v ok">'+uiIcon("check")+'Teraz</span>':'','data-c="pv" data-pv="tester"')]):'')
-     +setGroupsHtml(false)+privGrpHtml()   // 🔒 KROK 62
+     +gGrp("Pomoc i opinie",[gRow("#30d158","help","Pomoc — co potrafi aplikacja","Wersja "+esc(APP_VER),relNew()?'<span class="ios-bdg">Nowości</span>':'','data-c="help"'),
+        fbOk?gRow("#bf5af2","msg","Oceń aplikację / zgłoś błąd","Błąd, pomysł albo ocena — odpisujemy",fbMineUnread().length?'<span class="ios-bdg">'+fbMineUnread().length+'</span>':'','data-c="fb"'):"",
+        isStandalone()?"":gRow("#636366","phone","Zainstaluj aplikację","Ikona na ekranie telefonu","",'data-c="inst"')])
      +'<div class="ios-grp" style="margin-top:22px"><button type="button" class="ios-it ios-row ios-out" data-c="out">Wyloguj</button></div>'
      +'<button class="sdanger" data-c="del">Usuń konto…</button>'
     :'<div class="sname" style="margin-top:28px">Przeglądasz jako gość</div><div class="smail">Zaloguj się, żeby zapraszać na rower i dołączać do jazd.</div>'
      +'<button class="b sbtn" data-c="login">Zaloguj się / załóż konto</button>'
      +gGrp("Pomoc",[gRow("#30d158","help","Pomoc — co potrafi aplikacja","Wersja "+esc(APP_VER),relNew()?'<span class="ios-bdg">Nowości</span>':'','data-c="help"'),
         isStandalone()?"":gRow("#636366","phone","Zainstaluj aplikację","Ikona na ekranie telefonu","",'data-c="inst"')])
-     +setGroupsHtml(true);
+     +setLookHtml(true);
   p.innerHTML='<div class="sheetbox"><button class="sclose" data-c="close" aria-label="Zamknij">✕</button>'+body+'</div>';
   const s=$("adminsel");
   if(s&&keepSel&&[...s.options].some(o=>o.value===keepSel))s.value=keepSel;
@@ -474,6 +475,7 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="admin"){gearView="admin";renderGear();return}
   if(c==="colors"){gearView="colors";renderGear();return}
   if(c==="stats"){gearView="stats";loadStats();return}
+  if(c==="priv"){gearView="priv";renderGear();return}   // 🔒 ⚙️ → Prywatność (podstrona)
   if(c==="myrides"){delete userRides[uid];gearView="myrides";renderGear();return}   // 🚴 KROK 62 — zawsze świeże dane
   if(c==="privadm"){privAdm=null;gearView="privadm";renderGear();return}
   if(c==="userback2m"){gearView=tkFrom&&tkId===modDelId?"teczka":"user";renderGear();return}

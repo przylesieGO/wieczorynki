@@ -27,20 +27,24 @@ function rbHeroHtml(){
 }
 let rbHeroLoading=false;
 // ⚙️ ustawienia w stylu Ustawień iPhone'a (Apple HIG): grupy, ikonka, przełącznik / mały segment
-function setGroupsHtml(guest){
-  const sw=(on,attr,val)=>'<button type="button" class="ios-sw'+(on?' on':'')+'" role="switch" aria-checked="'+on+'" '+attr+'="'+val+'"></button>';
-  const it=(col,ico,t,sub,ctrl)=>'<div class="ios-it"><span class="ios-ic" style="background:'+col+'">'+uiIcon(ico)+'</span><span class="ios-t">'+t+(sub?'<small>'+sub+'</small>':'')+'</span>'+ctrl+'</div>';
-  const grp=(h,rows)=>rows.filter(Boolean).length?'<div class="ios-gh">'+h+'</div><div class="ios-grp">'+rows.filter(Boolean).join("")+'</div>':'';
+// klocki wspólne dla całego panelu: przełącznik i wiersz z kontrolką; nagłówki grup zawsze przez gGrp (jeden styl)
+const iosSw=(on,attr,val)=>'<button type="button" class="ios-sw'+(on?' on':'')+'" role="switch" aria-checked="'+on+'" '+attr+'="'+val+'"></button>';
+const iosIt=(col,ico,t,sub,ctrl)=>'<div class="ios-it"><span class="ios-ic" style="background:'+col+'">'+uiIcon(ico)+'</span><span class="ios-t">'+t+(sub?'<small>'+sub+'</small>':'')+'</span>'+ctrl+'</div>';
+// Wygląd i ekran (też dla gościa)
+function setLookHtml(guest){
   const theme='<span class="ios-seg">'+[["light","Jasny"],["dark","Ciemny"],["auto","Auto"]].map(([k,n])=>'<button type="button" data-t="'+k+'" class="'+(themeMode===k?"on":"")+'">'+n+'</button>').join("")+'</span>';
-  return '<div class="ios">'
-   +grp("Wygląd i ekran",[
-     it("#5e5ce6","moon","Motyw",themeMode==="auto"?"Jak w telefonie":"",theme),
-     guest?"":it("#0a84ff","user","Nick na górze ekranu","",sw(showNick,"data-sn",showNick?"0":"1")),
-     it("#30d158","help","Pomoc przy starcie","",sw(!helpOff,"data-hs",helpOff?"1":"0"))])
-   +(guest?'':grp("Zaproszenia",[reportOk?it("#34c759","bike","Pytaj „Jak poszło?” po jeździe",repOff()?"Wyłączone — możesz ocenić jazdę z karty w 🗄 Archiwum":"Raz po jeździe: km, średnia, ocena (bez testowych)",sw(!repOff(),"data-ro",repOff()?"0":"1")):"",testOk?it("#ff453a","flask","Testowe zaproszenia",hideTest?"Ukryte — widzisz tylko prawdziwe (Twoje zostają)":"Widoczne — wyłącz, żeby widzieć tylko prawdziwe",sw(!hideTest,"data-ht",hideTest?"0":"1")):""]))
-   +(guest||!meTester()?'':grp("🧪 Tester",[it("#bf5af2","flask","Funkcje testowe",betaOn?"Widzisz funkcje w budowie (🧪 BETA)":"Wyłączone — widzisz aplikację tak jak wszyscy",sw(betaOn,"data-beta",betaOn?"0":"1"))]))
-   +(guest||!canStealth()?'':grp("🛡️ Administrator",[it("#636366","eye","Widoczny online",hideOnline?"Wyłączony: nikt nie widzi Cię w „online”. Ty widzisz wszystkich.":"Inni widzą Cię jako online",sw(!hideOnline,"data-ho",hideOnline?"0":"1"))]))
-   +'</div>';
+  return gGrp("Wygląd i ekran",[
+    iosIt("#5e5ce6","moon","Motyw",themeMode==="auto"?"Jak w telefonie":"",theme),
+    guest?"":iosIt("#0a84ff","user","Nick na górze ekranu","",iosSw(showNick,"data-sn",showNick?"0":"1")),
+    iosIt("#30d158","help","Pomoc przy starcie","",iosSw(!helpOff,"data-hs",helpOff?"1":"0"))]);
+}
+// Jazdy i zaproszenia: „Jak poszło?” (karta Baza tras stoi nad tą grupą)
+function setRidesHtml(){
+  return gGrp("Jazdy i zaproszenia",[reportOk?iosIt("#34c759","bike","Pytaj „Jak poszło?” po jeździe",repOff()?"Wyłączone — możesz ocenić jazdę z karty w 🗄 Archiwum":"Raz po jeździe: km, średnia, ocena (bez testowych)",iosSw(!repOff(),"data-ro",repOff()?"0":"1")):""]);
+}
+// Testy: Testowe zaproszenia (każdy z włączoną funkcją) + Funkcje testowe (tylko testerzy)
+function setTestHtml(){
+  return gGrp("Testy",[testOk?iosIt("#ff453a","flask","Testowe zaproszenia",hideTest?"Ukryte — widzisz tylko prawdziwe (Twoje zostają)":"Widoczne — wyłącz, żeby widzieć tylko prawdziwe",iosSw(!hideTest,"data-ht",hideTest?"0":"1")):"",meTester()?iosIt("#bf5af2","flask","Funkcje testowe",betaOn?"Widzisz funkcje w budowie (🧪 BETA)":"Wyłączone — widzisz aplikację tak jak wszyscy",iosSw(betaOn,"data-beta",betaOn?"0":"1")):""]);
 }
 // pełny opis (rozwijany pod krótką pomocą)
 // 📲 instalacja jako aplikacja (PWA): Android/Chrome — systemowe okienko; iPhone — instrukcja
@@ -135,7 +139,7 @@ function helpFullHtml(){
      "<b>Tempo:</b> Senior Adventure 15–18, Turystycznie 18–24, SPEEDAY 26+ km/h albo ✏️ własne. Bez wyboru — tempo dowolne.",
      "<b>Dystans</b> albo <b>„Na ile jedziesz?”</b> (domyślnie 2 h). Pod zegarem widać „⏱ Jazda ok. 18:00–20:40”.",
      "<b>Kilka zaproszeń dziennie</b> — ale nie mogą na siebie nachodzić (+15 min zapasu). Gdy nachodzą, okienko pod zegarem i pasek nad „Wyślij” robią się żółte, a „Ustaw 11:55” podpowiada najwcześniejszą wolną godzinę.",
-     "<b>🧪 Testowe / 🚴 Prawdziwe:</b> testowe są na próbę (czerwona migająca plakietka TEST, na kanale z oznaczeniem). Możesz je ukryć: ⚙️ → „Testowe zaproszenia: Ukryj”.",
+     "<b>🧪 Testowe / 🚴 Prawdziwe:</b> testowe są na próbę (czerwona migająca plakietka TEST, na kanale z oznaczeniem). Możesz je ukryć: ⚙️ → Testy → „Testowe zaproszenia”.",
      "<b>Kto zobaczy?</b> 🌍 Wszyscy (także kanał Telegram) albo 🔒 ⭐ Ulubieni / 👥 wybrane osoby. Prywatne widzą tylko zaproszeni; mogą doprosić kolejne osoby.",
      "<b>🚲 Rower / teren</b>: dla wszystkich (domyślnie), szosa, gravel, MTB, trekking.",
      "<b>📍 Punkt zbiórki</b> (opcjonalnie): wybierz z listy, „✏️ Inne miejsce…” albo „🗺️ Wskaż na mapie…”. Przełącznik „Dodaj do listy miejsc” zapisze miejsce dla wszystkich. Na karcie „Mapa ›” otwiera nawigację.",
@@ -158,7 +162,7 @@ function helpFullHtml(){
    +(tabOk(3)?sec("🏁 Imprezy",[
      "Rajdy, gravele, maratony, biegi i marsze. Na karcie: data, miejsce, dystanse (z przewyższeniem i limitem czasu), „🏁 start za 12 dni”, zapisy trwają / zakończone, kto z nas jedzie.",
      "<b>Rozwiń kartę</b>, wybierz dystans i kliknij „Jadę!” (przy biegu „Biegnę”, przy marszu „Idę”). ❤ Lubię, 📅 do Google Kalendarza, udostępnij.",
-     "<b>📍 W okolicy</b> — imprezy w promieniu 50 / 100 / 200 km od <b>Mojej miejscowości</b> (ustawisz w filtrze albo w ⚙️ → Okolica) albo od Twojej lokalizacji z telefonu. Na każdej karcie widać odległość w linii prostej.",
+     "<b>📍 W okolicy</b> — imprezy w promieniu 50 / 100 / 200 km od <b>Mojej miejscowości</b> (ustawisz w filtrze albo w ⚙️ → Profil → Moja miejscowość) albo od Twojej lokalizacji z telefonu. Na każdej karcie widać odległość w linii prostej.",
      "<b>＋ Dodaj imprezę</b> — każdy zalogowany. Autor i admin edytują; ⧉ Duplikuj tworzy kolejną edycję (rok i daty +1). Dystanse ułożysz, przeciągając ⋮⋮. Usuwa admin (autor prosi o usunięcie)."]):'')
    +(rbOk?sec("🗺️ Baza tras",[
      "<b>⚙️ → Baza tras</b> — trasy, którymi jeździmy. Sortowanie: najczęściej wybierane, najlepsze, najbardziej malownicze, najtrudniejsze, najłatwiejsze, najmniej aut, najwięcej lasu, asfalt, teren, gastronomia, najdłuższe, najbliżej (od Mojej miejscowości); filtr roweru i szukajka.",

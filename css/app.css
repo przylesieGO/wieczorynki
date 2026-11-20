@@ -57,6 +57,10 @@ body.pvon{padding-top:30px}body.pvon .hdr{top:30px}.wbeta{border-radius:999px;wi
 .nit.new .tx{padding-right:40px}.nit.stn.new .tx{padding-right:12px}.nit.stn .nmk{position:static;margin-left:8px;flex:none}
 .bsmka{display:flex;justify-content:flex-end;margin:2px 2px 0}.bsmka .lnk{font-size:13px;display:inline-flex;align-items:center;gap:5px}.bsmka .ui-i{width:15px;height:15px}
 .bsbox .bsect.unr{background:var(--acc2);box-shadow:inset 3px 0 0 var(--acc)}
+/* 🔔 hierarchia: rozwinięta sekcja = nagłówek + „drabinka” (wcięta linia) z pozycjami pod spodem; kolor akcentu przy nieprzeczytanych */
+.bsbox .bsect:not(.col){border-radius:12px 12px 0 0;margin-bottom:0}
+.bsbox .bsect:not(.col)+.bsecb{margin-left:14px;padding:4px 0 8px 12px;border-left:2px solid var(--line);border-radius:0 0 0 10px}
+.bsbox .bsect.unr:not(.col)+.bsecb{border-left-color:var(--acc)}
 .nit .sb{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.nit .sb .b{padding:8px 12px;font-size:14px;border-radius:10px}
 .nit .nnews{font-size:14px;margin-top:6px;padding:6px 9px;border-radius:9px;background:var(--card)}.nit .nmore{color:var(--mut);font-weight:700}
 .bsbox .bsempty{padding:8px 4px;font-size:14px}.bsempty .lnk{font-size:14px;padding:0}

@@ -197,14 +197,20 @@ const PRIV=[["arch","#5856d6","archive","Moje wyniki w Archiwum","Każdy, kto wi
   ["stats","#ff9500","medal","Rekordy i seria na mojej karcie","Inni widzą: 30 dni, śr. km/h, serię, ulubiony dzień, rekordy","Inni widzą tylko sumy: jazdy i km"],
   ["cal","#34c759","cal","Kalendarz i km na mojej karcie","Inni widzą kalendarz jazd, imprezy i km w sezonie (planowane — tylko publiczne)","Tylko Ty"]];
 // grupa przełączników — w ⚙️ Ustawieniach i na dole „Moich jazd” (ten sam wygląd i działanie)
-function privGrpHtml(){
+function privGrpHtml(noHead){
   // start z pamięci telefonu nie wczytuje profilu od nowa — dociągnij przełączniki raz, przy pierwszym pokazaniu
   if(session&&!privOk&&!privLoading){privLoading=true;loadPrivFlags().then(()=>{if(privOk&&gearOpen)renderGear()})}
   if(!session||!privOk)return "";
   const rows=PRIV.map(([k,col,ic,t,on,off])=>'<div class="ios-it"><span class="ios-ic" style="background:'+col+'">'+uiIcon(ic)+'</span><span class="ios-t">'+t+'<small>'+(myPrivF[k]?on:off)+'</small></span>'
     +'<button type="button" class="ios-sw'+(myPrivF[k]?' on':'')+'" role="switch" aria-checked="'+myPrivF[k]+'" aria-label="'+esc(t)+'" data-pvs="'+k+'" data-pvv="'+(myPrivF[k]?0:1)+'"></button></div>').join("");
-  return '<div class="ios"><div class="ios-gh">'+uiIcon("lock")+' Prywatność</div><div class="ios-grp">'+rows+'</div></div>'
+  return '<div class="ios">'+(noHead?'':'<div class="ios-gh">Prywatność</div>')+'<div class="ios-grp">'+rows+'</div></div>'
    +'<p class="note" style="margin:6px 4px 0">Domyślnie wszystko wyłączone. Zmieniasz tylko Ty — administrator też nie może.</p>';
+}
+// ⚙️ → Prywatność: osobna podstrona (te same przełączniki są też na dole „Moich jazd”)
+function privPageHtml(){
+  return '<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">'+uiIcon("lock")+' Prywatność</div>'
+   +'<div class="smail">Co inni widzą o Twoich jazdach.</div>'
+   +(privGrpHtml(true)||'<div class="note">Ładuję…</div>');
 }
 async function setPriv(k,v){
   if(!session||!PRIV.some(p=>p[0]===k))return;

@@ -11,7 +11,7 @@ function repAutoOpen(id){repAskedAdd(id);openReport(id)}
 const myRep=w=>(reports[w.id]||[]).find(r=>r.user_id===uid);
 const repCan=w=>!!session&&reportOk&&wantStart(w).getTime()<=Date.now()&&Date.now()-new Date(w.starts_at).getTime()<7*864e5&&(w.user_id===uid||(joins[w.id]||[]).includes(uid));
 // testowe: pytamy też po nich (decyzja właściciela 13:15 — pomaga w testach), ale ich odpowiedzi nie liczą się do statystyk (KROK 45)
-// pytanie można wyłączyć: ⚙️ → Zaproszenia → „Pytaj „Jak poszło?” po jeździe” (localStorage.repOff)
+// pytanie można wyłączyć: ⚙️ → Jazdy i zaproszenia → „Pytaj „Jak poszło?” po jeździe” (localStorage.repOff)
 const repOff=()=>{try{return localStorage.getItem("repOff")==="1"}catch(e){return false}};
 function repPending(){
   const sk=repSkip(),lt=repAsked();
@@ -117,7 +117,7 @@ $("repsheet").addEventListener("click",e=>{
   const b=e.target.closest("[data-rs]");if(!b||!rs)return;const k=b.dataset.rs,v=b.dataset.v;
   if(k==="later"){repLaterAdd();closeRep();renderBell();say("Jazda czeka w 🔔 Powiadomieniach.");return}
   if(k==="skip"){const sk=repSkip();sk.add(rs.id);try{localStorage.setItem("repSkip",JSON.stringify([...sk]))}catch(err){}closeRep();renderWants();renderBell();return}
-  if(k==="off"){try{localStorage.setItem("repOff","1")}catch(err){}closeRep();renderWants();say("Nie będę pytać po jazdach. Włączysz w ⚙️ → Zaproszenia.");return}
+  if(k==="off"){try{localStorage.setItem("repOff","1")}catch(err){}closeRep();renderWants();say("Nie będę pytać po jazdach. Włączysz w ⚙️ → Jazdy i zaproszenia.");return}
   if(k==="save"){saveReport();return}
   if(k==="went")rs.went=v==="1";
   if(k==="km"){rs.kmMode=v;const w=wants.find(x=>x.id===rs.id),plan=kmOf(w);if(v!=="plan"&&!rs.km&&plan)rs.km=String(plan)}
