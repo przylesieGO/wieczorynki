@@ -571,8 +571,8 @@ function nickBansHtml(){
   if(nickBans===null)return head+'<div class="sleft"><div class="note">Ładuję…</div></div>';
   if(nickBans===false)return head+'<div class="sleft"><div class="note">Lista niedostępna — w bazie trzeba uruchomić KROK 67.</div></div>';
   const rows=nickBans.map(b=>{const h=nbHits(b.key,b.mode);
-    return '<div class="arow" data-nb="'+esc(b.key)+'"><span><b>'+esc(b.word)+'</b><br><span class="note">'+(b.mode==="contains"?'zawiera':'dokładnie')
-     +(h.length?' · ⚠️ pasuje: '+h.map(id=>esc(nicks[id])).join(", "):'')+(b.added_by&&nicks[b.added_by]?' · dodał(a) '+esc(nicks[b.added_by]):'')+'</span></span>'
+    const sub=[b.added_by&&nicks[b.added_by]?'dodał(a) '+esc(nicks[b.added_by]):'',h.length?'⚠️ pasuje: '+h.map(id=>esc(nicks[id])).join(", "):''].filter(Boolean).join(" · ");
+    return '<div class="arow" data-nb="'+esc(b.key)+'"><span><b>'+esc(b.word)+'</b>'+(sub?'<br><span class="note">'+sub+'</span>':'')+'</span>'
      +'<span class="arbtns" style="flex-wrap:nowrap;align-items:center"><span class="ios-seg">'+NB_M.map(([m,t])=>'<button type="button" data-a="nbmode" data-id="'+esc(b.key)+'" data-m="'+m+'" class="'+(b.mode===m?'on':'')+'"'+(m==="contains"&&b.key.length<4?' disabled title="Od 4 liter"':'')+'>'+t+'</button>').join("")+'</span>'
      +'<button class="b g small" data-a="nbdel" data-id="'+esc(b.key)+'" aria-label="Usuń „'+esc(b.word)+'”">🗑</button></span></div>'}).join("");
   return head+'<div class="sleft">'
