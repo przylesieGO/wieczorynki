@@ -445,6 +445,12 @@ function wantDayHtml(w){
    +'<span class="wms">'+(jn?'dołączyło: '+jn:'nikt jeszcze nie dołączył')+(isTest(w)?' · test':'')+'</span></div>'
    +'<button type="button" class="lnk wmup" data-wmup="'+esc(w.id)+'" aria-label="Pokaż wyżej">Wyżej ↑</button></div>';
 }
+// 🕖 po ustaleniu godziny: osoba, która wybierała z zakresu, widzi swój wybór i ustaloną godzinę (prośba właściciela 2026-11-20 19:17)
+function myPickHtml(w,myp,joined,mine){
+  if(mine||!joined||!myp||!w.settled_at)return "";
+  const a=hhmm(new Date(myp)),b=hhmm(new Date(w.starts_at));
+  return '<div class="meta">🕖 Twój wybór: <b>'+esc(a)+'</b>'+(a===b?' · ustalono na tę godzinę':' · ustalono <b>'+esc(b)+'</b>')+'</div>';
+}
 function wantHtml(w){
     const j=joins[w.id]||[],mine=w.user_id===uid,joined=j.includes(uid),others=j.filter(x=>x!==w.user_id);
     const priv=isPriv(w),canInv=priv&&!mine&&wantCanInvite(w);
@@ -455,7 +461,7 @@ function wantHtml(w){
      +(live?liveHtml(w):'')
      +paceHtml(w)+bikeHtml(w)+(live?'':durLineHtml(w))+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+(live?'':wxHtml(w))+routeBoxHtml(w)
      +invitedHtml(w)
-     +(open?tallyHtml(w):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w))
+     +(open?tallyHtml(w):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w)+(live?'':myPickHtml(w,myp,joined,mine)))
      +'<div class="acts">'
      +(mine?(live?'':(open?'<button class="b join" data-my="settle" data-id="'+esc(w.id)+'" title="Ustal godzinę">✅ Ustal '+esc(hhmm(new Date(wBest(w))))+'</button>':'<button class="b g join" data-my="edit" data-id="'+esc(w.id)+'">✏️ Edytuj</button>')
         +(priv?'<button class="ib" data-my="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
