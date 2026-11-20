@@ -217,4 +217,18 @@ document.addEventListener("click",e=>{
   b.innerHTML=uiIcon(show?"eyeoff":"eye");
   b.setAttribute("aria-label",show?"Ukryj hasło":"Pokaż hasło");
 });
-
+/* ✅ okno potwierdzenia w stylu aplikacji (zamiast systemowego confirm(), który część przeglądarek blokuje — wtedy nic się nie działo).
+   askOk(tekst, napis przycisku, czerwony?) → Promise<true/false>. Pierwszy akapit (do „\n\n”) to pytanie, reszta — opis pod nim. Enter = potwierdź, Esc / tło = anuluj. */
+function askOk(msg,ok,danger){
+  return new Promise(res=>{
+    const old=document.getElementById("cfm");if(old)old.remove();
+    const [t,...rest]=String(msg).split("\n\n");
+    const d=document.createElement("div");d.id="cfm";d.className="sheet cfm";d.setAttribute("role","alertdialog");d.setAttribute("aria-modal","true");
+    d.innerHTML='<div class="sheetbox cfmbox"><div class="cfmt">'+esc(t)+'</div>'+(rest.length?'<div class="cfmd">'+esc(rest.join("\n\n"))+'</div>':'')
+      +'<div class="cfmb"><button type="button" class="cfmno">Anuluj</button><button type="button" class="cfmok'+(danger?' bad':'')+'">'+esc(ok||"OK")+'</button></div></div>';
+    const kd=e=>{if(e.key==="Escape"||e.key==="Enter"){e.preventDefault();e.stopPropagation();done(e.key==="Enter")}};
+    const done=v=>{document.removeEventListener("keydown",kd,true);d.remove();res(v)};
+    d.addEventListener("click",e=>{e.stopPropagation();if(e.target===d||e.target.closest(".cfmno"))done(false);else if(e.target.closest(".cfmok"))done(true)});
+    document.addEventListener("keydown",kd,true);document.body.appendChild(d);d.querySelector(".cfmok").focus();
+  });
+}

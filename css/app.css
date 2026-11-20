@@ -931,3 +931,6 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 .myl{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:4px}
 #popsheet .nk{pointer-events:none}
 .popbox .nks{margin-top:4px}
+/* ✅ okno potwierdzenia askOk() — nad panelami (4000/4100), pod komunikatami (5000) */
+.cfm{z-index:4600}.cfmbox{max-width:340px;padding:24px 20px 18px}.cfmt{font-size:17px;font-weight:700;line-height:1.35;white-space:pre-line}.cfmd{font-size:14.5px;color:var(--mut);margin-top:8px;line-height:1.4;white-space:pre-line}
+.cfmb{display:flex;gap:10px;margin-top:20px}.cfmb button{flex:1;padding:12px 8px;border:0;border-radius:12px;font:inherit;font-size:16px;font-weight:600;cursor:pointer}.cfmno{background:var(--fill);color:var(--ink)}.cfmok{background:var(--accbtn);color:#fff}.cfmok.bad{background:var(--bad)}

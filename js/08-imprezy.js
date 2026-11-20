@@ -246,7 +246,7 @@ async function evJoin(e,did){
   catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
 }
 async function evLeave(e){
-  if(!confirm("Rezygnujesz z „"+e.name+"”?"))return;
+  if(!await askOk("Rezygnujesz z „"+e.name+"”?","Rezygnuję",1))return;
   try{const r=await sb.from("event_participants").delete().eq("event_id",e.id).eq("user_id",uid);if(r.error)throw r.error;
     evPart[e.id]=(evPart[e.id]||[]).filter(x=>x.user_id!==uid);renderEvents();say("Zrezygnowano.")}catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
 }
@@ -280,7 +280,7 @@ $("p3").addEventListener("click",async e=>{
     try{const r=on?await sb.from("event_likes").delete().eq("event_id",ev.id).eq("user_id",uid):await sb.from("event_likes").insert({event_id:ev.id});if(r.error)throw r.error;
       if(on)evLikes[ev.id]=L.filter(x=>x!==uid);else{L.push(uid);try{navigator.vibrate&&navigator.vibrate(10)}catch(err){}}renderEvents()}catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}return}
   if(a==="delreq"){
-    if(!confirm("Poprosić admina o usunięcie imprezy „"+ev.name+"”?"))return;
+    if(!await askOk("Poprosić admina o usunięcie imprezy „"+ev.name+"”?","Poproś"))return;
     try{const t=new Date().toISOString(),r=await sb.from("events").update({delete_req_at:t,delete_req_by:uid}).eq("id",ev.id).select("id");if(r.error||!r.data||!r.data.length)throw r.error||new Error("brak uprawnień");
       ev.delete_req_at=t;ev.delete_req_by=uid;renderEvents();say("Wysłano prośbę o usunięcie — zdecyduje admin.")}catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}return}
   if(a==="delno"){

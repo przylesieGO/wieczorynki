@@ -414,16 +414,16 @@ $("gearpanel").addEventListener("click",async e=>{
     if(a.dataset.a==="invite"){const id=a.dataset.id;gearOpen=false;renderGear();show(0);openWantForm(null,{pick:[id]});return}
     if(a.dataset.a==="trm"){
       if(!isSuper(uid))return;
-      if(!confirm("Odebrać prawa testera użytkownikowi "+nickOf(a.dataset.id)+"?"))return;
+      if(!await askOk("Odebrać prawa testera użytkownikowi "+nickOf(a.dataset.id)+"?","Odbierz",1))return;
       try{const r=await sb.from("testers").delete().eq("user_id",a.dataset.id);if(r.error)throw r.error;await syncNow();say("Odebrano prawa testera.")}
       catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
       return;
     }
     if(["modhide","modban"].includes(a.dataset.a)&&isSuper(uid)){
       const id=a.dataset.id,ban=modBanned.has(id),hid=modHidden.has(id),nb=a.dataset.a==="modban"?!ban:ban,nh=a.dataset.a==="modhide"?!hid:hid;
-      if(a.dataset.a==="modhide"&&!confirm(nh?"Ukryć konto "+nickOf(id)+"?\n\nInni przestaną widzieć to konto i jego zaproszenia. Możesz to cofnąć.":"Pokazać konto "+nickOf(id)+" innym?\n\nKonto i jego zaproszenia znowu będą widoczne dla wszystkich."))return;
-      if(a.dataset.a==="modban"&&!nb&&!confirm("Odblokować konto "+nickOf(id)+"?\n\nOsoba znowu będzie mogła zapraszać i dołączać do jazd."))return;
-      if(a.dataset.a==="modban"&&nb&&!confirm("Zablokować konto "+nickOf(id)+"?\n\nOsoba zobaczy komunikat „Konto zablokowane — napisz do administratora”, nie będzie mogła zapraszać ani dołączać, a jej zaproszenia znikną innym. Możesz to cofnąć."))return;
+      if(a.dataset.a==="modhide"&&!await askOk(nh?"Ukryć konto "+nickOf(id)+"?\n\nInni przestaną widzieć to konto i jego zaproszenia. Możesz to cofnąć.":"Pokazać konto "+nickOf(id)+" innym?\n\nKonto i jego zaproszenia znowu będą widoczne dla wszystkich.",nh?"Ukryj":"Pokaż"))return;
+      if(a.dataset.a==="modban"&&!nb&&!await askOk("Odblokować konto "+nickOf(id)+"?\n\nOsoba znowu będzie mogła zapraszać i dołączać do jazd.","Odblokuj"))return;
+      if(a.dataset.a==="modban"&&nb&&!await askOk("Zablokować konto "+nickOf(id)+"?\n\nOsoba zobaczy komunikat „Konto zablokowane — napisz do administratora”, nie będzie mogła zapraszać ani dołączać, a jej zaproszenia znikną innym. Możesz to cofnąć.","Zablokuj",1))return;
       modBusy=true;renderGear();
       try{const r=await sb.rpc("mod_set",{u:id,ban:nb,hide:nh});if(r.error)throw r.error;
         nb?modBanned.add(id):modBanned.delete(id);nh?modHidden.add(id):modHidden.delete(id);
@@ -433,7 +433,7 @@ $("gearpanel").addEventListener("click",async e=>{
     if(a.dataset.a==="plcity"){fillPlaceCities(true);return}
     if(a.dataset.a==="plpin"||a.dataset.a==="pldel"){
       const x=places.find(y=>y.id===a.dataset.id);if(!x)return;
-      if(a.dataset.a==="pldel"){if(!confirm("Usunąć miejsce „"+x.name+"” z listy? Zaproszenia, które już je mają, zostaną bez zmian."))return;
+      if(a.dataset.a==="pldel"){if(!await askOk("Usunąć miejsce „"+x.name+"” z listy? Zaproszenia, które już je mają, zostaną bez zmian.","Usuń",1))return;
         try{const r=await sb.from("places").delete().eq("id",x.id);if(r.error)throw r.error;places=places.filter(y=>y.id!==x.id);renderGear();say("Usunięto miejsce: "+x.name)}catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}return}
       gearOpen=false;renderGear();
       openPlaceMap({name:x.name,lat:x.lat,lon:x.lon,onOk:async(la,lo)=>{
@@ -468,7 +468,7 @@ $("gearpanel").addEventListener("click",async e=>{
     if(!isAdmin)return;
     if(a.dataset.a==="unick"){unickId=a.dataset.id;gearView="unick";renderGear();const i=$("gunick");if(i){i.focus();i.select()}return}
     if(a.dataset.a==="rm"&&isSuper(a.dataset.id)){say("Głównemu administratorowi nie można odebrać uprawnień.");return}
-    if(!confirm("Odebrać uprawnienia administratora użytkownikowi "+nickOf(a.dataset.id)+"?"))return;
+    if(!await askOk("Odebrać uprawnienia administratora użytkownikowi "+nickOf(a.dataset.id)+"?","Odbierz",1))return;
     try{
       const res=await sb.from("admins").delete().eq("user_id",a.dataset.id);
       if(res.error)throw res.error;
@@ -552,7 +552,7 @@ $("gearpanel").addEventListener("click",async e=>{
     return;
   }
   if(c==="tgoff"){
-    if(!confirm("Rozłączyć Telegram? Bot przestanie wysyłać Ci powiadomienia."))return;
+    if(!await askOk("Rozłączyć Telegram? Bot przestanie wysyłać Ci powiadomienia.","Rozłącz",1))return;
     try{const r=await sb.from("telegram_links").delete().eq("user_id",uid);if(r.error)throw r.error;tgLink=null;tgCode="";renderGear();say("🔕 Telegram rozłączony.")}
     catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
     return;
@@ -565,7 +565,7 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="nick"){selGender=genders[uid]||"";nickOpen=false;nickDraft=null;peStart();gearView="nick";renderGear();return}
   if(c==="nicksave"){if(!needProfile()&&!nickShort()&&!(await saveProfEx()))return;await gearSaveNick();return}
   if(c==="pephoto"){const f=$("pefile");if(f)f.click();return}
-  if(c==="pephotodel"){if(!confirm("Usunąć zdjęcie profilowe?\n\nZdjęcie zniknie po kliknięciu „Zapisz”."))return;if(pe){pe.av=null;pe.avCh=true;renderGear()}return}
+  if(c==="pephotodel"){if(!await askOk("Usunąć zdjęcie profilowe?\n\nZdjęcie zniknie po kliknięciu „Zapisz”.","Usuń",1))return;if(pe){pe.av=null;pe.avCh=true;renderGear()}return}
   if(c==="del"){gearView="del";renderGear();const i=$("gdel");if(i)i.focus();return}
   if(c==="delgo"){await gearDeleteAccount();return}
   if(c==="back"){gearView=gearFrom||"main";gearFrom="";renderGear();return}
@@ -619,7 +619,7 @@ async function gearDeleteAccount(){
   const i=$("gdel"),inf=$("gdelinfo");if(!i||deleting||!session)return;
   if(lastAdmin()||isSuper(uid)){renderGear();return}
   if(i.value.trim().toUpperCase()!=="USUŃ"){inf.textContent="Wpisz słowo USUŃ, aby potwierdzić.";return}
-  if(!confirm("Na pewno usunąć konto? Tej operacji nie można cofnąć."))return;
+  if(!await askOk("Na pewno usunąć konto? Tej operacji nie można cofnąć.","Usuń konto",1))return;
   deleting=true;inf.textContent="Usuwam konto…";
   try{
     const r=await sb.rpc("delete_my_account");
@@ -694,7 +694,7 @@ async function adminSaveNick(){
   const n=i.value.trim(),old=nicks[unickId];
   const back=tkFrom&&tkId===unickId?"teczka":"admin";
   if(n===old){gearView=back;renderGear();return}
-  if(!confirm("Zmienić nick „"+old+"” na „"+n+"”?\n\nNowy nick zobaczą wszyscy, także na zaproszeniach i wieczorynkach tej osoby."))return;
+  if(!await askOk("Zmienić nick „"+old+"” na „"+n+"”?\n\nNowy nick zobaczą wszyscy, także na zaproszeniach i wieczorynkach tej osoby.","Zmień"))return;
   const err=await saveNick(n,unickId);
   if(err){$("gunickinfo").textContent=err;return}
   gearView=back;renderGear();say("Zmieniono nick: "+old+" → "+n);

@@ -285,7 +285,7 @@ function askDelete(kind,id){
     r.title="Usunąć trasę z biblioteki?";r.author=l.creator;r.what=l.title+(l.km!=null?" · "+Number(l.km).toFixed(1)+" km":"");r.extra="Wieczorynki, które jej użyły, zachowają swoją kopię trasy.";}
   r.own=own;
   // wariant B: własne zaproszenie bez dołączonych — zwykłe potwierdzenie
-  if(kind==="want"&&own&&!joined){if(confirm("Odwołać zaproszenie na "+r.what+"?"))doDelete(r);return}
+  if(kind==="want"&&own&&!joined){askOk("Odwołać zaproszenie na "+r.what+"?","Odwołaj",1).then(ok=>{if(ok)doDelete(r)});return}
   delReq=r;gearOpen=true;gearView="confdel";renderGear();
   const i=$("gconf");if(i)i.focus();
 }

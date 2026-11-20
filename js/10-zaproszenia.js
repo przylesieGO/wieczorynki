@@ -964,7 +964,7 @@ $("wsave").onclick=async()=>{
   if(ePriv&&!eTarget.length){say(wf.vis==="fav"?"Nie masz jeszcze ulubionych — wybierz osoby w „Kto zobaczy”.":"Wybierz co najmniej jedną osobę w „Kto zobaczy”.");return}
   let visMsg="";
   // prywatne → wszyscy: potwierdzenie (ogłoszenie na kanale Telegram nie da się cofnąć; baza wysyła je tylko raz — KROK 52)
-  if(ow1&&visOk&&isPriv(ow1)&&!ePriv&&!confirm("Zaproszenie zobaczą wszyscy zalogowani.\n\nJeśli jeszcze nie było na kanale Telegram, trafi tam teraz — wiadomości z kanału nie da się cofnąć (nawet gdy później znów zrobisz je prywatnym).\n\nZapisać?"))return;
+  if(ow1&&visOk&&isPriv(ow1)&&!ePriv&&!await askOk("Zaproszenie zobaczą wszyscy zalogowani.\n\nJeśli jeszcze nie było na kanale Telegram, trafi tam teraz — wiadomości z kanału nie da się cofnąć (nawet gdy później znów zrobisz je prywatnym).\n\nZapisać?","Zapisz"))return;
   if(priv&&!ids.length){say(wf.vis==="fav"?"Nie masz jeszcze ulubionych — wybierz osoby w „Kto zobaczy”.":"Wybierz co najmniej jedną osobę w „Kto zobaczy”.");return}
   let editedPriv=false,sigInv=null;
   try{
@@ -1096,7 +1096,7 @@ async function myClick(e){
   if(b.dataset.my==="settlepick"){openPick("settle",w.id);return}
   if(b.dataset.my==="settle"){
     const t=wBest(w);
-    if(!confirm("Ustalić godzinę "+hhmm(new Date(t))+"? Zaproszeni dostaną powiadomienie."))return;
+    if(!await askOk("Ustalić godzinę "+hhmm(new Date(t))+"? Zaproszeni dostaną powiadomienie.","Ustal "+hhmm(new Date(t))))return;
     try{await settleWant(w,t);await syncNow();say("✅ Ustalono "+wfLabel(new Date(t))+" — zaproszeni dostaną powiadomienie.")}
     catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
     return;

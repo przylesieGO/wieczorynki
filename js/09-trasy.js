@@ -476,10 +476,10 @@ $("rbsheet").addEventListener("click",async e=>{
   if(k==="rate"){const mine=(rbReviews[rb.open]||[]).find(r=>r.user_id===uid);rb.rv=rvFrom(mine);rb.rate=true;renderRb();return}
   if(k==="rvsave"){const row=rvRow(rb.open,rb.rv);if(!rvHas(row)){say("Zaznacz coś albo napisz komentarz.");return}
     try{await rvSave(row);await Promise.all([rbLoad(true),rbLoadReviews(rb.open)]);rb.rate=false;renderRb();say("⭐ Dzięki — ocena zapisana.")}catch(err){say("Nie udało się zapisać oceny: "+(err&&err.message||"błąd"))}return}
-  if(k==="rvdel"){if(!confirm("Usunąć Twoją ocenę tej trasy?"))return;
+  if(k==="rvdel"){if(!await askOk("Usunąć Twoją ocenę tej trasy?","Usuń",1))return;
     const r=await sb.from("route_reviews").delete().eq("route_id",rb.open).eq("user_id",uid);if(r.error){say("Nie udało się usunąć.");return}
     await Promise.all([rbLoad(true),rbLoadReviews(rb.open)]);rb.rate=false;renderRb();say("Usunięto Twoją ocenę.");return}
-  if(k==="rvmod"){const u=b.dataset.u;if(!isAdmin||!confirm("Usunąć tę ocenę z komentarzem (moderacja)?"))return;
+  if(k==="rvmod"){const u=b.dataset.u;if(!isAdmin||!await askOk("Usunąć tę ocenę z komentarzem (moderacja)?","Usuń",1))return;
     const r=await sb.from("route_reviews").delete().eq("route_id",rb.open).eq("user_id",u).select("user_id");if(r.error||!r.data||!r.data.length){say("Nie udało się usunąć.");return}
     await Promise.all([rbLoad(true),rbLoadReviews(rb.open)]);renderRb();say("Usunięto ocenę.");return}
   const x=(rbList||[]).find(y=>y.id===rb.open);if(!x)return;
@@ -499,7 +499,7 @@ $("rbsheet").addEventListener("click",async e=>{
     x.name=t;renderRb();say("Zmieniono nazwę.");return}
   if(k==="hide"){const r=await sb.from("route_base").update({hidden:!x.hidden}).eq("id",x.id).select("id");if(r.error||!r.data||!r.data.length){say("Nie udało się.");return}
     x.hidden=!x.hidden;renderRb();say(x.hidden?"🙈 Trasa ukryta — inni jej nie widzą.":"👁 Trasa znowu widoczna.");return}
-  if(k==="del"){if(!confirm("Usunąć trasę „"+x.name+"” z bazy tras? Zaproszenia z tą trasą ją zachowają."))return;
+  if(k==="del"){if(!await askOk("Usunąć trasę „"+x.name+"” z bazy tras? Zaproszenia z tą trasą ją zachowają.","Usuń",1))return;
     const r=await sb.from("route_base").delete().eq("id",x.id).select("id");if(r.error||!r.data||!r.data.length){say("Nie udało się usunąć.");return}
     rbList=rbList.filter(y=>y.id!==x.id);rb.open=null;renderRb();say("Usunięto z bazy tras.");return}
 });
