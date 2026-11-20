@@ -229,8 +229,9 @@ function profHubHtml(){
 }
 function renderGear(){
   const p=$("gearpanel");
-  if(!gearOpen){p.classList.add("hide");gearView="main";gearFrom="";tkFrom=false;return}
+  if(!gearOpen){p.classList.add("hide");gearView="main";gearFrom="";tkFrom=false;favsSnap=null;return}
   p.classList.remove("hide");
+  if(gearView!=="favs")favsSnap=null;
   if((gearView==="admin"||gearView==="users"||gearView==="perms"||gearView==="unick"||gearView==="colors"||gearView==="stats"||gearView==="flags"||gearView==="testdel"||gearView==="privadm")&&!(session&&isAdmin))gearView="main";
   if(gearView==="flags"&&!isSuper(uid))gearView="admin";
   if(gearView==="unick"&&!nicks[unickId])gearView="admin";

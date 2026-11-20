@@ -322,8 +322,10 @@ async function confirmDelete(){
   await doDelete(delReq);
 }
 const starBtn=id=>'<button class="starb'+(isFav(id)?' on':'')+'" data-a="fav" data-id="'+esc(id)+'" title="'+(isFav(id)?'Usuń z ulubionych':'Dodaj do ulubionych')+'">'+(isFav(id)?'⭐':'☆')+'</button>';
+let favsSnap=null;   // porządek listy Ulubieni zamrożony na czas otwarcia widoku: po kliknięciu gwiazdki wiersze się nie przesuwają (czyści renderGear przy zamknięciu/zmianie widoku)
 function favsHtml(){
-  const ids=Object.keys(nicks).filter(id=>id!==uid).sort((a,b)=>((isFav(b)?1:0)-(isFav(a)?1:0))||nicks[a].localeCompare(nicks[b],"pl"));
+  if(!favsSnap)favsSnap=new Set(favs);
+  const ids=Object.keys(nicks).filter(id=>id!==uid).sort((a,b)=>((favsSnap.has(b)?1:0)-(favsSnap.has(a)?1:0))||nicks[a].localeCompare(nicks[b],"pl"));
   return ''+backBtn()+'<div class="sname" style="margin-top:26px">⭐ Ulubieni</div>'
    +'<div class="smail">Tylko Ty widzisz, kogo masz w ulubionych. Ulubieni są na początku list i widać ich w nagłówkach dni.</div>'
    +'<div class="sleft">'+(ids.map(id=>'<div class="arow">'+nk(id)+starBtn(id)+'</div>').join("")||'<div class="note">Brak innych użytkowników z nickiem.</div>')+'</div>';
