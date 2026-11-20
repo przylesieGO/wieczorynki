@@ -360,6 +360,9 @@ function renderWants0(){
     const cnt=d.ws.length,zg=cnt===1?"zgłoszenie":(cnt%10>=2&&cnt%10<=4&&(cnt%100<10||cnt%100>=20))?"zgłoszenia":"zgłoszeń";
     const os=ppl.size===1?"osoba":(ppl.size%10>=2&&ppl.size%10<=4&&(ppl.size%100<10||ppl.size%100>=20))?"osoby":"osób";
     const wd=dt.toLocaleDateString("pl-PL",{weekday:"long"}),fn=favNames([...ppl]);
+    // kto zaprasza tego dnia (zwinięta karta — bez rozwijania karuzeli): ⭐ ulubieni na początku, do 3 imion + „+N”
+    const authIds=favFirst([...new Set(d.ws.map(w=>w.user_id))]),authNames=authIds.map(id=>nicks[id]||"ktoś");
+    const authTxt=authNames.length>3?authNames.slice(0,3).join(", ")+" +"+(authNames.length-3):authNames.join(", ");
     // trwająca jazda: jej godzina na pomarańczowo (jak znacznik TRWA) i zawsze na początku listy
     const hw=d.ws.filter(wLive).concat(d.ws.filter(w=>!wLive(w)));
     const hrs=hw.map(w=>wLive(w)?'<b class="hlive" title="Trwa">'+wTime(w)+'</b>':'<b>'+wTime(w)+'</b>');
@@ -370,6 +373,7 @@ function renderWants0(){
      +'<div class="ftile'+(n===0?' today':'')+(d.ws.some(wLive)?' live':'')+'">'+ftInner(dt)+'</div>'
      +'<div class="wtx"><div class="wl1">'+l1+'</div>'
      +'<div class="wl2"><span class="whrs">'+hrs.slice(0,4).join("")+(hrs.length>4?'<b>+'+(hrs.length-4)+'</b>':'')+'</span>· '+ppl.size+' '+os+(me?'<span class="wme">Ty</span>':'')+'</div>'
+     +'<div class="wl3">Zaprasza: '+esc(authTxt)+'</div>'
      +(fn.length?'<div class="wl3">⭐ '+esc(fn.join(", "))+'</div>':'')+'</div>'
      +'</summary>'+mineTop.map(wantDayHtml).join("")+(ord.length>1
        ?'<div class="dcar" data-day="'+d.k+'">'+ord.map(wantHtml).join("")+'</div><div class="mydots ddots">'+ord.map((_,i)=>'<button type="button" data-ddot="'+i+'" class="'+(i===(dayIdx[d.k]||0)?'on':'')+'" aria-label="Zaproszenie '+(i+1)+'"></button>').join("")+'<span>'+(Math.min(dayIdx[d.k]||0,ord.length-1)+1)+' z '+ord.length+'</span></div>'
