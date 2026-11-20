@@ -564,7 +564,7 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="nick"){selGender=genders[uid]||"";nickOpen=false;nickDraft=null;peStart();gearView="nick";renderGear();return}
   if(c==="nicksave"){if(!needProfile()&&!nickShort()&&!(await saveProfEx()))return;await gearSaveNick();return}
   if(c==="pephoto"){const f=$("pefile");if(f)f.click();return}
-  if(c==="pephotodel"){if(pe){pe.av=null;pe.avCh=true;renderGear()}return}
+  if(c==="pephotodel"){if(!confirm("Usunąć zdjęcie profilowe?\n\nZdjęcie zniknie po kliknięciu „Zapisz”."))return;if(pe){pe.av=null;pe.avCh=true;renderGear()}return}
   if(c==="del"){gearView="del";renderGear();const i=$("gdel");if(i)i.focus();return}
   if(c==="delgo"){await gearDeleteAccount();return}
   if(c==="back"){gearView=gearFrom||"main";gearFrom="";renderGear();return}
