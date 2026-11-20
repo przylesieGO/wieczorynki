@@ -372,7 +372,8 @@ function renderWants0(){
     const hrs=hw.map(w=>wLive(w)?'<b class="hlive" title="Trwa">'+wTime(w)+'</b>':'<b>'+wTime(w)+'</b>');
     const ord0=d.ws.slice().sort((a,b)=>((isFav(b.user_id)?1:0)-(isFav(a.user_id)?1:0))||(new Date(a.starts_at)-new Date(b.starts_at)));
     const mineTop=ord0.filter(wAbove),ord=ord0.filter(w=>!wAbove(w));
-    const l1=n>=0&&n<=2?esc(["Dziś","Jutro","Pojutrze"][n])+' <i>· '+esc(wd)+'</i>':esc(wd.charAt(0).toUpperCase()+wd.slice(1));
+    const wdCap=wd.charAt(0).toUpperCase()+wd.slice(1);
+    const l1=n>=0&&n<=2?esc(["Dziś","Jutro","Pojutrze"][n])+' <i>· '+esc(wdCap)+'</i>':esc(wdCap);
     // 1-2 jazdy: godziny obok nazwy dnia; 3+ — osobny wiersz (nie mieściłoby się)
     const hrsInline=hrs.length<=2,hrsHtml=hrs.slice(0,4).join("")+(hrs.length>4?'<b>+'+(hrs.length-4)+'</b>':'');
     return '<details class="wday" data-day="'+d.k+'"'+(open?' open':'')+'><summary>'

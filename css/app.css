@@ -179,7 +179,7 @@ html[data-theme=dark] .ftile:not(.today) .fh,html[data-theme=dark] .ftile:not(.t
 @keyframes ftdot{0%,60%,100%{opacity:.25}30%{opacity:1}}
 @media (prefers-reduced-motion:reduce){.ftrwa i{animation:none;opacity:.7}}
 .wtx{flex:1;min-width:0}
-.wl1{font-size:19px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wl1 i{font-style:normal;font-weight:500;color:var(--mut)}
+.wl1{font-size:19px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wl1 i{font-style:normal;font-weight:500;color:var(--mut)}.wl1 .whrs{vertical-align:middle}.wl1 .whrs b{font-size:14px;padding:2px 8px}
 .wl2{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--mut);margin-top:2px;white-space:nowrap}
 .wme{font-size:13px;font-weight:700;color:var(--acc);background:var(--acc2);border-radius:999px;padding:1px 9px;white-space:nowrap}
 .wl3{font-size:15px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
