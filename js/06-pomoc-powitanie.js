@@ -1,0 +1,324 @@
+/* ---------- ❓ Pomoc: „Co potrafi PrzylesieGo?” ---------- */
+let helpOff=false;
+try{helpOff=localStorage.getItem("helpOff")==="1"}catch(e){}
+function setHelpOff(v){helpOff=!!v;try{localStorage.setItem("helpOff",helpOff?"1":"0")}catch(e){}}
+const helpPrefHtml=()=>'<div class="note" style="margin-top:14px">Pokazuj pomoc przy starcie</div><div class="seg">'
+  +[["1","Tak"],["0","Nie"]].map(([k,t])=>'<button data-hs="'+k+'" class="'+((helpOff?"0":"1")===k?"on":"")+'">'+t+'</button>').join("")+'</div>';
+let helpMore=false;
+// ⚙️ wiersze-przyciski w grupach (ikonka, nazwa, opis, wartość, ›) — górna część panelu
+function gRow(col,ico,t,sub,right,attrs,tag){tag=tag||"button";
+  return '<'+tag+' '+(tag==="button"?'type="button" ':'')+'class="ios-it ios-row" '+attrs+'><span class="ios-ic" style="background:'+col+'">'+uiIcon(ico)+'</span><span class="ios-t">'+t+(sub?'<small>'+sub+'</small>':'')+'</span>'+(right||'')+'<span class="ios-chev" aria-hidden="true">›</span></'+tag+'>'}
+const gGrp=(h,rows)=>{rows=rows.filter(Boolean);return rows.length?'<div class="ios"><div class="ios-gh">'+h+'</div><div class="ios-grp">'+rows.join("")+'</div></div>':''};
+function profCardHtml(){
+  const n=me.nick||"";
+  const mi=Object.keys(medias[uid]||{}).map(k=>{const m=MEDIA.find(x=>x[0]===k);return m?'<span>'+uiIcon(m[1])+'</span>':''}).join("");
+  return '<button type="button" class="gprof" data-c="nick"><span class="gav'+(genders[uid]==="K"?' k':'')+(avData[uid]?' ph':'')+'" aria-hidden="true">'+(avData[uid]?avImg(uid,"gavi"):esc((n||"?").charAt(0).toUpperCase()))+'</span><span class="gpi"><span>'+(n?nk(uid):'<b>Ustaw nick</b>')+(isAdmin?' '+uiIcon("shield"):'')+'</span>'
+   +'<span class="gml">'+esc(session.user.email||"")+'</span>'+(stazTxt(uid)?'<span class="gsz">'+esc(stazTxt(uid))+'</span>':'')+(mi?'<span class="gmi">'+mi+'</span>':'')+'<span class="ged">'+(n?(profExOk?'Edytuj profil':'Nick i płeć'):'Ustaw nick i płeć')+'</span></span><span class="ios-chev" aria-hidden="true">›</span></button>';
+}
+// 🗺️ wyróżniona karta „Baza tras”: ile tras, 3 najpopularniejsze miniatury, „Odkryj trasy”, „+ Dodaj”
+function rbHeroHtml(){
+  if(!rbOk)return "";
+  if(!rbList&&!rbHeroLoading){rbHeroLoading=true;rbLoad().then(()=>{rbHeroLoading=false;if(gearOpen&&gearView==="main")renderGear()},()=>{rbHeroLoading=false})}
+  const L=(rbList||[]).filter(x=>!x.hidden),top=L.slice().sort((a,b)=>rbUses(b)-rbUses(a)||String(b.created_at).localeCompare(String(a.created_at))).slice(0,3);
+  return '<div class="rbhero"><div class="rbhh">'+uiIcon("map")+'Baza tras</div><div class="rbhp">'
+   +(rbList?(L.length?L.length+' '+plf(L.length,["trasa","trasy","tras"])+' od ekipy — wybierz, sprawdź wiatr i zaproś jednym kliknięciem.':'Jeszcze pusto — dodaj pierwszą trasę: utwórz zaproszenie z plikiem GPX i włącz „Dodaj do bazy tras”.'):'Wczytuję trasy…')+'</div>'
+   +(top.length?'<div class="rbhm">'+top.map(x=>'<button type="button" data-rbhero="'+esc(x.id)+'" aria-label="'+esc(x.name)+'">'+rbSvg(x.preview,100,64,true)+'<small>'+String(Math.round(+x.km))+' km'+(rbUses(x)?' · '+rbUses(x)+'×':'')+'</small></button>').join("")+'</div>':'')
+   +'<div class="rbhb"><button type="button" class="rbh1" data-rbopen="1">Odkryj trasy ›</button><button type="button" class="rbh2" data-rbadd="1">'+(isAdmin?'+ Dodaj trasę':'+ Zaproś z trasą')+'</button></div></div>';
+}
+let rbHeroLoading=false;
+// ⚙️ ustawienia w stylu Ustawień iPhone'a (Apple HIG): grupy, ikonka, przełącznik / mały segment
+function setGroupsHtml(guest){
+  const sw=(on,attr,val)=>'<button type="button" class="ios-sw'+(on?' on':'')+'" role="switch" aria-checked="'+on+'" '+attr+'="'+val+'"></button>';
+  const it=(col,ico,t,sub,ctrl)=>'<div class="ios-it"><span class="ios-ic" style="background:'+col+'">'+uiIcon(ico)+'</span><span class="ios-t">'+t+(sub?'<small>'+sub+'</small>':'')+'</span>'+ctrl+'</div>';
+  const grp=(h,rows)=>rows.filter(Boolean).length?'<div class="ios-gh">'+h+'</div><div class="ios-grp">'+rows.filter(Boolean).join("")+'</div>':'';
+  const theme='<span class="ios-seg">'+[["light","Jasny"],["dark","Ciemny"],["auto","Auto"]].map(([k,n])=>'<button type="button" data-t="'+k+'" class="'+(themeMode===k?"on":"")+'">'+n+'</button>').join("")+'</span>';
+  return '<div class="ios">'
+   +grp("Wygląd i ekran",[
+     it("#5e5ce6","moon","Motyw",themeMode==="auto"?"Jak w telefonie":"",theme),
+     guest?"":it("#0a84ff","user","Nick na górze ekranu","",sw(showNick,"data-sn",showNick?"0":"1")),
+     it("#30d158","help","Pomoc przy starcie","",sw(!helpOff,"data-hs",helpOff?"1":"0"))])
+   +(guest?'':grp("Zaproszenia",[reportOk?it("#34c759","bike","Pytaj „Jak poszło?” po jeździe",repOff()?"Wyłączone — możesz ocenić jazdę z karty w 🗄 Archiwum":"Raz po jeździe: km, średnia, ocena (bez testowych)",sw(!repOff(),"data-ro",repOff()?"0":"1")):"",testOk?it("#ff453a","flask","Testowe zaproszenia",hideTest?"Ukryte — widzisz tylko prawdziwe (Twoje zostają)":"Widoczne — wyłącz, żeby widzieć tylko prawdziwe",sw(!hideTest,"data-ht",hideTest?"0":"1")):""]))
+   +(guest||!meTester()?'':grp("🧪 Tester",[it("#bf5af2","flask","Funkcje testowe",betaOn?"Widzisz funkcje w budowie (🧪 BETA)":"Wyłączone — widzisz aplikację tak jak wszyscy",sw(betaOn,"data-beta",betaOn?"0":"1"))]))
+   +(guest||!canStealth()?'':grp("🛡️ Administrator",[it("#636366","eye","Widoczny online",hideOnline?"Wyłączony: nikt nie widzi Cię w „online”. Ty widzisz wszystkich.":"Inni widzą Cię jako online",sw(!hideOnline,"data-ho",hideOnline?"0":"1"))]))
+   +'</div>';
+}
+// pełny opis (rozwijany pod krótką pomocą)
+// 📲 instalacja jako aplikacja (PWA): Android/Chrome — systemowe okienko; iPhone — instrukcja
+let instPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();instPrompt=e;if(gearOpen)renderGear()});
+window.addEventListener("appinstalled",()=>{instPrompt=null;try{localStorage.setItem("stepInstall","1")}catch(e){}try{renderSteps()}catch(e){}if(gearOpen)renderGear();say("✅ Zainstalowano — PrzylesieGo! jest na ekranie telefonu.")});
+const isStandalone=()=>(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone===true;
+// 📲 instrukcja instalacji — wspólna dla Pomocy i ⚙️ (decyzja właściciela 2026-11-16 11:48)
+// najpierw przeglądarka, w której jesteś teraz; pozostałe rozwijane niżej
+function instEnv(){
+  const ua=navigator.userAgent||"",ios=/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1),android=/Android/.test(ua);
+  const inApp=/Telegram|FBAN|FBAV|Instagram|Messenger|Line\//i.test(ua);
+  let k="desk";
+  if(ios)k=/CriOS/.test(ua)?"ioschrome":/FxiOS|EdgiOS|GSA/.test(ua)?"iosother":"ios";
+  else if(android)k=/SamsungBrowser/.test(ua)?"samsung":/Firefox/.test(ua)?"firefox":"chrome";
+  return {k,ios,android,mobile:ios||android,inApp};
+}
+const INST_G={
+  ios:["iPhone / iPad — Safari",["Stuknij <b>Udostępnij</b> — kwadrat ze strzałką w górę (na dole ekranu albo przy pasku adresu).","Przewiń i wybierz <b>„Do ekranu początkowego”</b>.","Stuknij <b>„Dodaj”</b>."]],
+  ioschrome:["iPhone — Chrome",["Stuknij <b>Udostępnij</b> przy pasku adresu (kwadrat ze strzałką).","Wybierz <b>„Dodaj do ekranu początkowego”</b> (gdy nie ma — otwórz adres w Safari).","Stuknij <b>„Dodaj”</b>."]],
+  iosother:["iPhone — inna przeglądarka",["Najpewniej zadziała w <b>Safari</b>: skopiuj adres i otwórz go w Safari.","Tam: <b>Udostępnij</b> → <b>„Do ekranu początkowego”</b> → <b>„Dodaj”</b>."]],
+  chrome:["Android — Chrome",["Stuknij <b>⋮</b> w prawym górnym rogu.","Wybierz <b>„Zainstaluj aplikację”</b> albo <b>„Dodaj do ekranu głównego”</b>.","Potwierdź <b>„Zainstaluj”</b>."]],
+  firefox:["Android — Firefox",["Stuknij <b>⋮</b> (menu — na dole albo u góry ekranu).","Wybierz <b>„Zainstaluj”</b> albo <b>„Dodaj do ekranu głównego”</b>.","Potwierdź — ikona pojawi się na ekranie."]],
+  samsung:["Android — Samsung Internet",["Stuknij <b>☰</b> (menu na dolnym pasku) — albo ikonę instalacji w pasku adresu.","Wybierz <b>„Dodaj stronę do”</b> → <b>„Ekran startowy”</b>.","Potwierdź <b>„Dodaj”</b>."]],
+  desk:["Komputer — Chrome / Edge / Safari",["<b>Chrome / Edge:</b> ikona instalacji (monitor ze strzałką) po prawej stronie paska adresu → „Zainstaluj”.","<b>Safari na Macu:</b> menu Plik → „Dodaj do Docka”."]]
+};
+function instGuideHtml(){
+  const E=instEnv(),ol=a=>'<ol class="inst">'+a.map(x=>'<li>'+x+'</li>').join("")+'</ol>';
+  if(E.inApp)return '<div class="note warnbox">⚠️ Otwierasz PrzylesieGo! w przeglądarce wbudowanej w '+(/Telegram/i.test(navigator.userAgent)?'Telegram':'komunikator')+' — stąd nie da się zainstalować.</div>'
+    +ol(["Stuknij <b>⋯</b> albo ikonę udostępniania w rogu.",E.ios?"Wybierz <b>„Otwórz w Safari”</b>.":"Wybierz <b>„Otwórz w przeglądarce”</b> (Chrome).","Tam otwórz ❓ Pomoc i zainstaluj według instrukcji."]);
+  const me=INST_G[E.k],others=Object.keys(INST_G).filter(k=>k!==E.k&&!(E.k==="iosother"&&k==="ios"));
+  return '<div class="instme"><div class="instb">Twoja przeglądarka: <b>'+me[0]+'</b></div>'+ol(me[1])+'</div>'
+   +'<details class="instx"><summary>Inne przeglądarki i komputer</summary>'+others.map(k=>'<div class="instb">'+INST_G[k][0]+'</div>'+ol(INST_G[k][1])).join("")+'</details>';
+}
+function instHtml(){
+  return '<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">📲 Zainstaluj aplikację</div>'
+   +(instPrompt?'<button class="b sbtn" data-c="instgo">📲 Zainstaluj teraz</button><div class="note" style="margin:10px 0 2px">albo ręcznie:</div>':'')
+   +'<div class="sleft">'+instGuideHtml()+'<div class="note" style="margin-top:10px">Po instalacji PrzylesieGo! otwiera się jak zwykła aplikacja: pełny ekran bez paska przeglądarki, ikona z dwoma kołami, liczba powiadomień na ikonie.</div></div>';
+}
+// 👀 przykład dla gościa: udawane osoby i zaproszenia, nic nie trafia do bazy
+function demoHtml(){
+  const keep={uid,wants,joins,prefs,decls,invs,nicks,genders,favs,favOk,paceOk,distOk,rangeOk,visOk,testOk,wRouteOk,isAdmin};
+  const t=(dd,h,m)=>{const d=new Date();d.setDate(d.getDate()+dd);d.setHours(h,m||0,0,0);return d.toISOString()};
+  try{
+    uid="demo-me";isAdmin=false;paceOk=distOk=rangeOk=visOk=wRouteOk=true;testOk=false;favOk=true;
+    nicks={"demo-me":"Ty",d1:"Marek z Bielan",d2:"Ania K",d3:"Kasia",d4:"Tomek R",d5:"Ola"};
+    genders={"demo-me":"M",d1:"M",d2:"K",d3:"K",d4:"M",d5:"K"};favs=new Set(["d2"]);
+    const now=new Date(),late=now.getHours()>=17,d0=late?1:0;
+    const W=[
+      {id:"dm1",user_id:"d1",starts_at:t(d0,18,0),note:"Kebab RIDE",visibility:"all",pace:"tour",km:40},
+      {id:"dm2",user_id:"d2",starts_at:t(d0+1,17,0),range_from:t(d0+1,17,0),range_to:t(d0+1,19,0),note:"Coffee Ride ☕",visibility:"all",pace:"senior",dur_min:120},
+      {id:"dm3",user_id:"d4",starts_at:t(d0+2,9,0),note:"SPEEDAY",visibility:"private",pace:"speed",route_km:62.4}];
+    wants=W;joins={dm1:["d2","d3"],dm2:["d1","d4","d5"],dm3:[]};
+    prefs={dm2:{d1:t(d0+1,17,30),d4:t(d0+1,18,0),d5:t(d0+1,18,0)}};decls={dm1:["d5"]};
+    invs={dm3:[{u:"demo-me",by:"d4"},{u:"d1",by:"d4"}]};
+    const WX=["🌡 9°C · 🌬 12 km/h z zachodu · 🌧 10%","🌡 11°C · 🌬 8 km/h z południa · 🌧 0%","🌡 7°C · 🌬 15 km/h z północnego zachodu · 🌧 20%"];
+    W.forEach((w,i)=>{wxTxt[w.id+"|"+wxWhen(w).getTime()]=WX[i]});
+    const cap=(n,t)=>'<div class="dmcap"><span>'+n+'</span><div>'+t+'</div></div>';
+    return '<div class="sheetbox popbox dmbox" role="dialog" aria-modal="true" aria-label="Przykład"><button class="sclose" data-dm="close" aria-label="Zamknij">✕</button>'
+     +'<span class="ptag dmtag">👀 PRZYKŁAD</span><div class="ph">Tak wygląda PrzylesieGo!</div>'
+     +'<div class="note" style="text-align:center">Udawane osoby i jazdy — możesz klikać, nic się nie zapisuje.</div>'
+     +cap(1,'Ktoś zaprasza wszystkich — wystarczy <b>„Jadę!”</b>')+wantHtml(W[0])
+     +cap(2,'Zakres godzin — każdy wybiera, <b>kiedy może</b>, autor ustala start')+wantHtml(W[1])
+     +cap(3,'🔒 Zaproszenie <b>tylko dla Ciebie</b>, z proponowaną trasą GPX')+wantHtml(W[2])
+     +cap(4,'Swoje zaproszenie tworzysz zielonym <b>➕</b> w prawym dolnym rogu. Pod <b>🔔</b> masz wszystkie zaproszenia do Ciebie.')
+     +'<button type="button" class="b big" data-dm="reg">Załóż konto — to 30 sekund</button>'
+     +'<button type="button" class="lnk" data-dm="close" style="display:block;margin:10px auto 0">Zamknij przykład</button></div>';
+  }finally{({uid,wants,joins,prefs,decls,invs,nicks,genders,favs,favOk,paceOk,distOk,rangeOk,visOk,testOk,wRouteOk,isAdmin}=keep)}
+}
+document.addEventListener("click",e=>{if(!e.target.closest("[data-betafb]"))return;
+  if(session&&fbOk){gearOpen=true;gearView="fb";renderGear()}
+  else say(session?"Zgłaszanie uwag będzie dostępne za chwilę — odśwież aplikację.":"🧪 To wersja testowa. Zaloguj się, a uwagi zgłosisz w ⚙️ → „Oceń aplikację / zgłoś błąd”.")});
+function openDemo(){const p=$("demosheet");p.innerHTML=demoHtml();p.classList.remove("hide");p.querySelector(".sheetbox").scrollTop=0}
+function closeDemo(){const p=$("demosheet");p.classList.add("hide");p.innerHTML=""}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-demo]");if(b){e.preventDefault();openDemo()}});
+$("demosheet").addEventListener("click",e=>{
+  if(e.target===$("demosheet")||e.target.closest("[data-dm='close']")){closeDemo();return}
+  if(e.target.closest("[data-dm='reg']")){closeDemo();if(guestMode){setGuest(false);renderChrome()}setTimeout(()=>{const m=$("ae");if(m){m.scrollIntoView({block:"center"});m.focus()}},120);return}
+  if(e.target.closest("button,a,summary,.nk")){e.preventDefault();e.stopPropagation();say("👀 To tylko przykład — załóż konto, żeby jeździć naprawdę.")}
+},true);
+function helpFullHtml(){
+  const tg=feat("telegram_dm"),rides=tabOk(1),sec=(t,items)=>'<div class="hfs"><b>'+t+'</b><ul>'+items.map(x=>'<li>'+x+'</li>').join("")+'</ul></div>';
+  return '<div class="hfull">'
+   +sec("📲 Instalacja",["PrzylesieGo! to aplikacja z przeglądarki (PWA) — instalujesz ją z poziomu przeglądarki, bez sklepu. Instrukcja dla Twojej przeglądarki jest na samej górze Pomocy (i w ⚙️ → 📲 Zainstaluj aplikację).",
+     "Po instalacji: ikona z dwoma kołami, pełny ekran, liczba nieprzeczytanych powiadomień na ikonie. Aktualizacje przychodzą same."])
+   +sec("✨ Pierwsze kroki",["Przez 14 dni od założenia konta na górze Zaproszeń jest karta <b>„Pierwsze kroki”</b> — odhacza się sama (nick, instalacja, pierwsza jazda, Telegram, ulubieni). „Ukryj” chowa kartę; pozostałe kroki zostają pod 🔔 jako <b>„✨ Dokończ start”</b>."])
+   +sec("🚲 Zapraszanie",[
+     "<b>➕ Zaproś na rower</b> (prawy dolny róg) otwiera formularz. Na dole zawsze są „Wyślij” i „Anuluj”; ✕ albo „Anuluj” po zmianach pytają, czy odrzucić.",
+     "<b>Dzień i godzina:</b> Dziś / Jutro / Inny dzień, godzina na kartkach zegara (przeciągnij palcem albo ▲▼) i skróty „Za 30 min”, 17:30, 18:00, 19:00.",
+     "<b>↔ Zakres godzin</b> (np. 17:30–19:30): każdy wybiera „Pasuje mi o…”, Ty ustalasz start („✅ Ustal 18:00”). Jeśli nie ustalisz — ustali się sam 1 h przed początkiem zakresu (najwięcej chętnych).",
+     "<b>🗺️ Trasa GPX</b> (opcjonalnie): inni zobaczą długość, mapę z wiatrem na odcinkach i pobiorą plik. Kosz obok usuwa trasę.",
+     "<b>Tempo:</b> Senior Adventure 15–18, Turystycznie 18–24, SPEEDAY 26+ km/h albo ✏️ własne. Bez wyboru — tempo dowolne.",
+     "<b>Dystans</b> albo <b>„Na ile jedziesz?”</b> (domyślnie 2 h). Pod zegarem widać „⏱ Jazda ok. 18:00–20:40”.",
+     "<b>Kilka zaproszeń dziennie</b> — ale nie mogą na siebie nachodzić (+15 min zapasu). Gdy nachodzą, okienko pod zegarem i pasek nad „Wyślij” robią się żółte, a „Ustaw 11:55” podpowiada najwcześniejszą wolną godzinę.",
+     "<b>🧪 Testowe / 🚴 Prawdziwe:</b> testowe są na próbę (czerwona migająca plakietka TEST, na kanale z oznaczeniem). Możesz je ukryć: ⚙️ → „Testowe zaproszenia: Ukryj”.",
+     "<b>Kto zobaczy?</b> 🌍 Wszyscy (także kanał Telegram) albo 🔒 ⭐ Ulubieni / 👥 wybrane osoby. Prywatne widzą tylko zaproszeni; mogą doprosić kolejne osoby.",
+     "<b>🚲 Rower / teren</b>: dla wszystkich (domyślnie), szosa, gravel, MTB, trekking.",
+     "<b>📍 Punkt zbiórki</b> (opcjonalnie): wybierz z listy, „✏️ Inne miejsce…” albo „🗺️ Wskaż na mapie…”. Przełącznik „Dodaj do listy miejsc” zapisze miejsce dla wszystkich. Na karcie „Mapa ›” otwiera nawigację.",
+     "<b>Notatka:</b> gotowe (Kebab RIDE, Coffee Ride ☕, SPEEDAY…) albo własna. „↺ Jak ostatnio” ustawia godzinę z poprzedniego razu.",
+     "<b>📚 Wybierz z bazy tras</b> — gotowa trasa jednym dotknięciem. Przełącznik „📚 Dodaj trasę do bazy tras” zapisze Twój plik GPX dla wszystkich (z nazwą).",
+     "<b>✏️ Edytuj</b> na karcie „Ty zapraszasz” — zmienisz godzinę, tempo, dystans, trasę i punkt zbiórki; zaproszeni dostaną powiadomienie."])
+   +sec("🙋 Odpowiadanie",[
+     "Na karcie zaproszenia: <b>„Jadę!”</b>, <b>„Nie dam rady”</b>, a przy zakresie <b>„Pasuje mi o…”</b>. „Rezygnuję” — gdy zmienisz zdanie.",
+     "Na karcie: godzina, 🌡 pogoda (temperatura, wiatr, deszcz), tempo, „📏 50 km · ⏱ ok. 18:00–20:40”, kto dołączył i kto nie da rady.",
+     "Zaproszenia są pogrupowane w <b>karty dni</b>; kilka w jednym dniu — przewijasz w bok.",
+     "<b>🚴 Jak poszło?</b> — po jeździe aplikacja (i bot na Telegramie) pyta: pojechałeś?, ile km, średnia prędkość, ocena jazdy i trasy GPX, jak było. Przy trasie z bazy od razu ocenisz ją (malownicza, trudność, ruch aut, plakietki, komentarz). Wyłączysz w ⚙️. Autor potwierdza, kto był. Odpowiedzi widać w archiwum i w statystykach (karta osoby: potwierdzone jazdy i km).",
+     "<b>🚴 TRWA</b> — od startu do końca jazdy: bez edycji, dołączania i dopraszania. Potem zaproszenie trafia do <b>🗄 Archiwum</b> na dole listy (30 dni) z podsumowaniem: kto pojechał, ile km (plan).",
+     "<b>🔍 Filtry</b> (przycisk obok „online”): czyje, kiedy, gdzie (miasto, dzielnica, miejsce), rower / teren, tempo, osoba. Włączone filtry widać w pasku pod nagłówkiem — ✕ usuwa jeden, „Wyczyść” wszystkie. Z karty osoby: „🔍 Pokaż zaproszenia z …”."])
+   +sec("🔔 Powiadomienia",[
+     "<b>🔔 w nagłówku</b> — wszystko w jednym miejscu: <b>📩 Do Ciebie</b> (od innych, prywatne i dla wszystkich), <b>🙋 Twoje zaproszenia</b> (kto dołączył, zmiany), odpowiedzi na Twoje zgłoszenia i — przez pierwsze dni — <b>✨ Dokończ start</b>. Sekcje zwijasz i rozwijasz dotknięciem nagłówka; czerwone kółko = nieprzeczytane (liczba także na ikonie aplikacji).",
+     "Po wejściu wyskakuje okienko, gdy ktoś zaprosił Cię prywatnie. Dowiesz się też, gdy ktoś zrezygnuje i <b>🔁 wróci</b> do Twojej jazdy.",
+     "<b>Czerwona liczba na ➕</b> — ile zaproszeń <b>innych osób</b> jest na dziś (Twoich nie liczy). Po przewinięciu w dół przycisk zwija się do samego ➕.",
+     tg?"<b>Bot Telegram</b> napisze prywatnie: zaproszenie, zmiana godziny i szczegółów, ustalenie startu, kto dołączył, przypomnienie ~1 h przed jazdą. Włączysz: ⚙️ → Połącz z Telegramem → w Telegramie START. Wyłączysz tam samo (Rozłącz).":"",
+     "<b>Kanał @PrzylesieGo</b> na Telegramie — ogłoszenia nowych jazd dla wszystkich."].filter(Boolean))
+   +(tabOk(3)?sec("🏁 Imprezy",[
+     "Rajdy, gravele, maratony, biegi i marsze. Na karcie: data, miejsce, dystanse (z przewyższeniem i limitem czasu), „🏁 start za 12 dni”, zapisy trwają / zakończone, kto z nas jedzie.",
+     "<b>Rozwiń kartę</b>, wybierz dystans i kliknij „Jadę!” (przy biegu „Biegnę”, przy marszu „Idę”). ❤ Lubię, 📅 do Google Kalendarza, udostępnij.",
+     "<b>📍 W okolicy</b> — imprezy w promieniu 50 / 100 / 200 km od <b>Mojej miejscowości</b> (ustawisz w filtrze albo w ⚙️ → Okolica) albo od Twojej lokalizacji z telefonu. Na każdej karcie widać odległość w linii prostej.",
+     "<b>＋ Dodaj imprezę</b> — każdy zalogowany. Autor i admin edytują; ⧉ Duplikuj tworzy kolejną edycję (rok i daty +1). Dystanse ułożysz, przeciągając ⋮⋮. Usuwa admin (autor prosi o usunięcie)."]):'')
+   +(rbOk?sec("🗺️ Baza tras",[
+     "<b>⚙️ → Baza tras</b> — trasy, którymi jeździmy. Sortowanie: najczęściej wybierane, najlepsze, najbardziej malownicze, najtrudniejsze, najłatwiejsze, najmniej aut, najwięcej lasu, asfalt, teren, gastronomia, najdłuższe, najbliżej (od Mojej miejscowości); filtr roweru i szukajka.",
+     "<b>Szczegóły trasy:</b> mapa z wiatrem (czerwone = pod wiatr), długość, przewyższenie, czas, <b>📍 miejscowości na trasie</b> (rozwijana lista z kilometrem od startu), oceny i komentarze.",
+     "<b>Nawierzchnia i otoczenie</b> (z OpenStreetMap, liczone raz dla trasy): ile asfaltu, szutru i gruntu, ile w lesie oraz <b>po drodze</b> — kawiarnie, restauracje, sklepy, woda i serwis (do 200 m, z kilometrem). Rankingi: najwięcej lasu, asfalt, teren, gastronomia.",
+     "<b>🌦 Przed jazdą:</b> wybierz dzień i godzinę startu — pogoda godzina po godzinie (3 h przed, cała jazda, 3 h po), wiatr w połowie jazdy, zachód słońca, ostrzeżenia (deszcz, porywy, gołoledź, zmrok). Gdy w drugą stronę jest lepiej — „↺ Odwróć”.",
+     "<b>🎒 Co zabrać</b> — lista dopasowana do pogody i długości jazdy; odhaczaj, co już spakowane (zapamiętane w telefonie).",
+     "<b>⭐ Oceń trasę</b> — gwiazdki, malownicza, trudność, ruch aut, plakietki i komentarz (widzą wszyscy). <b>🚲 Zaproś na tę trasę</b> otwiera formularz z wybraną trasą.",
+     "Trasy dodaje się z zaproszenia z plikiem GPX (przełącznik w formularzu albo „📚 Do bazy tras” na karcie). Autor i admin zmieniają nazwę, ukrywają i usuwają."]):'')
+   +sec("⭐ Ludzie",[
+     "Dotknij nicku: karta osoby — zdjęcie, „Z nami od…”, media, a jeśli ktoś pozwolił: miejscowość i „Zadzwoń / SMS”; „🚴 Zaproś na rower”, ☆ dodaj do ulubionych. ⭐ ulubieni są zawsze na górze list.",
+     "🟢 zielona kropka przy nicku = osoba ma teraz otwartą aplikację. Przy nickach: ⭐ ulubiony, 🧪 tester, 💡 3 zrealizowane pomysły/zgłoszenia, 👑 główny admin."])
+   +sec("⚙️ Ustawienia",[
+     "Na górze karta profilu → <b>Edytuj profil</b>: zdjęcie, nick i płeć, miejscowość (domyślnie ukryta), Moje media (Strava, Instagram, YouTube, Facebook, www) i telefon z wyborem, kto go widzi (tylko ulubieni albo wszyscy zalogowani). Pod nią <b>🗺️ Baza tras</b>. Dalej grupy: Ludzie i okolica (⭐ ulubieni, Moja miejscowość), Powiadomienia (Telegram, kanał), Pomoc i opinie (💬 oceń aplikację / zgłoś błąd lub pomysł — odpowiedź pod 🔔, instalacja), wygląd ☀️ / 🌙 / Auto, zaproszenia (testowe, „Jak poszło?”), wyloguj, usuń konto.",
+     "<b>⬆</b> w lewym dolnym rogu wraca na górę strony."])
+   +sec("🔒 Prywatność",[
+     "Prywatne zaproszenia widzą tylko autor i zaproszeni — oraz administratorzy, wyłącznie do moderacji (np. usunięcia spamu). Administrator nie może dołączyć ani doprosić się do cudzego prywatnego zaproszenia.",
+     "Nie zapisujemy Twojej lokalizacji — „Moja lokalizacja” na mapie i „📡 moja lokalizacja” w Imprezach działają tylko w telefonie, gdy sam je włączysz. <b>Moja miejscowość</b> jest zapamiętana tylko w Twoim telefonie — nikt jej nie widzi."])
+   +(rides?sec("🗺️ Wieczorynki",["Zaplanowane jazdy z trasą, mapą, wiatrem i odliczaniem — zakładka Wieczorynki."]):'')
+   +'</div>';
+}
+function relHtml(){
+  const r=APP_REL[0],nw=relNew(),li=x=>'<li>'+uiIcon(x[0])+'<span>'+x[1]+'</span></li>';
+  return '<details class="hrel"'+(nw?' open':'')+'><summary>'+uiIcon("sparkles")+' Co nowego w wersji '+esc(r.v)+(nw?' <span class="hrelnew">NOWE</span>':'')+'<small>'+esc(r.d)+'</small></summary>'
+   +'<ul>'+r.items.map(li).join("")+'</ul>'
+   +(APP_REL.length>1?'<details class="hrelold"><summary>Wcześniejsze wersje</summary>'+APP_REL.slice(1).map(o=>'<div class="hrelv">'+esc(o.v)+' · '+esc(o.d)+'</div><ul>'+o.items.map(li).join("")+'</ul>').join("")+'</details>':'')
+   +'</details>';
+}
+function helpHtml(){
+  // pomoc przeredagowana 2026-11-16 11:48: na górze instalacja; potem 4 kroki i wskazówki; pełny opis rozwijany
+  const tg=feat("telegram_dm"),st=(n,b,t)=>'<li><span class="hn">'+n+'</span><span><b>'+b+'</b> '+t+'</span></li>',ev=tabOk(3);
+  const inst=isStandalone()?'<div class="hinst ok">✅ Masz zainstalowaną aplikację — otwierasz ją z ikony na ekranie.</div>'
+    :'<div class="hinst"><div class="hinsth">📲 Zainstaluj jak zwykłą aplikację</div><div class="hinstl">Ikona z dwoma kołami na ekranie telefonu, pełny ekran bez paska przeglądarki i liczba powiadomień na ikonie. Zajmuje chwilę, nic nie pobierasz ze sklepu.</div>'
+      +(instPrompt?'<button type="button" class="b big" data-h="instgo">📲 Zainstaluj teraz</button><div class="note" style="margin:8px 0 0">albo ręcznie:</div>':'')
+      +instGuideHtml()+'</div>';
+  return '<div class="sheetbox popbox hbox" role="dialog" aria-modal="true" aria-label="Pomoc"><button class="sclose" data-h="close" aria-label="Zamknij">✕</button>'
+   +'<div class="ph" style="margin-top:0">Jak to działa?</div>'
+   +relHtml()
+   +inst
+   +'<ol class="hst">'
+   +st(1,"Zaproś na rower — ➕ w prawym dolnym rogu.","Dzień i godzina (albo zakres, np. 17–19 — każdy wybierze, kiedy może). Do tego, jeśli chcesz: tempo, dystans, trasa GPX, punkt zbiórki. Dla wszystkich albo 🔒 tylko dla wybranych.")
+   +st(2,"Dołączaj — „Jadę!” albo „Nie dam rady”.","Zaproszenia są w zakładce Zaproszenia; 🔍 Filtry pokażą tylko te z Twojej okolicy, roweru czy tempa.")
+   +st(3,"Sprawdzaj 🔔","Kto Cię zaprasza, kto dołączył do Twojej jazdy, zmiany godzin. Sekcje zwiniesz i rozwiniesz dotknięciem nagłówka.")
+   +(ev?st(4,"Imprezy — rajdy, gravele, maratony, biegi.","Kliknij dystans i „Jadę!”, a zobaczysz, kto z nas jedzie. „📍 W okolicy” pokaże imprezy blisko Ciebie."):'')
+   +'</ol>'
+   +'<div class="htips"><div>⭐ Dotknij nicku — karta osoby, ulubieni, „Zaproś na rower”.</div>'
+   +(rbOk?'<div>🗺️ <b>Baza tras</b> w ⚙️ — oceny, pogoda na jazdę i lista „co zabrać”.</div>':'')
+   +'<div>🚴 Po jeździe aplikacja zapyta <b>„Jak poszło?”</b> — km, średnia, ocena trasy.</div>'
+   +'<div>🧪 Zaproszenia z czerwoną plakietką <b>TEST</b> są na próbę — śmiało klikaj. Ukryjesz je w ⚙️.</div>'
+   +(session?'':'<div>👤 Żeby zapraszać i dołączać, zaloguj się — wystarczą e-mail i hasło.</div>')+'</div>'
+   +'<button type="button" class="lnk hmorebtn" data-h="more">'+(helpMore?'Zwiń opis ▴':'📖 Wszystkie funkcje — dokładny opis ▾')+'</button>'
+   +(helpMore?helpFullHtml():'')
+   +(tg&&session?(tgLink?'<div class="htg2">✅ Telegram połączony — bot napisze, gdy ktoś Cię zaprosi.</div>'
+       :tgOn()?'<button type="button" class="b sbtn tgx" data-h="tg">'+uiIcon("send")+' Połącz z Telegramem<small>Powiadomienia prosto na telefon</small></button>':'')
+     :'<div class="htg2">📣 Nowe jazdy także na kanale <a href="https://t.me/PrzylesieGo" target="_blank" rel="noopener">@PrzylesieGo ›</a></div>')
+   +(session&&fbOk?'<button type="button" class="lnk" data-h="fb" style="display:block;margin:12px auto 0">💬 Coś nie działa albo masz pomysł? Napisz ›</button>':'')
+   +'<label class="hoff"><input type="checkbox" id="helpoff"'+(helpOff?' checked':'')+'> Nie pokazuj przy starcie</label>'
+   +'<div class="note hver">PrzylesieGo! · wersja '+esc(APP_VER)+' (BETA) · '+esc(APP_REL[0].d)+'</div>'
+   +'<button type="button" class="b big" data-h="close">Zaczynamy!</button></div>';
+}
+function openHelp(){helpMore=false;const p=$("helpsheet");p.innerHTML=helpHtml();p.classList.remove("hide");relMark()}
+function closeHelp(){const p=$("helpsheet");p.classList.add("hide");p.innerHTML=""}
+$("helpsheet").addEventListener("click",async e=>{
+  if(e.target.closest("[data-h='instgo']")){if(instPrompt){const ev=instPrompt;instPrompt=null;try{ev.prompt();const r=await ev.userChoice;say(r&&r.outcome==="accepted"?"📲 Instaluję — ikona pojawi się na ekranie telefonu.":"Możesz zainstalować później — instrukcja jest w ❓ Pomocy.")}catch(err){}}
+    const p=$("helpsheet"),y=p.querySelector(".sheetbox").scrollTop;p.innerHTML=helpHtml();p.querySelector(".sheetbox").scrollTop=y;return}
+  if(e.target.closest("[data-h='tg']")){closeHelp();gearOpen=true;gearView="tg";renderGear();return}
+  if(e.target.closest("[data-h='fb']")){closeHelp();gearOpen=true;gearView="fb";renderGear();return}
+  if(e.target.closest("[data-h='more']")){helpMore=!helpMore;const p=$("helpsheet"),y=p.querySelector(".sheetbox").scrollTop;p.innerHTML=helpHtml();p.querySelector(".sheetbox").scrollTop=y;return}
+  if(e.target===$("helpsheet")||e.target.closest("[data-h='close']"))closeHelp();
+});
+$("helpsheet").addEventListener("change",e=>{if(e.target.id==="helpoff")setHelpOff(e.target.checked)});
+$("helpbtn").onclick=openHelp;
+if(relNew())$("helpbtn").classList.add("newdot");
+$("welhelp").onclick=openHelp;
+// samo się pokazuje raz na uruchomienie aplikacji (po zalogowaniu), dopóki ktoś nie wyłączy
+function maybeHelp(){
+  if(helpOff||!session||needProfile()||gearOpen||pwMode)return;
+  try{if(sessionStorage.getItem("helpShown")==="1")return;sessionStorage.setItem("helpShown","1")}catch(e){}
+  if(popOpen()||!$("whosheet").classList.contains("hide"))return; // powiadomienia mają pierwszeństwo
+  openHelp();
+}
+
+/* ---------- 🎉 powitanie nowego użytkownika (A) + ✨ pierwsze kroki (C) — decyzja właściciela 2026-11-16 09:59 ---------- */
+// A: raz, zaraz po wybraniu pierwszego nicku (zamiast okienka pomocy); podgląd dla każdego: adres z #powitanie
+// C: karta na górze Zaproszeń przez 14 dni od założenia konta; kroki odhaczają się same; „Ukryj” zapamiętane w urządzeniu
+let welForce=false;
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}},lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const WEL_LOGO='<svg viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="27" fill="#1f9d55"/><circle cx="44" cy="62" r="25" fill="none" stroke="#fff" stroke-width="9"/><circle cx="76" cy="62" r="25" fill="none" stroke="#fbbf24" stroke-width="9"/><circle cx="44" cy="62" r="4" fill="#fff"/><circle cx="76" cy="62" r="4" fill="#fbbf24"/></svg>';
+function welPeople(){
+  const on=new Set(onlineIds||[]),up=new Set(wants.filter(w=>new Date(w.starts_at).getTime()>Date.now()-864e5).map(w=>w.user_id));
+  return Object.keys(nicks).filter(id=>id!==uid&&!modGone(id))
+    .sort((a,b)=>(on.has(b)-on.has(a))||(up.has(b)-up.has(a))||(new Date(joinedAt[a]||0)-new Date(joinedAt[b]||0)));
+}
+function openWelcome(){
+  const p=$("welsheet");if(!p||!session||!nicks[uid])return;
+  const P=welPeople(),mj=joinedAt[uid]?new Date(joinedAt[uid]).getTime():Date.now();
+  const n=Object.keys(nicks).filter(id=>!modGone(id)&&(!joinedAt[id]||new Date(joinedAt[id]).getTime()<=mj)).length;
+  const first=String(nicks[uid]).trim().split(/\s+/)[0];
+  const cols=["#1f9d55","#fbbf24","#7c3aed","#ff3b30","#0a84ff","#34c759"],rnd=k=>{const x=Math.sin(k*12.9898)*43758.5453;return x-Math.floor(x)};
+  let cf="";for(let i=0;i<30;i++){const L=i%2?70+rnd(i)*28:2+rnd(i)*28;
+    cf+='<span style="left:'+L.toFixed(1)+'%;--y:'+(10+rnd(i+50)*120).toFixed(0)+'px;--r:'+(rnd(i+99)*540).toFixed(0)+'deg;background:'+cols[i%6]+';width:'+(6+rnd(i+7)*5).toFixed(1)+'px;height:'+(10+rnd(i+3)*8).toFixed(1)+'px;animation-delay:'+(rnd(i+21)*.35).toFixed(2)+'s"></span>'}
+  p.innerHTML='<div class="bsbox welbox" role="dialog" aria-modal="true" aria-label="Witaj w PrzylesieGo"><div class="welcf" aria-hidden="true">'+cf+'</div><div class="bsgrab"></div>'
+   +'<div class="wellg">'+WEL_LOGO+'</div><h2 class="welh">Cześć, '+esc(first)+'!</h2>'
+   +'<div class="welld">Witaj w ekipie PrzylesieGo! Jesteś <b>'+n+'. osobą</b> — od teraz jeździsz z nami.</div>'
+   +(P.length?'<div class="welwho">Już jeżdżą</div><div class="welppl">'+P.slice(0,3).map(id=>nk(id)).join("")+(P.length>3?'<span class="welmore">+'+(P.length-3)+'</span>':'')+'</div>':'')
+   +'<div class="weltl"><div><i>🙋</i><b>Zaproś na rower</b><span>Podaj godzinę — inni dołączą</span></div>'
+   +'<div><i>🚴</i><b>Dołącz do jazdy</b><span>Kliknij „Jadę!” przy zaproszeniu</span></div>'
+   +'<div><i>🔔</i><b>Nic Cię nie ominie</b><span>'+(tgOn()?'Połącz Telegram w ⚙️':'Nowości pod 🔔 w nagłówku')+'</span></div></div>'
+   +'<button type="button" class="b big" data-wl="go">🚲 Zaczynamy!</button><button type="button" class="lnk welhelp" data-wl="help">Pokaż, co potrafi aplikacja ›</button></div>';
+  p.classList.remove("hide");
+  try{navigator.vibrate&&navigator.vibrate([20,40,20])}catch(e){}
+}
+function closeWelcome(){const p=$("welsheet");p.classList.add("hide");p.innerHTML="";renderSteps()}
+$("welsheet").addEventListener("click",e=>{
+  if(e.target===$("welsheet")){closeWelcome();return}
+  const b=e.target.closest("[data-wl]");if(!b)return;
+  closeWelcome();if(b.dataset.wl==="help")openHelp();
+});
+function stepsList(){
+  const S=[{k:"nick",t:"Wybierz nick",ok:!!nicks[uid]}];
+  if(isStandalone())lsSet("stepInstall","1");
+  if(instEnv().mobile||lsGet("stepInstall")==="1")S.push({k:"inst",t:"Zainstaluj aplikację na telefonie",ok:lsGet("stepInstall")==="1",go:"Jak?"});
+  let ride=lsGet("stepRide")==="1"||wants.some(w=>w.user_id===uid)||Object.values(joins).some(a=>(a||[]).includes(uid));
+  if(ride)lsSet("stepRide","1");
+  S.push({k:"ride",t:"Dołącz do jazdy albo zaproś",ok:ride,go:"Zobacz"});
+  if(tgOn())S.push({k:"tg",t:"Połącz Telegram",ok:!!tgLink,go:"Połącz"});
+  if(favOk)S.push({k:"fav",t:"Dodaj ulubionych ⭐",ok:favIds().length>0,go:"Wybierz"});
+  return S;
+}
+// dostępne przez 14 dni od założenia konta; „Ukryj” chowa tylko kartę w Zaproszeniach — kroki zostają w 🔔 („✨ Dokończ start”)
+const stepsAvail=()=>!!session&&!!nicks[uid]&&(welForce||(!!joinedAt[uid]&&Date.now()-new Date(joinedAt[uid]).getTime()<14*864e5));
+const stepsOn=()=>stepsAvail()&&lsGet("stepsHide")!=="1";
+const stepsLeft=()=>stepsAvail()?stepsList().filter(x=>!x.ok):[];
+// licznik na dzwonku: tylko do pierwszego obejrzenia listy 🔔 i gdy karta nie jest ukryta
+const stepsBadge=()=>lsGet("stepsSeen")==="1"||lsGet("stepsHide")==="1"?0:stepsLeft().length;
+function stepGo(k){
+  if(k==="inst"){if(instPrompt){const ev=instPrompt;instPrompt=null;try{ev.prompt();ev.userChoice.then(r=>{if(r&&r.outcome==="accepted"){lsSet("stepInstall","1");renderSteps()}}).catch(()=>{})}catch(e){gearOpen=true;gearView="inst";renderGear()}return}
+    gearOpen=true;gearView="inst";renderGear();return}
+  if(k==="ride"){show(0);const w=document.querySelector("#wantlist .want");if(w){w.scrollIntoView({behavior:"smooth",block:"center"});w.classList.remove("flash");void w.offsetWidth;w.classList.add("flash")}else openWantForm(null);return}
+  if(k==="tg"){gearOpen=true;gearView="tg";renderGear();return}
+  if(k==="fav"){gearOpen=true;gearView="favs";renderGear();return}
+  if(k==="show"){try{localStorage.removeItem("stepsHide")}catch(e){}show(0);renderSteps();const b=$("steps");if(b)setTimeout(()=>{b.scrollIntoView({behavior:"smooth",block:"center"})},60);renderBell();return}
+}
+function renderSteps(){
+  const box=$("steps");if(!box)return;
+  try{renderBell()}catch(e){}
+  if(!stepsOn()){box.className="hide";box.innerHTML="";return}
+  const S=stepsList(),d=S.filter(x=>x.ok).length,all=d===S.length,first=String(nicks[uid]).trim().split(/\s+/)[0];
+  box.className="steps"+(all?" all":"");
+  box.innerHTML=all
+   ?'<div class="sth"><div><b>✅ Wszystko gotowe, '+esc(first)+'!</b><div class="sts">Miłej jazdy — do zobaczenia na trasie.</div></div><button type="button" class="lnk" data-st="hide">Ukryj ✕</button></div>'
+   :'<div class="sth"><div><b>✨ Witaj, '+esc(first)+'!</b><div class="sts">Pierwsze kroki · '+d+' z '+S.length+'</div></div><button type="button" class="lnk" data-st="hide">Ukryj ✕</button></div>'
+    +'<div class="stbar"><i style="width:'+Math.round(d/S.length*100)+'%"></i></div>'
+    +S.map(x=>'<div class="stit'+(x.ok?' dn':'')+'"><span class="stc" aria-hidden="true">'+(x.ok?'✓':'')+'</span><span class="stt">'+x.t+'</span>'
+      +(!x.ok&&x.go?'<button type="button" class="lnk stgo" data-st="'+x.k+'">'+x.go+' ›</button>':'')+'</div>').join("");
+}
+$("steps").addEventListener("click",e=>{
+  const b=e.target.closest("[data-st]");if(!b)return;const k=b.dataset.st;
+  if(k==="hide"){lsSet("stepsHide","1");renderSteps();renderBell();
+    if(stepsLeft().length)say("Schowane — pozostałe kroki znajdziesz pod 🔔 „Dokończ start”.");return}
+  stepGo(k);
+});
+
