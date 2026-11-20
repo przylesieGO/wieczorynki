@@ -392,7 +392,7 @@ function renderWants0(){
        ?'<div class="dcar" data-day="'+d.k+'">'+ord.map(wantHtml).join("")+'</div><div class="mydots ddots">'+ord.map((_,i)=>'<button type="button" data-ddot="'+i+'" class="'+(i===(dayIdx[d.k]||0)?'on':'')+'" aria-label="Zaproszenie '+(i+1)+'"></button>').join("")+'<span>'+(Math.min(dayIdx[d.k]||0,ord.length-1)+1)+' z '+ord.length+'</span></div>'
        :ord.length?wantHtml(ord[0]):'')+'</details>';
   }).join("");
-  box.querySelectorAll(".dcar").forEach(dcarRestore);
+  box.querySelectorAll(".dcar").forEach(c=>dcarRestore(c));
   fillWx();
   wsecSync();
 }
@@ -411,9 +411,10 @@ function dcarGoto(c,idx,smooth){
   dayIdx[c.dataset.day]=idx;
   const dots=c.nextElementSibling;if(dots){[...dots.querySelectorAll("button")].forEach((b,i)=>b.classList.toggle("on",i===idx));const sp=dots.querySelector("span");if(sp)sp.textContent=(idx+1)+" z "+c.children.length}
 }
-function dcarRestore(c){
-  const i=Math.min(dayIdx[c.dataset.day]||0,c.children.length-1);
-  if(c.clientWidth)dcarGoto(c,i,false);
+function dcarRestore(c,tries){
+  // dzień mógł się właśnie otworzyć — przeglądarka czasem nie zdążyła jeszcze policzyć szerokości w tej samej klatce
+  if(!c.clientWidth){if((tries||0)<6)requestAnimationFrame(()=>dcarRestore(c,(tries||0)+1));return}
+  dcarGoto(c,Math.min(dayIdx[c.dataset.day]||0,c.children.length-1),false);
 }
 $("wantlist").addEventListener("scroll",e=>{
   const c=e.target;if(!(c.classList&&c.classList.contains("dcar")))return;
