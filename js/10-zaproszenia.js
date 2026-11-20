@@ -365,7 +365,8 @@ function renderWants0(){
     const authTxt=authNames.length>3?authNames.slice(0,3).join(", ")+" +"+(authNames.length-3):authNames.join(", ");
     // kto jedzie tego dnia (osobna linia pod godzinami): „Ty i N osoby jadą” (N = inni, bez Ciebie) / „N osoby jadą”
     const others=me?ppl.size-1:ppl.size;
-    const pplTxt=me?(others>0?"Ty i "+others+" "+osFor(others)+" jadą":"Ty jedziesz"):(ppl.size+" "+osFor(ppl.size)+" jadą");
+    const ty='<span class="wme">Ty</span>';
+    const pplHtml=me?(others>0?ty+" i "+others+" "+osFor(others)+" jadą":ty+" jedziesz"):esc(ppl.size+" "+osFor(ppl.size)+" jadą");
     // trwająca jazda: jej godzina na pomarańczowo (jak znacznik TRWA) i zawsze na początku listy
     const hw=d.ws.filter(wLive).concat(d.ws.filter(w=>!wLive(w)));
     const hrs=hw.map(w=>wLive(w)?'<b class="hlive" title="Trwa">'+wTime(w)+'</b>':'<b>'+wTime(w)+'</b>');
@@ -376,7 +377,7 @@ function renderWants0(){
      +'<div class="ftile'+(n===0?' today':'')+(d.ws.some(wLive)?' live':'')+'">'+ftInner(dt)+'</div>'
      +'<div class="wtx"><div class="wl1">'+l1+'</div>'
      +'<div class="wl2"><span class="whrs">'+hrs.slice(0,4).join("")+(hrs.length>4?'<b>+'+(hrs.length-4)+'</b>':'')+'</span></div>'
-     +'<div class="wl2">'+esc(pplTxt)+'</div>'
+     +'<div class="wl2">'+pplHtml+'</div>'
      +'<div class="wl3">Od: '+esc(authTxt)+'</div></div>'
      +'</summary>'+mineTop.map(wantDayHtml).join("")+(ord.length>1
        ?'<div class="dcar" data-day="'+d.k+'">'+ord.map(wantHtml).join("")+'</div><div class="mydots ddots">'+ord.map((_,i)=>'<button type="button" data-ddot="'+i+'" class="'+(i===(dayIdx[d.k]||0)?'on':'')+'" aria-label="Zaproszenie '+(i+1)+'"></button>').join("")+'<span>'+(Math.min(dayIdx[d.k]||0,ord.length-1)+1)+' z '+ord.length+'</span></div>'
