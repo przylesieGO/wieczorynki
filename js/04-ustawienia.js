@@ -101,11 +101,11 @@ function testersHtml(){
   const rows=[...supers].filter(id=>nicks[id]&&!testerIds.has(id)).map(id=>'<div class="arow">'+nk(id)+'<span class="note">👑 automatycznie</span></div>').join("")
     +ids.map(id=>'<div class="arow">'+nk(id)+(king?'<button class="b g small" data-a="trm" data-id="'+esc(id)+'">Odbierz</button>':'')+'</div>').join("");
   const cand=Object.keys(nicks).filter(id=>!testerIds.has(id)&&!isSuper(id)).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl"));
-  return '<h3>🧪 Testerzy ('+ids.length+')</h3>'+(rows||'<div class="note">Brak testerów.</div>')
+  return '<h3>💉 Testerzy ('+ids.length+')</h3>'+(rows||'<div class="note">Brak testerów.</div>')
    +(king?(cand.length?'<select id="testersel">'+cand.map(id=>'<option value="'+esc(id)+'">'+esc(nicks[id])+'</option>').join("")+'</select><button class="b sbtn" data-c="testeradd">Nadaj prawa testera</button>':'')
 
      :'<p class="note">Prawa testera nadaje i odbiera tylko 👑 główny administrator.</p>')
-   +'<p class="note">Tester widzi funkcje w fazie testów (z plakietką 🧪 BETA), zanim dostaną je wszyscy. 🧪 przy nicku oznacza testera.</p>';
+   +'<p class="note">Tester widzi funkcje w fazie testów (z plakietką 🧪 BETA), zanim dostaną je wszyscy. 💉 przy nicku oznacza testera.</p>';
 }
 const FSTATE=[["off","Wyłączona"],["testers","Tylko testerzy"],["all","Wszyscy"]];
 // 👤 przełącznik „Goście” (KROK 61) — tylko przy funkcjach, które gość może zobaczyć; działa przy stanie „Wszyscy”
@@ -135,7 +135,7 @@ function flagsHtml(){
    +'<div class="sleft">'+(L.length?'<div class="fgrps">'+L.map(f=>'<div class="ios-grp"><div class="ios-it ffl"><div class="ios-t"><b>'+esc(f.name)+'</b>'+(f.description?'<small>'+esc(f.description)+'</small>':'')+'</div>'
      +'<div class="ios-seg fseg">'+FSTATE.map(([k,t])=>'<button type="button" data-f="'+esc(f.key)+'" data-fs="'+k+'" class="fs-'+k+(f.state===k?' on':'')+'">'+({off:"Wyłączona",testers:"Testerzy",all:"Wszyscy"}[k]||t)+'</button>').join("")+'</div>'+fGuestHtml(f)+'</div></div>').join("")+'</div>'
      :'<div class="note">Na razie brak funkcji testowych. Każda nowa funkcja dopisuje się tutaj w swoim kroku SQL.</div>')
-   +'<p class="note">Wyłączona — nikt nie widzi (także testerzy i 👑) · Testerzy — tylko 🧪 testerzy i 👑, z plakietką BETA · Wszyscy — każdy (Imprezy: osoby bez logowania tylko przy 👤 Goście „Widzą”).</p></div>';
+   +'<p class="note">Wyłączona — nikt nie widzi (także testerzy i 👑) · Testerzy — tylko 💉 testerzy i 👑, z plakietką BETA · Wszyscy — każdy (Imprezy: osoby bez logowania tylko przy 👤 Goście „Widzą”).</p></div>';
 }
 function colorsHtml(){
   const v=(m,d,k)=>HEX_RE.test(m[k]||"")?m[k]:d[k];
@@ -661,7 +661,7 @@ function teczkaHtml(){
   if(!d)return head+'<div class="note">Wczytuję…</div>';
   if(d.err)return head+'<div class="changed">'+esc(d.err)+'</div>';
   const st=d.stats||{},n=k=>+st[k]||0,c=(v,l)=>'<div class="st"><b>'+v+'</b><span>'+l+'</span></div>';
-  const role=isSuper(id)?'👑 główny administrator':adminIds.includes(id)?'🛡️ administrator':testerIds.has(id)?'🧪 tester':'użytkownik';
+  const role=isSuper(id)?'👑 główny administrator':adminIds.includes(id)?'🛡️ administrator':testerIds.has(id)?'💉 tester':'użytkownik';
   const state=modBanned.has(id)?'⛔ zablokowane':modHidden.has(id)?'👻 ukryte':'aktywne';
   const mu=MEDIA.filter(m=>(medias[id]||{})[m[0]]);
   // 1. konto

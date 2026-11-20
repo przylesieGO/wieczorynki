@@ -174,7 +174,7 @@ function helpFullHtml(){
      "Trasy dodaje się z zaproszenia z plikiem GPX (przełącznik w formularzu albo „📚 Do bazy tras” na karcie). Autor i admin zmieniają nazwę, ukrywają i usuwają."]):'')
    +sec("⭐ Ludzie",[
      "Dotknij nicku: karta osoby — zdjęcie, „Z nami od…”, media, a jeśli ktoś pozwolił: miejscowość i „Zadzwoń / SMS”; „🚴 Zaproś na rower”, ☆ dodaj do ulubionych. ⭐ ulubieni są zawsze na górze list.",
-     "🟢 zielona kropka przy nicku = osoba ma teraz otwartą aplikację. Przy nickach: ⭐ ulubiony, 🧪 tester, 💡 3 zrealizowane pomysły/zgłoszenia, 👑 główny admin."])
+     "🟢 zielona kropka przy nicku = osoba ma teraz otwartą aplikację. Przy nickach: ⭐ ulubiony, 💉 tester, 💡 3 zrealizowane pomysły/zgłoszenia, 👑 główny admin."])
    +sec("⚙️ Ustawienia",[
      "Na górze karta profilu → <b>Edytuj profil</b>: zdjęcie, nick i płeć, miejscowość (domyślnie ukryta), Moje media (Strava, Instagram, YouTube, Facebook, www) i telefon z wyborem, kto go widzi (tylko ulubieni albo wszyscy zalogowani). Pod nią <b>🗺️ Baza tras</b>. Dalej grupy: Ludzie i okolica (⭐ ulubieni, Moja miejscowość), Powiadomienia (Telegram, kanał), Pomoc i opinie (💬 oceń aplikację / zgłoś błąd lub pomysł — odpowiedź pod 🔔, instalacja), wygląd ☀️ / 🌙 / Auto, zaproszenia (testowe, „Jak poszło?”), wyloguj, usuń konto.",
      "<b>⬆</b> w lewym dolnym rogu wraca na górę strony."])

@@ -18,7 +18,7 @@ const APP_REL=[
 const APP_VER=APP_REL[0].v;
 const relNew=()=>{try{return localStorage.getItem("seenVer")!==APP_VER}catch(e){return false}};
 function relMark(){try{localStorage.setItem("seenVer",APP_VER)}catch(e){}const b=$("helpbtn");if(b)b.classList.remove("newdot")}
-const FB_KIND={bug:"🐞 Błąd",idea:"💡 Pomysł",rating:"⭐ Ocena",msg:"✉️ Wiadomość",tester:"🧪 Chce testować"};
+const FB_KIND={bug:"🐞 Błąd",idea:"💡 Pomysł",rating:"⭐ Ocena",msg:"✉️ Wiadomość",tester:"💉 Chce testować"};
 const FB_ST={new:"nowe",accepted:"przyjęte",done:"zrobione",rejected:"odrzucone"};
 const fbMineUnread=()=>fbList.filter(f=>f.user_id===uid&&f.user_unread);
 const fbAdmUnread=()=>isAdmin?fbList.filter(f=>f.user_id!==uid&&f.admin_unread):[];
@@ -50,19 +50,19 @@ function fbFormHtml(){
 function testerCardHtml(){
   if(!session||!fbOk||!testerOk||meTester())return "";
   const r=fbList.find(f=>f.user_id===uid&&f.kind==="tester");
-  if(r&&(r.status==="new"||r.status==="accepted"))return '<div class="tcard"><b>🧪 Zgłosiłeś się na testera</b><div class="note">Dzięki! Liczba miejsc jest ograniczona — odezwiemy się, gdy zwolni się miejsce w grupie testerów.</div></div>';
+  if(r&&(r.status==="new"||r.status==="accepted"))return '<div class="tcard"><b>💉 Zgłosiłeś się na testera</b><div class="note">Dzięki! Liczba miejsc jest ograniczona — odezwiemy się, gdy zwolni się miejsce w grupie testerów.</div></div>';
   if(r&&r.status==="rejected")return "";
-  return '<div class="tcard"><b>🧪 Zostań testerem</b><div class="note">Testerzy widzą nowe funkcje przed wszystkimi i pomagają je dopracować. Liczba miejsc jest ograniczona — jeśli grupa będzie pełna, możemy się nie odezwać, ale Twoje zgłoszenie zostanie na liście.</div>'
+  return '<div class="tcard"><b>💉 Zostań testerem</b><div class="note">Testerzy widzą nowe funkcje przed wszystkimi i pomagają je dopracować. Liczba miejsc jest ograniczona — jeśli grupa będzie pełna, możemy się nie odezwać, ale Twoje zgłoszenie zostanie na liście.</div>'
    +'<button class="b sbtn" data-c="testerreq">Chcę testować</button></div>';
 }
 async function testerReq(b){
   if(b)b.disabled=true;
-  try{const r=await sb.rpc("fb_send",{k:"tester",r:null,b:null,dev:fbDevice()});if(r.error)throw r.error;await syncNow();say("🧪 Zgłoszenie wysłane — dzięki! Odezwiemy się, gdy będzie miejsce.")}
+  try{const r=await sb.rpc("fb_send",{k:"tester",r:null,b:null,dev:fbDevice()});if(r.error)throw r.error;await syncNow();say("💉 Zgłoszenie wysłane — dzięki! Odezwiemy się, gdy będzie miejsce.")}
   catch(e){if(b)b.disabled=false;say(fbErr(e))}
 }
 async function testerGrant(f){
   try{const r=await sb.from("testers").insert({user_id:f.user_id,added_by:uid});if(r.error&&r.error.code!=="23505")throw r.error;
-    const s=await sb.rpc("fb_status",{f:f.id,s:"done"});if(s.error)throw s.error;await syncNow();say("🧪 Nadano prawa testera: "+nickOf(f.user_id))}
+    const s=await sb.rpc("fb_status",{f:f.id,s:"done"});if(s.error)throw s.error;await syncNow();say("💉 Nadano prawa testera: "+nickOf(f.user_id))}
   catch(e){say("Nie udało się: "+(e&&e.message?e.message:"błąd"))}
 }
 function fbHubHtml(){
@@ -93,9 +93,9 @@ function devShort(d){
 // przyciski akcji admina (wariant B): tylko te, które mają sens przy danym stanie
 function fbActHtml(f){
   const st=f.status,t=f.kind==="tester",open=st==="new"||st==="accepted";let h="";
-  if(t&&testerIds.has(f.user_id))h+='<div class="note" style="margin-top:4px">🧪 Już jest testerem.</div>';
+  if(t&&testerIds.has(f.user_id))h+='<div class="note" style="margin-top:4px">💉 Już jest testerem.</div>';
   if(open){
-    if(t){if(isSuper(uid)&&!testerIds.has(f.user_id))h+='<button class="b sbtn" data-c="fbgrant">🧪 Nadaj prawa testera</button>'}
+    if(t){if(isSuper(uid)&&!testerIds.has(f.user_id))h+='<button class="b sbtn" data-c="fbgrant">💉 Nadaj prawa testera</button>'}
     else h+='<button class="b sbtn" data-fs2="done">✓ '+(f.kind==="rating"?'Zamknij — przeczytane':'Oznacz jako zrobione')+'</button>';
     h+='<div class="fbact">'+(st==="new"?'<button class="b fbok" data-fs2="accepted">Przyjmij</button>':'')+'<button class="b fbno" data-fs2="rejected">Odrzuć</button></div>'
      +'<p class="note">'+(t?(st==="new"?'„Przyjmij” = odezwiemy się · ':'')+'„Odrzuć” = komplet testerów.':(st==="new"?'„Przyjmij” = zajmiesz się tym · ':'')+'„Odrzuć” = nie będzie zmian. Użytkownik dostanie wiadomość.')+'</p>';
@@ -107,7 +107,7 @@ function fbThreadHtml(){
   const back='<button class="sback" data-c="fbback">‹ '+(fbBack==="fbadmin"?'Zgłoszenia':fbBack==="bell"?'Zamknij':fbBack==="teczka"?'Teczka':'Zgłoszenia')+'</button>';
   if(!f)return back+'<div class="sname" style="margin-top:26px">Nie znaleziono</div>';
   const adm=isAdmin&&f.user_id!==uid,M=fbMsgs[f.id];
-  const first=f.kind==="msg"?{sender:f.started_by,body:f.body,created_at:f.created_at}:{sender:f.user_id,body:(f.kind==="rating"?starsTxt(f.rating)+(f.body?"<br>":""):"")+(f.kind==="tester"&&!f.body?"Chcę zostać testerem 🧪":esc(f.body||"")),created_at:f.created_at,html:true};
+  const first=f.kind==="msg"?{sender:f.started_by,body:f.body,created_at:f.created_at}:{sender:f.user_id,body:(f.kind==="rating"?starsTxt(f.rating)+(f.body?"<br>":""):"")+(f.kind==="tester"&&!f.body?"Chcę zostać testerem 💉":esc(f.body||"")),created_at:f.created_at,html:true};
   const bub=m=>{const mine=m.sender===uid;return '<div class="fbm'+(mine?' me':'')+'"><div class="fbmh">'+(m.sender?nk(m.sender):'<span class="note">usunięte konto</span>')+' <span class="note">'+esc(fbAgo(m.created_at))+'</span></div><div class="fbmb">'+(m.html?m.body:esc(m.body))+'</div></div>'};
   return back+'<div class="sname" style="margin-top:26px">'+FB_KIND[f.kind]+'</div>'
    +'<div class="smail">'+(adm?'od '+nk(f.user_id)+' · ':f.kind==="msg"?'od administratora · ':'')+(f.kind!=="msg"?'<span class="fbs s-'+f.status+'">'+FB_ST[f.status]+'</span>':'')+'</div>'
@@ -141,7 +141,7 @@ async function fbOpen(id,back){
   }
   if(gearView==="fbt"&&fbId===id)renderGear();
 }
-const fbErr=e=>{const m=e&&e.message||"";return /FB_DUP/.test(m)?"Twoja prośba już czeka — odezwiemy się.":/FB_TESTER/.test(m)?"Już jesteś testerem 🧪":/FB_LIMIT/.test(m)?"Dzisiejszy limit wyczerpany — spróbuj jutro.":/check/.test(m)?"Za krótki tekst (min. 3 znaki).":"Nie udało się: "+(m||"błąd")};
+const fbErr=e=>{const m=e&&e.message||"";return /FB_DUP/.test(m)?"Twoja prośba już czeka — odezwiemy się.":/FB_TESTER/.test(m)?"Już jesteś testerem 💉":/FB_LIMIT/.test(m)?"Dzisiejszy limit wyczerpany — spróbuj jutro.":/check/.test(m)?"Za krótki tekst (min. 3 znaki).":"Nie udało się: "+(m||"błąd")};
 async function fbSend(){
   const t=fbf.text.trim(),k=fbf.kind,inf=$("fbinfo");
   if(k==="rating"&&!fbf.rating){inf.textContent="Zaznacz gwiazdki — przesuń palcem.";return}
@@ -529,7 +529,7 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="instgo"){if(instPrompt){const ev=instPrompt;instPrompt=null;try{ev.prompt();const r=await ev.userChoice;say(r&&r.outcome==="accepted"?"📲 Instaluję — ikona pojawi się na ekranie telefonu.":"Możesz zainstalować później: ⚙️ → Zainstaluj aplikację.")}catch(err){gearView="inst"}renderGear();return}gearView="inst";renderGear();return}
   if(c==="testeradd"){
     const sel=$("testersel"),id=sel?sel.value:"";if(!id||!isSuper(uid))return;
-    try{const r=await sb.from("testers").insert({user_id:id,added_by:uid});if(r.error)throw r.error;await syncNow();say("🧪 Nadano prawa testera: "+nickOf(id))}
+    try{const r=await sb.from("testers").insert({user_id:id,added_by:uid});if(r.error)throw r.error;await syncNow();say("💉 Nadano prawa testera: "+nickOf(id))}
     catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
     return;
   }

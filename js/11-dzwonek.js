@@ -129,7 +129,7 @@ const tstPending=()=>isAdmin?fbList.filter(f=>f.kind==="tester"&&f.user_id!==uid
 function tstBellHtml(){
   const pend=tstPending(),ids=[...testerIds].filter(id=>nicks[id]).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl"));
   if(!isAdmin||(!pend.length&&!ids.length))return "";
-  return bsSec("tst",'🧪 Testerzy'+(pend.length?' · czeka '+pend.length:''),0,pend.length||ids.length,
+  return bsSec("tst",'💉 Testerzy'+(pend.length?' · czeka '+pend.length:''),0,pend.length||ids.length,
     pend.map(f=>fbRow(f,true)).join("")
     +'<div class="bsempty">Obecni testerzy ('+ids.length+'): '+(ids.map(id=>nk(id)).join(" ")||"brak")+'</div>'
     +'<div class="bsempty">Dodawanie i usuwanie: ⚙️ → 🛡️ Administracja → Uprawnienia</div>');
