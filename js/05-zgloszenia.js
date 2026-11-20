@@ -104,7 +104,7 @@ function fbActHtml(f){
 }
 function fbThreadHtml(){
   const f=fbList.find(x=>x.id===fbId);
-  const back='<button class="sback" data-c="fbback">‹ '+(fbBack==="fbadmin"?'Zgłoszenia':fbBack==="bell"?'Zamknij':'Zgłoszenia')+'</button>';
+  const back='<button class="sback" data-c="fbback">‹ '+(fbBack==="fbadmin"?'Zgłoszenia':fbBack==="bell"?'Zamknij':fbBack==="teczka"?'Teczka':'Zgłoszenia')+'</button>';
   if(!f)return back+'<div class="sname" style="margin-top:26px">Nie znaleziono</div>';
   const adm=isAdmin&&f.user_id!==uid,M=fbMsgs[f.id];
   const first=f.kind==="msg"?{sender:f.started_by,body:f.body,created_at:f.created_at}:{sender:f.user_id,body:(f.kind==="rating"?starsTxt(f.rating)+(f.body?"<br>":""):"")+(f.kind==="tester"&&!f.body?"Chcę zostać testerem 🧪":esc(f.body||"")),created_at:f.created_at,html:true};
@@ -221,7 +221,7 @@ function maybeFb(){
 }
 function renderGear(){
   const p=$("gearpanel");
-  if(!gearOpen){p.classList.add("hide");gearView="main";return}
+  if(!gearOpen){p.classList.add("hide");gearView="main";tkFrom=false;return}
   p.classList.remove("hide");
   if((gearView==="admin"||gearView==="unick"||gearView==="colors"||gearView==="stats"||gearView==="flags"||gearView==="testdel")&&!(session&&isAdmin))gearView="main";
   if(gearView==="flags"&&!isSuper(uid))gearView="admin";
@@ -245,6 +245,7 @@ function renderGear(){
   else if(gearView==="favs"&&session)body=favsHtml();
   else if(gearView==="tg"&&tgOn())body=tgHtml();
   else if(gearView==="user"&&session&&nicks[userId])body=userHtml();
+  else if(gearView==="teczka"&&session&&isKingReal()&&nicks[tkId])body=teczkaHtml();
   else if(gearView==="online"&&session)body=onlineHtml();
   else if(gearView==="allw"&&session&&isSuper(uid))body=allWantsHtml();
   else if(gearView==="karch"&&session&&isSuper(uid))body=kArchHtml();
@@ -393,6 +394,8 @@ $("gearpanel").addEventListener("click",async e=>{
     }
     if(["modhide","modban"].includes(a.dataset.a)&&isSuper(uid)){
       const id=a.dataset.id,ban=modBanned.has(id),hid=modHidden.has(id),nb=a.dataset.a==="modban"?!ban:ban,nh=a.dataset.a==="modhide"?!hid:hid;
+      if(a.dataset.a==="modhide"&&!confirm(nh?"Ukryć konto "+nickOf(id)+"?\n\nInni przestaną widzieć to konto i jego zaproszenia. Możesz to cofnąć.":"Pokazać konto "+nickOf(id)+" innym?\n\nKonto i jego zaproszenia znowu będą widoczne dla wszystkich."))return;
+      if(a.dataset.a==="modban"&&!nb&&!confirm("Odblokować konto "+nickOf(id)+"?\n\nOsoba znowu będzie mogła zapraszać i dołączać do jazd."))return;
       if(a.dataset.a==="modban"&&nb&&!confirm("Zablokować konto "+nickOf(id)+"?\n\nOsoba zobaczy komunikat „Konto zablokowane — napisz do administratora”, nie będzie mogła zapraszać ani dołączać, a jej zaproszenia znikną innym. Możesz to cofnąć."))return;
       modBusy=true;renderGear();
       try{const r=await sb.rpc("mod_set",{u:id,ban:nb,hide:nh});if(r.error)throw r.error;
@@ -417,6 +420,11 @@ $("gearpanel").addEventListener("click",async e=>{
         on?stealthIds.delete(id):stealthIds.add(id);renderGear();say(on?"Odebrano ukrywanie obecności: "+nickOf(id):"👻 "+nickOf(id)+" może teraz ukryć swoją obecność online")}
       catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
       return}
+    if(a.dataset.a==="tk"){tkOpen(a.dataset.id,gearView==="admin"?"admin":"user");return}
+    if(a.dataset.a==="tkmore"&&isKingReal()){tkLoad(a.dataset.id,true);return}
+    if(a.dataset.a==="tkfb"&&isKingReal()){fbOpen(a.dataset.id,"teczka");return}
+    if(a.dataset.a==="tkride"){const i=sorted.findIndex(r=>r.id===a.dataset.id);if(i<0||!tabOk(1)){say("Tej wieczorynki nie ma już na liście.");return}gearOpen=false;renderGear();show(1);showRide(i);return}
+    if(a.dataset.a==="tkev"){if(!evs.some(x=>x.id===a.dataset.id)||!tabOk(3)){say("Tej imprezy nie ma na liście.");return}gearOpen=false;renderGear();evGo(a.dataset.id);return}
     if(a.dataset.a==="moddel"&&isSuper(uid)){modDelId=a.dataset.id;modPrev=null;gearView="moddel";renderGear();
       try{const r=await sb.rpc("mod_preview",{u:modDelId});modPrev=r.error?{err:r.error.message}:r.data}catch(e){modPrev={err:"błąd"}}
       if(gearView==="moddel")renderGear();return}
@@ -443,7 +451,9 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="admin"){gearView="admin";renderGear();return}
   if(c==="colors"){gearView="colors";renderGear();return}
   if(c==="stats"){gearView="stats";loadStats();return}
-  if(c==="userback2m"){gearView="user";renderGear();return}
+  if(c==="userback2m"){gearView=tkFrom&&tkId===modDelId?"teczka":"user";renderGear();return}
+  if(c==="tkback"){tkFrom=false;gearView=tkBack==="admin"?"admin":"user";renderGear();return}
+  if(c==="tkret"){gearView="teczka";renderGear();return}
   if(c==="allw"){gearView="allw";renderGear();return}
   if(c==="evdelreq"){gearOpen=false;renderGear();evFlt="delreq";show(3);return}
   if(c==="karch"){gearView="karch";kArch=null;renderGear();loadKArch();return}
@@ -492,7 +502,7 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="fbreply"){await fbReply();return}
   if(c==="fbmsgsend"){await fbMsgSend();return}
   if(c==="fbback"){if(fbBack==="bell"){gearOpen=false;renderGear()}else{gearView=fbBack;renderGear()}return}
-  if(c==="userback2"){gearView="user";renderGear();return}
+  if(c==="userback2"){gearView=tkFrom&&tkId===fbTo?"teczka":"user";renderGear();return}
   if(c==="tg"){gearView="tg";renderGear();return}
   if(c==="tgcheck"){await tgCheck(true);return}
   if(c==="tgcode"){
@@ -641,9 +651,11 @@ async function saveNick(n,target,gender){
 async function adminSaveNick(){
   const i=$("gunick");if(!i||!isAdmin)return;
   const n=i.value.trim(),old=nicks[unickId];
-  if(n===old){gearView="admin";renderGear();return}
+  const back=tkFrom&&tkId===unickId?"teczka":"admin";
+  if(n===old){gearView=back;renderGear();return}
+  if(!confirm("Zmienić nick „"+old+"” na „"+n+"”?\n\nNowy nick zobaczą wszyscy, także na zaproszeniach i wieczorynkach tej osoby."))return;
   const err=await saveNick(n,unickId);
   if(err){$("gunickinfo").textContent=err;return}
-  gearView="admin";renderGear();say("Zmieniono nick: "+old+" → "+n);
+  gearView=back;renderGear();say("Zmieniono nick: "+old+" → "+n);
 }
 

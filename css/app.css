@@ -506,6 +506,13 @@ ol.inst{margin:6px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:
 .hdr.compact .honl:not(.hide){display:inline-flex}button.onl{border:0;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
 .admbox{margin-top:16px;padding:12px;border-radius:14px;background:var(--fill);text-align:left}.admbox>b{display:block;margin-bottom:6px}
 .admln{font-size:14.5px;margin:3px 0}.admst{margin:10px 0}.admrec{display:flex;flex-direction:column;gap:4px;font-size:14px}.admrec>div{display:flex;justify-content:space-between;gap:8px}
+/* 📁 Teczka użytkownika (KROK 60) — sekcje jak „🛡️ Dla admina”, klikalne wiersze jak w liście */
+.tklist{display:flex;flex-direction:column;margin:2px 0 6px}
+.tkit{display:flex;justify-content:space-between;align-items:baseline;gap:8px;width:100%;padding:7px 0;border:0;border-bottom:.5px solid var(--line);background:none;color:var(--acc);font:inherit;font-size:14px;text-align:left;cursor:pointer}
+.tkit:last-child{border-bottom:0}.tkit:active{opacity:.6}.tkit .note{flex:none}
+.tkmore{margin-top:10px}
+.tkdet{margin-top:6px;font-size:14px}.tkdet summary{cursor:pointer;color:var(--acc);margin-bottom:6px}
+.admbox a{color:var(--acc)}
 .tgm{font-size:13px}
 #banscreen{position:fixed;inset:0;z-index:3500;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
 .banbox{max-width:380px;text-align:center}.banbox h2{margin:6px 0 10px}.banbox p{color:var(--mut);line-height:1.45}

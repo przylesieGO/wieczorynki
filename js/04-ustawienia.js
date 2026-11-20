@@ -60,7 +60,7 @@ function adminHtml(){
    +'<h3>Użytkownicy ('+Object.keys(nicks).length+')</h3>'+(tgLinks?'<p class="note">✈️ = połączony bot Telegram ('+tgLinks.size+'). Dotknij nicku — karta osoby z aktywnością.</p>':'')
    +'<div class="admq"><input id="admq" type="search" class="srch" placeholder="Szukaj po nicku" value="'+esc(admQ)+'" autocomplete="off" enterkeyhint="search"><span class="note" id="admqn"></span></div>'
    +'<div class="fchips admqf">'+[["","Wszyscy"],["on","🟢 Online"],["new","🆕 Nowi (14 dni)"],["tg","Telegram"],["ban","Zablokowani"],["hid","Ukryci"]].map(([k,t])=>'<button type="button" class="fch'+(admF===k?' on':'')+'" data-admf="'+k+'">'+t+'</button>').join("")+'</div>'
-   +(Object.keys(nicks).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")).map(id=>'<div class="arow" data-admu="'+esc(id)+'"'+(admMatch(id)?'':' style="display:none"')+'><span>'+nk(id)+(tgLinks&&tgLinks.has(id)?' <span class="tgm" title="Telegram połączony">✈️</span>':'')+(modBanned.has(id)?' <span class="tgm" title="Zablokowany">⛔</span>':'')+(modHidden.has(id)?' <span class="tgm" title="Ukryty">👻</span>':'')+(joinedAt[id]?'<br><span class="note">od '+esc(new Date(joinedAt[id]).toLocaleDateString("pl-PL",{day:"numeric",month:"short",year:"numeric"}))+'</span>':'')+'</span>'+(id===uid?'<span class="note">(Ty)</span>':isSuper(id)?'<span class="note">👑</span>':'<button class="b g small" data-a="unick" data-id="'+esc(id)+'">Zmień nick</button>')+'</div>').join("")||'<div class="note">Brak użytkowników z nickiem.</div>')
+   +(Object.keys(nicks).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")).map(id=>'<div class="arow" data-admu="'+esc(id)+'"'+(admMatch(id)?'':' style="display:none"')+'><span>'+nk(id)+(tgLinks&&tgLinks.has(id)?' <span class="tgm" title="Telegram połączony">✈️</span>':'')+(modBanned.has(id)?' <span class="tgm" title="Zablokowany">⛔</span>':'')+(modHidden.has(id)?' <span class="tgm" title="Ukryty">👻</span>':'')+(joinedAt[id]?'<br><span class="note">od '+esc(new Date(joinedAt[id]).toLocaleDateString("pl-PL",{day:"numeric",month:"short",year:"numeric"}))+'</span>':'')+'</span>'+(isKingReal()?'<span class="arbtns"><button class="b g small" data-a="tk" data-id="'+esc(id)+'" title="Teczka" aria-label="Teczka">📁</button>':'')+(id===uid?'<span class="note">(Ty)</span>':isSuper(id)?'<span class="note">👑</span>':'<button class="b g small" data-a="unick" data-id="'+esc(id)+'">Zmień nick</button>')+(isKingReal()?'</span>':'')+'</div>').join("")||'<div class="note">Brak użytkowników z nickiem.</div>')
    +'</div>';
 }
 /* 🧪 testerzy i funkcje testowe (KROK 16) — nadaje/odbiera i przełącza tylko 👑 */
@@ -121,7 +121,7 @@ function colorsPreview(){
 }
 let unickId="";
 function unickHtml(){
-  return '<button class="sback" data-c="backadmin">‹ Administracja</button>'
+  return (tkFrom&&tkId===unickId?'<button class="sback" data-c="tkret">‹ Teczka</button>':'<button class="sback" data-c="backadmin">‹ Administracja</button>')
    +'<div class="sname" style="margin-top:26px">✏️ Zmień nick użytkownika</div>'
    +'<div class="smail">Obecny nick: '+nk(unickId)+'</div>'
    +'<div class="sleft"><label for="gunick" style="font-size:15px">Nowy nick</label>'
@@ -313,7 +313,7 @@ async function savePrivCity(h){
   const r=await sb.from("profile_private").upsert(row,{onConflict:"user_id"}).select("phone,phone_vis,city,city_lat,city_lon,city_vis").maybeSingle();
   if(!r.error)myPriv=r.data;
 }
-async function loadUx(id){if(!profExOk||!session||!id)return;const r=await sb.rpc("user_extra",{u:id});uxCache[id]=r.error?{}:(r.data||{});if(gearOpen&&gearView==="user"&&userId===id)renderGear()}
+async function loadUx(id){if(!profExOk||!session||!id)return;const r=await sb.rpc("user_extra",{u:id});uxCache[id]=r.error?{}:(r.data||{});if(gearOpen&&(gearView==="user"||gearView==="teczka")&&userId===id)renderGear()}
 // zdjęcie z galerii → kwadrat 256 px (środek), JPEG do ~45 KB
 function avFromFile(f){return new Promise((res,rej)=>{
   if(!f||!/^image\//.test(f.type||"image/"))return rej(new Error("To nie jest zdjęcie."));
@@ -389,7 +389,7 @@ async function loadAdmInfo(id){
   try{const r=await sb.rpc("admin_user_info",{u:id});admInfo[id]=r.error?{err:1}:r.data||{}}catch(e){admInfo[id]={err:1}}
   if(gearOpen&&gearView==="user"&&userId===id)renderGear();
 }
-const ACT_TXT={want_public:"🌍 zaprosił(a) wszystkich",want_private:"🔒 zaprosił(a) wybranych",want_join:"🙋 dołączył(a) do jazdy",want_leave:"👋 zrezygnował(a) z jazdy",invite_sent:"➕ doprosił(a) kogoś",ride_created:"🗺️ utworzył(a) wieczorynkę",ride_join:"🚴 zapisał(a) się na wieczorynkę",ride_leave:"↩︎ wypisał(a) się z wieczorynki"};
+const ACT_TXT={want_public:"🌍 zaprosił(a) wszystkich",want_private:"🔒 zaprosił(a) wybranych",want_join:"🙋 dołączył(a) do jazdy",want_leave:"👋 zrezygnował(a) z jazdy",invite_sent:"➕ doprosił(a) kogoś",ride_created:"🗺️ utworzył(a) wieczorynkę",ride_join:"🚴 zapisał(a) się na wieczorynkę",ride_leave:"↩︎ wypisał(a) się z wieczorynki",route_added:"🗺️ dodał(a) trasę",route_chosen:"🧭 wybrał(a) trasę z bazy",route_rated:"⭐ ocenił(a) trasę",want_deleted:"🗑 usunął(a) zaproszenie"};
 function admInfoHtml(id){
   const a=admInfo[id];
   if(!a)return '<div class="admbox"><b>🛡️ Dla admina</b><div class="note">Ładuję…</div></div>';
@@ -509,7 +509,7 @@ function userRidesHtml(id){
   if(s===undefined){userRides[id]=null;sb.from("ride_reports").select("went,km,avg_kmh,ride_at").eq("user_id",id).eq("went",true).eq("ride_test",false).limit(2000)
     .then(r=>r&&r.error?sb.from("ride_reports").select("went,km,avg_kmh,ride_at").eq("user_id",id).eq("went",true).limit(2000):r).then(r=>{
     const L=(r&&r.data)||[],m=Date.now()-30*864e5;userRides[id]={n:L.length,km:Math.round(L.reduce((a,x)=>a+(+x.km||0),0)),n30:L.filter(x=>x.ride_at&&new Date(x.ride_at).getTime()>m).length,km30:Math.round(L.filter(x=>x.ride_at&&new Date(x.ride_at).getTime()>m).reduce((a,x)=>a+(+x.km||0),0)),kmh:(()=>{const v=L.filter(x=>x.avg_kmh!=null).map(x=>+x.avg_kmh);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null})()};
-    if(gearOpen&&gearView==="user"&&userId===id)renderGear()});return ""}
+    if(gearOpen&&(gearView==="user"||gearView==="teczka")&&userId===id)renderGear()});return ""}
   const u=userPubStats(id);if(!u&&(!s||!s.n))return "";
   // 📊 mała statystyka na karcie osoby — widzą wszyscy zalogowani (prośba właściciela 2026-11-17 21:21; KROK 59)
   const c=(v,l)=>'<div class="st"><b>'+v+'</b><span>'+l+'</span></div>',n=s&&s.n||0;
@@ -524,7 +524,7 @@ function userPubStats(id){
   if(!upOk||!session)return null;
   if(!(id in upStats)){upStats[id]=null;Promise.resolve(sb.rpc("user_pub_stats",{u:id})).then(r=>{
       if(r&&r.error){upOk=false;delete upStats[id]}else upStats[id]=r&&r.data||null;
-      if(gearOpen&&gearView==="user"&&userId===id)renderGear()},()=>{delete upStats[id]})}
+      if(gearOpen&&(gearView==="user"||gearView==="teczka")&&userId===id)renderGear()},()=>{delete upStats[id]})}
   const v=upStats[id];return v?{created:+v.created||0,joined:+v.joined||0}:null;
 }
 function userHtml(){
@@ -543,7 +543,7 @@ function userHtml(){
    +(visOk?'<button class="b sbtn" data-a="invite" data-id="'+esc(userId)+'">🚴 Zaproś na rower</button>':'')
    +gGrp("Ta osoba",[session?gRow("#0a84ff","cal","Pokaż zaproszenia z "+esc(nicks[userId]||"tą osobą"),"Filtr na liście zaproszeń","",'data-a="fltuser" data-id="'+esc(userId)+'"'):'',
       gRow("#ffcc00",fav?"starf":"star",fav?"W ulubionych":"Dodaj do ulubionych",fav?"Dotknij, aby usunąć":"Zawsze na górze list",fav?'<span class="ios-v ok">'+uiIcon("check")+'</span>':'','data-a="fav" data-id="'+esc(userId)+'"')])
-   +(isAdmin?gGrp("Administrator",[fbOk?gRow("#bf5af2","msg","Napisz wiadomość","Trafi do jej skrzynki zgłoszeń","",'data-a="fbmsg" data-id="'+esc(userId)+'"'):'',
+   +(isAdmin?gGrp("Administrator",[isKingReal()?gRow("#5e5ce6","folder","Teczka","Wszystko o tej osobie w jednym miejscu","",'data-a="tk" data-id="'+esc(userId)+'"'):'',fbOk?gRow("#bf5af2","msg","Napisz wiadomość","Trafi do jej skrzynki zgłoszeń","",'data-a="fbmsg" data-id="'+esc(userId)+'"'):'',
       !isSuper(userId)?gRow("#ff9f0a","pencil","Zmień nick","","",'data-a="unick" data-id="'+esc(userId)+'"'):'']):'')
    +(isAdmin?admInfoHtml(userId):'')
    +(modOk&&isSuper(uid)&&userId!==uid&&!isSuper(userId)?(()=>{const d=modBusy?' disabled':'',id='data-id="'+esc(userId)+'"'+d,hid=modHidden.has(userId),ban=modBanned.has(userId);
@@ -551,6 +551,93 @@ function userHtml(){
         gRow(ban?"#30d158":"#ff3b30",ban?"check":"lock",ban?"Odblokuj konto":"Zablokuj konto",ban?"Teraz: zablokowane — widzi tylko komunikat o blokadzie":"Zobaczy tylko komunikat o blokadzie","",'data-a="modban" '+id)])
        +(adminIds.includes(userId)?'<p class="note" style="margin:8px 14px 0">Administratora nie można usunąć — najpierw odbierz mu uprawnienia.</p>'
         :'<div class="ios-grp" style="margin-top:14px"><button type="button" class="ios-it ios-row ios-out" data-a="moddel" '+id+'>Usuń konto…</button></div>')})():'');
+}
+/* 📁 Teczka użytkownika (KROK 60) — wszystko o osobie w jednym miejscu; tylko prawdziwy 👑 (decyzja właściciela 2026-11-20 04:16) */
+let tkId="",tkData={},tkBack="user",tkFrom=false,tkBusy=false;
+async function tkLoad(id,more){
+  const d=tkData[id],off=more&&d&&d.act?d.act.length:0;
+  if(more){if(tkBusy)return;tkBusy=true;renderGear()}
+  try{const r=await sb.rpc("admin_teczka",{u:id,lim:50,off});
+    if(r.error)throw r.error;
+    if(more&&tkData[id])tkData[id].act=tkData[id].act.concat(r.data.act||[]);else tkData[id]=r.data||{};
+  }catch(e){if(!more)tkData[id]={err:/admin_teczka|function|schema/i.test(e&&e.message||"")?"Brak danych — uruchom KROK 60 w bazie.":"Nie udało się wczytać: "+(e&&e.message||"błąd")}}
+  tkBusy=false;if(gearOpen&&gearView==="teczka"&&tkId===id)renderGear();
+}
+function tkOpen(id,back){
+  if(!isKingReal()||!nicks[id])return;
+  tkId=id;userId=id;tkBack=back||"user";tkFrom=true;gearOpen=true;gearView="teczka";
+  delete tkData[id];renderGear();tkLoad(id);
+}
+function tkActTxt(x,id){
+  const m=x.meta||{};
+  if(x.kind==="want_deleted"){
+    const who=x.by&&x.by!==id?' — usunął(a) '+esc(nickOf(x.by)):'';
+    return (x.by&&x.by!==id?'🗑 jej/jego zaproszenie zostało usunięte':'🗑 usunął(a) zaproszenie')+who+(m.joined?' · zapisanych: '+(+m.joined):'')+(m.test?' · 🧪':'');
+  }
+  return esc(ACT_TXT[x.kind]||x.kind);
+}
+function teczkaHtml(){
+  const id=tkId,d=tkData[id],g=genders[id],ux=uxCache[id]||{};
+  if(profExOk&&!(id in uxCache)){uxCache[id]={};loadUx(id)}
+  const ln=(l,v)=>'<div class="admln">'+l+': <b>'+v+'</b></div>',box=(h,b)=>'<div class="admbox"><b>'+h+'</b>'+b+'</div>';
+  const dt=t=>t?esc(new Date(t).toLocaleDateString("pl-PL",{day:"numeric",month:"short",year:"numeric"})):'—';
+  const head=(tkBack==="admin"?'<button class="sback" data-c="tkback">‹ Administracja</button>':'<button class="sback" data-c="tkback">‹ '+esc(nickOf(id))+'</button>')
+   +'<div class="sname" style="margin-top:26px">📁 Teczka</div><div class="bigpill">'+nk(id)+'</div>';
+  if(!d)return head+'<div class="note">Wczytuję…</div>';
+  if(d.err)return head+'<div class="changed">'+esc(d.err)+'</div>';
+  const st=d.stats||{},n=k=>+st[k]||0,c=(v,l)=>'<div class="st"><b>'+v+'</b><span>'+l+'</span></div>';
+  const role=isSuper(id)?'👑 główny administrator':adminIds.includes(id)?'🛡️ administrator':testerIds.has(id)?'🧪 tester':'użytkownik';
+  const state=modBanned.has(id)?'⛔ zablokowane':modHidden.has(id)?'👻 ukryte':'aktywne';
+  const mu=MEDIA.filter(m=>(medias[id]||{})[m[0]]);
+  // 1. konto
+  const s1=box('Konto',
+     ln('E-mail',d.email?'<a href="mailto:'+esc(d.email)+'">'+esc(d.email)+'</a>':'—')
+    +ln('Płeć',g==="K"?"kobieta":g==="M"?"mężczyzna":"—")
+    +ln('Konto założone',dt(d.created_at))+(stazTxt(id)?'<div class="note">'+esc(stazTxt(id))+'</div>':'')
+    +(ux.city?ln('Miasto',esc(ux.city)):'')+(ux.phone?ln('Telefon','<a href="tel:'+esc(ux.phone.replace(/[^0-9+]/g,""))+'">'+esc(ux.phone)+'</a>'):'')
+    +(mu.length?'<div class="ucsoc">'+mu.map(([k,ic,t])=>'<a class="ucs" href="'+esc(medias[id][k])+'" target="_blank" rel="noopener nofollow" title="'+esc(t)+'" aria-label="'+esc(t)+'">'+uiIcon(ic)+'</a>').join("")+'</div>':'')
+    +ln('Rola',role)+ln('Stan konta',state)
+    +ln('Telegram',d.tg_linked_at?'połączony od '+dt(d.tg_linked_at):'nie połączony'));
+  // 2. obecność
+  const L=d.logins||[];
+  const s2=box('Obecność',
+     ln('Ostatnio w aplikacji',onlineIds.includes(id)?'teraz 🟢':d.last_seen?esc(agoTxt(d.last_seen)):'—')
+    +ln('Ostatnie logowanie',d.last_sign_in_at?esc(fmtWhen(d.last_sign_in_at)):'—')
+    +ln('Logowania (30 dni)',L.length)
+    +(L.length?'<details class="tkdet"><summary>Pokaż logowania</summary><div class="admrec">'+L.map(x=>'<div><span>🔑 '+esc(fmtWhen(x.at))+'</span><span class="note">'+(x.bf?'z historii':x.prev?'poprzednio '+esc(fmtWhen(x.prev)):'')+'</span></div>').join("")+'</div></details>':''));
+  // 3. statystyki
+  const s3=box('Statystyki','<div class="stats admst">'+c(n("want_public")+n("want_private"),"zaproszeń")+c(n("want_join"),"dołączeń")+c(n("want_leave"),"rezygnacji")
+      +c(n("invite_sent"),"doproszeń")+c(n("ride_created"),"wieczorynek")+c(n("ride_join"),"zapisów na wieczorynki")+'</div>'
+    +userRidesHtml(id)+((fbDone[id]||0)?'<div class="admln">💡 Zrealizowane zgłoszenia: <b>'+fbDone[id]+'</b></div>':''));
+  // 4. dziennik
+  const A=d.act||[],tot=+d.act_total||0;
+  const s4=box('Dziennik aktywności'+(tot?' ('+tot+')':''),A.length
+     ?'<div class="admrec">'+A.map(x=>'<div><span>'+tkActTxt(x,id)+'</span><span class="note">'+esc(fmtWhen(x.at))+'</span></div>').join("")+'</div>'
+      +(A.length<tot?'<button class="b g small tkmore" data-a="tkmore" data-id="'+esc(id)+'"'+(tkBusy?' disabled':'')+'>'+(tkBusy?'Wczytuję…':'Pokaż więcej ('+A.length+' z '+tot+')')+'</button>':'')
+     :'<div class="note">Brak wpisów w dzienniku.</div>');
+  // 5. jej / jego rzeczy
+  const W=wants.filter(w=>w.user_id===id),R=d.rides||[],T=d.routes||[],E=d.events||[];
+  const it=(a,t,sub)=>'<button type="button" class="tkit" '+a+'><span>'+t+'</span><span class="note">'+sub+'</span></button>';
+  const s5=box('Dodane przez tę osobę',
+     '<div class="admln">Aktualne zaproszenia: <b>'+W.length+'</b></div>'
+    +'<div class="admln">Wieczorynki: <b>'+(+d.rides_n||0)+'</b></div>'+(R.length?'<div class="tklist">'+R.map(x=>it('data-a="tkride" data-id="'+esc(x.id)+'"',esc(x.t||"Wieczorynka"),dt(x.at))).join("")+'</div>':'')
+    +'<div class="admln">Trasy w bazie: <b>'+(+d.routes_n||0)+'</b></div>'+(T.length?'<div class="admrec">'+T.map(x=>'<div><span>'+esc(x.t||"Trasa")+'</span><span class="note">'+(x.km!=null?fmt1(+x.km)+' km · ':'')+dt(x.at)+'</span></div>').join("")+'</div>':'')
+    +'<div class="admln">Imprezy: <b>'+(+d.events_n||0)+'</b></div>'+(E.length?'<div class="tklist">'+E.map(x=>it('data-a="tkev" data-id="'+esc(x.id)+'"',esc(x.t||"Impreza"),dt(x.at))).join("")+'</div>':'')
+    +(d.rides_n>R.length||d.routes_n>T.length||d.events_n>E.length?'<div class="note">Pokazane 20 ostatnich z każdego rodzaju.</div>':''));
+  // 6. zgłoszenia i wiadomości
+  const F=fbOk?fbList.filter(f=>f.user_id===id):[];
+  const s6=fbOk?box('Zgłoszenia i wiadomości ('+F.length+')',F.length
+     ?'<div class="tklist">'+F.map(f=>it('data-a="tkfb" data-id="'+esc(f.id)+'"',esc(FB_KIND[f.kind]||f.kind)+(f.body?' — '+esc(String(f.body).slice(0,60))+(String(f.body).length>60?'…':''):''),esc(fmtWhen(f.updated_at||f.created_at)))).join("")+'</div>'
+     :'<div class="note">Brak.</div>'):'';
+  // 7. skróty do akcji (zmiana nicku, ukrycie i blokada pytają o potwierdzenie)
+  const mod=modOk&&id!==uid&&!isSuper(id),dis=modBusy?' disabled':'',ida='data-id="'+esc(id)+'"'+dis,hid=modHidden.has(id),ban=modBanned.has(id);
+  const s7=gGrp("Akcje",[fbOk&&id!==uid?gRow("#bf5af2","msg","Napisz wiadomość","Trafi do jej skrzynki zgłoszeń","",'data-a="fbmsg" data-id="'+esc(id)+'"'):'',
+      gRow("#0a84ff","cal","Pokaż zaproszenia tej osoby","Filtr na liście zaproszeń","",'data-a="fltuser" data-id="'+esc(id)+'"'),
+      !isSuper(id)?gRow("#ff9f0a","pencil","Zmień nick","","",'data-a="unick" data-id="'+esc(id)+'"'):'',
+      mod?gRow(hid?"#30d158":"#8e8e93",hid?"eye":"user",hid?"Pokaż konto innym":"Ukryj konto",hid?"Teraz: ukryte":"Zniknie z list u innych","",'data-a="modhide" '+ida):'',
+      mod?gRow(ban?"#30d158":"#ff3b30",ban?"check":"lock",ban?"Odblokuj konto":"Zablokuj konto",ban?"Teraz: zablokowane":"Zobaczy tylko komunikat o blokadzie","",'data-a="modban" '+ida):''])
+   +(mod&&!adminIds.includes(id)?'<div class="ios-grp" style="margin-top:14px"><button type="button" class="ios-it ios-row ios-out" data-a="moddel" '+ida+'>Usuń konto…</button></div>':'');
+  return head+s1+s2+s3+s4+s5+s6+'<div style="margin-top:18px">'+s7+'</div>';
 }
 async function toggleFav(id){
   if(!session||!favOk||!id||id===uid)return;
@@ -569,6 +656,6 @@ document.addEventListener("click",e=>{
   const inPanel=!!p.closest("#gearpanel");
   if(inPanel&&!["favs","online","admin"].includes(gearView))return;
   if(inPanel&&p.dataset.u===uid)return;
-  userBack=inPanel?gearView:"";userId=p.dataset.u;gearOpen=true;gearView="user";renderGear();
+  userBack=inPanel?gearView:"";tkFrom=false;userId=p.dataset.u;gearOpen=true;gearView="user";renderGear();
   if(isAdmin){delete admInfo[userId];loadAdmInfo(userId)}
 });
