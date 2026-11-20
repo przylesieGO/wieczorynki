@@ -437,7 +437,7 @@ function sigBellHtml(){
   const L=sigList();if(!L.length)return "";
   const U=new Set(sigUnread());
   return bsSec("sig",'🚲 Mają ochotę dziś',U.size,L.length,L.slice().sort((a,b)=>(U.has(b)?1:0)-(U.has(a)?1:0)).map(x=>sigRow(x,U.has(x))).join("")
-    +'<div class="bsempty">Bez godziny i trasy. „Zaproś” otwiera zaproszenie na dziś z zakresem godzin — ta osoba dostanie powiadomienie.</div>');
+    +'<div class="bsempty">Bez godziny i trasy. „Zaproś” otwiera zaproszenie na dziś z zakresem godzin — domyślnie widzi je tylko ta osoba (dostanie powiadomienie); w „Kto zobaczy?” możesz dopisać innych.</div>');
 }
 // pop-up z zachętą: pierwsze 3 wejścia (raz na uruchomienie), tylko gdy przycisk z kołem jest widoczny
 // (gdy przy starcie otwarta jest Pomoc albo inne okienko — pokazuje się zaraz po jego zamknięciu, najpóźniej 3 min od startu)

@@ -573,6 +573,8 @@ function openWantForm(w,preset){
   wf.pace=w&&w.pace||null;wf.bike=w&&w.bike||null;wbikeRender();$("wbikewrap").classList.toggle("hide",!bikeOk);wf.pcity=w&&w.place_city||null;wf.parea=w&&w.place_area||null;wf.km=w&&w.km!=null?+w.km:null;wf.dur=w&&w.dur_min||null;wf.kmOwn=false;wf.durOwn=false;wf.place=w&&w.place||null;wf.plat=w&&w.place_lat!=null?+w.place_lat:null;wf.plon=w&&w.place_lon!=null?+w.place_lon:null;wf.placeOwn=false;wf.placeMap=false;wf.placeAdd=false;wfPlaceSync();$("wpacewrap").classList.toggle("hide",!paceOk);wfPaceSync();
   wfRouteSync();
   if(preset&&preset.pick){wf.vis="pick";wf.pick=new Set(preset.pick)}
+  // z „Mam ochotę”: domyślnie TYLKO ta osoba (prywatne zaproszenie); „Kto zobaczy?” pozwala dopisać kogoś jeszcze albo otworzyć dla wszystkich
+  if(wf.sigFor&&wf.sigFor!==uid&&visOk&&!(preset&&preset.pick)){wf.vis="pick";wf.pick=new Set([wf.sigFor])}
   // edycja: „Kto zobaczy?” startuje z obecnego stanu (prywatne → wybrane osoby = obecni zaproszeni)
   if(w&&isPriv(w)){wf.vis="pick";wf.pick=new Set((invs[w.id]||[]).map(x=>x.u))}
   $("wwhowrap").classList.toggle("hide",!visOk);
