@@ -420,6 +420,14 @@ body.wfopen .toast{bottom:calc(var(--wffh,130px) + 12px);width:max-content;max-w
 /* 🟡 „Mam ochotę” (KROK 64): okrągły przycisk z kołem z logo nad ➕ — mniejszy, żeby ➕ został głównym */
 .sigfab{position:fixed;right:max(calc(21px + env(safe-area-inset-right,0px)),calc((100vw - 900px)/2 + 21px));bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:1500;width:48px;height:48px;padding:0;border:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--card);color:var(--card);cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 6px 16px rgba(0,0,0,.18),0 1px 3px rgba(0,0,0,.12);transition:transform .12s,background .2s}
 .sigfab svg{width:32px;height:32px;animation:sigspin 6s ease-in-out infinite}
+/* dymek „Mam ochotę” nad kołem: półprzezroczysty (nie narzuca się); komputer — po najechaniu / fokusie, telefon — raz dziennie na kilka sekund (js/11) */
+.sigtip{position:fixed;right:max(calc(21px + env(safe-area-inset-right,0px)),calc((100vw - 900px)/2 + 21px));bottom:calc(144px + env(safe-area-inset-bottom,0px));z-index:1500;pointer-events:none;opacity:0;transition:opacity .25s;font-size:12.5px;font-weight:600;white-space:nowrap;padding:5px 11px;border-radius:9px;color:rgba(30,30,32,.85);background:rgba(255,255,255,.55);border:1px solid rgba(0,0,0,.14);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+html[data-theme=dark] .sigtip{color:rgba(255,255,255,.88);background:rgba(44,44,46,.5);border-color:rgba(255,255,255,.2)}
+.sigtip::after{content:"";position:absolute;right:20px;bottom:-5px;width:8px;height:8px;transform:rotate(45deg);background:inherit;border:inherit;border-left:0;border-top:0}
+.sigfab.hide+.sigtip{display:none}
+.sigtip.show{opacity:1}
+@media (hover:hover){.sigfab:hover+.sigtip,.sigfab:focus-visible+.sigtip{opacity:1}}
+@media (prefers-reduced-motion:reduce){.sigtip{transition:none}}
 .sigfab:active{transform:scale(.92)}
 .sigfab.done{background:#248a3d}.sigfab.done svg{width:26px;height:26px;animation:none}
 html[data-theme=dark] .sigfab{box-shadow:0 6px 16px rgba(0,0,0,.5)}
@@ -741,7 +749,7 @@ html[data-theme=dark] .evp-t.soon{background:#4d2a0e;color:#ffb074}@keyframes ev
 .pe-avb{position:relative;width:96px;height:96px;border-radius:50%;border:0;padding:0;background:none;cursor:pointer}
 .pe-avb img,.pe-avb .gav{width:96px;height:96px;border-radius:50%;object-fit:cover;display:flex;font-size:40px}
 .pe-cam{position:absolute;right:-2px;bottom:-2px;width:32px;height:32px;border-radius:50%;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 3px var(--card)}.pe-cam .ui-i{width:17px;height:17px}
-#gsex button{display:inline-flex;align-items:center;gap:3px}#gsex .ui-i{width:15px;height:15px}
+#gsex button{display:inline-flex;align-items:center;gap:3px;color:var(--gc);background:var(--gb);opacity:.55;box-shadow:none;transition:opacity .15s,box-shadow .15s}#gsex button.on{opacity:1;box-shadow:inset 0 0 0 2px var(--gc)}#gsex .ui-i{width:15px;height:15px}
 .pe-nickline{display:flex;justify-content:center;margin:0 0 6px}.pe-nickline .lnk{font-size:15px;font-weight:600;display:inline-flex;align-items:center;gap:6px}.pe-nickline .ui-i{width:14px;height:14px}
 .pe-avl{display:flex;gap:18px}.pe-avl .lnk{font-size:15px;font-weight:600}.pe-rm{color:var(--bad)!important}
 .pe-row{display:flex;align-items:center;gap:11px;cursor:default}.pe-in{flex:1;min-width:0;border:0!important;background:none!important;padding:6px 0!important;margin:0!important;font-size:15.5px!important;box-shadow:none!important;color:var(--ink)}

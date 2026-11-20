@@ -382,9 +382,9 @@ function avFromFile(f){return new Promise((res,rej)=>{
   img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error("Nie udało się wczytać zdjęcia."))};img.src=url})}
 function peStart(){pe={av:avData[uid]?avData[uid].d:null,avCh:false,media:Object.assign({},medias[uid]||{}),phone:myPriv&&myPriv.phone||"",pvis:myPriv&&myPriv.phone_vis||"off",cvis:!!(myPriv&&myPriv.city_vis)}}
 // przełącznik płci: grafika Wenus / Mars + litera K / M (wspólny dla Edytuj profil i pierwszego uzupełniania profilu)
-const sexBtn=k=>{   // kolory jak na etykietach nicków (⚙️ → Administracja → Kolory nicków): tekst + tło; wybrana ma obrys, niewybrana jest przygaszona
+const sexBtn=k=>{   // kolory jak na etykietach nicków (⚙️ → Administracja → Kolory nicków): --gc tekst, --gb tło; wybrana (.on) ma obrys i pełną widoczność — styl w css, więc przełącza się od razu po kliknięciu
   const c=HEX_RE.test(nickColors[k]||"")?nickColors[k]:DEF_COLORS[k],b=nickBgs[k]==="none"?"transparent":(HEX_RE.test(nickBgs[k]||"")?nickBgs[k]:DEF_BGS[k]),on=selGender===k,nm=k==="K"?"Kobieta":"Mężczyzna";
-  return '<button type="button" data-g="'+k+'" class="'+(on?"on":"")+'" style="color:'+c+';background:'+b+(on?';box-shadow:inset 0 0 0 2px '+c:';opacity:.55')+'" title="'+nm+'" aria-label="'+nm+'">'+uiIcon(k==="K"?"venus":"mars")+" "+k+'</button>';
+  return '<button type="button" data-g="'+k+'" class="'+(on?"on":"")+'" style="--gc:'+c+';--gb:'+b+'" title="'+nm+'" aria-label="'+nm+'">'+uiIcon(k==="K"?"venus":"mars")+" "+k+'</button>';
 };
 let nickOpen=false,nickDraft=null;   // Edytuj profil: nick jako tekst pod zdjęciem; pole rozwija się po kliknięciu
 let mediaOpen=false;   // „Moje media” w Edytuj profil: domyślnie zwinięte

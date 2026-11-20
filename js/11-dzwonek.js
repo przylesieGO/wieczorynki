@@ -381,6 +381,18 @@ function sigFabSync(fabOn){
   if(fabOn===undefined)fabOn=!$("fab").classList.contains("hide");
   const done=Date.now()<sigDoneT;
   b.classList.toggle("hide",!fabOn||!(sigFabOn()||done));b.classList.toggle("done",done);
+  if(!b.classList.contains("hide")&&!done)sigTipAuto();
+}
+// 💬 dymek „Mam ochotę”: na telefonie (bez najechania) pokazuje się sam, raz dziennie, na ok. 4 s — dopiero po pierwszych 3 wejściach (wtedy jest okienko z zachętą)
+let sigTipT=0;
+function sigTipAuto(){
+  const t=$("sigtip");if(!t||sigTipT||!window.matchMedia||!matchMedia("(hover:none)").matches)return;
+  if((+(lsGet("sigIntro")||0))<3||lsGet("sigTipDay")===sigToday())return;
+  sigTipT=setTimeout(()=>{
+    sigTipT=0;const b=$("sigfab"),sh=$("sigsheet");
+    if(!b||b.classList.contains("hide")||(sh&&!sh.classList.contains("hide")))return;
+    lsSet("sigTipDay",sigToday());t.classList.add("show");setTimeout(()=>t.classList.remove("show"),4000)
+  },1500);
 }
 const sigWheel='<svg viewBox="0 0 30 30" fill="none" aria-hidden="true"><circle cx="15" cy="15" r="10.5" stroke="#f5b82e" stroke-width="4.5"/><circle cx="15" cy="15" r="2" fill="#f5b82e"/><path d="M15 3.5v4.5" stroke="currentColor" stroke-width="2.2"/></svg>';
 const sigCheck='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
