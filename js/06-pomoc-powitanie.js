@@ -157,12 +157,12 @@ function helpFullHtml(){
      "<b>🔔 w nagłówku</b> — wszystko w jednym miejscu: <b>📩 Do Ciebie</b> (od innych, prywatne i dla wszystkich), <b>🙋 Twoje zaproszenia</b> (kto dołączył, zmiany), odpowiedzi na Twoje zgłoszenia i — przez pierwsze dni — <b>✨ Dokończ start</b>. Sekcje zwijasz i rozwijasz dotknięciem nagłówka; czerwone kółko = nieprzeczytane (liczba także na ikonie aplikacji).",
      "Po wejściu wyskakuje okienko, gdy ktoś zaprosił Cię prywatnie. Dowiesz się też, gdy ktoś zrezygnuje i <b>🔁 wróci</b> do Twojej jazdy.",
      "<b>Czerwona liczba na ➕</b> — ile zaproszeń <b>innych osób</b> jest na dziś (Twoich nie liczy). Po przewinięciu w dół przycisk zwija się do samego ➕.",
-     tg?"<b>Bot Telegram</b> napisze prywatnie: zaproszenie, zmiana godziny i szczegółów, ustalenie startu, kto dołączył, przypomnienie ~1 h przed jazdą. Włączysz: ⚙️ → Połącz z Telegramem → w Telegramie START. Wyłączysz tam samo (Rozłącz).":"",
+     tg?"<b>Bot Telegram</b> napisze prywatnie: zaproszenie, zmiana godziny i szczegółów, ustalenie startu, kto dołączył, przypomnienie ~1 h przed jazdą. Włączysz: ⚙️ → Edytuj profil → Telegram → Połącz z Telegramem → w Telegramie START. Wyłączysz tam samo (Rozłącz).":"",
      session?"<b>Kanał @PrzylesieGo</b> na Telegramie — ogłoszenia nowych jazd dla wszystkich.":""].filter(Boolean))
    +(tabOk(3)?sec("🏁 Imprezy",[
      "Rajdy, gravele, maratony, biegi i marsze. Na karcie: data, miejsce, dystanse (z przewyższeniem i limitem czasu), „🏁 start za 12 dni”, zapisy trwają / zakończone, kto z nas jedzie.",
      "<b>Rozwiń kartę</b>, wybierz dystans i kliknij „Jadę!” (przy biegu „Biegnę”, przy marszu „Idę”). ❤ Lubię, 📅 do Google Kalendarza, udostępnij.",
-     "<b>📍 W okolicy</b> — imprezy w promieniu 50 / 100 / 200 km od <b>Mojej miejscowości</b> (ustawisz w filtrze albo w ⚙️ → Profil → Moja miejscowość) albo od Twojej lokalizacji z telefonu. Na każdej karcie widać odległość w linii prostej.",
+     "<b>📍 W okolicy</b> — imprezy w promieniu 50 / 100 / 200 km od <b>Mojej miejscowości</b> (ustawisz w filtrze albo w ⚙️ → Edytuj profil → Moja miejscowość) albo od Twojej lokalizacji z telefonu. Na każdej karcie widać odległość w linii prostej.",
      "<b>＋ Dodaj imprezę</b> — każdy zalogowany. Autor i admin edytują; ⧉ Duplikuj tworzy kolejną edycję (rok i daty +1). Dystanse ułożysz, przeciągając ⋮⋮. Usuwa admin (autor prosi o usunięcie)."]):'')
    +(rbOk?sec("🗺️ Baza tras",[
      "<b>⚙️ → Baza tras</b> — trasy, którymi jeździmy. Sortowanie: najczęściej wybierane, najlepsze, najbardziej malownicze, najtrudniejsze, najłatwiejsze, najmniej aut, najwięcej lasu, asfalt, teren, gastronomia, najdłuższe, najbliżej (od Mojej miejscowości); filtr roweru i szukajka.",

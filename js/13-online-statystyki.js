@@ -208,7 +208,7 @@ function privGrpHtml(noHead){
 }
 // ⚙️ → Prywatność: osobna podstrona (te same przełączniki są też na dole „Moich jazd”)
 function privPageHtml(){
-  return '<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">'+uiIcon("lock")+' Prywatność</div>'
+  return ''+backBtn()+'<div class="sname" style="margin-top:26px">'+uiIcon("lock")+' Prywatność</div>'
    +'<div class="smail">Co inni widzą o Twoich jazdach.</div>'
    +(privGrpHtml(true)||'<div class="note">Ładuję…</div>');
 }
@@ -289,7 +289,7 @@ function urSectionsHtml(d,own){
 }
 // ekran ⚙️ → „Moje jazdy”
 function myRidesHtml(){
-  const head='<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">'+uiIcon("bike")+' Moje jazdy</div>';
+  const head=''+backBtn()+'<div class="sname" style="margin-top:26px">'+uiIcon("bike")+' Moje jazdy</div>';
   const s0=userRides[uid];if(s0===undefined)userRidesHtml(uid);
   if(!s0)return head+'<div class="smail">Ładuję…</div>';
   if(!s0.ur)return head+'<div class="sleft"><div class="changed">Wymaga KROKU 62 w bazie.</div></div>';

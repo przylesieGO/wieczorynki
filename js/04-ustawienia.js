@@ -11,7 +11,8 @@ function setTheme(t){themeMode=t;try{localStorage.setItem("theme",t)}catch(e){}a
 if(darkMq&&darkMq.addEventListener)darkMq.addEventListener("change",applyTheme);
 applyTheme();
 const themeHtml=()=>'<div class="note" style="margin-top:14px">Wygląd</div><div class="seg">'+[["light","☀️ Jasny"],["dark","🌙 Ciemny"],["auto","Auto"]].map(([k,n])=>'<button data-t="'+k+'" class="'+(themeMode===k?"on":"")+'">'+n+'</button>').join("")+'</div>'+(themeMode==="auto"?'<div class="note" style="margin-top:6px">Auto — jak w telefonie. Wieczorem ciemny, jeśli masz w telefonie włączone automatyczne przełączanie.</div>':'');
-let guestMode=false,gearOpen=false,gearView="main";
+let guestMode=false,gearOpen=false,gearView="main",gearFrom="";
+const backBtn=()=>'<button class="sback" data-c="back">‹ '+(gearFrom==="nick"?"Edytuj profil":"Ustawienia")+'</button>';
 // nick zalogowanego na górze ekranu (pomaga przy kilku kontach) — domyślnie widoczny, zapamiętane w telefonie
 let showNick=true;try{showNick=localStorage.getItem("showNick")!=="0"}catch(e){}
 const showNickHtml=()=>'<div class="note" style="margin-top:14px">Nick na górze ekranu</div><div class="seg">'+[["1","Pokaż"],["0","Ukryj"]].map(([k,t])=>'<button data-sn="'+k+'" class="'+((showNick?"1":"0")===k?"on":"")+'">'+t+'</button>').join("")+'</div>';
@@ -177,7 +178,7 @@ function nickHtml(){
      :first?'<div class="sname">👋 Wybierz swój nick</div><div class="smail">Witaj w PrzylesieGo! Nick widzą inni przy zapisach na wieczorynki i zgłoszeniach.</div>'
      :incomplete?'<div class="sname">👋 Uzupełnij profil</div><div class="smail">Wybierz płeć — od niej zależy kolor Twojego nicku.</div>'
      :'<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">'+(profExOk?'Edytuj profil':'✏️ Nick i płeć')+'</div>'+avEditHtml()
-       +'<div class="sleft">'+gGrp("Konto",[gRow("#636366","key","Zmień hasło",esc(session&&session.user.email||""),'','data-c="pwd"')])+'</div>';
+       +'<div class="sleft">'+profHubHtml()+gGrp("Konto",[gRow("#636366","key","Zmień hasło",esc(session&&session.user.email||""),'','data-c="pwd"')])+'</div>';
   const gsel=genderOk?'<label style="font-size:15px;margin-top:14px">Płeć (obowiązkowo)</label><div class="seg" id="gsex" style="margin-top:4px">'
      +[["K","👩 Kobieta"],["M","👨 Mężczyzna"]].map(([k,t])=>'<button type="button" data-g="'+k+'" class="'+(selGender===k?"on":"")+'">'+t+'</button>').join("")+'</div>':'';
   return head
@@ -308,7 +309,7 @@ async function confirmDelete(){
 const starBtn=id=>'<button class="starb'+(isFav(id)?' on':'')+'" data-a="fav" data-id="'+esc(id)+'" title="'+(isFav(id)?'Usuń z ulubionych':'Dodaj do ulubionych')+'">'+(isFav(id)?'⭐':'☆')+'</button>';
 function favsHtml(){
   const ids=Object.keys(nicks).filter(id=>id!==uid).sort((a,b)=>((isFav(b)?1:0)-(isFav(a)?1:0))||nicks[a].localeCompare(nicks[b],"pl"));
-  return '<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">⭐ Ulubieni</div>'
+  return ''+backBtn()+'<div class="sname" style="margin-top:26px">⭐ Ulubieni</div>'
    +'<div class="smail">Tylko Ty widzisz, kogo masz w ulubionych. Ulubieni są na początku list i widać ich w nagłówkach dni.</div>'
    +'<div class="sleft">'+(ids.map(id=>'<div class="arow">'+nk(id)+starBtn(id)+'</div>').join("")||'<div class="note">Brak innych użytkowników z nickiem.</div>')+'</div>';
 }

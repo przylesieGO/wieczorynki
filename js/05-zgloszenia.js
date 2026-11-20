@@ -219,9 +219,16 @@ function maybeFb(){
   if(Date.now()<sn)return;
   openRate();
 }
+// 👤 ⚙️ → Edytuj profil: grupy „Profil” (Moje jazdy, Ulubieni, Moja miejscowość, Prywatność) i „Powiadomienia” (Telegram, kanał) — przeniesione z głównego ekranu
+function profHubHtml(){
+  return gGrp("Profil",[reportOk?gRow("#34c759","bike","Moje jazdy","Kalendarz, rekordy, km w sezonie",userRides[uid]&&userRides[uid].n?'<span class="ios-v">'+userRides[uid].n+'</span>':'','data-c="myrides"'):"",favOk?gRow("#ffcc00","starf","Ulubieni","Zawsze na górze list",favs.size?'<span class="ios-v">'+favs.size+'</span>':'','data-c="favs"'):"",
+  (evGeoOk&&tabOk(3))||rbOk?gRow("#ff9f0a","pin","Moja miejscowość",rbOk&&!(evGeoOk&&tabOk(3))?"Odległość do tras":"Odległość do imprez i tras",'<span class="ios-v">'+(homeGet()?esc(homeGet().name):'Ustaw')+'</span>','data-home="1"'):"",reportOk?gRow("#5856d6","lock","Prywatność","Kto widzi Twoje jazdy i rekordy","",'data-c="priv"'):""])
+   +gGrp("Powiadomienia",[tgOn()?gRow("#0a84ff","send","Telegram"+betaTag("telegram_dm"),"Powiadomienia prosto na telefon",tgLink?'<span class="ios-v ok">'+uiIcon("check")+'Połączony</span>':'<span class="ios-v">Połącz</span>','data-c="tg"'):"",
+  gRow("#0a84ff","mega","Kanał @PrzylesieGo","Nowe jazdy dla wszystkich","",'href="https://t.me/PrzylesieGo" target="_blank" rel="noopener"',"a")]);
+}
 function renderGear(){
   const p=$("gearpanel");
-  if(!gearOpen){p.classList.add("hide");gearView="main";tkFrom=false;return}
+  if(!gearOpen){p.classList.add("hide");gearView="main";gearFrom="";tkFrom=false;return}
   p.classList.remove("hide");
   if((gearView==="admin"||gearView==="users"||gearView==="perms"||gearView==="unick"||gearView==="colors"||gearView==="stats"||gearView==="flags"||gearView==="testdel"||gearView==="privadm")&&!(session&&isAdmin))gearView="main";
   if(gearView==="flags"&&!isSuper(uid))gearView="admin";
@@ -268,18 +275,14 @@ function renderGear(){
   // ⚙️ góra w stylu grup iPhone'a + wyróżniona „Baza tras” (wariant B, decyzja właściciela 2026-11-16 15:11)
   else body=session
     ?profCardHtml()
-     +gGrp("Profil",[reportOk?gRow("#34c759","bike","Moje jazdy","Kalendarz, rekordy, km w sezonie",userRides[uid]&&userRides[uid].n?'<span class="ios-v">'+userRides[uid].n+'</span>':'','data-c="myrides"'):"",favOk?gRow("#ffcc00","starf","Ulubieni","Zawsze na górze list",favs.size?'<span class="ios-v">'+favs.size+'</span>':'','data-c="favs"'):"",
-        (evGeoOk&&tabOk(3))||rbOk?gRow("#ff9f0a","pin","Moja miejscowość",rbOk&&!(evGeoOk&&tabOk(3))?"Odległość do tras":"Odległość do imprez i tras",'<span class="ios-v">'+(homeGet()?esc(homeGet().name):'Ustaw')+'</span>','data-home="1"'):"",reportOk?gRow("#5856d6","lock","Prywatność","Kto widzi Twoje jazdy i rekordy","",'data-c="priv"'):""])
-     +rbHeroHtml()+testerCardHtml()+setRidesHtml()
-     +gGrp("Powiadomienia",[tgOn()?gRow("#0a84ff","send","Telegram"+betaTag("telegram_dm"),"Powiadomienia prosto na telefon",tgLink?'<span class="ios-v ok">'+uiIcon("check")+'Połączony</span>':'<span class="ios-v">Połącz</span>','data-c="tg"'):"",
-        gRow("#0a84ff","mega","Kanał @PrzylesieGo","Nowe jazdy dla wszystkich","",'href="https://t.me/PrzylesieGo" target="_blank" rel="noopener"',"a")])
-     +setLookHtml(false)
-     +setTestHtml()
-     +(isAdmin?gGrp("Narzędzia",[gRow("#8e8e93","shield","Administracja","Użytkownicy, zgłoszenia, statystyki, uprawnienia",fbAdmUnread().length?'<span class="ios-bdg">'+fbAdmUnread().length+'</span>':'','data-c="admin"')]):'')
+     +(isAdmin?gGrp("Administracja",[gRow("#8e8e93","shield","Administracja","Użytkownicy, zgłoszenia, statystyki, uprawnienia",fbAdmUnread().length?'<span class="ios-bdg">'+fbAdmUnread().length+'</span>':'','data-c="admin"')]):'')
      +(isKingReal()?gGrp("Podgląd aplikacji",[
         gRow("#8e8e93","user","Jak widzi gość","Nowa karta bez logowania",'','data-c="pv" data-pv="guest"'),
         gRow("#0a84ff","users","Jak widzi użytkownik","Bez funkcji testowych i bez uprawnień admina",pv==="user"?'<span class="ios-v ok">'+uiIcon("check")+'Teraz</span>':'','data-c="pv" data-pv="user"'),
         gRow("#bf5af2","flask","Jak widzi tester","Z funkcjami testowymi (🧪 BETA), bez uprawnień admina",pv==="tester"?'<span class="ios-v ok">'+uiIcon("check")+'Teraz</span>':'','data-c="pv" data-pv="tester"')]):'')
+     +rbHeroHtml()+testerCardHtml()+setRidesHtml()
+     +setLookHtml(false)
+     +setTestHtml()
      +gGrp("Pomoc i opinie",[gRow("#30d158","help","Pomoc — co potrafi aplikacja","Wersja "+esc(APP_VER),relNew()?'<span class="ios-bdg">Nowości</span>':'','data-c="help"'),
         fbOk?gRow("#bf5af2","msg","Oceń aplikację / zgłoś błąd","Błąd, pomysł albo ocena — odpisujemy",fbMineUnread().length?'<span class="ios-bdg">'+fbMineUnread().length+'</span>':'','data-c="fb"'):"",
         isStandalone()?"":gRow("#636366","phone","Zainstaluj aplikację","Ikona na ekranie telefonu","",'data-c="inst"')])
@@ -303,7 +306,7 @@ function renderGear(){
   if($("admq")){admFilter();if(keepAdmq!=null){const q=$("admq");q.focus();try{q.setSelectionRange(keepAdmq,keepAdmq)}catch(e){}}}
 }
 function tgHtml(){
-  const head='<button class="sback" data-c="back">‹ Ustawienia</button><div class="sname" style="margin-top:26px">🔔 Telegram'+betaTag("telegram_dm")+'</div>';
+  const head=''+backBtn()+'<div class="sname" style="margin-top:26px">🔔 Telegram'+betaTag("telegram_dm")+'</div>';
   const what='<ul><li>ktoś Cię zaprosi na rower,</li><li>zmieni albo ustali godzinę,</li><li>ktoś dołączy do Twojego zaproszenia albo zrezygnuje,</li><li>za godzinę jedziesz (przypomnienie — też na wieczorynki).</li></ul>';
   if(tgLink)return head+'<div class="smail"><span class="tgok">✅ Połączono'+(tgLink.tg_name?' · '+esc(tgLink.tg_name):'')+'</span></div>'
     +'<div class="sleft"><div class="note" style="font-size:15px">Bot <b>@PrzylesieGo_bot</b> napisze do Ciebie, gdy:</div>'+what+'</div>'
@@ -472,6 +475,7 @@ $("gearpanel").addEventListener("click",async e=>{
   }
   const b=e.target.closest("button[data-c]");if(!b)return;
   const c=b.dataset.c;
+  if(gearView==="nick"&&["myrides","favs","priv","tg"].includes(c))gearFrom="nick";   // ‹ wraca do Edytuj profil
   if(c==="admin"){gearView="admin";renderGear();return}
   if(c==="colors"){gearView="colors";renderGear();return}
   if(c==="stats"){gearView="stats";loadStats();return}
@@ -560,7 +564,7 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="pephotodel"){if(pe){pe.av=null;pe.avCh=true;renderGear()}return}
   if(c==="del"){gearView="del";renderGear();const i=$("gdel");if(i)i.focus();return}
   if(c==="delgo"){await gearDeleteAccount();return}
-  if(c==="back"){gearView="main";renderGear();return}
+  if(c==="back"){gearView=gearFrom||"main";gearFrom="";renderGear();return}
   if(c==="backadmin"){gearView="admin";renderGear();return}
   if(c==="unicksave"){await adminSaveNick();return}
   if(c==="adminadd"){
