@@ -61,6 +61,7 @@ function adminHtml(){
       gRow("#34c759","shield","Uprawnienia","Administratorzy"+(testerOk?" i testerzy":""),'<span class="ios-v">'+adminIds.filter(id=>nicks[id]).length+(testerOk?' / '+testerIds.size:'')+'</span>','data-c="perms"'),
       testerOk&&isSuper(uid)?gRow("#5e5ce6","flask","Funkcje testowe","Kto widzi nowe funkcje: nikt, testerzy, wszyscy","",'data-c="flags"'):'',
       genderOk?gRow("#ff2d55","palette","Kolory nicków","","",'data-c="colors"'):'',
+      gRow("#ff3b30","hand","Zakazane nicki","Słowa, których nie można użyć w nicku","",'data-c="nickbans"'),
       placeOk?gRow("#ff9f0a","pin","Miejsca zbiórki","",'<span class="ios-v">'+places.length+'</span>','data-c="places"'):''])
    +(isSuper(uid)?gGrp("Zaproszenia",[gRow("#30d158","eye","Wszystkie zaproszenia","Także prywatne i testowe",'<span class="ios-v">'+wantsAll.filter(w=>wantEnd(w).getTime()>Date.now()).length+'</span>','data-c="allw"'),
       gRow("#8e8e93","archive","Archiwum zaproszeń","Zakończone jazdy","",'data-c="karch"'),
@@ -198,7 +199,7 @@ function nickEditHtml(){
    +'<div class="sleft">'
    +'<div class="pe-nickline"><button type="button" class="lnk" data-c="nickopen" aria-expanded="'+nickOpen+'" aria-label="Zmień nick">'+esc((nickDraft!=null&&nickDraft.trim()?nickDraft:me.nick||"").trim())+' '+uiIcon("pencil")+'</button></div>'
    +(nickOpen?gGrp("Nick",[rowIn("#0a84ff","user",'<input class="pe-in" id="gnick" maxlength="20" autocomplete="off" value="'+esc(nickDraft!=null?nickDraft:me.nick||"")+'" placeholder="np. GAWRON" aria-label="Nick">')])
-     +'<p class="note pe-note">Najlepiej <b>imię + litera nazwiska</b> albo ksywka, np. <i>Ania K</i>, <i>Marek z Bielan</i>. Co najmniej 3 litery, do 20 znaków: litery, cyfry, spacja, kropka, _ lub -. Nick musi być unikalny; widzą go inni zalogowani.</p>'
+     +'<p class="note pe-note">Najlepiej <b>imię + litera nazwiska</b> albo ksywka, np. <i>Ania K</i>, <i>Marek z Bielan</i>. Co najmniej 3 litery, do 20 znaków: litery, cyfry, spacja, kropka, _ lub -. Nick musi być unikalny; widzą go inni zalogowani. Zmienisz go raz na 14 dni.'+(nickNext?' <b>Kolejna zmiana możliwa od '+esc(nickDay(nickNext))+'.</b>':'')+'</p>'
      +'<div class="nsug hide" id="gnicksug"></div>':'')
    +sex
    +profHubHtml()
@@ -553,6 +554,55 @@ function placesHtml(){
      +(su||x.created_by===uid?'<span class="arbtns" style="flex-direction:row;flex-wrap:nowrap;white-space:nowrap"><button class="b g small" data-a="plpin" data-id="'+esc(x.id)+'">📌 '+(x.lat!=null?'Zmień':'Pinezka')+'</button><button class="b g small" data-a="pldel" data-id="'+esc(x.id)+'">🗑</button></span>':'')+'</div>').join(""):'<div class="note">Brak miejsc.</div>')
    +(su&&bikeOk&&places.some(x=>x.lat!=null&&!x.city)?'<div class="ios-grp" style="margin-top:12px">'+gRow("#0a84ff","city","Uzupełnij miasta z pinezek","Dla miejsc bez nazwy miasta","",'data-a="plcity"')+'</div>':'')
    +'<p class="note">Miejsca dodaje każdy przy tworzeniu zaproszenia („✏️ Inne miejsce…” albo „🗺️ Wskaż na mapie…” + „Dodaj do listy miejsc”). Pinezkę ustawia i miejsce usuwa autor albo 👑.</p></div>';
+}
+// 🚫 zakazane nicki (KROK 67) — listę edytuje każdy administrator; zakaz pilnuje baza (profiles_nick_rules)
+let nickBans=null,nbMode="exact";   // null = ładuję, false = brak KROKU 67
+async function loadNickBans(){
+  try{const r=await sb.from("nick_bans").select("key,word,mode,added_by").order("word").limit(1000);if(r.error)throw r.error;nickBans=r.data||[]}
+  catch(e){nickBans=false}
+}
+// cyfry udające litery (Adm1n = admin) — tak samo jak nick_key_leet w bazie
+const nickLeet=n=>nickKey(String(n||"").toLowerCase().replace(/[013457@$]/g,c=>"oieastas"["013457@$".indexOf(c)]));
+const nbMatch=(n,key,mode)=>[nickKey(n),nickLeet(n)].some(k=>k===key||(mode==="contains"&&k.includes(key)));
+const nbHits=(key,mode)=>Object.keys(nicks).filter(id=>!isSuper(id)&&nbMatch(nicks[id],key,mode)).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl"));
+const NB_M=[["exact","Dokładnie"],["contains","Zawiera"]];
+function nickBansHtml(){
+  const head='<button class="sback" data-c="backadm">‹ Administracja</button><div class="sname" style="margin-top:26px">🚫 Zakazane nicki</div>';
+  if(nickBans===null)return head+'<div class="sleft"><div class="note">Ładuję…</div></div>';
+  if(nickBans===false)return head+'<div class="sleft"><div class="note">Lista niedostępna — w bazie trzeba uruchomić KROK 67.</div></div>';
+  const rows=nickBans.map(b=>{const h=nbHits(b.key,b.mode);
+    return '<div class="arow" data-nb="'+esc(b.key)+'"><span><b>'+esc(b.word)+'</b><br><span class="note">'+(b.mode==="contains"?'zawiera':'dokładnie')
+     +(h.length?' · ⚠️ pasuje: '+h.map(id=>esc(nicks[id])).join(", "):'')+(b.added_by&&nicks[b.added_by]?' · dodał(a) '+esc(nicks[b.added_by]):'')+'</span></span>'
+     +'<span class="arbtns" style="flex-wrap:nowrap;align-items:center"><span class="ios-seg">'+NB_M.map(([m,t])=>'<button type="button" data-a="nbmode" data-id="'+esc(b.key)+'" data-m="'+m+'" class="'+(b.mode===m?'on':'')+'"'+(m==="contains"&&b.key.length<4?' disabled title="Od 4 liter"':'')+'>'+t+'</button>').join("")+'</span>'
+     +'<button class="b g small" data-a="nbdel" data-id="'+esc(b.key)+'" aria-label="Usuń „'+esc(b.word)+'”">🗑</button></span></div>'}).join("");
+  return head+'<div class="sleft">'
+   +(nickBans.length>8?'<input class="bsq srch" id="nbq" type="search" placeholder="Szukaj słowa…" autocomplete="off">':'')
+   +(rows||'<div class="note">Lista jest pusta.</div>')
+   +'<h3 style="margin-top:18px">Dodaj słowo</h3>'
+   +'<input id="nbword" maxlength="20" autocomplete="off" placeholder="np. kierownik">'
+   +'<div class="seg" id="nbseg">'+NB_M.map(([m,t])=>'<button type="button" data-nbm="'+m+'" class="'+(nbMode===m?'on':'')+'">'+t+'</button>').join("")+'</div>'
+   +'<div class="note" id="nbprev" style="margin-top:8px"></div>'
+   +'<div class="note" id="nbinfo" style="color:var(--bad)"></div>'
+   +'<button class="b sbtn" data-c="nbadd">Dodaj do listy</button>'
+   +'<p class="note">„Dokładnie” — cały nick równy słowu. „Zawiera” — słowo w dowolnym miejscu nicku (tylko słowa od 4 liter). Wielkość liter, polskie znaki, kropki i spacje nie mają znaczenia; cyfry udające litery też są wyłapywane (Adm1n = admin). Obecne nicki zostają — zmienisz je w Użytkownikach. 👑 nie dotyczy.</p></div>';
+}
+function nbPreview(){
+  const i=$("nbword"),pv=$("nbprev");if(!i||!pv)return;
+  const k=nickKey(i.value.trim());$("nbinfo").textContent="";
+  if(!i.value.trim()||!/^[a-z]{3,}$/.test(k)){pv.textContent="";return}
+  const h=nbHits(k,nbMode);
+  pv.innerHTML=h.length?'⚠️ Pasuje do obecnych nicków: <b>'+h.map(id=>esc(nicks[id])).join(", ")+'</b> — zostaną, ale nie da się ich ustawić ponownie.':'Nikt obecnie nie ma takiego nicku.';
+}
+function nbFilter(){const q=nickKey(($("nbq")||{}).value||"");document.querySelectorAll("[data-nb]").forEach(r=>{r.style.display=!q||r.dataset.nb.includes(q)?"":"none"})}
+document.addEventListener("input",e=>{if(e.target.id==="nbword")nbPreview();else if(e.target.id==="nbq")nbFilter()});
+// ⏳ zmiana nicku raz na 14 dni (KROK 67): od kiedy znowu można; null = teraz albo baza bez KROKU 67
+let nickNext=null;
+const nickDay=t=>new Date(t).toLocaleString("pl-PL",{day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"});
+async function loadNickNext(){
+  try{const r=await sb.from("profiles").select("nick_changed_at").eq("user_id",uid).maybeSingle();
+    const t=!r.error&&r.data&&r.data.nick_changed_at?new Date(r.data.nick_changed_at).getTime()+14*864e5:0;
+    const v=t>Date.now()&&!isSuper(uid)?t:null;if(v!==nickNext){nickNext=v;if(gearOpen&&gearView==="nick")renderGear()}}
+  catch(e){}
 }
 function onlineHtml(){
   const ids=favFirst(onlineIds.filter(id=>nicks[id]&&(isAdmin||!modGone(id))));

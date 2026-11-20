@@ -232,7 +232,7 @@ function renderGear(){
   if(!gearOpen){p.classList.add("hide");gearView="main";gearFrom="";tkFrom=false;favsSnap=null;return}
   p.classList.remove("hide");
   if(gearView!=="favs")favsSnap=null;
-  if((gearView==="admin"||gearView==="users"||gearView==="perms"||gearView==="unick"||gearView==="colors"||gearView==="stats"||gearView==="flags"||gearView==="testdel"||gearView==="privadm")&&!(session&&isAdmin))gearView="main";
+  if((gearView==="admin"||gearView==="users"||gearView==="perms"||gearView==="unick"||gearView==="colors"||gearView==="stats"||gearView==="flags"||gearView==="testdel"||gearView==="privadm"||gearView==="nickbans")&&!(session&&isAdmin))gearView="main";
   if(gearView==="flags"&&!isSuper(uid))gearView="admin";
   if(gearView==="unick"&&!nicks[unickId])gearView="admin";
   const keepSel=$("adminsel")?$("adminsel").value:"";
@@ -242,6 +242,7 @@ function renderGear(){
   const keepUnick=gearView==="unick"&&$("gunick")?{v:$("gunick").value,i:$("gunickinfo").textContent}:null;
   const keepConf=gearView==="confdel"&&$("gconf")?$("gconf").value:null;
   const keepDel=gearView==="del"&&$("gdel")?{v:$("gdel").value,i:$("gdelinfo").textContent}:null;
+  const keepNb=gearView==="nickbans"&&$("nbword")?{v:$("nbword").value,q:$("nbq")?$("nbq").value:""}:null;
   if(gearView==="nick"&&$("gnick"))nickDraft=$("gnick").value;   // zapamiętaj wpisany nick, gdy pole się zwija / ekran się odświeża
   const keepNick=gearView==="nick"&&$("gnick")?{v:$("gnick").value,i:$("gnickinfo").textContent}:null;
   const keepPw=gearView==="pwd"&&$("gpw0")?{v:["gpw0","gpw1","gpw2"].map(i=>[$(i).value,$(i).type]),i:$("gpwinfo").textContent,f:document.activeElement&&document.activeElement.id}:null;   // odświeżanie co minutę nie kasuje wpisanych haseł
@@ -251,6 +252,7 @@ function renderGear(){
   else if(gearView==="perms")body=permsHtml();
   else if(gearView==="unick")body=unickHtml();
   else if(gearView==="colors")body=colorsHtml();
+  else if(gearView==="nickbans")body=nickBansHtml();
   else if(gearView==="stats")body=adminStatsHtml();
   else if(gearView==="flags")body=flagsHtml();
   else if(gearView==="privadm")body=privAdmHtml();
@@ -304,6 +306,7 @@ function renderGear(){
   if(keepUnick&&$("gunick")){$("gunick").value=keepUnick.v;$("gunickinfo").textContent=keepUnick.i}
   if(keepConf!=null&&$("gconf"))$("gconf").value=keepConf;
   if(keepDel&&$("gdel")){$("gdel").value=keepDel.v;$("gdelinfo").textContent=keepDel.i}
+  if(keepNb&&$("nbword")){$("nbword").value=keepNb.v;nbPreview();if($("nbq")){$("nbq").value=keepNb.q;nbFilter()}}
   if(keepNick&&$("gnick")){$("gnick").value=keepNick.v;$("gnickinfo").textContent=keepNick.i}
   if(keepPw&&$("gpw0")){["gpw0","gpw1","gpw2"].forEach((i,k)=>{$(i).value=keepPw.v[k][0];$(i).type=keepPw.v[k][1];const eb=document.querySelector('[data-eye="'+i+'"]');if(eb)eb.innerHTML=uiIcon(keepPw.v[k][1]==="text"?"eyeoff":"eye")});$("gpwinfo").textContent=keepPw.i;if(keepPw.f&&$(keepPw.f))$(keepPw.f).focus()}
   if($("admq")){admFilter();if(keepAdmq!=null){const q=$("admq");q.focus();try{q.setSelectionRange(keepAdmq,keepAdmq)}catch(e){}}}
@@ -394,6 +397,8 @@ $("gearpanel").addEventListener("click",async e=>{
   if(pvs){await setPriv(pvs.dataset.pvs,pvs.dataset.pvv==="1");return}
   const urc=e.target.closest("button[data-urc]");   // 📅 Odbyte / Planowane
   if(urc){urCalMode=urc.dataset.urc;renderGear();return}
+  const nbm=e.target.closest("button[data-nbm]");   // 🚫 tryb nowego słowa: Dokładnie / Zawiera
+  if(nbm){nbMode=nbm.dataset.nbm;document.querySelectorAll("[data-nbm]").forEach(x=>x.classList.toggle("on",x===nbm));nbPreview();return}
   const fg=e.target.closest("button[data-fg]");
   if(fg){   // 👤 przełącznik „Goście” (KROK 61)
     if(!isSuper(uid)||fg.disabled)return;
@@ -431,6 +436,15 @@ $("gearpanel").addEventListener("click",async e=>{
       catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
       modBusy=false;renderGear();syncNow();return}
     if(a.dataset.a==="plcity"){fillPlaceCities(true);return}
+    if((a.dataset.a==="nbdel"||a.dataset.a==="nbmode")&&isAdmin&&nickBans){   // 🚫 zakazane nicki (KROK 67)
+      const b=nickBans.find(x=>x.key===a.dataset.id);if(!b)return;
+      if(a.dataset.a==="nbmode"&&b.mode===a.dataset.m)return;
+      if(a.dataset.a==="nbdel"&&!await askOk("Usunąć „"+b.word+"” z zakazanych nicków?\n\nTakiego nicku będzie można znowu użyć.","Usuń",1))return;
+      try{const r=a.dataset.a==="nbdel"?await sb.from("nick_bans").delete().eq("key",b.key).select("key"):await sb.from("nick_bans").update({mode:a.dataset.m}).eq("key",b.key).select("key");
+        if(r.error)throw r.error;if(!r.data||!r.data.length)throw new Error("brak uprawnień");
+        say(a.dataset.a==="nbdel"?"Usunięto z zakazanych: "+b.word:"„"+b.word+"”: "+(a.dataset.m==="contains"?"zawiera":"dokładnie"))}
+      catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+      await loadNickBans();renderGear();return}
     if(a.dataset.a==="plpin"||a.dataset.a==="pldel"){
       const x=places.find(y=>y.id===a.dataset.id);if(!x)return;
       if(a.dataset.a==="pldel"){if(!await askOk("Usunąć miejsce „"+x.name+"” z listy? Zaproszenia, które już je mają, zostaną bez zmian.","Usuń",1))return;
@@ -505,6 +519,17 @@ $("gearpanel").addEventListener("click",async e=>{
     try{const r=await sb.rpc("admin_old_wants",{do_delete:true});if(r.error)throw r.error;say("🗑 Usunięto "+(+r.data||0)+" starych zaproszeń.");loadKArch()}catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
     return}
   if(c==="places"){gearView="places";renderGear();return}
+  if(c==="nickbans"){gearView="nickbans";nickBans=null;renderGear();await loadNickBans();if(gearView==="nickbans")renderGear();return}
+  if(c==="nbadd"&&isAdmin){
+    const i=$("nbword"),inf=$("nbinfo");if(!i)return;
+    const w=i.value.trim().replace(/\s+/g," "),k=nickKey(w);
+    if(!/^[a-z]{3,}$/.test(k)){inf.textContent="Słowo musi mieć co najmniej 3 litery.";return}
+    if(nbMode==="contains"&&k.length<4){inf.textContent="„Zawiera” działa dla słów od 4 liter — wybierz „Dokładnie”.";return}
+    if(nickBans&&nickBans.some(x=>x.key===k)){inf.textContent="To słowo już jest na liście.";return}
+    try{const r=await sb.from("nick_bans").insert({word:w,mode:nbMode}).select("key");
+      if(r.error)throw r.error;i.value="";say("🚫 Dodano do zakazanych: "+w)}
+    catch(err){inf.textContent=err&&err.code==="23505"?"To słowo już jest na liście.":"Nie udało się: "+(err&&err.message?err.message:"błąd");return}
+    await loadNickBans();renderGear();return}
   if(c==="backadm"){gearView="admin";renderGear();return}
   if(c==="accall"){statsAllAcc=!statsAllAcc;renderGear();return}
   if(c==="online"){if(!session)return;onlBack="";gearOpen=true;gearView="online";renderGear();return}
@@ -562,7 +587,7 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="coldef"){["K","M"].forEach(g=>{$("col"+g).value=DEF_COLORS[g];$("bg"+g).value=DEF_BGS[g];$("nob"+g).checked=false});colorsPreview();return}
   if(c==="colsave"){await saveColors();return}
   if(c==="nickopen"){nickOpen=!nickOpen;renderGear();if(nickOpen){const i=$("gnick");if(i)i.focus()}return}
-  if(c==="nick"){selGender=genders[uid]||"";nickOpen=false;nickDraft=null;peStart();gearView="nick";renderGear();return}
+  if(c==="nick"){selGender=genders[uid]||"";nickOpen=false;nickDraft=null;peStart();gearView="nick";renderGear();loadNickNext();return}
   if(c==="nicksave"){if(!needProfile()&&!nickShort()&&!(await saveProfEx()))return;await gearSaveNick();return}
   if(c==="pephoto"){const f=$("pefile");if(f)f.click();return}
   if(c==="pephotodel"){if(!await askOk("Usunąć zdjęcie profilowe?\n\nZdjęcie zniknie po kliknięciu „Zapisz”.","Usuń",1))return;if(pe){pe.av=null;pe.avCh=true;renderGear()}return}
@@ -658,6 +683,7 @@ async function gearSaveNick(){
     if(/zajęty/.test(err)&&sg){const L=nickSuggest(n);if(L.length){sg.innerHTML='<div class="note">Wolne, np.:</div>'+L.map(x=>'<button type="button" class="chip" data-ns="'+esc(x)+'">'+esc(x)+'</button>').join("")+'<div class="note">…albo dopisz pierwszą literę nazwiska, np. „'+esc((w=>w.charAt(0).toUpperCase()+w.slice(1))(n.split(" ")[0]))+' K”.</div>';sg.classList.remove("hide")}}
     return}
   if(first)gearOpen=false;
+  if(!isNew)loadNickNext();
   gearView="main";renderGear();
   if(isNew){show(0);openWelcome();return}
   say(first?"Profil zapisany ✔":"Zapisano ✔");
@@ -677,13 +703,18 @@ function nickKey(n){
 async function saveNick(n,target,gender){
   const who=target||uid;
   if(!NICK_RE.test(n))return "Nick: do 20 znaków — litery, cyfry, spacja, kropka, _ lub -.";
+  if(/\s{2}/.test(n))return "Nick nie może mieć podwójnych spacji.";
   if(nickLetters(n)<3&&!isSuper(who))return "Nick musi mieć co najmniej 3 litery (np. imię albo ksywka) — inicjały typu „AK” nie przejdą.";
   const k=nickKey(n),twin=Object.keys(nicks).find(id=>id!==who&&nickKey(nicks[id])===k);
   if(twin)return "Ten nick jest zajęty albo zbyt podobny do „"+nicks[twin]+"” (różni się tylko wielkością liter, cyframi, znakami lub polskimi literami). Wybierz inny.";
   const row={nick:n};if(gender)row.gender=gender;
   try{
     const res=nicks[who]?await sb.from("profiles").update(row).eq("user_id",who).select("user_id"):await sb.from("profiles").insert(Object.assign({user_id:who},row)).select("user_id");
-    if(res.error&&/NICK_SHORT/.test(res.error.message||""))return "Nick musi mieć co najmniej 3 litery.";
+    const em=res.error?res.error.message||"":"";
+    if(/NICK_SHORT/.test(em))return "Nick musi mieć co najmniej 3 litery.";
+    if(/NICK_BANNED/.test(em))return "Ten nick jest zarezerwowany — wybierz inny.";
+    if(/NICK_SPACES/.test(em))return "Nick nie może mieć podwójnych spacji.";
+    if(/NICK_WAIT/.test(em)){const d=/NICK_WAIT (\S+)/.exec(em),t=d?Date.parse(d[1]):NaN;if(!isNaN(t))nickNext=t;return "Nick zmienisz raz na 14 dni"+(isNaN(t)?"":" — kolejna zmiana możliwa od "+nickDay(t))+".";}
     if(res.error)return res.error.code==="23505"?"Ten nick jest zajęty albo zbyt podobny do istniejącego — wybierz inny.":"Nie udało się zapisać: "+res.error.message;
     if(!res.data||!res.data.length)return "Brak uprawnień do zmiany tego nicku.";
     await syncNow();return null;
