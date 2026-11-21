@@ -1230,10 +1230,8 @@ function whoPlHtml(){
   if(!L.length)return "";
   const on=([l,A])=>ws.vis==="pick"&&A.every(id=>ws.pick.has(id)),sel=L.filter(on).map(x=>x[0].name),col=!ws.plOpen;
   // wygląd jak zwijane sekcje pod 🔔 (pasek + drabinka), większy; zielone tło, gdy wybrano listę
-  return '<button type="button" class="bsec bsect wsplb'+(col?' col':'')+(sel.length?' unr':'')+'" data-k="plt" aria-expanded="'+!col+'"><span class="bst">'+uiIcon("list")+'Twoje listy</span>'
-   +'<span class="cnt0">'+L.length+'</span>'+(sel.length?'<span class="wsplsel">'+esc(sel.join(", "))+'</span>':'')
-   +'<svg class="bschev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>'
-   +'<div class="bsecb'+(col?' hide':'')+'">'+(col?'':L.map(x=>'<button type="button" class="prow'+(on(x)?' on':'')+'" data-wpl="'+esc(x[0].id)+'"><span class="cbx">'+CHECK+'</span><span class="pnm">'+plDot(x[0])+esc(x[0].name)+plEd(x[0])+'</span><span class="pon">'+x[1].length+' '+plf(x[1].length,["osoba","osoby","osób"])+'</span></button>').join(""))+'</div>';
+  return secBar(uiIcon("list"),"Twoje listy",L.length,col,esc(sel.join(", ")),'data-k="plt"',sel.length)
+   +'<div class="secb'+(col?' hide':'')+'">'+(col?'':L.map(x=>'<button type="button" class="prow'+(on(x)?' on':'')+'" data-wpl="'+esc(x[0].id)+'"><span class="cbx">'+CHECK+'</span><span class="pnm">'+plDot(x[0])+esc(x[0].name)+plEd(x[0])+'</span><span class="pon">'+x[1].length+' '+plf(x[1].length,["osoba","osoby","osób"])+'</span></button>').join(""))+'</div>';
 }
 function openWho(mode,wantId){
   if(!session)return;
@@ -1271,10 +1269,16 @@ const whoRow=(id,on)=>{const dn=whoDis().get(id);if(dn)return '<button type="but
 // ▸ zwijanie sekcji (Ulubieni / Pozostali): przy szukaniu lub filtrze wszystko rozwinięte; w zwiniętej sekcji licznik zaznaczonych
 const whoFiltering=()=>ws.vis==="pick"&&(!!ws.q.trim()||pfOn("who"));
 const whoColl=g=>!whoFiltering()&&!!(ws.col&&ws.col[g]);
-const grpHead=(t,n,col,k,attrs)=>'<button type="button" class="wsgt'+(col?'':' open')+'" '+attrs+' aria-expanded="'+!col+'"><span class="wsgc" aria-hidden="true">›</span>'+t+' ('+n+')'+(col&&k?'<span class="wsplsel"> · zaznaczono '+k+'</span>':'')+'</button>';
+// ▸ jeden wygląd zwijanych sekcji osób i list (duży pasek jak pod 🔔): ikona, nazwa, licznik, dopisek, strzałka; „unr” = zielone tło
+const secBar=(ico,t,n,col,extra,attrs,unr)=>'<button type="button" class="secbar'+(col?' col':'')+(unr?' unr':'')+'" '+attrs+' aria-expanded="'+!col+'"><span class="bst">'+ico+'<span>'+t+'</span></span>'
+  +'<span class="cnt0">'+n+'</span>'+(extra?'<span class="wsplsel">'+extra+'</span>':'')+'<svg class="bschev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>'+'</button>';
 const whoGrp=(t,ids,g,tog)=>{if(!ids.length)return '';const D=whoDis();ids=ids.filter(id=>!D.has(id));if(!ids.length)return '<div class="bsgrp">'+t+'</div>';const L=whoLocked(),all=ids.every(id=>ws.pick.has(id)||L.has(id)),free=ids.some(id=>!L.has(id));
-  const head=tog&&!whoFiltering()?grpHead(t,ids.length,whoColl(g),ids.filter(id=>ws.pick.has(id)||L.has(id)).length,'data-k="gtog" data-g="'+g+'"'):'<span>'+t+'</span>';
-  return '<div class="bsgrp gl">'+head+(free?'<button type="button" class="lnk" data-k="grp" data-g="'+g+'">'+(all?'Odznacz':'Zaznacz wszystkich')+'</button>':'')+'</div>'};
+  const sel=free?'<button type="button" class="lnk" data-k="grp" data-g="'+g+'">'+(all?'Odznacz':'Zaznacz wszystkich')+'</button>':'';
+  if(!tog)return '<div class="bsgrp gl"><span>'+t+'</span>'+sel+'</div>';
+  // dwie sekcje: duży zwijany pasek; „Zaznacz wszystkich” w środku sekcji
+  const col=whoColl(g),k=ids.filter(id=>ws.pick.has(id)||L.has(id)).length;
+  return secBar(g==="f"?'<span class="secstar">'+uiIcon("starf")+'</span>':uiIcon("users"),g==="f"?"Ulubieni":"Pozostali",ids.length,col,k?"zaznaczono "+k:"",'data-k="gtog" data-g="'+g+'"',false)
+   +'<div class="secb'+(col?' hide':'')+'">'+(sel?'<div class="secact">'+sel+'</div>':'')};
 function whoListHtml(){
   if(ws.vis==="all")return '<div class="bsempty">🌍 Zaproszenie zobaczą wszyscy zalogowani, a wiadomość trafi na kanał Telegram.</div>';
   const q=ws.vis==="pick"?nickKey(ws.q.trim()):"",all=whoPeople().filter(id=>(!q||nickKey(nicks[id]).includes(q))&&(ws.vis!=="pick"||pfMatch("who",id)));
@@ -1285,8 +1289,9 @@ function whoListHtml(){
   if(!all.length)return '<div class="bsempty">'+(q?'Nie znaleziono takiego nicku.':pfOn("who")?'Nikt nie pasuje do filtra.':ws.mode==="add"?'Wszyscy są już zaproszeni.':whoEv()?'Nikt inny nie widzi jeszcze zakładki Imprezy (BETA — testerzy).':'Brak innych osób z nickiem.')+'</div>';
   const f=all.filter(isFav),o=all.filter(id=>!isFav(id));
   const two=!!(f.length&&o.length);   // jedna sekcja — bez zwijania
-  return (f.length?whoGrp('⭐ Ulubieni',f,'f',two)+(two&&whoColl("f")?'':f.map(id=>whoRow(id,ws.pick.has(id))).join("")):'')
-   +(o.length?whoGrp(f.length?'Pozostali':'Osoby',o,'o',two)+(two&&whoColl("o")?'':o.map(id=>whoRow(id,ws.pick.has(id))).join("")):'');
+  const blk=(t,L,g)=>{if(!L.length)return '';const h=whoGrp(t,L,g,two),op=h.includes('class="secb');   // op = otwarty kontener sekcji do zamknięcia
+    return h+(op&&whoColl(g)?'':L.map(id=>whoRow(id,ws.pick.has(id))).join(""))+(op?'</div>':'')};
+  return blk('⭐ Ulubieni',f,'f')+blk(f.length?'Pozostali':'Osoby',o,'o');
 }
 const whoCount=()=>ws.vis==="all"?0:ws.vis==="fav"?favIds().length:ws.pick.size;
 function renderWho(first){

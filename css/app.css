@@ -948,9 +948,6 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 .pfrow .fch{flex:none;white-space:nowrap;padding:7px 12px;font-size:14px;display:inline-flex;align-items:center;gap:5px}.pfrow .fch .ui-i{width:15px;height:15px}
 .pfrow .pfx{color:var(--bad)}.pflbl{flex:none;align-self:center;font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
 .plico{display:inline-flex;vertical-align:-3px;margin-right:6px;flex:none}.plico .ui-i{width:17px;height:17px}.sname .plico .ui-i{width:22px;height:22px}
-.wsgt{flex:1;min-width:0;display:flex;align-items:center;gap:5px;border:0;background:none;padding:4px 0;font:inherit;color:inherit;text-transform:inherit;letter-spacing:inherit;cursor:pointer;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.wsgt .ui-i{width:14px;height:14px;flex:none}.wsgc{display:inline-block;font-size:16px;line-height:1;transition:transform .15s;flex:none}.wsgt.open .wsgc{transform:rotate(90deg)}
-.wsgt .wsplsel{overflow:hidden;text-overflow:ellipsis}
 .fvbody.col{display:none}.pfact .fvbody.col{display:block}.wsplsel{color:var(--acc);text-transform:none;letter-spacing:0}
 .wsplm{display:block;margin:8px 0 0;font-size:14px;font-weight:600;text-align:center}button.wsplm{width:100%;color:var(--acc)}
 .bsbox.bsauto{height:auto;max-height:min(86vh,760px)}.bsauto .bslist{max-height:52vh}
@@ -964,6 +961,16 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 .plrm{border:0;background:none;color:var(--mut);cursor:pointer;padding:6px;display:flex}.plrm .ui-i{width:22px;height:22px}
 #plsheet{z-index:4200}
 .pledb{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin:-6px 0 -6px 4px;border-radius:50%;color:var(--mut);cursor:pointer;vertical-align:middle}.pledb:hover{background:var(--fill);color:var(--acc)}.pledb .ui-i{width:15px;height:15px}.sname .pledb .ui-i{width:18px;height:18px}
-.bsbox .wsplb{font-size:16px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--ink);padding:13px 14px;margin:10px 0 6px}.wsplb .ui-i{width:19px;height:19px;color:var(--acc)}
-.wsplb .wsplsel{flex:1;min-width:0;font-size:13.5px;font-weight:600;color:var(--acc);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
 .ucrole{color:var(--acc);font-weight:600}.ucrole .ui-i{width:15px;height:15px;vertical-align:-2px}
+/* ▸ zwijane sekcje osób i list — jeden wygląd (pasek + drabinka jak pod 🔔), w oknach i w Ustawieniach */
+.secbar{display:flex;align-items:center;gap:8px;width:100%;border:0;background:var(--fill);border-radius:12px;padding:13px 14px;margin:10px 0 6px;font:inherit;font-size:16px;font-weight:700;color:var(--ink);cursor:pointer;text-align:left}
+.secbar .bst{display:inline-flex;align-items:center;gap:8px;min-width:0;flex:none}.secbar .bst .ui-i{width:19px;height:19px;color:var(--acc);flex:none}.secbar .secstar .ui-i{color:#ffcc00}
+.secbar .cnt0{min-width:22px;height:22px;border-radius:11px;padding:0 6px;display:inline-flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:800;background:var(--card);color:var(--mut);box-shadow:inset 0 0 0 1.5px var(--line);flex:none}
+.secbar .wsplsel{flex:1;min-width:0;font-size:13.5px;font-weight:600;color:var(--acc);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+.secbar .bschev{width:18px;height:18px;margin-left:auto;flex:none;transition:transform .2s;transform:rotate(180deg)}.secbar.col .bschev{transform:none}
+.secbar.unr{background:var(--acc2);box-shadow:inset 3px 0 0 var(--acc)}
+.secbar:not(.col){border-radius:12px 12px 0 0;margin-bottom:0}
+.secbar:not(.col)+.secb{margin-left:14px;padding:2px 0 8px 12px;border-left:2px solid var(--line);border-radius:0 0 0 10px}.secbar.unr:not(.col)+.secb{border-left-color:var(--acc)}
+.secact{display:flex;justify-content:flex-end;padding:4px 0 2px}.secact .lnk{font-size:13px;font-weight:600;color:var(--acc)}
+.pfact .secbar.col+.secb{display:block}
+.plppl .pnm small{display:block;font-size:12.5px;color:var(--mut);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.plppl{margin-top:8px}

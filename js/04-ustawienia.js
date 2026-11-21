@@ -336,8 +336,9 @@ function favsHtml(){
       const row=id=>'<div class="arow" data-pu="'+esc(id)+'">'+nk(id)+starBtn(id)+'</div>',f=ids.filter(id=>favsSnap.has(id)),o=ids.filter(id=>!favsSnap.has(id));
       if(!fvCol)fvCol={f:false,o:ids.length>10};
       // ▸ zwijane sekcje jak w „Kogo zapraszasz?”; przy szukaniu / filtrze rozwinięte (klasa .pfact)
-      const sec=(t,L,g)=>!L.length?'':(f.length&&o.length?'<div class="bsgrp gl">'+grpHead(t,L.length,fvCol[g],0,'data-c="fvtog" data-fvs="'+g+'"')+'</div>':'')+'<div class="fvbody'+(f.length&&o.length&&fvCol[g]?' col':'')+'">'+L.map(row).join("")+'</div>';
-      return sec('⭐ Ulubieni',f,'f')+sec('Pozostali',o,'o')+(ids.length>8?'<div class="note pfnone hide">Nikt nie pasuje do filtra.</div>':'')})()+'</div>';
+      const two=!!(f.length&&o.length),sec=(L,g)=>!L.length?'':(two?secBar(g==="f"?'<span class="secstar">'+uiIcon("starf")+'</span>':uiIcon("users"),g==="f"?"Ulubieni":"Pozostali",L.length,fvCol[g],"",'data-c="fvtog" data-fvs="'+g+'"',false):'')
+        +'<div class="fvbody'+(two?' secb':'')+(two&&fvCol[g]?' col':'')+'">'+L.map(row).join("")+'</div>';
+      return sec(f,'f')+sec(o,'o')+(ids.length>8?'<div class="note pfnone hide">Nikt nie pasuje do filtra.</div>':'')})()+'</div>';
 }
 /* 🗓 data dołączenia (KROK 25): „Z nami od 12 marca 2026 · 245 dni” */
 let joinedAt={};
@@ -927,7 +928,9 @@ function renderPl(first){
      +plFormHtml('<button type="button" class="b big" data-pk="create"'+(ps.busy?' disabled':'')+'>'+(n?'Zapisz listę · '+n+' '+plf(n,["osoba","osoby","osób"]):'Utwórz listę')+'</button>');
   }else{
     const l=plById(ps.list);if(!l){closePl();return}
-    body=plFormHtml('<button type="button" class="b big" data-pk="save"'+(ps.busy?' disabled':'')+'>Zapisz zmiany</button>')
+    const n=plIds(l.id).length,nm=plIds(l.id).slice(0,3).map(u=>nicks[u]).join(", ")+(n>3?"…":"");
+    body='<button type="button" class="prow pladd plppl" data-pk="people"><span class="cbx plplus">+</span><span class="pnm">Dodaj lub usuń osoby<small>'+(n?esc(nm):'Lista jest pusta')+'</small></span><span class="pon">'+n+' '+plf(n,["osoba","osoby","osób"])+' ›</span></button>'
+     +plFormHtml('<button type="button" class="b big" data-pk="save"'+(ps.busy?' disabled':'')+'>Zapisz nazwę i kolor</button>')
      +(ps.delAsk?'<div class="pldel"><div class="note">Usunąć listę „'+esc(l.name)+'”? Osoby zostaną w aplikacji, zniknie tylko lista.</div><div class="cfmb"><button type="button" class="cfmno" data-pk="delno">Zostaw</button><button type="button" class="cfmok bad" data-pk="delyes"'+(ps.busy?' disabled':'')+'>Usuń listę</button></div></div>'
        :'<button type="button" class="lnk pldelask" data-pk="delask">Usuń listę…</button>');
   }
@@ -952,6 +955,17 @@ $("plsheet").addEventListener("click",async e=>{
   const a=k.dataset.pk;
   if(a==="close"){closePl();return}
   if(a==="newopen"){ps.newOpen=true;ps.name="";renderPl();const i=$("plname");if(i)i.focus();return}
+  if(a==="people"){   // ✏️ edycja listy → osoby na liście; zmieniona nazwa / kolor zapisują się najpierw (nie przepadają)
+    const id=ps.list,l=plById(id);if(!l)return;
+    const raw=String(($("plname")||{}).value||"").trim();
+    if(raw!==l.name||ps.color!==l.color){
+      const n=plNameOk();if(!n)return;
+      ps.busy=true;renderPl();
+      try{const r=await sb.from("people_lists").update({name:n,color:ps.color}).eq("id",id);if(r.error)throw r.error;l.name=n;l.color=ps.color;say("Zapisano listę „"+n+"”")}
+      catch(err){ps.busy=false;renderPl();const i=$("plinfo");if(i)i.textContent=plErr(err);return}
+      ps.busy=false;plRefresh();
+    }
+    ps.back=null;closePl();openWho("pl",id);return}
   if(a==="delask"||a==="delno"){ps.delAsk=a==="delask";renderPl();return}
   if(a==="create"){const n=plNameOk();if(!n)return;ps.busy=true;renderPl();
     try{const l=await plCreate(n,ps.color,ps.mode==="user"?[ps.u]:ps.ids);ps.busy=false;
