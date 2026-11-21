@@ -1,9 +1,10 @@
 /* 👥 Grupy (KROK 70) — commit A: ⚙️ → Edytuj profil → „Grupy” (zaproszenia i prośby, Moje grupy, wyszukiwarka jawnych, „Mam kod”, „Załóż grupę”),
    ekran grupy (Ludzie / O grupie), formularz grupy i okno kodu (#grsheet), zapraszanie przez okno wyboru osób (openWho "gr"),
-   „Przekształć w grupę” w widoku listy, link #grupa=KOD.
+   „Przekształć w grupę” w widoku listy, link #grupa=KOD. 📣 KROK 76: zakładka „Tablica” (ogłoszenia grupy) — blok na końcu pliku.
    Wszystkie zmiany tylko funkcjami bazy (group_*); tabele są tylko do odczytu. Komunikaty błędów z bazy są po polsku → toast.
    Plik wczytywany jako ostatni: przy wczytaniu tylko rejestruje obsługę zdarzeń; niższe pliki wołają go z renderGear / kliknięć (przez typeof). */
 let grK=null,grFromAdm=false;   // 👑 wszystkie grupy + prośby o limit (Administracja → Grupy)
+let grPN=[];   // 📣 nieprzeczytane powiadomienia o ogłoszeniach (g_post / g_pin) — plakietki w „Moje grupy” i sekcja w 🔔
 let grOk=null,grMsg="",grFor="",grLoading=false,grMine=[],grG={},grMem={},grLim={},grReqs=[],grId="",grTab="ppl",grOpenU="",grFind=null,grQ="",grFindT=0;
 const GR_ICONS=["users","bike","mtb","gravel","road","run","walk","tree","flag","trophy","medal","heart","coffee","sun","moon","city"];
 const GR_ROLE={owner:"właściciel",mod:"moderator",member:""};
@@ -38,7 +39,7 @@ const grByName=(a,b)=>grName(a.group_id).localeCompare(grName(b.group_id),"pl");
 
 /* 📥 dane: moje członkostwa (też zaproszenia i prośby) + grupy + skład + prośby o limit; wczytywane przy pierwszym pokazaniu */
 async function grLoad(){
-  if(!session){grOk=null;grFor="";grMine=[];grMem={};grLim={};grReqs=[];return}
+  if(!session){grOk=null;grFor="";grMine=[];grMem={};grLim={};grReqs=[];grPN=[];return}
   grLoading=true;
   try{
     const a=await sb.from("group_members").select("group_id,role,status,invited_by,created_at,joined_at").eq("user_id",uid).limit(200);
@@ -46,7 +47,7 @@ async function grLoad(){
     const mine=a.data||[],ids=mine.map(m=>m.group_id),mem={},lim={};
     if(ids.length){
       const [b,c,d]=await Promise.all([
-        sb.from("groups").select("id,owner,name,icon,descr,area,color,visibility,join_mode,member_limit,code,archived_at").in("id",ids),
+        sb.from("groups").select("id,owner,name,icon,descr,area,color,visibility,join_mode,member_limit,code,archived_at,posts_mods_only").in("id",ids),
         sb.from("group_members").select("group_id,user_id,role,status,invited_by,created_at,joined_at").in("group_id",ids).limit(5000),
         sb.from("group_limit_requests").select("id,group_id,from_limit,to_limit,status").in("group_id",ids).eq("status","pending")]);
       if(b.error)throw b.error;if(c.error)throw c.error;
@@ -54,6 +55,9 @@ async function grLoad(){
       ids.forEach(i=>{mem[i]=[]});(c.data||[]).forEach(x=>{(mem[x.group_id]=mem[x.group_id]||[]).push(x)});
       (d.data||[]).forEach(x=>{lim[x.group_id]=x});
     }
+    // 📣 nieprzeczytane ogłoszenia z moich grup (osobno od powiadomień o zaproszeniach — nie wypychają ich z limitu 80)
+    const pn=ids.length?await sb.from("notifications").select("id,kind,group_id,actor,created_at").eq("user_id",uid).in("kind",["g_post","g_pin"]).is("read_at",null).order("created_at",{ascending:false}).limit(300):{data:[]};
+    grPN=pn.error?[]:(pn.data||[]).filter(n=>grG[n.group_id]);
     grMine=mine.filter(m=>grG[m.group_id]);grMem=mem;grLim=lim;grOk=true;grFor=uid;
     grReqs=[];grMine.forEach(m=>{if(grIsMod(m.group_id))(grMem[m.group_id]||[]).forEach(x=>{if(x.status==="requested")grReqs.push(x)})});
     if(isKingReal())await grKLoad();else grK=null;
@@ -89,7 +93,8 @@ function grHubHtml(){
   const inv=grMine.filter(m=>m.status==="invited").sort(grByName),req=grMine.filter(m=>m.status==="requested").sort(grByName),act=grMine.filter(m=>m.status==="active").sort(grByName);
   if(inv.length||grReqs.length)h+='<div class="ios"><div class="ios-gh">Do Ciebie</div><div class="grbox">'+inv.map(grInvRow).join("")+grReqs.map(r=>grReqRow(r,true)).join("")+'</div></div>';
   h+=gGrp("Moje grupy",act.map(m=>{const x=grG[m.group_id],n=grCnt(x.id),R=GR_ROLE[m.role];
-      return gRow(grCol(x),grIc(x),grNmTag(x),[R?R[0].toUpperCase()+R.slice(1):"",grOsob(n),x.visibility==="hidden"?"ukryta":""].filter(Boolean).join(" · "),'','data-gx="open" data-gid="'+esc(x.id)+'"')})
+      const un=grUnN(x.id);
+      return gRow(grCol(x),grIc(x),grNmTag(x),[R?R[0].toUpperCase()+R.slice(1):"",grOsob(n),x.visibility==="hidden"?"ukryta":"",un?(un===1?"nowe ogłoszenie":"nowe ogłoszenia"):""].filter(Boolean).join(" · "),un?'<span class="ios-bdg" aria-label="Nowe ogłoszenia: '+un+'">'+un+'</span>':'','data-gx="open" data-gid="'+esc(x.id)+'"')})
     .concat(req.map(m=>{const x=grG[m.group_id];return gRow(grCol(x),grIc(x),grNmTag(x),"Prośba wysłana — czekasz na przyjęcie","",'data-gx="open" data-gid="'+esc(x.id)+'"')})));
   if(!act.length&&!req.length&&!inv.length)h+='<p class="note" style="margin:10px 14px 0;font-size:14px;text-align:left">Nie należysz jeszcze do żadnej grupy. Załóż własną albo znajdź grupę niżej.</p>';
   if(grOn()){
@@ -129,8 +134,10 @@ function grGroupHtml(){
     h+=full?'<p class="note grwait">Grupa jest pełna.</p>':'<button type="button" class="b big" data-gx="join" data-gid="'+esc(g)+'">'+(x.join_mode==="open"?"Dołącz do grupy":"Poproś o dołączenie")+'</button>'}
   if(!role&&!isKingReal())return h+grAboutHtml(g,false);
   if(!role)h+='<p class="note grwait">👑 Podgląd administratora — nie jesteś w tej grupie.</p>';
-  h+='<div class="seg grseg">'+[["ppl","Ludzie"],["about","O grupie"]].map(([k,t])=>'<button type="button" class="'+(grTab===k?'on':'')+'" data-gx="tab" data-v="'+k+'">'+t+'</button>').join("")+'</div>';
-  return h+(grTab==="about"?grAboutHtml(g,true):grPplHtml(g));
+  // 📣 KROK 76: „Tablica” tylko dla członków (👑 spoza grupy jej nie widzi — reguły w bazie)
+  const tabs=(role?[["board","Tablica"]]:[]).concat([["ppl","Ludzie"],["about","O grupie"]]);if(grTab==="board"&&!role)grTab="ppl";
+  h+='<div class="seg grseg">'+tabs.map(([k,t])=>{const un=k==="board"?grUnN(g):0;return '<button type="button" class="'+(grTab===k?'on':'')+'" data-gx="tab" data-v="'+k+'">'+t+(un?' <span class="ios-bdg">'+un+'</span>':'')+'</button>'}).join("")+'</div>';
+  return h+(grTab==="about"?grAboutHtml(g,true):grTab==="board"?grBoardHtml(g):grPplHtml(g));
 }
 function grPplHtml(g){
   const x=grG[g],role=grRole(g),mod=grIsMod(g),own=role==="owner",M=grMem[g]||[],used=grUsed(g),lim=+x.member_limit;
@@ -164,6 +171,8 @@ function grAboutHtml(g,member){
      mod?gRow("#8e8e93","repeat","Nowy kod","Stary link przestanie działać","",'data-gx="newcode"'):""]);
   h+=gGrp("Miejsca",[own&&!lr?gRow("#ff9f0a","users","Zajęte: "+used+" z "+x.member_limit,"Poproś o większy limit — decyduje główny administrator","",'data-gx="limit"'):""])
    +(!own||lr?'<p class="note" style="margin:8px 14px 0;font-size:13px;text-align:left">Zajęte miejsca: '+used+' z '+x.member_limit+' (członkowie i zaproszeni).'+(lr?' Prośba o limit '+lr.to_limit+' czeka na decyzję.':'')+'</p>':'');
+  if(own)h+='<div class="ios"><div class="ios-gh">Tablica — kto pisze</div></div><div class="seg grfseg">'+[["all","Wszyscy członkowie"],["mods","Właściciel i moderatorzy"]].map(([k,t])=>'<button type="button" class="'+((!!x.posts_mods_only)===(k==="mods")?'on':'')+'" data-gx="pmode" data-v="'+k+'">'+t+'</button>').join("")+'</div>'
+     +'<p class="note" style="margin:8px 14px 0;font-size:13px;text-align:left">Czytają zawsze wszyscy członkowie. Przypinają, usuwają cudze wpisy: właściciel i moderatorzy.</p>';
   if(own)h+=gGrp("Zarządzanie",[gRow(grCol(x),"pencil","Edytuj grupę","Nazwa, ikona, opis, okolica, kolor, widoczność","",'data-gx="edit"'),
      gRow("#5856d6","user","Przekaż grupę","Wybierz osobę w zakładce „Ludzie”","",'data-gx="xferhint"'),
      gRow("#ff3b30","trash","Usuń grupę","Znikną członkostwa i zaproszenia","",'data-gx="del"')]);
@@ -291,7 +300,7 @@ grSheet().addEventListener("click",async e=>{
     }catch(err){gf.busy=false;renderGrSheet();grInfo(grErr(err))}return}
 });
 // przejście do ekranu grupy (otwiera ⚙️, jeśli zamknięte)
-function grGo(g){grId=g;grTab="ppl";grOpenU="";pf.gm=null;if(!gearOpen){gearOpen=true;gearFrom=""}gearView=grG[g]?"group":"groups";renderGear()}
+function grGo(g){grId=g;grTab=grRole(g)?"board":"ppl";grOpenU="";grOpenP="";grEditP="";pf.gm=null;if(!gearOpen){gearOpen=true;gearFrom=""}gearView=grG[g]?"group":"groups";renderGear();if(grTab==="board")grPostsLoad(g)}
 
 /* 👑 Administracja → Grupy: wszystkie grupy (👑 tymczasowo widzi też ukryte — KROK 70) i prośby o większy limit */
 async function grKLoad(){
@@ -321,14 +330,19 @@ function grAdmHtml(){
 }
 
 /* 🔔 sekcja „Grupy”: zaproszenia do mnie i prośby do grup, w których jestem właścicielem / moderatorem (do załatwienia — liczą się do numerka) */
-const grBellN=()=>session&&grOk&&grFor===uid?grMine.filter(m=>m.status==="invited").length+grReqs.length+grKReqN():0;
-function grBellHtml(){const n=grBellN();if(!n)return "";
+const grBellToDo=()=>session&&grOk&&grFor===uid?grMine.filter(m=>m.status==="invited").length+grReqs.length+grKReqN():0;
+const grBellN=()=>grBellToDo()+grPostUnN();   // licznik na 🔔: do załatwienia + nieprzeczytane ogłoszenia
+function grBellHtml(){return grBellToDoHtml()+grPostBellHtml()}
+function grBellToDoHtml(){const n=grBellToDo();if(!n)return "";
   return bsSec("grp","👥 Grupy",n,n,grMine.filter(m=>m.status==="invited").sort(grByName).map(grInvRow).join("")+grReqs.map(r=>grReqRow(r,true)).join("")+(grKReqN()?grK.reqs.map(grLimRow).join(""):"")
     +'<div class="bsempty"><button type="button" class="lnk" data-gx="hub">Wszystkie grupy: ⚙️ → Grupy ›</button></div>')}
 $("bellsheet").addEventListener("click",async e=>{
   const b=e.target.closest("[data-gx]");if(!b||b.disabled||!session)return;
   const a=b.dataset.gx,g=b.dataset.gid,u=b.dataset.gu||"",x=grG[g],nm=nicks[u]||"tę osobę";
   if(a==="hub"||a==="open"){closeBell();if(a==="open"&&x){grGo(g);return}gearOpen=true;gearFrom="";gearView="groups";renderGear();grReload();return}
+  if(a==="pgo"){closeBell();if(x){grFromAdm=false;grGo(g)}return}   // 📣 ogłoszenie → tablica grupy (wejście oznacza przeczytane)
+  if(a==="pread"){grPostSeen(g);renderBellSheet();return}
+  if(a==="pall"){grPostReadAll();renderBellSheet();return}
   if(!x)return;
   if(a==="acc")await grDo("group_answer",{g,accept:true},"👥 Dołączono do grupy „"+x.name+"”",b);
   else if(a==="dec"){if(await askOk("Odrzucić zaproszenie do „"+x.name+"”?","Odrzuć"))await grDo("group_answer",{g,accept:false},"Odrzucono zaproszenie.",b)}
@@ -353,7 +367,8 @@ $("gearpanel").addEventListener("click",async e=>{
   if(a==="new"){openGrForm("");return}
   if(a==="code"){openGrCode("");return}
   if(a==="pl2gr"){const l=plById(plId);if(!l)return;openGrForm("",{name:l.name,color:l.color,ids:plIds(l.id)});return}
-  if(a==="tab"){grTab=b.dataset.v;grOpenU="";renderGear();return}
+  if(a==="tab"){grTab=b.dataset.v;grOpenU="";grOpenP="";renderGear();if(grTab==="board")grPostsLoad(grId);return}
+  if(/^p(man|like|add|edit|cancel|save|pin|del|rep|mode)$/.test(a)){await grPostAct(a,b);return}   // 📣 tablica (KROK 76)
   if(a==="man"){grOpenU=grOpenU===u?"":u;renderGear();return}
   if(a==="inv"){openWho("gr",g);return}
   if(a==="edit"){openGrForm(g);return}
@@ -413,3 +428,117 @@ function grTagGo(t){const g=t.dataset.grgo;if(!g||!session)return;
   grFromAdm=false;grGo(g);if(!grG[g])say("Tej grupy nie widzisz — nie jesteś jej członkiem.");else if(!grSt(g))grReload()}
 document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-grgo]");if(!t)return;e.preventDefault();e.stopPropagation();grTagGo(t)},true);
 document.addEventListener("keydown",e=>{if(e.key!=="Enter"&&e.key!==" ")return;const t=e.target.closest&&e.target.closest("[data-grgo]");if(!t)return;e.preventDefault();e.stopPropagation();grTagGo(t)},true);
+
+/* 📣 Tablica ogłoszeń grupy (KROK 76): ⚙️ → Grupy → grupa → zakładka „Tablica” (przypięty wpis na górze, niżej od najnowszego, pole na dole).
+   Czytają i piszą tylko aktywni członkowie (reguły w bazie); zmiany tylko funkcjami group_post_* (komunikaty z bazy po polsku → toast).
+   Odświeżanie: sync_since → klucz „gpost” (grPostSync z js/14) — tylko otwarta tablica pobiera wpisy na nowo; bez nowych połączeń.
+   Powiadomienia: g_post / g_pin w grPN (grLoad) → plakietka w „Moje grupy”, przy zakładce i sekcja „📣 Ogłoszenia grup” w 🔔;
+   wejście na tablicę oznacza ogłoszenia tej grupy jako przeczytane. */
+let grPosts={g:"",list:[],likes:{},ok:null,busy:false,msg:""},grOpenP="",grEditP="",grDraft="",grDraftE="",grPBusy=false;
+const GP_MAX=500;
+const grUnN=g=>grPN.filter(n=>n.group_id===g).length;
+const grPostUnN=()=>session&&grOk&&grFor===uid?grPN.length:0;
+const grBoardOn=()=>gearOpen&&gearView==="group"&&grTab==="board"&&!!grRole(grId);
+const grPostById=id=>grPosts.list.find(p=>p.id===id)||null;
+async function grPostsLoad(g){
+  if(!g||!session||!grRole(g))return;
+  if(grPosts.g!==g)grPosts={g,list:[],likes:{},ok:null,busy:true,msg:""};else grPosts.busy=true;
+  try{const [a,b]=await Promise.all([
+      sb.from("group_posts").select("id,author,body,pinned,created_at,edited_at").eq("group_id",g).order("created_at",{ascending:false}).limit(100),
+      sb.from("group_post_likes").select("post_id,user_id").eq("group_id",g).limit(5000)]);
+    if(a.error)throw a.error;const L={};((!b.error&&b.data)||[]).forEach(x=>{(L[x.post_id]=L[x.post_id]||[]).push(x.user_id)});
+    if(grPosts.g!==g)return;grPosts={g,list:(a.data||[]).sort((x,y)=>String(y.created_at).localeCompare(String(x.created_at))),likes:L,ok:true,busy:false,msg:""};
+  }catch(err){if(grPosts.g!==g)return;grPosts={g,list:[],likes:{},ok:false,busy:false,msg:/group_posts|schema cache|does not exist/i.test(err&&err.message||"")?"Tablica wymaga KROKU 76 w bazie.":"Nie udało się wczytać tablicy: "+grErr(err)}}
+  if(grBoardOn()&&grId===g)grPostSeen(g);
+  grBoardPaint();
+}
+// odświeżenie z sync_since: tylko gdy ta tablica jest właśnie na ekranie
+async function grPostSync(ids){if(grBoardOn()&&(ids||[]).includes(grId))await grPostsLoad(grId)}
+// przeczytane: ogłoszenia jednej grupy (wejście na tablicę, ✓ w 🔔) albo wszystkie
+function grPostRead(ids){if(!ids.length)return;const S=new Set(ids);grPN=grPN.filter(n=>!S.has(n.id));
+  try{sb.from("notifications").update({read_at:new Date().toISOString()}).in("id",ids).then(()=>{},()=>{})}catch(e){}renderBell()}
+const grPostSeen=g=>grPostRead(grPN.filter(n=>n.group_id===g).map(n=>n.id));
+const grPostReadAll=()=>grPostRead(grPN.map(n=>n.id));
+// tylko lista wpisów (pole pisania zostaje — nie gubi kursora ani tekstu)
+function grBoardPaint(){const e=$("grplist");if(e&&grBoardOn()&&grPosts.g===grId)e.innerHTML=grPListHtml(grId)}
+function grBoardHtml(g){
+  if(grPosts.g!==g&&!grPosts.busy)setTimeout(()=>{if(grPosts.g!==g||(!grPosts.busy&&grPosts.ok===null))grPostsLoad(g)},0);
+  return '<div id="grplist">'+grPListHtml(g)+'</div>'+grComposeHtml(g);
+}
+function grPListHtml(g){
+  if(grPosts.g!==g||grPosts.ok===null)return '<p class="note grwait">Wczytuję tablicę…</p>';
+  if(grPosts.ok===false)return '<p class="note grwait">'+esc(grPosts.msg)+'</p>';
+  const L=grPosts.list,pin=L.filter(p=>p.pinned),rest=L.filter(p=>!p.pinned);
+  if(!L.length)return '<p class="note grwait">Na tablicy jeszcze nic nie ma. Napisz pierwsze ogłoszenie — zobaczą je wszyscy członkowie grupy.</p>';
+  return (pin.length?'<div class="ios"><div class="ios-gh">'+uiIcon("pushpin")+' Przypięte</div><div class="grbox gpin">'+pin.map(grPostHtml).join("")+'</div></div>':'')
+    +(rest.length?'<div class="ios"><div class="ios-gh">Ogłoszenia</div><div class="grbox">'+rest.map(grPostHtml).join("")+'</div></div>':'')
+    +(L.length>=100?'<p class="note" style="margin:8px 14px 0;font-size:13px;text-align:left">Widać 100 najnowszych wpisów.</p>':'');
+}
+function grPostHtml(p){
+  const g=grPosts.g,me=p.author===uid,mod=grIsMod(g),lk=grPosts.likes[p.id]||[],mine=lk.includes(uid),open=grOpenP===p.id;
+  const who=lk.filter(u=>u!==uid&&nicks[u]).map(u=>nicks[u]),lkTxt=(mine?["Ty"]:[]).concat(who.slice(0,mine?2:3)).join(", ")+(lk.length>3?" i "+(lk.length-3)+" "+plf(lk.length-3,["inna osoba","inne osoby","innych osób"]):"");
+  const acts=(me?'<button type="button" class="b small w" data-gx="pedit" data-pid="'+esc(p.id)+'">Edytuj</button>':'')
+    +(mod?'<button type="button" class="b small w" data-gx="ppin" data-pid="'+esc(p.id)+'">'+(p.pinned?"Odepnij":"Przypnij na górze")+'</button>':'')
+    +(!me?'<button type="button" class="b small w" data-gx="prep" data-pid="'+esc(p.id)+'">Zgłoś</button>':'')
+    +(me||mod?'<button type="button" class="b small bad" data-gx="pdel" data-pid="'+esc(p.id)+'">Usuń</button>':'');
+  return '<div class="gpost'+(grEditP===p.id?' gped':'')+'"><div class="gph">'+nk(p.author,"usunięte konto")+'<span class="note">'+esc(agoTxt(p.created_at))+(p.edited_at?' · edytowano':'')+'</span>'
+    +'<button type="button" class="plrm'+(open?' on':'')+'" data-gx="pman" data-pid="'+esc(p.id)+'" aria-expanded="'+open+'" aria-label="Opcje wpisu" title="Opcje wpisu">'+uiIcon("sliders")+'</button></div>'
+    +'<div class="gpb">'+esc(p.body)+'</div>'
+    +'<div class="gpf"><button type="button" class="gplk'+(mine?' on':'')+'" data-gx="plike" data-pid="'+esc(p.id)+'" aria-pressed="'+mine+'" aria-label="Polecam'+(lk.length?' — '+lk.length:'')+'">'+uiIcon("thumb")+(lk.length?'<span>'+lk.length+'</span>':'')+'</button>'
+    +(lkTxt?'<span class="note gplkn">'+esc(lkTxt)+'</span>':'')+'</div>'
+    +(open?'<div class="gract">'+acts+'</div>':'')+'</div>';
+}
+function grComposeHtml(g){
+  const x=grG[g],ed=!!grEditP&&!!grPostById(grEditP),can=!x.posts_mods_only||grIsMod(g),t=ed?grDraftE:grDraft;
+  if(!can&&!ed)return '<p class="note grwait gplock">'+uiIcon("lock")+' Na tej tablicy piszą tylko właściciel i moderatorzy.</p>';
+  return '<div class="ios"><div class="ios-gh">'+(ed?"Zmień ogłoszenie":"Napisz ogłoszenie")+'</div></div><div class="gpcomp">'
+    +'<textarea class="bsmsg" id="gpbody" rows="3" maxlength="'+GP_MAX+'" aria-label="'+(ed?"Zmień ogłoszenie":"Napisz ogłoszenie")+'" placeholder="Np. W sobotę o 9:00 spod kościoła, tempo spokojne — kto jedzie?">'+esc(t)+'</textarea>'
+    +'<div class="gpcr"><span class="note" id="gpcnt">'+t.length+' / '+GP_MAX+'</span>'+(ed?'<button type="button" class="b small w" data-gx="pcancel">Anuluj</button>':'')
+    +'<button type="button" class="b small" data-gx="'+(ed?"psave":"padd")+'"'+(grPBusy?' disabled':'')+'>'+(ed?"Zapisz zmianę":"Opublikuj")+'</button></div>'
+    +'<p class="note gphint">'+(ed?(grPostById(grEditP).pinned?"Wpis jest przypięty — członkowie dostaną powiadomienie o zmianie.":"Zmiana bez nowego powiadomienia; przy wpisie pojawi się „edytowano”."):"Widzą tylko członkowie grupy — dostaną powiadomienie pod 🔔.")+'</p></div>';
+}
+// 🖱 akcje tablicy (wołane z obsługi kliknięć w ⚙️)
+async function grPostAct(a,b){
+  const g=grId,pid=b.dataset.pid||"",p=grPostById(pid);
+  const run=async(fn,args,ok)=>{grPBusy=true;b.disabled=true;
+    try{const r=await sb.rpc(fn,args);if(r.error)throw r.error;if(ok)say(ok);grPBusy=false;return true}
+    catch(err){grPBusy=false;b.disabled=false;say(grErr(err));return false}};
+  if(a==="pman"){grOpenP=grOpenP===pid?"":pid;grBoardPaint();return}
+  if(a==="pmode"){const m=b.dataset.v==="mods";if(!!(grG[g]&&grG[g].posts_mods_only)===m)return;
+    if(await run("group_posts_mode",{g,mods_only:m},m?"📣 Na tablicy piszą teraz tylko właściciel i moderatorzy.":"📣 Na tablicy piszą wszyscy członkowie."))await grReload();return}
+  if(a==="plike"){if(!p)return;const L=grPosts.likes[pid]=grPosts.likes[pid]||[],on=!L.includes(uid);
+    if(on)L.push(uid);else L.splice(L.indexOf(uid),1);grBoardPaint();   // od razu na ekranie; przy błędzie cofamy
+    const r=await sb.rpc("group_post_like",{p:pid,on_:on});
+    if(r.error){if(on)L.splice(L.indexOf(uid),1);else L.push(uid);grBoardPaint();say(grErr(r.error))}return}
+  if(a==="pedit"){if(!p)return;grEditP=pid;grDraftE=p.body;grOpenP="";renderGear();setTimeout(()=>{const t=$("gpbody");if(t){t.focus();t.scrollIntoView({block:"center",behavior:"smooth"})}},60);return}
+  if(a==="pcancel"){grEditP="";grDraftE="";renderGear();return}
+  if(a==="padd"||a==="psave"){const ed=a==="psave",t=(ed?grDraftE:grDraft).trim();
+    if(!t){say("Wpis jest pusty.");return}if(t.length>GP_MAX){say("Wpis: najwyżej "+GP_MAX+" znaków.");return}
+    if(ed&&p===null&&!grPostById(grEditP)){grEditP="";renderGear();say("Tego wpisu już nie ma.");return}
+    if(!await run(ed?"group_post_edit":"group_post_add",ed?{p:grEditP,p_body:t}:{g,p_body:t},ed?"Zapisano zmianę.":"📣 Opublikowano — członkowie zobaczą ogłoszenie."))return;
+    if(ed){grEditP="";grDraftE=""}else grDraft="";
+    await grPostsLoad(g);renderGear();return}
+  if(!p){grBoardPaint();return}
+  if(a==="ppin"){grOpenP="";if(await run("group_post_pin",{p:pid,on_:!p.pinned},p.pinned?"Odpięto wpis.":"📌 Przypięto na górze tablicy — członkowie dostaną powiadomienie."))await grPostsLoad(g);return}
+  if(a==="pdel"){const mine=p.author===uid;
+    if(!await askOk(mine?"Usunąć Twój wpis?":"Usunąć wpis — "+(nicks[p.author]||"usunięte konto")+"?\n\nTego nie da się cofnąć.","Usuń",1))return;
+    grOpenP="";if(grEditP===pid){grEditP="";grDraftE=""}
+    if(await run("group_post_delete",{p:pid},"Usunięto wpis."))await grPostsLoad(g);return}
+  if(a==="prep"){if(!await askOk("Zgłosić ten wpis głównemu administratorowi?\n\nZobaczy treść wpisu i nazwę grupy. Autor nie dowie się, kto zgłosił.","Zgłoś",1))return;
+    grOpenP="";if(await run("group_post_report",{p:pid},"🚩 Zgłoszono — administrator się tym zajmie."))grBoardPaint();return}
+}
+// pole pisania: tekst w pamięci (przerysowanie ⚙️ go nie gubi) i licznik znaków
+$("gearpanel").addEventListener("input",e=>{if(e.target.id!=="gpbody")return;const v=e.target.value;if(grEditP)grDraftE=v;else grDraft=v;
+  const c=$("gpcnt");if(c){c.textContent=v.length+" / "+GP_MAX;c.classList.toggle("gpfull",v.length>=GP_MAX)}});
+// 🔔 sekcja „📣 Ogłoszenia grup”: jedna pozycja na grupę (ile nowych, od kogo, kiedy); ✓ przy pozycji albo dla całej sekcji
+function grPostBellHtml(){
+  if(!grPostUnN())return "";
+  const by={};grPN.forEach(n=>{(by[n.group_id]=by[n.group_id]||[]).push(n)});
+  const G=Object.keys(by).filter(g=>grG[g]).sort((a,b)=>String(by[b][0].created_at).localeCompare(String(by[a][0].created_at)));
+  return bsSec("gpo","📣 Ogłoszenia grup",grPN.length,grPN.length,
+    '<div class="bsmka"><button type="button" class="lnk" data-gx="pall">'+uiIcon("check")+' Oznacz sekcję jako przeczytane</button></div>'
+    +G.map(g=>{const L=by[g],x=grG[g],n=L.length,pin=L.some(k=>k.kind==="g_pin"),who=[...new Set(L.map(k=>nicks[k.actor]).filter(Boolean))];
+      return '<div class="nit new" data-gx="pgo" data-gid="'+esc(g)+'" role="button" tabindex="0"><div class="ic gpic" style="background:'+grCol(x)+'">'+uiIcon("mega")+'</div><div class="tx"><b>'+grNmTag(x)+'</b>'
+        +'<div class="w">'+(n>1?n+" "+plf(n,["nowe ogłoszenie","nowe ogłoszenia","nowych ogłoszeń"]):pin?"przypięte ogłoszenie":"nowe ogłoszenie")+(who.length?' · '+esc(who.slice(0,3).join(", ")):'')+' · '+esc(agoTxt(L[0].created_at))+'</div></div>'
+        +'<button type="button" class="nmk" data-gx="pread" data-gid="'+esc(g)+'" aria-label="Oznacz jako przeczytane" title="Oznacz jako przeczytane">'+uiIcon("check")+'</button></div>'}).join(""));
+}

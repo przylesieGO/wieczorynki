@@ -51,6 +51,7 @@ async function syncOnce(){
       // 👥 KROK 71: weszłam/wyszłam z grupy → inne zaproszenia grupowe widać/nie widać — pełne wczytanie
       if(wGrOk&&typeof grActIds==="function"&&grActIds()!==was)return loadRemote();
     }
+    if((d.gpost||[]).length&&typeof grPostSync==="function")await grPostSync(d.gpost);   // 📣 tablica grupy (KROK 76): tylko otwarta tablica
   }catch(e){return loadRemote()}
   syncN=+d.last;
   deriveWants();
@@ -86,7 +87,7 @@ async function syncProfiles(ids){
 }
 async function syncMe(){
   const [nt,fv,tl]=await Promise.all([
-    visOk?sb.from("notifications").select("id,kind,want_id,actor,created_at,read_at").eq("user_id",uid).gte("created_at",new Date(Date.now()-30*864e5).toISOString()).order("created_at",{ascending:false}).limit(80):Promise.resolve({data:notifs}),
+    visOk?sb.from("notifications").select("id,kind,want_id,actor,created_at,read_at").eq("user_id",uid).is("group_id",null).gte("created_at",new Date(Date.now()-30*864e5).toISOString()).order("created_at",{ascending:false}).limit(80):Promise.resolve({data:notifs}),
     sb.from("favorites").select("fav_id").eq("user_id",uid).limit(1000),
     sb.from("telegram_links").select("tg_name,linked_at").eq("user_id",uid).limit(1)]);
   if(nt.error||fv.error)throw nt.error||fv.error;
@@ -97,7 +98,7 @@ async function syncMe(){
   await loadMyPriv();
 }
 async function syncFb(){
-  const fq=await sb.from("feedback").select("id,user_id,kind,rating,body,device,status,started_by,user_unread,admin_unread,created_at,updated_at").order("updated_at",{ascending:false}).limit(300);
+  const fq=await sb.from("feedback").select("id,user_id,kind,rating,body,device,status,started_by,user_unread,admin_unread,created_at,updated_at,post_id").order("updated_at",{ascending:false}).limit(300);
   if(fq.error)throw fq.error;fbOk=true;fbList=fq.data||[];
   const fc=await sb.rpc("fb_done_counts");if(!fc.error){fbDone={};(fc.data||[]).forEach(x=>{fbDone[x.user_id]=+x.n||0})}
   if(gearOpen&&/^fb/.test(gearView))renderGear();
@@ -262,7 +263,7 @@ async function loadRemote(selectId){
       return {data:out}};
     const [iv,nt,dc]=visOk?await Promise.all([
       byWant("want_invitees","want_id,user_id,added_by"),
-      sb.from("notifications").select("id,kind,want_id,actor,created_at,read_at").eq("user_id",uid).gte("created_at",new Date(Date.now()-30*864e5).toISOString()).order("created_at",{ascending:false}).limit(80),
+      sb.from("notifications").select("id,kind,want_id,actor,created_at,read_at").eq("user_id",uid).is("group_id",null).gte("created_at",new Date(Date.now()-30*864e5).toISOString()).order("created_at",{ascending:false}).limit(80),
       rangeOk?byWant("want_declines","want_id,user_id"):Promise.resolve({data:[]})
     ]):[{data:[]},{data:[]},{data:[]}];
     decls={};((dc&&!dc.error&&dc.data)||[]).forEach(x=>{(decls[x.want_id]=decls[x.want_id]||[]).push(x.user_id)});
@@ -286,7 +287,7 @@ async function loadRemote(selectId){
     const ts=await sb.from("testers").select("user_id");testerOk=!ts.error;testerIds=new Set((!ts.error&&ts.data||[]).map(x=>x.user_id));
     // 🏁 imprezy masowe (KROK 40) — tylko gdy zakładka dostępna
     if(flags.tab_events&&tabOk(3))await loadEvents();
-    const fq=await sb.from("feedback").select("id,user_id,kind,rating,body,device,status,started_by,user_unread,admin_unread,created_at,updated_at").order("updated_at",{ascending:false}).limit(300);fbOk=!fq.error;fbList=fbOk?fq.data||[]:[];
+    const fq=await sb.from("feedback").select("id,user_id,kind,rating,body,device,status,started_by,user_unread,admin_unread,created_at,updated_at,post_id").order("updated_at",{ascending:false}).limit(300);fbOk=!fq.error;fbList=fbOk?fq.data||[]:[];
     fbDone={};if(fbOk){const fc=await sb.rpc("fb_done_counts");if(!fc.error)(fc.data||[]).forEach(x=>{fbDone[x.user_id]=+x.n||0})}
     const tl=await sb.from("telegram_links").select("tg_name,linked_at").eq("user_id",uid).limit(1);tgOk=!tl.error;tgLink=tgOk&&tl.data&&tl.data[0]||null;
     nicks={};genders={};joinedAt={};avAt={};medias={};(ok(p)||[]).forEach(x=>{nicks[x.user_id]=x.nick;if(x.gender)genders[x.user_id]=x.gender;if(x.joined_at)joinedAt[x.user_id]=x.joined_at;if(x.avatar_at)avAt[x.user_id]=x.avatar_at;if(x.media)medias[x.user_id]=x.media});

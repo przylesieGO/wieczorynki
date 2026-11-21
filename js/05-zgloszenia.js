@@ -18,7 +18,7 @@ const APP_REL=[
 const APP_VER=APP_REL[0].v;
 const relNew=()=>{try{return localStorage.getItem("seenVer")!==APP_VER}catch(e){return false}};
 function relMark(){try{localStorage.setItem("seenVer",APP_VER)}catch(e){}const b=$("helpbtn");if(b)b.classList.remove("newdot")}
-const FB_KIND={bug:"🐞 Błąd",idea:"💡 Pomysł",rating:"⭐ Ocena",msg:"✉️ Wiadomość",tester:"💉 Chce testować"};
+const FB_KIND={bug:"🐞 Błąd",idea:"💡 Pomysł",rating:"⭐ Ocena",msg:"✉️ Wiadomość",tester:"💉 Chce testować",gpost:"🚩 Wpis w grupie"};
 const FB_ST={new:"nowe",accepted:"przyjęte",done:"zrobione",rejected:"odrzucone"};
 const fbMineUnread=()=>fbList.filter(f=>f.user_id===uid&&f.user_unread);
 const fbAdmUnread=()=>isAdmin?fbList.filter(f=>f.user_id!==uid&&f.admin_unread):[];
@@ -94,6 +94,7 @@ function devShort(d){
 function fbActHtml(f){
   const st=f.status,t=f.kind==="tester",open=st==="new"||st==="accepted";let h="";
   if(t&&testerIds.has(f.user_id))h+='<div class="note" style="margin-top:4px">💉 Już jest testerem.</div>';
+  if(f.kind==="gpost")h+=f.post_id?'<button class="b sbtn bad" data-c="fbgpdel">'+uiIcon("trash")+' Usuń wpis z tablicy grupy</button>':'<div class="note" style="margin-top:4px">Wpis jest już usunięty z tablicy.</div>';   // 📣 KROK 76
   if(open){
     if(t){if(isSuper(uid)&&!testerIds.has(f.user_id))h+='<button class="b sbtn" data-c="fbgrant">💉 Nadaj prawa testera</button>'}
     else h+='<button class="b sbtn" data-fs2="done">✓ '+(f.kind==="rating"?'Zamknij — przeczytane':'Oznacz jako zrobione')+'</button>';
@@ -573,6 +574,10 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="fbsend"){await fbSend();return}
   if(c==="testerreq"){await testerReq(b);return}
   if(c==="fbgrant"){const f=fbList.find(x=>x.id===fbId);if(f&&isSuper(uid))await testerGrant(f);return}
+  if(c==="fbgpdel"){const f=fbList.find(x=>x.id===fbId);if(!f||!f.post_id)return;   // 📣 KROK 76: zgłoszony wpis z tablicy grupy
+    if(!await askOk("Usunąć zgłoszony wpis z tablicy grupy?\n\nTego nie da się cofnąć. Zgłoszenie zostaje — zamknij je osobno.","Usuń wpis",1))return;
+    b.disabled=true;const r=await sb.rpc("group_post_delete",{p:f.post_id});if(r.error){b.disabled=false;say(r.error.message);return}
+    f.post_id=null;say("Usunięto wpis z tablicy grupy.");renderGear();return}
   if(c==="fbreply"){await fbReply();return}
   if(c==="fbmsgsend"){await fbMsgSend();return}
   if(c==="fbback"){if(fbBack==="bell"){gearOpen=false;renderGear()}else{gearView=fbBack;renderGear()}return}
