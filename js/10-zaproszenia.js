@@ -745,12 +745,20 @@ function wfDurSync(){
       wf.jump=localIso(nx).slice(0,10)===localIso(st).slice(0,10)?nx:null;
       i.innerHTML+='<div class="wclash">⚠️ Nachodzi na Twoją jazdę '+esc(relDay(cs).toLowerCase())+' '+hhmm(cs)+'–'+hhmm(ce)+'. Najwcześniej o <b>'+hhmm(nx)+'</b>.'+(wf.jump?' <button type="button" class="lnk wjump">Ustaw '+hhmm(nx)+'</button>':'')+'</div>'}
     else i.innerHTML+='<div class="wclash">⚠️ '+esc(relDay(cs))+' o '+hhmm(cs)+' masz już jazdę — ta skończyłaby się ok. '+hhmm(en)+'. Wybierz wcześniejszą godzinę albo krótszą jazdę.</div>'}
+  const jc=cl?null:wfJoinedClash(st,en);   // 🔁 zapisany na inną jazdę w tym czasie — przy wysyłaniu „Przenieś się” (jak przy „Jadę!”)
+  if(jc){const cs=wantStart(jc),ce=wantEnd(jc);i.innerHTML+='<div class="wclash">🔁 Jedziesz już '+esc(relDay(cs).toLowerCase())+' '+hhmm(cs)+'–'+hhmm(ce)+' ('+esc(nickOf(jc.user_id))+') — przy wysyłaniu zapytam, czy się przenieść.</div>'}
   i.classList.toggle("bad",!!cl);
   const fb=$("wfclash");
   if(cl){const cs=wantStart(cl),ce=wantEnd(cl);
     fb.innerHTML='⚠️ Nachodzi na jazdę '+esc(relDay(cs).toLowerCase())+' '+hhmm(cs)+'–'+hhmm(ce)+(wf.jump?' · <button type="button" class="lnk wjump">Ustaw '+hhmm(wf.jump)+'</button>':cs>st?' · wybierz wcześniejszą godzinę':'');
     fb.classList.remove("hide")}else fb.classList.add("hide");
   i.classList.remove("hide");
+}
+// czy nowe zaproszenie nachodzi na jazdę innej osoby, na którą jestem zapisany (z zapasem 15 min)
+function wfJoinedClash(st,en){
+  const g=RIDE_GAP*60000;
+  return wants.filter(w=>w.user_id!==uid&&w.id!==wf.editId&&!isOpen(w)&&wantEnd(w).getTime()>Date.now()&&(joins[w.id]||[]).includes(uid))
+    .find(w=>st.getTime()<wantEnd(w).getTime()+g&&wantStart(w).getTime()<en.getTime()+g)||null;
 }
 // czy nowe zaproszenie nachodzi na inne moje (z zapasem 15 min)
 function wfClash(st,en){
@@ -767,9 +775,13 @@ function joinClash(w){
 async function joinClashOk(w){
   if(isOpen(w))return true;
   const c=joinClash(w);if(!c)return true;
-  const cs=wantStart(c),ce=wantEnd(c),when=relDay(cs).toLowerCase()+" "+hhmm(cs)+"–"+hhmm(ce);
-  if(c.user_id===uid){say("Prowadzisz jazdę "+when+" — najpierw ją usuń albo zmień godzinę.");return false}
-  if(!await askOk("Jedziesz już "+when+". Przenieść się na "+hhmm(wantStart(w))+"?\n\nZrezygnujesz z tamtej jazdy ("+nickOf(c.user_id)+" dostanie powiadomienie).","Przenieś się"))return false;
+  if(c.user_id===uid){const cs=wantStart(c);say("Prowadzisz jazdę "+relDay(cs).toLowerCase()+" "+hhmm(cs)+"–"+hhmm(wantEnd(c))+" — najpierw ją usuń albo zmień godzinę.");return false}
+  return leaveForClash(c,wantStart(w));
+}
+// „Przenieś się”: pytanie i wypisanie z jazdy c (wspólne dla „Jadę!” i zakładania zaproszenia)
+async function leaveForClash(c,to){
+  const cs=wantStart(c),when=relDay(cs).toLowerCase()+" "+hhmm(cs)+"–"+hhmm(wantEnd(c));
+  if(!await askOk("Jedziesz już "+when+". Przenieść się na "+(dayDiff(to)===dayDiff(cs)?"":relDay(to).toLowerCase()+" ")+hhmm(to)+"?\n\nZrezygnujesz z tamtej jazdy ("+nickOf(c.user_id)+" dostanie powiadomienie).","Przenieś się"))return false;
   const r=await sb.from("want_joins").delete().eq("want_id",c.id).eq("user_id",uid);
   if(r.error){say("Nie udało się zrezygnować z tamtej jazdy: "+r.error.message);return false}
   joins[c.id]=(joins[c.id]||[]).filter(x=>x!==uid);return true;
@@ -1032,6 +1044,7 @@ $("wsave").onclick=async()=>{
       say(cs<=d?"Twoja jazda "+relDay(cs).toLowerCase()+" o "+hhmm(cs)+" potrwa do ok. "+hhmm(ce)+" — następne zaproszenie najwcześniej o "+hhmm(ceil5(ce.getTime()+RIDE_GAP*60000))+"."
                :relDay(cs)+" o "+hhmm(cs)+" masz już jazdę — ta skończyłaby się ok. "+hhmm(en)+". Wybierz wcześniejszą godzinę albo krótszą jazdę.");
       return}
+    const jc=wfJoinedClash(d,en);if(jc&&!await leaveForClash(jc,d))return;
   }
   const priv=!wf.editId&&wfPriv(),ids=priv?wfInvIds():[];
   // edycja: zmiana „Kto zobaczy?” (osoby, które już dołączyły, zostają zaproszone)
