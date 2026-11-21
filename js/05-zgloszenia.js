@@ -228,9 +228,10 @@ function profHubHtml(){
    +gGrp("Powiadomienia",[tgOn()?gRow("#0a84ff","send","Telegram"+betaTag("telegram_dm"),"Powiadomienia prosto na telefon",tgLink?'<span class="ios-v ok">'+uiIcon("check")+'Połączony</span>':'<span class="ios-v">Połącz</span>','data-c="tg"'):"",
   gRow("#0a84ff","mega","Kanał @PrzylesieGo","Nowe jazdy dla wszystkich","",'href="https://t.me/PrzylesieGo" target="_blank" rel="noopener"',"a")]);
 }
+let gearScrKey="";
 function renderGear(){
   const p=$("gearpanel");
-  if(!gearOpen){p.classList.add("hide");gearView="main";gearFrom="";tkFrom=false;favsSnap=null;return}
+  if(!gearOpen){gearScrKey="";p.classList.add("hide");gearView="main";gearFrom="";tkFrom=false;favsSnap=null;return}
   p.classList.remove("hide");
   if(gearView!=="favs"){favsSnap=null;fvCol=null}
   if(gearView==="plist"&&!(session&&plById(plId)))gearView="favs";   // 📋 lista usunięta (np. na innym urządzeniu)
@@ -304,7 +305,11 @@ function renderGear(){
      +gGrp("Pomoc",[gRow("#30d158","help","Pomoc — co potrafi aplikacja","Wersja "+esc(APP_VER),relNew()?'<span class="ios-bdg">Nowości</span>':'','data-c="help"'),
         isStandalone()?"":gRow("#636366","phone","Zainstaluj aplikację","Ikona na ekranie telefonu","",'data-c="inst"')])
      +setLookHtml(true);
+  // przewinięcie: odświeżenie tego samego ekranu (sync, doczytanie danych) nie wraca na górę; zmiana ekranu zaczyna od góry
+  const scrKey=gearView+"|"+(typeof userId!=="undefined"?userId:"")+"|"+(typeof grId!=="undefined"?grId:"")+"|"+(typeof plId!=="undefined"?plId:""),oldBox=p.querySelector(".sheetbox"),keepScr=oldBox&&gearScrKey===scrKey?oldBox.scrollTop:0;
+  gearScrKey=scrKey;
   p.innerHTML='<div class="sheetbox"><button class="sclose" data-c="close" aria-label="Zamknij">✕</button>'+body+'</div>';
+  if(keepScr){const nb=p.querySelector(".sheetbox");if(nb)nb.scrollTop=keepScr}
   const s=$("adminsel");
   if(s&&keepSel&&[...s.options].some(o=>o.value===keepSel))s.value=keepSel;
   if(keepCol&&$("colK")){["K","M"].forEach(g=>{$("col"+g).value=keepCol["c"+g];$("nob"+g).checked=keepCol["b"+g]==="none";if(keepCol["b"+g]!=="none")$("bg"+g).value=keepCol["b"+g]})}
