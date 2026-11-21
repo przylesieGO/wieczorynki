@@ -61,13 +61,22 @@ function demoVolAct(){const all=new Set(demoPeople()),sel=[...demoSel].filter(id
   return '<div class="dmvact"><button type="button" class="b sbtn" data-dx="vadd"'+(na&&!demoBusy?'':' disabled')+'>Dodaj do ochotników ('+na+')</button>'
    +'<button type="button" class="b sbtn g" data-dx="vdel"'+(nd&&!demoBusy?'':' disabled')+'>Wypisz ('+nd+')</button></div>'
    +'<button type="button" class="lnk dmvclr" data-dx="vclr">Wyczyść zaznaczenie ('+sel.length+')</button>'}
+// dwie zwijane sekcje jak „Ulubieni / Pozostali”: Ochotnicy (rozwinięci) i Potencjalni ochotnicy (zwinięci); przy szukaniu / filtrze rozwinięte
+let demoVCol={v:false,p:true};
+const demoVOpen=g=>!demoVCol[g]||pfOn("dvol");
 function demoVolList(){
-  const ids=demoVShown().sort((a,b)=>((demoVol.has(b)?1:0)-(demoVol.has(a)?1:0))||nicks[a].localeCompare(nicks[b],"pl"));
-  const vis=ids.filter(id=>pfMatch("dvol",id)),all=vis.length&&vis.every(id=>demoSel.has(id));
+  const ids=demoVShown().sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")),V=ids.filter(id=>demoVol.has(id)),P=ids.filter(id=>!demoVol.has(id)),two=true;   // sekcje zawsze — także gdy ochotników jeszcze nie ma
+  const vis=[...(demoVOpen("v")||!two?V:[]),...(demoVOpen("p")||!two?P:[])].filter(id=>pfMatch("dvol",id)),all=vis.length&&vis.every(id=>demoSel.has(id));
+  const row=id=>'<button type="button" class="prow'+(demoSel.has(id)?' on':'')+'" data-dx="vsel" data-du="'+esc(id)+'" data-pu="'+esc(id)+'" aria-pressed="'+demoSel.has(id)+'"'+(pfMatch("dvol",id)?'':' style="display:none"')+'>'
+     +'<span class="cbx">'+CHECK+'</span><span class="pnm">'+nk(id)+'</span>'+(demoVol.has(id)?'<span class="pjn">ochotnik</span>':'')+'</button>';
+  const sec=(L,g)=>{if(!L.length)return '';const k=L.filter(id=>demoSel.has(id)).length;
+    return (two?secBar(g==="v"?uiIcon("flask"):uiIcon("users"),g==="v"?"Ochotnicy":"Potencjalni ochotnicy",L.length,demoVCol[g],k?"zaznaczono "+k:"",'data-dx="vtog" data-vs="'+g+'"',false):'')
+      +'<div class="fvbody'+(two?' secb':'')+(two&&demoVCol[g]?' col':'')+'">'+L.map(row).join("")+'</div>'};
   return '<div class="bsgrp gl"><span>Osoby ('+ids.length+')</span>'+(vis.length?'<button type="button" class="lnk" data-dx="vall">'+(all?'Odznacz widocznych':'Zaznacz widocznych')+'</button>':'')+'</div>'
-   +ids.map(id=>'<button type="button" class="prow'+(demoSel.has(id)?' on':'')+'" data-dx="vsel" data-du="'+esc(id)+'" data-pu="'+esc(id)+'" aria-pressed="'+demoSel.has(id)+'"'+(pfMatch("dvol",id)?'':' style="display:none"')+'>'
-     +'<span class="cbx">'+CHECK+'</span><span class="pnm">'+nk(id)+'</span>'+(demoVol.has(id)?'<span class="pjn">ochotnik</span>':'')+'</button>').join("")
-   +'<div class="note pfnone'+(vis.length?' hide':'')+'">'+(ids.length?'Nikt nie pasuje do filtra.':'Brak osób w tym filtrze.')+'</div>'}
+   +sec(V,"v")+sec(P,"p")
+   +'<div class="note pfnone'+(ids.some(id=>pfMatch("dvol",id))?' hide':'')+'">'+(ids.length?'Nikt nie pasuje do filtra.':'Brak osób w tym filtrze.')+'</div>'}
+// „widoczni” = pasują do filtrów i nie siedzą w zwiniętej sekcji
+const demoVVis=()=>demoVShown().filter(id=>pfMatch("dvol",id)&&demoVOpen(demoVol.has(id)?"v":"p"));
 const demoVolHtml=()=>'<div id="dmvchips">'+demoVolChips()+'</div>'+pfBar("dvol",demoPeople().length)
   +'<div id="dmvact">'+demoVolAct()+'</div><div class="sleft dmvlist" data-pfl="dvol" id="dmvlist">'+demoVolList()+'</div>'
   +'<p class="note">Ochotnicy dostają prywatne zaproszenia od kont demo i zaproszenia do grup demo (powiadomienia w aplikacji i na Telegramie). Pojedynczo dodasz też w karcie osoby → Administrator.</p>';
@@ -166,9 +175,10 @@ $("gearpanel").addEventListener("click",async e=>{
   // 🙋 ochotnicy zbiorczo: filtr, zaznaczanie (bez przerysowania całego okna), dodaj / wypisz
   if(a==="vf"){demoVF=b.dataset.dv||"";demoVolPart();return}
   if(a==="vsel"){const id=b.dataset.du,on=!demoSel.has(id);on?demoSel.add(id):demoSel.delete(id);b.classList.toggle("on",on);b.setAttribute("aria-pressed",on);
-    $("dmvact").innerHTML=demoVolAct();const vis=demoVShown().filter(x=>pfMatch("dvol",x)),l=document.querySelector('#dmvlist [data-dx="vall"]');
+    $("dmvact").innerHTML=demoVolAct();const vis=demoVVis(),l=document.querySelector('#dmvlist [data-dx="vall"]');
     if(l)l.textContent=vis.length&&vis.every(x=>demoSel.has(x))?"Odznacz widocznych":"Zaznacz widocznych";return}
-  if(a==="vall"){const vis=demoVShown().filter(x=>pfMatch("dvol",x)),all=vis.every(x=>demoSel.has(x));vis.forEach(x=>all?demoSel.delete(x):demoSel.add(x));demoVolPart();return}
+  if(a==="vtog"){const g=b.dataset.vs;demoVCol[g]=!demoVCol[g];$("dmvlist").innerHTML=demoVolList();pfApply("dvol");return}
+  if(a==="vall"){const vis=demoVVis(),all=vis.every(x=>demoSel.has(x));vis.forEach(x=>all?demoSel.delete(x):demoSel.add(x));demoVolPart();return}
   if(a==="vclr"){demoSel.clear();demoVolPart();return}
   if(a==="vadd"||a==="vdel"){const P=new Set(demoPeople()),on=a==="vadd",L=[...demoSel].filter(id=>P.has(id)&&demoVol.has(id)!==on);if(!L.length)return;
     const nm=L.map(id=>nicks[id]).slice(0,8).join(", ")+(L.length>8?" i "+(L.length-8)+" innych":"");
