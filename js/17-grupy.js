@@ -3,6 +3,7 @@
    „Przekształć w grupę” w widoku listy, link #grupa=KOD.
    Wszystkie zmiany tylko funkcjami bazy (group_*); tabele są tylko do odczytu. Komunikaty błędów z bazy są po polsku → toast.
    Plik wczytywany jako ostatni: przy wczytaniu tylko rejestruje obsługę zdarzeń; niższe pliki wołają go z renderGear / kliknięć (przez typeof). */
+let grK=null,grFromAdm=false;   // 👑 wszystkie grupy + prośby o limit (Administracja → Grupy)
 let grOk=null,grMsg="",grFor="",grLoading=false,grMine=[],grG={},grMem={},grLim={},grReqs=[],grId="",grTab="ppl",grOpenU="",grFind=null,grQ="",grFindT=0;
 const GR_ICONS=["users","bike","mtb","gravel","road","run","walk","tree","flag","trophy","medal","heart","coffee","sun","moon","city"];
 const GR_ROLE={owner:"właściciel",mod:"moderator",member:""};
@@ -43,10 +44,11 @@ async function grLoad(){
     }
     grMine=mine.filter(m=>grG[m.group_id]);grMem=mem;grLim=lim;grOk=true;grFor=uid;
     grReqs=[];grMine.forEach(m=>{if(grIsMod(m.group_id))(grMem[m.group_id]||[]).forEach(x=>{if(x.status==="requested")grReqs.push(x)})});
+    if(isKingReal())await grKLoad();else grK=null;
   }catch(err){grOk=false;grFor=uid;grMsg=grErr(err)==="Grupy wymagają KROKU 70 w bazie."?grErr(err):"Nie udało się wczytać grup: "+grErr(err)}
   grLoading=false;
 }
-function grRefresh(){try{if(gearOpen&&["main","nick","groups","group","plist"].includes(gearView))renderGear();renderBell()}catch(e){}}
+function grRefresh(){try{if(gearOpen&&["main","nick","groups","group","gradm","admin","user","plist"].includes(gearView))renderGear();renderBell()}catch(e){}}
 async function grReload(){await grLoad();grRefresh()}
 const grFresh=()=>{if(session&&grFor!==uid){grOk=null;grMine=[];grMem={};grLim={};grReqs=[];grFind=null}if(session&&grOk===null&&!grLoading)grReload()};
 
@@ -59,7 +61,7 @@ function grRow(){
 }
 
 /* ⚙️ widoki „groups” (lista grup) i „group” (jedna grupa) — renderGear w js/05 */
-function grHtml(){return gearView==="group"&&grG[grId]?grGroupHtml():grHubHtml()}
+function grHtml(){return gearView==="gradm"&&isKingReal()?grAdmHtml():gearView==="group"&&grG[grId]?grGroupHtml():grHubHtml()}
 const grBtns=(no,yes,attrs)=>'<span class="grb"><button type="button" class="b small w" data-gx="'+no+'" '+attrs+'>Odrzuć</button><button type="button" class="b small" data-gx="'+yes+'" '+attrs+'>'+(yes==="acc"?"Dołącz":"Przyjmij")+'</button></span>';
 function grInvRow(m){const x=grG[m.group_id];
   return '<div class="grir">'+grIco(x)+'<span class="grt" data-gx="open" data-gid="'+esc(x.id)+'"><b>'+esc(x.name)+'</b><small>'+(m.invited_by&&nicks[m.invited_by]?'zaprasza '+esc(nicks[m.invited_by]):'zaproszenie do grupy')+(x.area?' · '+esc(x.area):'')+'</small></span>'
@@ -105,7 +107,7 @@ function grFindHtml(){
 function grGroupHtml(){
   const g=grId,x=grG[g],st=grSt(g),role=grRole(g),mod=grIsMod(g),own=role==="owner";
   const meta=[x.visibility==="hidden"?"ukryta":"jawna",x.join_mode==="open"?"wolne dołączanie":"na prośbę",grOsob(grCnt(g))].join(" · ");
-  let h='<button class="sback" data-gx="hub">‹ Grupy</button><div class="grhead">'+grIco(x,true)+'<div class="sname">'+esc(x.name)
+  let h=(grFromAdm&&isKingReal()?'<button class="sback" data-gx="adm">‹ Wszystkie grupy</button>':'<button class="sback" data-gx="hub">‹ Grupy</button>')+'<div class="grhead">'+grIco(x,true)+'<div class="sname">'+esc(x.name)
    +(own?'<span class="pledb" role="button" tabindex="0" data-gx="edit" title="Edytuj grupę" aria-label="Edytuj grupę">'+uiIcon("pencil")+'</span>':'')+'</div>'
    +'<div class="smail">'+meta+(GR_ROLE[role]?' · <span class="grrole">'+GR_ROLE[role]+'</span>':'')+'</div></div>';
   if(st==="invited"){const m=grMy(g);
@@ -113,7 +115,8 @@ function grGroupHtml(){
   else if(st==="requested")h+='<div class="grbox grwait"><div class="note" style="font-size:15px">Prośba wysłana — właściciel albo moderator zdecyduje.</div><button type="button" class="lnk" data-gx="leave">Wycofaj prośbę</button></div>';
   else if(!role&&grOn()&&x.visibility==="public"){const full=grCnt(g)>=+x.member_limit;
     h+=full?'<p class="note grwait">Grupa jest pełna.</p>':'<button type="button" class="b big" data-gx="join" data-gid="'+esc(g)+'">'+(x.join_mode==="open"?"Dołącz do grupy":"Poproś o dołączenie")+'</button>'}
-  if(!role)return h+grAboutHtml(g,false);
+  if(!role&&!isKingReal())return h+grAboutHtml(g,false);
+  if(!role)h+='<p class="note grwait">👑 Podgląd administratora — nie jesteś w tej grupie.</p>';
   h+='<div class="seg grseg">'+[["ppl","Ludzie"],["about","O grupie"]].map(([k,t])=>'<button type="button" class="'+(grTab===k?'on':'')+'" data-gx="tab" data-v="'+k+'">'+t+'</button>').join("")+'</div>';
   return h+(grTab==="about"?grAboutHtml(g,true):grPplHtml(g));
 }
@@ -152,7 +155,9 @@ function grAboutHtml(g,member){
   if(own)h+=gGrp("Zarządzanie",[gRow(grCol(x),"pencil","Edytuj grupę","Nazwa, ikona, opis, okolica, kolor, widoczność","",'data-gx="edit"'),
      gRow("#5856d6","user","Przekaż grupę","Wybierz osobę w zakładce „Ludzie”","",'data-gx="xferhint"'),
      gRow("#ff3b30","trash","Usuń grupę","Znikną członkostwa i zaproszenia","",'data-gx="del"')]);
+  if(!own&&isKingReal())h+=gGrp("👑 Administrator",[gRow("#ff3b30","trash","Usuń grupę","Np. za treści łamiące zasady — znikną członkostwa i zaproszenia","",'data-gx="del"')]);
   const alone=own&&!grAct(g).some(m=>m.user_id!==uid);
+  if(!role)return h;
   if(!own||alone)h+='<div class="ios-grp" style="margin-top:22px"><button type="button" class="ios-it ios-row ios-out" data-gx="leave">'+(alone?"Zamknij grupę (archiwum)":"Wyjdź z grupy")+'</button></div>';
   else h+='<p class="note" style="margin:14px 14px 0;font-size:13px;text-align:left">Żeby wyjść z grupy, najpierw przekaż ją innej osobie.</p>';
   return h;
@@ -179,13 +184,31 @@ function openGrCode(code){
   if(!session){say("Zaloguj się, żeby dołączyć do grupy.");return}if(needProfile()){askNick();return}
   Object.assign(gf,{mode:"code",code:code||"",prev:null,busy:false});renderGrSheet(true);if(code)grCheckCode();
 }
+/* 👤 karta osoby → „Dodaj do grupy…”: grupy, do których mogę zapraszać (właściciel / moderator; członek — gdy dołączanie wolne) */
+const grCanInv=g=>{const x=grG[g];return grIsMod(g)||(!!grRole(g)&&x&&x.join_mode==="open")};
+const grInvGroups=()=>grMine.filter(m=>m.status==="active"&&grCanInv(m.group_id)).sort(grByName).map(m=>m.group_id);
+const grUserSt=(g,u)=>{const m=(grMem[g]||[]).find(x=>x.user_id===u);return m?m.status:""};
+function grAddRow(u){
+  if(!session||u===uid||!grOk||grFor!==uid)return "";
+  const G=grInvGroups();if(!G.length&&!grOn())return "";
+  const inG=grMine.filter(m=>m.status==="active"&&grUserSt(m.group_id,u)==="active").map(m=>grName(m.group_id));
+  return gRow("#0a84ff","users","Dodaj do grupy…",inG.length?"W grupach: "+esc(inG.join(", ")):G.length?"Zaproś do jednej z Twoich grup":"Załóż grupę i zaproś tę osobę",inG.length?'<span class="ios-v">'+inG.length+'</span>':'','data-gx="addto" data-gu="'+esc(u)+'"');
+}
+function openGrPick(u){if(!session||!nicks[u])return;Object.assign(gf,{mode:"pick",u,busy:false});renderGrSheet(true)}
 function closeGr(){const p=grSheet();p.classList.add("hide");p.innerHTML=""}
 const grSeg=(k,v,opts)=>'<div class="seg grfseg">'+opts.map(([o,t])=>'<button type="button" class="'+(v===o?'on':'')+'" data-'+k+'="'+o+'">'+t+'</button>').join("")+'</div>';
 function grKeep(){const v=i=>{const e=$(i);return e?e.value:null};["name","descr","area"].forEach(k=>{const e=v("gr"+k);if(e!=null)gf[k]=e});const c=v("grcode");if(c!=null)gf.code=c}
 function renderGrSheet(first){
   const p=grSheet();p.classList.remove("hide");if(!first)grKeep();
   let tt,body,btn;
-  if(gf.mode==="code"){tt="Dołącz kodem";const pv=gf.prev,st=pv&&pv.status;
+  if(gf.mode==="pick"){tt="Dodaj do grupy";const G=grInvGroups();
+    body='<div class="note" style="margin-top:6px;text-align:center;font-size:14px">Do której grupy zaprosić '+nk(gf.u)+'?</div><div class="bslist">'
+     +(G.length?G.map(g=>{const x=grG[g],st=grUserSt(g,gf.u),full=grUsed(g)>=+x.member_limit,dis=!!st||full||gf.busy;
+        return '<button type="button" class="prow'+(st==="active"?' on':'')+(dis?' dis':'')+'" data-gk="pickg" data-gid="'+esc(g)+'"'+(dis?' disabled':'')+'><span class="cbx">'+CHECK+'</span><span class="pnm">'+grIco(x)+' '+esc(x.name)+'</span><span class="pjn">'+(st==="active"?"w grupie":st==="invited"?"zaproszony(a)":st==="requested"?"prosi — przyjmij w grupie":full?"brak miejsc":"")+'</span></button>'}).join("")
+       :'<div class="bsempty">Nie masz grup, do których możesz zapraszać.</div>')
+     +(grOn()?'<button type="button" class="prow pladd" data-gk="picknew"><span class="cbx plplus">+</span><span class="pnm">Nowa grupa (zaprosisz: '+esc(nicks[gf.u]||"")+')</span></button>':'')+'</div>';
+    btn='<button type="button" class="b big" data-gk="close">Gotowe</button>';
+  }else if(gf.mode==="code"){tt="Dołącz kodem";const pv=gf.prev,st=pv&&pv.status;
     body='<div class="note" style="margin-top:6px;text-align:center;font-size:14px">Wklej link do grupy albo wpisz kod, który dostałeś(-aś).</div>'
      +'<div class="wsqrow"><input class="bsq" id="grcode" type="text" maxlength="200" placeholder="Kod albo link" autocomplete="off" value="'+esc(gf.code)+'"><button type="button" class="b small" data-gk="check"'+(gf.busy?' disabled':'')+'>Sprawdź</button></div>'
      +'<div class="note plinfo" id="grinfo"></div>'
@@ -229,6 +252,8 @@ grSheet().addEventListener("click",async e=>{
   const k=e.target.closest("[data-gk]");if(!k||k.disabled)return;const a=k.dataset.gk;
   if(a==="close"){closeGr();return}
   if(a==="check"){await grCheckCode();return}
+  if(a==="pickg"){const g=k.dataset.gid;gf.busy=true;renderGrSheet();try{await grInvite(g,[gf.u])}catch(err){say(grErr(err))}gf.busy=false;if(gf.mode==="pick"&&!grSheet().classList.contains("hide"))renderGrSheet();return}
+  if(a==="picknew"){openGrForm("",{ids:[gf.u]});return}
   if(a==="openg"){const g=gf.prev&&gf.prev.id;closeGr();if(g){await grLoad();grGo(g)}return}
   if(a==="joincode"){const pv=gf.prev;if(!pv)return;gf.busy=true;renderGrSheet();
     try{const r=await sb.rpc("group_join_code",{c:grCodeOf(gf.code)});if(r.error)throw r.error;closeGr();
@@ -248,10 +273,37 @@ grSheet().addEventListener("click",async e=>{
 // przejście do ekranu grupy (otwiera ⚙️, jeśli zamknięte)
 function grGo(g){grId=g;grTab="ppl";grOpenU="";pf.gm=null;if(!gearOpen){gearOpen=true;gearFrom=""}gearView=grG[g]?"group":"groups";renderGear()}
 
+/* 👑 Administracja → Grupy: wszystkie grupy (👑 tymczasowo widzi też ukryte — KROK 70) i prośby o większy limit */
+async function grKLoad(){
+  const [a,b,c]=await Promise.all([
+    sb.from("groups").select("id,owner,name,icon,descr,area,color,visibility,join_mode,member_limit,code,created_at,archived_at").order("created_at",{ascending:false}).limit(500),
+    sb.from("group_limit_requests").select("id,group_id,asked_by,from_limit,to_limit,status,created_at").eq("status","pending").order("created_at").limit(100),
+    sb.from("group_members").select("group_id,user_id,role,status,invited_by,created_at,joined_at").limit(10000)]);
+  if(a.error||b.error||c.error){grK=null;return}
+  const cnt={},mem={};(c.data||[]).forEach(x=>{(mem[x.group_id]=mem[x.group_id]||[]).push(x);if(x.status==="active")cnt[x.group_id]=(cnt[x.group_id]||0)+1});
+  (a.data||[]).forEach(x=>{grG[x.id]=Object.assign({},grG[x.id]||{},x,{members:cnt[x.id]||0});if(!grMy(x.id))grMem[x.id]=mem[x.id]||[]});
+  grK={groups:a.data||[],reqs:(b.data||[]).filter(r=>grG[r.group_id])};
+}
+const grKReqN=()=>isKingReal()&&grK?grK.reqs.length:0;
+function grLimRow(r){const x=grG[r.group_id];
+  return '<div class="grir wrap">'+grIco(x)+'<span class="grt" data-gx="open" data-gid="'+esc(x.id)+'"><b>'+esc(x.name)+'</b><small>'+esc(nicks[r.asked_by]||"właściciel")+' prosi: '+r.from_limit+' → '+r.to_limit+' · członków '+grCnt(x.id)+(grAct(x.id).some(m=>m.role==="mod")?' · jest moderator':'')+'</small></span>'
+   +'<span class="grb"><button type="button" class="b small w" data-gx="lno" data-rq="'+esc(r.id)+'" data-gid="'+esc(x.id)+'">Odrzuć</button><button type="button" class="b small" data-gx="lok" data-rq="'+esc(r.id)+'" data-gid="'+esc(x.id)+'">Zatwierdź</button></span></div>'}
+function grAdmRow(){if(!isKingReal())return "";grFresh();const n=grKReqN();
+  return gRow("#0a84ff","users","Grupy",grK?"Wszystkie: "+grK.groups.filter(x=>!x.archived_at).length+(n?" · prośby o limit":""):"Wszystkie grupy i prośby o limit",n?'<span class="ios-bdg">'+n+'</span>':'','data-gx="adm"')}
+function grAdmHtml(){
+  let h='<button class="sback" data-c="backadm">‹ Administracja</button><div class="sname" style="margin-top:26px">👥 Grupy 👑</div>';
+  if(!grK)return h+'<p class="note grwait">'+(grLoading?"Wczytuję…":"Nie udało się wczytać grup (KROK 70?).")+'</p>';
+  if(grK.reqs.length)h+='<div class="ios"><div class="ios-gh">Prośby o większy limit</div><div class="grbox">'+grK.reqs.map(grLimRow).join("")+'</div></div>';
+  const L=grK.groups,act=L.filter(x=>!x.archived_at),arch=L.filter(x=>x.archived_at),row=x=>gRow(grCol(x),grIc(x),esc(x.name),
+     [esc(nicks[x.owner]||"bez właściciela"),grOsob(grCnt(x.id))+" / "+x.member_limit,x.visibility==="hidden"?"ukryta":"jawna",x.archived_at?"archiwum":""].filter(Boolean).join(" · "),"",'data-gx="open" data-gid="'+esc(x.id)+'"');
+  h+=gGrp("Wszystkie grupy ("+act.length+")",act.map(row))+(act.length?'':'<p class="note grwait">Nikt jeszcze nie założył grupy.</p>')+gGrp("Archiwum ("+arch.length+")",arch.map(row));
+  return h+'<p class="note" style="margin:10px 14px 0;font-size:13px;text-align:left">👑 Na czas rozwijania widzisz wszystkie grupy, także ukryte, i ich skład (wyłączenie — koniec KROKU 70).</p>';
+}
+
 /* 🔔 sekcja „Grupy”: zaproszenia do mnie i prośby do grup, w których jestem właścicielem / moderatorem (do załatwienia — liczą się do numerka) */
-const grBellN=()=>session&&grOk&&grFor===uid?grMine.filter(m=>m.status==="invited").length+grReqs.length:0;
+const grBellN=()=>session&&grOk&&grFor===uid?grMine.filter(m=>m.status==="invited").length+grReqs.length+grKReqN():0;
 function grBellHtml(){const n=grBellN();if(!n)return "";
-  return bsSec("grp","👥 Grupy",n,n,grMine.filter(m=>m.status==="invited").sort(grByName).map(grInvRow).join("")+grReqs.map(r=>grReqRow(r,true)).join("")
+  return bsSec("grp","👥 Grupy",n,n,grMine.filter(m=>m.status==="invited").sort(grByName).map(grInvRow).join("")+grReqs.map(r=>grReqRow(r,true)).join("")+(grKReqN()?grK.reqs.map(grLimRow).join(""):"")
     +'<div class="bsempty"><button type="button" class="lnk" data-gx="hub">Wszystkie grupy: ⚙️ → Grupy ›</button></div>')}
 $("bellsheet").addEventListener("click",async e=>{
   const b=e.target.closest("[data-gx]");if(!b||b.disabled||!session)return;
@@ -262,6 +314,7 @@ $("bellsheet").addEventListener("click",async e=>{
   else if(a==="dec"){if(await askOk("Odrzucić zaproszenie do „"+x.name+"”?","Odrzuć"))await grDo("group_answer",{g,accept:false},"Odrzucono zaproszenie.",b)}
   else if(a==="rok")await grDo("group_decide",{g,u,accept:true},"👥 "+nm+" — przyjęto do „"+x.name+"”",b);
   else if(a==="rno")await grDo("group_decide",{g,u,accept:false},"Odrzucono prośbę: "+nm,b);
+  else if(a==="lok"||a==="lno")await grDo("group_limit_decide",{req:b.dataset.rq,approve:a==="lok"},a==="lok"?"✅ „"+x.name+"”: limit zwiększony.":"Odrzucono prośbę o limit „"+x.name+"”.",b);
 });
 
 /* 🖱 akcje w ⚙️ (atrybut data-gx — nie koliduje z data-c obsługiwanym w js/05) */
@@ -273,8 +326,10 @@ async function grDo(fn,args,okMsg,btn){
 $("gearpanel").addEventListener("click",async e=>{
   const b=e.target.closest("[data-gx]");if(!b||b.disabled||!session)return;
   const a=b.dataset.gx,g=b.dataset.gid||grId,u=b.dataset.gu||"",nm=nicks[u]||"tę osobę",x=grG[g];
-  if(a==="hub"){if(gearView==="nick")gearFrom="nick";grOpenU="";gearView="groups";renderGear();grReload();return}
-  if(a==="open"){grGo(g);return}
+  if(a==="adm"){grFromAdm=false;gearView="gradm";renderGear();grReload();return}
+  if(a==="addto"){openGrPick(u);return}
+  if(a==="hub"){grFromAdm=false;if(gearView==="nick")gearFrom="nick";grOpenU="";gearView="groups";renderGear();grReload();return}
+  if(a==="open"){grFromAdm=gearView==="gradm"||(gearView==="group"&&grFromAdm);grGo(g);return}
   if(a==="new"){openGrForm("");return}
   if(a==="code"){openGrCode("");return}
   if(a==="pl2gr"){const l=plById(plId);if(!l)return;openGrForm("",{name:l.name,color:l.color,ids:plIds(l.id)});return}
@@ -289,6 +344,7 @@ $("gearpanel").addEventListener("click",async e=>{
   if(a==="dec"){if(!await askOk("Odrzucić zaproszenie do „"+x.name+"”?","Odrzuć"))return;await grDo("group_answer",{g,accept:false},"Odrzucono zaproszenie.",b);if(gearView==="group"&&!grSt(g)){gearView="groups";renderGear()}return}
   if(a==="rok"){await grDo("group_decide",{g,u,accept:true},"👥 "+nm+" — przyjęto do „"+x.name+"”",b);return}
   if(a==="rno"){await grDo("group_decide",{g,u,accept:false},"Odrzucono prośbę: "+nm,b);return}
+  if(a==="lok"||a==="lno"){await grDo("group_limit_decide",{req:b.dataset.rq,approve:a==="lok"},a==="lok"?"✅ „"+x.name+"”: limit zwiększony.":"Odrzucono prośbę o limit „"+x.name+"”.",b);return}
   if(a==="join"){await grDo("group_join",{g},d=>d==="active"?"👥 Dołączono do grupy „"+x.name+"”":"🙋 Wysłano prośbę — właściciel albo moderator zdecyduje.",b);if(gearView==="groups")grSearch(grQ);return}
   if(a==="role"){const m=(grMem[g]||[]).find(y=>y.user_id===u);if(!m)return;const to=m.role==="mod"?"member":"mod";
     await grDo("group_set_role",{g,u,p_role:to},to==="mod"?"🛡 "+nm+" — moderator grupy":nm+" — już nie moderator",b);return}
@@ -303,7 +359,7 @@ $("gearpanel").addEventListener("click",async e=>{
     if(!await askOk(st==="requested"?"Wycofać prośbę o dołączenie do „"+x.name+"”?":own?"Zamknąć grupę „"+x.name+"”?\n\nJesteś w niej sam(a) — grupa trafi do archiwum.":"Wyjść z grupy „"+x.name+"”?",st==="requested"?"Wycofaj":own?"Zamknij":"Wyjdź",1))return;
     if(await grDo("group_leave",{g},st==="requested"?"Wycofano prośbę.":own?"Grupa zamknięta.":"Wyszedłeś(-aś) z grupy „"+x.name+"”.",b)){gearView="groups";grFind=null;renderGear()}return}
   if(a==="del"){if(!await askOk("Usunąć grupę „"+x.name+"”?\n\nZnikną członkostwa i zaproszenia. Tego nie da się cofnąć.","Usuń grupę",1))return;
-    if(await grDo("group_delete",{g},"Usunięto grupę „"+x.name+"”.",b)){delete grG[g];gearView="groups";grFind=null;renderGear()}return}
+    if(await grDo("group_delete",{g},"Usunięto grupę „"+x.name+"”.",b)){delete grG[g];gearView=grFromAdm&&isKingReal()?"gradm":"groups";grFind=null;renderGear()}return}
 });
 $("gearpanel").addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.dataset&&e.target.dataset.gx==="edit"){e.preventDefault();openGrForm(grId)}});
 $("gearpanel").addEventListener("input",e=>{if(e.target.id!=="grq")return;grQ=e.target.value;clearTimeout(grFindT);grFindT=setTimeout(()=>grSearch(grQ),300)});

@@ -995,3 +995,4 @@ button.b.bad{background:var(--bad);color:#fff}
 .gricb{width:42px;height:42px;border-radius:12px;border:0;background:var(--fill);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}.gricb .ui-i{width:22px;height:22px}.gricb.on{color:#fff}
 .grbox .b.w{background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
 .grir .grt{text-align:left}.grir .grt b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.grir.wrap{flex-wrap:wrap}.grir.wrap .grt{flex:1 1 calc(100% - 44px)}.grir.wrap .grb{width:100%;justify-content:flex-end}

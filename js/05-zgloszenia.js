@@ -262,7 +262,7 @@ function renderGear(){
   else if(gearView==="testdel"&&isSuper(uid))body=testDelHtml();
   else if(gearView==="favs"&&session)body=favsHtml();
   else if(gearView==="plist"&&session)body=plistHtml();
-  else if((gearView==="groups"||gearView==="group")&&session&&typeof grHtml==="function")body=grHtml();   // 👥 grupy (KROK 70, js/17)
+  else if((gearView==="groups"||gearView==="group"||gearView==="gradm")&&session&&typeof grHtml==="function")body=grHtml();   // 👥 grupy (KROK 70, js/17)
   else if(gearView==="tg"&&tgOn())body=tgHtml();
   else if(gearView==="user"&&session&&nicks[userId])body=userHtml();
   else if(gearView==="teczka"&&session&&isKingReal()&&nicks[tkId])body=teczkaHtml();

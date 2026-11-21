@@ -58,6 +58,7 @@ function adminHtml(){
       fbOk?gRow("#bf5af2","msg","Zgłoszenia","Uwagi i błędy od użytkowników",fbN?'<span class="ios-bdg">'+fbN+'</span>':'','data-c="fbadmin"'):'',
       gRow("#30b0c7","users","Użytkownicy",isKingReal()?"Szukaj, filtruj, otwórz teczkę":"Szukaj, filtruj, karta osoby",'<span class="ios-v">'+Object.keys(nicks).length+'</span>','data-c="users"'),
       gRow("#5856d6","lock","Prywatność","Kto co widzi, ile osób co włączyło","",'data-c="privadm"'),
+      typeof grAdmRow==="function"?grAdmRow():'',   // 👥 👑 wszystkie grupy i prośby o limit (KROK 70)
       gRow("#34c759","shield","Uprawnienia","Administratorzy"+(testerOk?" i testerzy":""),'<span class="ios-v">'+adminIds.filter(id=>nicks[id]).length+(testerOk?' / '+testerIds.size:'')+'</span>','data-c="perms"'),
       testerOk&&isSuper(uid)?gRow("#5e5ce6","flask","Funkcje testowe","Kto widzi nowe funkcje: nikt, testerzy, wszyscy","",'data-c="flags"'):'',
       genderOk?gRow("#ff2d55","palette","Kolory nicków","","",'data-c="colors"'):'',
@@ -679,7 +680,8 @@ function userHtml(){
    +(visOk?'<button class="b sbtn" data-a="invite" data-id="'+esc(userId)+'">🚴 Zaproś na rower</button>':'')
    +gGrp("Ta osoba",[session?gRow("#0a84ff","cal","Pokaż zaproszenia z "+esc(nicks[userId]||"tą osobą"),"Filtr na liście zaproszeń","",'data-a="fltuser" data-id="'+esc(userId)+'"'):'',
       gRow("#ffcc00",fav?"starf":"star",fav?"W ulubionych":"Dodaj do ulubionych",fav?"Dotknij, aby usunąć":"Zawsze na górze list",fav?'<span class="ios-v ok">'+uiIcon("check")+'</span>':'','data-a="fav" data-id="'+esc(userId)+'"'),
-      plOk&&userId!==uid?(()=>{const L=plOfUser(userId);return gRow("#5ac8fa","list","Dodaj do listy…",L.length?"Na listach: "+esc(L.map(l=>l.name).join(", ")):"Np. MTB, Gravel, Wieczorynki",L.length?'<span class="ios-v">'+L.length+'</span>':'','data-a="pladd" data-id="'+esc(userId)+'"')})():''])
+      plOk&&userId!==uid?(()=>{const L=plOfUser(userId);return gRow("#5ac8fa","list","Dodaj do listy…",L.length?"Na listach: "+esc(L.map(l=>l.name).join(", ")):"Np. MTB, Gravel, Wieczorynki",L.length?'<span class="ios-v">'+L.length+'</span>':'','data-a="pladd" data-id="'+esc(userId)+'"')})():'',
+      typeof grAddRow==="function"?grAddRow(userId):''])
    +(isAdmin?gGrp("Administrator",[isKingReal()?gRow("#5e5ce6","folder","Teczka","Wszystko o tej osobie w jednym miejscu","",'data-a="tk" data-id="'+esc(userId)+'"'):'',fbOk?gRow("#bf5af2","msg","Napisz wiadomość","Trafi do jej skrzynki zgłoszeń","",'data-a="fbmsg" data-id="'+esc(userId)+'"'):'',
       !isSuper(userId)?gRow("#ff9f0a","pencil","Zmień nick","","",'data-a="unick" data-id="'+esc(userId)+'"'):'']):'')
    +(isAdmin?admInfoHtml(userId):'')
