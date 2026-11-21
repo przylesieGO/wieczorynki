@@ -8,7 +8,18 @@ let grOk=null,grMsg="",grFor="",grLoading=false,grMine=[],grG={},grMem={},grLim=
 const GR_ICONS=["users","bike","mtb","gravel","road","run","walk","tree","flag","trophy","medal","heart","coffee","sun","moon","city"];
 const GR_ROLE={owner:"właściciel",mod:"moderator",member:""};
 const grOn=()=>!!session&&feat("grupy");
-const grCol=x=>PL_COL[x&&x.color]||PL_COL.blue;
+// 🎨 kolor grupy: z paletki (nazwa) albo własny #rrggbb (KROK 72)
+const GR_HEX=/^#[0-9a-f]{6}$/;
+const grCol=x=>x&&GR_HEX.test(x.color)?x.color:PL_COL[x&&x.color]||PL_COL.blue;
+// tło pod biały napis: kolor grupy przyciemniony, aż kontrast z bielą ≥ 4,5 : 1 (żółte, zielone, turkusowe stają się czytelne)
+function grInk(c){
+  let [r,g,b]=[1,3,5].map(i=>parseInt(c.slice(i,i+2),16));
+  const L=()=>{const f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)};return .2126*f(r)+.7152*f(g)+.0722*f(b)};
+  for(let i=0;i<14&&1.05/(L()+.05)<4.5;i++){r=Math.round(r*.88);g=Math.round(g*.88);b=Math.round(b*.88)}
+  return "#"+[r,g,b].map(v=>v.toString(16).padStart(2,"0")).join("");
+}
+// nowa grupa: pierwszy kolor z paletki, którego nie mam jeszcze w swoich grupach
+const grFreeCol=()=>{const U=new Set(grMine.filter(m=>m.status==="active"&&grG[m.group_id]).map(m=>grG[m.group_id].color));return Object.keys(PL_COL).find(c=>!U.has(c))||"blue"};
 const grIc=x=>GR_ICONS.includes(x&&x.icon)?x.icon:"users";
 const grIco=(x,big)=>'<span class="grico'+(big?' big':'')+'" style="background:'+grCol(x)+'" aria-hidden="true">'+uiIcon(grIc(x))+'</span>';
 const grMy=g=>grMine.find(m=>m.group_id===g)||null;
@@ -21,7 +32,7 @@ const grUsed=g=>(grMem[g]||[]).filter(x=>x.status==="active"||x.status==="invite
 const grCnt=g=>grRole(g)?grAct(g).length:(grG[g]&&grG[g].members!=null?+grG[g].members:0);
 const grOsob=n=>n+" "+plf(n,["osoba","osoby","osób"]);
 const grLink=x=>location.origin+location.pathname+"#grupa="+encodeURIComponent(x.code||"");
-const grErr=e=>{const m=e&&e.message||"błąd";return /relation|schema cache|does not exist|Could not find/i.test(m)?"Grupy wymagają KROKU 70 w bazie.":m};
+const grErr=e=>{const m=e&&e.message||"błąd";if(/groups_color_check/.test(m))return "Własny kolor grupy wymaga KROKU 72 w bazie.";return /relation|schema cache|does not exist|Could not find/i.test(m)?"Grupy wymagają KROKU 70 w bazie.":m};
 const grByName=(a,b)=>grName(a.group_id).localeCompare(grName(b.group_id),"pl");
 
 /* 📥 dane: moje członkostwa (też zaproszenia i prośby) + grupy + skład + prośby o limit; wczytywane przy pierwszym pokazaniu */
@@ -177,7 +188,7 @@ function openGrForm(id,pre){
   if(!session)return;if(needProfile()){askNick();return}
   const x=id?grG[id]:null;pre=pre||{};
   Object.assign(gf,{mode:"form",id:id||"",busy:false,ids:pre.ids||[],name:x?x.name:pre.name||"",icon:x?grIc(x):"users",descr:x?x.descr||"":"",area:x?x.area||"":"",
-    color:x?x.color:pre.color||"blue",vis:x?x.visibility:"public",join:x?x.join_mode:"request"});
+    color:x?x.color:pre.color||grFreeCol(),vis:x?x.visibility:"public",join:x?x.join_mode:"request"});
   renderGrSheet(true);
 }
 function openGrCode(code){
@@ -219,8 +230,12 @@ function renderGrSheet(first){
   }else{tt=gf.id?"Edytuj grupę":"Nowa grupa";const n=gf.ids.length;
     body='<div class="bslist grform">'+(n?'<div class="note" style="margin-top:6px;text-align:center;font-size:14px">Po założeniu zaprosisz '+grOsob(n).replace("osoba","osobę")+' z listy — członkiem zostanie ten, kto przyjmie zaproszenie.</div>':'')
      +'<label for="grname">Nazwa</label><input class="bsq" id="grname" type="text" maxlength="40" placeholder="Np. MTB Przylesie" autocomplete="off" value="'+esc(gf.name)+'">'
-     +'<label>Ikona i kolor</label><div class="gricons" role="radiogroup" aria-label="Ikona grupy">'+GR_ICONS.map(k=>'<button type="button" class="gricb'+(gf.icon===k?' on':'')+'" data-gic="'+k+'"'+(gf.icon===k?' style="background:'+(PL_COL[gf.color]||PL_COL.blue)+'"':'')+' aria-label="Ikona '+k+'">'+uiIcon(k)+'</button>').join("")+'</div>'
-     +'<div class="plcols" role="radiogroup" aria-label="Kolor grupy">'+Object.keys(PL_COL).map(c=>'<button type="button" class="plcol'+(gf.color===c?' on':'')+'" data-gcl="'+c+'" style="background:'+PL_COL[c]+'" aria-label="Kolor '+c+'"></button>').join("")+'</div>'
+     +'<label>Ikona i kolor</label><div class="gricons" role="radiogroup" aria-label="Ikona grupy">'+GR_ICONS.map(k=>'<button type="button" class="gricb'+(gf.icon===k?' on':'')+'" data-gic="'+k+'"'+(gf.icon===k?' style="background:'+grCol(gf)+'"':'')+' aria-label="Ikona '+k+'">'+uiIcon(k)+'</button>').join("")+'</div>'
+     +'<div class="plcols" role="radiogroup" aria-label="Kolor grupy">'+Object.keys(PL_COL).map(c=>'<button type="button" class="plcol'+(gf.color===c?' on':'')+'" data-gcl="'+c+'" style="background:'+PL_COL[c]+'" aria-label="Kolor '+c+'"></button>').join("")
+     // 🎨 własny kolor (KROK 72): kółko z tęczą (albo wybranym kolorem) otwiera systemowy wybierak; pipeta — gdy przeglądarka ją ma
+     +'<label class="plcol plcust'+(GR_HEX.test(gf.color)?' on':'')+'" id="grcust" title="Własny kolor"'+(GR_HEX.test(gf.color)?' style="background:'+gf.color+'"':'')+'><input type="color" id="grcolin" value="'+grCol(gf)+'" aria-label="Własny kolor grupy"></label></div>'
+     +'<div class="grcolx">'+(GR_HEX.test(gf.color)?'<span class="note">Własny kolor '+gf.color+'</span>':'<span class="note">Ostatnie kółko — własny kolor</span>')
+     +('EyeDropper' in window?'<button type="button" class="lnk" data-gk="eyedrop">'+uiIcon("pipette")+' Pipeta</button>':'')+'</div>'
      +'<label for="grdescr">Opis <span class="pe-opt">(opcjonalnie)</span></label><textarea class="bsmsg" id="grdescr" maxlength="500" rows="3" placeholder="Dla kogo jest grupa, jak często jeździcie…">'+esc(gf.descr)+'</textarea>'
      +'<label for="grarea">Okolica <span class="pe-opt">(opcjonalnie)</span></label><input class="bsq" id="grarea" type="text" maxlength="60" placeholder="Np. Przylesie, Zalesie" autocomplete="off" value="'+esc(gf.area)+'">'
      +'<label>Kto znajdzie grupę?</label>'+grSeg("gvis",gf.vis,[["public","Jawna"],["hidden","Ukryta"]])
@@ -241,7 +256,10 @@ async function grCheckCode(){
   try{const r=await sb.rpc("group_by_code",{c});if(r.error)throw r.error;gf.busy=false;gf.prev=r.data||null;const i=$("grcode");if(i)i.value=c;gf.code=c;renderGrSheet();if(!gf.prev)grInfo("Kod nie pasuje do żadnej grupy.")}
   catch(err){gf.busy=false;renderGrSheet();grInfo(grErr(err))}
 }
-grSheet().addEventListener("input",e=>{if(e.target.id==="grcode"&&gf.prev){gf.prev=null;gf.code=e.target.value;renderGrSheet();const i=$("grcode");if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}}else grInfo("")});
+// 🎨 własny kolor: podgląd na żywo bez przerysowania (wybierak zostaje otwarty), zapis w formularzu po zamknięciu wybieraka
+const grColLive=c=>{gf.color=c;const k=$("grcust");if(k){k.style.background=c;k.classList.add("on")}grSheet().querySelectorAll(".plcol.on[data-gcl]").forEach(b=>b.classList.remove("on"));const i=grSheet().querySelector(".gricb.on");if(i)i.style.background=c};
+grSheet().addEventListener("change",e=>{if(e.target.id==="grcolin"){const c=String(e.target.value||"").toLowerCase();if(GR_HEX.test(c)){gf.color=c;renderGrSheet()}}});
+grSheet().addEventListener("input",e=>{if(e.target.id==="grcolin"){const c=String(e.target.value||"").toLowerCase();if(GR_HEX.test(c))grColLive(c);return}if(e.target.id==="grcode"&&gf.prev){gf.prev=null;gf.code=e.target.value;renderGrSheet();const i=$("grcode");if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}}else grInfo("")});
 grSheet().addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.target.id==="grcode"||e.target.id==="grname"||e.target.id==="grarea")){e.preventDefault();const b=grSheet().querySelector(gf.mode==="code"&&!gf.prev?'[data-gk="check"]':'[data-gk="save"],[data-gk="joincode"]');if(b&&!b.disabled)b.click()}});
 grSheet().addEventListener("click",async e=>{
   const p=grSheet();if(e.target===p){closeGr();return}
@@ -250,6 +268,7 @@ grSheet().addEventListener("click",async e=>{
   const vs=e.target.closest("[data-gvis]");if(vs){gf.vis=vs.dataset.gvis;renderGrSheet();return}
   const jm=e.target.closest("[data-gjm]");if(jm){gf.join=jm.dataset.gjm;renderGrSheet();return}
   const k=e.target.closest("[data-gk]");if(!k||k.disabled)return;const a=k.dataset.gk;
+  if(a==="eyedrop"){try{const r=await new EyeDropper().open(),c=String(r&&r.sRGBHex||"").toLowerCase();if(GR_HEX.test(c)){gf.color=c;renderGrSheet()}}catch(err){}return}   // 🎨 pipeta (Chrome/Edge na komputerze)
   if(a==="close"){closeGr();return}
   if(a==="check"){await grCheckCode();return}
   if(a==="pickg"){const g=k.dataset.gid;gf.busy=true;renderGrSheet();try{await grInvite(g,[gf.u])}catch(err){say(grErr(err))}gf.busy=false;if(gf.mode==="pick"&&!grSheet().classList.contains("hide"))renderGrSheet();return}
@@ -381,5 +400,7 @@ const grActIds=()=>grMine.filter(m=>m.status==="active").map(m=>m.group_id).sort
 const grIn=g=>!!g&&grMine.some(m=>m.group_id===g&&m.status==="active");
 function grForWant(){return grOk?grMine.filter(m=>m.status==="active"&&grG[m.group_id]&&!grG[m.group_id].archived_at).map(m=>grG[m.group_id]).sort((a,b)=>a.name.localeCompare(b.name,"pl")):[]}
 const grMemIds=g=>grAct(g).map(x=>x.user_id).filter(id=>id!==uid);
+// 🎨 etykieta wypełniona kolorem grupy (przyciemnionym pod biały napis) + biała ikona grupy; tło karty — odcień koloru grupy i pasek z lewej
 function wGrTag(w){const x=grG[w.group_id];
-  return '<span class="lockt grtag"><span class="grtc" style="color:'+(x?grCol(x):'var(--mut)')+'">'+uiIcon(x?grIc(x):"users")+'</span>'+esc(x?x.name:"grupa")+'</span>'}
+  return '<span class="lockt grtag" style="background:'+(x?grInk(grCol(x)):'#6e6e73')+'">'+uiIcon(x?grIc(x):"users")+'<span>'+esc(x?x.name:"grupa")+'</span></span>'}
+function wGrCls(w){const x=grG[w.group_id];return ' wgrp" style="--gc:'+(x?grCol(x):'#8e8e93')}

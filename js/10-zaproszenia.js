@@ -497,7 +497,7 @@ function wantHtml(w){
     // admin widzi cudze prywatne zaproszenie tylko podglądowo (bez „Jadę!”), chyba że jest zaproszony
     const peek=priv&&!mine&&!wInvMe(w)&&!joined;
     const open=isOpen(w)&&!wLive(w),myp=(prefs[w.id]||{})[uid],dec=(decls[w.id]||[]).includes(uid),live=wLive(w);
-    return '<div class="want'+(mine?' mine':'')+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'">'+(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+'<div class="wtop">'+nk(w.user_id)+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="lockt">do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?(wGr(w)?grTagHtml(w)+(peek?'<span class="lockt">👁 podgląd admina</span>':''):'<span class="lockt">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>'):'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
+    return '<div class="want'+(mine?' mine':'')+(isTest(w)?' test':'')+grCls(w)+'" data-wid="'+esc(w.id)+'">'+(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+'<div class="wtop">'+nk(w.user_id)+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="lockt">do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?(wGr(w)?grTagHtml(w)+(peek?'<span class="lockt">👁 podgląd admina</span>':''):'<span class="lockt">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>'):'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
      +(live?liveHtml(w):'')
      +paceHtml(w)+bikeHtml(w)+(live?'':durLineHtml(w))+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+(live?'':wxHtml(w))+routeBoxHtml(w)
      +invitedHtml(w)
@@ -1101,13 +1101,13 @@ function renderMyWant(){
     const wd=d.toLocaleDateString("pl-PL",{weekday:"long"}),n=dayDiff(d);
     const priv=isPriv(w),ni=(invs[w.id]||[]).length;
     const live=wLive(w);
-    if(live)return '<div class="mywant live'+(isTest(w)?' test':'')+'" data-i="'+i+'" data-wid="'+esc(w.id)+'"><div class="myh">🙋 Ty zapraszasz '+trwaTag()+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+(mine.length>1?' · '+(i+1)+' z '+mine.length:'')+'</div>'
+    if(live)return '<div class="mywant live'+(isTest(w)?' test':'')+grCls(w)+'" data-i="'+i+'" data-wid="'+esc(w.id)+'"><div class="myh">🙋 Ty zapraszasz '+trwaTag()+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+(mine.length>1?' · '+(i+1)+' z '+mine.length:'')+'</div>'
      +wTitleHtml(w)+'<div class="myt">'+esc(relDay(new Date(w.starts_at))+" "+hhmm(new Date(w.starts_at)))+'</div>'+liveHtml(w)
      +paceHtml(w)+bikeHtml(w)+placeHtml(w)+(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')
      +'<div class="mym">'+joinedHtml("my"+w.id,j,'Jedziesz sam(a).')+'</div>'
      +'<div class="linfo">🔒 Jazda trwa — nie można już edytować, dołączać ani doprosić. Po zakończeniu trafi do archiwum.</div>'
      +'<div class="acts"><button class="b g join" data-my="share" data-id="'+esc(w.id)+'">Udostępnij</button><button class="ib del" data-my="del" data-id="'+esc(w.id)+'" title="Usuń zaproszenie" aria-label="Usuń zaproszenie">'+ICON.del+'</button></div></div>';
-    return '<div class="mywant'+(isTest(w)?' test':'')+'" data-i="'+i+'" data-wid="'+esc(w.id)+'"><div class="myh">🙋 Ty zapraszasz'+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+(mine.length>1?' · '+(i+1)+' z '+mine.length:'')+(priv?(wGr(w)?grTagHtml(w):'<span class="lockt">🔒 dla '+ni+' '+osob(ni)+'</span>'):'')+'</div>'
+    return '<div class="mywant'+(isTest(w)?' test':'')+grCls(w)+'" data-i="'+i+'" data-wid="'+esc(w.id)+'"><div class="myh">🙋 Ty zapraszasz'+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+(mine.length>1?' · '+(i+1)+' z '+mine.length:'')+(priv?(wGr(w)?grTagHtml(w):'<span class="lockt">🔒 dla '+ni+' '+osob(ni)+'</span>'):'')+'</div>'
      +wTitleHtml(w)+'<div class="myt'+(isOpen(w)?' rng':'')+'">'+esc(n>=0&&n<=2?["Dziś","Jutro","Pojutrze"][n]+" "+wTime(w):wd.charAt(0).toUpperCase()+wd.slice(1)+" "+wTime(w))+(n>=0&&n<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
      +(isOpen(w)?'<div class="mym">🕖 Godzina do ustalenia'+(new Date(w.range_from).getTime()>Date.now()+36e5?' — ustali się sama '+esc(hhmm(new Date(new Date(w.range_from).getTime()-36e5)))+', jeśli jej nie wybierzesz':'')+'</div>':fromRange(w)?'<div class="mym">✅ Godzina ustalona</div>':'')
      +paceHtml(w)+bikeHtml(w)+durLineHtml(w)+placeHtml(w)+(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')+wxHtml(w)+routeBoxHtml(w)
@@ -1202,6 +1202,8 @@ let wGrOk=false;
 const wGr=w=>wGrOk&&!!w&&w.group_id||"";
 const grTagHtml=w=>wGr(w)&&typeof wGrTag==="function"?wGrTag(w):"";
 const grNm=g=>typeof grName==="function"?grName(g):"grupa";
+// 🎨 karta w kolorze grupy: dopisek do atrybutu class (kończy się przed zamykającym cudzysłowem) — „ wgrp\" style=\"--gc:#…”
+const grCls=w=>wGr(w)&&typeof wGrCls==="function"?wGrCls(w):"";
 // grupy do wyboru w „Kto zobaczy?” (aktywne członkostwa, nie w archiwum) — tylko gdy baza ma KROK 71
 const wGrList=()=>wGrOk&&typeof grForWant==="function"?grForWant():[];
 const invIds=w=>(invs[w.id]||[]).map(x=>x.u);

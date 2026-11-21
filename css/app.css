@@ -997,7 +997,19 @@ button.b.bad{background:var(--bad);color:#fff}
 .grir .grt{text-align:left}.grir .grt b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .grir.wrap{flex-wrap:wrap}.grir.wrap .grt{flex:1 1 calc(100% - 44px)}.grir.wrap .grb{width:100%;justify-content:flex-end}
 /* 👥 zaproszenie dla grupy (KROK 71): plakietka „ikona + nazwa” (jak .lockt; ikona w kolorze grupy) i wiersz grupy w „Kto zobaczy?” */
-.grtag{display:inline-flex;align-items:center;gap:4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}.grtag .grtc{display:inline-flex}.grtag .ui-i{width:13px;height:13px}
-.nit .grtag,.ptag+.grtag{font-size:11.5px}
+.grtag{display:inline-flex;align-items:center;gap:5px;max-width:100%;vertical-align:middle;color:#fff!important;font-size:13px;font-weight:700;padding:2px 10px 2px 8px;box-shadow:0 1px 2px rgba(0,0,0,.15)}.grtag>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.grtag .ui-i{width:14px;height:14px;color:#fff}
+.nit .grtag{font-size:12px}.popbox .grtag{font-size:13px;margin:6px 0 0}
+/* 🎨 zaproszenie dla grupy: odcień koloru grupy w tle i pasek z lewej (--gc ustawia aplikacja; brak grupy w pamięci = szary) */
+.want.wgrp,.mywant.wgrp,.nit.wgrp{--gcb:color-mix(in srgb,var(--gc,#8e8e93) 9%,var(--card));background:var(--gcb);box-shadow:inset 4px 0 0 var(--gc,#8e8e93)}
+html[data-theme=dark] .want.wgrp,html[data-theme=dark] .mywant.wgrp,html[data-theme=dark] .nit.wgrp{--gcb:color-mix(in srgb,var(--gc,#8e8e93) 17%,var(--card))}
+.want.wgrp:not(.test):not(.mine){border-color:color-mix(in srgb,var(--gc,#8e8e93) 40%,var(--line))}
+.nit.wgrp.new{background:linear-gradient(90deg,var(--gcb),var(--acc2) 70%)}
+.want.wgrp.test,.mywant.wgrp.test,.nit.wgrp.test{background:repeating-linear-gradient(135deg,transparent 0 10px,rgba(229,72,77,.05) 10px 20px),var(--gcb)}
+.popbox.wgrp{box-shadow:inset 0 6px 0 var(--gc,#8e8e93),0 20px 60px rgba(0,0,0,.35);background:color-mix(in srgb,var(--gc,#8e8e93) 7%,var(--card))}
+html[data-theme=dark] .popbox.wgrp{background:color-mix(in srgb,var(--gc,#8e8e93) 14%,var(--card))}
+/* 🎨 własny kolor w formularzu grupy (KROK 72): kółko z tęczą, wybrany — w swoim kolorze; ukryty systemowy wybierak w środku */
+.plcust{position:relative;overflow:hidden;display:inline-block;background:conic-gradient(#ff3b30,#ff9f0a,#ffd60a,#30d158,#40c8e0,#0a84ff,#bf5af2,#ff3b30)}
+.plcust input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}
+.grcolx{display:flex;align-items:center;justify-content:center;gap:14px;margin:2px 0 6px;font-size:13px}.grcolx .lnk{display:inline-flex;align-items:center;gap:5px;font-size:13px}
 .prow.wgr .pnm{display:flex;align-items:center;gap:8px}.prow.wgr .grico{width:26px;height:26px;border-radius:7px}.prow.wgr .grico .ui-i{width:15px;height:15px}
 .who .wic .grico{width:30px;height:30px}
