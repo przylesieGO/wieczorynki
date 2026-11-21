@@ -55,6 +55,9 @@ function adminHtml(){
   return '<button class="sback" data-c="back">‹ Ustawienia</button>'
    +'<div class="sname" style="margin-top:26px">🛡️ Administracja</div>'
    +'<div class="stats admbar">'+t(onl,"teraz online","onlineadm")+(fbOk?t(fbN,fbN===1?"nowe zgłoszenie":"nowych zgłoszeń","fbadmin"):'')+t(today,"zaproszeń dziś","wantstoday")+'</div>'
+   // 🧪 Generator zaproszeń — na samej górze (decyzja 2026-11-21 20:30): Ekipa demo, generator, grupy demo, sprzątanie (js/18)
+   +(isSuper(uid)?gGrp("Generator zaproszeń",[typeof demoAdmRow==="function"&&isKingReal()?demoAdmRow()
+      :testOk?gRow("#ff3b30","trash","Usuń testowe zaproszenia","Tylko oznaczone 🧪 TEST — prawdziwe zostają","",'data-c="testdel"'):'']):'')
    +(evs.some(x=>x.delete_req_at)?gGrp("Do zrobienia",[gRow("#ff3b30","trash","Prośby o usunięcie imprez","Autorzy chcą usunąć swoje imprezy",'<span class="ios-bdg">'+evs.filter(x=>x.delete_req_at).length+'</span>','data-c="evdelreq"')]):'')
    +(canStealth()?gGrp("Moja widoczność",[iosIt("#636366","eye","Widoczny online",hideOnline?"Wyłączony: nikt nie widzi Cię w „online”. Ty widzisz wszystkich.":"Inni widzą Cię jako online",iosSw(!hideOnline,"data-ho",hideOnline?"0":"1"))]):'')
    +gGrp("Narzędzia",[gRow("#0a84ff","chart","Statystyki","Aktywność, jazdy, logowania","",'data-c="stats"'),
@@ -68,9 +71,7 @@ function adminHtml(){
       gRow("#ff3b30","hand","Zakazane nicki","Słowa, których nie można użyć w nicku","",'data-c="nickbans"'),
       placeOk?gRow("#ff9f0a","pin","Miejsca zbiórki","",'<span class="ios-v">'+places.length+'</span>','data-c="places"'):''])
    +(isSuper(uid)?gGrp("Zaproszenia",[gRow("#30d158","eye","Wszystkie zaproszenia","Także prywatne i testowe",'<span class="ios-v">'+wantsAll.filter(w=>wantEnd(w).getTime()>Date.now()).length+'</span>','data-c="allw"'),
-      gRow("#8e8e93","archive","Archiwum zaproszeń","Zakończone jazdy","",'data-c="karch"'),
-      typeof demoAdmRow==="function"&&isKingReal()?demoAdmRow()   // 🧪 Ekipa demo + generator + sprzątanie (KROK 74, js/18)
-      :testOk?gRow("#ff3b30","trash","Usuń testowe zaproszenia","Tylko oznaczone 🧪 TEST — prawdziwe zostają","",'data-c="testdel"'):'']):'');
+      gRow("#8e8e93","archive","Archiwum zaproszeń","Zakończone jazdy","",'data-c="karch"')]):'');
 }
 // 🛡️ → Uprawnienia: administratorzy i testerzy
 function permsHtml(){
