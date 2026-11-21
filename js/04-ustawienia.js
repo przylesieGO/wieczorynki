@@ -876,7 +876,8 @@ function plistHtml(){
    +'<div class="smail">'+n+' '+plf(n,["osoba","osoby","osób"])+' · tylko Ty widzisz tę listę</div>'
    +gGrp("Lista",[gRow(plCol(l),"users","Dodaj lub usuń osoby","Wybierz z listy wszystkich","",'data-c="plpick"'),
       visOk&&n?gRow("#34c759","bike","Zaproś tę listę na rower","🔒 Prywatne zaproszenie dla "+n+" "+plf(n,["osoby","osób","osób"]),"",'data-c="plinv"'):'',
-      gRow("#8e8e93","pencil","Zmień nazwę lub kolor","Albo usuń listę","",'data-c="pledit"')])
+      gRow("#8e8e93","pencil","Zmień nazwę lub kolor","Albo usuń listę","",'data-c="pledit"'),
+      typeof grOn==="function"&&grOn()&&n?gRow("#0a84ff","users","Przekształć w grupę","Załóż grupę i zaproś te osoby — członkiem zostanie, kto przyjmie","",'data-gx="pl2gr"'):''])
    +'<div class="ios"><div class="ios-gh">Osoby na liście</div></div>'+pfBar("pl",n)
    +'<div class="sleft" data-pfl="pl">'+(n?ids.map(id=>'<div class="arow" data-pu="'+esc(id)+'">'+nk(id)+(onlineIds.includes(id)?'<span class="note">🟢 teraz</span>':'')
       +'<button type="button" class="plrm" data-c="plrm" data-u="'+esc(id)+'" aria-label="Usuń z listy" title="Usuń z listy">'+uiIcon("xcircle")+'</button></div>').join("")
@@ -987,7 +988,7 @@ $("plsheet").addEventListener("click",async e=>{
 document.addEventListener("click",e=>{
   const p=e.target.closest(".nk[data-u]");if(!p||!session||!favOk)return;
   const inPanel=!!p.closest("#gearpanel");
-  if(inPanel&&!["favs","plist","online","admin","perms","stats"].includes(gearView))return;
+  if(inPanel&&!["favs","plist","group","online","admin","perms","stats"].includes(gearView))return;
   if(inPanel&&gearView==="stats"&&isKingReal()){tkOpen(p.dataset.u,"stats");return}
   if(inPanel&&p.dataset.u===uid)return;
   userBack=inPanel?gearView:"";tkFrom=false;userId=p.dataset.u;gearOpen=true;gearView="user";renderGear();

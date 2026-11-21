@@ -974,3 +974,24 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 .secact{display:flex;justify-content:flex-end;padding:4px 0 2px}.secact .lnk{font-size:13px;font-weight:600;color:var(--acc)}
 .pfact .secbar.col+.secb{display:block}
 .plppl .pnm small{display:block;font-size:12.5px;color:var(--mut);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.plppl{margin-top:8px}
+/* 👥 Grupy (KROK 70, js/17) — klocki jak listy: wiersze ⚙️, okno .bsbox, paski .seg, kolory PL_COL */
+#grsheet{z-index:4200}
+.grico{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;color:#fff;flex:none}.grico .ui-i{width:18px;height:18px}
+.grico.big{width:58px;height:58px;border-radius:16px}.grico.big .ui-i{width:32px;height:32px}
+.grhead{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:22px;text-align:center}.grhead .smail{margin:0 0 6px}
+.grbox{background:var(--fill);border-radius:12px;padding:2px 12px}.grbox.grwait{padding:12px}.grbox .cfmb{margin-top:12px}
+.grir{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.grir:last-child{border-bottom:0}
+.grir .grt{flex:1;min-width:0;font-size:16px;cursor:pointer}.grir .grt small{display:block;font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grir .grb{display:flex;gap:6px;flex:none}.grir>.note{flex:none;font-size:13px}
+.grwait{text-align:center;margin:14px 0}
+.grseg{margin:16px 0 4px}
+.grm .arow{justify-content:flex-start}.grm .arow .note{margin-left:6px;font-size:13px}.grm .arow .plrm{margin-left:auto}.grm .plrm.on{color:var(--acc)}
+.grrole{color:var(--acc);font-weight:600}
+.gract{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;padding:8px 0 10px;border-bottom:1px solid var(--line)}
+button.b.bad{background:var(--bad);color:#fff}
+.grdesc{white-space:pre-line;font-size:16px;line-height:1.45;padding:10px 0 6px;text-align:left}.grarea{padding:0 0 10px;text-align:left;font-size:14px}.grarea .ui-i{width:15px;height:15px;vertical-align:-2px}
+.grform label{margin-top:14px}.grform .seg{margin-top:2px}.grfh{margin-top:6px;font-size:13px}
+.gricons{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:6px 0 2px}
+.gricb{width:42px;height:42px;border-radius:12px;border:0;background:var(--fill);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}.gricb .ui-i{width:22px;height:22px}.gricb.on{color:#fff}
+.grbox .b.w{background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.grir .grt{text-align:left}.grir .grt b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

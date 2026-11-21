@@ -221,7 +221,7 @@ function maybeFb(){
 }
 // 👤 ⚙️ → Edytuj profil: grupy „Profil” (Moje jazdy, Ulubieni, Moja miejscowość, Prywatność) i „Powiadomienia” (Telegram, kanał) — przeniesione z głównego ekranu
 function profHubHtml(){
-  return gGrp("Profil",profExRows().concat([reportOk?gRow("#34c759","bike","Moje jazdy","Kalendarz, rekordy, km w sezonie",userRides[uid]&&userRides[uid].n?'<span class="ios-v">'+userRides[uid].n+'</span>':'','data-c="myrides"'):"",favOk?gRow("#ffcc00","starf",plOk?"Ulubieni i listy":"Ulubieni",plOk&&plists.length?"Listy: "+plists.length+" · ulubieni zawsze na górze":"Zawsze na górze list",favs.size?'<span class="ios-v">'+favs.size+'</span>':'','data-c="favs"'):"",
+  return gGrp("Profil",profExRows().concat([reportOk?gRow("#34c759","bike","Moje jazdy","Kalendarz, rekordy, km w sezonie",userRides[uid]&&userRides[uid].n?'<span class="ios-v">'+userRides[uid].n+'</span>':'','data-c="myrides"'):"",favOk?gRow("#ffcc00","starf",plOk?"Ulubieni i listy":"Ulubieni",plOk&&plists.length?"Listy: "+plists.length+" · ulubieni zawsze na górze":"Zawsze na górze list",favs.size?'<span class="ios-v">'+favs.size+'</span>':'','data-c="favs"'):"",typeof grRow==="function"?grRow():"",
   (profExOk&&pe?"":((evGeoOk&&tabOk(3))||rbOk?gRow("#ff9f0a","pin","Moja miejscowość",rbOk&&!(evGeoOk&&tabOk(3))?"Odległość do tras":"Odległość do imprez i tras",'<span class="ios-v">'+(homeGet()?esc(homeGet().name):'Ustaw')+'</span>','data-home="1"'):"")),reportOk?gRow("#5856d6","lock","Prywatność","Kto widzi Twoje jazdy i rekordy","",'data-c="priv"'):""]))
    +(profExOk&&pe?'<p class="note pe-note">'+uiIcon("lock")+' Zdjęcie i media widzą zalogowani. Miejscowość i telefon — tylko gdy włączysz. Goście nie widzą nic.</p>':'')
    +gGrp("Powiadomienia",[tgOn()?gRow("#0a84ff","send","Telegram"+betaTag("telegram_dm"),"Powiadomienia prosto na telefon",tgLink?'<span class="ios-v ok">'+uiIcon("check")+'Połączony</span>':'<span class="ios-v">Połącz</span>','data-c="tg"'):"",
@@ -262,6 +262,7 @@ function renderGear(){
   else if(gearView==="testdel"&&isSuper(uid))body=testDelHtml();
   else if(gearView==="favs"&&session)body=favsHtml();
   else if(gearView==="plist"&&session)body=plistHtml();
+  else if((gearView==="groups"||gearView==="group")&&session&&typeof grHtml==="function")body=grHtml();   // 👥 grupy (KROK 70, js/17)
   else if(gearView==="tg"&&tgOn())body=tgHtml();
   else if(gearView==="user"&&session&&nicks[userId])body=userHtml();
   else if(gearView==="teczka"&&session&&isKingReal()&&nicks[tkId])body=teczkaHtml();
@@ -311,7 +312,7 @@ function renderGear(){
   if(keepNb&&$("nbword")){$("nbword").value=keepNb.v;nbPreview();if($("nbq")){$("nbq").value=keepNb.q;nbFilter()}}
   if(keepNick&&$("gnick")){$("gnick").value=keepNick.v;$("gnickinfo").textContent=keepNick.i}
   if(keepPw&&$("gpw0")){["gpw0","gpw1","gpw2"].forEach((i,k)=>{$(i).value=keepPw.v[k][0];$(i).type=keepPw.v[k][1];const eb=document.querySelector('[data-eye="'+i+'"]');if(eb)eb.innerHTML=uiIcon(keepPw.v[k][1]==="text"?"eyeoff":"eye")});$("gpwinfo").textContent=keepPw.i;if(keepPw.f&&$(keepPw.f))$(keepPw.f).focus()}
-  pfApply("favs");pfApply("pl");   // 🔎 filtry osób zostają po odświeżeniu
+  pfApply("favs");pfApply("pl");pfApply("gm");   // 🔎 filtry osób zostają po odświeżeniu
   if($("admq")){admFilter();if(keepAdmq!=null){const q=$("admq");q.focus();try{q.setSelectionRange(keepAdmq,keepAdmq)}catch(e){}}}
 }
 function tgHtml(){
