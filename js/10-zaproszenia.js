@@ -506,7 +506,7 @@ function wantHtml(w){
      +'<div class="acts">'
      +(mine?(live?'':(open?'<button class="b join" data-my="settle" data-id="'+esc(w.id)+'" title="Ustal godzinę">✅ Ustal '+esc(hhmm(new Date(wBest(w))))+'</button>':'<button class="b g join" data-my="edit" data-id="'+esc(w.id)+'">✏️ Edytuj</button>')
         +(priv?'<button class="ib" data-my="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
-        +'<button class="ib" data-my="share" data-id="'+esc(w.id)+'" title="Udostępnij" aria-label="Udostępnij">'+ICON.share+'</button>'):live&&!wLate(w)?'<span class="note" style="flex:1">🚴 Jazda trwa — dołączyć już nie można.</span>':peek?'<span class="note" style="flex:1">Nie jesteś zaproszony — możesz tylko podejrzeć lub usunąć.</span>'
+        +'<button class="ib" data-my="share" data-id="'+esc(w.id)+'" title="Udostępnij" aria-label="Udostępnij">'+ICON.share+'</button>'):live&&!wLate(w)&&!joined?'<span class="note" style="flex:1">🚴 Jazda trwa — dołączyć już nie można.</span>':peek?'<span class="note" style="flex:1">Nie jesteś zaproszony — możesz tylko podejrzeć lub usunąć.</span>'
        :open?'<button class="b join'+(joined?' g':'')+'" data-w="pref" data-id="'+esc(w.id)+'">'+(joined&&myp?'✓ '+esc(hhmm(new Date(myp)))+' · zmień':dec?'Jednak mogę? Wybierz godzinę':'Pasuje mi o…')+'</button>'
        :'<button class="b join'+(joined?' g':'')+'" data-w="join" data-id="'+esc(w.id)+'">'+(joined?'Rezygnuję':dec?'Jednak jadę!':'Jadę!')+'</button>')
      +(canInv&&!live?'<button class="ib" data-w="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
@@ -565,6 +565,10 @@ function wfSetTime(hh,mm){
 }
 function wfStep(unit,dir){
   const two=unit.endsWith("2");
+  // 🌙 godzina startu przez północ → następny / poprzedni dzień (nie wcześniej niż dziś), jak w pogodzie
+  if(!two){const d=wfDate();if(d){const n=new Date(d);
+    if(unit[0]==="h")n.setHours(n.getHours()+dir);else{const m=dir>0?(Math.floor(wf.m/15)+1)*15:(Math.ceil(wf.m/15)-1)*15;n.setMinutes(m)}
+    if(localIso(n).slice(0,10)!==localIso(d).slice(0,10)&&dayDiff(n)>=0){wfApplyAt(n);flipCard($("fch"),pad(wf.h));flipCard($("fcm"),pad(wf.m));try{navigator.vibrate&&navigator.vibrate(8)}catch(x){}return}}}
   let hh=two?wf.h2:wf.h,mm=two?wf.m2:wf.m;
   if(unit[0]==="h")hh+=dir;
   else{
@@ -753,6 +757,22 @@ function wfClash(st,en){
   const g=RIDE_GAP*60000;
   return wants.filter(w=>w.user_id===uid&&w.id!==wf.editId&&wantEnd(w).getTime()>Date.now())
     .find(w=>st.getTime()<wantEnd(w).getTime()+g&&wantStart(w).getTime()<en.getTime()+g);
+}
+// 🔁 „Jadę!” a inna Twoja jazda w tym czasie (+15 min zapasu, jak przy zakładaniu): prowadzisz → blokada; jesteś zapisany → „Przenieś się”
+function joinClash(w){
+  const g=RIDE_GAP*60000,s=wantStart(w).getTime(),e=wantEnd(w).getTime();
+  return wants.filter(x=>x.id!==w.id&&!isOpen(x)&&wantEnd(x).getTime()>Date.now()&&(x.user_id===uid||(joins[x.id]||[]).includes(uid)))
+    .find(x=>s<wantEnd(x).getTime()+g&&wantStart(x).getTime()<e+g)||null;
+}
+async function joinClashOk(w){
+  if(isOpen(w))return true;
+  const c=joinClash(w);if(!c)return true;
+  const cs=wantStart(c),ce=wantEnd(c),when=relDay(cs).toLowerCase()+" "+hhmm(cs)+"–"+hhmm(ce);
+  if(c.user_id===uid){say("Prowadzisz jazdę "+when+" — najpierw ją usuń albo zmień godzinę.");return false}
+  if(!await askOk("Jedziesz już "+when+". Przenieść się na "+hhmm(wantStart(w))+"?\n\nZrezygnujesz z tamtej jazdy ("+nickOf(c.user_id)+" dostanie powiadomienie).","Przenieś się"))return false;
+  const r=await sb.from("want_joins").delete().eq("want_id",c.id).eq("user_id",uid);
+  if(r.error){say("Nie udało się zrezygnować z tamtej jazdy: "+r.error.message);return false}
+  joins[c.id]=(joins[c.id]||[]).filter(x=>x!==uid);return true;
 }
 const ceil5=t=>new Date(Math.ceil(t/300000)*300000);
 const kmTxt=k=>Number(k).toFixed(1).replace(".",",");
@@ -1182,6 +1202,7 @@ $("wantlist").addEventListener("click",async e=>{
     if(b.dataset.w==="join"){
       if(needProfile()){askNick();return}
       const joined=(joins[id]||[]).includes(uid);
+      if(!joined){const w=wants.find(x=>x.id===id);if(w&&!await joinClashOk(w))return}
       const res=joined?await sb.from("want_joins").delete().eq("want_id",id).eq("user_id",uid):await sb.from("want_joins").insert({want_id:id});
       if(res.error)throw res.error;
       if(!joined&&(decls[id]||[]).includes(uid))await sb.from("want_declines").delete().eq("want_id",id).eq("user_id",uid);

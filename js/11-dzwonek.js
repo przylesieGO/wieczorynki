@@ -247,6 +247,7 @@ $("bellsheet").addEventListener("click",async e=>{
     a.disabled=true;
     try{
       if(a.dataset.na==="join"){
+        if(!(joins[w.id]||[]).includes(uid)&&!await joinClashOk(w)){a.disabled=false;return}
         const r=await sb.from("want_joins").insert({want_id:w.id});if(r.error&&r.error.code!=="23505")throw r.error;
         if((decls[w.id]||[]).includes(uid))await sb.from("want_declines").delete().eq("want_id",w.id).eq("user_id",uid);
         try{navigator.vibrate&&navigator.vibrate(30)}catch(err){}
@@ -355,6 +356,7 @@ $("popsheet").addEventListener("click",async e=>{
   popBusy=true;
   try{
     if(q==="join"&&!(joins[it.w.id]||[]).includes(uid)){
+      if(!await joinClashOk(it.w))return;
       const r=await sb.from("want_joins").insert({want_id:it.w.id});if(r.error)throw r.error;
       try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}
     }
