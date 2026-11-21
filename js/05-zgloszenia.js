@@ -260,6 +260,7 @@ function renderGear(){
   else if(gearView==="myrides"&&session)body=myRidesHtml();
   else if(gearView==="priv"&&session)body=privPageHtml();
   else if(gearView==="testdel"&&isSuper(uid))body=testDelHtml();
+  else if(gearView==="demo"&&session&&isKingReal()&&typeof demoHtml==="function")body=demoHtml();   // 🧪 Ekipa demo (KROK 74, js/18)
   else if(gearView==="favs"&&session)body=favsHtml();
   else if(gearView==="plist"&&session)body=plistHtml();
   else if((gearView==="groups"||gearView==="group"||gearView==="gradm")&&session&&typeof grHtml==="function")body=grHtml();   // 👥 grupy (KROK 70, js/17)
@@ -547,7 +548,7 @@ $("gearpanel").addEventListener("click",async e=>{
     const i=$("gtdel");if(!i)return;
     if(i.value.trim().toUpperCase()!=="USUŃ"){$("gtdelinfo").textContent="Wpisz słowo USUŃ, aby potwierdzić.";return}
     b.disabled=true;
-    try{const r=await sb.rpc("admin_test_wants",{do_delete:true});if(r.error)throw r.error;gearView="admin";await syncNow();renderGear();say("🧹 Usunięto testowe zaproszenia: "+(+r.data||0))}
+    try{const r=await sb.rpc("admin_test_wants",{do_delete:true});if(r.error)throw r.error;const dr=typeof demoRet!=="undefined"&&demoRet;gearView=dr?"demo":"admin";await syncNow();renderGear();if(dr&&typeof demoStatus==="function")demoStatus();say("🧹 Usunięto testowe zaproszenia: "+(+r.data||0))}
     catch(err){b.disabled=false;$("gtdelinfo").textContent="Nie udało się: "+(err&&err.message?err.message:"błąd")}
     return;
   }

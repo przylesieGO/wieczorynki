@@ -39,7 +39,7 @@ async function syncOnce(){
   const changed=!!(W.length||P.length||E.length||d.me||d.fb);
   try{
     if(W.length)await syncWants(W);
-    if(P.length)await syncProfiles(P);
+    if(P.length){await syncProfiles(P);if(typeof demoLoad==="function")await demoLoad()}   // 🧪 KROK 74: nowe/usunięte konta demo
     if(E.length&&flags.tab_events&&tabOk(3))await loadEvents();
     if(d.me)await syncMe();
     if(d.fb)await syncFb();
@@ -89,6 +89,7 @@ async function syncMe(){
   if(nt.error||fv.error)throw nt.error||fv.error;
   notifs=nt.data||[];favOk=true;favs=new Set((fv.data||[]).map(x=>x.fav_id));
   await plLoad();   // 📋 listy osób (KROK 68)
+  if(typeof demoLoad==="function")await demoLoad();   // 🧪 konta demo i ochotnicy (KROK 74, js/18)
   tgOk=!tl.error;tgLink=tgOk&&tl.data&&tl.data[0]||null;
   await loadMyPriv();
 }
@@ -291,6 +292,7 @@ async function loadRemote(selectId){
     favOk=!fv.error;favs=new Set((ok(fv)||[]).map(x=>x.fav_id));
     await plLoad();   // 📋 listy osób (KROK 68)
     if(typeof grLoad==="function")await grLoad();   // 👥 grupy (KROK 70, js/17)
+    if(typeof demoLoad==="function")await demoLoad();   // 🧪 konta demo → plakietka DEMO (KROK 74, js/18)
     nickColors={...DEF_COLORS};nickBgs={...DEF_BGS};
     (ok(st)||[]).forEach(x=>{
       let m=/^nick_color_([KM])$/.exec(x.key);if(m&&HEX_RE.test(x.value))nickColors[m[1]]=x.value;

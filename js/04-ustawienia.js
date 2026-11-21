@@ -69,7 +69,8 @@ function adminHtml(){
       placeOk?gRow("#ff9f0a","pin","Miejsca zbiórki","",'<span class="ios-v">'+places.length+'</span>','data-c="places"'):''])
    +(isSuper(uid)?gGrp("Zaproszenia",[gRow("#30d158","eye","Wszystkie zaproszenia","Także prywatne i testowe",'<span class="ios-v">'+wantsAll.filter(w=>wantEnd(w).getTime()>Date.now()).length+'</span>','data-c="allw"'),
       gRow("#8e8e93","archive","Archiwum zaproszeń","Zakończone jazdy","",'data-c="karch"'),
-      testOk?gRow("#ff3b30","trash","Usuń testowe zaproszenia","Tylko oznaczone 🧪 TEST — prawdziwe zostają","",'data-c="testdel"'):'']):'');
+      typeof demoAdmRow==="function"&&isKingReal()?demoAdmRow()   // 🧪 Ekipa demo + generator + sprzątanie (KROK 74, js/18)
+      :testOk?gRow("#ff3b30","trash","Usuń testowe zaproszenia","Tylko oznaczone 🧪 TEST — prawdziwe zostają","",'data-c="testdel"'):'']):'');
 }
 // 🛡️ → Uprawnienia: administratorzy i testerzy
 function permsHtml(){
@@ -125,7 +126,8 @@ function fGuestHtml(f){
 const evGuest=()=>{const f=flags.tab_events;return !!f&&f.state==="all"&&!!f.guests};
 let testDelN=null;
 function testDelHtml(){
-  return '<button class="sback" data-c="backadmin">‹ Administracja</button><div class="sname" style="margin-top:26px">🧹 Usuń testowe zaproszenia</div>'
+  const dr=typeof demoRet!=="undefined"&&demoRet;   // 🧪 przyszedł z panelu „Zaproszenia testowe” (js/18)
+  return (dr?'<button class="sback" data-dx="open">‹ Zaproszenia testowe</button>':'<button class="sback" data-c="backadmin">‹ Administracja</button>')+'<div class="sname" style="margin-top:26px">🧹 Usuń testowe zaproszenia</div>'
    +'<div class="sleft"><div class="arow" style="flex-direction:column;align-items:flex-start;gap:4px"><b>'+(testDelN==null?'Liczę…':'Testowych zaproszeń: '+testDelN)+'</b>'
    +'<span class="note">Znikną na zawsze razem z dołączeniami, zaproszonymi, odpowiedziami i powiadomieniami. Prawdziwe zaproszenia (bez 🧪) zostają. Dziennik aktywności zostaje.</span></div>'
    +'<label for="gtdel" style="font-size:15px;margin-top:16px">Aby potwierdzić, wpisz <b>USUŃ</b></label><input id="gtdel" maxlength="10" autocomplete="off" autocapitalize="characters">'
@@ -667,7 +669,7 @@ function userPubStats(id){
 function userHtml(){
   const g=genders[userId],fav=isFav(userId),ux=uxCache[userId]||{},mu=MEDIA.filter(m=>(medias[userId]||{})[m[0]]);
   if(profExOk&&session&&!(userId in uxCache)){uxCache[userId]={};loadUx(userId)}
-  return (userBack?'<button class="sback" data-c="userback">‹ '+({favs:"Ulubieni",plist:"Lista",online:"Online",admin:"Administracja",users:"Użytkownicy",perms:"Uprawnienia",stats:"Statystyki"}[userBack]||"Ustawienia")+'</button>':'')
+  return (userBack?'<button class="sback" data-c="userback">‹ '+({favs:"Ulubieni",plist:"Lista",online:"Online",admin:"Administracja",users:"Użytkownicy",perms:"Uprawnienia",stats:"Statystyki",demo:"Zaproszenia testowe"}[userBack]||"Ustawienia")+'</button>':'')
    +(avData[userId]?'<div class="ucav" style="margin-top:'+(userBack?'30px':'8px')+'">'+avImg(userId,"")+'</div>':'')
    +'<div class="bigpill" style="margin-top:'+(avData[userId]?'8px':userBack?'26px':'6px')+'">'+nk(userId)+'</div>'
    +'<div class="smail">'+(g==="K"?uiIcon("venus")+" Kobieta":g==="M"?uiIcon("mars")+" Mężczyzna":"")+(onlineIds.includes(userId)?(g?" · ":"")+"🟢 teraz w aplikacji":"")+'</div>'
@@ -686,7 +688,8 @@ function userHtml(){
       plOk&&userId!==uid?(()=>{const L=plOfUser(userId);return gRow("#5ac8fa","list","Dodaj do listy…",L.length?"Na listach: "+esc(L.map(l=>l.name).join(", ")):"Np. MTB, Gravel, Wieczorynki",L.length?'<span class="ios-v">'+L.length+'</span>':'','data-a="pladd" data-id="'+esc(userId)+'"')})():'',
       typeof grAddRow==="function"?grAddRow(userId):''])
    +(isAdmin?gGrp("Administrator",[isKingReal()?gRow("#5e5ce6","folder","Teczka","Wszystko o tej osobie w jednym miejscu","",'data-a="tk" data-id="'+esc(userId)+'"'):'',fbOk?gRow("#bf5af2","msg","Napisz wiadomość","Trafi do jej skrzynki zgłoszeń","",'data-a="fbmsg" data-id="'+esc(userId)+'"'):'',
-      !isSuper(userId)?gRow("#ff9f0a","pencil","Zmień nick","","",'data-a="unick" data-id="'+esc(userId)+'"'):'']):'')
+      !isSuper(userId)?gRow("#ff9f0a","pencil","Zmień nick","","",'data-a="unick" data-id="'+esc(userId)+'"'):'',
+      typeof demoVolRow==="function"?demoVolRow(userId):'']):'')
    +(isAdmin?admInfoHtml(userId):'')
    +(modOk&&isSuper(uid)&&userId!==uid&&!isSuper(userId)?(()=>{const d=modBusy?' disabled':'',id='data-id="'+esc(userId)+'"'+d,hid=modHidden.has(userId),ban=modBanned.has(userId);
       return gGrp("👑 Moderacja",[gRow(hid?"#30d158":"#8e8e93",hid?"eye":"user",hid?"Pokaż konto innym":"Ukryj konto",hid?"Teraz: ukryte — inni go nie widzą ani jego zaproszeń":"Np. konto testowe — zniknie z list","",'data-a="modhide" '+id),

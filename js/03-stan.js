@@ -21,7 +21,7 @@ const pill=(t,c,bg,live,uid_,extra,pre)=>'<span'+(uid_?' data-u="'+esc(uid_)+'"'
 /* ulubieni (prywatni: każdy widzi tylko swoich) */
 let favs=new Set(),favOk=false;
 const isFav=id=>favs.has(id);
-const nk=(id,fallback)=>{const c=colorOf(id),g=genders[id],t=nicks[id]||fallback||"ktoś";return pill(t,c,c?nickBgs[g]:"",onlineIds.includes(id),nicks[id]&&favOk&&id!==uid?id:"",(testerIds.has(id)?'<span class="nktst" title="tester">'+uiIcon("syringe")+'</span>':"")+(fbBulb(id)?' '+uiIcon("bulb"):""),avImg(id,"nkav")+(isFav(id)?uiIcon("starf")+' ':""))};
+const nk=(id,fallback)=>{const c=colorOf(id),g=genders[id],t=nicks[id]||fallback||"ktoś";return pill(t,c,c?nickBgs[g]:"",onlineIds.includes(id),nicks[id]&&favOk&&id!==uid?id:"",(testerIds.has(id)?'<span class="nktst" title="tester">'+uiIcon("syringe")+'</span>':"")+(typeof demoTag==="function"?demoTag(id):"")+(fbBulb(id)?' '+uiIcon("bulb"):""),avImg(id,"nkav")+(isFav(id)?uiIcon("starf")+' ':""))};
 const favFirst=ids=>ids.slice().sort((a,b)=>(isFav(b)?1:0)-(isFav(a)?1:0));
 const nkList=ids=>'<div class="nks">'+favFirst(ids).map(id=>nk(id)).join("")+'</div>';
 const favNames=ids=>favFirst(ids).filter(isFav).map(id=>nicks[id]).filter(Boolean);
