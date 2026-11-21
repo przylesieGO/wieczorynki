@@ -590,7 +590,7 @@ $("gearpanel").addEventListener("click",async e=>{
   // 📋 listy osób (KROK 68)
   if(c==="plist"){plId=b.dataset.pl;pf.pl=null;gearView="plist";renderGear();return}
   if(c==="plback"){gearView="favs";renderGear();return}
-  if(c==="fvtog"){const g=b.dataset.g;if(fvCol)fvCol[g]=!fvCol[g];renderGear();return}   // ▸ zwijanie Ulubieni / Pozostali
+  if(c==="fvtog"){const g=b.dataset.fvs;if(fvCol)fvCol[g]=!fvCol[g];renderGear();return}   // ▸ zwijanie Ulubieni / Pozostali (uwaga: w panelu ⚙️ data-g = wybór płci, data-fg = przełącznik „Goście”, data-f = funkcje testowe — stąd data-fvs)
   if(c==="plnew"){openPl("new",{after:l=>{plId=l.id;pf.pl=null;gearView="plist";renderGear();openWho("pl",l.id)}});return}
   if(c==="pledit"){openPl("edit",{list:plId});return}
   if(c==="plpick"){openWho("pl",plId);return}

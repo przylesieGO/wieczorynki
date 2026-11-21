@@ -966,3 +966,4 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 .pledb{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin:-6px 0 -6px 4px;border-radius:50%;color:var(--mut);cursor:pointer;vertical-align:middle}.pledb:hover{background:var(--fill);color:var(--acc)}.pledb .ui-i{width:15px;height:15px}.sname .pledb .ui-i{width:18px;height:18px}
 .bsbox .wsplb{font-size:16px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--ink);padding:13px 14px;margin:10px 0 6px}.wsplb .ui-i{width:19px;height:19px;color:var(--acc)}
 .wsplb .wsplsel{flex:1;min-width:0;font-size:13.5px;font-weight:600;color:var(--acc);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+.ucrole{color:var(--acc);font-weight:600}.ucrole .ui-i{width:15px;height:15px;vertical-align:-2px}
