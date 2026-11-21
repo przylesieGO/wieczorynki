@@ -5,7 +5,7 @@
    Wszystko robią funkcje bazy admin_demo_* (sprawdzają 👑); tabele demo_* są tylko do odczytu.
    Plik wczytywany jako ostatni: przy wczytaniu tylko rejestruje obsługę zdarzeń; niższe pliki wołają go przez typeof. */
 let demoIds=new Set(),demoVol=new Set(),demoSt=null,demoBusy=false,demoRet=false;
-let demoAcc=4;   // ile kont demo (stepper „Konta demo”)
+let demoAcc=4,demoAccSet=false;   // ile kont demo (stepper „Konta demo”); demoAccSet = zmienione ręcznie, odświeżenie stanu go nie nadpisuje
 let demoGrN=3;   // ile grup demo założyć (stepper „Grupy demo”)
 const demoF={n:25,days:14,priv:30,grp:30,routes:true,ranges:true,answers:true,chan:false};
 const DEMO_BIKE={mtb:"MTB",gravel:"Gravel",road:"Szosa",trekking:"Trekking"};
@@ -20,7 +20,7 @@ async function demoLoad(){
   if(isKingReal()){try{const v=await sb.from("demo_volunteers").select("user_id");if(!v.error)demoVol=new Set((v.data||[]).map(x=>x.user_id))}catch(e){}}
 }
 async function demoStatus(){
-  try{const r=await sb.rpc("admin_demo_status");if(r.error)throw r.error;demoSt=r.data||{};if(demoSt.demo_active)demoAcc=+demoSt.demo_active}
+  try{const r=await sb.rpc("admin_demo_status");if(r.error)throw r.error;demoSt=r.data||{};if(demoSt.demo_active&&!demoAccSet)demoAcc=+demoSt.demo_active}
   catch(e){demoSt={err:(e&&e.message)||"błąd"}}
   if(gearView==="demo")renderGear();
 }
@@ -121,7 +121,7 @@ $("gearpanel").addEventListener("click",async e=>{
     try{const r=await sb.rpc("admin_demo_volunteer",{u:id,p_on:on});if(r.error)throw r.error;on?demoVol.add(id):demoVol.delete(id);say(on?"🙋 Dodano do ochotników":"Wypisano z ochotników")}catch(err){demoErr(err)}
     demoBusy=false;renderGear();return}
   if(a==="user"){userBack="demo";tkFrom=false;userId=b.dataset.du;gearView="user";renderGear();if(isAdmin&&typeof loadAdmInfo==="function"){delete admInfo[userId];loadAdmInfo(userId)}return}
-  if(a==="acc-"||a==="acc+"){demoAcc=Math.max(1,Math.min(30,demoAcc+(a==="acc+"?1:-1)));renderGear();return}
+  if(a==="acc-"||a==="acc+"){demoAccSet=true;demoAcc=Math.max(1,Math.min(30,demoAcc+(a==="acc+"?1:-1)));renderGear();return}
   if(a==="grn-"||a==="grn+"){demoGrN=Math.max(1,Math.min(10,demoGrN+(a==="grn+"?1:-1)));renderGear();return}
   if(a==="grp"){await demoRun("admin_demo_groups",{p_count:demoGrN,p_volunteers:true},d=>d&&d.created?"👥 Założono grup demo: "+d.created+(d.invited?" · zaproszeni ochotnicy: "+d.invited:""):"Nie założono grup — konta demo są w limitach albo pula nazw się skończyła");
     if(typeof grReload==="function")grReload();return}
@@ -135,7 +135,7 @@ $("gearpanel").addEventListener("click",async e=>{
   if(a==="days"){demoF.days=+b.dataset.dd;renderGear();return}
   if(a==="sw"){const k=b.dataset.dk;demoF[k]=!demoF[k];renderGear();return}
   if(a==="acc"){const made=(demoSt&&demoSt.pool||[]).filter(p=>p.user_id).length,n=demoAcc;
-    await demoRun("admin_demo_accounts",{p_count:n,p_channel:false},d=>d&&d.created?"🧪 Utworzono "+d.created+" · generator losuje z "+n:"Generator losuje teraz z "+n+(n<made?" (pozostałe konta zostają)":""));return}
+    demoAccSet=false;await demoRun("admin_demo_accounts",{p_count:n,p_channel:false},d=>d&&d.created?"🧪 Utworzono "+d.created+" · generator losuje z "+n:"Generator losuje teraz z "+n+(n<made?" (pozostałe konta zostają)":""));return}
   if(a==="gen"){
     if(demoF.chan&&!await askOk("Wysłać podsumowanie także na kanał @PrzylesieGo?\n\nZobaczą je wszyscy na kanale, z dopiskiem, że to nie są prawdziwe jazdy.","Wyślij też na kanał"))return;
     await demoRun("admin_demo_generate",{p_count:demoF.n,p_days:demoF.days,p_private_pct:demoF.priv,p_routes:demoF.routes,p_ranges:demoF.ranges,p_answers:demoF.answers,p_channel:demoF.chan,p_group_pct:demoF.grp},
