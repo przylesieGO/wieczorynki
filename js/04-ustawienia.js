@@ -323,16 +323,21 @@ async function confirmDelete(){
   await doDelete(delReq);
 }
 const starBtn=id=>'<button class="starb'+(isFav(id)?' on':'')+'" data-a="fav" data-id="'+esc(id)+'" title="'+(isFav(id)?'Usuń z ulubionych':'Dodaj do ulubionych')+'">'+(isFav(id)?'⭐':'☆')+'</button>';
-let favsSnap=null;   // porządek listy Ulubieni zamrożony na czas otwarcia widoku: po kliknięciu gwiazdki wiersze się nie przesuwają (czyści renderGear przy zamknięciu/zmianie widoku)
+let favsSnap=null,fvCol=null;   // porządek listy Ulubieni zamrożony na czas otwarcia widoku: po kliknięciu gwiazdki wiersze się nie przesuwają (czyści renderGear przy zamknięciu/zmianie widoku)
 function favsHtml(){
   if(!favsSnap)favsSnap=new Set(favs);
   const ids=Object.keys(nicks).filter(id=>id!==uid).sort((a,b)=>((favsSnap.has(b)?1:0)-(favsSnap.has(a)?1:0))||nicks[a].localeCompare(nicks[b],"pl"));
   return ''+backBtn()+'<div class="sname" style="margin-top:26px">'+(plOk?'Ulubieni i listy':'⭐ Ulubieni')+'</div>'
    +plRowsHtml()   // 📋 KROK 68
-   +(plOk?'<div class="ios"><div class="ios-gh">⭐ Ulubieni</div></div>':'')
+   +(plOk?'<div class="ios"><div class="ios-gh">Osoby</div></div>':'')
    +'<div class="smail"'+(plOk?' style="margin:0 14px 10px;font-size:14px;text-align:left"':'')+'>Tylko Ty widzisz, kogo masz w ulubionych. Ulubieni są na początku list i widać ich w nagłówkach dni.</div>'
    +pfBar("favs",ids.length)
-   +'<div class="sleft" data-pfl="favs">'+(ids.map(id=>'<div class="arow" data-pu="'+esc(id)+'">'+nk(id)+starBtn(id)+'</div>').join("")+(ids.length>8?'<div class="note pfnone hide">Nikt nie pasuje do filtra.</div>':'')||'<div class="note">Brak innych użytkowników z nickiem.</div>')+'</div>';
+   +'<div class="sleft" data-pfl="favs">'+(()=>{if(!ids.length)return '<div class="note">Brak innych użytkowników z nickiem.</div>';
+      const row=id=>'<div class="arow" data-pu="'+esc(id)+'">'+nk(id)+starBtn(id)+'</div>',f=ids.filter(id=>favsSnap.has(id)),o=ids.filter(id=>!favsSnap.has(id));
+      if(!fvCol)fvCol={f:false,o:ids.length>10};
+      // ▸ zwijane sekcje jak w „Kogo zapraszasz?”; przy szukaniu / filtrze rozwinięte (klasa .pfact)
+      const sec=(t,L,g)=>!L.length?'':(f.length&&o.length?'<div class="bsgrp gl">'+grpHead(t,L.length,fvCol[g],0,'data-c="fvtog" data-g="'+g+'"')+'</div>':'')+'<div class="fvbody'+(f.length&&o.length&&fvCol[g]?' col':'')+'">'+L.map(row).join("")+'</div>';
+      return sec('⭐ Ulubieni',f,'f')+sec('Pozostali',o,'o')+(ids.length>8?'<div class="note pfnone hide">Nikt nie pasuje do filtra.</div>':'')})()+'</div>';
 }
 /* 🗓 data dołączenia (KROK 25): „Z nami od 12 marca 2026 · 245 dni” */
 let joinedAt={};
@@ -839,6 +844,7 @@ const pfBar=(k,n)=>n>8?'<div class="pfbar" data-pfbar="'+k+'"><input class="bsq 
 // filtrowanie wierszy w Ustawieniach bez przerysowania panelu (pole szukania nie traci kursora)
 function pfApply(k){
   const box=document.querySelector('[data-pfl="'+k+'"]');if(!box)return;
+  box.classList.toggle("pfact",pfOn(k));   // przy szukaniu / filtrze zwinięte sekcje się rozwijają
   let n=0;box.querySelectorAll("[data-pu]").forEach(r=>{const v=pfMatch(k,r.dataset.pu);r.style.display=v?"":"none";if(v)n++});
   const e=box.querySelector(".pfnone");if(e)e.classList.toggle("hide",!!n);
 }

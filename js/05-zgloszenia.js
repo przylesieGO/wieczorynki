@@ -231,7 +231,7 @@ function renderGear(){
   const p=$("gearpanel");
   if(!gearOpen){p.classList.add("hide");gearView="main";gearFrom="";tkFrom=false;favsSnap=null;return}
   p.classList.remove("hide");
-  if(gearView!=="favs")favsSnap=null;
+  if(gearView!=="favs"){favsSnap=null;fvCol=null}
   if(gearView==="plist"&&!(session&&plById(plId)))gearView="favs";   // 📋 lista usunięta (np. na innym urządzeniu)
   if((gearView==="admin"||gearView==="users"||gearView==="perms"||gearView==="unick"||gearView==="colors"||gearView==="stats"||gearView==="flags"||gearView==="testdel"||gearView==="privadm"||gearView==="nickbans")&&!(session&&isAdmin))gearView="main";
   if(gearView==="flags"&&!isSuper(uid))gearView="admin";
@@ -590,6 +590,7 @@ $("gearpanel").addEventListener("click",async e=>{
   // 📋 listy osób (KROK 68)
   if(c==="plist"){plId=b.dataset.pl;pf.pl=null;gearView="plist";renderGear();return}
   if(c==="plback"){gearView="favs";renderGear();return}
+  if(c==="fvtog"){const g=b.dataset.g;if(fvCol)fvCol[g]=!fvCol[g];renderGear();return}   // ▸ zwijanie Ulubieni / Pozostali
   if(c==="plnew"){openPl("new",{after:l=>{plId=l.id;pf.pl=null;gearView="plist";renderGear();openWho("pl",l.id)}});return}
   if(c==="pledit"){openPl("edit",{list:plId});return}
   if(c==="plpick"){openWho("pl",plId);return}

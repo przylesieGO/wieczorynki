@@ -1229,19 +1229,20 @@ function whoPlHtml(){
   const L=plists.filter(l=>!(ws.mode==="pl"&&l.id===ws.want)).map(l=>[l,whoPlAvail(l.id)]).filter(x=>x[1].length);
   if(!L.length)return "";
   const on=([l,A])=>ws.vis==="pick"&&A.every(id=>ws.pick.has(id)),sel=L.filter(on).map(x=>x[0].name);
-  return '<button type="button" class="bsgrp gl wsplh" data-k="plt" aria-expanded="'+!!ws.plOpen+'"><span>'+uiIcon("list")+' Listy ('+L.length+')'+(sel.length?'<span class="wsplsel"> · '+esc(sel.join(", "))+'</span>':'')+'</span>'
-   +'<span class="lnk">'+(ws.plOpen?'Zwiń ▴':'Rozwiń ▾')+'</span></button>'
+  return '<div class="bsgrp gl">'+grpHead(uiIcon("list")+' Listy',L.length,!ws.plOpen,0,'data-k="plt"').replace('</button>',(sel.length?'<span class="wsplsel"> · '+esc(sel.join(", "))+'</span>':'')+'</button>')+'</div>'
    +(ws.plOpen?L.map(x=>'<button type="button" class="prow'+(on(x)?' on':'')+'" data-wpl="'+esc(x[0].id)+'"><span class="cbx">'+CHECK+'</span><span class="pnm">'+plDot(x[0])+esc(x[0].name)+'</span><span class="pon">'+x[1].length+' '+plf(x[1].length,["osoba","osoby","osób"])+'</span></button>').join(""):'');
 }
 function openWho(mode,wantId){
   if(!session)return;
   if(needProfile()){askNick();return}
   ws.mode=mode;ws.want=wantId||null;ws.q="";
-  ws.msg="";pf.who=null;ws.plOpen=false;   // 🔎 filtry od nowa przy każdym otwarciu
+  ws.msg="";pf.who=null;   // 🔎 filtry od nowa przy każdym otwarciu
   if(mode==="pl"){ws.vis="pick";ws.pick=new Set(plIds(wantId))}   // 📋 osoby na liście (KROK 68)
   else if(mode==="form"){ws.vis=wf.vis;ws.pick=new Set(wf.vis==="fav"?favIds():wf.pick);whoLocked().forEach(id=>ws.pick.add(id))}
   else if(mode==="evf"){ws.vis="pick";ws.pick=new Set(ef&&ef.inv||[]);ws.msg=ef&&ef.invMsg||""}
   else{ws.vis="pick";ws.pick=new Set()}
+  // domyślnie: Listy zwinięte, ⭐ Ulubieni rozwinięci, Pozostali zwinięci; przy ≤10 osobach wszystko rozwinięte
+  const few=whoPeople().length<=10;ws.plOpen=few;ws.col={f:false,o:!few};
   renderWho(true);
 }
 function closeWho(){const p=$("whosheet");p.classList.add("hide");p.innerHTML=""}
@@ -1261,8 +1262,13 @@ const whoLocked=()=>new Set(ws.mode==="form"&&wf.editId?(joins[wf.editId]||[]).f
 const whoRow=(id,on)=>{const dn=whoDis().get(id);if(dn)return '<button type="button" class="prow dis" data-p="'+esc(id)+'"><span class="cbx"></span><span class="pnm">'+nk(id)+'</span><span class="pjn">'+esc(dn)+'</span></button>';
   const lk=whoLocked().has(id);return '<button type="button" class="prow'+(on||lk?' on':'')+(lk?' lock':'')+'" data-p="'+esc(id)+'"><span class="cbx">'+CHECK+'</span><span class="pnm">'+nk(id)+'</span>'+(lk?'<span class="pjn">dołączył(a)</span>':onlineIds.includes(id)?'<span class="pon">🟢 teraz</span>':'')+'</button>'};
 // nagłówek grupy z „Zaznacz wszystkich / Odznacz”
-const whoGrp=(t,ids,g)=>{if(!ids.length)return '';const D=whoDis();ids=ids.filter(id=>!D.has(id));if(!ids.length)return '<div class="bsgrp">'+t+'</div>';const L=whoLocked(),all=ids.every(id=>ws.pick.has(id)||L.has(id)),free=ids.some(id=>!L.has(id));
-  return '<div class="bsgrp gl"><span>'+t+'</span>'+(free?'<button type="button" class="lnk" data-k="grp" data-g="'+g+'">'+(all?'Odznacz':'Zaznacz wszystkich')+'</button>':'')+'</div>'};
+// ▸ zwijanie sekcji (Ulubieni / Pozostali): przy szukaniu lub filtrze wszystko rozwinięte; w zwiniętej sekcji licznik zaznaczonych
+const whoFiltering=()=>ws.vis==="pick"&&(!!ws.q.trim()||pfOn("who"));
+const whoColl=g=>!whoFiltering()&&!!(ws.col&&ws.col[g]);
+const grpHead=(t,n,col,k,attrs)=>'<button type="button" class="wsgt'+(col?'':' open')+'" '+attrs+' aria-expanded="'+!col+'"><span class="wsgc" aria-hidden="true">›</span>'+t+' ('+n+')'+(col&&k?'<span class="wsplsel"> · zaznaczono '+k+'</span>':'')+'</button>';
+const whoGrp=(t,ids,g,tog)=>{if(!ids.length)return '';const D=whoDis();ids=ids.filter(id=>!D.has(id));if(!ids.length)return '<div class="bsgrp">'+t+'</div>';const L=whoLocked(),all=ids.every(id=>ws.pick.has(id)||L.has(id)),free=ids.some(id=>!L.has(id));
+  const head=tog&&!whoFiltering()?grpHead(t,ids.length,whoColl(g),ids.filter(id=>ws.pick.has(id)||L.has(id)).length,'data-k="gtog" data-g="'+g+'"'):'<span>'+t+'</span>';
+  return '<div class="bsgrp gl">'+head+(free?'<button type="button" class="lnk" data-k="grp" data-g="'+g+'">'+(all?'Odznacz':'Zaznacz wszystkich')+'</button>':'')+'</div>'};
 function whoListHtml(){
   if(ws.vis==="all")return '<div class="bsempty">🌍 Zaproszenie zobaczą wszyscy zalogowani, a wiadomość trafi na kanał Telegram.</div>';
   const q=ws.vis==="pick"?nickKey(ws.q.trim()):"",all=whoPeople().filter(id=>(!q||nickKey(nicks[id]).includes(q))&&(ws.vis!=="pick"||pfMatch("who",id)));
@@ -1272,8 +1278,9 @@ function whoListHtml(){
   }
   if(!all.length)return '<div class="bsempty">'+(q?'Nie znaleziono takiego nicku.':pfOn("who")?'Nikt nie pasuje do filtra.':ws.mode==="add"?'Wszyscy są już zaproszeni.':whoEv()?'Nikt inny nie widzi jeszcze zakładki Imprezy (BETA — testerzy).':'Brak innych osób z nickiem.')+'</div>';
   const f=all.filter(isFav),o=all.filter(id=>!isFav(id));
-  return (f.length?whoGrp('⭐ Ulubieni',f,'f')+f.map(id=>whoRow(id,ws.pick.has(id))).join(""):'')
-   +(o.length?whoGrp(f.length?'Pozostali':'Osoby',o,'o')+o.map(id=>whoRow(id,ws.pick.has(id))).join(""):'');
+  const two=!!(f.length&&o.length);   // jedna sekcja — bez zwijania
+  return (f.length?whoGrp('⭐ Ulubieni',f,'f',two)+(two&&whoColl("f")?'':f.map(id=>whoRow(id,ws.pick.has(id))).join("")):'')
+   +(o.length?whoGrp(f.length?'Pozostali':'Osoby',o,'o',two)+(two&&whoColl("o")?'':o.map(id=>whoRow(id,ws.pick.has(id))).join("")):'');
 }
 const whoCount=()=>ws.vis==="all"?0:ws.vis==="fav"?favIds().length:ws.pick.size;
 function renderWho(first){
@@ -1328,6 +1335,7 @@ $("whosheet").addEventListener("click",async e=>{
   const k=e.target.closest("[data-k]");if(!k)return;
   if(k.dataset.k==="cancel"){closeWho();return}
   if(k.dataset.k==="plt"){ws.plOpen=!ws.plOpen;renderWho();return}
+  if(k.dataset.k==="gtog"){const g=k.dataset.g;ws.col[g]=!ws.col[g];renderWho();return}
   if(k.dataset.k==="plsave"){openPl("new",{ids:[...ws.pick].filter(id=>id!==uid)});return}
   if(ws.mode==="pl"){const l=plById(ws.want);if(!l){closeWho();return}
     const cur=new Set(plMem[l.id]||[]),add=[...ws.pick].filter(id=>!cur.has(id)),rm=plIds(l.id).filter(id=>!ws.pick.has(id));
