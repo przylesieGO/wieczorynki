@@ -1228,9 +1228,12 @@ function whoPlHtml(){
   if(!plOk)return "";
   const L=plists.filter(l=>!(ws.mode==="pl"&&l.id===ws.want)).map(l=>[l,whoPlAvail(l.id)]).filter(x=>x[1].length);
   if(!L.length)return "";
-  const on=([l,A])=>ws.vis==="pick"&&A.every(id=>ws.pick.has(id)),sel=L.filter(on).map(x=>x[0].name);
-  return '<div class="bsgrp gl">'+grpHead(uiIcon("list")+' Listy',L.length,!ws.plOpen,0,'data-k="plt"').replace('</button>',(sel.length?'<span class="wsplsel"> · '+esc(sel.join(", "))+'</span>':'')+'</button>')+'</div>'
-   +(ws.plOpen?L.map(x=>'<button type="button" class="prow'+(on(x)?' on':'')+'" data-wpl="'+esc(x[0].id)+'"><span class="cbx">'+CHECK+'</span><span class="pnm">'+plDot(x[0])+esc(x[0].name)+'</span><span class="pon">'+x[1].length+' '+plf(x[1].length,["osoba","osoby","osób"])+'</span></button>').join(""):'');
+  const on=([l,A])=>ws.vis==="pick"&&A.every(id=>ws.pick.has(id)),sel=L.filter(on).map(x=>x[0].name),col=!ws.plOpen;
+  // wygląd jak zwijane sekcje pod 🔔 (pasek + drabinka), większy; zielone tło, gdy wybrano listę
+  return '<button type="button" class="bsec bsect wsplb'+(col?' col':'')+(sel.length?' unr':'')+'" data-k="plt" aria-expanded="'+!col+'"><span class="bst">'+uiIcon("list")+'Twoje listy</span>'
+   +'<span class="cnt0">'+L.length+'</span>'+(sel.length?'<span class="wsplsel">'+esc(sel.join(", "))+'</span>':'')
+   +'<svg class="bschev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>'
+   +'<div class="bsecb'+(col?' hide':'')+'">'+(col?'':L.map(x=>'<button type="button" class="prow'+(on(x)?' on':'')+'" data-wpl="'+esc(x[0].id)+'"><span class="cbx">'+CHECK+'</span><span class="pnm">'+plDot(x[0])+esc(x[0].name)+plEd(x[0])+'</span><span class="pon">'+x[1].length+' '+plf(x[1].length,["osoba","osoby","osób"])+'</span></button>').join(""))+'</div>';
 }
 function openWho(mode,wantId){
   if(!session)return;
@@ -1242,7 +1245,10 @@ function openWho(mode,wantId){
   else if(mode==="evf"){ws.vis="pick";ws.pick=new Set(ef&&ef.inv||[]);ws.msg=ef&&ef.invMsg||""}
   else{ws.vis="pick";ws.pick=new Set()}
   // domyślnie: Listy zwinięte, ⭐ Ulubieni rozwinięci, Pozostali zwinięci; przy ≤10 osobach wszystko rozwinięte
-  const few=whoPeople().length<=10;ws.plOpen=few;ws.col={f:false,o:!few};
+  const few=whoPeople().length<=10;ws.col={f:false,o:!few};
+  // 📋 wybrana już lista (np. przy edycji zaproszenia) → sekcja „Twoje listy” od razu rozwinięta
+  const plSel=ws.vis==="pick"&&plOk&&plists.some(l=>{const A=whoPlAvail(l.id);return A.length&&A.every(id=>ws.pick.has(id))});
+  ws.plOpen=few||plSel;
   renderWho(true);
 }
 function closeWho(){const p=$("whosheet");p.classList.add("hide");p.innerHTML=""}
@@ -1288,7 +1294,7 @@ function renderWho(first){
   if(first){
     const w=ws.mode==="add"?wants.find(x=>x.id===ws.want):null,ev=ws.mode==="ev"?evs.find(x=>x.id===ws.want):null;
     p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-k="cancel">Anuluj</button><b>'+(ws.mode==="pl"?"Osoby na liście":ws.mode==="add"?"Zaproś kogoś jeszcze":whoEv()?"Zaproś na imprezę":"Kogo zapraszasz?")+'</b><span style="min-width:64px"></span></div>'
-     +(ws.mode==="pl"&&plById(ws.want)?'<div class="note" style="margin-top:6px;text-align:center;font-size:14px">'+plDot(plById(ws.want))+esc(plById(ws.want).name)+'</div>':'')
+     +(ws.mode==="pl"&&plById(ws.want)?'<div class="note" id="wspln" style="margin-top:6px;text-align:center;font-size:14px"></div>':'')
      +(ev?'<div class="note" style="margin-top:6px;text-align:center;font-size:14px">🏁 '+esc(ev.name)+' · '+esc(evDates(ev))+'</div>':'')
      +(ws.mode==="form"?'<div class="seg" id="wsseg">'+[["all","🌍 Wszyscy"],["fav","⭐ Ulubieni"],["pick","👥 Wybieram"]].map(([k,t])=>'<button type="button" data-v="'+k+'">'+t+'</button>').join("")+'</div>'
        :(w?'<div class="note" style="margin-top:6px;text-align:center;font-size:14px">Zaproszenie: '+esc(wfLabel(new Date(w.starts_at)))+(w.user_id!==uid&&nicks[w.user_id]?' · od '+esc(nicks[w.user_id]):'')+'</div>':''))
@@ -1304,6 +1310,7 @@ function renderWho(first){
   const nUn=[...ws.pick].filter(id=>!whoLocked().has(id)).length,cb=$("wsclr");
   cb.textContent="Wyczyść ("+nUn+")";cb.classList.toggle("hide",ws.vis!=="pick"||!nUn);
   $("wslist").innerHTML=whoPlHtml()+whoListHtml();
+  const pn=$("wspln"),pl=ws.mode==="pl"&&plById(ws.want);if(pn&&pl)pn.innerHTML=plDot(pl)+esc(pl.name)+plEd(pl);   // nazwa listy (odświeża się po zmianie)
   $("wspf").innerHTML=ws.vis==="pick"&&whoPeople().length>8?pfChips("who"):"";
   const pm=ws.vis==="pick"&&ws.mode!=="pl"&&plOk&&ws.pick.size?plMatch([...ws.pick]):null;
   $("wsplsave").innerHTML=ws.vis==="pick"&&ws.mode!=="pl"&&plOk?(pm?'<div class="note wsplm">'+plDot(pm)+'To Twoja lista „'+esc(pm.name)+'”</div>'

@@ -792,6 +792,10 @@ const PL_COL={blue:"#0a84ff",green:"#30d158",orange:"#ff9f0a",red:"#ff3b30",purp
 const plCol=l=>PL_COL[l&&l.color]||PL_COL.blue;
 const plDot=l=>'<span class="plico" style="color:'+plCol(l)+'" aria-hidden="true">'+uiIcon("list")+'</span>';   // ikona listy w kolorze listy (kształt inny niż 🟢 online)
 const plById=id=>plists.find(l=>l.id===id)||null;
+// ✏️ ołówek przy nazwie listy — wszędzie, gdzie lista jest pokazana (otwiera „Zmień listę”)
+const plEd=l=>'<span class="pledb" role="button" tabindex="0" data-pled="'+esc(l.id)+'" title="Zmień nazwę lub kolor" aria-label="Zmień listę '+esc(l.name)+'">'+uiIcon("pencil")+'</span>';
+document.addEventListener("click",e=>{const x=e.target.closest("[data-pled]");if(!x)return;e.preventDefault();e.stopPropagation();openPl("edit",{list:x.dataset.pled})},true);
+document.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.dataset&&e.target.dataset.pled){e.preventDefault();e.stopPropagation();openPl("edit",{list:e.target.dataset.pled})}},true);
 const plIds=id=>(plMem[id]||[]).filter(u=>u!==uid&&nicks[u]&&!modGone(u));   // widoczne osoby z listy (bez ukrytych / zablokowanych)
 const plOfUser=u=>plists.filter(l=>(plMem[l.id]||[]).includes(u));
 // lista, która dokładnie pasuje do wybranych osób (pole „Kto zobaczy”)
@@ -864,7 +868,7 @@ function plistHtml(){
   const l=plById(plId);if(!l)return favsHtml();
   const ids=plIds(l.id).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")),n=ids.length;
   return '<button class="sback" data-c="plback">‹ Ulubieni i listy</button>'
-   +'<div class="sname" style="margin-top:26px">'+plDot(l)+esc(l.name)+'</div>'
+   +'<div class="sname" style="margin-top:26px">'+plDot(l)+esc(l.name)+plEd(l)+'</div>'
    +'<div class="smail">'+n+' '+plf(n,["osoba","osoby","osób"])+' · tylko Ty widzisz tę listę</div>'
    +gGrp("Lista",[gRow(plCol(l),"users","Dodaj lub usuń osoby","Wybierz z listy wszystkich","",'data-c="plpick"'),
       visOk&&n?gRow("#34c759","bike","Zaproś tę listę na rower","🔒 Prywatne zaproszenie dla "+n+" "+plf(n,["osoby","osób","osób"]),"",'data-c="plinv"'):'',
@@ -879,7 +883,7 @@ function plistHtml(){
 function plRowsHtml(){
   if(!plOk)return '';
   return gGrp("Moje listy",plists.map(l=>{const ids=plIds(l.id),nm=ids.slice(0,3).map(u=>nicks[u]).join(", ")+(ids.length>3?"…":"");
-      return gRow(plCol(l),"list",esc(l.name),nm?esc(nm):"Pusta lista",'<span class="ios-v">'+ids.length+'</span>','data-c="plist" data-pl="'+esc(l.id)+'"')})
+      return gRow(plCol(l),"list",esc(l.name)+plEd(l),nm?esc(nm):"Pusta lista",'<span class="ios-v">'+ids.length+'</span>','data-c="plist" data-pl="'+esc(l.id)+'"')})
     .concat([plists.length<20?gRow("#8e8e93","plus","Nowa lista","Np. MTB, Gravel, Wieczorynki","",'data-c="plnew"'):'']))
    +'<p class="note" style="margin:8px 14px 0;font-size:13px;text-align:left">Listy widzisz tylko Ty. Osoby z listy nie wiedzą, że na niej są. Wybierzesz je jednym kliknięciem przy zapraszaniu.</p>';
 }
@@ -889,11 +893,13 @@ const ps={mode:"user",u:"",ids:[],list:"",name:"",color:"blue",busy:false,newOpe
 function openPl(mode,o){
   if(!session)return;
   if(!plOk){say("Listy wymagają KROKU 68 w bazie.");return}
-  o=o||{};Object.assign(ps,{mode,u:o.u||"",ids:o.ids||[],list:o.list||"",after:o.after||null,busy:false,newOpen:mode==="new",delAsk:false});
+  o=o||{};const back=mode==="edit"&&!$("plsheet").classList.contains("hide")&&ps.mode==="user"?{u:ps.u}:null;
+  Object.assign(ps,{back,mode,u:o.u||"",ids:o.ids||[],list:o.list||"",after:o.after||null,busy:false,newOpen:mode==="new",delAsk:false});
   const l=mode==="edit"?plById(ps.list):null;ps.name=l?l.name:"";ps.color=l?l.color:"blue";
   renderPl(true);
 }
-function closePl(){const p=$("plsheet");p.classList.add("hide");p.innerHTML=""}
+function closePl(){const p=$("plsheet");p.classList.add("hide");p.innerHTML="";
+  const bk=ps.back;ps.back=null;if(bk&&nicks[bk.u])openPl("user",{u:bk.u})}   // po edycji z „Listy” wraca do okna osoby
 function plFormHtml(btn){
   return '<div class="plform"><input class="bsq" id="plname" type="text" maxlength="30" placeholder="Nazwa listy, np. MTB" autocomplete="off" value="'+esc(ps.name)+'">'
    +'<div class="plcols" role="radiogroup" aria-label="Kolor listy">'+Object.keys(PL_COL).map(c=>'<button type="button" class="plcol'+(ps.color===c?' on':'')+'" data-plc="'+c+'" style="background:'+PL_COL[c]+'" aria-label="Kolor '+c+'"></button>').join("")+'</div>'
@@ -907,7 +913,7 @@ function renderPl(first){
   if(ps.mode==="user"){
     body='<div class="note" style="margin-top:6px;text-align:center;font-size:14px">Na których listach ma być '+nk(ps.u)+'?</div><div class="bslist">'
      +(plists.length?plists.map(l=>{const on=(plMem[l.id]||[]).includes(ps.u);
-        return '<button type="button" class="prow'+(on?' on':'')+'" data-pt="'+esc(l.id)+'"'+(ps.busy?' disabled':'')+'><span class="cbx">'+CHECK+'</span><span class="pnm">'+plDot(l)+esc(l.name)+'</span><span class="pon">'+plIds(l.id).length+'</span></button>'}).join("")
+        return '<button type="button" class="prow'+(on?' on':'')+'" data-pt="'+esc(l.id)+'"'+(ps.busy?' disabled':'')+'><span class="cbx">'+CHECK+'</span><span class="pnm">'+plDot(l)+esc(l.name)+plEd(l)+'</span><span class="pon">'+plIds(l.id).length+'</span></button>'}).join("")
        :'<div class="bsempty">Nie masz jeszcze list. Utwórz pierwszą — np. „MTB” albo „Wieczorynki”.</div>')
      +(plists.length<20?(ps.newOpen?plFormHtml('<button type="button" class="b big" data-pk="create"'+(ps.busy?' disabled':'')+'>Utwórz i dodaj '+esc(nicks[ps.u]||"")+'</button>')
         :'<button type="button" class="prow pladd" data-pk="newopen"><span class="cbx plplus">+</span><span class="pnm">Nowa lista</span></button>'):'<div class="note">Masz już 20 list — to limit.</div>')+'</div>'

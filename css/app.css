@@ -943,7 +943,8 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 
 /* 📋 listy osób (KROK 68) + 🔎 filtry osób */
 .pfbar{margin:2px 0 4px}.pfbar .bsq{margin:0}
-.pfrow{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin:8px 0 2px;-webkit-overflow-scrolling:touch}.pfrow::-webkit-scrollbar{display:none}
+.pfrow{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin:8px 0 2px}   /* filtry zawijają się i są wyśrodkowane (telefon i komputer) */
+.pjl{margin-top:10px;text-align:left}
 .pfrow .fch{flex:none;white-space:nowrap;padding:7px 12px;font-size:14px;display:inline-flex;align-items:center;gap:5px}.pfrow .fch .ui-i{width:15px;height:15px}
 .pfrow .pfx{color:var(--bad)}.pflbl{flex:none;align-self:center;font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
 .plico{display:inline-flex;vertical-align:-3px;margin-right:6px;flex:none}.plico .ui-i{width:17px;height:17px}.sname .plico .ui-i{width:22px;height:22px}
@@ -962,3 +963,6 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 .arow[data-pu]{justify-content:flex-start}.arow[data-pu] .note{margin-left:6px;font-size:13px}.arow[data-pu] .starb,.plrm{margin-left:auto}
 .plrm{border:0;background:none;color:var(--mut);cursor:pointer;padding:6px;display:flex}.plrm .ui-i{width:22px;height:22px}
 #plsheet{z-index:4200}
+.pledb{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin:-6px 0 -6px 4px;border-radius:50%;color:var(--mut);cursor:pointer;vertical-align:middle}.pledb:hover{background:var(--fill);color:var(--acc)}.pledb .ui-i{width:15px;height:15px}.sname .pledb .ui-i{width:18px;height:18px}
+.bsbox .wsplb{font-size:16px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--ink);padding:13px 14px;margin:10px 0 6px}.wsplb .ui-i{width:19px;height:19px;color:var(--acc)}
+.wsplb .wsplsel{flex:1;min-width:0;font-size:13.5px;font-weight:600;color:var(--acc);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}

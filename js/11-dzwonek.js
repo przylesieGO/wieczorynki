@@ -290,6 +290,14 @@ function maybePopup(){
   if(gearOpen||needProfile()||pwMode||!$("whosheet").classList.contains("hide")||!$("wantform").classList.contains("hide"))return;
   popIdx=0;renderPop();
 }
+// 👥 osoby w okienku zaproszenia: do 6 — etykiety, od 7 — zwinięta lista (jak „Dołączyło”, ulubieni na początku)
+function popNks(lbl,ids,k,cnt){
+  if(ids.length<=6)return '<div class="pmeta">'+lbl+(cnt?' ('+ids.length+')':'')+':</div><div class="nks">'+favFirst(ids).map(id=>nk(id)).join("")+'</div>';
+  const fn=favNames(ids);
+  return '<details class="jlist pjl" data-j="'+esc(k)+'"'+(joinOpen.has(k)?' open':'')+'><summary><span class="jc">'+lbl+' '+ids.length+'</span>'
+   +(fn.length?'<span class="jf">· ⭐ '+esc(fn.join(", "))+'</span>':'')+'</summary>'
+   +'<div class="jv">'+favFirst(ids).map(id=>'<div>'+nk(id)+(onlineIds.includes(id)?'<span class="note">🟢 teraz</span>':'')+'</div>').join("")+'</div></details>';
+}
 function renderPop(){
   const p=$("popsheet"),it=popList[popIdx];if(!it){closePop();return}
   const {n,w,moved}=it,d=new Date(w.starts_at),wd=d.toLocaleDateString("pl-PL",{weekday:"long"}),dd=dayDiff(d);
@@ -318,8 +326,8 @@ function renderPop(){
    +(moved&&!open?'<div class="pmeta">'+(fromRange(w)?'✅ Godzina jest już ustalona — powyżej.':'🕖 Godzina była już zmieniana — powyżej aktualna.')+'</div>':'')
    +paceHtml(w)+bikeHtml(w)+durLineHtml(w)+placeHtml(w)+(w.note?'<div class="pnote">💬 '+esc(w.note)+'</div>':'')
    +(w.user_id!==actor&&!time?'<div class="pmeta">Zaproszenie od '+nk(w.user_id)+'</div>':'')
-   +(inv.length?'<div class="pmeta">Zaproszeni też:</div><div class="nks">'+favFirst(inv).map(id=>nk(id)).join("")+'</div>':'')
-   +(going.length&&!open?'<div class="pmeta">Jadą już ('+going.length+'):</div><div class="nks">'+favFirst(going).map(id=>nk(id)).join("")+'</div>':'')
+   +(inv.length?popNks("Zaproszeni też",inv,"pinv"+w.id,false):'')
+   +(going.length&&!open?popNks("Jadą już",going,"pgo"+w.id,true):'')
    +btns
    +(popList.length>1?'<div class="pnav">'+popList.map((_,i)=>'<button type="button" data-pi="'+i+'" class="'+(i===popIdx?'on':'')+'" aria-label="Powiadomienie '+(i+1)+'"></button>').join("")+'<span>'+(popIdx+1)+' z '+popList.length+'</span></div>':'')
    +'<div class="ptg">Zaproszenie znajdziesz też na Starcie, w karcie dnia.</div></div>';
