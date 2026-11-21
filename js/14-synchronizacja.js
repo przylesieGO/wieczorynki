@@ -6,7 +6,7 @@
    Ostatni stan zapisany w telefonie (localStorage „snap”) — start pokazuje go od razu i dociąga zmiany.
    Bez KROKU 56 (błąd sync_since) — jak dawniej: pełne wczytanie co minutę. */
 let lastTick=Date.now(),syncN=null,syncOk=false,syncTicks=0,syncP=null,syncAgain=false,wRaw=[],wCols=null,wColsTry=null,titleOk=false;
-const SNAP_V=2,SNAP_MAX=2500000,SYNC_FULL_EVERY=15;
+const SNAP_V=3,SNAP_MAX=2500000,SYNC_FULL_EVERY=15;
 function deriveWants(){
   const since=Date.now()-31*864e5;
   let a=wRaw.filter(x=>new Date(x.starts_at).getTime()>=since);
@@ -137,7 +137,7 @@ function snapSave(){
     const d={v:SNAP_V,uid,at:Date.now(),n:syncN,
       sorted,rsvps,watchOk,watchN,flags,
       myPriv,profExOk,genderOk,nicks,genders,joinedAt,avAt,medias,meNick:me.nick,
-      rbOk,titleOk,bikeOk,placeOk,distOk,paceOk,wRouteOk,testOk,rangeOk,visOk,wCols,
+      rbOk,titleOk,wGrOk,bikeOk,placeOk,distOk,paceOk,wRouteOk,testOk,rangeOk,visOk,wCols,
       wRaw,joins,prefs,invs,decls,notifs,reportOk,reports,lib,
       adminIds,nickColors,nickBgs,favOk,favs:[...favs],plOk,plists,plMem,supers:[...supers],testerOk,testerIds:[...testerIds],
       evOk,evNewOk,evGeoOk,evExtraOk,evInvOk,evPriceOk,evLoaded,evs,evDist,evPart,evLikes,evInv,
@@ -154,7 +154,7 @@ function snapLoad(){
     if(!d||d.v!==SNAP_V||d.uid!==uid||!(Date.now()-d.at<2.5*864e5)||d.n==null)return false;
     sorted=d.sorted||[];rsvps=d.rsvps||{};watchOk=d.watchOk;watchN=d.watchN||{};flags=d.flags||{};flagsReady=true;
     myPriv=d.myPriv;profExOk=d.profExOk;genderOk=d.genderOk;nicks=d.nicks||{};genders=d.genders||{};joinedAt=d.joinedAt||{};avAt=d.avAt||{};medias=d.medias||{};me.nick=d.meNick||null;
-    rbOk=d.rbOk;titleOk=!!d.titleOk;bikeOk=d.bikeOk;placeOk=d.placeOk;distOk=d.distOk;paceOk=d.paceOk;wRouteOk=d.wRouteOk;testOk=d.testOk;rangeOk=d.rangeOk;visOk=d.visOk;wCols=d.wCols;
+    rbOk=d.rbOk;titleOk=!!d.titleOk;wGrOk=!!d.wGrOk;bikeOk=d.bikeOk;placeOk=d.placeOk;distOk=d.distOk;paceOk=d.paceOk;wRouteOk=d.wRouteOk;testOk=d.testOk;rangeOk=d.rangeOk;visOk=d.visOk;wCols=d.wCols;
     wRaw=d.wRaw||[];joins=d.joins||{};prefs=d.prefs||{};invs=d.invs||{};decls=d.decls||{};notifs=d.notifs||[];reportOk=d.reportOk;reports=d.reports||{};lib=d.lib||[];
     adminIds=d.adminIds||[];isAdmin=adminIds.includes(uid)&&!pv;nickColors=d.nickColors||{...DEF_COLORS};nickBgs=d.nickBgs||{...DEF_BGS};
     favOk=d.favOk;favs=new Set(d.favs||[]);plOk=!!d.plOk;plists=d.plists||[];plMem=d.plMem||{};supers=new Set(d.supers||[]);testerOk=d.testerOk;testerIds=new Set(d.testerIds||[]);
