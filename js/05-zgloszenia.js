@@ -380,6 +380,8 @@ $("gearpanel").addEventListener("click",async e=>{
   if(ro){try{localStorage.setItem("repOff",ro.dataset.ro==="1"?"1":"0")}catch(err){}renderGear();say(ro.dataset.ro==="1"?"Nie będę pytać „Jak poszło?”.":"Zapytam „Jak poszło?” po jeździe.");return}
   const ht=e.target.closest("button[data-ht]");
   if(ht){hideTest=ht.dataset.ht==="1";try{localStorage.setItem("hideTest",hideTest?"1":"0")}catch(err){}renderGear();await syncNow();say(hideTest?"Testowe zaproszenia ukryte.":"Testowe zaproszenia widoczne.");return}
+  const tc=e.target.closest("button[data-tc]");
+  if(tc){testCalm=tc.dataset.tc==="1";try{localStorage.setItem("testCalm",testCalm?"1":"0")}catch(err){}document.documentElement.classList.toggle("tcalm",testCalm);renderGear();say(testCalm?"Testowe karty: spokojny wygląd (sama etykieta TEST).":"Testowe karty: pełne oznaczenie (migająca ramka).");return}
   const ho=e.target.closest("button[data-ho]");
   if(ho&&canStealth()){hideOnline=ho.dataset.ho==="1";try{localStorage.setItem("hideOnline",hideOnline?"1":"0")}catch(err){}applyPresence();renderGear();say(hideOnline?"👻 Jesteś niewidoczny — nie liczysz się do „online”.":"🟢 Znowu widać Cię jako online.");return}
   if(sn){showNick=sn.dataset.sn==="1";try{localStorage.setItem("showNick",showNick?"1":"0")}catch(err){}renderMeNick();renderGear();return}

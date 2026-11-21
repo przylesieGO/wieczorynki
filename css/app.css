@@ -1014,3 +1014,9 @@ html[data-theme=dark] .popbox.wgrp{background:color-mix(in srgb,var(--gc,#8e8e93
 .grcolx{display:flex;align-items:center;justify-content:center;gap:14px;margin:2px 0 6px;font-size:13px}.grcolx .lnk{display:inline-flex;align-items:center;gap:5px;font-size:13px}
 .prow.wgr .pnm{display:flex;align-items:center;gap:8px}.prow.wgr .grico{width:26px;height:26px;border-radius:7px}.prow.wgr .grico .ui-i{width:15px;height:15px}
 .who .wic .grico{width:30px;height:30px}
+/* 🧪 spokojny wygląd kart testowych (⚙️ → Testy): zostaje czerwona etykieta TEST, znika miganie, czerwona ramka, paski i przygaszenie */
+html.tcalm .ttag{animation:none;box-shadow:none}
+html.tcalm .want.test,html.tcalm .mywant.test,html.tcalm .nit.test{animation:none;border-style:solid;border-width:1px;border-color:var(--line);background-image:none}
+html.tcalm .mywant.test{border-width:2px;border-color:var(--acc);background:linear-gradient(180deg,var(--acc2),transparent 75%)}
+html.tcalm .want.test>*,html.tcalm .mywant.test>*,html.tcalm .nit.test .tx>*,html.tcalm .nit.test .ic{opacity:1!important;filter:none!important}
+html.tcalm .want.wgrp.test,html.tcalm .mywant.wgrp.test,html.tcalm .nit.wgrp.test{background:var(--gcb)}

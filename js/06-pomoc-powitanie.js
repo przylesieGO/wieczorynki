@@ -44,7 +44,7 @@ function setRidesHtml(){
 }
 // Testy: Testowe zaproszenia (każdy z włączoną funkcją) + Funkcje testowe (tylko testerzy)
 function setTestHtml(){
-  return gGrp("Testy",[testOk?iosIt("#ff453a","flask","Testowe zaproszenia",hideTest?"Ukryte — widzisz tylko prawdziwe (Twoje zostają)":"Widoczne — wyłącz, żeby widzieć tylko prawdziwe",iosSw(!hideTest,"data-ht",hideTest?"0":"1")):"",meTester()?iosIt("#bf5af2","flask","Funkcje testowe",betaOn?"Widzisz funkcje w budowie (🧪 BETA)":"Wyłączone — widzisz aplikację tak jak wszyscy",iosSw(betaOn,"data-beta",betaOn?"0":"1")):""]);
+  return gGrp("Testy",[testOk?iosIt("#ff453a","flask","Testowe zaproszenia",hideTest?"Ukryte — widzisz tylko prawdziwe (Twoje zostają)":"Widoczne — wyłącz, żeby widzieć tylko prawdziwe",iosSw(!hideTest,"data-ht",hideTest?"0":"1")):"",testOk?iosIt("#ff453a","flask","Spokojny wygląd testowych",testCalm?"Sama etykieta 🧪 TEST — bez migania i czerwonych pasków":"Wyłączony — testowe karty mają migającą czerwoną ramkę",iosSw(testCalm,"data-tc",testCalm?"0":"1")):"",meTester()?iosIt("#bf5af2","flask","Funkcje testowe",betaOn?"Widzisz funkcje w budowie (🧪 BETA)":"Wyłączone — widzisz aplikację tak jak wszyscy",iosSw(betaOn,"data-beta",betaOn?"0":"1")):""]);
 }
 // pełny opis (rozwijany pod krótką pomocą)
 // 📲 instalacja jako aplikacja (PWA): Android/Chrome — systemowe okienko; iPhone — instrukcja
