@@ -516,21 +516,56 @@ function renderBan(){
    +'<button class="lnk" data-ban="out" style="display:block;margin:14px auto 0">Wyloguj</button></div>';
 }
 // 👁 wszystkie aktualne zaproszenia — tylko podgląd dla 👑 (także prywatne, testowe, ukrytych i zablokowanych)
-function allWantsHtml(){
-  const L=wantsAll.filter(w=>wantEnd(w).getTime()>Date.now()).sort((a,b)=>wantStart(a)-wantStart(b));
-  const n=f=>L.filter(f).length,tag=(c,t)=>'<span class="awt '+c+'">'+t+'</span>';
-  const head='<button class="sback" data-c="backadm">‹ Administracja</button><div class="sname" style="margin-top:26px">👁 Wszystkie zaproszenia</div>'
-   +'<div class="note" style="text-align:center">'+L.length+' aktualnych · 🔒 '+n(w=>w.visibility==="private")+' prywatnych · 🧪 '+n(w=>w.is_test)+' testowych'+(n(w=>modGone(w.user_id))?' · 👻⛔ '+n(w=>modGone(w.user_id)):'')+'</div>'
-   +'<div class="note" style="text-align:center;margin-top:4px">Tylko podgląd — dołączyć możesz tylko tam, gdzie jesteś zaproszony.</div>';
-  if(!L.length)return head+'<div class="note" style="margin-top:14px;text-align:center">Brak aktualnych zaproszeń.</div>';
-  return head+'<div class="aws">'+L.map(w=>{
+// filtry (tylko widok; nic nie zmieniają w bazie): źródło / widoczność / kiedy / autor
+let awF={src:"",vis:"",when:"",q:""};
+const AW_CHIPS=[["src","Źródło",[["","Wszystkie"],["real","Prawdziwe"],["test","Testowe"],["demo","Od kont demo"]]],["vis","Widoczność",[["","Wszystkie"],["open","Jawne"],["priv","Prywatne"],["grp","Dla grupy"]]],["when","Kiedy",[["","Wszystkie"],["today","Dziś"],["tom","Jutro"],["7d","7 dni"]]]];
+const awAll=()=>wantsAll.filter(w=>wantEnd(w).getTime()>Date.now()).sort((a,b)=>wantStart(a)-wantStart(b));
+const awActive=()=>!!(awF.src||awF.vis||awF.when||awF.q.trim());
+function awOk(w){
+  const f=awF,dd=dayDiff(wantStart(w)),p=w.visibility==="private",g=typeof wGr==="function"&&!!wGr(w);
+  if(f.src==="real"&&w.is_test)return false;
+  if(f.src==="test"&&!w.is_test)return false;
+  if(f.src==="demo"&&!(typeof demoIds!=="undefined"&&demoIds.has(w.user_id)))return false;
+  if(f.vis==="open"&&p)return false;
+  if(f.vis==="priv"&&!(p&&!g))return false;
+  if(f.vis==="grp"&&!g)return false;
+  if(f.when==="today"&&dd!==0)return false;
+  if(f.when==="tom"&&dd!==1)return false;
+  if(f.when==="7d"&&(dd<0||dd>6))return false;
+  const q=nickKey(f.q.trim());if(q&&!nickKey(nicks[w.user_id]||"").includes(q))return false;
+  return true;
+}
+function awCards(L){
+  if(!L.length)return '<div class="note" style="margin-top:14px;text-align:center">'+(awActive()?'Brak zaproszeń dla tych filtrów.':'Brak aktualnych zaproszeń.')+'</div>';
+  const tag=(c,t)=>'<span class="awt '+c+'">'+t+'</span>';
+  return L.map(w=>{
     const iv=(invs[w.id]||[]).map(x=>x.u),jn=(joins[w.id]||[]).filter(x=>x!==w.user_id),dc=(decls[w.id]||[]),pr=prefs[w.id]||{};
     return '<div class="aw"><div class="awtags">'+(w.visibility==="private"?tag("p","🔒 prywatne"):tag("a","🌍 wszyscy"))+(w.is_test?tag("t","🧪 test"):'')+(modHidden.has(w.user_id)?tag("h","👻 ukryty"):'')+(modBanned.has(w.user_id)?tag("b","⛔ zablokowany"):'')+'</div>'
      +'<div class="awh">'+nk(w.user_id)+' <b>'+esc(relDay(wantStart(w))+" "+wTime(w))+'</b></div>'
      +paceHtml(w)+bikeHtml(w)+durLineHtml(w)+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')
      +(iv.length?'<div class="awl">🔒 Zaproszeni ('+iv.length+'): '+iv.map(id=>nk(id)).join(" ")+'</div>':'')
      +'<div class="awl">🙋 Dołączyli ('+jn.length+'): '+(jn.length?jn.map(id=>nk(id)+(pr[id]?'<span class="note"> '+hhmm(new Date(pr[id]))+'</span>':'')).join(" "):'<span class="note">nikt</span>')+'</div>'
-     +(dc.length?'<div class="awl">🙅 Nie da rady: '+dc.map(id=>nk(id)).join(" ")+'</div>':'')+'</div>'}).join("")+'</div>';
+     +(dc.length?'<div class="awl">🙅 Nie da rady: '+dc.map(id=>nk(id)).join(" ")+'</div>':'')+'</div>'}).join("");
+}
+// odświeża tylko listę i chipy (pole szukania zostaje, więc nie traci fokusu)
+function awRefresh(){
+  const l=$("awlist");if(!l)return;const A=awAll(),L=A.filter(awOk);l.innerHTML=awCards(L);
+  const c=$("awcnt");if(c)c.textContent=awActive()?L.length+" z "+A.length:"";
+  document.querySelectorAll("[data-awf]").forEach(b=>{const [k,v]=b.dataset.awf.split(":");b.classList.toggle("on",(awF[k]||"")===v)});
+}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-awf]");if(!b)return;const [k,v]=b.dataset.awf.split(":");awF[k]=v;awRefresh()});
+document.addEventListener("input",e=>{if(e.target.id==="awq"){awF.q=e.target.value;awRefresh()}});
+function allWantsHtml(){
+  const L=awAll();
+  const n=f=>L.filter(f).length;
+  const head='<button class="sback" data-c="backadm">‹ Administracja</button><div class="sname" style="margin-top:26px">👁 Wszystkie zaproszenia</div>'
+   +'<div class="note" style="text-align:center">'+L.length+' aktualnych · 🔒 '+n(w=>w.visibility==="private")+' prywatnych · 🧪 '+n(w=>w.is_test)+' testowych'+(n(w=>modGone(w.user_id))?' · 👻⛔ '+n(w=>modGone(w.user_id)):'')+'</div>'
+   +'<div class="note" style="text-align:center;margin-top:4px">Tylko podgląd — dołączyć możesz tylko tam, gdzie jesteś zaproszony.</div>';
+  if(!L.length)return head+'<div class="note" style="margin-top:14px;text-align:center">Brak aktualnych zaproszeń.</div>';
+  const flt=AW_CHIPS.map(([k,t,o])=>'<div class="bsgrp">'+t+'</div><div class="fchips">'+o.map(([v,x])=>'<button type="button" class="fch'+((awF[k]||"")===v?' on':'')+'" data-awf="'+k+':'+v+'">'+x+'</button>').join("")+'</div>').join("")
+   +'<div class="admq" style="margin-top:10px"><input id="awq" type="search" class="srch" placeholder="Autor (nick)" value="'+esc(awF.q)+'" autocomplete="off" enterkeyhint="search"><span class="note" id="awcnt">'+(awActive()?L.filter(awOk).length+' z '+L.length:'')+'</span></div>';
+  const F=L.filter(awOk);
+  return head+'<div class="sleft">'+flt+'</div><div class="aws" id="awlist">'+awCards(F)+'</div>';
 }
 
 // 👑 archiwum: starsze niż 30 dni widzi tylko król (KROK 38) i sam je usuwa

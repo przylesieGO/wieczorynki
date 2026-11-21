@@ -290,6 +290,7 @@ function fltSecs(){
     when:FLT_WHEN.map(([v,t])=>fltChip("when",v,t)).join("")+'<label class="fch fdate'+(flt.when==="date"?' on':'')+'">📅 <input type="date" id="fltdate" value="'+esc(flt.when==="date"?flt.date:"")+'"></label>',
     where:fltWhereChips(),bike:FLT_BIKE().map(([v,t])=>fltChip("bike",v,t)).join(""),
     pace:FLT_PACE().map(([v,t])=>fltChip("pace",v,t)).join(""),user:fltUserChips(),
+    test:[["0","Pokaż"],["1","Ukryj"]].map(([v,t])=>'<button type="button" class="fch'+((hideTest?"1":"0")===v?' on':'')+'" data-fk="ht" data-fv="'+v+'">'+t+'</button>').join(""),
     grp:wGrList().map(x=>fltChip("grp",x.id,"👥 "+x.name)).join("")+(flt.grp&&!wGrList().some(x=>x.id===flt.grp)?fltChip("grp",flt.grp,fltLabel("grp")):"")};
 }
 function fltRefresh(){
@@ -301,7 +302,7 @@ function openFlt(){
   const p=$("fltsheet");p.classList.remove("hide");fltQ="";fltUQ="";
   const sec=(k,t,extra)=>'<div class="fsec"><div class="bsgrp">'+t+'</div>'+(extra||'')+'<div class="fchips" id="flt_'+k+'"></div></div>';
   p.innerHTML='<div class="bsbox fltbox" role="dialog" aria-modal="true" aria-label="Filtry"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="close">Zamknij</button><b>Filtry</b><button type="button" class="lnk" data-fk="clear" style="color:var(--bad);text-align:right">Wyczyść</button></div>'
-   +'<div class="bslist">'+sec("who","Czyje")+(wGrList().length||flt.grp?sec("grp","Grupa"):'')+sec("when","Kiedy")
+   +'<div class="bslist">'+sec("who","Czyje")+(wGrList().length||flt.grp?sec("grp","Grupa"):'')+sec("when","Kiedy")+(testOk?sec("test","Testowe 🧪"):'')
    +(placeOk?sec("where","Gdzie",'<input class="bsq srch" id="fltwq" type="search" placeholder="Miasto, dzielnica, miejsce…" autocomplete="off">'):'')
    +(bikeOk?sec("bike","Rower / teren"):'')+(paceOk?sec("pace","Tempo"):'')
    +sec("user","Osoba",'<input class="bsq srch" id="fltuq" type="search" placeholder="Nick…" autocomplete="off">')+'</div>'
@@ -315,6 +316,7 @@ $("fltsheet").addEventListener("click",e=>{
   const k=b.dataset.fk;
   if(k==="close"){closeFlt();return}
   if(k==="clear"){flt=fltEmpty();fltQ="";fltUQ="";const a=$("fltwq"),c=$("fltuq");if(a)a.value="";if(c)c.value="";fltSave();fltRefresh();return}
+  if(k==="ht"){hideTest=b.dataset.fv==="1";try{localStorage.setItem("hideTest",hideTest?"1":"0")}catch(err){}deriveWants();fltRefresh();syncNow();return}   // to samo ustawienie co ⚙️ → Testy
   const v=b.dataset.fv;flt[k]=flt[k]===v?"":v;if(k==="when")flt.date="";
   fltSave();fltRefresh();
 });
