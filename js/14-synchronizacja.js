@@ -335,5 +335,6 @@ async function loadTail(selectId,prevId){
   else showRide(idx);
   if(location.hash==="#powitanie"&&session&&nicks[uid]){try{history.replaceState(null,"",location.pathname+location.search);sessionStorage.setItem("helpShown","1")}catch(e){}
     welForce=true;show(0);openWelcome()}
+  if(session&&typeof demoLoad==="function")demoLoad().then(()=>{if(demoIds.size)refreshUi()}).catch(()=>{});   // 🧪 start ze stanu telefonu: plakietki DEMO (KROK 74, js/18)
   await afterData();
 }
