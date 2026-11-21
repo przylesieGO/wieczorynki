@@ -43,6 +43,7 @@ async function syncOnce(){
     if(E.length&&flags.tab_events&&tabOk(3))await loadEvents();
     if(d.me)await syncMe();
     if(d.fb)await syncFb();
+    if(((d.grp||[]).length||d.me)&&typeof grLoad==="function")await grLoad();   // 👥 grupy (KROK 70)
   }catch(e){return loadRemote()}
   syncN=+d.last;
   deriveWants();
@@ -284,6 +285,7 @@ async function loadRemote(selectId){
     me.nick=nicks[uid]||null;
     favOk=!fv.error;favs=new Set((ok(fv)||[]).map(x=>x.fav_id));
     await plLoad();   // 📋 listy osób (KROK 68)
+    if(typeof grLoad==="function")await grLoad();   // 👥 grupy (KROK 70, js/17)
     nickColors={...DEF_COLORS};nickBgs={...DEF_BGS};
     (ok(st)||[]).forEach(x=>{
       let m=/^nick_color_([KM])$/.exec(x.key);if(m&&HEX_RE.test(x.value))nickColors[m[1]]=x.value;

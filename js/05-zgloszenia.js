@@ -283,6 +283,7 @@ function renderGear(){
   // ⚙️ góra w stylu grup iPhone'a + wyróżniona „Baza tras” (wariant B, decyzja właściciela 2026-11-16 15:11)
   else body=session
     ?profCardHtml()
+     +(typeof grRow==="function"?gGrp("Ludzie",[grRow()]):'')   // 👥 grupy wysoko — zaproszenia od razu widać (KROK 70)
      +(isAdmin?gGrp("Administracja",[gRow("#8e8e93","shield","Administracja","Użytkownicy, zgłoszenia, statystyki, uprawnienia",fbAdmUnread().length?'<span class="ios-bdg">'+fbAdmUnread().length+'</span>':'','data-c="admin"')]):'')
      +(isKingReal()?gGrp("Podgląd aplikacji",[
         gRow("#8e8e93","user","Jak widzi gość","Nowa karta bez logowania",'','data-c="pv" data-pv="guest"'),

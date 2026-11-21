@@ -46,7 +46,7 @@ async function grLoad(){
   }catch(err){grOk=false;grFor=uid;grMsg=grErr(err)==="Grupy wymagają KROKU 70 w bazie."?grErr(err):"Nie udało się wczytać grup: "+grErr(err)}
   grLoading=false;
 }
-function grRefresh(){try{if(gearOpen&&["nick","groups","group","plist"].includes(gearView))renderGear()}catch(e){}}
+function grRefresh(){try{if(gearOpen&&["main","nick","groups","group","plist"].includes(gearView))renderGear();renderBell()}catch(e){}}
 async function grReload(){await grLoad();grRefresh()}
 const grFresh=()=>{if(session&&grFor!==uid){grOk=null;grMine=[];grMem={};grLim={};grReqs=[];grFind=null}if(session&&grOk===null&&!grLoading)grReload()};
 
@@ -248,6 +248,22 @@ grSheet().addEventListener("click",async e=>{
 // przejście do ekranu grupy (otwiera ⚙️, jeśli zamknięte)
 function grGo(g){grId=g;grTab="ppl";grOpenU="";pf.gm=null;if(!gearOpen){gearOpen=true;gearFrom=""}gearView=grG[g]?"group":"groups";renderGear()}
 
+/* 🔔 sekcja „Grupy”: zaproszenia do mnie i prośby do grup, w których jestem właścicielem / moderatorem (do załatwienia — liczą się do numerka) */
+const grBellN=()=>session&&grOk&&grFor===uid?grMine.filter(m=>m.status==="invited").length+grReqs.length:0;
+function grBellHtml(){const n=grBellN();if(!n)return "";
+  return bsSec("grp","👥 Grupy",n,n,grMine.filter(m=>m.status==="invited").sort(grByName).map(grInvRow).join("")+grReqs.map(r=>grReqRow(r,true)).join("")
+    +'<div class="bsempty"><button type="button" class="lnk" data-gx="hub">Wszystkie grupy: ⚙️ → Grupy ›</button></div>')}
+$("bellsheet").addEventListener("click",async e=>{
+  const b=e.target.closest("[data-gx]");if(!b||b.disabled||!session)return;
+  const a=b.dataset.gx,g=b.dataset.gid,u=b.dataset.gu||"",x=grG[g],nm=nicks[u]||"tę osobę";
+  if(a==="hub"||a==="open"){closeBell();if(a==="open"&&x){grGo(g);return}gearOpen=true;gearFrom="";gearView="groups";renderGear();grReload();return}
+  if(!x)return;
+  if(a==="acc")await grDo("group_answer",{g,accept:true},"👥 Dołączono do grupy „"+x.name+"”",b);
+  else if(a==="dec"){if(await askOk("Odrzucić zaproszenie do „"+x.name+"”?","Odrzuć"))await grDo("group_answer",{g,accept:false},"Odrzucono zaproszenie.",b)}
+  else if(a==="rok")await grDo("group_decide",{g,u,accept:true},"👥 "+nm+" — przyjęto do „"+x.name+"”",b);
+  else if(a==="rno")await grDo("group_decide",{g,u,accept:false},"Odrzucono prośbę: "+nm,b);
+});
+
 /* 🖱 akcje w ⚙️ (atrybut data-gx — nie koliduje z data-c obsługiwanym w js/05) */
 async function grDo(fn,args,okMsg,btn){
   if(btn)btn.disabled=true;
@@ -291,6 +307,9 @@ $("gearpanel").addEventListener("click",async e=>{
 });
 $("gearpanel").addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.dataset&&e.target.dataset.gx==="edit"){e.preventDefault();openGrForm(grId)}});
 $("gearpanel").addEventListener("input",e=>{if(e.target.id!=="grq")return;grQ=e.target.value;clearTimeout(grFindT);grFindT=setTimeout(()=>grSearch(grQ),300)});
+
+// pierwsze wczytanie: przy starcie js/14 może ruszyć, zanim ten plik się wczyta — wtedy grupy dociągamy tutaj
+(()=>{let n=0;const t=setInterval(()=>{n++;if(n>120){clearInterval(t);return}if(!ready||!session)return;clearInterval(t);if(grOk===null&&!grLoading)grReload()},1000)})();
 
 /* 🔗 link #grupa=KOD — po zalogowaniu i wybraniu nicku otwiera okno „Dołącz kodem” */
 (()=>{const m=/#grupa=([0-9a-z]{4,20})/i.exec(location.hash||"");if(!m)return;const code=m[1];

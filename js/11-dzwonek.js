@@ -99,7 +99,7 @@ function lsRow(x){
 const bellUnread=()=>notifs.filter(n=>!n.read_at&&nWant(n)&&(ME_KINDS.includes(n.kind)||OWN_KINDS.includes(n.kind)));
 function renderBell(){
   const b=$("bellbtn");if(!b)return;
-  const on=!!session&&visOk,n=on?bellUnread().length+fbMineUnread().length+fbAdmUnread().length+nuUnread().length+stepsBadge()+evBellUn().length+repTodoN()+sigUnread().length:0,bd=$("bellbadge");
+  const on=!!session&&visOk,n=on?bellUnread().length+fbMineUnread().length+fbAdmUnread().length+nuUnread().length+stepsBadge()+evBellUn().length+repTodoN()+sigUnread().length+(typeof grBellN==="function"?grBellN():0):0,bd=$("bellbadge");
   b.classList.toggle("hide",!on);
   bd.textContent=n>9?"9+":String(n);bd.classList.toggle("hide",!n);
   b.setAttribute("aria-label",n?"Powiadomienia — nowe: "+n:"Powiadomienia");
@@ -144,6 +144,7 @@ function renderBellSheet(){
       +(lsGet("stepsHide")==="1"?'<div class="bsempty"><button type="button" class="lnk" data-sb="show">Pokaż z powrotem w Zaproszeniach ›</button></div>':'')):''),
    repBellHtml(),
    sigBellHtml(),
+   typeof grBellHtml==="function"?grBellHtml():"",   // 👥 zaproszenia do grup i prośby (KROK 70, js/17)
    (fbMineUnread().length?bsSec("msg",'💬 Wiadomości',fbMineUnread().length,fbMineUnread().length,fbMineUnread().map(f=>fbRow(f,false)).join("")):''),
    (fbAdmUnread().length?bsSec("adm",'🛡️ Zgłoszenia',fbAdmUnread().length,fbAdmUnread().length,fbAdmUnread().slice(0,5).map(f=>fbRow(f,true)).join("")):''),
    tstBellHtml(),
