@@ -536,7 +536,21 @@ function wfSetMode(m){
   [...$("wmode").children].forEach(b=>b.classList.toggle("on",b.dataset.mode===m));
   ["flbl1","flbl2","fclock2"].forEach(id=>$(id).classList.toggle("hide",!r));
   $("fclock").classList.toggle("sm",r);
+  if(r&&!wf.editId&&wf.h*60+wf.m>WF_ODMAX)wfSetTime(Math.floor(WF_ODMAX/60),WF_ODMAX%60);   // zakres mieści się w jednym dniu: „od” najpóźniej 22:45
+  wfEndFix();
   wfUpdate();
+}
+// „do” pilnuje tylko różnicy względem „od”: min. 1 h, maks. 12 h, tego samego dnia (najpóźniej 23:45); przy wymuszeniu „do” = „od” + 2 h
+const WF_ODMAX=22*60+45,WF_DOMAX=23*60+45;
+function wfEndFix(){
+  const s=wf.h*60+wf.m,e=wf.h2*60+wf.m2;
+  if(e-s<60||e>WF_DOMAX){const t=Math.min(s+120,WF_DOMAX);wfSetTime2(Math.floor(t/60),t%60)}
+  else if(e-s>720){const t=s+720;wfSetTime2(Math.floor(t/60),t%60)}
+}
+// skróty godzin: nieaktywne, gdy godzina już minęła (dla zakresu — gdy start za wcześnie)
+function wfQuickSync(){
+  const b=wfDate(),lim=Date.now()+(wfRange()?65:5)*60000;
+  [...$("wquick").children].forEach(x=>{const [h,m]=x.dataset.q.split(":").map(Number);let dis=false;if(b){const t=new Date(b);t.setHours(h,m,0,0);dis=t.getTime()<lim}x.disabled=dis});
 }
 function wfSetTime2(hh,mm){
   wf.h2=((hh%24)+24)%24;wf.m2=mm;
@@ -558,17 +572,19 @@ function wfApplyAt(d){
   if(n>=0&&n<=1)wfSetDay(String(n));else{$("wdt").value=localIso(d).slice(0,10);wfSetDay("x",true)}
   wf.h=d.getHours();wf.m=d.getMinutes();$("fch").textContent=pad(wf.h);$("fcm").textContent=pad(wf.m);
   const e=new Date(d.getTime()+Math.max(len,15*6e4));wf.h2=e.getHours();wf.m2=e.getMinutes();$("fch2").textContent=pad(wf.h2);$("fcm2").textContent=pad(wf.m2);
+  wfEndFix();
   wfUpdate();
 }
 function wfSetTime(hh,mm){
   wf.h=((hh%24)+24)%24;wf.m=mm;
   flipCard($("fch"),pad(wf.h));flipCard($("fcm"),pad(wf.m));
+  wfEndFix();
   wfUpdate();
 }
 function wfStep(unit,dir){
   const two=unit.endsWith("2");
   // 🌙 godzina startu przez północ → następny / poprzedni dzień (nie wcześniej niż dziś), jak w pogodzie
-  if(!two){const d=wfDate();if(d){const n=new Date(d);
+  if(!two&&!wfRange()){const d=wfDate();if(d){const n=new Date(d);
     if(unit[0]==="h")n.setHours(n.getHours()+dir);else{const m=dir>0?(Math.floor(wf.m/15)+1)*15:(Math.ceil(wf.m/15)-1)*15;n.setMinutes(m)}
     if(localIso(n).slice(0,10)!==localIso(d).slice(0,10)&&dayDiff(n)>=0){wfApplyAt(n);flipCard($("fch"),pad(wf.h));flipCard($("fcm"),pad(wf.m));try{navigator.vibrate&&navigator.vibrate(8)}catch(x){}return}}}
   let hh=two?wf.h2:wf.h,mm=two?wf.m2:wf.m;
@@ -577,6 +593,8 @@ function wfStep(unit,dir){
     mm=dir>0?(Math.floor(mm/15)+1)*15:(Math.ceil(mm/15)-1)*15;
     if(mm>=60){mm=0;hh++}else if(mm<0){mm=45;hh--}
   }
+  if(two){const s=wf.h*60+wf.m,t=Math.max(s+60,Math.min(hh*60+mm,s+720,WF_DOMAX));hh=Math.floor(t/60);mm=t%60}   // „do” nie wcześniej niż „od” + 1 h, nie później niż 23:45
+  else if(wfRange()){const t=Math.max(0,Math.min(hh*60+mm,WF_ODMAX));hh=Math.floor(t/60);mm=t%60}   // w zakresie „od” najpóźniej 22:45
   two?wfSetTime2(hh,mm):wfSetTime(hh,mm);
 }
 function wfTestSync(){try{wfRbSync()}catch(e){}
@@ -586,6 +604,7 @@ function wfTestSync(){try{wfRbSync()}catch(e){}
 let wxTimer=null;
 function wfUpdate(){
   wfTitleHint();
+  try{wfQuickSync()}catch(e){}
   const d=wfDate(),btn=$("wsave");
   const tst=!wf.editId&&testOk&&wf.test;
   btn.classList.toggle("tbtn",tst);
@@ -633,7 +652,7 @@ function openWantForm(w,preset){
   if(w&&isPriv(w)){wf.vis="pick";wf.pick=new Set((invs[w.id]||[]).map(x=>x.u));wf.gr=wGr(w)}
   $("wwhowrap").classList.toggle("hide",!visOk);
   renderWhoBtn();
-  $("wftitle").textContent="Kiedy jedziesz?";
+  $("wftitle").textContent="Planowany start";
   let d;
   if(w)d=new Date(w.starts_at);
   else{
@@ -998,19 +1017,10 @@ let wheelT=0;
   window.addEventListener("mouseup",()=>{my0=null});
 });
 $("wquick").addEventListener("click",e=>{
-  const b=e.target.closest("button[data-q]");if(!b)return;
-  let d;
-  if(b.dataset.q==="30"){d=new Date(Date.now()+30*60000);d.setMinutes(Math.ceil(d.getMinutes()/5)*5,0,0)}
-  else{
-    const [hh,mm]=b.dataset.q.split(":").map(Number);
-    d=wf.day==="x"?(wfDate()||new Date()):new Date();
-    if(wf.day!=="x"&&wf.day!=="0")d.setDate(d.getDate()+(+wf.day));
-    d.setHours(hh,mm,0,0);
-    if(d.getTime()<Date.now()+5*60000&&wf.day==="0")d.setDate(d.getDate()+1);
-  }
-  if(wf.day!=="x"||b.dataset.q==="30"){const n=dayDiff(d);if(n>=0&&n<=1)wfSetDay(String(n));else{$("wdt").value=localIso(d).slice(0,10);wfSetDay("x",true)}}
-  wfSetTime(d.getHours(),d.getMinutes());
-  if(wfRange()&&wf.h2*60+wf.m2<=wf.h*60+wf.m){const e=new Date(d.getTime()+2*36e5);if(e.getDate()===d.getDate())wfSetTime2(e.getHours(),e.getMinutes());else wfSetTime2(23,45)}
+  const b=e.target.closest("button[data-q]");if(!b||b.disabled)return;
+  // skok: ustawia tylko zegar „od” (dzień bez zmian); „do” = „od” + 2 h (najpóźniej 23:45)
+  const [hh,mm]=b.dataset.q.split(":").map(Number),t=Math.min(hh*60+mm+120,WF_DOMAX);
+  wfSetTime(hh,mm);wfSetTime2(Math.floor(t/60),t%60);
 });
 $("wtitle").addEventListener("input",()=>{wf.titleAuto=false;wfTitleHint()});
 $("wtitle").addEventListener("focus",()=>{if(wf.titleAuto)$("wtitle").select()});

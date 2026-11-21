@@ -242,6 +242,7 @@ html[data-theme=dark] .fcard::after{background:rgba(0,0,0,.25);box-shadow:0 1px 
 @keyframes fcflip{0%{transform:perspective(300px) rotateX(0)}45%{transform:perspective(300px) rotateX(70deg);filter:brightness(.7)}100%{transform:perspective(300px) rotateX(0)}}
 @media (prefers-reduced-motion:reduce){.fcard.flipping{animation:none}}
 .qchips{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.qchips button:disabled{opacity:.35;cursor:default}
 .qchips button{border:0;background:var(--acc2);color:var(--acc);font:inherit;font-size:15px;font-weight:700;border-radius:999px;padding:8px 14px;cursor:pointer}
 .wx{font-size:15px;margin-top:12px;padding:9px 12px;border-radius:10px;background:var(--acc2);text-align:center}
 #wnotesel{font-size:16px;font-weight:600}
