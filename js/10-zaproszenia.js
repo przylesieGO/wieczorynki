@@ -200,7 +200,7 @@ $("wantarch").addEventListener("click",e=>{const b=e.target.closest("[data-arch]
   if(b.dataset.arch==="t")archOpen=!archOpen;else archAll=!archAll;renderArch(wants)});
 /* ---------- 🔍 filtry zaproszeń (decyzje właściciela 2026-11-15 18:58: jak w makiecie filtry.png + z karty osoby) ---------- */
 // zapamiętane w telefonie; działają na listę zaproszeń (karty dni i Twoje zaproszenia), nie na 🔔
-const fltEmpty=()=>({who:"",when:"",date:"",where:"",bike:"",pace:"",user:""});
+const fltEmpty=()=>({who:"",grp:"",when:"",date:"",where:"",bike:"",pace:"",user:""});   // grp: 👥 grupa (KROK 71)
 let flt=(()=>{try{return Object.assign(fltEmpty(),JSON.parse(localStorage.getItem("flt")||"{}"))}catch(e){return fltEmpty()}})(),fltQ="",fltUQ="";
 function fltSave(){try{localStorage.setItem("flt",JSON.stringify(flt))}catch(e){}}
 const fltKeys=()=>Object.keys(fltEmpty()).filter(k=>k!=="date"&&flt[k]);
@@ -215,6 +215,8 @@ function fltOk(w){
   if(flt.who==="going"&&(w.user_id===uid||!j.includes(uid)))return false;
   if(flt.who==="fav"&&!(isFav(w.user_id)||j.some(isFav)))return false;
   if(flt.who==="priv"&&w.visibility!=="private")return false;
+  if(flt.who==="open"&&w.visibility==="private")return false;
+  if(flt.grp&&wGr(w)!==flt.grp)return false;
   if(flt.when==="today"&&dd!==0)return false;
   if(flt.when==="tom"&&dd!==1)return false;
   if(flt.when==="wknd"&&!fltWknd().includes(dd))return false;
@@ -231,7 +233,7 @@ function fltOk(w){
   if(flt.user&&w.user_id!==flt.user&&!j.includes(flt.user))return false;
   return true;
 }
-const FLT_WHO=[["mine","🙋 Moje"],["going","✅ Jadę"],["fav","⭐ Ulubieni"],["priv","🔒 Prywatne"]];
+const FLT_WHO=[["mine","🙋 Moje"],["going","✅ Jadę"],["fav","⭐ Ulubieni"],["open","🌍 Otwarte"],["priv","🔒 Prywatne"]];
 const FLT_WHEN=[["today","Dziś"],["tom","Jutro"],["wknd","Weekend"],["7d","7 dni"]];
 const FLT_BIKE=()=>[["all","🚲 Dla wszystkich"]].concat(Object.entries(BIKES));
 const FLT_PACE=()=>Object.entries(PACES).map(([k,x])=>[k,x.e+" "+x.r.replace(" km/h","")]);
@@ -243,6 +245,7 @@ function fltLabel(k){
   if(k==="bike")return f(FLT_BIKE());
   if(k==="pace")return f(FLT_PACE());
   if(k==="user")return "👤 "+(nicks[v]||"osoba");
+  if(k==="grp")return "👥 "+grNm(v);
   return v;
 }
 function renderWants(){try{renderSteps()}catch(e){}
@@ -286,7 +289,8 @@ function fltSecs(){
   return {who:'<button type="button" class="fch'+(!flt.who?' on':'')+'" data-fk="who" data-fv="">Wszystkie</button>'+FLT_WHO.map(([v,t])=>fltChip("who",v,t)).join(""),
     when:FLT_WHEN.map(([v,t])=>fltChip("when",v,t)).join("")+'<label class="fch fdate'+(flt.when==="date"?' on':'')+'">📅 <input type="date" id="fltdate" value="'+esc(flt.when==="date"?flt.date:"")+'"></label>',
     where:fltWhereChips(),bike:FLT_BIKE().map(([v,t])=>fltChip("bike",v,t)).join(""),
-    pace:FLT_PACE().map(([v,t])=>fltChip("pace",v,t)).join(""),user:fltUserChips()};
+    pace:FLT_PACE().map(([v,t])=>fltChip("pace",v,t)).join(""),user:fltUserChips(),
+    grp:wGrList().map(x=>fltChip("grp",x.id,"👥 "+x.name)).join("")+(flt.grp&&!wGrList().some(x=>x.id===flt.grp)?fltChip("grp",flt.grp,fltLabel("grp")):"")};
 }
 function fltRefresh(){
   const S=fltSecs();Object.keys(S).forEach(k=>{const el=$("flt_"+k);if(el)el.innerHTML=S[k]});
@@ -297,7 +301,7 @@ function openFlt(){
   const p=$("fltsheet");p.classList.remove("hide");fltQ="";fltUQ="";
   const sec=(k,t,extra)=>'<div class="fsec"><div class="bsgrp">'+t+'</div>'+(extra||'')+'<div class="fchips" id="flt_'+k+'"></div></div>';
   p.innerHTML='<div class="bsbox fltbox" role="dialog" aria-modal="true" aria-label="Filtry"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="close">Zamknij</button><b>Filtry</b><button type="button" class="lnk" data-fk="clear" style="color:var(--bad);text-align:right">Wyczyść</button></div>'
-   +'<div class="bslist">'+sec("who","Czyje")+sec("when","Kiedy")
+   +'<div class="bslist">'+sec("who","Czyje")+(wGrList().length||flt.grp?sec("grp","Grupa"):'')+sec("when","Kiedy")
    +(placeOk?sec("where","Gdzie",'<input class="bsq srch" id="fltwq" type="search" placeholder="Miasto, dzielnica, miejsce…" autocomplete="off">'):'')
    +(bikeOk?sec("bike","Rower / teren"):'')+(paceOk?sec("pace","Tempo"):'')
    +sec("user","Osoba",'<input class="bsq srch" id="fltuq" type="search" placeholder="Nick…" autocomplete="off">')+'</div>'
@@ -491,9 +495,9 @@ function wantHtml(w){
     const j=joins[w.id]||[],mine=w.user_id===uid,joined=j.includes(uid),others=j.filter(x=>x!==w.user_id);
     const priv=isPriv(w),canInv=priv&&!mine&&wantCanInvite(w);
     // admin widzi cudze prywatne zaproszenie tylko podglądowo (bez „Jadę!”), chyba że jest zaproszony
-    const peek=priv&&!mine&&!invIds(w).includes(uid)&&!joined;
+    const peek=priv&&!mine&&!wInvMe(w)&&!joined;
     const open=isOpen(w)&&!wLive(w),myp=(prefs[w.id]||{})[uid],dec=(decls[w.id]||[]).includes(uid),live=wLive(w);
-    return '<div class="want'+(mine?' mine':'')+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'">'+(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+'<div class="wtop">'+nk(w.user_id)+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="lockt">do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?'<span class="lockt">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>':'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
+    return '<div class="want'+(mine?' mine':'')+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'">'+(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+'<div class="wtop">'+nk(w.user_id)+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="lockt">do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?(wGr(w)?grTagHtml(w)+(peek?'<span class="lockt">👁 podgląd admina</span>':''):'<span class="lockt">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>'):'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
      +(live?liveHtml(w):'')
      +paceHtml(w)+bikeHtml(w)+(live?'':durLineHtml(w))+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+(live?'':wxHtml(w))+routeBoxHtml(w)
      +invitedHtml(w)
@@ -607,7 +611,7 @@ function openWantForm(w,preset){
   if(needProfile()){askNick();return}
   wf.editId=w?w.id:null;
   wf.sigFor=!w&&preset&&preset.sig||null;   // 🟡 zaproszenie z „Mam ochotę” — ta osoba zostanie zaproszona
-  wf.vis="all";wf.pick=new Set();
+  wf.vis="all";wf.pick=new Set();wf.gr="";   // 👥 wf.gr: grupa zaproszenia (KROK 71)
   wf.test=true;$("wtestwrap").classList.toggle("hide",!!w||!testOk);wfTestSync();
   wf.route=null;wf.routeName="";wf.routeHad=hasRoute(w);wf.routeTouched=false;$("wrfile").value="";
   wf.rbId=w&&w.route_base_id||null;wf.rbAdd=null;wf.rbName="";
@@ -619,7 +623,7 @@ function openWantForm(w,preset){
   // z „Mam ochotę”: domyślnie TYLKO ta osoba (prywatne zaproszenie); „Kto zobaczy?” pozwala dopisać kogoś jeszcze albo otworzyć dla wszystkich
   if(wf.sigFor&&wf.sigFor!==uid&&visOk&&!(preset&&preset.pick)){wf.vis="pick";wf.pick=new Set([wf.sigFor])}
   // edycja: „Kto zobaczy?” startuje z obecnego stanu (prywatne → wybrane osoby = obecni zaproszeni)
-  if(w&&isPriv(w)){wf.vis="pick";wf.pick=new Set((invs[w.id]||[]).map(x=>x.u))}
+  if(w&&isPriv(w)){wf.vis="pick";wf.pick=new Set((invs[w.id]||[]).map(x=>x.u));wf.gr=wGr(w)}
   $("wwhowrap").classList.toggle("hide",!visOk);
   renderWhoBtn();
   $("wftitle").textContent="Kiedy jedziesz?";
@@ -835,7 +839,7 @@ async function savePlaceToList(){
   if(places.some(x=>x.name.toLowerCase()===wf.place.toLowerCase()))return;
   try{const row={name:wf.place,lat:wf.plat,lon:wf.plon};if(bikeOk&&wf.pcity){row.city=wf.pcity;row.area=wf.parea||null}const r=await sb.from("places").insert(row).select(bikeOk?"id,name,lat,lon,created_by,city,area":"id,name,lat,lon,created_by").single();if(!r.error&&r.data)places.push(r.data)}catch(e){}
 }
-function wfSnap(){return JSON.stringify([wf.day,$("wdt").value,wf.mode,wf.h,wf.m,wf.h2,wf.m2,wf.vis,[...wf.pick].sort(),wf.test,wf.pace,wf.bike,wf.km,wf.dur,wf.place,wf.plat,(wf.titleAuto?"":$("wtitle").value.trim()),$("wnote").value.trim(),!!wf.route,wf.routeTouched])}
+function wfSnap(){return JSON.stringify([wf.day,$("wdt").value,wf.mode,wf.h,wf.m,wf.h2,wf.m2,wf.vis,[...wf.pick].sort(),wf.gr,wf.test,wf.pace,wf.bike,wf.km,wf.dur,wf.place,wf.plat,(wf.titleAuto?"":$("wtitle").value.trim()),$("wnote").value.trim(),!!wf.route,wf.routeTouched])}
 function wfTryClose(){
   if($("wantform").classList.contains("hide"))return;
   if(wf.snap0&&wfSnap()!==wf.snap0){
@@ -1009,11 +1013,11 @@ $("wsave").onclick=async()=>{
   // edycja: zmiana „Kto zobaczy?” (osoby, które już dołączyły, zostają zaproszone)
   const ow1=wf.editId?wants.find(x=>x.id===wf.editId):null,ePriv=!!ow1&&visOk&&wfPriv(),
     eJoined=ow1?(joins[ow1.id]||[]).filter(x=>x!==uid):[],eTarget=ePriv?[...new Set([...wfInvIds(),...eJoined])]:[];
-  if(ePriv&&!eTarget.length){say(wf.vis==="fav"?"Nie masz jeszcze ulubionych — wybierz osoby w „Kto zobaczy”.":"Wybierz co najmniej jedną osobę w „Kto zobaczy”.");return}
+  if(ePriv&&!eTarget.length&&!wf.gr){say(wf.vis==="fav"?"Nie masz jeszcze ulubionych — wybierz osoby w „Kto zobaczy”.":"Wybierz co najmniej jedną osobę w „Kto zobaczy”.");return}
   let visMsg="";
   // prywatne → wszyscy: potwierdzenie (ogłoszenie na kanale Telegram nie da się cofnąć; baza wysyła je tylko raz — KROK 52)
   if(ow1&&visOk&&isPriv(ow1)&&!ePriv&&!await askOk("Zaproszenie zobaczą wszyscy zalogowani.\n\nJeśli jeszcze nie było na kanale Telegram, trafi tam teraz — wiadomości z kanału nie da się cofnąć (nawet gdy później znów zrobisz je prywatnym).\n\nZapisać?","Zapisz"))return;
-  if(priv&&!ids.length){say(wf.vis==="fav"?"Nie masz jeszcze ulubionych — wybierz osoby w „Kto zobaczy”.":"Wybierz co najmniej jedną osobę w „Kto zobaczy”.");return}
+  if(priv&&!ids.length&&!wf.gr){say(wf.vis==="fav"?"Nie masz jeszcze ulubionych — wybierz osoby w „Kto zobaczy”.":"Wybierz co najmniej jedną osobę w „Kto zobaczy”.");return}
   let editedPriv=false,sigInv=null;
   try{
     await savePlaceToList();
@@ -1036,9 +1040,11 @@ $("wsave").onclick=async()=>{
       const ow=wants.find(x=>x.id===wf.editId);editedPriv=!!ow&&((invs[ow.id]||[]).length>0||(joins[ow.id]||[]).some(x=>x!==uid));
       if(ow1&&visOk){
         const was=isPriv(ow1),cur=(invs[ow1.id]||[]).map(x=>x.u);
-        if(was!==ePriv){const rv=await sb.from("wants").update({visibility:ePriv?"private":"all"}).eq("id",ow1.id).select("id");
-          if(rv.error||!rv.data||!rv.data.length)throw new Error("termin zapisany, ale zmiana „Kto zobaczy” wymaga KROKU 52 w bazie");
-          visMsg=ePriv?" 🔒 Teraz widzą tylko zaproszeni.":" 🌍 Teraz widzą wszyscy."}
+        const gOld=wGr(ow1)||null,gNew=ePriv&&wf.gr||null,gCh=wGrOk&&gOld!==gNew;   // 👥 KROK 71: widoczność i grupa jednym zapisem
+        if(was!==ePriv||gCh){const vu={visibility:ePriv?"private":"all"};if(wGrOk)vu.group_id=gNew;
+          const rv=await sb.from("wants").update(vu).eq("id",ow1.id).select("id");
+          if(rv.error||!rv.data||!rv.data.length)throw new Error(rv.error&&rv.error.message?"termin zapisany, ale „Kto zobaczy”: "+rv.error.message:"termin zapisany, ale zmiana „Kto zobaczy” wymaga KROKU 52 w bazie");
+          visMsg=gNew&&gCh?" 👥 Teraz widzi grupa „"+grNm(gNew)+"”"+(eTarget.length?" i wybrane osoby.":"."):was!==ePriv?(ePriv?" 🔒 Teraz widzą tylko zaproszeni.":" 🌍 Teraz widzą wszyscy."):" 🔒 Grupa zdjęta — widzą tylko zaproszeni."}
         if(ePriv){const add=eTarget.filter(u=>!cur.includes(u)),rem=cur.filter(u=>!eTarget.includes(u));
           if(add.length){const ri=await sb.from("want_invitees").insert(add.map(u=>({want_id:ow1.id,user_id:u,added_by:uid})));if(ri.error)throw ri.error}
           if(rem.length){const rd=await sb.from("want_invitees").delete().eq("want_id",ow1.id).in("user_id",rem);if(rd.error)throw rd.error}
@@ -1047,12 +1053,12 @@ $("wsave").onclick=async()=>{
           if(rem.length)visMsg+=" Usunięto z zaproszonych: "+rem.length+".";}
       }
     }else{
-      const row={starts_at:d.toISOString(),note};if(titleOk&&title)row.title=title;if(paceOk&&wf.pace)row.pace=wf.pace;if(placeOk&&wf.place){row.place=wf.place;if(wf.plat!=null){row.place_lat=wf.plat;row.place_lon=wf.plon}}if(bikeOk){if(wf.bike)row.bike=wf.bike;if(wf.place&&wf.pcity){row.place_city=wf.pcity;if(wf.parea)row.place_area=wf.parea}}if(distOk&&!wf.route){if(wf.km)row.km=wf.km;else row.dur_min=wf.dur||DUR_DEF}if(priv)row.visibility="private";if(testOk)row.is_test=!!wf.test;if(wRouteOk&&wf.route){row.route=routeJson(wf.route);row.route_km=+routeKm(wf.route).toFixed(1)}if(rbOk&&rbUse)row.route_base_id=rbUse;
+      const row={starts_at:d.toISOString(),note};if(titleOk&&title)row.title=title;if(paceOk&&wf.pace)row.pace=wf.pace;if(placeOk&&wf.place){row.place=wf.place;if(wf.plat!=null){row.place_lat=wf.plat;row.place_lon=wf.plon}}if(bikeOk){if(wf.bike)row.bike=wf.bike;if(wf.place&&wf.pcity){row.place_city=wf.pcity;if(wf.parea)row.place_area=wf.parea}}if(distOk&&!wf.route){if(wf.km)row.km=wf.km;else row.dur_min=wf.dur||DUR_DEF}if(priv)row.visibility="private";if(priv&&wGrOk&&wf.gr)row.group_id=wf.gr;if(testOk)row.is_test=!!wf.test;if(wRouteOk&&wf.route){row.route=routeJson(wf.route);row.route_km=+routeKm(wf.route).toFixed(1)}if(rbOk&&rbUse)row.route_base_id=rbUse;
       if(rng){row.range_from=d.toISOString();row.range_to=d2.toISOString()}
       const res=await sb.from("wants").insert(row).select("id").single();
       if(res.error)throw res.error;
       if(rbNew)sb.from("route_base").update({src_want:res.data.id}).eq("id",rbNew).then(()=>{},()=>{});
-      if(priv){
+      if(priv&&ids.length){
         const r2=await sb.from("want_invitees").insert(ids.map(u=>({want_id:res.data.id,user_id:u,added_by:uid})));
         if(r2.error){await sb.from("wants").delete().eq("id",res.data.id);throw r2.error}
       }
@@ -1067,7 +1073,7 @@ $("wsave").onclick=async()=>{
     const lbl=wfLabel(d)+(rng?"–"+hhmm(d2):"");
     if(sigInv){say("Wysłane ✔ "+lbl+" — "+(nicks[sigInv]||"ta osoba")+" dostanie zaproszenie.");return}
     say(wasEdit?"Zapisano ✔ "+lbl+(visMsg||(editedPriv&&visOk?" — zaproszeni dostaną powiadomienie.":""))
-      :priv?"Wysłane 🔒 do "+ids.length+" "+osob(ids.length)+" ✔ Dostaną powiadomienie w aplikacji.":testOk&&wf.test?"Wysłane 🧪 testowe zaproszenie na "+lbl+" ✔ (na kanale Telegram z oznaczeniem TESTOWE)":"Wysłane ✔ Zaproszenie na "+lbl+" jest też na kanale Telegram.");
+      :priv&&wf.gr?"Wysłane 👥 do grupy „"+grNm(wf.gr)+"”"+(ids.length?" i "+ids.length+" "+osob(ids.length):"")+" ✔ Dostaną powiadomienie w aplikacji.":priv?"Wysłane 🔒 do "+ids.length+" "+osob(ids.length)+" ✔ Dostaną powiadomienie w aplikacji.":testOk&&wf.test?"Wysłane 🧪 testowe zaproszenie na "+lbl+" ✔ (na kanale Telegram z oznaczeniem TESTOWE)":"Wysłane ✔ Zaproszenie na "+lbl+" jest też na kanale Telegram.");
   }catch(e){say("Nie udało się: "+(e&&e.message?e.message:"błąd"))}
 };
 /* ---------- Twoje zaproszenie (zamiast dużego przycisku) ---------- */
@@ -1101,7 +1107,7 @@ function renderMyWant(){
      +'<div class="mym">'+joinedHtml("my"+w.id,j,'Jedziesz sam(a).')+'</div>'
      +'<div class="linfo">🔒 Jazda trwa — nie można już edytować, dołączać ani doprosić. Po zakończeniu trafi do archiwum.</div>'
      +'<div class="acts"><button class="b g join" data-my="share" data-id="'+esc(w.id)+'">Udostępnij</button><button class="ib del" data-my="del" data-id="'+esc(w.id)+'" title="Usuń zaproszenie" aria-label="Usuń zaproszenie">'+ICON.del+'</button></div></div>';
-    return '<div class="mywant'+(isTest(w)?' test':'')+'" data-i="'+i+'" data-wid="'+esc(w.id)+'"><div class="myh">🙋 Ty zapraszasz'+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+(mine.length>1?' · '+(i+1)+' z '+mine.length:'')+(priv?'<span class="lockt">🔒 dla '+ni+' '+osob(ni)+'</span>':'')+'</div>'
+    return '<div class="mywant'+(isTest(w)?' test':'')+'" data-i="'+i+'" data-wid="'+esc(w.id)+'"><div class="myh">🙋 Ty zapraszasz'+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+(mine.length>1?' · '+(i+1)+' z '+mine.length:'')+(priv?(wGr(w)?grTagHtml(w):'<span class="lockt">🔒 dla '+ni+' '+osob(ni)+'</span>'):'')+'</div>'
      +wTitleHtml(w)+'<div class="myt'+(isOpen(w)?' rng':'')+'">'+esc(n>=0&&n<=2?["Dziś","Jutro","Pojutrze"][n]+" "+wTime(w):wd.charAt(0).toUpperCase()+wd.slice(1)+" "+wTime(w))+(n>=0&&n<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
      +(isOpen(w)?'<div class="mym">🕖 Godzina do ustalenia'+(new Date(w.range_from).getTime()>Date.now()+36e5?' — ustali się sama '+esc(hhmm(new Date(new Date(w.range_from).getTime()-36e5)))+', jeśli jej nie wybierzesz':'')+'</div>':fromRange(w)?'<div class="mym">✅ Godzina ustalona</div>':'')
      +paceHtml(w)+bikeHtml(w)+durLineHtml(w)+placeHtml(w)+(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')+wxHtml(w)+routeBoxHtml(w)
@@ -1191,14 +1197,23 @@ const CHECK='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke=
 const plf=(n,f)=>n===1?f[0]:(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20))?f[1]:f[2];
 const osob=n=>n===1?"osoby":"osób"; // „dla 1 osoby”, „dla 5 osób”
 const isPriv=w=>!!w&&w.visibility==="private";
+// 👥 zaproszenie dla grupy (KROK 71): wants.group_id; wGrOk ustawia wczytanie (js/14); nazwa/kolor/skład grupy — js/17 (przez typeof)
+let wGrOk=false;
+const wGr=w=>wGrOk&&!!w&&w.group_id||"";
+const grTagHtml=w=>wGr(w)&&typeof wGrTag==="function"?wGrTag(w):"";
+const grNm=g=>typeof grName==="function"?grName(g):"grupa";
+// grupy do wyboru w „Kto zobaczy?” (aktywne członkostwa, nie w archiwum) — tylko gdy baza ma KROK 71
+const wGrList=()=>wGrOk&&typeof grForWant==="function"?grForWant():[];
 const invIds=w=>(invs[w.id]||[]).map(x=>x.u);
-const wantCanInvite=w=>isPriv(w)&&new Date(w.starts_at).getTime()>Date.now()-36e5&&(w.user_id===uid||invIds(w).includes(uid));
+// zaproszony: wpis w want_invitees albo aktywny członek grupy zaproszenia (👥 KROK 71)
+const wInvMe=w=>invIds(w).includes(uid)||(!!wGr(w)&&typeof grIn==="function"&&grIn(w.group_id));
+const wantCanInvite=w=>isPriv(w)&&new Date(w.starts_at).getTime()>Date.now()-36e5&&(w.user_id===uid||wInvMe(w));
 // lista zaproszonych: do 2 osób pigułki, od 3 — zwinięta (jak „Dołączyło”); „dopr. X” przy dopraszanych
 function invitedHtml(w){
   if(!isPriv(w))return "";
   const L=(invs[w.id]||[]).slice().sort((a,b)=>((isFav(b.u)?1:0)-(isFav(a.u)?1:0))||String(nicks[a.u]||"").localeCompare(String(nicks[b.u]||""),"pl"));
   const by=x=>x.by&&x.by!==w.user_id&&nicks[x.by]?'dopr. '+esc(nicks[x.by]):'';
-  if(!L.length)return '<div class="meta">🔒 Zaproszeni: nikt</div>';
+  if(!L.length)return wGr(w)?'':'<div class="meta">🔒 Zaproszeni: nikt</div>';   // 👥 grupa bez dodatkowych osób
   if(L.length<=2)return '<div class="meta">🔒 Zaproszeni ('+L.length+'):<div class="nks">'+L.map(x=>nk(x.u)+(by(x)?'<span class="note">'+by(x)+'</span>':'')).join("")+'</div></div>';
   const k="inv"+w.id,fn=favNames(L.map(x=>x.u));
   return '<details class="jlist" data-j="'+esc(k)+'"'+(joinOpen.has(k)?' open':'')+'><summary><span class="jc">🔒 Zaproszeni '+L.length+'</span>'
@@ -1206,11 +1221,16 @@ function invitedHtml(w){
    +'<div class="jv">'+L.map(x=>'<div>'+nk(x.u)+'<span class="note">'+[by(x),onlineIds.includes(x.u)?'🟢 teraz':''].filter(Boolean).join(' · ')+'</span></div>').join("")+'</div></details>';
 }
 /* pole „Kto zobaczy” w formularzu */
-const wfPriv=()=>visOk&&wf.vis!=="all";
+const wfPriv=()=>visOk&&(wf.vis!=="all"||!!wf.gr);
 function wfInvIds(){return (wf.vis==="fav"?[...favs]:[...wf.pick]).filter(id=>id!==uid&&nicks[id])}
 function renderWhoBtn(){
   const b=$("wwho");if(!b)return;
   const ids=wf.vis==="all"?[]:wfInvIds(),names=favFirst(ids).map(id=>nicks[id]);
+  // 👥 grupa (+ ewentualnie dodatkowe osoby): ikona i kolor grupy jak w ⚙️ → Grupy
+  if(wf.gr&&typeof grG!=="undefined"){const x=grG[wf.gr],n=typeof grMemIds==="function"?grMemIds(wf.gr).length+1:0;
+    b.className="who priv";
+    b.innerHTML='<span class="wic">'+(x&&typeof grIco==="function"?grIco(x):'👥')+'</span><span class="wtx"><b>'+esc(grNm(wf.gr)+(n?" ("+n+")":""))+'</b><span>'+esc(ids.length?"Członkowie grupy + "+names.join(", "):"Członkowie grupy, także nowi")+'</span></span><span class="war">›</span>';
+    return}
   const [ic,t,s]=wf.vis==="all"?["🌍","Wszyscy","Wszyscy zalogowani + kanał Telegram"]
     :wf.vis==="fav"?["⭐","Ulubieni ("+ids.length+")",names.join(", ")||"Nie masz jeszcze ulubionych"]
     :(()=>{const l=plOk&&plMatch(ids);return l?["📋",l.name+" ("+ids.length+")",names.join(", ")]:["👥","Wybrane osoby ("+ids.length+")",names.join(", ")||"Nikogo nie wybrano"]})();
@@ -1237,6 +1257,7 @@ function openWho(mode,wantId){
   if(!session)return;
   if(needProfile()){askNick();return}
   ws.mode=mode;ws.want=wantId||null;ws.q="";
+  ws.gr=mode==="form"&&wGrList().some(x=>x.id===wf.gr)?wf.gr:"";   // 👥 grupa (KROK 71)
   ws.msg="";pf.who=null;   // 🔎 filtry od nowa przy każdym otwarciu
   if(mode==="pl"){ws.vis="pick";ws.pick=new Set(plIds(wantId))}   // 📋 osoby na liście (KROK 68)
   else if(mode==="form"){ws.vis=wf.vis;ws.pick=new Set(wf.vis==="fav"?favIds():wf.pick);whoLocked().forEach(id=>ws.pick.add(id))}
@@ -1246,7 +1267,7 @@ function openWho(mode,wantId){
   const few=whoPeople().length<=10;ws.col={f:false,o:!few};
   // 📋 wybrana już lista (np. przy edycji zaproszenia) → sekcja „Twoje listy” od razu rozwinięta
   const plSel=ws.vis==="pick"&&plOk&&plists.some(l=>{const A=whoPlAvail(l.id);return A.length&&A.every(id=>ws.pick.has(id))});
-  ws.plOpen=few||plSel;
+  ws.plOpen=few||plSel;ws.grOpen=!!ws.gr||wGrList().length<=3;
   renderWho(true);
 }
 function closeWho(){const p=$("whosheet");p.classList.add("hide");p.innerHTML=""}
@@ -1258,7 +1279,8 @@ function whoPeople(){
 }
 const whoEv=()=>ws.mode==="ev"||ws.mode==="evf";
 // 🏁 impreza: kto już jest zaproszony albo jedzie — widoczny, ale nie do wybrania
-function whoDis(){const M=new Map();if(ws.mode==="gr"&&typeof grDis==="function")return grDis(ws.want);if(ws.mode!=="ev")return M;
+function whoDis(){const M=new Map();if(ws.mode==="gr"&&typeof grDis==="function")return grDis(ws.want);
+  if(ws.mode==="form"&&ws.gr&&ws.vis!=="all"&&typeof grMemIds==="function"){grMemIds(ws.gr).forEach(id=>M.set(id,"w grupie"));return M}if(ws.mode!=="ev")return M;
   (evPart[ws.want]||[]).forEach(p=>M.set(p.user_id,"już jedzie"));
   evInv.filter(x=>x.event_id===ws.want).forEach(x=>{if(!M.has(x.user_id))M.set(x.user_id,"już zaproszony(a)")});return M}
 // edycja zaproszenia: osoby, które już dołączyły, zostają zaproszone (nie da się ich odznaczyć)
@@ -1279,6 +1301,15 @@ const whoGrp=(t,ids,g,tog)=>{if(!ids.length)return '';const D=whoDis();ids=ids.f
   const col=whoColl(g),k=ids.filter(id=>ws.pick.has(id)||L.has(id)).length;
   return secBar(g==="f"?'<span class="secstar">'+uiIcon("starf")+'</span>':uiIcon("users"),g==="f"?"Ulubieni":"Pozostali",ids.length,col,k?"zaznaczono "+k:"",'data-k="gtog" data-g="'+g+'"',false)
    +'<div class="secb'+(col?' hide':'')+'">'+(sel?'<div class="secact">'+sel+'</div>':'')};
+// 👥 zwijana sekcja „Twoje grupy” (KROK 71) — jedna grupa na zaproszenie; wygląd jak „Twoje listy”, ikona i kolor grupy jak w ⚙️ → Grupy
+function whoGrHtml(){
+  if(ws.mode!=="form")return "";
+  const L=wGrList();if(!L.length)return "";
+  const sel=ws.vis!=="all"&&ws.gr?L.find(x=>x.id===ws.gr):null,col=!ws.grOpen;
+  return secBar(uiIcon("users"),"Twoje grupy",L.length,col,sel?esc(sel.name):"",'data-k="grt"',!!sel)
+   +'<div class="secb'+(col?' hide':'')+'">'+(col?'':L.map(x=>{const on=!!sel&&sel.id===x.id,n=grMemIds(x.id).length+1;
+     return '<button type="button" class="prow wgr'+(on?' on':'')+'" data-wgr="'+esc(x.id)+'"><span class="cbx">'+CHECK+'</span><span class="pnm">'+grIco(x)+'<span>'+esc(x.name)+'</span></span><span class="pon">'+n+' '+plf(n,["osoba","osoby","osób"])+'</span></button>'}).join(""))+'</div>';
+}
 function whoListHtml(){
   if(ws.vis==="all")return '<div class="bsempty">🌍 Zaproszenie zobaczą wszyscy zalogowani, a wiadomość trafi na kanał Telegram.</div>';
   const q=ws.vis==="pick"?nickKey(ws.q.trim()):"",all=whoPeople().filter(id=>(!q||nickKey(nicks[id]).includes(q))&&(ws.vis!=="pick"||pfMatch("who",id)));
@@ -1315,22 +1346,25 @@ function renderWho(first){
   $("wsqrow").classList.toggle("hide",ws.vis!=="pick");
   const nUn=[...ws.pick].filter(id=>!whoLocked().has(id)).length,cb=$("wsclr");
   cb.textContent="Wyczyść ("+nUn+")";cb.classList.toggle("hide",ws.vis!=="pick"||!nUn);
-  $("wslist").innerHTML=whoPlHtml()+whoListHtml();
+  $("wslist").innerHTML=whoGrHtml()+whoPlHtml()+whoListHtml();
   const pn=$("wspln"),pl=ws.mode==="pl"&&plById(ws.want);if(pn&&pl)pn.innerHTML=plDot(pl)+esc(pl.name)+plEd(pl);   // nazwa listy (odświeża się po zmianie)
   $("wspf").innerHTML=ws.vis==="pick"&&whoPeople().length>8?pfChips("who"):"";
   const pm=ws.vis==="pick"&&ws.mode!=="pl"&&plOk&&ws.pick.size?plMatch([...ws.pick]):null;
   $("wsplsave").innerHTML=ws.vis==="pick"&&ws.mode!=="pl"&&plOk?(pm?'<div class="note wsplm">'+plDot(pm)+'To Twoja lista „'+esc(pm.name)+'”</div>'
     :ws.pick.size>=2&&plists.length<20?'<button type="button" class="lnk wsplm" data-k="plsave">📋 Zapisz wybór jako listę</button>':''):'';
   const jn=ws.mode==="form"&&wf.editId?(joins[wf.editId]||[]).filter(x=>x!==uid).length:0;
-  $("wshint").textContent=ws.mode==="gr"?"👥 Dostaną zaproszenie do grupy w aplikacji (⚙️ → Grupy). Członkiem zostanie ten, kto je przyjmie. Wyszarzeni już są w grupie albo mają zaproszenie.":ws.mode==="pl"?"📋 Tylko Ty widzisz tę listę. Osoby nie dostaną żadnego powiadomienia.":whoEv()?"Dostaną powiadomienie w aplikacji i od bota na Telegramie (jeśli go połączyli). Zaprosić można osoby, które widzą zakładkę Imprezy.":ws.vis==="all"?"":ws.mode==="add"?"Dostaną powiadomienie i zobaczą to zaproszenie.":"🔒 Zaproszenie zobaczą tylko wybrane osoby (i kogo one doproszą). Nie trafi na publiczny kanał Telegram."+(jn?" Osoby, które już dołączyły ("+jn+"), zostaną zaproszone.":"");
+  const gSel=ws.mode==="form"&&ws.vis!=="all"&&ws.gr?grNm(ws.gr):"";
+  $("wshint").textContent=gSel?"👥 Zobaczą wszyscy członkowie grupy „"+gSel+"” — także ci, którzy dołączą później"+(ws.vis==="fav"?" — i Twoi ulubieni":" — i osoby wybrane niżej")+". Nie trafi na publiczny kanał Telegram."+(jn?" Osoby, które już dołączyły ("+jn+"), zostaną zaproszone.":""):ws.mode==="gr"?"👥 Dostaną zaproszenie do grupy w aplikacji (⚙️ → Grupy). Członkiem zostanie ten, kto je przyjmie. Wyszarzeni już są w grupie albo mają zaproszenie.":ws.mode==="pl"?"📋 Tylko Ty widzisz tę listę. Osoby nie dostaną żadnego powiadomienia.":whoEv()?"Dostaną powiadomienie w aplikacji i od bota na Telegramie (jeśli go połączyli). Zaprosić można osoby, które widzą zakładkę Imprezy.":ws.vis==="all"?"":ws.mode==="add"?"Dostaną powiadomienie i zobaczą to zaproszenie.":"🔒 Zaproszenie zobaczą tylko wybrane osoby (i kogo one doproszą). Nie trafi na publiczny kanał Telegram."+(jn?" Osoby, które już dołączyły ("+jn+"), zostaną zaproszone.":"");
   const n=whoCount(),ok=$("wsok");
-  ok.textContent=ws.mode==="gr"?(n?"Zaproś do grupy · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.mode==="pl"?"Zapisz · "+n+" "+plf(n,["osoba","osoby","osób"]):ws.mode==="ev"?(n?"Zaproś · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.mode==="evf"?(n?"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]):"Gotowe · nikogo"):ws.mode==="add"?(n?"Zaproś · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.vis==="all"?"Gotowe · wszyscy":"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]);
+  ok.textContent=ws.mode==="gr"?(n?"Zaproś do grupy · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.mode==="pl"?"Zapisz · "+n+" "+plf(n,["osoba","osoby","osób"]):ws.mode==="ev"?(n?"Zaproś · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.mode==="evf"?(n?"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]):"Gotowe · nikogo"):ws.mode==="add"?(n?"Zaproś · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.vis==="all"?"Gotowe · wszyscy":gSel?"Gotowe · 👥 "+gSel+(whoCount()?" + "+whoCount()+" "+plf(whoCount(),["osoba","osoby","osób"]):""):"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]);
   ok.disabled=(ws.mode==="add"||ws.mode==="ev"||ws.mode==="gr")&&!n;
 }
 $("whosheet").addEventListener("click",async e=>{
   if(e.target===$("whosheet")){closeWho();return}
   const v=e.target.closest("button[data-v]");
-  if(v){if(v.dataset.v==="pick"&&ws.vis==="fav"&&!ws.pick.size)ws.pick=new Set(favIds());ws.vis=v.dataset.v;renderWho();return}
+  if(v){if(v.dataset.v==="pick"&&ws.vis==="fav"&&!ws.pick.size)ws.pick=new Set(favIds());ws.vis=v.dataset.v;if(ws.vis==="all")ws.gr="";renderWho();return}
+  const gc=e.target.closest("[data-wgr]");   // 👥 grupa jednym kliknięciem (zaznacz / odznacz); z „Wszyscy” → wybrane osoby
+  if(gc){const g=gc.dataset.wgr;ws.gr=ws.gr===g&&ws.vis!=="all"?"":g;if(ws.gr&&ws.vis==="all"){ws.vis="pick";ws.pick=new Set();whoLocked().forEach(id=>ws.pick.add(id))}renderWho();return}
   const lc=e.target.closest("[data-wpl]");   // 📋 lista jednym kliknięciem: zaznacz / odznacz wszystkich z listy
   if(lc){const A=whoPlAvail(lc.dataset.wpl),L=whoLocked();if(!A.length)return;
     if(ws.vis!=="pick"){ws.pick=new Set(ws.vis==="fav"?favIds():[]);whoLocked().forEach(id=>ws.pick.add(id));ws.vis="pick"}
@@ -1348,6 +1382,7 @@ $("whosheet").addEventListener("click",async e=>{
   const k=e.target.closest("[data-k]");if(!k)return;
   if(k.dataset.k==="cancel"){closeWho();return}
   if(k.dataset.k==="plt"){ws.plOpen=!ws.plOpen;renderWho();return}
+  if(k.dataset.k==="grt"){ws.grOpen=!ws.grOpen;renderWho();return}
   if(k.dataset.k==="gtog"){const g=k.dataset.g;ws.col[g]=!ws.col[g];renderWho();return}
   if(k.dataset.k==="plsave"){openPl("new",{ids:[...ws.pick].filter(id=>id!==uid)});return}
   if(ws.mode==="pl"){const l=plById(ws.want);if(!l){closeWho();return}
@@ -1369,8 +1404,11 @@ $("whosheet").addEventListener("click",async e=>{
     try{await evInvite(ws.want,ids,ws.msg);closeWho();renderEvents();say("🏁 Zaproszono: "+ids.map(id=>nicks[id]).join(", ")+" ✔ Dostaną powiadomienie.")}
     catch(err){k.disabled=false;say("Nie udało się zaprosić: "+(err&&err.message?err.message:"błąd"))}return}
   if(ws.mode==="form"){
-    wf.vis=ws.vis;wf.pick=new Set(ws.vis==="pick"?ws.pick:[]);
-    if(wf.vis==="pick"&&!wf.pick.size){wf.vis="all";say("Nikogo nie wybrano — zaproszenie zobaczą wszyscy.")}
+    wf.vis=ws.vis;wf.pick=new Set(ws.vis==="pick"?ws.pick:[]);wf.gr=ws.vis==="all"?"":ws.gr||"";
+    // 👥 członkowie wybranej grupy widzą zaproszenie przez grupę — bez osobnych wpisów (zostają tylko osoby, które już dołączyły)
+    if(wf.gr&&typeof grMemIds==="function"){const M=new Set(grMemIds(wf.gr)),L=whoLocked();wf.pick=new Set([...wf.pick].filter(id=>!M.has(id)||L.has(id)))}
+    if(wf.vis==="fav"&&wf.gr&&!favIds().length)wf.vis="pick";
+    if(wf.vis==="pick"&&!wf.pick.size&&!wf.gr){wf.vis="all";say("Nikogo nie wybrano — zaproszenie zobaczą wszyscy.")}
     if(wf.vis==="fav"&&!favIds().length){wf.vis="all";say("Nie masz jeszcze ulubionych — zaproszenie zobaczą wszyscy.")}
     closeWho();renderWhoBtn();wfUpdate();try{wfRbSync()}catch(e){}return;
   }
@@ -1383,7 +1421,7 @@ $("whosheet").addEventListener("click",async e=>{
     say("Zaproszono: "+ids.map(id=>nicks[id]).join(", ")+" ✔ Dostaną powiadomienie.");
   }catch(err){k.disabled=false;say("Nie udało się zaprosić: "+(err&&err.message?err.message:"błąd"))}
 });
-$("whosheet").addEventListener("input",e=>{if(e.target.id==="wsmsg"){ws.msg=e.target.value;return}if(e.target.id==="wsq"){ws.q=e.target.value;$("wslist").innerHTML=whoPlHtml()+whoListHtml()}});
+$("whosheet").addEventListener("input",e=>{if(e.target.id==="wsmsg"){ws.msg=e.target.value;return}if(e.target.id==="wsq"){ws.q=e.target.value;$("wslist").innerHTML=whoGrHtml()+whoPlHtml()+whoListHtml()}});
 /* ---------- zakres godzin, „Pasuje mi o…”, „Ustal godzinę” (KROK 15) ---------- */
 let rangeOk=false,prefs={},decls={},autoAt=0;
 const isOpen=w=>rangeOk&&!!w&&!!w.range_to&&!w.settled_at;

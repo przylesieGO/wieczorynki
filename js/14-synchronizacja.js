@@ -14,7 +14,7 @@ function deriveWants(){
   wantsAll=a.slice();
   if(!isAdmin)a=a.filter(x=>x.user_id===uid||!modGone(x.user_id));
   // 👁 podgląd: cudze prywatne zaproszenia, do których 👑 nie jest zaproszony — jak u zwykłego użytkownika (niewidoczne)
-  if(pv)a=a.filter(x=>x.visibility!=="private"||x.user_id===uid||(invs[x.id]||[]).some(y=>y.u===uid)||(joins[x.id]||[]).includes(uid));
+  if(pv)a=a.filter(x=>x.visibility!=="private"||x.user_id===uid||(invs[x.id]||[]).some(y=>y.u===uid)||wInvMe(x)||(joins[x.id]||[]).includes(uid));
   if(bikeOk)a.forEach(w=>{if(w.place&&!w.place_city){const x=places.find(y=>y.city&&y.name.toLowerCase()===w.place.toLowerCase());if(x){w.place_city=x.city;w.place_area=w.place_area||x.area||null}}});
   wants=a;
 }
@@ -43,7 +43,11 @@ async function syncOnce(){
     if(E.length&&flags.tab_events&&tabOk(3))await loadEvents();
     if(d.me)await syncMe();
     if(d.fb)await syncFb();
-    if(((d.grp||[]).length||d.me)&&typeof grLoad==="function")await grLoad();   // 👥 grupy (KROK 70)
+    if(((d.grp||[]).length||d.me)&&typeof grLoad==="function"){   // 👥 grupy (KROK 70)
+      const was=typeof grActIds==="function"?grActIds():"";await grLoad();
+      // 👥 KROK 71: weszłam/wyszłam z grupy → inne zaproszenia grupowe widać/nie widać — pełne wczytanie
+      if(wGrOk&&typeof grActIds==="function"&&grActIds()!==was)return loadRemote();
+    }
   }catch(e){return loadRemote()}
   syncN=+d.last;
   deriveWants();
@@ -227,7 +231,8 @@ async function loadRemote(selectId){
     const wSince=new Date(Date.now()-31*864e5).toISOString(); // + archiwum 30 dni (KROK 38)
     const wq=cols=>{wColsTry=cols;return sb.from("wants").select(cols).gte("starts_at",wSince).order("starts_at").limit(1000)};
     const WFULL="id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min,place,place_lat,place_lon,bike,place_city,place_area";
-    let w=await wq(WFULL+",route_base_id,title,title_auto");titleOk=!w.error;   // 🏷 tytuł zaproszenia (KROK 65)
+    let w=await wq(WFULL+",route_base_id,title,title_auto,group_id");wGrOk=!w.error;   // 👥 zaproszenie dla grupy (KROK 71)
+    if(w.error)w=await wq(WFULL+",route_base_id,title,title_auto");titleOk=!w.error;   // 🏷 tytuł zaproszenia (KROK 65)
     if(w.error)w=await wq(WFULL+",route_base_id");
     rbOk=!w.error;   // 🗺️ baza tras (KROK 47)
     if(w.error)w=await wq(WFULL);

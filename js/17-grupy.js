@@ -48,7 +48,7 @@ async function grLoad(){
   }catch(err){grOk=false;grFor=uid;grMsg=grErr(err)==="Grupy wymagają KROKU 70 w bazie."?grErr(err):"Nie udało się wczytać grup: "+grErr(err)}
   grLoading=false;
 }
-function grRefresh(){try{if(gearOpen&&["main","nick","groups","group","gradm","admin","user","plist"].includes(gearView))renderGear();renderBell()}catch(e){}}
+function grRefresh(){try{if(gearOpen&&["main","nick","groups","group","gradm","admin","user","plist"].includes(gearView))renderGear();renderBell();if(wGrOk)renderWants()}catch(e){}}   // 👥 KROK 71: plakietki grup na kartach
 async function grReload(){await grLoad();grRefresh()}
 const grFresh=()=>{if(session&&grFor!==uid){grOk=null;grMine=[];grMem={};grLim={};grReqs=[];grFind=null}if(session&&grOk===null&&!grLoading)grReload()};
 
@@ -373,3 +373,13 @@ $("gearpanel").addEventListener("input",e=>{if(e.target.id!=="grq")return;grQ=e.
   let n=0,told=false;const t=setInterval(()=>{n++;if(n>900){clearInterval(t);return}
     if(!ready)return;if(!session){if(!told&&n>3){told=true;say("Zaloguj się, żeby dołączyć do grupy z linku.")}return}
     if(!nicks[uid])return;clearInterval(t);openGrCode(code)},1000)})();
+
+/* 👥 zaproszenie na rower dla grupy (KROK 71) — pomocniki dla js/10, js/11, js/14 (wołane przez typeof przy rysowaniu i odświeżaniu)
+   grActIds: moje aktywne grupy (porównanie przed/po odświeżeniu); grForWant: grupy do wyboru w „Kto zobaczy?” (aktywne, nie w archiwum);
+   wGrTag: plakietka „👥 nazwa” w kolorze i z ikoną grupy (jak w ⚙️ → Grupy); grMemIds: aktywni członkowie bez mnie */
+const grActIds=()=>grMine.filter(m=>m.status==="active").map(m=>m.group_id).sort().join(",");
+const grIn=g=>!!g&&grMine.some(m=>m.group_id===g&&m.status==="active");
+function grForWant(){return grOk?grMine.filter(m=>m.status==="active"&&grG[m.group_id]&&!grG[m.group_id].archived_at).map(m=>grG[m.group_id]).sort((a,b)=>a.name.localeCompare(b.name,"pl")):[]}
+const grMemIds=g=>grAct(g).map(x=>x.user_id).filter(id=>id!==uid);
+function wGrTag(w){const x=grG[w.group_id];
+  return '<span class="lockt grtag"><span class="grtc" style="color:'+(x?grCol(x):'var(--mut)')+'">'+uiIcon(x?grIc(x):"users")+'</span>'+esc(x?x.name:"grupa")+'</span>'}
