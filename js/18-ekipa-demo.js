@@ -2,6 +2,8 @@
    konta demo (1–30, pula nicków), generator zaproszeń testowych (bez nachodzących jazd, część dla grup demo),
    grupy demo (1–10), automatyczne odpowiedzi kont demo (cron co 15 min, przełącznik), ochotnicy, sprzątanie;
    plakietka DEMO przy nickach i grupach kont demo.
+   2026-11-21: panel w zwijanych sekcjach (Ekipa demo, Zaproszenia, Ochotnicy, Grupy demo, Odpowiedzi, Sprzątanie);
+   ochotnicy zbiorczo: lista wszystkich osób z szukajką i filtrami, zaznaczanie wielu, Dodaj / Wypisz.
    Wszystko robią funkcje bazy admin_demo_* (sprawdzają 👑); tabele demo_* są tylko do odczytu.
    Plik wczytywany jako ostatni: przy wczytaniu tylko rejestruje obsługę zdarzeń; niższe pliki wołają go przez typeof. */
 let demoIds=new Set(),demoVol=new Set(),demoSt=null,demoBusy=false,demoRet=false;
@@ -22,7 +24,7 @@ async function demoLoad(){
 async function demoStatus(){
   try{const r=await sb.rpc("admin_demo_status");if(r.error)throw r.error;demoSt=r.data||{};if(demoSt.demo_active&&!demoAccSet)demoAcc=+demoSt.demo_active}
   catch(e){demoSt={err:(e&&e.message)||"błąd"}}
-  if(gearView==="demo")renderGear();
+  if(gearView==="demo")demoRender();
 }
 
 // ⚙️ → Administracja → grupa „Zaproszenia”: zamiast samego „Usuń testowe” — cały panel
@@ -41,62 +43,103 @@ const demoStep=(k,v,min,max,lbl,sub)=>'<div class="ios-it dmrow"><span class="io
 const demoSw=(k,t,sub)=>'<div class="ios-it"><span class="ios-t">'+t+(sub?'<small>'+sub+'</small>':'')+'</span>'
   +'<button type="button" class="ios-sw'+(demoF[k]?' on':'')+'" role="switch" aria-checked="'+demoF[k]+'" aria-label="'+esc(t)+'" data-dx="sw" data-dk="'+k+'"></button></div>';
 
+/* panel w zwijanych sekcjach (jak Statystyki: <details class="stsec">, stan w joinOpen); na start rozwinięte „Zaproszenia” */
+let demoOpen0=false,demoVF="",demoSel=new Set();   // demoVF: filtr ochotników ""|"vol"|"non"; demoSel: zaznaczeni do akcji zbiorczej
+const demoSec=(k,h,sum,body)=>'<details class="stsec dmsec" data-j="dm_'+k+'"'+(joinOpen.has("dm_"+k)?' open':'')+'><summary><span>'+h+'</span>'
+  +(sum!==""&&sum!=null?'<span class="stsum"'+(k==="vol"?' id="dmvsum"':'')+'>'+sum+'</span>':'')+'</summary><div class="stbody">'+body+'</div></details>';
+// przerysowanie panelu bez skoku na górę (renderGear podmienia całe okno)
+function demoRender(){const x=document.querySelector("#gearpanel .sheetbox"),y=x?x.scrollTop:0;renderGear();const z=document.querySelector("#gearpanel .sheetbox");if(z&&gearView==="demo")z.scrollTop=y}
+
+// 🙋 ochotnicy: wszyscy prawdziwi użytkownicy (bez kont demo i bez Ciebie), szukajka + filtry osób + Ochotnicy / Nie-ochotnicy, zaznaczanie wielu
+const demoPeople=()=>Object.keys(nicks).filter(id=>id!==uid&&!demoIds.has(id));
+const demoVShown=()=>demoPeople().filter(id=>demoVF==="vol"?demoVol.has(id):demoVF==="non"?!demoVol.has(id):true);
+function demoVolChips(){const all=demoPeople(),nv=all.filter(id=>demoVol.has(id)).length;
+  const c=(v,l,n)=>'<button type="button" class="fch'+(demoVF===v?' on':'')+'" aria-pressed="'+(demoVF===v)+'" data-dx="vf" data-dv="'+v+'">'+l+' <span class="fcn">'+n+'</span></button>';
+  return '<div class="pfrow">'+c("","Wszyscy",all.length)+c("vol",uiIcon("flask")+" Ochotnicy",nv)+c("non","Nie-ochotnicy",all.length-nv)+'</div>'}
+function demoVolAct(){const all=new Set(demoPeople()),sel=[...demoSel].filter(id=>all.has(id)),na=sel.filter(id=>!demoVol.has(id)).length,nd=sel.length-na;
+  if(!sel.length)return '<p class="note">Zaznacz osoby, żeby dodać je do ochotników albo wypisać. Tylko za zgodą tych osób.</p>';
+  return '<div class="dmvact"><button type="button" class="b sbtn" data-dx="vadd"'+(na&&!demoBusy?'':' disabled')+'>Dodaj do ochotników ('+na+')</button>'
+   +'<button type="button" class="b sbtn g" data-dx="vdel"'+(nd&&!demoBusy?'':' disabled')+'>Wypisz ('+nd+')</button></div>'
+   +'<button type="button" class="lnk dmvclr" data-dx="vclr">Wyczyść zaznaczenie ('+sel.length+')</button>'}
+function demoVolList(){
+  const ids=demoVShown().sort((a,b)=>((demoVol.has(b)?1:0)-(demoVol.has(a)?1:0))||nicks[a].localeCompare(nicks[b],"pl"));
+  const vis=ids.filter(id=>pfMatch("dvol",id)),all=vis.length&&vis.every(id=>demoSel.has(id));
+  return '<div class="bsgrp gl"><span>Osoby ('+ids.length+')</span>'+(vis.length?'<button type="button" class="lnk" data-dx="vall">'+(all?'Odznacz widocznych':'Zaznacz widocznych')+'</button>':'')+'</div>'
+   +ids.map(id=>'<button type="button" class="prow'+(demoSel.has(id)?' on':'')+'" data-dx="vsel" data-du="'+esc(id)+'" data-pu="'+esc(id)+'" aria-pressed="'+demoSel.has(id)+'"'+(pfMatch("dvol",id)?'':' style="display:none"')+'>'
+     +'<span class="cbx">'+CHECK+'</span><span class="pnm">'+nk(id)+'</span>'+(demoVol.has(id)?'<span class="pjn">ochotnik</span>':'')+'</button>').join("")
+   +'<div class="note pfnone'+(vis.length?' hide':'')+'">'+(ids.length?'Nikt nie pasuje do filtra.':'Brak osób w tym filtrze.')+'</div>'}
+const demoVolHtml=()=>'<div id="dmvchips">'+demoVolChips()+'</div>'+pfBar("dvol",demoPeople().length)
+  +'<div id="dmvact">'+demoVolAct()+'</div><div class="sleft dmvlist" data-pfl="dvol" id="dmvlist">'+demoVolList()+'</div>'
+  +'<p class="note">Ochotnicy dostają prywatne zaproszenia od kont demo i zaproszenia do grup demo (powiadomienia w aplikacji i na Telegramie). Pojedynczo dodasz też w karcie osoby → Administrator.</p>';
+// odświeżenie samej sekcji ochotników (pole szukania nie traci kursora, okno nie skacze)
+function demoVolPart(){
+  if(!$("dmvlist"))return;$("dmvchips").innerHTML=demoVolChips();$("dmvact").innerHTML=demoVolAct();$("dmvlist").innerHTML=demoVolList();pfApply("dvol");
+  const v=demoPeople().filter(id=>demoVol.has(id)).length;if($("dmvsum"))$("dmvsum").textContent=v||"brak";if($("dmvoln"))$("dmvoln").textContent=demoVol.size;
+}
+
 function demoHtml(){
   const s=demoSt,ld=s===null,er=s&&s.err;
+  if(!demoOpen0){demoOpen0=true;joinOpen.add("dm_gen")}
   const st=(v,l)=>'<div class="st"><b>'+(ld?'…':v)+'</b><span>'+l+'</span></div>';
   const made=(s&&s.pool||[]).filter(p=>p.user_id),act=s&&+s.demo_active||0,dis=demoBusy?' disabled':'';
   const grs=(s&&s.groups)||[],auto=!s||s.auto!==false,pd=(s&&s.pending)||{},tl=s&&s.tick_last;
+  const nAct=made.filter(p=>p.slot<=act).length,nPd=(pd.g_invites||0)+(pd.g_requests||0)+(pd.rides||0);
   const bikes=Object.keys(DEMO_BIKE).map(b=>[b,made.filter(p=>p.bike===b&&p.slot<=act).length]).filter(x=>x[1]);
+  const nVol=demoPeople().filter(id=>demoVol.has(id)).length;
   return '<button class="sback" data-c="backadmin">‹ Administracja</button><div class="sname" style="margin-top:26px">🧪 Zaproszenia testowe</div>'
    +'<div class="smail">Konta demo i zaproszenia do testów. Widzisz to tylko Ty (👑). Konta demo mają plakietkę <span class="nkdemo">DEMO</span> i nie da się na nie zalogować.</div>'
    +(er?'<p class="note" style="color:var(--bad)">Nie udało się wczytać: '+esc(er)+'</p>':'')
    +'<div class="stats admbar dmst">'+st(s&&s.test_wants||0,"zaproszeń testowych")+st(s&&s.test_private||0,"w tym prywatnych")+st(s&&s.demo_accounts||0,"kont demo")+'</div>'
-   // 👥 konta demo
-   +'<div class="ios"><div class="ios-gh">Konta demo</div><div class="ios-grp">'
-   +demoStep("acc",demoAcc,1,30,"Liczba kont",made.length?"Utworzone: "+made.length+" · zaproszenia losują z "+act:"Nicki z puli 30, rowery na zmianę")
-   +'<button type="button" class="ios-it ios-row dmact" data-dx="acc"'+dis+'><span class="ios-t">'+(demoAcc>made.length?'Utwórz brakujące ('+(demoAcc-made.length)+')':'Ustaw liczbę kont')+'</span></button>'
-   +'</div>'+(bikes.length?'<div class="dmbikes">'+bikes.map(([b,n])=>'<span class="dmbk dm-'+b+'">'+uiIcon(b==="road"?"road":b==="trekking"?"bike":b)+' '+DEMO_BIKE[b]+' '+n+'</span>').join("")+'</div>':'')+'</div>'
-   // 🎲 generator
-   +'<div class="ios"><div class="ios-gh">Wygeneruj</div><div class="ios-grp">'
-   +demoStep("n",demoF.n,1,60,"Liczba zaproszeń","Zwykle 20–30 na raz")
-   +'<div class="ios-it dmcol"><span class="ios-t">Na ile dni do przodu<small>Od jutra</small></span><div class="seg" role="group" aria-label="Na ile dni">'
-     +DEMO_DAYS.map(([d,l])=>'<button type="button" class="'+(demoF.days===d?'on':'')+'" aria-pressed="'+(demoF.days===d)+'" data-dx="days" data-dd="'+d+'">'+l+'</button>').join("")+'</div></div>'
-   +'<div class="ios-it dmcol"><label class="ios-t" for="dmpriv">Jawne i prywatne<small id="dmprivt">jawne '+(100-demoF.priv)+'% · prywatne '+demoF.priv+'%</small></label>'
-     +'<input id="dmpriv" type="range" min="0" max="100" step="10" value="'+demoF.priv+'"><small class="note">Prywatne dostają konta demo i ochotnicy ('+demoVol.size+').</small></div>'
-   +'<div class="ios-it dmcol"><label class="ios-t" for="dmgrp">Prywatne dla grupy<small id="dmgrpt">'+demoF.grp+'% prywatnych — dla grupy demo autora</small></label>'
-     +'<input id="dmgrp" type="range" min="0" max="100" step="10" value="'+demoF.grp+'"'+(grs.length?'':' disabled')+'><small class="note">'+(grs.length?'Dostają je członkowie grupy (też ochotnicy, którzy dołączyli).':'Najpierw załóż grupy demo (niżej).')+'</small></div>'
-   +demoSw("routes","Trasy z biblioteki tras","Mapa i GPX przy części zaproszeń")
-   +demoSw("ranges","Zakresy godzin","Część zaproszeń „do ustalenia”")
-   +demoSw("answers","Dołączenia i odmowy kont demo","Żeby karty nie były puste")
-   +demoSw("chan","Podsumowanie także na kanale","Domyślnie tylko do Ciebie na Telegram")
-   +'</div><button type="button" class="b sbtn" data-dx="gen"'+(made.length&&!demoBusy?'':' disabled')+'>'+(demoBusy?'Pracuję…':'Wygeneruj '+demoF.n+' '+(demoF.n===1?'zaproszenie':demoF.n%10>=2&&demoF.n%10<=4&&(demoF.n%100<12||demoF.n%100>14)?'zaproszenia':'zaproszeń'))+'</button>'
-   +(made.length?'':'<p class="note">Najpierw utwórz konta demo.</p>')
-   +'<p class="note">Każde dostaje plakietkę 🧪 TEST, więc „Usuń wszystkie testowe” sprząta je jednym ruchem. Autor i dołączający nie mają innej jazdy ±3 h.</p></div>'
-   // 👥 grupy demo
-   +'<div class="ios"><div class="ios-gh">Grupy demo</div><div class="ios-grp">'
-   +demoStep("grn",demoGrN,1,10,"Liczba nowych grup","Nazwy z puli 10 · limity jak u ludzi (3 założone, 15 przynależności)")
-   +'<button type="button" class="ios-it ios-row dmact" data-dx="grp"'+(made.length>=2&&!demoBusy?'':' disabled')+'><span class="ios-t">Załóż '+demoGrN+' '+(demoGrN===1?'grupę':demoGrN<5?'grupy':'grup')+' demo</span></button>'
-   +grs.map(g=>'<div class="ios-it"><span class="ios-ic" style="background:'+(typeof grCol==="function"?grCol(g):"#0a84ff")+'">'+uiIcon(g.icon||"users")+'</span><span class="ios-t">'+esc(g.name)
-      +'<small>'+[g.members+' '+(g.members===1?'członek':'członków'),g.real?'prawdziwych: '+g.real:'',g.invited?'zaproszeni: '+g.invited:'',g.requested?'prośby: '+g.requested:'',g.visibility==="hidden"?'ukryta':'',g.join_mode==="open"?'wolne':'na prośbę'].filter(Boolean).join(' · ')+'</small></span></div>').join("")
-   +'</div>'+(made.length<2?'<p class="note">Grupy zakładają konta demo — potrzebne co najmniej 2.</p>':'<p class="note">Ochotnicy dostają zaproszenia do grup. Grupy widzą na razie testerzy (przełącznik „Grupy”).</p>')+'</div>'
-   // 🤖 odpowiedzi kont demo
-   +'<div class="ios"><div class="ios-gh">Odpowiedzi kont demo</div><div class="ios-grp">'
-   +'<div class="ios-it"><span class="ios-t">Odpowiadają same<small>Co 15 min: zaproszenia do grup i na rower, prośby do grup demo · po kilku minutach do ok. 4 h</small></span>'
-     +'<button type="button" class="ios-sw'+(auto?' on':'')+'" role="switch" aria-checked="'+auto+'" aria-label="Konta demo odpowiadają same" data-dx="auto"'+dis+'></button></div>'
-   +'<div class="ios-it"><span class="ios-t">Czeka na odpowiedź<small>'+(ld?'…':[pd.g_invites+' do grup',pd.g_requests+' próśb',pd.rides+' na rower'].join(' · '))+'</small></span></div>'
-   +(tl?'<div class="ios-it"><span class="ios-t">Ostatnia tura<small>'+demoWhen(tl.at)+' · przyjęte: '+((tl.g_ok||0)+(tl.rq_ok||0)+(tl.ride_ok||0))+' · odmowy: '+((tl.g_no||0)+(tl.rq_no||0)+(tl.ride_no||0))+'</small></span></div>':'')
-   +'<button type="button" class="ios-it ios-row dmact" data-dx="tick"'+(made.length&&!demoBusy?'':' disabled')+'><span class="ios-t">Odpowiedz teraz, bez czekania</span></button>'
-   +'</div><p class="note">Po każdej turze, w której coś się stało — jedna wiadomość do Ciebie na Telegram.</p></div>'
-   // 🧹 sprzątanie
-   +gGrp("Sprzątanie",[gRow("#ff3b30","trash","Usuń wszystkie testowe zaproszenia","Konta demo zostają · potwierdzasz wpisując USUŃ",'','data-dx="testdel"'),
+   // 1. 👥 ekipa demo: liczba kont + lista kont
+   +demoSec("acc","Ekipa demo",ld?"…":made.length?made.length+" kont · losuje "+nAct:"brak kont",
+     '<div class="ios-grp">'
+     +demoStep("acc",demoAcc,1,30,"Liczba kont",made.length?"Utworzone: "+made.length+" · zaproszenia losują z "+nAct:"Nicki z puli 30, rowery na zmianę")
+     +'<button type="button" class="ios-it ios-row dmact" data-dx="acc"'+dis+'><span class="ios-t">'+(demoAcc>made.length?'Utwórz brakujące ('+(demoAcc-made.length)+')':'Ustaw liczbę kont')+'</span></button></div>'
+     +'<p class="note">Mniejsza liczba niczego nie usuwa — generator i grupy biorą wtedy tylko pierwsze konta, reszta czeka.</p>'
+     +(bikes.length?'<div class="dmbikes">'+bikes.map(([b,n])=>'<span class="dmbk dm-'+b+'">'+uiIcon(b==="road"?"road":b==="trekking"?"bike":b)+' '+DEMO_BIKE[b]+' '+n+'</span>').join("")+'</div>':'')
+     +(made.length?'<div class="bsgrp">Konta ('+made.length+')</div><div class="ios-grp">'+made.map(p=>p.user_id&&nicks[p.user_id]?gRow(p.slot<=act?"#ff9f0a":"#8e8e93",p.bike==="road"?"road":p.bike==="trekking"?"bike":p.bike,nk(p.user_id),
+        DEMO_BIKE[p.bike]+(p.slot<=act?'':' · nie losuje (poza liczbą kont)'),'','data-dx="user" data-du="'+esc(p.user_id)+'"'):'').join("")+'</div>':''))
+   // 2. 🎲 zaproszenia: generator
+   +demoSec("gen","Zaproszenia",ld?"…":(s&&s.test_wants||0)+" testowych",
+     '<div class="ios-grp">'
+     +demoStep("n",demoF.n,1,60,"Liczba zaproszeń","Zwykle 20–30 na raz")
+     +'<div class="ios-it dmcol"><span class="ios-t">Na ile dni do przodu<small>Od jutra</small></span><div class="seg" role="group" aria-label="Na ile dni">'
+       +DEMO_DAYS.map(([d,l])=>'<button type="button" class="'+(demoF.days===d?'on':'')+'" aria-pressed="'+(demoF.days===d)+'" data-dx="days" data-dd="'+d+'">'+l+'</button>').join("")+'</div></div>'
+     +'<div class="ios-it dmcol"><label class="ios-t" for="dmpriv">Jawne i prywatne<small id="dmprivt">jawne '+(100-demoF.priv)+'% · prywatne '+demoF.priv+'%</small></label>'
+       +'<input id="dmpriv" type="range" min="0" max="100" step="10" value="'+demoF.priv+'"><small class="note">Prywatne dostają konta demo i ochotnicy (<span id="dmvoln">'+demoVol.size+'</span>).</small></div>'
+     +'<div class="ios-it dmcol"><label class="ios-t" for="dmgrp">Prywatne dla grupy<small id="dmgrpt">'+demoF.grp+'% prywatnych — dla grupy demo autora</small></label>'
+       +'<input id="dmgrp" type="range" min="0" max="100" step="10" value="'+demoF.grp+'"'+(grs.length?'':' disabled')+'><small class="note">'+(grs.length?'Dostają je członkowie grupy (też ochotnicy, którzy dołączyli).':'Najpierw załóż grupy demo (sekcja „Grupy demo”).')+'</small></div>'
+     +demoSw("routes","Trasy z biblioteki tras","Mapa i GPX przy części zaproszeń")
+     +demoSw("ranges","Zakresy godzin","Część zaproszeń „do ustalenia”")
+     +demoSw("answers","Dołączenia i odmowy kont demo","Żeby karty nie były puste")
+     +demoSw("chan","Podsumowanie także na kanale","Domyślnie tylko do Ciebie na Telegram")
+     +'</div><button type="button" class="b sbtn" data-dx="gen"'+(made.length&&!demoBusy?'':' disabled')+'>'+(demoBusy?'Pracuję…':'Wygeneruj '+demoF.n+' '+(demoF.n===1?'zaproszenie':demoF.n%10>=2&&demoF.n%10<=4&&(demoF.n%100<12||demoF.n%100>14)?'zaproszenia':'zaproszeń'))+'</button>'
+     +(made.length?'':'<p class="note">Najpierw utwórz konta demo (sekcja „Ekipa demo”).</p>')
+     +'<p class="note">Każde dostaje plakietkę 🧪 TEST, więc „Usuń wszystkie testowe” (Sprzątanie) usuwa je jednym ruchem. Autor i dołączający nie mają innej jazdy ±3 h.</p>')
+   // 3. 🙋 ochotnicy
+   +demoSec("vol","Ochotnicy",nVol||"brak",demoVolHtml())
+   // 4. 👥 grupy demo
+   +demoSec("grp","Grupy demo",ld?"…":grs.length||"brak",
+     '<div class="ios-grp">'
+     +demoStep("grn",demoGrN,1,10,"Liczba nowych grup","Nazwy z puli 10 · limity jak u ludzi (3 założone, 15 przynależności)")
+     +'<button type="button" class="ios-it ios-row dmact" data-dx="grp"'+(made.length>=2&&!demoBusy?'':' disabled')+'><span class="ios-t">Załóż '+demoGrN+' '+(demoGrN===1?'grupę':demoGrN<5?'grupy':'grup')+' demo</span></button></div>'
+     +(grs.length?'<div class="bsgrp">Grupy ('+grs.length+')</div><div class="ios-grp">'+grs.map(g=>'<div class="ios-it"><span class="ios-ic" style="background:'+(typeof grCol==="function"?grCol(g):"#0a84ff")+'">'+uiIcon(g.icon||"users")+'</span><span class="ios-t">'+esc(g.name)
+        +'<small>'+[g.members+' '+(g.members===1?'członek':'członków'),g.real?'prawdziwych: '+g.real:'',g.invited?'zaproszeni: '+g.invited:'',g.requested?'prośby: '+g.requested:'',g.visibility==="hidden"?'ukryta':'',g.join_mode==="open"?'wolne':'na prośbę'].filter(Boolean).join(' · ')+'</small></span></div>').join("")+'</div>':'')
+     +(made.length<2?'<p class="note">Grupy zakładają konta demo — potrzebne co najmniej 2.</p>':'<p class="note">Ochotnicy dostają zaproszenia do grup. Grupy widzą na razie testerzy (przełącznik „Grupy”).</p>'))
+   // 5. 🤖 odpowiedzi kont demo
+   +demoSec("tick","Odpowiedzi kont demo",ld?"…":(auto?"same":"wyłączone")+" · czeka "+nPd,
+     '<div class="ios-grp">'
+     +'<div class="ios-it"><span class="ios-t">Odpowiadają same<small>Co 15 min: zaproszenia do grup i na rower, prośby do grup demo · po kilku minutach do ok. 4 h</small></span>'
+       +'<button type="button" class="ios-sw'+(auto?' on':'')+'" role="switch" aria-checked="'+auto+'" aria-label="Konta demo odpowiadają same" data-dx="auto"'+dis+'></button></div>'
+     +'<div class="ios-it"><span class="ios-t">Czeka na odpowiedź<small>'+(ld?'…':[(pd.g_invites||0)+' do grup',(pd.g_requests||0)+' próśb',(pd.rides||0)+' na rower'].join(' · '))+'</small></span></div>'
+     +(tl?'<div class="ios-it"><span class="ios-t">Ostatnia tura<small>'+demoWhen(tl.at)+' · przyjęte: '+((tl.g_ok||0)+(tl.rq_ok||0)+(tl.ride_ok||0))+' · odmowy: '+((tl.g_no||0)+(tl.rq_no||0)+(tl.ride_no||0))+'</small></span></div>':'')
+     +'<button type="button" class="ios-it ios-row dmact" data-dx="tick"'+(made.length&&!demoBusy?'':' disabled')+'><span class="ios-t">Odpowiedz teraz, bez czekania</span></button>'
+     +'</div><p class="note">Po każdej turze, w której coś się stało — jedna wiadomość do Ciebie na Telegram.</p>')
+   // 6. 🧹 sprzątanie (zwinięte — same czerwone przyciski)
+   +demoSec("del","Sprzątanie","",
+     '<div class="ios-grp">'+[gRow("#ff3b30","trash","Usuń wszystkie testowe zaproszenia","Konta demo zostają · potwierdzasz wpisując USUŃ",'','data-dx="testdel"'),
       gRow("#ff3b30","trash","Zamknij grupy demo","Do archiwum, razem z prawdziwymi członkami",grs.length?'<span class="ios-v">'+grs.length+'</span>':'','data-dx="grwipe"'+(grs.length?dis:' disabled')),
-      gRow("#ff3b30","trash","Usuń konta demo","Razem z ich zaproszeniami, listami i ulubionymi",made.length?'<span class="ios-v">'+made.length+'</span>':'','data-dx="wipe"'+(made.length?dis:' disabled'))])
-   // 👀 ekipa
-   +(made.length?gGrp("Ekipa demo",made.map(p=>p.user_id&&nicks[p.user_id]?gRow(p.slot<=act?"#ff9f0a":"#8e8e93",p.bike==="road"?"road":p.bike==="trekking"?"bike":p.bike,nk(p.user_id),
-       DEMO_BIKE[p.bike]+(p.slot<=act?'':' · nie losuje (poza liczbą kont)'),'','data-dx="user" data-du="'+esc(p.user_id)+'"'):'')):'')
-   // 🙋 ochotnicy
-   +gGrp("Ochotnicy",[...[...demoVol].filter(id=>nicks[id]).map(id=>gRow("#30d158","user",nk(id),"Dostaje prywatne zaproszenia od kont demo",'','data-dx="user" data-du="'+esc(id)+'"')),
-      '<div class="ios-it"><span class="ios-t"><small>Ochotnika dodasz w karcie osoby → Administrator. Tylko za zgodą tej osoby.</small></span></div>'])
+      gRow("#ff3b30","trash","Usuń konta demo","Wszystkie naraz, razem z ich zaproszeniami, listami i ulubionymi",made.length?'<span class="ios-v">'+made.length+'</span>':'','data-dx="wipe"'+(made.length?dis:' disabled'))].join("")+'</div>')
    // 🔒 później
    +'<div class="ios dmsoon"><div class="ios-gh">Wkrótce</div><div class="ios-grp">'
    +iosIt("#8e8e93","list","Posty kont demo na tablicy grupy","",uiIcon("lock"))+'</div></div>';
@@ -104,7 +147,7 @@ function demoHtml(){
 
 const demoWhen=t=>{const d=new Date(t);return isNaN(d)?"—":d.toLocaleString("pl-PL",{day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit"})};
 async function demoRun(fn,args,okMsg){
-  if(demoBusy)return;demoBusy=true;renderGear();
+  if(demoBusy)return;demoBusy=true;demoRender();
   try{const r=await sb.rpc(fn,args);if(r.error)throw r.error;demoBusy=false;await demoLoad();await syncNow();say(okMsg(r.data));}
   catch(e){demoBusy=false;demoErr(e)}
   await demoStatus();
@@ -113,16 +156,30 @@ async function demoRun(fn,args,okMsg){
 $("gearpanel").addEventListener("click",async e=>{
   const b=e.target.closest("[data-dx]");if(!b||b.disabled||!session)return;
   const a=b.dataset.dx;
-  if(a==="open"){if(!isKingReal())return;demoSt=null;gearView="demo";renderGear();demoLoad().then(demoStatus);return}
+  if(a==="open"){if(!isKingReal())return;demoSt=null;demoSel=new Set();gearView="demo";renderGear();demoLoad().then(demoStatus);return}
   if(!isKingReal())return;
   if(a==="vol"){const id=b.dataset.du,on=!demoVol.has(id);
     if(on&&!await askOk("Dodać "+(nicks[id]||"tę osobę")+" do ochotników Ekipy demo?\n\nBędzie dostawać prywatne zaproszenia testowe od kont demo (powiadomienia w aplikacji i na Telegramie). Rób to tylko za zgodą tej osoby.","Dodaj"))return;
     demoBusy=true;renderGear();
     try{const r=await sb.rpc("admin_demo_volunteer",{u:id,p_on:on});if(r.error)throw r.error;on?demoVol.add(id):demoVol.delete(id);say(on?"🙋 Dodano do ochotników":"Wypisano z ochotników")}catch(err){demoErr(err)}
     demoBusy=false;renderGear();return}
+  // 🙋 ochotnicy zbiorczo: filtr, zaznaczanie (bez przerysowania całego okna), dodaj / wypisz
+  if(a==="vf"){demoVF=b.dataset.dv||"";demoVolPart();return}
+  if(a==="vsel"){const id=b.dataset.du,on=!demoSel.has(id);on?demoSel.add(id):demoSel.delete(id);b.classList.toggle("on",on);b.setAttribute("aria-pressed",on);
+    $("dmvact").innerHTML=demoVolAct();const vis=demoVShown().filter(x=>pfMatch("dvol",x)),l=document.querySelector('#dmvlist [data-dx="vall"]');
+    if(l)l.textContent=vis.length&&vis.every(x=>demoSel.has(x))?"Odznacz widocznych":"Zaznacz widocznych";return}
+  if(a==="vall"){const vis=demoVShown().filter(x=>pfMatch("dvol",x)),all=vis.every(x=>demoSel.has(x));vis.forEach(x=>all?demoSel.delete(x):demoSel.add(x));demoVolPart();return}
+  if(a==="vclr"){demoSel.clear();demoVolPart();return}
+  if(a==="vadd"||a==="vdel"){const P=new Set(demoPeople()),on=a==="vadd",L=[...demoSel].filter(id=>P.has(id)&&demoVol.has(id)!==on);if(!L.length)return;
+    const nm=L.map(id=>nicks[id]).slice(0,8).join(", ")+(L.length>8?" i "+(L.length-8)+" innych":"");
+    if(on&&!await askOk("Dodać "+L.length+" "+plf(L.length,["osobę","osoby","osób"])+" do ochotników Ekipy demo?\n\n"+nm+"\n\nBędą dostawać prywatne zaproszenia testowe od kont demo i zaproszenia do grup demo (powiadomienia w aplikacji i na Telegramie). Rób to tylko za zgodą tych osób.","Dodaj"))return;
+    demoBusy=true;$("dmvact").innerHTML=demoVolAct();let ok=0,err=null;
+    for(const id of L){try{const r=await sb.rpc("admin_demo_volunteer",{u:id,p_on:on});if(r.error)throw r.error;on?demoVol.add(id):demoVol.delete(id);demoSel.delete(id);ok++}catch(e){err=e}}
+    demoBusy=false;demoVolPart();
+    if(err)demoErr(err);say((on?"🙋 Dodano do ochotników: ":"Wypisano z ochotników: ")+ok+(ok<L.length?" z "+L.length:""));return}
   if(a==="user"){userBack="demo";tkFrom=false;userId=b.dataset.du;gearView="user";renderGear();if(isAdmin&&typeof loadAdmInfo==="function"){delete admInfo[userId];loadAdmInfo(userId)}return}
-  if(a==="acc-"||a==="acc+"){demoAccSet=true;demoAcc=Math.max(1,Math.min(30,demoAcc+(a==="acc+"?1:-1)));renderGear();return}
-  if(a==="grn-"||a==="grn+"){demoGrN=Math.max(1,Math.min(10,demoGrN+(a==="grn+"?1:-1)));renderGear();return}
+  if(a==="acc-"||a==="acc+"){demoAccSet=true;demoAcc=Math.max(1,Math.min(30,demoAcc+(a==="acc+"?1:-1)));demoRender();return}
+  if(a==="grn-"||a==="grn+"){demoGrN=Math.max(1,Math.min(10,demoGrN+(a==="grn+"?1:-1)));demoRender();return}
   if(a==="grp"){await demoRun("admin_demo_groups",{p_count:demoGrN,p_volunteers:true},d=>d&&d.created?"👥 Założono grup demo: "+d.created+(d.invited?" · zaproszeni ochotnicy: "+d.invited:""):"Nie założono grup — konta demo są w limitach albo pula nazw się skończyła");
     if(typeof grReload==="function")grReload();return}
   if(a==="grwipe"){const n=(demoSt&&demoSt.groups||[]).length;
@@ -131,9 +188,9 @@ $("gearpanel").addEventListener("click",async e=>{
   if(a==="auto"){const on=!(demoSt&&demoSt.auto!==false);await demoRun("admin_demo_auto",{p_on:on},()=>on?"🤖 Konta demo odpowiadają same":"Konta demo nie odpowiadają same");return}
   if(a==="tick"){await demoRun("admin_demo_tick",{p_force:true},d=>{d=d||{};const ok=(d.g_ok||0)+(d.rq_ok||0)+(d.ride_ok||0),no=(d.g_no||0)+(d.rq_no||0)+(d.ride_no||0);return ok+no?"🤖 Odpowiedzi: przyjęte "+ok+", odmowy "+no:"Nic nie czekało na odpowiedź"});
     if(typeof grReload==="function")grReload();return}
-  if(a==="n-"||a==="n+"){demoF.n=Math.max(1,Math.min(60,demoF.n+(a==="n+"?1:-1)));renderGear();return}
-  if(a==="days"){demoF.days=+b.dataset.dd;renderGear();return}
-  if(a==="sw"){const k=b.dataset.dk;demoF[k]=!demoF[k];renderGear();return}
+  if(a==="n-"||a==="n+"){demoF.n=Math.max(1,Math.min(60,demoF.n+(a==="n+"?1:-1)));demoRender();return}
+  if(a==="days"){demoF.days=+b.dataset.dd;demoRender();return}
+  if(a==="sw"){const k=b.dataset.dk;demoF[k]=!demoF[k];demoRender();return}
   if(a==="acc"){const made=(demoSt&&demoSt.pool||[]).filter(p=>p.user_id).length,n=demoAcc;
     demoAccSet=false;await demoRun("admin_demo_accounts",{p_count:n,p_channel:false},d=>d&&d.created?"🧪 Utworzono "+d.created+" · generator losuje z "+n:"Generator losuje teraz z "+n+(n<made?" (pozostałe konta zostają)":""));return}
   if(a==="gen"){
