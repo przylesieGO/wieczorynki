@@ -593,9 +593,15 @@ function wfStep(unit,dir){
     mm=dir>0?(Math.floor(mm/15)+1)*15:(Math.ceil(mm/15)-1)*15;
     if(mm>=60){mm=0;hh++}else if(mm<0){mm=45;hh--}
   }
-  if(two){   // „do” nie bliżej niż 2 h od „od” i nie dalej niż 12 h (może wypaść po północy)
-    const s=wf.h*60+wf.m;let g=((hh*60+mm-s)%1440+1440)%1440;
-    if(g<WF_MIN||g>WF_MAX){g=dir>0?WF_MAX:WF_MIN;const t=(s+g)%1440;hh=Math.floor(t/60);mm=t%60}
+  if(two){   // „do” nie bliżej niż 2 h od „od” i nie dalej niż 12 h (może wypaść po północy); na granicy zakres przesuwa się razem z „od”
+    const s=wf.h*60+wf.m,g=((hh*60+mm-s)%1440+1440)%1440;
+    if((dir<0&&g<WF_MIN)||(dir>0&&g>WF_MAX)){
+      const de=wfDate2(),ne=de?new Date(de):null;
+      if(ne){ne.setHours(hh,mm,0,0);const ns=new Date(ne.getTime()-(dir>0?WF_MAX:WF_MIN)*6e4);
+        if(ns.getTime()>=Date.now()){wfApplyAt(ns);wfSetTime2(ne.getHours(),ne.getMinutes());flipCard($("fch"),pad(wf.h));flipCard($("fcm"),pad(wf.m));try{navigator.vibrate&&navigator.vibrate(8)}catch(x){}}
+        else say("Zakres nie może zacząć się w przeszłości.")}
+      return}
+    if(g<WF_MIN||g>WF_MAX)return;
   }
   two?wfSetTime2(hh,mm):wfSetTime(hh,mm);
 }
