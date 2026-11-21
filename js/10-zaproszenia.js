@@ -529,23 +529,23 @@ function wfDate(){
 }
 function wfLabel(d){return relDay(d)+" "+hhmm(d)}
 // koniec zakresu (ten sam dzień co początek)
-function wfDate2(){const d=wfDate();if(!d)return null;const e=new Date(d);e.setHours(wf.h2,wf.m2,0,0);return e}
+function wfDate2(){const d=wfDate();if(!d)return null;const e=new Date(d);e.setHours(wf.h2,wf.m2,0,0);if(e<=d)e.setDate(e.getDate()+1);return e}   // „do” wcześniejsze niż „od” = następnego dnia (np. 22:30–01:30)
 const wfRange=()=>rangeOk&&wf.mode==="range";
 function wfSetMode(m){
   wf.mode=m;const r=m==="range";
   [...$("wmode").children].forEach(b=>b.classList.toggle("on",b.dataset.mode===m));
   ["flbl1","flbl2","fclock2"].forEach(id=>$(id).classList.toggle("hide",!r));
   $("fclock").classList.toggle("sm",r);
-  if(r&&!wf.editId&&wf.h*60+wf.m>WF_ODMAX)wfSetTime(Math.floor(WF_ODMAX/60),WF_ODMAX%60);   // zakres mieści się w jednym dniu: „od” najpóźniej 22:45
   wfEndFix();
   wfUpdate();
 }
-// „do” pilnuje tylko różnicy względem „od”: min. 1 h, maks. 12 h, tego samego dnia (najpóźniej 23:45); przy wymuszeniu „do” = „od” + 2 h
-const WF_ODMAX=22*60+45,WF_DOMAX=23*60+45;
+// „do” pilnuje tylko różnicy względem „od”: min. 2 h, maks. 12 h; „do” wcześniejsze niż „od” = następnego dnia (22:30–01:30); wymuszone „do” = „od” + 2 h
+const WF_MIN=120,WF_MAX=720;
+const wfGap=()=>(((wf.h2*60+wf.m2)-(wf.h*60+wf.m))%1440+1440)%1440;   // minuty od „od” do „do” (0 = ten sam zegar)
 function wfEndFix(){
-  const s=wf.h*60+wf.m,e=wf.h2*60+wf.m2;
-  if(e-s<60||e>WF_DOMAX){const t=Math.min(s+120,WF_DOMAX);wfSetTime2(Math.floor(t/60),t%60)}
-  else if(e-s>720){const t=s+720;wfSetTime2(Math.floor(t/60),t%60)}
+  const s=wf.h*60+wf.m,g=wfGap();
+  if(g<WF_MIN){const t=(s+WF_MIN)%1440;wfSetTime2(Math.floor(t/60),t%60)}
+  else if(g>WF_MAX){const t=(s+WF_MAX)%1440;wfSetTime2(Math.floor(t/60),t%60)}
 }
 // skróty godzin: nieaktywne, gdy godzina już minęła (dla zakresu — gdy start za wcześnie)
 function wfQuickSync(){
@@ -584,7 +584,7 @@ function wfSetTime(hh,mm){
 function wfStep(unit,dir){
   const two=unit.endsWith("2");
   // 🌙 godzina startu przez północ → następny / poprzedni dzień (nie wcześniej niż dziś), jak w pogodzie
-  if(!two&&!wfRange()){const d=wfDate();if(d){const n=new Date(d);
+  if(!two){const d=wfDate();if(d){const n=new Date(d);
     if(unit[0]==="h")n.setHours(n.getHours()+dir);else{const m=dir>0?(Math.floor(wf.m/15)+1)*15:(Math.ceil(wf.m/15)-1)*15;n.setMinutes(m)}
     if(localIso(n).slice(0,10)!==localIso(d).slice(0,10)&&dayDiff(n)>=0){wfApplyAt(n);flipCard($("fch"),pad(wf.h));flipCard($("fcm"),pad(wf.m));try{navigator.vibrate&&navigator.vibrate(8)}catch(x){}return}}}
   let hh=two?wf.h2:wf.h,mm=two?wf.m2:wf.m;
@@ -593,8 +593,10 @@ function wfStep(unit,dir){
     mm=dir>0?(Math.floor(mm/15)+1)*15:(Math.ceil(mm/15)-1)*15;
     if(mm>=60){mm=0;hh++}else if(mm<0){mm=45;hh--}
   }
-  if(two){const s=wf.h*60+wf.m,t=Math.max(s+60,Math.min(hh*60+mm,s+720,WF_DOMAX));hh=Math.floor(t/60);mm=t%60}   // „do” nie wcześniej niż „od” + 1 h, nie później niż 23:45
-  else if(wfRange()){const t=Math.max(0,Math.min(hh*60+mm,WF_ODMAX));hh=Math.floor(t/60);mm=t%60}   // w zakresie „od” najpóźniej 22:45
+  if(two){   // „do” nie bliżej niż 2 h od „od” i nie dalej niż 12 h (może wypaść po północy)
+    const s=wf.h*60+wf.m;let g=((hh*60+mm-s)%1440+1440)%1440;
+    if(g<WF_MIN||g>WF_MAX){g=dir>0?WF_MAX:WF_MIN;const t=(s+g)%1440;hh=Math.floor(t/60);mm=t%60}
+  }
   two?wfSetTime2(hh,mm):wfSetTime(hh,mm);
 }
 function wfTestSync(){try{wfRbSync()}catch(e){}
@@ -605,6 +607,7 @@ let wxTimer=null;
 function wfUpdate(){
   wfTitleHint();
   try{wfQuickSync()}catch(e){}
+  try{const nx=wfRange()&&wf.h2*60+wf.m2<=wf.h*60+wf.m;$("flbl2").textContent=nx?"DO · NASTĘPNEGO DNIA":"DO"}catch(e){}
   const d=wfDate(),btn=$("wsave");
   const tst=!wf.editId&&testOk&&wf.test;
   btn.classList.toggle("tbtn",tst);
@@ -917,8 +920,8 @@ $("wpaceown").addEventListener("input",()=>{wf.pace=$("wpaceown").value.trim().s
 const wfJump=e=>{
   if(e.target.closest(".wtom")){wfSetDay("1");wfUpdate();try{navigator.vibrate&&navigator.vibrate(8)}catch(x){}return}
   if(!e.target.closest(".wjump")||!wf.jump)return;
-  const j=wf.jump,len=wfRange()?(wf.h2*60+wf.m2)-(wf.h*60+wf.m):0;wfSetTime(j.getHours(),j.getMinutes());
-  if(len>0){const e2=new Date(j.getTime()+len*60000);if(e2.getDate()===j.getDate())wfSetTime2(e2.getHours(),e2.getMinutes())}
+  const j=wf.jump,len=wfRange()?wfGap():0;wfSetTime(j.getHours(),j.getMinutes());
+  if(len>0){const e2=new Date(j.getTime()+len*60000);wfSetTime2(e2.getHours(),e2.getMinutes())}
   wfUpdate();try{navigator.vibrate&&navigator.vibrate(8)}catch(x){}};
 $("wdurinfo").addEventListener("click",wfJump);$("wfclash").addEventListener("click",wfJump);
 $("wplacesel").addEventListener("change",()=>{const v=$("wplacesel").value;
@@ -1018,8 +1021,8 @@ let wheelT=0;
 });
 $("wquick").addEventListener("click",e=>{
   const b=e.target.closest("button[data-q]");if(!b||b.disabled)return;
-  // skok: ustawia tylko zegar „od” (dzień bez zmian); „do” = „od” + 2 h (najpóźniej 23:45)
-  const [hh,mm]=b.dataset.q.split(":").map(Number),t=Math.min(hh*60+mm+120,WF_DOMAX);
+  // skok: ustawia tylko zegar „od” (dzień bez zmian); „do” = „od” + 2 h
+  const [hh,mm]=b.dataset.q.split(":").map(Number),t=(hh*60+mm+WF_MIN)%1440;
   wfSetTime(hh,mm);wfSetTime2(Math.floor(t/60),t%60);
 });
 $("wtitle").addEventListener("input",()=>{wf.titleAuto=false;wfTitleHint()});
@@ -1043,7 +1046,7 @@ $("wsave").onclick=async()=>{
   if(!d){say("Wybierz datę.");return}
   if(d.getTime()<Date.now()-5*60000){say("Ten termin już minął — wybierz późniejszą godzinę.");return}
   const rng=wfRange(),d2=rng?wfDate2():null;
-  if(rng&&(d2<=d||d2-d>12*36e5)){say("Koniec zakresu musi być później niż początek (tego samego dnia, maks. 12 h).");return}
+  if(rng&&(d2-d<WF_MIN*6e4||d2-d>WF_MAX*6e4)){say("Zakres musi trwać od 2 do 12 godzin.");return}
   if(rng&&d.getTime()<Date.now()+65*60000){say("Zakres zaczyna się za mniej niż godzinę — wtedy godzina ustala się sama i nikt nie może zaproponować swojej. Przesuń początek zakresu albo wybierz „Godzina”.");return}
   const note=$("wnote").value.trim()||null,title=wf.titleAuto?null:($("wtitle").value.trim()||null),k=localIso(d).slice(0,10);
   if(title&&title.length<6){say("Tytuł: co najmniej 6 znaków — albo zostaw puste (tytuł ułoży się sam).");return}
@@ -1525,6 +1528,7 @@ function slotsHtml(w,sel,other){
 function otherTime(w){
   const v=($("othtime")||{}).value||"";if(!/^\d\d:\d\d$/.test(v))return null;
   const d=new Date(w.range_from||w.starts_at),[h,m]=v.split(":").map(Number);d.setHours(h,m,0,0);
+  if(w.range_to&&d<new Date(w.range_from)&&new Date(w.range_to).getDate()!==new Date(w.range_from).getDate())d.setDate(d.getDate()+1);   // godzina po północy zakresu (np. 01:00 przy 22:30–01:30)
   return d.getTime()<Date.now()-5*60000?null:d.getTime();
 }
 /* okienko wyboru godziny: „Kiedy możesz?” (zaproszony) albo „Ustal godzinę” (zapraszający) */
