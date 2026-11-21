@@ -1020,3 +1020,6 @@ html.tcalm .want.test,html.tcalm .mywant.test,html.tcalm .nit.test{animation:non
 html.tcalm .mywant.test{border-width:2px;border-color:var(--acc);background:linear-gradient(180deg,var(--acc2),transparent 75%)}
 html.tcalm .want.test>*,html.tcalm .mywant.test>*,html.tcalm .nit.test .tx>*,html.tcalm .nit.test .ic{opacity:1!important;filter:none!important}
 html.tcalm .want.wgrp.test,html.tcalm .mywant.wgrp.test,html.tcalm .nit.wgrp.test{background:var(--gcb)}
+/* 🏃 komunikat dla spóźnialskich (15 min po starcie) */
+.latenote{margin:8px 0 0;font-weight:600;color:var(--acc)}
+.acts .latenote{margin:0}

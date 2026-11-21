@@ -502,10 +502,11 @@ function wantHtml(w){
      +paceHtml(w)+bikeHtml(w)+(live?'':durLineHtml(w))+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+(live?'':wxHtml(w))+routeBoxHtml(w)
      +invitedHtml(w)
      +(open?tallyHtml(w):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w)+(live?'':myPickHtml(w,myp,joined,mine)))
+     +(wLate(w)&&!mine&&!peek&&!joined?lateNote():'')
      +'<div class="acts">'
      +(mine?(live?'':(open?'<button class="b join" data-my="settle" data-id="'+esc(w.id)+'" title="Ustal godzinę">✅ Ustal '+esc(hhmm(new Date(wBest(w))))+'</button>':'<button class="b g join" data-my="edit" data-id="'+esc(w.id)+'">✏️ Edytuj</button>')
         +(priv?'<button class="ib" data-my="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
-        +'<button class="ib" data-my="share" data-id="'+esc(w.id)+'" title="Udostępnij" aria-label="Udostępnij">'+ICON.share+'</button>'):live?'<span class="note" style="flex:1">🚴 Jazda trwa — dołączyć już nie można.</span>':peek?'<span class="note" style="flex:1">Nie jesteś zaproszony — możesz tylko podejrzeć lub usunąć.</span>'
+        +'<button class="ib" data-my="share" data-id="'+esc(w.id)+'" title="Udostępnij" aria-label="Udostępnij">'+ICON.share+'</button>'):live&&!wLate(w)?'<span class="note" style="flex:1">🚴 Jazda trwa — dołączyć już nie można.</span>':peek?'<span class="note" style="flex:1">Nie jesteś zaproszony — możesz tylko podejrzeć lub usunąć.</span>'
        :open?'<button class="b join'+(joined?' g':'')+'" data-w="pref" data-id="'+esc(w.id)+'">'+(joined&&myp?'✓ '+esc(hhmm(new Date(myp)))+' · zmień':dec?'Jednak mogę? Wybierz godzinę':'Pasuje mi o…')+'</button>'
        :'<button class="b join'+(joined?' g':'')+'" data-w="join" data-id="'+esc(w.id)+'">'+(joined?'Rezygnuję':dec?'Jednak jadę!':'Jadę!')+'</button>')
      +(canInv&&!live?'<button class="ib" data-w="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
@@ -678,6 +679,9 @@ function ftInner(dt){return '<div class="fu">'+pad(dt.getDate())+'</div><div cla
 // co minutę: start/koniec jazdy przełącza kafelek bez przeładowania listy
 function ftLiveSync(){document.querySelectorAll("details.wday[data-day]").forEach(el=>{const ws=wdayWs[el.dataset.day];const t=el.querySelector(".ftile");if(ws&&t&&t.classList.contains("live")!==ws.some(wLive))renderWants()})}
 const wLive=w=>{const n=Date.now();return wantStart(w).getTime()<=n&&wantEnd(w).getTime()>n};
+// spóźnialscy: przez 15 min po starcie zwykłej jazdy można jeszcze dołączyć (baza tego nie blokuje) — krótki komunikat zamiast „Jazda trwa”
+const wLate=w=>!isOpen(w)&&wLive(w)&&Date.now()<new Date(w.starts_at).getTime()+15*60000;
+const lateNote=()=>'<div class="note latenote">🏃 Jazda już ruszyła — możesz jeszcze dogonić!</div>';
 const wDone=w=>wantEnd(w).getTime()<=Date.now();
 const trwaTag=()=>'<span class="trwa">🚴 TRWA<span class="tdots" aria-hidden="true"><i></i><i></i><i></i></span></span>';
 function liveHtml(w){
