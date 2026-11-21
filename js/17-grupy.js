@@ -59,7 +59,7 @@ async function grLoad(){
   }catch(err){grOk=false;grFor=uid;grMsg=grErr(err)==="Grupy wymagają KROKU 70 w bazie."?grErr(err):"Nie udało się wczytać grup: "+grErr(err)}
   grLoading=false;
 }
-function grRefresh(){try{if(gearOpen&&["main","nick","groups","group","gradm","admin","user","plist"].includes(gearView))renderGear();renderBell();if(wGrOk)renderWants()}catch(e){}}   // 👥 KROK 71: plakietki grup na kartach
+function grRefresh(){try{if(gearOpen&&["main","nick","groups","group","gradm","admin","user","plist"].includes(gearView))renderGear();renderBell();if(wGrOk)renderWants();if(wGrOk&&!$("popsheet").classList.contains("hide"))renderPop()}catch(e){}}   // 👥 KROK 71: plakietki grup na kartach i w okienku nowego zaproszenia (nazwa zamiast „grupa”, gdy grupy dociągną się po okienku)
 async function grReload(){await grLoad();grRefresh()}
 const grFresh=()=>{if(session&&grFor!==uid){grOk=null;grMine=[];grMem={};grLim={};grReqs=[];grFind=null}if(session&&grOk===null&&!grLoading)grReload()};
 
@@ -337,9 +337,9 @@ $("bellsheet").addEventListener("click",async e=>{
 });
 
 /* 🖱 akcje w ⚙️ (atrybut data-gx — nie koliduje z data-c obsługiwanym w js/05) */
-async function grDo(fn,args,okMsg,btn){
+async function grDo(fn,args,okMsg,btn,pre){   // pre: zmiana widoku zaraz po udanej akcji, przed odświeżeniem (bez starego „3 osoby” na ekranie)
   if(btn)btn.disabled=true;
-  try{const r=await sb.rpc(fn,args);if(r.error)throw r.error;if(okMsg)say(typeof okMsg==="function"?okMsg(r.data):okMsg);await grReload();return true}
+  try{const r=await sb.rpc(fn,args);if(r.error)throw r.error;if(okMsg)say(typeof okMsg==="function"?okMsg(r.data):okMsg);if(pre){pre();renderGear()}await grReload();return true}
   catch(err){if(btn)btn.disabled=false;say(grErr(err));return false}
 }
 $("gearpanel").addEventListener("click",async e=>{
@@ -376,7 +376,7 @@ $("gearpanel").addEventListener("click",async e=>{
   if(a==="limit"){if(!await askOk("Poprosić o większy limit miejsc?\n\nDecyduje główny administrator — dostaniesz odpowiedź w aplikacji.","Poproś"))return;await grDo("group_limit_ask",{g},d=>"Wysłano prośbę o limit "+d+" osób.",b);return}
   if(a==="leave"){const st=grSt(g),own=grRole(g)==="owner";
     if(!await askOk(st==="requested"?"Wycofać prośbę o dołączenie do „"+x.name+"”?":own?"Zamknąć grupę „"+x.name+"”?\n\nJesteś w niej sam(a) — grupa trafi do archiwum.":"Wyjść z grupy „"+x.name+"”?",st==="requested"?"Wycofaj":own?"Zamknij":"Wyjdź",1))return;
-    if(await grDo("group_leave",{g},st==="requested"?"Wycofano prośbę.":own?"Grupa zamknięta.":"Wyszedłeś(-aś) z grupy „"+x.name+"”.",b)){gearView="groups";grFind=null;renderGear()}return}
+    await grDo("group_leave",{g},st==="requested"?"Wycofano prośbę.":own?"Grupa zamknięta.":"Wyszedłeś(-aś) z grupy „"+x.name+"”.",b,()=>{gearView="groups";grFind=null});return}
   if(a==="del"){if(!await askOk("Usunąć grupę „"+x.name+"”?\n\nZnikną członkostwa i zaproszenia. Tego nie da się cofnąć.","Usuń grupę",1))return;
     if(await grDo("group_delete",{g},"Usunięto grupę „"+x.name+"”.",b)){delete grG[g];gearView=grFromAdm&&isKingReal()?"gradm":"groups";grFind=null;renderGear()}return}
 });
@@ -401,6 +401,14 @@ const grIn=g=>!!g&&grMine.some(m=>m.group_id===g&&m.status==="active");
 function grForWant(){return grOk?grMine.filter(m=>m.status==="active"&&grG[m.group_id]&&!grG[m.group_id].archived_at).map(m=>grG[m.group_id]).sort((a,b)=>a.name.localeCompare(b.name,"pl")):[]}
 const grMemIds=g=>grAct(g).map(x=>x.user_id).filter(id=>id!==uid);
 // 🎨 etykieta wypełniona kolorem grupy (przyciemnionym pod biały napis) + biała ikona grupy; tło karty — odcień koloru grupy i pasek z lewej
+// klikalna: otwiera grupę (⚙️ → Grupy → grupa); działa na kartach, w Twoich zaproszeniach, w 🔔 i w okienku nowego zaproszenia
 function wGrTag(w){const x=grG[w.group_id];
-  return '<span class="lockt grtag" style="background:'+(x?grInk(grCol(x)):'#6e6e73')+'">'+uiIcon(x?grIc(x):"users")+'<span>'+esc(x?x.name:"grupa")+'</span></span>'}
+  return '<span class="lockt grtag" role="button" tabindex="0" data-grgo="'+esc(w.group_id)+'" title="Otwórz grupę" style="background:'+(x?grInk(grCol(x)):'#6e6e73')+'">'+uiIcon(x?grIc(x):"users")+'<span>'+esc(x?x.name:"grupa")+'</span></span>'}
 function wGrCls(w){const x=grG[w.group_id];return ' wgrp" style="--gc:'+(x?grCol(x):'#8e8e93')}
+// 👥 klik w etykietę grupy → okno grupy; okienko nowego zaproszenia odkładamy na później (jak klik obok), 🔔 zamykamy
+function grTagGo(t){const g=t.dataset.grgo;if(!g||!session)return;
+  if(!$("popsheet").classList.contains("hide")){try{const it=popList[popIdx];if(it){popIds(it).forEach(i=>popSnooze.add(i));saveSnooze()}}catch(e){}closePop()}
+  if(!$("bellsheet").classList.contains("hide"))closeBell();
+  grFromAdm=false;grGo(g);if(!grG[g])say("Tej grupy nie widzisz — nie jesteś jej członkiem.");else if(!grSt(g))grReload()}
+document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-grgo]");if(!t)return;e.preventDefault();e.stopPropagation();grTagGo(t)},true);
+document.addEventListener("keydown",e=>{if(e.key!=="Enter"&&e.key!==" ")return;const t=e.target.closest&&e.target.closest("[data-grgo]");if(!t)return;e.preventDefault();e.stopPropagation();grTagGo(t)},true);
