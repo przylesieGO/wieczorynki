@@ -45,6 +45,9 @@ async function syncOnce(){
     if(d.fb)await syncFb();
     if(((d.grp||[]).length||d.me)&&typeof grLoad==="function"){   // 👥 grupy (KROK 70)
       const was=typeof grActIds==="function"?grActIds():"";await grLoad();
+      // 👥 zmiana w grupach → lista „Grupy jawne” (grFind) i otwarty panel ⚙️ nie zostają na starym stanie; nie odrysowujemy, gdy ktoś pisze w polu
+      if(typeof grSearch==="function"){if(gearOpen&&gearView==="groups")await grSearch(grQ);else grFind=null}
+      if(typeof grRefresh==="function"&&!/^(INPUT|TEXTAREA)$/.test((document.activeElement||{}).tagName||""))grRefresh();
       // 👥 KROK 71: weszłam/wyszłam z grupy → inne zaproszenia grupowe widać/nie widać — pełne wczytanie
       if(wGrOk&&typeof grActIds==="function"&&grActIds()!==was)return loadRemote();
     }
