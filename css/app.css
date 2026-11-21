@@ -1038,4 +1038,4 @@ html[data-theme=dark] .nkdemo{border-color:#ff7a70;color:#ff7a70}
 .dmsec .stbody{text-align:left}.dmsec .ios-grp{background:var(--card)}.dmsec .ios-grp+.ios-grp{margin-top:8px}.dmsec .dmsb{background:var(--fill)}
 .dmsec .bsgrp{margin:14px 2px 6px}.dmsec .note{margin:8px 2px 0}.dmsec .sbtn{margin-top:10px}
 .dmvact{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.dmsec .dmvact .sbtn{margin:0;padding:12px 8px;font-size:15px}
-.dmvclr{display:block;margin:8px auto 0;font-size:13px}.dmvlist{margin-top:4px}.dmvlist .prow .pjn{margin-left:auto}
+.dmvclr{display:block;margin:8px auto 0;font-size:13px}.dmvlist{margin-top:8px;background:var(--card);border-radius:14px;padding:0 12px 4px}.dmvlist .bsgrp{margin:0;padding:12px 0 4px}.dmvlist .prow:last-of-type{border-bottom:0}.dmvlist .pfnone{padding:8px 0}.dmvlist .prow .pjn{margin-left:auto}
