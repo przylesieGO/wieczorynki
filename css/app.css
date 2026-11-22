@@ -1110,3 +1110,13 @@ html[data-theme=dark] .wx-storm.dwxc,html[data-theme=dark] .wx-cloud.dwxc{color:
 .wl2 b{color:var(--ink)}
 details.wday>summary{align-items:flex-start}details.wday>summary .ftile{margin-top:4px}
 details.wday>summary{flex-wrap:wrap}details.wday>summary::after{align-self:center}.dwx{display:contents}.dwxc .ui-i{width:15px;height:15px}
+
+/* 📊 KROK 81: APP DEMO (js/18) i ocena przy wyjściu z demo (js/19) */
+.dsseg{margin:10px 0 6px}.dsseg.dstg{display:grid;grid-template-columns:1fr 1fr}.sheetbox .dsseg.dstg button{font-size:15px;padding:11px 4px}.dsbars{gap:2px}
+.dsd{background:var(--card);border-radius:12px;padding:6px 10px}
+.dsr{display:grid;grid-template-columns:minmax(0,42%) 1fr auto;align-items:center;gap:8px;font-size:13px;padding:4px 0}.dsr+.dsr{border-top:.5px solid var(--line)}
+.dsr span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dsr i{height:6px;border-radius:3px;background:var(--fill);overflow:hidden}
+.dsr s{display:block;height:100%;background:var(--acc);border-radius:3px;text-decoration:none}.dsr b{font-size:12px;font-weight:600;color:var(--mut);white-space:nowrap}
+.dslbl{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;margin:8px 2px}.dslbl select{width:auto}
+.dsv{font-size:12px;font-weight:700;border-radius:999px;padding:1px 8px}.dsv.up{background:var(--acc2);color:var(--acc)}.dsv.dn{background:var(--fill);color:var(--mut)}
+.dqvote button{display:inline-flex;align-items:center;justify-content:center;gap:6px}.dqvote svg{width:20px;height:20px}.dqdn{display:inline-flex;transform:rotate(180deg)}

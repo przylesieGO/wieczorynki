@@ -1,7 +1,7 @@
 // Prosty service worker: sieć najpierw, pamięć podręczna tylko awaryjnie (powłoka aplikacji).
-const CACHE="przylesiego-v101";
+const CACHE="przylesiego-v102";
 // Pliki aplikacji: ?v= musi być takie samo jak w index.html (podbijać przy każdej zmianie css/js).
-const SHELL=["./","index.html","manifest.json","favicon.ico","icon-b-32.png","icon-b-192.png","icon-b-512.png","apple-touch-icon-b.png","css/app.css?v=97","js/01-podstawy.js?v=97","js/02-ikony.js?v=97","js/03-stan.js?v=97","js/04-ustawienia.js?v=97","js/05-zgloszenia.js?v=97","js/06-pomoc-powitanie.js?v=97","js/07-pogoda-zaproszen.js?v=97","js/08-imprezy.js?v=97","js/09-trasy.js?v=97","js/10-zaproszenia.js?v=97","js/11-dzwonek.js?v=97","js/12-wieczorynki.js?v=97","js/13-online-statystyki.js?v=97","js/14-synchronizacja.js?v=97","js/15-wieczorynki-formularz.js?v=97","js/16-start.js?v=97","js/17-grupy.js?v=97","js/18-ekipa-demo.js?v=97","js/19-demo-gosc.js?v=97"];
+const SHELL=["./","index.html","manifest.json","favicon.ico","icon-b-32.png","icon-b-192.png","icon-b-512.png","apple-touch-icon-b.png","css/app.css?v=98","js/01-podstawy.js?v=98","js/02-ikony.js?v=98","js/03-stan.js?v=98","js/04-ustawienia.js?v=98","js/05-zgloszenia.js?v=98","js/06-pomoc-powitanie.js?v=98","js/07-pogoda-zaproszen.js?v=98","js/08-imprezy.js?v=98","js/09-trasy.js?v=98","js/10-zaproszenia.js?v=98","js/11-dzwonek.js?v=98","js/12-wieczorynki.js?v=98","js/13-online-statystyki.js?v=98","js/14-synchronizacja.js?v=98","js/15-wieczorynki-formularz.js?v=98","js/16-start.js?v=98","js/17-grupy.js?v=98","js/18-ekipa-demo.js?v=98","js/19-demo-gosc.js?v=98"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).catch(()=>{}));self.skipWaiting()});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==CACHE).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 self.addEventListener("fetch",e=>{

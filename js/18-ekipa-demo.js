@@ -258,3 +258,108 @@ $("gearpanel").addEventListener("input",e=>{
   if(e.target.id!=="dmpriv")return;demoF.priv=+e.target.value;const t=$("dmprivt");if(t)t.textContent="jawne "+(100-demoF.priv)+"% · prywatne "+demoF.priv+"%"});
 // start: aplikacja mogła już wystartować ze stanu telefonu, zanim ten plik się wczytał → doczytaj konta demo od razu
 if(typeof session!=="undefined"&&session)demoLoad().then(()=>{if(demoIds.size)refreshUi()}).catch(()=>{});
+
+/* ---------- 📊 KROK 81: „APP DEMO” — anonimowe statystyki trybu demo (tylko 👑; Administracja → Statystyki) ----------
+   Dane z admin_demo_stats(p_days); zbiera je js/19 (tylko w ?demo=1). Ustawienia Telegrama: admin_demo_stats_cfg. */
+let dsAdm=null,dsAdmAt=0,dsDays=30,dsWipeAsk=false;
+const DS_N={dev:{tel:"Telefon",tab:"Tablet",pc:"Komputer"},os:{android:"Android",ios:"iOS",windows:"Windows",macos:"macOS",linux:"Linux",cros:"ChromeOS",inny:"Inny"},
+  br:{chrome:"Chrome",safari:"Safari",samsung:"Samsung Internet",firefox:"Firefox",edge:"Edge",opera:"Opera",inna:"Inna"},
+  inapp:{fb:"Facebook",msg:"Messenger",ig:"Instagram",wv:"Inna aplikacja",nie:"Zwykła przeglądarka"},
+  vw:{xs:"< 360 px",s:"360–399 px",m:"400–479 px",tab:"480–1023 px",pc:"1024 px i więcej"},orient:{p:"Pionowo",l:"Poziomo"},theme:{light:"Jasny",dark:"Ciemny"},
+  lang:{pl:"polski",en:"angielski",de:"niemiecki",uk:"ukraiński",ru:"rosyjski",inny:"inny"},
+  ref:{fb:"Facebook",msg:"Messenger",ig:"Instagram",google:"Google",app:"Ekran logowania",direct:"Bezpośrednio / brak danych",inna:"Inne strony"},
+  conn:{"slow-2g":"bardzo wolne","2g":"2G","3g":"3G","4g":"4G i szybsze"}};
+const DS_SCR={t0:"Zaproszenia",t1:"Wieczorynki",t2:"Zaawansowane",t3:"Imprezy",gearpanel:"Ustawienia",wantform:"Formularz zaproszenia",whosheet:"Wybór osób",
+  plsheet:"Listy",grsheet:"Grupa",fltsheet:"Filtry",repsheet:"Jak poszło?",evsheet:"Impreza",popsheet:"Okno / karta",picksheet:"Wybór",bellsheet:"Powiadomienia",
+  sigsheet:"Mam ochotę",welsheet:"Powitanie",homesheet:"Miejscowość",routesheet:"Trasa",rbsheet:"Baza tras",mapsheet:"Mapa",helpsheet:"Pomoc",demosheet:"Ocena demo",ratesheet:"Ocena aplikacji"};
+const DS_CL={"w:join":"Jadę! / Rezygnuję","w:pref":"Pasuje mi o…","w:inv":"Dopraszanie","w:del":"Usuń zaproszenie","id:fab":"Nowe zaproszenie (+)","id:bellbtn":"Dzwonek",
+  "id:gear":"Ustawienia","id:helpbtn":"Pomoc","id:pvend":"Wyjdź z demo","id:wsave":"Wyślij zaproszenie","id:wcancel":"Anuluj zaproszenie","id:wfx":"Zamknij formularz",
+  "id:t0":"Zakładka Zaproszenia","id:t1":"Zakładka Wieczorynki","id:t2":"Zakładka Zaawansowane","id:t3":"Zakładka Imprezy","id:honl":"Kto jest online","id:menick":"Mój nick",
+  "id:wwho":"Kto zobaczy zaproszenie","u:karta":"Karta osoby (nick)","c:myrides":"Moje jazdy","c:back":"Wstecz","c:help":"Pomoc","dq:send":"Ocena demo: wyślij","dq:skip":"Ocena demo: bez oceny",
+  "ev:like":"Impreza: polub","ev:share":"Impreza: udostępnij","my:share":"Udostępnij zaproszenie","my:edit":"Edytuj zaproszenie"};
+const dsScrName=k=>DS_SCR[k]||(/^g_/.test(k)?"Ustawienia › "+k.slice(2):k);
+const dsClName=k=>DS_CL[k]||(/^x:/.test(k)?"Bez reakcji: ."+k.slice(2):/^j:/.test(k)?"Sekcja: "+k.slice(2):k);
+const dsLkName=k=>/^r_/.test(k)?"Funkcja bazy: "+k.slice(2):/^f_/.test(k)?"Funkcja serwera: "+k.slice(2):({login:"Logowanie",signup:"Zakładanie konta",haslo:"Przypomnienie hasła",konto:"Zmiana konta"})[k]||k;
+const dsTime=s=>{s=Math.round(+s||0);return s>=60?Math.floor(s/60)+" min "+(s%60)+" s":s+" s"};
+function dsAdmLoad(){
+  if(dsAdm&&dsAdm.loading)return;dsAdm=Object.assign({},dsAdm||{},{loading:1});
+  sb.rpc("admin_demo_stats",{p_days:dsDays}).then(r=>{if(r.error)throw r.error;dsAdm=r.data||{};dsAdmAt=Date.now()})
+    .catch(e=>{dsAdm={err:(e&&e.message)||"Nie udało się wczytać statystyk demo (KROK 81)."};dsAdmAt=Date.now()})
+    .finally(()=>{if(gearOpen&&gearView==="stats")dsRender()});
+}
+function dsRender(){const x=document.querySelector("#gearpanel .sheetbox"),y=x?x.scrollTop:0;renderGear();const z=document.querySelector("#gearpanel .sheetbox");if(z&&gearView==="stats")z.scrollTop=y}
+const dsAdmSum=()=>dsAdm&&dsAdm.today!=null?dsAdm.today+" dziś · "+dsAdm.d7+" w 7 dni":"";
+// słupki (klocek .nbars jak w statystykach grupy)
+function dsBars(v,lab,num){const mx=Math.max(1,...v);
+  return '<div class="nbars dsbars">'+v.map(n=>'<i style="height:'+(n?Math.max(6,Math.round(n/mx*100)):0)+'%"'+(n?'':' class="z"')+'>'+(n&&num?'<b>'+n+'</b>':'')+'</i>').join("")+'</div>'
+   +'<div class="gsbl">'+lab.map(x=>'<span>'+esc(x)+'</span>').join("")+'</div>'}
+// rozkład: nazwa · pasek · liczba (%)
+function dsDist(o,names,tot){const E=Object.entries(o||{}).sort((a,b)=>b[1]-a[1]);if(!E.length)return '<p class="note">Brak danych.</p>';
+  const t=tot||E.reduce((a,[,n])=>a+n,0)||1;
+  return '<div class="dsd">'+E.map(([k,n])=>'<div class="dsr"><span>'+esc((names&&names[k])||k)+'</span><i><s style="width:'+Math.round(n/t*100)+'%"></s></i><b>'+n+' · '+Math.round(n/t*100)+'%</b></div>').join("")+'</div>'}
+function dsList(L,name,fmtv){if(!L||!L.length)return '<p class="note">Brak danych.</p>';const mx=Math.max(1,...L.map(x=>+x[1]||0));
+  return '<div class="dsd">'+L.map(([k,s,n])=>'<div class="dsr"><span>'+esc(name(k))+'</span><i><s style="width:'+Math.round((+s||0)/mx*100)+'%"></s></i><b>'+esc(fmtv(s,n))+'</b></div>').join("")+'</div>'}
+function dsAdmHtml(){
+  if(!isKingReal())return "";
+  if(!dsAdm||(!dsAdm.loading&&Date.now()-dsAdmAt>60000))dsAdmLoad();
+  const d=dsAdm||{};
+  if(d.err)return '<div class="changed">'+esc(d.err)+'</div>';
+  if(d.n==null)return '<div class="smail">Ładuję…</div>';
+  const t=(v,l)=>'<div class="st"><b>'+esc(v==null?"—":v)+'</b><span>'+l+'</span></div>',n=+d.n||0,pc=x=>n?Math.round((+x||0)/n*100)+"%":"—";
+  const F=d.funnel||[0,0,0,0,0],FL=["Weszło do demo","Kliknęło w zaproszenie","Kliknęło „Jadę!”","Otworzyło formularz","Wysłało zaproszenie"];
+  const hr=d.hours||[],H8=[...Array(8)].map((_,i)=>(+hr[i*3]||0)+(+hr[i*3+1]||0)+(+hr[i*3+2]||0)),S=d.series||[];
+  const seg=(v,l)=>'<button type="button" class="'+(dsDays===v?'on':'')+'" data-dsx="days" data-v="'+v+'">'+l+'</button>';
+  const c=d.cfg||{},mode=c.tg_mode||"off",ms=(v,l)=>'<button type="button" class="'+(mode===v?'on':'')+'" data-dsx="tg" data-v="'+v+'">'+l+'</button>';
+  const opt=(a,b,cur,f)=>[...Array(b-a+1)].map((_,i)=>'<option value="'+(a+i)+'"'+(a+i===+cur?' selected':'')+'>'+f(a+i)+'</option>').join("");
+  const fl=d.flags||{},V=d.votes||{},sd=S.length?[S[0][0],S[Math.floor(S.length/2)][0],S[S.length-1][0]].map(x=>x.slice(8)+"."+x.slice(5,7)):[];
+  return '<div class="stats">'+t(d.today,"dziś")+t(d.d7,"7 dni")+t(d.d30,"30 dni")+t(d.n?dsTime(d.secs_avg):"—","średni czas")+t(pc(d.bounce),"wyszło od razu (< 5 s)")+t(F[4],"wysłane zaproszenia")+'</div>'
+   +'<div class="seg dsseg">'+seg(7,"7 dni")+seg(30,"30 dni")+seg(90,"90 dni")+seg(365,"rok")+'</div>'
+   +'<div class="note">Okres: '+n+' '+plf(n,["wejście","wejścia","wejść"])+' · mediana czasu '+esc(dsTime(d.secs_med))+' · łącznie '+esc(dsTime(d.secs_sum))+'</div>'
+   +(n?'<div class="gsh">Wejścia dzień po dniu</div>'+dsBars(S.map(x=>+x[1]||0),[],S.length<=14)+'<div class="nbl"><span>'+(sd[0]||"")+'</span><span>'+(sd[1]||"")+'</span><span>'+(sd[2]||"")+'</span></div>'
+   +'<div class="gsh">Godzina wejścia</div>'+dsBars(H8,["0–3","3–6","6–9","9–12","12–15","15–18","18–21","21–24"],1)
+   +'<div class="gsh">Dzień tygodnia</div>'+dsBars((d.dow||[]).map(Number),["pn","wt","śr","czw","pt","sb","nd"],1)
+   +'<div class="gsh">Lejek</div><div class="dsd">'+F.map((x,i)=>'<div class="dsr"><span>'+FL[i]+'</span><i><s style="width:'+(F[0]?Math.round(x/F[0]*100):0)+'%"></s></i><b>'+x+' · '+(F[0]?Math.round(x/F[0]*100):0)+'%</b></div>').join("")+'</div>'
+   +'<div class="gsh">Skąd</div>'+dsDist(d.ref,DS_N.ref,n)
+   +(Object.keys(d.tag||{}).length?'<div class="gsh">Znacznik w linku (&amp;z=…)</div>'+dsDist(d.tag,null,n):'')
+   +'<div class="gsh">Urządzenie</div>'+dsDist(d.dev,DS_N.dev,n)
+   +'<div class="gsh">System</div>'+dsDist(d.os,DS_N.os,n)
+   +'<div class="gsh">Przeglądarka</div>'+dsDist(d.br,DS_N.br,n)
+   +'<div class="gsh">Wbudowana przeglądarka aplikacji</div>'+dsDist(d.inapp,DS_N.inapp,n)
+   +'<div class="gsh">Szerokość ekranu</div>'+dsDist(d.vw,DS_N.vw,n)
+   +'<div class="gsh">Orientacja</div>'+dsDist(d.orient,DS_N.orient,n)
+   +'<div class="gsh">Motyw systemu</div>'+dsDist(d.theme,DS_N.theme,n)
+   +'<div class="gsh">Język</div>'+dsDist(d.lang,DS_N.lang,n)
+   +(Object.keys(d.conn||{}).length?'<div class="gsh">Połączenie (tylko Chrome)</div>'+dsDist(d.conn,DS_N.conn):'')
+   +'<div class="stats">'+t(pc(fl.pwa),"zainstalowana aplikacja")+t(pc(fl.dark),"ciemny motyw w demo")+t(pc(fl.thchg),"zmienili motyw")+t(pc(fl.rm),"ograniczony ruch")+t(pc(fl.hc),"większy kontrast")
+     +t(d.scroll_avg==null?"—":d.scroll_avg+"%","przewinięcie listy")+'</div>'
+   +'<div class="gsh">Ekrany — łączny czas</div>'+dsList(d.screens,dsScrName,(s,c)=>dsTime(s)+" · "+c+" os.")
+   +'<div class="gsh">Ostatni ekran przed wyjściem</div>'+dsDist(Object.fromEntries(Object.entries(d.last||{}).map(([k,v])=>[dsScrName(k),v])),null,n)
+   +'<div class="gsh">Najczęściej klikane</div>'+dsList((d.clicks||[]).filter(x=>!/^x:/.test(x[0])).slice(0,20),dsClName,(s,c)=>s+" · "+c+" os.")
+   +'<div class="gsh">Problemy</div><div class="stats">'+t(d.rage,"szybkie stukanie ("+(d.rage_s||0)+" os.)")+t(d.dead,"kliknięcia bez reakcji ("+(d.dead_s||0)+" os.)")
+     +t(d.errs,"błędy aplikacji ("+(d.err_s||0)+" os.)")+t(d.load_med==null?"—":(d.load_med/1000).toFixed(1).replace(".",",")+" s","wczytanie (mediana)")
+     +t(d.load_p90==null?"—":(d.load_p90/1000).toFixed(1).replace(".",",")+" s","wczytanie (9 na 10 szybciej)")+'</div>'
+   +((d.clicks||[]).some(x=>/^x:/.test(x[0]))?'<div class="gsh">Kliknięcia bez reakcji — gdzie</div>'+dsList((d.clicks||[]).filter(x=>/^x:/.test(x[0])).slice(0,10),dsClName,(s,c)=>s+" · "+c+" os."):'')
+   +((d.err_msgs||[]).length?'<div class="gsh">Komunikaty błędów</div><div class="urrec">'+d.err_msgs.map(([m,c])=>'<div>'+esc(m)+' <span class="note">× '+c+'</span></div>').join("")+'</div>':'')
+   +((d.locked||[]).length?'<div class="gsh">Próby funkcji niedostępnych w demo</div>'+dsList(d.locked,dsLkName,(s,c)=>s+" · "+c+" os."):'')
+   +'<div class="gsh">Oceny przy wyjściu</div><div class="stats">'+t(V.up||0,"Fajne")+t(V.down||0,"Słabo")+'</div>'
+   +((d.notes||[]).length?'<div class="urrec">'+d.notes.map(x=>'<div>'+(x.vote>0?'<span class="dsv up">Fajne</span> ':x.vote<0?'<span class="dsv dn">Słabo</span> ':'')+esc(x.note)
+      +' <span class="note">'+esc(new Date(x.at).toLocaleString("pl-PL",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}))+(x.dev?' · '+esc(DS_N.dev[x.dev]||x.dev):'')+'</span></div>').join("")+'</div>':'')
+   :'<p class="note">Jeszcze nikt nie wszedł do demo w tym okresie.</p>')
+   +'<div class="gsh">Powiadomienia na Telegram (do 👑)</div><div class="seg dsseg dstg">'+ms("off","Wyłączone")+ms("each","Każde wejście")+ms("hours","Co kilka godzin")+ms("daily","Raz dziennie")+'</div>'
+   +(mode==="hours"?'<label class="dslbl">Co ile godzin <select data-dsx="hrs">'+opt(1,24,c.tg_hours,x=>x+" h")+'</select></label>':'')
+   +(mode==="daily"?'<label class="dslbl">O godzinie <select data-dsx="hr">'+opt(0,23,c.tg_hour,x=>x+":00")+'</select></label>':'')
+   +'<p class="note">'+(mode==="each"?'Zbiorczo co 5 minut, gdy ktoś skończył oglądać demo.':mode==="off"?'Bez wiadomości — dane widać tylko tutaj.':'Jedna wiadomość z podsumowaniem, tylko gdy ktoś był w demo.')+' Wiadomość nie zawiera treści uwag.</p>'
+   +'<button type="button" class="b sbtn g" data-dsx="wipe">'+(dsWipeAsk?'Na pewno? Usuń wszystkie statystyki demo':'Wyczyść statystyki demo')+'</button>'
+   +'<p class="note">Anonimowo: bez nicków, adresu IP i ciasteczek; dane starsze niż 180 dni usuwają się same.</p>';
+}
+async function dsAct(k,v){
+  if(k==="days"){dsDays=+v||30;dsAdm=null;dsAdmLoad();dsRender();return}
+  if(k==="wipe"){if(!dsWipeAsk){dsWipeAsk=true;dsRender();return}dsWipeAsk=false;
+    const r=await sb.rpc("admin_demo_stats_wipe");say(r.error?"Nie udało się: "+r.error.message:"Usunięto statystyki demo ("+(r.data||0)+")");dsAdm=null;dsAdmLoad();dsRender();return}
+  const c=(dsAdm&&dsAdm.cfg)||{},a={p_mode:k==="tg"?v:c.tg_mode||"off",p_hours:k==="hrs"?+v:null,p_hour:k==="hr"?+v:null};
+  const r=await sb.rpc("admin_demo_stats_cfg",a);
+  if(r.error){say("Nie udało się: "+r.error.message);return}
+  if(dsAdm)dsAdm.cfg=r.data;dsRender();if(k==="tg")say(v==="off"?"Powiadomienia o demo wyłączone":"Powiadomienia o demo włączone");
+}
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("button[data-dsx]");if(!b||!isKingReal())return;e.preventDefault();dsAct(b.dataset.dsx,b.dataset.v)});
+document.addEventListener("change",e=>{const s=e.target.closest&&e.target.closest("select[data-dsx]");if(!s||!isKingReal())return;dsAct(s.dataset.dsx,s.value)});

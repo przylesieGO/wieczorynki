@@ -44,6 +44,7 @@ function setRidesHtml(){
 }
 // Testy: Testowe zaproszenia (każdy z włączoną funkcją) + Funkcje testowe (tylko testerzy)
 function setTestHtml(){
+  if(DEMO)return "";   // 🎮 w demo bez sekcji „Testy”
   return gGrp("Testy",[testOk?iosIt("#ff453a","flask","Testowe zaproszenia",hideTest?"Ukryte — widzisz tylko prawdziwe (Twoje zostają)":"Widoczne — wyłącz, żeby widzieć tylko prawdziwe",iosSw(!hideTest,"data-ht",hideTest?"0":"1")):"",testOk?iosIt("#ff453a","flask","Spokojny wygląd testowych",testCalm?"Sama etykieta 🧪 TEST — bez migania i czerwonych pasków":"Wyłączony — testowe karty mają migającą czerwoną ramkę",iosSw(testCalm,"data-tc",testCalm?"0":"1")):"",meTester()?iosIt("#bf5af2","flask","Funkcje testowe",betaOn?"Widzisz funkcje w budowie (🧪 BETA)":"Wyłączone — widzisz aplikację tak jak wszyscy",iosSw(betaOn,"data-beta",betaOn?"0":"1")):""]);
 }
 // pełny opis (rozwijany pod krótką pomocą)
@@ -84,47 +85,9 @@ function instHtml(){
    +(instPrompt?'<button class="b sbtn" data-c="instgo">📲 Zainstaluj teraz</button><div class="note" style="margin:10px 0 2px">albo ręcznie:</div>':'')
    +'<div class="sleft">'+instGuideHtml()+'<div class="note" style="margin-top:10px">Po instalacji PrzylesieGo! otwiera się jak zwykła aplikacja: pełny ekran bez paska przeglądarki, ikona z dwoma kołami, liczba powiadomień na ikonie.</div></div>';
 }
-// 👀 przykład dla gościa: udawane osoby i zaproszenia, nic nie trafia do bazy
-function guestDemoHtml(){
-  const keep={uid,wants,joins,prefs,decls,invs,nicks,genders,favs,favOk,paceOk,distOk,rangeOk,visOk,testOk,wRouteOk,isAdmin};
-  const t=(dd,h,m)=>{const d=new Date();d.setDate(d.getDate()+dd);d.setHours(h,m||0,0,0);return d.toISOString()};
-  try{
-    uid="demo-me";isAdmin=false;paceOk=distOk=rangeOk=visOk=wRouteOk=true;testOk=false;favOk=true;
-    nicks={"demo-me":"Ty",d1:"Marek z Bielan",d2:"Ania K",d3:"Kasia",d4:"Tomek R",d5:"Ola"};
-    genders={"demo-me":"M",d1:"M",d2:"K",d3:"K",d4:"M",d5:"K"};favs=new Set(["d2"]);
-    const now=new Date(),late=now.getHours()>=17,d0=late?1:0;
-    const W=[
-      {id:"dm1",user_id:"d1",starts_at:t(d0,18,0),note:"Kebab RIDE",visibility:"all",pace:"tour",km:40},
-      {id:"dm2",user_id:"d2",starts_at:t(d0+1,17,0),range_from:t(d0+1,17,0),range_to:t(d0+1,19,0),note:"Coffee Ride ☕",visibility:"all",pace:"senior",dur_min:120},
-      {id:"dm3",user_id:"d4",starts_at:t(d0+2,9,0),note:"SPEEDAY",visibility:"private",pace:"speed",route_km:62.4}];
-    wants=W;joins={dm1:["d2","d3"],dm2:["d1","d4","d5"],dm3:[]};
-    prefs={dm2:{d1:t(d0+1,17,30),d4:t(d0+1,18,0),d5:t(d0+1,18,0)}};decls={dm1:["d5"]};
-    invs={dm3:[{u:"demo-me",by:"d4"},{u:"d1",by:"d4"}]};
-    const WX=["🌡 9°C · 🌬 12 km/h z zachodu · 🌧 10%","🌡 11°C · 🌬 8 km/h z południa · 🌧 0%","🌡 7°C · 🌬 15 km/h z północnego zachodu · 🌧 20%"];
-    W.forEach((w,i)=>{wxTxt[w.id+"|"+wxWhen(w).getTime()]=WX[i]});
-    const cap=(n,t)=>'<div class="dmcap"><span>'+n+'</span><div>'+t+'</div></div>';
-    return '<div class="sheetbox popbox dmbox" role="dialog" aria-modal="true" aria-label="Przykład"><button class="sclose" data-dm="close" aria-label="Zamknij">✕</button>'
-     +'<span class="ptag dmtag">👀 PRZYKŁAD</span><div class="ph">Tak wygląda PrzylesieGo!</div>'
-     +'<div class="note" style="text-align:center">Udawane osoby i jazdy — możesz klikać, nic się nie zapisuje.</div>'
-     +cap(1,'Ktoś zaprasza wszystkich — wystarczy <b>„Jadę!”</b>')+wantHtml(W[0])
-     +cap(2,'Zakres godzin — każdy wybiera, <b>kiedy może</b>, autor ustala start')+wantHtml(W[1])
-     +cap(3,'🔒 Zaproszenie <b>tylko dla Ciebie</b>, z proponowaną trasą GPX')+wantHtml(W[2])
-     +cap(4,'Swoje zaproszenie tworzysz zielonym <b>➕</b> w prawym dolnym rogu. Pod <b>🔔</b> masz wszystkie zaproszenia do Ciebie.')
-     +'<button type="button" class="b big" data-dm="reg">Załóż konto — to 30 sekund</button>'
-     +'<button type="button" class="lnk" data-dm="close" style="display:block;margin:10px auto 0">Zamknij przykład</button></div>';
-  }finally{({uid,wants,joins,prefs,decls,invs,nicks,genders,favs,favOk,paceOk,distOk,rangeOk,visOk,testOk,wRouteOk,isAdmin}=keep)}
-}
 document.addEventListener("click",e=>{if(!e.target.closest("[data-betafb]"))return;
   if(session&&fbOk){gearOpen=true;gearView="fb";renderGear()}
   else say(session?"Zgłaszanie uwag będzie dostępne za chwilę — odśwież aplikację.":"🧪 To wersja testowa. Zaloguj się, a uwagi zgłosisz w ⚙️ → „Oceń aplikację / zgłoś błąd”.")});
-function openDemo(){const p=$("demosheet");p.innerHTML=guestDemoHtml();p.classList.remove("hide");p.querySelector(".sheetbox").scrollTop=0}
-function closeDemo(){const p=$("demosheet");p.classList.add("hide");p.innerHTML=""}
-document.addEventListener("click",e=>{const b=e.target.closest("[data-demo]");if(b){e.preventDefault();openDemo()}});
-$("demosheet").addEventListener("click",e=>{
-  if(e.target===$("demosheet")||e.target.closest("[data-dm='close']")){closeDemo();return}
-  if(e.target.closest("[data-dm='reg']")){closeDemo();if(guestMode){setGuest(false);renderChrome()}setTimeout(()=>{const m=$("ae");if(m){m.scrollIntoView({block:"center"});m.focus()}},120);return}
-  if(e.target.closest("button,a,summary,.nk")){e.preventDefault();e.stopPropagation();say("👀 To tylko przykład — załóż konto, żeby jeździć naprawdę.")}
-},true);
 function helpFullHtml(){
   const tg=feat("telegram_dm"),rides=tabOk(1),sec=(t,items)=>'<div class="hfs"><b>'+t+'</b><ul>'+items.map(x=>'<li>'+x+'</li>').join("")+'</ul></div>';
   return '<div class="hfull">'

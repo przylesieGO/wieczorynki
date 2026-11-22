@@ -174,6 +174,7 @@ function demoClient(){
   }
   // 🤝 „żywe” demo: po założeniu zaproszenia przez Gościa ktoś z ekipy dołącza (powiadomienie pod 🔔)
   function demoReact(wid){
+    try{dsStep(16)}catch(e){}   // 📊 lejek: zaproszenie wysłane
     const pick=[...Array(12).keys()].map(i=>dmId(i+1)).sort(()=>Math.random()-.5);
     [9000,24000].forEach((ms,i)=>setTimeout(()=>{
       const w=(DB.wants||[]).find(x=>x.id===wid);if(!w)return;
@@ -221,19 +222,129 @@ function demoClient(){
   const exit=()=>{location.href=location.pathname};
   return {
     from:t=>new Q(t),
-    rpc:(n,a)=>RPC[n]?RPC[n](a||{}):bad(),
+    rpc:(n,a)=>RPC[n]?RPC[n](a||{}):(dsLock("r_"+n),bad()),
     auth:{
       getSession:()=>ok({session}),getUser:()=>ok({user:session.user}),
       onAuthStateChange:()=>({data:{subscription:sub}}),
       signOut:()=>{setTimeout(exit,50);return ok(null)},
-      signInWithPassword:()=>bad("To jest demo — wyjdź z demo (pasek u góry), żeby się zalogować."),
-      signUp:()=>bad("To jest demo — wyjdź z demo (pasek u góry), żeby założyć konto."),
-      resetPasswordForEmail:()=>bad(),updateUser:()=>bad()
+      signInWithPassword:()=>(dsLock("login"),bad("To jest demo — wyjdź z demo (pasek u góry), żeby się zalogować.")),
+      signUp:()=>(dsLock("signup"),bad("To jest demo — wyjdź z demo (pasek u góry), żeby założyć konto.")),
+      resetPasswordForEmail:()=>(dsLock("haslo"),bad()),updateUser:()=>(dsLock("konto"),bad())
     },
-    functions:{invoke:()=>bad()},
+    functions:{invoke:n=>(dsLock("f_"+n),bad())},
     channel:()=>{const hs=[];const ch={state:"joined",on(ev,o,cb){hs.push(cb);return ch},
       subscribe(cb){setTimeout(()=>{cb&&cb("SUBSCRIBED");hs.forEach(h=>{try{h()}catch(e){}})},300);return ch},
       track:()=>ok(null),untrack:()=>ok(null),presenceState:()=>Object.fromEntries(ONLINE.map(id=>[id,[{t:Date.now()}]]))};return ch},
     removeChannel:()=>ok("ok"),removeAllChannels:()=>ok([])
   };
 }
+
+/* ---------- 📊 KROK 81: anonimowe statystyki demo („APP DEMO” w Administracji → Statystyki) ----------
+   Działa tylko tutaj (ten plik wczytuje się wyłącznie w ?demo=1). Bez IP, ciasteczek i zapisu w telefonie — losowy numer
+   sesji żyje w pamięci karty. Dane w przedziałach; baza (demo_ping) przyjmuje tylko wartości z listy / wzorca, sama pilnuje
+   sufitów i częstotliwości. Wysyłka: po wczytaniu, co 60 s przy widocznej karcie i przy wyjściu (fetch keepalive). */
+const DS={sid:dmUuid(),secs:0,steps:1,clicks:{},screens:{},locked:{},last:"",scroll:0,rage:0,dead:0,errs:0,emsg:[],dark:null,thchg:false,vote:0,note:"",load:null};
+const dsK=x=>String(x==null?"":x).toLowerCase().replace(/[^a-z0-9_]/g,"").slice(0,20)||"x";
+const dsInc=(o,k,max)=>{if(!(k in o)&&Object.keys(o).length>=(max||70))return;o[k]=(o[k]||0)+1};
+function dsStep(b){DS.steps|=b}
+function dsLock(k){dsInc(DS.locked,dsK(k).slice(0,30),25)}
+function dsEnv(){
+  const ua=navigator.userAgent||"",uad=navigator.userAgentData,w=window.innerWidth||0;
+  const mm=q=>{try{return matchMedia(q).matches}catch(e){return false}},ipad=/Macintosh/.test(ua)&&navigator.maxTouchPoints>1;
+  const dev=uad&&uad.mobile===true?"tel":/iPad|Tablet/.test(ua)||ipad||(/Android/.test(ua)&&!/Mobile/.test(ua))?"tab":/Mobi|iPhone|iPod|Android/.test(ua)?"tel":"pc";
+  const os=/Android/.test(ua)?"android":/iPhone|iPad|iPod/.test(ua)||ipad?"ios":/CrOS/.test(ua)?"cros":/Windows/.test(ua)?"windows":/Mac OS X|Macintosh/.test(ua)?"macos":/Linux/.test(ua)?"linux":"inny";
+  const br=/SamsungBrowser/.test(ua)?"samsung":/Edg(A|iOS)?\//.test(ua)?"edge":/OPR\/|Opera/.test(ua)?"opera":/Firefox|FxiOS/.test(ua)?"firefox":/Chrome|CriOS/.test(ua)?"chrome":/Safari/.test(ua)?"safari":"inna";
+  const inapp=/Messenger|Orca-Android/.test(ua)?"msg":/FBAN|FBAV|FB_IAB|FBIOS/.test(ua)?"fb":/Instagram/.test(ua)?"ig":/; wv\)/.test(ua)?"wv":undefined;
+  let h="";try{h=document.referrer?new URL(document.referrer).hostname:""}catch(e){}
+  const ref=!h?"direct":/(^|\.)messenger\.com$/.test(h)?"msg":/(^|\.)(facebook\.com|fb\.com|fb\.me)$/.test(h)?"fb":/(^|\.)instagram\.com$/.test(h)?"ig":/(^|\.)google\./.test(h)?"google":h===location.hostname?"app":"inna";
+  let tag="";try{tag=(new URLSearchParams(location.search).get("z")||"").toLowerCase()}catch(e){}
+  const lang=(navigator.language||"").slice(0,2).toLowerCase(),c=navigator.connection;
+  return {dev,os,br,inapp,vw:w<360?"xs":w<400?"s":w<480?"m":w<1024?"tab":"pc",or:(window.innerHeight||0)>=w?"p":"l",
+    theme:mm("(prefers-color-scheme: dark)")?"dark":"light",rm:mm("(prefers-reduced-motion: reduce)"),hc:mm("(prefers-contrast: more)"),
+    lang:["pl","en","de","uk","ru"].includes(lang)?lang:"inny",pwa:mm("(display-mode: standalone)")||navigator.standalone===true,
+    ref,tag:/^[a-z0-9]{1,8}$/.test(tag)?tag:undefined,conn:c&&c.effectiveType||undefined};
+}
+// 🖥️ bieżący ekran: najwyższe otwarte okno (kolejność jak w index.html), w Ustawieniach podstrona; inaczej zakładka
+const DS_SHEETS=["gearpanel","wantform","whosheet","plsheet","grsheet","fltsheet","repsheet","evsheet","popsheet","picksheet","bellsheet","sigsheet","welsheet","homesheet","routesheet","rbsheet","mapsheet","helpsheet","demosheet","ratesheet"];
+function dsScreen(){
+  let s="";for(const id of DS_SHEETS){const e=document.getElementById(id);if(e&&!e.classList.contains("hide"))s=id}
+  if(s==="gearpanel"&&typeof gearView==="string"&&gearView)s="g_"+gearView.toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,14);
+  if(s)return s.slice(0,16);
+  const t=document.querySelector("nav button.on");return t&&/^t\d$/.test(t.id)?t.id:"t0";
+}
+setInterval(()=>{
+  if(document.hidden)return;
+  DS.secs++;const s=dsScreen();DS.last=s;dsInc(DS.screens,s,35);if(s==="wantform")dsStep(8);
+  if(!document.querySelector(".sheet:not(.hide)")){const mx=document.documentElement.scrollHeight-window.innerHeight;
+    if(mx>50)DS.scroll=Math.max(DS.scroll,Math.min(100,Math.round((window.scrollY||0)/mx*100)))}
+  const dk=document.documentElement.dataset.theme==="dark";if(DS.dark!==null&&dk!==DS.dark)DS.thchg=true;DS.dark=dk;
+},1000);
+// 👆 kliknięcia: klucz = rodzaj atrybutu + wartość (np. „w:join”, „id:bellbtn”); bez treści i bez nicków
+const DS_ATTR=["w","c","a","my","ev","pk","gx","gk","rb","rs","go","dx","dm","dq","j"];
+const DS_SEL=DS_ATTR.map(a=>"[data-"+a+"]").join(",")+",[data-u],button[id],a[id],input[id],select[id]";
+let dsMut=0,dsTaps=[];
+try{new MutationObserver(()=>{dsMut=Date.now()}).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:["class","open","style"]})}catch(e){}
+document.addEventListener("click",e=>{
+  const el=e.target&&e.target.closest?e.target:null;if(!el)return;
+  const t=Date.now(),x=el.closest(DS_SEL);
+  if(x){const a=DS_ATTR.find(a=>x.hasAttribute("data-"+a));
+    dsInc(DS.clicks,a?a+":"+dsK(x.getAttribute("data-"+a)):x.hasAttribute("data-u")?"u:karta":"id:"+dsK(x.id))}
+  if(el.closest("[data-wid],.want"))dsStep(2);
+  if(x&&x.getAttribute("data-w")==="join")dsStep(4);
+  // 😤 szybkie stukanie w to samo miejsce (3× w 1 s)
+  dsTaps=dsTaps.filter(p=>t-p.t<1000&&Math.abs(p.x-e.clientX)<40&&Math.abs(p.y-e.clientY)<40);dsTaps.push({t,x:e.clientX,y:e.clientY});
+  if(dsTaps.length>=3){DS.rage++;dsTaps=[]}
+  // 🫥 kliknięcie w coś, co nie reaguje (nic się nie zmieniło na ekranie)
+  if(!x&&!el.closest("button,a,input,select,textarea,label,summary,[role=button],[tabindex],.sheet")){
+    const cl=dsK((typeof el.className==="string"&&el.className.split(/\s+/)[0])||el.tagName);
+    setTimeout(()=>{if(dsMut<t){DS.dead++;dsInc(DS.clicks,"x:"+cl)}},700)}
+},true);
+// 🐞 błędy aplikacji (krótko, bez adresów)
+function dsErr(m){DS.errs++;m=String(m||"").replace(/https?:\/\/\S+/g,"").replace(/[^\p{L}\p{N}\s.,:;!?()'"_\/=+-]/gu,"").trim().slice(0,80);
+  if(m&&DS.emsg.length<5&&!DS.emsg.includes(m))DS.emsg.push(m)}
+window.addEventListener("error",e=>dsErr(e&&e.message));
+window.addEventListener("unhandledrejection",e=>dsErr(e&&e.reason&&(e.reason.message||e.reason)));
+// 📤 wysyłka (bez biblioteki Supabase; klucz publiczny jak w całej aplikacji)
+let dsLast=0,dsEnvSent=false;
+function dsSend(force){
+  if(navigator.webdriver&&!window.DS_TEST)return;   // automaty (testy, roboty) nie psują statystyk
+  const now=Date.now();if(!force&&now-dsLast<11000)return;dsLast=now;
+  const p={sid:DS.sid,secs:DS.secs,steps:DS.steps,clicks:DS.clicks,screens:DS.screens,locked:DS.locked,last:DS.last||undefined,scroll:DS.scroll,
+    rage:DS.rage,dead:DS.dead,errs:DS.errs,emsg:DS.emsg,dark:DS.dark==null?undefined:DS.dark,thchg:DS.thchg};
+  if(DS.vote)p.vote=DS.vote;if(DS.note)p.note=DS.note.slice(0,300);
+  if(!dsEnvSent)Object.assign(p,dsEnv(),{load:DS.load==null?undefined:DS.load});
+  const body=JSON.stringify({p});if(body.length>7800)return;
+  try{fetch(SUPABASE_URL+"/rest/v1/rpc/demo_ping",{method:"POST",keepalive:true,headers:{"Content-Type":"application/json",apikey:SUPABASE_KEY},body})
+    .then(r=>{if(r.ok)dsEnvSent=true}).catch(()=>{})}catch(e){}
+}
+// pierwszy sygnał po zniknięciu ekranu ładowania (czas wczytania), potem co minutę i przy wyjściu
+(function dsBoot(){const b=document.getElementById("boot");
+  if(b&&!b.classList.contains("out")){setTimeout(dsBoot,250);return}
+  DS.load=Math.min(60000,Math.round(performance.now()));dsSend(true)})();
+setInterval(()=>{if(!document.hidden)dsSend()},60000);
+document.addEventListener("visibilitychange",()=>{if(document.hidden)dsSend(true)});
+window.addEventListener("pagehide",()=>dsSend(true));
+
+// 👍👎 przy „Wyjdź z demo”: dobrowolna ocena i uwaga (raz; drugie „Wyjdź” wychodzi od razu)
+let dsAsked=false,dsVoteSel=0;
+function dsAskHtml(){
+  const b=(v,ic,l)=>'<button type="button" class="'+(dsVoteSel===v?'on':'')+'" data-dq="'+(v>0?'up':'down')+'" aria-pressed="'+(dsVoteSel===v)+'">'+ic+' '+l+'</button>';
+  return '<div class="sheetbox popbox" role="dialog" aria-modal="true" aria-label="Ocena demo"><button class="sclose" data-dq="close" aria-label="Zamknij">✕</button>'
+   +'<span class="ptag">DEMO</span><div class="ph">Jak Ci się podobało demo?</div>'
+   +'<div class="seg dqvote">'+b(1,uiIcon("thumb"),"Fajne")+b(-1,'<span class="dqdn">'+uiIcon("thumb")+'</span>',"Słabo")+'</div>'
+   +'<textarea id="dqtxt" rows="3" maxlength="300" placeholder="Co było niejasne? (opcjonalnie)"></textarea>'
+   +'<button type="button" class="b big" data-dq="send">Wyślij i wyjdź</button>'
+   +'<div class="pbtns"><button type="button" class="b w" data-dq="skip">Wyjdź bez oceny</button></div>'
+   +'<div class="ptg">Anonimowo — bez nicku i adresu e-mail. Pomaga nam poprawić aplikację.</div></div>';
+}
+function dsAsk(){const p=$("demosheet");if(!p){location.href=location.pathname;return}dsAsked=true;p.innerHTML=dsAskHtml();p.classList.remove("hide")}
+function dsAskClose(){const p=$("demosheet");p.classList.add("hide");p.innerHTML=""}
+const dsExit=()=>{dsSend(true);setTimeout(()=>{location.href=location.pathname},250)};
+document.addEventListener("click",e=>{if(dsAsked||!e.target.closest||!e.target.closest("#pvend"))return;e.preventDefault();e.stopImmediatePropagation();dsAsk()},true);
+$("demosheet").addEventListener("click",e=>{
+  const p=$("demosheet"),b=e.target.closest("[data-dq]"),k=b&&b.dataset.dq;
+  if(e.target===p||k==="close"){dsAskClose();return}
+  if(k==="up"||k==="down"){dsVoteSel=k==="up"?1:-1;p.querySelectorAll(".dqvote button").forEach(x=>{const on=x.dataset.dq===k;x.classList.toggle("on",on);x.setAttribute("aria-pressed",on)});return}
+  if(k==="skip"){dsExit();return}
+  if(k==="send"){const t=$("dqtxt");DS.vote=dsVoteSel;DS.note=t?t.value.trim():"";b.disabled=true;dsExit()}
+});

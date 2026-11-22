@@ -136,6 +136,7 @@ function adminStatsHtml(){
       +'<p class="note">Aktywny = otworzył aplikację zalogowany w danym okresie.'+(since?' Aktywność zapisywana od '+esc(since)+'.':'')+'</p>')
    +(tgLinks?sec("tg","Telegram",tgLinks.size+" z botem",'<div class="stats">'+tc(tgLinks.size,"połączony bot","ufilter","tg")+t(Math.max(0,(d.profiles||0)-tgLinks.size),"bez bota")+'</div>'):'')
    +sec("plec","Płeć","",'<div class="stats">'+t(d.women,"👩 kobiety")+t(d.men,"👨 mężczyźni")+(d.nogender?t(d.nogender,"bez płci"):"")+'</div>')
+   +(isKingReal()&&typeof dsAdmHtml==="function"?sec("demo","APP DEMO",dsAdmSum(),dsAdmHtml()):'')   // 📊 KROK 81: statystyki trybu demo (js/18)
    +'<p class="note">Konta bez nicku liczą się tylko w „założone konta”. Kafelek ze strzałką › pokazuje osoby.</p>'
    +'<button class="b sbtn g" data-c="stats">↻ Odśwież</button></div>';
 }
