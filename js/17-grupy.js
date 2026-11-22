@@ -146,7 +146,7 @@ function grPplHtml(g){
     +(used>=lim?'<p class="note" style="margin:8px 14px 0;font-size:13px;text-align:left">Limit miejsc wykorzystany (liczą się członkowie i zaproszeni).'+(own?' Poproś o więcej w zakładce „O grupie”.':'')+'</p>':'');
   const rq=mod?M.filter(m=>m.status==="requested"):[];
   if(rq.length)h+='<div class="ios"><div class="ios-gh">Proszą o dołączenie</div><div class="grbox">'+rq.map(r=>grReqRow(r,false)).join("")+'</div></div>';
-  const ord={owner:0,mod:1,member:2},act=grAct(g).sort((a,b)=>(ord[a.role]-ord[b.role])||String(nicks[a.user_id]||"").localeCompare(String(nicks[b.user_id]||""),"pl"));
+  const ord={owner:0,mod:1,member:2},act=grAct(g).sort((a,b)=>(ord[a.role]-ord[b.role])||((isFav(b.user_id)?1:0)-(isFav(a.user_id)?1:0))||String(nicks[a.user_id]||"").localeCompare(String(nicks[b.user_id]||""),"pl"));   // ⭐ rola (właściciel, moderatorzy), w obrębie roli ulubieni na górze, potem nick
   h+='<div class="ios"><div class="ios-gh">Członkowie ('+act.length+')</div></div>'+pfBar("gm",act.length)
    +'<div class="sleft" data-pfl="gm">'+act.map(m=>{const id=m.user_id,R=GR_ROLE[m.role],me=id===uid;
      const can=!me&&(own||(mod&&m.role==="member")),open=can&&grOpenU===id;
