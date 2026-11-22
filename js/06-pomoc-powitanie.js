@@ -85,7 +85,7 @@ function instHtml(){
    +'<div class="sleft">'+instGuideHtml()+'<div class="note" style="margin-top:10px">Po instalacji PrzylesieGo! otwiera się jak zwykła aplikacja: pełny ekran bez paska przeglądarki, ikona z dwoma kołami, liczba powiadomień na ikonie.</div></div>';
 }
 // 👀 przykład dla gościa: udawane osoby i zaproszenia, nic nie trafia do bazy
-function demoHtml(){
+function guestDemoHtml(){
   const keep={uid,wants,joins,prefs,decls,invs,nicks,genders,favs,favOk,paceOk,distOk,rangeOk,visOk,testOk,wRouteOk,isAdmin};
   const t=(dd,h,m)=>{const d=new Date();d.setDate(d.getDate()+dd);d.setHours(h,m||0,0,0);return d.toISOString()};
   try{
@@ -117,7 +117,7 @@ function demoHtml(){
 document.addEventListener("click",e=>{if(!e.target.closest("[data-betafb]"))return;
   if(session&&fbOk){gearOpen=true;gearView="fb";renderGear()}
   else say(session?"Zgłaszanie uwag będzie dostępne za chwilę — odśwież aplikację.":"🧪 To wersja testowa. Zaloguj się, a uwagi zgłosisz w ⚙️ → „Oceń aplikację / zgłoś błąd”.")});
-function openDemo(){const p=$("demosheet");p.innerHTML=demoHtml();p.classList.remove("hide");p.querySelector(".sheetbox").scrollTop=0}
+function openDemo(){const p=$("demosheet");p.innerHTML=guestDemoHtml();p.classList.remove("hide");p.querySelector(".sheetbox").scrollTop=0}
 function closeDemo(){const p=$("demosheet");p.classList.add("hide");p.innerHTML=""}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-demo]");if(b){e.preventDefault();openDemo()}});
 $("demosheet").addEventListener("click",e=>{
