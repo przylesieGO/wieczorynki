@@ -292,9 +292,9 @@ function fltUfBump(id){const m=fltUfGet();m[id]=(m[id]||0)+1;try{localStorage.se
 // Osoba: lista — wybrana, ulubieni (⭐), najczęściej wybierani, reszta; bez szukania 12 pozycji, z szukaniem do 20
 function fltUserChips(){
   const fq=fltUfGet(),q=nickKey(fltUQ.trim());
-  // bez szukania: osoby z zaproszeń, ulubieni i najczęściej wybierani; z szukaniem: wszyscy użytkownicy
+  // bez szukania: tylko osoby z zaproszeń (ulubieni i najczęściej wybierani są wśród nich na górze); z szukaniem: wszyscy użytkownicy
   const ids=new Set(q?Object.keys(nicks):[]);
-  if(!q){wants.filter(wUpcoming).forEach(w=>{ids.add(w.user_id);(joins[w.id]||[]).forEach(x=>ids.add(x))});favs.forEach(x=>ids.add(x));Object.keys(fq).forEach(x=>ids.add(x))}
+  if(!q){wants.filter(wUpcoming).forEach(w=>{ids.add(w.user_id);(joins[w.id]||[]).forEach(x=>ids.add(x))})}
   if(flt.user)ids.add(flt.user);
   const base=[...ids].filter(id=>nicks[id]&&id!==uid&&!modGone(id)&&(!q||nickKey(nicks[id]).includes(q)||id===flt.user));
   const byNick=(a,b)=>nicks[a].localeCompare(nicks[b],"pl");
