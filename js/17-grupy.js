@@ -120,7 +120,7 @@ function grFindHtml(){
     return '<div class="grir">'+grIco(x)+'<span class="grt" data-gx="open" data-gid="'+esc(x.id)+'"><b>'+grNmTag(x)+'</b><small>'+[x.area?esc(x.area):"",grOsob(+x.members||0),x.join_mode==="open"?"wolne dołączanie":"na prośbę"].filter(Boolean).join(" · ")+'</small></span>'+btn+'</div>'}).join("")+'</div>';
 }
 
-/* 👥 ekran grupy: Ludzie / O grupie */
+/* 👥 ekran grupy: Tablica / Ludzie / Statystyki / O grupie */
 function grGroupHtml(){
   const g=grId,x=grG[g],st=grSt(g),role=grRole(g),mod=grIsMod(g),own=role==="owner";
   const meta=[x.visibility==="hidden"?"ukryta":"jawna",x.join_mode==="open"?"wolne dołączanie":"na prośbę",grOsob(grCnt(g))].join(" · ");
@@ -135,9 +135,9 @@ function grGroupHtml(){
   if(!role&&!isKingReal())return h+grAboutHtml(g,false);
   if(!role)h+='<p class="note grwait">👑 Podgląd administratora — nie jesteś w tej grupie.</p>';
   // 📣 KROK 76: „Tablica” tylko dla członków (👑 spoza grupy jej nie widzi — reguły w bazie)
-  const tabs=(role?[["board","Tablica"]]:[]).concat([["ppl","Ludzie"],["about","O grupie"]]);if(grTab==="board"&&!role)grTab="ppl";
+  const tabs=(role?[["board","Tablica"]]:[]).concat([["ppl","Ludzie"]],role?[["stats","Staty"]]:[],[["about","O grupie"]]);if((grTab==="board"||grTab==="stats")&&!role)grTab="ppl";   // 📊 KROK 78: statystyki też tylko dla członków
   h+='<div class="seg grseg">'+tabs.map(([k,t])=>{const un=k==="board"?grUnN(g):0;return '<button type="button" class="'+(grTab===k?'on':'')+'" data-gx="tab" data-v="'+k+'">'+t+(un?' <span class="ios-bdg">'+un+'</span>':'')+'</button>'}).join("")+'</div>';
-  return h+(grTab==="about"?grAboutHtml(g,true):grTab==="board"?grBoardHtml(g):grPplHtml(g));
+  return h+(grTab==="about"?grAboutHtml(g,true):grTab==="board"?grBoardHtml(g):grTab==="stats"?grStatsHtml(g):grPplHtml(g));
 }
 function grPplHtml(g){
   const x=grG[g],role=grRole(g),mod=grIsMod(g),own=role==="owner",M=grMem[g]||[],used=grUsed(g),lim=+x.member_limit;
@@ -367,7 +367,8 @@ $("gearpanel").addEventListener("click",async e=>{
   if(a==="new"){openGrForm("");return}
   if(a==="code"){openGrCode("");return}
   if(a==="pl2gr"){const l=plById(plId);if(!l)return;openGrForm("",{name:l.name,color:l.color,ids:plIds(l.id)});return}
-  if(a==="tab"){grTab=b.dataset.v;grOpenU="";grOpenP="";renderGear();if(grTab==="board")grPostsLoad(grId);return}
+  if(a==="tab"){grTab=b.dataset.v;grOpenU="";grOpenP="";renderGear();if(grTab==="board")grPostsLoad(grId);if(grTab==="stats")grStatsLoad(grId);return}
+  if(a==="stm"){grStM=b.dataset.v==="km"?"km":"n";renderGear();return}   // 📊 wykres miesięcy: Jazdy / Km
   if(/^p(man|like|add|edit|cancel|save|pin|del|rep|mode)$/.test(a)){await grPostAct(a,b);return}   // 📣 tablica (KROK 76)
   if(a==="man"){grOpenU=grOpenU===u?"":u;renderGear();return}
   if(a==="inv"){openWho("gr",g);return}
@@ -541,4 +542,92 @@ function grPostBellHtml(){
       return '<div class="nit new" data-gx="pgo" data-gid="'+esc(g)+'" role="button" tabindex="0"><div class="ic gpic" style="background:'+grCol(x)+'">'+uiIcon("mega")+'</div><div class="tx"><b>'+grNmTag(x)+'</b>'
         +'<div class="w">'+(n>1?n+" "+plf(n,["nowe ogłoszenie","nowe ogłoszenia","nowych ogłoszeń"]):pin?"przypięte ogłoszenie":"nowe ogłoszenie")+(who.length?' · '+esc(who.slice(0,3).join(", ")):'')+' · '+esc(agoTxt(L[0].created_at))+'</div></div>'
         +'<button type="button" class="nmk" data-gx="pread" data-gid="'+esc(g)+'" aria-label="Oznacz jako przeczytane" title="Oznacz jako przeczytane">'+uiIcon("check")+'</button></div>'}).join(""));
+}
+
+/* 📊 Statystyki grupy (KROK 78): ⚙️ → Grupy → grupa → zakładka „Statystyki” (tylko członkowie — kontrola w bazie, group_stats).
+   Liczą się tylko odbyte jazdy grupy (zaproszenia „dla grupy”); klocki jak w „Moich jazdach” (js/13): .stats, details.stsec, .lch, .hcal, .nbars, .urrec.
+   Dane pobierane przy wejściu na zakładkę, ponownie najwcześniej po minucie; bez odświeżania w tle (oszczędność limitów). */
+let grSS={g:"",d:null,ok:null,msg:"",at:0,busy:false},grStM="n",grStSeen=false;
+const MON_S=["sty","lut","mar","kwi","maj","cze","lip","sie","wrz","paź","lis","gru"];
+async function grStatsLoad(g,force){
+  if(!g||!session||!grRole(g)||grSS.busy)return;
+  if(!force&&grSS.g===g&&grSS.ok&&Date.now()-grSS.at<60000)return;
+  if(grSS.g!==g)grSS={g,d:null,ok:null,msg:"",at:0,busy:false};grSS.busy=true;
+  try{const r=await sb.rpc("group_stats",{g});if(r.error)throw r.error;if(grSS.g!==g)return;grSS={g,d:r.data,ok:true,msg:"",at:Date.now(),busy:false}}
+  catch(err){if(grSS.g!==g)return;grSS={g,d:null,ok:false,at:Date.now(),busy:false,msg:/group_stats|schema cache|does not exist/i.test(err&&err.message||"")?"Statystyki wymagają KROKU 78 w bazie.":"Nie udało się wczytać statystyk: "+grErr(err)}}
+  if(gearOpen&&gearView==="group"&&grTab==="stats"&&grId===g)renderGear();
+}
+function grStatsHtml(g){
+  if(grSS.g!==g||grSS.ok===null){setTimeout(()=>grStatsLoad(g),0);return '<p class="note grwait">Liczę statystyki…</p>'}
+  if(grSS.ok===false)return '<p class="note grwait">'+esc(grSS.msg)+'</p>';
+  const d=grSS.d||{},n=+d.n||0,t=(v,l)=>'<div class="st"><b>'+v+'</b><span>'+l+'</span></div>';
+  if(!grStSeen){grStSeen=true;joinOpen.add("gs_mon");joinOpen.add("gs_ppl")}
+  const sec=(k,h,sum,body)=>'<details class="stsec" data-j="gs_'+k+'"'+(joinOpen.has("gs_"+k)?' open':'')+'><summary><span>'+h+'</span>'+(sum!==""&&sum!=null?'<span class="stsum">'+sum+'</span>':'')+'</summary><div class="stbody">'+body+'</div></details>';
+  let h='<div class="smail gsintro">Odbyte jazdy grupy — tylko zaproszenia „dla grupy”'+(d.first?', od '+esc(fmtD(d.first)):'')+'. Widzą tylko członkowie.</div>';
+  if(!n)return h+'<p class="note grwait">Grupa nie ma jeszcze odbytych wspólnych jazd. Zaproszenie „dla grupy” wybierzesz w „Kto zobaczy?”.</p>';
+  h+='<div class="sleft"><div class="stats">'+t(n,plf(n,["jazda","jazdy","jazd"]))+t(Math.round(+d.km||0).toLocaleString("pl-PL"),"km tras")+t(d.ppl_avg!=null?fmt1(+d.ppl_avg):"—","śr. osób na jeździe")
+    +t(uiIcon("flame")+' '+(+d.streak||0),plf(+d.streak||0,["tydzień","tygodnie","tygodni"])+' z rzędu')+'</div>';
+  if(kmFun(+d.pkm||0))h+='<div class="urln">'+uiIcon("map")+' Razem przejechaliście '+Math.round(+d.pkm).toLocaleString("pl-PL")+' km. '+esc(kmFun(+d.pkm))+'</div>';
+  if(+d.t)h+='<p class="note">W tym '+uiIcon("flask")+' '+d.t+' '+plf(+d.t,["testowa jazda","testowe jazdy","testowych jazd"])+'.</p>';
+  h+=sec("mon",uiIcon("trend")+" Miesiące",(+d.d30||0)+' w 30 dni',grStMonHtml(d))
+    +sec("cal",uiIcon("cal")+" Kalendarz aktywności","",grStCalHtml(d))
+    +sec("when",uiIcon("clock")+" Kiedy jeździcie","",grStWhenHtml(d))
+    +sec("ppl",uiIcon("users")+" Najaktywniejsi",(d.people||[]).length+' '+plf((d.people||[]).length,["osoba","osoby","osób"]),grStPplHtml(d))
+    +sec("rec",uiIcon("trophy")+" Rekordy grupy","",grStRecHtml(d));
+  return h+'</div><p class="note gsfoot">Uczestnicy = autor i zapisani, bez osób, które w „Jak poszło?” odpowiedziały, że nie pojechały. Km jazdy = średnia z „Jak poszło?” (bez odpowiedzi — plan trasy).</p>';
+}
+// 📈 12 miesięcy: linia z wypełnieniem, przełącznik Jazdy / Km
+function grStMonHtml(d){
+  const M=d.months||[],km=grStM==="km",v=M.map(m=>km?+m.km||0:+m.n||0),L=v.length;if(!L)return "";
+  const W=300,H=120,mx=Math.max(1,...v),px=i=>14+i*(W-28)/Math.max(1,L-1),py=n=>H-22-n/mx*(H-46);
+  const p=v.map((n,i)=>(i?'L':'M')+px(i).toFixed(1)+' '+py(n).toFixed(1)).join(' '),top=v.indexOf(mx),fv=n=>km?Math.round(n).toLocaleString("pl-PL"):n;
+  return '<div class="ios-seg urseg">'+[["n","Jazdy"],["km","Km"]].map(([k,t])=>'<button type="button" data-gx="stm" data-v="'+k+'" class="'+(grStM===k?"on":"")+'">'+t+'</button>').join("")+'</div>'
+   +'<svg class="lch" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+(km?'Kilometry':'Jazdy')+' grupy w ostatnich 12 miesiącach">'
+   +[0,.5,1].map(f=>'<line class="lg" x1="8" x2="'+(W-8)+'" y1="'+(24+f*(H-46)).toFixed(1)+'" y2="'+(24+f*(H-46)).toFixed(1)+'"/>').join("")
+   +'<path class="la" d="'+p+' L'+px(L-1).toFixed(1)+' '+(H-22)+' L'+px(0).toFixed(1)+' '+(H-22)+' Z"/><path class="ll" d="'+p+'"/>'
+   +v.map((n,i)=>n?'<circle class="ld" cx="'+px(i).toFixed(1)+'" cy="'+py(n).toFixed(1)+'" r="'+(i===top?4.5:3)+'"><title>'+esc(MON_S[+String(M[i].m).slice(5,7)-1]+' '+String(M[i].m).slice(0,4))+': '+(+M[i].n)+' '+plf(+M[i].n,["jazda","jazdy","jazd"])+', '+Math.round(+M[i].km)+' km</title></circle>':'').join("")
+   +(mx>0&&v[top]?'<text class="lt" x="'+px(top).toFixed(1)+'" y="'+(py(v[top])-9).toFixed(1)+'" text-anchor="'+(top<2?'start':top>L-3?'end':'middle')+'">'+fv(v[top])+(km?' km':'')+'</text>':'')
+   +M.map((m,i)=>'<text class="lt" x="'+px(i).toFixed(1)+'" y="'+(H-6)+'" text-anchor="middle">'+MON_S[+String(m.m).slice(5,7)-1]+'</text>').join("")+'</svg>';
+}
+// 📅 26 tygodni, kratka = dzień (dotknięcie → podpowiedź, obsługa .hcal rect w js/13)
+function grStCalHtml(d){
+  const day=864e5,today=startOfDay(new Date()).getTime(),mon=today-((new Date().getDay()+6)%7)*day,first=mon-25*7*day,by={},tt={};
+  (d.days||[]).forEach(x=>{const k=new Date(x.d+"T00:00").getTime();by[k]=+x.n||0;tt[k]=(x.tt||[]).join(", ")});
+  const cw=(300-26)/26,s=cw-2.2;let cells="";
+  for(let w=0;w<26;w++)for(let dd=0;dd<7;dd++){const t=first+(w*7+dd)*day;if(t>today)continue;const n=by[t]||0;
+    cells+='<rect class="hc l'+(n?Math.min(4,n+1):0)+(t===today?' td':'')+'" x="'+(26+w*cw).toFixed(1)+'" y="'+(2+dd*(s+2.2)).toFixed(1)+'" width="'+s.toFixed(1)+'" height="'+s.toFixed(1)+'" rx="2"><title>'
+      +esc(new Date(t).toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"}))+(n?': '+n+' '+plf(n,["jazda","jazdy","jazd"]):'')+(tt[t]?' · 🏷 '+esc(tt[t]):'')+'</title></rect>'}
+  const H=Math.ceil(4+7*(s+2.2)),act=(d.days||[]).length;
+  return '<svg class="hcal" viewBox="0 0 300 '+H+'" role="img" aria-label="Jazdy grupy z 26 tygodni">'
+   +[[0,"pn"],[2,"śr"],[4,"pt"],[6,"nd"]].map(([i,t])=>'<text class="lt" x="0" y="'+(2+i*(s+2.2)+s-1).toFixed(1)+'">'+t+'</text>').join("")+cells+'</svg>'
+   +'<div class="nbl"><span>Od '+esc(new Date(first).toLocaleDateString("pl-PL",{day:"numeric",month:"short"}))+' · '+act+' '+plf(act,["dzień","dni","dni"])+' z jazdą</span><span class="hleg">mniej <i class="hc l1"></i><i class="hc l2"></i><i class="hc l4"></i> więcej</span></div>';
+}
+// 🕖 dni tygodnia i godziny startu (słupki jak w Statystykach)
+function grStWhenHtml(d){
+  const bars=(v,lab)=>{const mx=Math.max(1,...v);return '<div class="nbars">'+v.map(n=>'<i style="height:'+(n?Math.max(6,Math.round(n/mx*100)):0)+'%"'+(n?'':' class="z"')+'>'+(n?'<b>'+n+'</b>':'')+'</i>').join("")+'</div>'
+    +'<div class="gsbl">'+lab.map(x=>'<span>'+x+'</span>').join("")+'</div>'};
+  const dow=d.dow||[0,0,0,0,0,0,0],hr=d.hours||[],B=[...Array(8)].map((_,i)=>(+hr[i*3]||0)+(+hr[i*3+1]||0)+(+hr[i*3+2]||0));
+  const dm=Math.max(...dow),hm=Math.max(...hr.map(Number)),ph=hr.map(Number).indexOf(hm);
+  return (dm?'<div class="urln">'+uiIcon("heart")+' Najczęściej: <b>'+DOWN[dow.indexOf(dm)]+'</b>'+(hm?', start ok. <b>'+ph+':00</b>':'')+'</div>':'')
+   +'<div class="gsh">Dni tygodnia</div>'+bars(dow.map(Number),["pn","wt","śr","czw","pt","sb","nd"])
+   +'<div class="gsh">Godzina startu</div>'+bars(B,["0–3","3–6","6–9","9–12","12–15","15–18","18–21","21–24"]);
+}
+// 👥 wszyscy członkowie, top 5 wyróżnione
+function grStPplHtml(d){
+  const P=d.people||[],mx=Math.max(1,...P.map(p=>+p.n||0));
+  return '<div class="gspl">'+P.map((p,i)=>{const n=+p.n||0,top=n>0&&i<5,R=GR_ROLE[p.role];
+    return '<div class="gsp'+(top?' top':'')+(p.u===uid?' me':'')+'"><span class="gsr">'+(top&&i<3?uiIcon("medal"):i+1)+'</span><div class="gsm"><div class="gsn">'+nk(p.u,"ktoś")+(R?'<span class="note grrole">'+R+'</span>':'')+(p.u===uid?'<span class="note">to Ty</span>':'')+'</div>'
+      +'<div class="note">'+(n?n+' '+plf(n,["jazda","jazdy","jazd"])+' · '+Math.round(+p.km||0).toLocaleString("pl-PL")+' km'+(+p.led?' · założył(a) '+p.led:'')+(p.last?' · ostatnio '+esc(fmtD(p.last)):''):'jeszcze bez wspólnej jazdy')+'</div>'
+      +'<div class="gsbar"><i style="width:'+Math.round(n/mx*100)+'%"></i></div></div></div>'}).join("")+'</div>'
+   +'<p class="note">Kolejność: liczba wspólnych jazd, potem km. Pierwsza piątka wyróżniona.</p>';
+}
+// 🏆 rekordy grupy
+function grStRecHtml(d){
+  const ti=x=>x&&x.title?' „'+esc(x.title)+'”':'',mo=m=>new Date(String(m).slice(0,10)+"T12:00").toLocaleDateString("pl-PL",{month:"long",year:"numeric"});
+  const r=[d.rec_km?uiIcon("ruler")+' Najdłuższa: <b>'+fmt1(+d.rec_km.km)+' km</b>'+ti(d.rec_km)+' · '+esc(fmtD(d.rec_km.d)):'',
+    d.rec_ppl&&+d.rec_ppl.n>1?uiIcon("users")+' Najliczniejsza: <b>'+d.rec_ppl.n+' '+plf(+d.rec_ppl.n,["osoba","osoby","osób"])+'</b>'+ti(d.rec_ppl)+' · '+esc(fmtD(d.rec_ppl.d)):'',
+    d.rec_kmh?uiIcon("bolt")+' Najszybsza: <b>'+fmt1(+d.rec_kmh.kmh)+' km/h</b>'+ti(d.rec_kmh)+' · '+esc(fmtD(d.rec_kmh.d)):'',
+    d.rec_month?uiIcon("chart")+' Najlepszy miesiąc: <b>'+esc(mo(d.rec_month.m))+'</b> · '+d.rec_month.n+' '+plf(+d.rec_month.n,["jazda","jazdy","jazd"])+(+d.rec_month.km?', '+Math.round(+d.rec_month.km)+' km':''):'',
+    +d.streak_best?uiIcon("flame")+' Najdłuższa seria: <b>'+d.streak_best+' '+plf(+d.streak_best,["tydzień","tygodnie","tygodni"])+'</b> z rzędu':''].filter(Boolean);
+  return r.length?'<div class="urrec">'+r.map(x=>'<div>'+x+'</div>').join("")+'</div><p class="note">Seria = kolejne tygodnie (pon.–niedz.) z co najmniej jedną jazdą grupy.</p>':'<p class="note">Rekordy pojawią się po pierwszych jazdach z km.</p>';
 }

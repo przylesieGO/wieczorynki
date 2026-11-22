@@ -1056,3 +1056,17 @@ html[data-theme=dark] .nkdemo{border-color:#ff7a70;color:#ff7a70}
 .gplock .ui-i{width:15px;height:15px;vertical-align:-2px}
 .grseg .ios-bdg{font-size:11px;padding:0 6px;margin-left:4px;vertical-align:1px}
 .nit .ic.gpic{color:#fff}.nit .ic.gpic .ui-i{width:19px;height:19px}
+/* 📊 Statystyki grupy (KROK 78, js/17) — klocki z „Moich jazd” (.stats, .stsec, .lch, .hcal, .nbars, .urrec) */
+.sheetbox .grseg button{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px;padding:13px 2px}   /* 4 zakładki na telefonie */
+.gsintro{margin:12px 2px 0}.gsfoot{margin:10px 4px 0;font-size:12.5px}
+.gsh{font-size:13px;font-weight:600;color:var(--mut);margin:12px 2px 6px}.gsh:first-child{margin-top:4px}
+.nbars i.z{min-height:0}
+.gsbl{display:flex;gap:6px;padding:0 4px;margin-top:4px}.gsbl span{flex:1;text-align:center;font-size:11px;color:var(--mut);white-space:nowrap}
+.gspl{background:var(--card);border-radius:12px;padding:4px 10px}
+.gsp{display:flex;gap:10px;align-items:flex-start;padding:8px 0}.gsp+.gsp{border-top:.5px solid var(--line)}
+.gsr{flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--mut);border:1.5px solid var(--line)}
+.gsp.top .gsr{background:var(--acc);border-color:var(--acc);color:#fff}.gsr .ui-i{width:15px;height:15px}
+.gsm{flex:1;min-width:0}.gsm .note{font-size:12.5px;margin-top:2px}
+.gsbar{height:4px;border-radius:2px;background:var(--fill);margin-top:5px;overflow:hidden}.gsbar i{display:block;height:100%;background:var(--acc);border-radius:2px;opacity:.45}
+.gsp.top .gsbar i{opacity:1}
+.gsn{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:17px}.gsn .note{font-size:13px;margin:0}.gsp.me .gsn .note:last-child{font-weight:600}
