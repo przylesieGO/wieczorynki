@@ -217,6 +217,7 @@ function fltOk(w){
   const j=joins[w.id]||[],dd=dayDiff(new Date(w.starts_at));
   if(flt.who==="mine"&&w.user_id!==uid)return false;
   if(flt.who==="going"&&(w.user_id===uid||!j.includes(uid)))return false;
+  if(flt.who==="inv"&&(w.user_id===uid||!wInvMe(w)))return false;   // zaproszony = prywatne z moim wpisem na liście albo grupowe, w których jestem członkiem (nie moje)
   if(flt.who==="part"&&w.user_id!==uid&&!j.includes(uid))return false;   // biorę udział = moje + te, na które jadę
   if(flt.who==="fav"&&!(isFav(w.user_id)||j.some(isFav)))return false;
   if(flt.vis==="priv"&&w.visibility!=="private")return false;
@@ -240,10 +241,10 @@ function fltOk(w){
   if(flt.demo&&typeof demoIds!=="undefined"){const dm=demoIds.has(w.user_id);if(flt.demo==="only"&&!dm||flt.demo==="hide"&&dm)return false}   // zaproszenia od kont demo (dla wszystkich)
   return true;
 }
-const FLT_WHO=[["mine","Moje"],["going","Jadę"],["part","Biorę udział"],["fav","Ulubieni"]];   // „Biorę udział” tylko z licznika nad listą (w oknie bez bomblu)
+const FLT_WHO=[["mine","Moje"],["going","Jadę"],["inv","Zaproszony"],["part","Biorę udział"],["fav","Ulubieni"]];   // „Biorę udział” tylko z licznika nad listą (w oknie bez bomblu)
 const FLT_VIS=[["open","Otwarte"],["priv","Prywatne"]];
 const FLT_ACT=[["bike","Rower"],["run","Bieganie"],["walk","Spacery"],["hike","Trekking"]];   // klucze jak SIG_ACT (js/11) i wants.activity
-const FLT_ICO={mine:"user",going:"check",fav:"star",open:"globe",priv:"lock",bike:"bike",run:"run",walk:"walk",hike:"tree"};
+const FLT_ICO={mine:"user",going:"check",inv:"mail",fav:"star",open:"globe",priv:"lock",bike:"bike",run:"run",walk:"walk",hike:"tree"};
 const FLT_WHEN=[["today","Dziś"],["tom","Jutro"],["wknd","Weekend"],["7d","7 dni"]];
 const FLT_BIKE=()=>[["all","Dla wszystkich"]].concat(Object.entries(BIKES).map(([k,t])=>[k,t.replace(/^\S+\s/,"")]));
 const FLT_PACE=()=>Object.entries(PACES).map(([k,x])=>[k,x.e+" "+x.r.replace(" km/h","")]);
