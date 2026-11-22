@@ -228,10 +228,12 @@ $("gearpanel").addEventListener("click",async e=>{
     if(!await askOk("Dopisać historię jazd kontom demo?\n\nOk. "+demoF.hw*(demoF.hpw||demoHAuto((demoSt&&demoSt.pool||[]).filter(p=>p.user_id&&p.slot<=(+demoSt.demo_active||0)).length))+" odbytych jazd z ostatnich "+demoF.hw+" tyg., raporty „Jak poszło?”"+(demoF.hposts?" i wpisy na tablicach grup demo":"")+". Wszystko z 🧪 TEST, bez powiadomień.","Dopisz"))return;
     await demoRun("admin_demo_history",{p_weeks:demoF.hw,p_per_week:demoF.hpw||null,p_group_pct:demoF.hgrp,p_posts:demoF.hposts},
       d=>{d=d||{};return "📈 Historia: "+(d.rides||0)+" jazd ("+(d.group_rides||0)+" w grupach), "+(d.reports||0)+" raportów, "+demoNum(d.km||0)+" km"+(d.posts?", wpisów: "+d.posts:"")});
+    for(const k in userRides)delete userRides[k];   // karty osób: świeże jazdy i km
     if(typeof grReload==="function")grReload();return}
   if(a==="histdel"){const h=(demoSt&&demoSt.hist)||{};
     if(!await askOk("Usunąć historię demo?\n\n"+(h.rides||0)+" przeszłych jazd kont demo z raportami „Jak poszło?” i "+(h.posts||0)+" wpisów kont demo na tablicach grup demo. Przyszłe zaproszenia, konta i grupy zostają.","Usuń historię",true))return;
     await demoRun("admin_demo_history_wipe",{do_delete:true},d=>"🧹 Usunięto: jazd "+(d&&d.rides||0)+", wpisów "+(d&&d.posts||0));
+    for(const k in userRides)delete userRides[k];
     if(typeof grReload==="function")grReload();return}
   if(a==="n-"||a==="n+"){demoF.n=Math.max(1,Math.min(60,demoF.n+(a==="n+"?1:-1)));demoRender();return}
   if(a==="days"){demoF.days=+b.dataset.dd;demoRender();return}

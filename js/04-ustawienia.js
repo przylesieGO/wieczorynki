@@ -679,12 +679,14 @@ function userRidesHtml(id){
   if(!reportOk)return "";
   const s=userRides[id];
   // 🚴 KROK 62: liczby z user_rides() (cudze odpowiedzi nie są już czytelne wprost); bez KROKU 62 — jak dotąd
-  if(s===undefined){userRides[id]=null;sb.rpc("user_rides",{u:id}).then(r=>{if(r.error||!r.data)throw 0;const d=r.data;
-    userRides[id]={n:+d.n||0,km:Math.round(+d.km||0),n30:+d.d30_n||0,km30:Math.round(+d.d30_km||0),kmh:d.avg_kmh!=null?+d.avg_kmh:null,ur:d};
+  // dane starsze niż minuta → doczytanie w tle (stare liczby widać do czasu odpowiedzi); wcześniej karta pokazywała stan z pierwszego otwarcia aż do przeładowania
+  const stale=!!(s&&s.at&&Date.now()-s.at>6e4);
+  if(s===undefined||stale){if(stale)s.at=Date.now();else userRides[id]=null;sb.rpc("user_rides",{u:id}).then(r=>{if(r.error||!r.data)throw 0;const d=r.data;
+    userRides[id]={n:+d.n||0,km:Math.round(+d.km||0),n30:+d.d30_n||0,km30:Math.round(+d.d30_km||0),kmh:d.avg_kmh!=null?+d.avg_kmh:null,ur:d,at:Date.now()};
     if(gearOpen&&(gearView==="user"||gearView==="teczka")&&userId===id)renderGear();if(gearOpen&&gearView==="myrides"&&id===uid)renderGear()}).catch(()=>{sb.from("ride_reports").select("went,km,avg_kmh,ride_at").eq("user_id",id).eq("went",true).eq("ride_test",false).limit(2000)
     .then(r=>r&&r.error?sb.from("ride_reports").select("went,km,avg_kmh,ride_at").eq("user_id",id).eq("went",true).limit(2000):r).then(r=>{
     const L=(r&&r.data)||[],m=Date.now()-30*864e5;userRides[id]={n:L.length,km:Math.round(L.reduce((a,x)=>a+(+x.km||0),0)),n30:L.filter(x=>x.ride_at&&new Date(x.ride_at).getTime()>m).length,km30:Math.round(L.filter(x=>x.ride_at&&new Date(x.ride_at).getTime()>m).reduce((a,x)=>a+(+x.km||0),0)),kmh:(()=>{const v=L.filter(x=>x.avg_kmh!=null).map(x=>+x.avg_kmh);return v.length?v.reduce((a,b)=>a+b,0)/v.length:null})()};
-    if(gearOpen&&(gearView==="user"||gearView==="teczka")&&userId===id)renderGear()})});return ""}
+    if(gearOpen&&(gearView==="user"||gearView==="teczka")&&userId===id)renderGear()})});if(!stale)return ""}
   const u=userPubStats(id);if(!u&&(!s||!s.n))return "";
   // 📊 mała statystyka na karcie osoby — widzą wszyscy zalogowani (prośba właściciela 2026-11-17 21:21; KROK 59)
   const c=(v,l)=>'<div class="st"><b>'+v+'</b><span>'+l+'</span></div>',n=s&&s.n||0;
