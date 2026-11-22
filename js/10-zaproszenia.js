@@ -308,7 +308,7 @@ function fltUserChips(){
 }
 function fltSecs(){
   return {who:'<button type="button" class="fch'+(!flt.who?' on':'')+'" data-fk="who" data-fv="">Wszystkie</button>'+FLT_WHO.map(([v,t])=>fltChip("who",v,t)).join(""),
-    when:FLT_WHEN.map(([v,t])=>fltChip("when",v,t)).join("")+'<label class="fch fdate'+(flt.when==="date"?' on':'')+'">📅 <input type="date" id="fltdate" value="'+esc(flt.when==="date"?flt.date:"")+'"></label>',
+    when:FLT_WHEN.filter(x=>x[0]!=="7d").map(([v,t])=>fltChip("when",v,t)).join("")+'<label class="fch fdate'+(flt.when==="date"?' on':'')+'">📅 <input type="date" id="fltdate" value="'+esc(flt.when==="date"?flt.date:"")+'"></label>',
     where:fltWhereChips(),bike:FLT_BIKE().map(([v,t])=>fltChip("bike",v,t)).join(""),
     pace:FLT_PACE().map(([v,t])=>fltChip("pace",v,t)).join(""),user:fltUserChips(),
     test:[["0","Pokaż"],["1","Ukryj"]].map(([v,t])=>'<button type="button" class="fch'+((hideTest?"1":"0")===v?' on':'')+'" data-fk="ht" data-fv="'+v+'">'+t+'</button>').join(""),
@@ -317,7 +317,7 @@ function fltSecs(){
 }
 function fltRefresh(){
   const S=fltSecs();Object.keys(S).forEach(k=>{const el=$("flt_"+k);if(el)el.innerHTML=S[k]});
-  ["where","bike"].forEach(k=>{const el=$("fsum_"+k);if(el)el.textContent=flt[k]?fltLabel(k):""});
+  ["where","bike","grp"].forEach(k=>{const el=$("fsum_"+k);if(el)el.textContent=flt[k]?fltLabel(k):""});
   const n=wants.filter(wUpcoming).filter(fltOk).length;$("fltok").textContent=fltActive()?"Pokaż "+n+" "+(n===1?"zaproszenie":n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"zaproszenia":"zaproszeń"):"Gotowe";
   renderWants();
 }
@@ -329,9 +329,9 @@ function openFlt(){
   const hasDemo=(typeof demoIds!=="undefined"&&demoIds.size)||flt.demo;
   p.innerHTML='<div class="bsbox fltbox" role="dialog" aria-modal="true" aria-label="Filtry"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="close">Zamknij</button><b>Filtry</b><button type="button" class="lnk" data-fk="clear" style="color:var(--bad);text-align:right">Wyczyść</button></div>'
    +'<div class="bslist">'+((testOk||hasDemo)?'<div class="fsrc">'+(testOk?sec("test","Testowe zaproszenia"):'')+(hasDemo?sec("demo","Konta demo"):'')+'</div>':'')
-   +sec("who","Czyje")+(wGrList().length||flt.grp?sec("grp","Grupa"):'')+sec("when","Kiedy")
+   +sec("when","Kiedy")+(paceOk?sec("pace","Tempo"):'')+sec("who","Czyje")+(wGrList().length||flt.grp?csec("grp","users","Grupa"):'')
    +(placeOk?csec("where","pin","Gdzie",'<input class="bsq srch" id="fltwq" type="search" placeholder="Miasto, dzielnica, miejsce…" autocomplete="off">'):'')
-   +(bikeOk?csec("bike","bike","Rower / teren"):'')+(paceOk?sec("pace","Tempo"):'')
+   +(bikeOk?csec("bike","bike","Rower / teren"):'')
    +sec("user","Osoba",'<input class="bsq srch" id="fltuq" type="search" placeholder="Nick…" autocomplete="off">')+'</div>'
    +'<button type="button" class="b big" id="fltok" data-fk="close">Gotowe</button></div>';
   fltRefresh();
