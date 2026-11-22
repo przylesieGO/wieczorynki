@@ -317,7 +317,7 @@ function fltSecs(){
 }
 function fltRefresh(){
   const S=fltSecs();Object.keys(S).forEach(k=>{const el=$("flt_"+k);if(el)el.innerHTML=S[k]});
-  ["where","bike","grp"].forEach(k=>{const el=$("fsum_"+k);if(el)el.textContent=flt[k]?fltLabel(k):""});
+  ["where","bike","grp","user"].forEach(k=>{const el=$("fsum_"+k);if(el)el.textContent=flt[k]?(k==="user"?(nicks[flt.user]||"osoba"):fltLabel(k)):""});
   const n=wants.filter(wUpcoming).filter(fltOk).length;$("fltok").textContent=fltActive()?"Pokaż "+n+" "+(n===1?"zaproszenie":n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"zaproszenia":"zaproszeń"):"Gotowe";
   renderWants();
 }
@@ -332,7 +332,7 @@ function openFlt(){
    +sec("when","Kiedy")+(paceOk?sec("pace","Tempo"):'')+sec("who","Czyje")+(wGrList().length||flt.grp?csec("grp","users","Grupa"):'')
    +(placeOk?csec("where","pin","Gdzie",'<input class="bsq srch" id="fltwq" type="search" placeholder="Miasto, dzielnica, miejsce…" autocomplete="off">'):'')
    +(bikeOk?csec("bike","bike","Rower / teren"):'')
-   +sec("user","Osoba",'<input class="bsq srch" id="fltuq" type="search" placeholder="Nick…" autocomplete="off">')+'</div>'
+   +csec("user","user","Osoba",'<input class="bsq srch" id="fltuq" type="search" placeholder="Nick…" autocomplete="off">')+'</div>'
    +'<button type="button" class="b big" id="fltok" data-fk="close">Gotowe</button></div>';
   fltRefresh();
 }
