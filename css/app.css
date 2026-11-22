@@ -1120,3 +1120,10 @@ details.wday>summary{flex-wrap:wrap}details.wday>summary::after{align-self:cente
 .dslbl{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;margin:8px 2px}.dslbl select{width:auto}
 .dsv{font-size:12px;font-weight:700;border-radius:999px;padding:1px 8px}.dsv.up{background:var(--acc2);color:var(--acc)}.dsv.dn{background:var(--fill);color:var(--mut)}
 .dqvote button{display:inline-flex;align-items:center;justify-content:center;gap:6px}.dqvote svg{width:20px;height:20px}.dqdn{display:inline-flex;transform:rotate(180deg)}
+/* 📱 pasek „Otwórz w przeglądarce” (js/16) */
+.iabar{margin:10px auto 0;max-width:640px;padding:0 12px}.iabar>*{max-width:100%}
+.iabar{--iab:#fff4e0;--iai:#7a4a00}html[data-theme=dark] .iabar{--iab:#3a2a10;--iai:#ffcf80}
+.iain{display:flex;align-items:flex-start;gap:10px;background:var(--iab);color:var(--iai);border-radius:14px 14px 0 0;padding:12px 8px 6px 14px;font-size:14px;line-height:1.35}
+.iain>.ui-i{width:22px;height:22px;margin-top:1px}.iatx{flex:1;display:flex;flex-direction:column;gap:2px}.iatx b{font-size:15px}
+.iax{flex:none;width:44px;height:44px;margin:-10px -4px 0 0;border:0;border-radius:50%;background:transparent;color:inherit;font-size:16px;cursor:pointer}
+.iabtns{display:flex;gap:8px;background:var(--iab);border-radius:0 0 14px 14px;padding:4px 14px 12px}.iabtns .b{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;font-size:15px;padding:12px 8px;min-height:44px}

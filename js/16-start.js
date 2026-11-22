@@ -100,6 +100,31 @@ $("bootretry").onclick=()=>location.reload();
 $("bootskip").onclick=()=>bootDone();
 bootTimer=setTimeout(()=>bootFail(),8000);
 
+/* ---------- 📱 pasek „Otwórz w przeglądarce” (Facebook / Messenger / Instagram / WebView) ----------
+   W przeglądarce wbudowanej nie da się zainstalować aplikacji, logowanie potrafi zniknąć po zamknięciu, a pobieranie GPX
+   i linki do Telegrama bywają zablokowane. Android: przycisk otwiera Chrome (intent); iPhone: kopiowanie linku + podpowiedź.
+   ✕ chowa pasek do końca tej sesji karty. Kliknięcia liczą się w APP DEMO (id: iaopen, iacopy, iax). */
+function iaBar(){
+  const k=inAppKind(),b=$("iabar");if(!b)return;
+  let hid=false;try{hid=sessionStorage.getItem("iaHide")==="1"}catch(e){}
+  if(!k||hid){b.classList.add("hide");b.innerHTML="";return}
+  const ua=navigator.userAgent||"",and=/Android/.test(ua),ios=/iPhone|iPad|iPod/.test(ua);
+  const app={fb:"Facebooku",msg:"Messengerze",ig:"Instagramie"}[k]||"aplikacji";
+  const u=location.href.split("#")[0],intent="intent://"+u.replace(/^https?:\/\//,"")+"#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url="+encodeURIComponent(u)+";end";
+  b.innerHTML='<div class="iain">'+uiIcon("globe")+'<div class="iatx"><b>Otwierasz w '+app+'</b><span>W przeglądarce działa pełna wersja: instalacja na ekranie, stałe logowanie, pobieranie tras.'
+    +(ios?' Albo stuknij ⋯ → „Otwórz w Safari”.':'')+'</span></div><button type="button" class="iax" id="iax" aria-label="Ukryj">✕</button></div>'
+    +'<div class="iabtns">'+(and?'<a class="b" id="iaopen" href="'+esc(intent)+'">Otwórz w Chrome</a>':'')
+    +'<button type="button" class="b'+(and?' w':'')+'" id="iacopy">'+uiIcon("copy")+' Kopiuj link</button></div>';
+  b.classList.remove("hide");
+}
+$("iabar").addEventListener("click",e=>{
+  if(e.target.closest("#iax")){try{sessionStorage.setItem("iaHide","1")}catch(err){}iaBar();return}
+  if(e.target.closest("#iacopy")){const u=location.href.split("#")[0];
+    const done=()=>say(/iPhone|iPad|iPod/.test(navigator.userAgent)?"Link skopiowany — wklej go w Safari":"Link skopiowany — wklej go w przeglądarce");
+    try{navigator.clipboard.writeText(u).then(done,()=>prompt("Skopiuj link:",u))}catch(err){prompt("Skopiuj link:",u)}}
+});
+iaBar();
+
 /* ---------- start aplikacji ---------- */
 (async()=>{
   $("rw").value=defaultWhen();

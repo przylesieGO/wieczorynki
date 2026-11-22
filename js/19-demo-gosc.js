@@ -254,7 +254,7 @@ function dsEnv(){
   const dev=uad&&uad.mobile===true?"tel":/iPad|Tablet/.test(ua)||ipad||(/Android/.test(ua)&&!/Mobile/.test(ua))?"tab":/Mobi|iPhone|iPod|Android/.test(ua)?"tel":"pc";
   const os=/Android/.test(ua)?"android":/iPhone|iPad|iPod/.test(ua)||ipad?"ios":/CrOS/.test(ua)?"cros":/Windows/.test(ua)?"windows":/Mac OS X|Macintosh/.test(ua)?"macos":/Linux/.test(ua)?"linux":"inny";
   const br=/SamsungBrowser/.test(ua)?"samsung":/Edg(A|iOS)?\//.test(ua)?"edge":/OPR\/|Opera/.test(ua)?"opera":/Firefox|FxiOS/.test(ua)?"firefox":/Chrome|CriOS/.test(ua)?"chrome":/Safari/.test(ua)?"safari":"inna";
-  const inapp=/Messenger|Orca-Android/.test(ua)?"msg":/FBAN|FBAV|FB_IAB|FBIOS/.test(ua)?"fb":/Instagram/.test(ua)?"ig":/; wv\)/.test(ua)?"wv":undefined;
+  const inapp=inAppKind()||undefined;
   let h="";try{h=document.referrer?new URL(document.referrer).hostname:""}catch(e){}
   const ref=!h?"direct":/(^|\.)messenger\.com$/.test(h)?"msg":/(^|\.)(facebook\.com|fb\.com|fb\.me)$/.test(h)?"fb":/(^|\.)instagram\.com$/.test(h)?"ig":/(^|\.)google\./.test(h)?"google":h===location.hostname?"app":"inna";
   let tag="";try{tag=(new URLSearchParams(location.search).get("z")||"").toLowerCase()}catch(e){}

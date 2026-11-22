@@ -232,3 +232,7 @@ function askOk(msg,ok,danger){
     document.addEventListener("keydown",kd,true);document.body.appendChild(d);d.querySelector(".cfmok").focus();
   });
 }
+
+// 📱 przeglądarka wbudowana w aplikację (Facebook, Messenger, Instagram, inne WebView) — pasek „Otwórz w przeglądarce” (js/16), statystyki demo (js/19)
+function inAppKind(){const ua=navigator.userAgent||"";
+  return /Messenger|Orca-Android/.test(ua)?"msg":/FBAN|FBAV|FB_IAB|FBIOS/.test(ua)?"fb":/Instagram/.test(ua)?"ig":/; wv\)/.test(ua)?"wv":""}

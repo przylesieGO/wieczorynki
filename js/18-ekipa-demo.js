@@ -276,7 +276,7 @@ const DS_CL={"w:join":"Jadę! / Rezygnuję","w:pref":"Pasuje mi o…","w:inv":"D
   "id:gear":"Ustawienia","id:helpbtn":"Pomoc","id:pvend":"Wyjdź z demo","id:wsave":"Wyślij zaproszenie","id:wcancel":"Anuluj zaproszenie","id:wfx":"Zamknij formularz",
   "id:t0":"Zakładka Zaproszenia","id:t1":"Zakładka Wieczorynki","id:t2":"Zakładka Zaawansowane","id:t3":"Zakładka Imprezy","id:honl":"Kto jest online","id:menick":"Mój nick",
   "id:wwho":"Kto zobaczy zaproszenie","u:karta":"Karta osoby (nick)","c:myrides":"Moje jazdy","c:back":"Wstecz","c:help":"Pomoc","dq:send":"Ocena demo: wyślij","dq:skip":"Ocena demo: bez oceny",
-  "ev:like":"Impreza: polub","ev:share":"Impreza: udostępnij","my:share":"Udostępnij zaproszenie","my:edit":"Edytuj zaproszenie"};
+  "id:iaopen":"Pasek: Otwórz w Chrome","id:iacopy":"Pasek: Kopiuj link","id:iax":"Pasek: ukryj","ev:like":"Impreza: polub","ev:share":"Impreza: udostępnij","my:share":"Udostępnij zaproszenie","my:edit":"Edytuj zaproszenie"};
 const dsScrName=k=>DS_SCR[k]||(/^g_/.test(k)?"Ustawienia › "+k.slice(2):k);
 const dsClName=k=>DS_CL[k]||(/^x:/.test(k)?"Bez reakcji: ."+k.slice(2):/^j:/.test(k)?"Sekcja: "+k.slice(2):k);
 const dsLkName=k=>/^r_/.test(k)?"Funkcja bazy: "+k.slice(2):/^f_/.test(k)?"Funkcja serwera: "+k.slice(2):({login:"Logowanie",signup:"Zakładanie konta",haslo:"Przypomnienie hasła",konto:"Zmiana konta"})[k]||k;
