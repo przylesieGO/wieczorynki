@@ -1138,3 +1138,4 @@ details.wday>summary{flex-wrap:wrap}details.wday>summary::after{align-self:cente
 .fuic{width:18px;flex:none;display:inline-flex}.fuic .ui-i{width:16px;height:16px;color:#ffcc00}.fun{min-width:0;overflow:hidden;text-overflow:ellipsis}.fuck{margin-left:auto}.fuck .ui-i{width:18px;height:18px}
 .fsec .secbar .bschev{margin-left:0}
 #flt_when{flex-wrap:nowrap;gap:5px}#flt_when .fch{flex:none;padding:8px 11px}#flt_when .fdate input{width:92px;font-size:13px}
+.fusr.fumore{justify-content:center;color:var(--acc);font-weight:700}
