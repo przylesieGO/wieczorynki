@@ -1071,3 +1071,13 @@ html[data-theme=dark] .nkdemo{border-color:#ff7a70;color:#ff7a70}
 .gsbar{height:4px;border-radius:2px;background:var(--fill);margin-top:5px;overflow:hidden}.gsbar i{display:block;height:100%;background:var(--acc);border-radius:2px;opacity:.45}
 .gsp.top .gsbar i{opacity:1}
 .gsn{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:18px}.gsn .note{font-size:13px;margin:0}.gsp.me .gsn .note:last-child{font-weight:600}
+
+/* ---- dotyk i fokus: strefa kliknięcia min. ok. 44 px bez zmiany wyglądu (niewidoczny pseudo-element), widoczny fokus z klawiatury ---- */
+:where(.b,.whb,.lnk,.fbtn,.onl,.ah,.farr,.betabar){position:relative}
+:where(.b,.lnk,.fbtn,.ah)::after{content:"";position:absolute;left:0;right:0;top:-5px;bottom:-5px}
+:where(.onl)::after{content:"";position:absolute;left:0;right:0;top:-6px;bottom:-6px}
+:where(.whb)::after{content:"";position:absolute;left:0;right:0;top:-8px;bottom:-8px}
+:where(.farr,.betabar)::after{content:"";position:absolute;left:0;right:0;top:-7px;bottom:-7px}
+.nmk::after,.redge::after{content:"";position:absolute;inset:-7px;border-radius:50%}
+:where(button,a,summary,[role=button],[tabindex],input[type=checkbox]):focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.fch .fcn{opacity:.75}
