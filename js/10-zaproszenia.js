@@ -256,6 +256,9 @@ function renderWants(){try{renderSteps()}catch(e){}
   if(on)wants=all.filter(fltOk);
   try{renderWants0()}finally{wants=all}
   renderArch(all);
+  const ws=$("wstat");if(ws){const up=all.filter(wUpcoming),me=up.filter(w=>w.user_id===uid||(joins[w.id]||[]).includes(uid)).length;   // widoczne dla mnie / biorę udział
+    ws.classList.toggle("hide",!session);ws.innerHTML=uiIcon("hand")+'<b>'+up.length+'</b><s>/</s><b>'+me+'</b>';
+    ws.title="Zaproszenia widoczne dla Ciebie / te, w których bierzesz udział";ws.setAttribute("aria-label","Zaproszeń widocznych: "+up.length+", w których bierzesz udział: "+me)}
   const b=$("fltbtn"),bar=$("fltbar");if(!b)return;
   b.classList.toggle("hide",!session);b.classList.toggle("on",on);
   const n=fltKeys().length;$("fltn").textContent=n;$("fltn").classList.toggle("hide",!on);

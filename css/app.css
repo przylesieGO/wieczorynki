@@ -615,6 +615,7 @@ details.stsec[open]>summary::after{transform:rotate(90deg)}
 .bootmsg{background:var(--fill);border-radius:14px;padding:10px 16px;font-size:15px;text-align:center;max-width:260px;line-height:1.4}
 .booterr .b{padding:10px 20px}.bootbeta{position:absolute;bottom:calc(22px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;font-size:12px;color:var(--mut);opacity:.8}
 button.onl.off{background:var(--fill);color:var(--mut)}
+.wstat{display:inline-flex;align-items:center;gap:6px;font-size:16px;font-weight:700;color:var(--ink);min-width:0}.wstat .ui-i{width:18px;height:18px}.wstat s{text-decoration:none;color:var(--mut);font-weight:400}
 .hdbtns{display:inline-flex;gap:6px;align-items:center;flex:none}
 .fbtn{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:var(--fill);color:var(--ink);border-radius:999px;padding:6px 11px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
 .fbtn .fico{width:14px;height:14px}.fbtn.on{background:var(--accbtn);border-color:var(--accbtn);color:var(--white)}.fbtn .fn{background:var(--white);color:var(--accbtn);border-radius:999px;padding:0 6px;font-size:12px}
