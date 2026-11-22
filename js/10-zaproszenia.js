@@ -213,6 +213,7 @@ function fltOk(w){
   const j=joins[w.id]||[],dd=dayDiff(new Date(w.starts_at));
   if(flt.who==="mine"&&w.user_id!==uid)return false;
   if(flt.who==="going"&&(w.user_id===uid||!j.includes(uid)))return false;
+  if(flt.who==="part"&&w.user_id!==uid&&!j.includes(uid))return false;   // biorę udział = moje + te, na które jadę
   if(flt.who==="fav"&&!(isFav(w.user_id)||j.some(isFav)))return false;
   if(flt.who==="priv"&&w.visibility!=="private")return false;
   if(flt.who==="open"&&w.visibility==="private")return false;
@@ -234,7 +235,7 @@ function fltOk(w){
   if(flt.demo&&typeof demoIds!=="undefined"){const dm=demoIds.has(w.user_id);if(flt.demo==="only"&&!dm||flt.demo==="hide"&&dm)return false}   // zaproszenia od kont demo (dla wszystkich)
   return true;
 }
-const FLT_WHO=[["mine","🙋 Moje"],["going","✅ Jadę"],["fav","⭐ Ulubieni"],["open","🌍 Otwarte"],["priv","🔒 Prywatne"]];
+const FLT_WHO=[["mine","🙋 Moje"],["going","✅ Jadę"],["part","Biorę udział"],["fav","⭐ Ulubieni"],["open","🌍 Otwarte"],["priv","🔒 Prywatne"]];
 const FLT_WHEN=[["today","Dziś"],["tom","Jutro"],["wknd","Weekend"],["7d","7 dni"]];
 const FLT_BIKE=()=>[["all","🚲 Dla wszystkich"]].concat(Object.entries(BIKES));
 const FLT_DEMO=[["only","Tylko od kont demo"],["hide","Bez kont demo"]];
@@ -257,7 +258,7 @@ function renderWants(){try{renderSteps()}catch(e){}
   try{renderWants0()}finally{wants=all}
   renderArch(all);
   const ws=$("wstat");if(ws){const up=all.filter(wUpcoming),me=up.filter(w=>w.user_id===uid||(joins[w.id]||[]).includes(uid)).length;   // widoczne dla mnie / biorę udział
-    ws.classList.toggle("hide",!session);ws.innerHTML=uiIcon("hand")+'<b>'+up.length+'</b><s>/</s><b>'+me+'</b>';
+    ws.classList.toggle("hide",!session);ws.innerHTML=uiIcon("hand")+'<button type="button" data-ws="all" class="'+(flt.who!=="part"?"on":"")+'">'+up.length+'</button><s>/</s><button type="button" data-ws="part" class="'+(flt.who==="part"?"on":"")+'">'+me+'</button>';
     ws.title="Zaproszenia widoczne dla Ciebie / te, w których bierzesz udział";ws.setAttribute("aria-label","Zaproszeń widocznych: "+up.length+", w których bierzesz udział: "+me)}
   const b=$("fltbtn"),bar=$("fltbar");if(!b)return;
   b.classList.toggle("hide",!session);b.classList.toggle("on",on);
@@ -273,6 +274,8 @@ document.addEventListener("click",e=>{const x=e.target.closest("[data-fx]");if(!
   if(x.dataset.fx==="*")flt=fltEmpty();else{flt[x.dataset.fx]="";if(x.dataset.fx==="when")flt.date=""}
   fltSave();renderWants()});
 $("fltbtn").addEventListener("click",()=>openFlt());
+$("wstat").addEventListener("click",e=>{const b=e.target.closest("button[data-ws]");if(!b)return;   // licznik: pierwsza liczba = wszystkie, druga = tylko moje i te, na które jadę
+  flt.who=b.dataset.ws==="part"&&flt.who!=="part"?"part":"";if(flt.who!=="part"&&b.dataset.ws==="all")flt.who="";fltSave();renderWants()});
 function fltChip(k,v,t){return '<button type="button" class="fch'+(flt[k]===v?' on':'')+'" data-fk="'+k+'" data-fv="'+esc(v)+'">'+esc(t)+'</button>'}
 function fltWhereChips(){
   const up=wants.filter(wUpcoming),q=lc(fltQ.trim()),seen=new Set(),out=[];
