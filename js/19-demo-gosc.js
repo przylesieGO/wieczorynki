@@ -5,7 +5,7 @@
    a po zamknięciu karty / „Wyjdź z demo” wszystko znika. Sprzątanie kont i zaproszeń demo w Administracji
    nie ma wpływu na ten tryb — dane są tutaj, w kodzie. */
 const DEMO_ME="00000000-0000-4000-8000-00000000d0e0";
-const DEMO_SAY="🎮 To tylko demo — ta funkcja działa po założeniu konta.";
+const DEMO_SAY="To tylko demo — ta funkcja działa po założeniu konta.";
 const dmId=n=>"00000000-0000-4000-8000-0000000000"+String(n).padStart(2,"0");
 const dmUuid=()=>{try{return crypto.randomUUID()}catch(e){return "xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx".replace(/x/g,()=>(Math.random()*16|0).toString(16))}};
 
@@ -27,7 +27,7 @@ function demoSeed(){
     pace:null,km:null,dur_min:null,place:null,place_lat:null,place_lon:null,bike:null,place_city:null,place_area:null,route_base_id:null,activity:"bike",title:null,title_auto:false,group_id:null,note:null},o);
   const w1=W({user_id:u(1),starts_at:iso(at(d0,18)),title:"Zachód słońca nad Wisłą",note:"Spokojnie, z postojem na kawę na Młocinach.",pace:"tour",bike:"gravel",km:40,
       place:"Las Bielański, parking przy Kamedułach",place_city:"Warszawa",place_lat:52.2945,place_lon:20.9585});
-  const w2=W({user_id:u(2),starts_at:iso(at(d0+1,17)),range_from:iso(at(d0+1,17)),range_to:iso(at(d0+1,19)),title:"Kawa w Łomiankach ☕",note:"Wybierz godzinę, która Ci pasuje — ustalę start wg większości.",
+  const w2=W({user_id:u(2),starts_at:iso(at(d0+1,17)),range_from:iso(at(d0+1,17)),range_to:iso(at(d0+1,19)),title:"Kawa w Łomiankach",note:"Wybierz godzinę, która Ci pasuje — ustalę start wg większości.",
       pace:"senior",bike:"trekking",km:25,dur_min:120,place:"Rondo przy Hucie",place_city:"Warszawa",place_lat:52.2935,place_lon:20.9312});
   const w3=W({user_id:u(4),starts_at:iso(at(d0+2,9)),visibility:"private",title:"Kampinos dookoła",note:"Zapraszam tylko kilka osób — tempo równe, bez czekania.",pace:"speed",bike:"road",
       route:JSON.stringify(route),route_km:Math.round(rkm*10)/10,place:"Stacja PKP Łomianki",place_city:"Łomianki",place_lat:52.3335,place_lon:20.8862});
