@@ -1081,3 +1081,13 @@ html[data-theme=dark] .nkdemo{border-color:#ff7a70;color:#ff7a70}
 .nmk::after,.redge::after{content:"";position:absolute;inset:-7px;border-radius:50%}
 :where(button,a,summary,[role=button],[tabindex],input[type=checkbox]):focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .fch .fcn{opacity:.75}
+/* ---- karta zaproszenia: szczegóły zwinięte, przyciski trasy w rzędzie, chipy z ikonami ---- */
+.wopen{font-size:13px;color:var(--mut);white-space:nowrap}
+.wdet{margin-top:8px}.wdet>summary{font-size:15px}.wdet>.jv{padding:4px 10px 10px}.wdet>.jv>div{display:block;padding:0;border-bottom:0}
+.wdet .wwx{margin-top:8px}.wdet .wroute{margin-top:8px}
+.wroute .wrb{flex-wrap:nowrap}
+.wroute .wrb{gap:5px}.wroute .wrb .b{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;padding:7px 2px;font-size:12px;line-height:1.2;white-space:normal;overflow-wrap:normal;word-break:normal;text-align:center}.wdet .wroute{padding:9px 8px}
+.wroute .wrb .b .ui-i{width:20px;height:20px}
+details.jlist .jf.jfw{white-space:normal;overflow:visible}
+.wpc{display:inline-flex;align-items:center;gap:5px}.wpc.wbk{flex-direction:row;padding:2px 10px;border:0;font-size:14px;font-weight:700}
+.wpc .ui-i,.wpc.wbk .ui-i{width:15px;height:15px;color:currentColor}

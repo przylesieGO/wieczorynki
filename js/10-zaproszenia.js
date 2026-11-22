@@ -499,9 +499,9 @@ function wantHtml(w){
     // admin widzi cudze prywatne zaproszenie tylko podglądowo (bez „Jadę!”), chyba że jest zaproszony
     const peek=priv&&!mine&&!wInvMe(w)&&!joined;
     const open=isOpen(w)&&!wLive(w),myp=(prefs[w.id]||{})[uid],dec=(decls[w.id]||[]).includes(uid),live=wLive(w);
-    return '<div class="want'+(mine?' mine':'')+(isTest(w)?' test':'')+grCls(w)+'" data-wid="'+esc(w.id)+'">'+(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+'<div class="wtop">'+nk(w.user_id)+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w):'')+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="lockt">do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?(wGr(w)?grTagHtml(w)+(peek?'<span class="lockt">👁 podgląd admina</span>':''):'<span class="lockt">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>'):'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
+    return '<div class="want'+(mine?' mine':'')+(isTest(w)?' test':'')+grCls(w)+'" data-wid="'+esc(w.id)+'">'+(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+'<div class="wtop">'+nk(w.user_id)+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w):'')+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?(wGr(w)?grTagHtml(w)+(peek?'<span class="lockt">👁 podgląd admina</span>':''):'<span class="lockt">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>'):'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
      +(live?liveHtml(w):'')
-     +paceHtml(w)+bikeHtml(w)+(live?'':durLineHtml(w))+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+(live?'':wxHtml(w))+routeBoxHtml(w)
+     +paceHtml(w)+bikeHtml(w)+(live?'':durLineHtml(w))+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+wDetHtml(w,live)
      +invitedHtml(w)
      +(open?tallyHtml(w):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w)+(live?'':myPickHtml(w,myp,joined,mine)))
      +(wLate(w)&&!mine&&!peek&&!joined?lateNote():'')
@@ -515,6 +515,12 @@ function wantHtml(w){
      +((mine||isAdmin)?'<button class="ib del'+(mine?'':' adm')+'" data-w="del" data-id="'+esc(w.id)+'" title="'+(mine?'Odwołaj zaproszenie':'Usuń (admin)')+'" aria-label="'+(mine?'Odwołaj zaproszenie':'Usuń (admin)')+'">'+ICON.del+'</button>':'')
      +'</div>'
      +'</div>';
+}
+// pogoda i proponowana trasa — zwinięte pod „Szczegóły” (stan rozwinięcia w joinOpen, klucz "wd"+id)
+function wDetHtml(w,live){
+  const wx=live?'':wxHtml(w),rt=routeBoxHtml(w);if(!wx&&!rt)return '';
+  const k="wd"+w.id,lab=[hasRoute(w)?'🗺️ Trasa '+kmTxt(w.route_km)+' km':'',wx?'pogoda':''].filter(Boolean).join(' · ');
+  return '<details class="jlist wdet" data-j="'+esc(k)+'"'+(joinOpen.has(k)?' open':'')+'><summary><span class="jf jfw">'+lab+'</span></summary><div class="jv">'+wx+rt+'</div></details>';
 }
 /* ---------- formularz zaproszenia: dzień + zegar klapkowy + notatka ---------- */
 const wf={day:"0",h:19,m:0,h2:21,m2:0,mode:"one",editId:null,vis:"all",pick:new Set()};
@@ -1509,7 +1515,7 @@ function tallyHtml(w){
   const rows=T.slice().sort((a,b)=>a.t-b.t).map(x=>'<div><span class="tline'+(x.t===T[0].t?' best':'')+'"><span class="h">'+hhmm(new Date(x.t))+'</span>'
     +'<span class="bar" style="width:'+Math.max(10,Math.round(40*x.ids.length/max))+'px'+(inRange(w,x.t)?'':';background:var(--mut);opacity:.5')+'"></span>'
     +'<span class="ppl">'+favFirst(x.ids).map(id=>nk(id)).join("")+(inRange(w,x.t)?'':'<span class="note">poza zakresem</span>')+'</span></span></div>').join("");
-  return '<details class="jlist" data-j="'+esc(k)+'"'+(joinOpen.has(k)?' open':'')+'><summary><span class="jc">🕖 Odpowiedzi: '+n+'</span><span class="jf">· najwięcej: '+hhmm(new Date(T[0].t))+'</span></summary><div class="jv">'+rows+'</div></details>'+declHtml(w);
+  return '<details class="jlist" data-j="'+esc(k)+'"'+(joinOpen.has(k)?' open':'')+'><summary><span class="jf jfw">🕖 Odpowiedzi: '+n+' · najwięcej o '+hhmm(new Date(T[0].t))+'</span></summary><div class="jv">'+rows+'</div></details>'+declHtml(w);
 }
 async function setPref(w,t){
   const iso=new Date(t).toISOString(),joined=(joins[w.id]||[]).includes(uid);
