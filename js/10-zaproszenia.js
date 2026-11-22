@@ -383,23 +383,23 @@ function renderWants0(){
     // kto jedzie tego dnia (osobna linia pod godzinami): „Ty i N osoby jadą” (N = inni, bez Ciebie) / „N osoby jadą”
     const others=me?ppl.size-1:ppl.size;
     const ty='<span class="wme">Ty</span>';
-    const pplHtml=me?(others>0?ty+" i "+others+" "+osFor(others)+" jadą":ty+" jedziesz"):esc(ppl.size+" "+osFor(ppl.size)+" jadą");
+    const pplHtml=me?(others>0?ty+" i "+others+" "+osFor(others)+" jadą":ty+" jedziesz"):esc(ppl.size+" "+osFor(ppl.size)+(ppl.size===1?" jedzie":" jadą"));
     // trwająca jazda: jej godzina na pomarańczowo (jak znacznik TRWA) i zawsze na początku listy
     // karuzela w kolejności czasu (⭐ ulubieni widać przy nicku na karcie — nk()); godziny u góry: klik przewija/otwiera właściwe zaproszenie
     const mineTop=d.ws.filter(wAbove),ord=d.ws.filter(w=>!wAbove(w));
     const wdCap=wd.charAt(0).toUpperCase()+wd.slice(1);
     const l1=n>=0&&n<=2?esc(["Dziś","Jutro","Pojutrze"][n])+' <i>· '+esc(wdCap)+'</i>':esc(wdCap);
     return '<details class="wday" data-day="'+d.k+'"'+(open?' open':'')+'><summary>'
-     +'<div class="ftile'+(n===0?' today':'')+(d.ws.some(wLive)?' live':'')+'">'+ftInner(dt)+'</div>'
+     +'<div class="ftile'+(n===0?' today':'')+(d.ws.some(wLive)?' live':'')+'">'+ftInner(dt)+ftWxHtml(d.ws)+'</div>'
      +'<div class="wtx"><div class="wl1">'+l1+' · <span class="whrs'+(open?' whrsall':'')+'">'+wHrsHtml(d.ws,open)+'</span></div>'
      +'<div class="wl3">Od: '+esc(authTxt)+'</div>'
-     +'<div class="wl2">'+pplHtml+'</div></div>'
+     +'<div class="wl2">'+pplHtml+'</div></div>'+wl4Html(d.ws)
      +'</summary>'+mineTop.map(wantDayHtml).join("")+(ord.length>1
        ?'<div class="dcar" data-day="'+d.k+'">'+ord.map(wantHtml).join("")+'</div><div class="mydots ddots">'+ord.map((_,i)=>'<button type="button" data-ddot="'+i+'" class="'+(i===(dayIdx[d.k]||0)?'on':'')+'" aria-label="Zaproszenie '+(i+1)+'"></button>').join("")+'<span>'+(Math.min(dayIdx[d.k]||0,ord.length-1)+1)+' z '+ord.length+'</span></div>'
        :ord.length?wantHtml(ord[0]):'')+'</details>';
   }).join("");
   box.querySelectorAll(".dcar").forEach(c=>dcarRestore(c));
-  fillWx();
+  fillWx();fillFtWx();
   wsecSync();
 }
 /* godziny w nagłówku karty dnia: zwinięta karta — 4 + „+N” (etykieta); rozwinięta — wszystkie, klikalne (przewijają/otwierają właściwe zaproszenie w karuzeli) */
@@ -501,7 +501,7 @@ function wantHtml(w){
     const open=isOpen(w)&&!wLive(w),myp=(prefs[w.id]||{})[uid],dec=(decls[w.id]||[]).includes(uid),live=wLive(w);
     return '<div class="want'+(mine?' mine':'')+(isTest(w)?' test':'')+grCls(w)+'" data-wid="'+esc(w.id)+'">'+(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+'<div class="wtop">'+nk(w.user_id)+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w):'')+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?(wGr(w)?grTagHtml(w)+(peek?'<span class="lockt">👁 podgląd admina</span>':''):'<span class="lockt">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>'):'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
      +(live?liveHtml(w):'')
-     +paceHtml(w)+bikeHtml(w)+(live?'':durLineHtml(w))+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+wDetHtml(w,live)
+     +paceHtml(w)+bikeHtml(w)+(live?'':durLineHtml(w))+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+(live?'':wxHtml(w))+routeBoxHtml(w)
      +invitedHtml(w)
      +(open?tallyHtml(w):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w)+(live?'':myPickHtml(w,myp,joined,mine)))
      +(wLate(w)&&!mine&&!peek&&!joined?lateNote():'')
@@ -515,12 +515,6 @@ function wantHtml(w){
      +((mine||isAdmin)?'<button class="ib del'+(mine?'':' adm')+'" data-w="del" data-id="'+esc(w.id)+'" title="'+(mine?'Odwołaj zaproszenie':'Usuń (admin)')+'" aria-label="'+(mine?'Odwołaj zaproszenie':'Usuń (admin)')+'">'+ICON.del+'</button>':'')
      +'</div>'
      +'</div>';
-}
-// pogoda i proponowana trasa — zwinięte pod „Szczegóły” (stan rozwinięcia w joinOpen, klucz "wd"+id)
-function wDetHtml(w,live){
-  const wx=live?'':wxHtml(w),rt=routeBoxHtml(w);if(!wx&&!rt)return '';
-  const k="wd"+w.id,lab=[hasRoute(w)?'🗺️ Trasa '+kmTxt(w.route_km)+' km':'',wx?'pogoda':''].filter(Boolean).join(' · ');
-  return '<details class="jlist wdet" data-j="'+esc(k)+'"'+(joinOpen.has(k)?' open':'')+'><summary><span class="jf jfw">'+lab+'</span></summary><div class="jv">'+wx+rt+'</div></details>';
 }
 /* ---------- formularz zaproszenia: dzień + zegar klapkowy + notatka ---------- */
 const wf={day:"0",h:19,m:0,h2:21,m2:0,mode:"one",editId:null,vis:"all",pick:new Set()};
@@ -715,6 +709,13 @@ let distOk=false;const DUR_DEF=120,RIDE_GAP=15;
 // kafelek daty; w trakcie jazdy (.live) zamienia się w logo z kręcącymi się kołami + „TRWA”
 let wdayWs={};
 const FT_LIVE='<svg class="ftlogo" viewBox="0 0 120 120" aria-hidden="true"><g class="bw1"><circle cx="44" cy="62" r="25" fill="none" stroke="#fff" stroke-width="9" stroke-dasharray="118 39"/></g><g class="bw2"><circle cx="76" cy="62" r="25" fill="none" stroke="#fbbf24" stroke-width="9" stroke-dasharray="118 39"/></g><circle cx="44" cy="62" r="4" fill="#fff"/><circle cx="76" cy="62" r="4" fill="#fbbf24"/></svg><div class="ftrwa">TRWA<i></i><i></i><i></i></div>';
+// zwinięty dzień: kolorowe chipy — pogoda, tempa i rowery z zaproszeń tego dnia (po rozwinięciu ukryte w CSS)
+function wl4Html(ws){
+  const pc=[...new Set(ws.map(w=>w.pace).filter(p=>p&&PACES[p]))].map(p=>'<span class="wpc wpc-'+p+'">'+PACES[p].e+' '+esc(PACES[p].n)+'</span>');
+  const bk=[...new Set(ws.map(w=>w.bike).filter(b=>b&&BIKES[b]))].map(b=>'<span class="wpc wbk">'+BIKES[b]+'</span>');
+  const wx=dWxHtml(ws);if(!wx&&!pc.length&&!bk.length)return '';
+  return '<div class="wl4">'+wx+pc.join("")+bk.join("")+'</div>';
+}
 function ftInner(dt){return '<div class="fu">'+pad(dt.getDate())+'</div><div class="ft">'+pad(dt.getDate())+'</div><div class="fb">'+MON3[dt.getMonth()]+'</div><div class="fs"></div><div class="fh"></div><div class="fh2"></div>'+FT_LIVE}
 // co minutę: start/koniec jazdy przełącza kafelek bez przeładowania listy
 function ftLiveSync(){document.querySelectorAll("details.wday[data-day]").forEach(el=>{const ws=wdayWs[el.dataset.day];const t=el.querySelector(".ftile");if(ws&&t&&t.classList.contains("live")!==ws.some(wLive))renderWants()})}

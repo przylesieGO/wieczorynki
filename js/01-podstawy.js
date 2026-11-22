@@ -105,7 +105,7 @@ async function getWind(lat,lon,when){
     const err=new Error(k<H.time[0]?"Brak danych o wietrze dla tak dawnego terminu (dostępne ok. 30 dni wstecz).":"Prognoza wiatru jest dostępna do 16 dni naprzód — wróć bliżej terminu.");
     err.code="range";throw err;
   }
-  return {dir:H.wind_direction_10m[i],speed:H.wind_speed_10m[i],gust:H.wind_gusts_10m[i],temp:H.temperature_2m?H.temperature_2m[i]:null,rain:H.precipitation_probability?H.precipitation_probability[i]:null,time:H.time[i].slice(11,16)};
+  return {dir:H.wind_direction_10m[i],speed:H.wind_speed_10m[i],gust:H.wind_gusts_10m[i],temp:H.temperature_2m?H.temperature_2m[i]:null,rain:H.precipitation_probability?H.precipitation_probability[i]:null,code:H.weather_code?H.weather_code[i]:null,time:H.time[i].slice(11,16)};
 }
 
 /* ---------- mapa (Leaflet + OpenStreetMap) ---------- */

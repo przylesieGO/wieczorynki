@@ -19,6 +19,36 @@ function fillWx(){
     }).catch(()=>{document.querySelectorAll('.wwx[data-wxk="'+k+'"]').forEach(e=>e.remove())});
   });
 }
+/* ikona warunków (kod WMO z Open-Meteo): słońce, chmury, mgła, mżawka, deszcz, ulewa, śnieg, burza */
+const WX_K=c=>c==null?null:c<=1?["sun","Słonecznie",0]:c===2?["cloudsun","Częściowe zachmurzenie",1]:c===3?["cloud","Pochmurno",2]:c<=48?["fog","Mgła",3]
+  :c<=57?["drizzle","Mżawka",4]:c===61||c===80?["umbrella","Przelotny deszcz",5]:c===63||c===81?["umbrella","Deszcz",6]:c<=67||c===82?["rain","Ulewa",7]:c<=86?["snowman","Śnieg",6]:["storm","Burza",8];
+const WX_HOT=28,WX_WIND=25,WX_GUST=45;   // progi istotne dla rowerzysty: upał, silny wiatr (średni / porywy)
+const wxKT=(c,t)=>{const k=WX_K(c);return k&&t!=null&&t>=WX_HOT&&k[2]<=1?["flame","Upał",k[2]]:k};
+/* kafelek dnia: najgorsze warunki w godzinach startu zaproszeń tego dnia (te same dane co linia pogody — bez nowych zapytań) */
+const wxDay={};   // klucz = godziny startu dnia → {ico, chip}
+const wxDayKey=ws=>ws.map(w=>wxWhen(w).getTime()).filter(t=>t>Date.now()-36e5&&t<Date.now()+15.5*864e5).sort().join(",");
+function ftWxHtml(ws){const k=wxDayKey(ws);return k?'<span class="ftwx" data-ftwx="'+k+'">'+(wxDay[k]?wxDay[k].ico:'')+'</span>':''}
+function dWxHtml(ws){const k=wxDayKey(ws);return k?'<span class="dwx" data-dwx="'+k+'">'+(wxDay[k]?wxDay[k].chip:'')+'</span>':''}
+function fillFtWx(){
+  const paint=k=>{const d=wxDay[k];document.querySelectorAll('.ftwx[data-ftwx="'+k+'"]').forEach(e=>{e.innerHTML=d.ico});document.querySelectorAll('.dwx[data-dwx="'+k+'"]').forEach(e=>{e.innerHTML=d.chip})};
+  const keys=new Set([...document.querySelectorAll(".ftwx[data-ftwx],.dwx[data-dwx]")].map(e=>e.dataset.ftwx||e.dataset.dwx));
+  keys.forEach(k=>{
+    if(wxDay[k]){paint(k);return}
+    if(wxDay["busy"+k])return;wxDay["busy"+k]=1;
+    Promise.all(k.split(",").map(t=>getWind(WX_LAT,WX_LON,new Date(+t)).catch(()=>null))).then(L=>{
+      const ok=L.filter(x=>x&&x.code!=null);if(!ok.length){wxDay[k]={ico:'',chip:''};paint(k);return}
+      const tt=ok.map(x=>x.temp).filter(t=>t!=null).map(Math.round),t0=Math.min(...tt),t1=Math.max(...tt);
+      const worst=ok.slice().sort((a,b)=>WX_K(b.code)[2]-WX_K(a.code)[2])[0],K=wxKT(worst.code,tt.length?t1:null);
+      const rain=Math.max(...ok.map(x=>x.rain||0)),ws=Math.round(Math.max(...ok.map(x=>x.speed||0))),wg=Math.round(Math.max(...ok.map(x=>x.gust||0)));
+      const chip=(c,ico,t)=>'<span class="dwxc wx-'+c+'">'+uiIcon(ico)+t+'</span>';
+      wxDay[k]={ico:'<span class="wxi wx-'+K[0]+'" title="'+K[1]+'">'+uiIcon(K[0])+'</span>',
+        chip:chip(K[0],K[0],K[1]+(tt.length?' · '+(t0===t1?t0:t0+'…'+t1)+'°C':'')+(rain>=30&&K[2]<4?' · '+Math.round(rain)+'% deszczu':''))
+          +(ws>=WX_WIND||wg>=WX_GUST?chip("windy","windy","Silny wiatr "+ws+(wg>ws+5?'–'+wg:'')+' km/h'):'')
+          +(tt.length&&t0<=0&&K[0]!=="snowman"?chip("frost","snow","Mróz "+t0+"°C"):'')};
+      paint(k);
+    });
+  });
+}
 function routeBoxHtml(w){
   if(!hasRoute(w))return "";
   return '<div class="wroute"><div>🗺️ <b>Proponowana trasa</b> · 📏 '+kmTxt(w.route_km)+' km · ⏱ ≈ '+esc(durTxt(w.route_km/wPaceKmh(w.pace)*60))+'</div>'
