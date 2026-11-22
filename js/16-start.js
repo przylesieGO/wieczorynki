@@ -106,13 +106,17 @@ bootTimer=setTimeout(()=>bootFail(),8000);
   $("wt").value=localIso(new Date(Math.ceil(Date.now()/36e5)*36e5));
   $("wdt").value=localIso(new Date()).slice(0,10);
   advRender(false);refreshUi();
-  if(!window.supabase){$("dbnote").textContent="Nie udało się załadować biblioteki bazy danych — sprawdź połączenie z internetem i odśwież stronę.";bootFail(navigator.onLine===false?"📡 Brak połączenia z internetem":"📡 Nie udało się wczytać aplikacji");return}
+  // 🎮 tryb demo: plik js/19 wczytywany tylko tutaj (ta sama wersja ?v= co ten plik), klient z danymi w pamięci zamiast bazy
+  if(DEMO){const v=((document.querySelector('script[src*="16-start"]')||{}).src||"").split("?")[1]||"";
+    await new Promise(res=>{const s=document.createElement("script");s.src="js/19-demo-gosc.js"+(v?"?"+v:"");s.onload=res;s.onerror=res;document.head.appendChild(s)})}
+  if(DEMO&&typeof demoClient!=="function"){bootFail("📡 Nie udało się wczytać trybu demo");return}
+  if(!DEMO&&!window.supabase){$("dbnote").textContent="Nie udało się załadować biblioteki bazy danych — sprawdź połączenie z internetem i odśwież stronę.";bootFail(navigator.onLine===false?"📡 Brak połączenia z internetem":"📡 Nie udało się wczytać aplikacji");return}
   // 👁 podgląd gościa: osobny klient bez sesji (nie rusza logowania 👑 w innych kartach)
   // 🧪 ?konto=N: osobne miejsce na zalogowanie dla tej karty (kilka kont naraz w jednej przeglądarce)
-  sb=PV_GUEST?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:"pv-guest"}})
+  sb=DEMO?demoClient():PV_GUEST?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,storageKey:"pv-guest"}})
     :KONTO?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{storageKey:"konto-"+KONTO}})
     :window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-  if(PV_GUEST||KONTO)pvBar();
+  if(PV_GUEST||KONTO||DEMO)pvBar();
   try{const r=await sb.auth.getSession();setSession(r.data.session)}catch(e){}
   if(RECOVERY&&session)pwMode=true;
   if(HASH_EXPIRED&&!session){$("ainfo").textContent="Link z maila wygasł albo został już użyty. Wpisz e-mail i kliknij „Nie pamiętam hasła”, żeby wysłać nowy.";try{history.replaceState(null,"",location.pathname)}catch(e){}}

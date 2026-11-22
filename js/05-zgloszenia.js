@@ -731,7 +731,7 @@ function askNick(){
   gearOpen=true;gearView="nick";renderGear();
   const i=$("gnick");if(i)i.focus();
 }
-$("guestbtn").onclick=()=>{setGuest(true);renderChrome()};
+$("guestbtn").onclick=()=>{location.href=location.pathname+"?demo=1"};   // 🎮 „Rozejrzyj się bez logowania” = tryb demo (js/19)
 // „spłaszczony” nick: małe litery, bez polskich znaków, cyfr, spacji i znaków — tak samo jak w bazie (nick_key)
 function nickKey(n){
   const k=String(n||"").toLowerCase().replace(/[ąćęłńóśźż]/g,c=>({"ą":"a","ć":"c","ę":"e","ł":"l","ń":"n","ó":"o","ś":"s","ź":"z","ż":"z"}[c])).replace(/[^a-z]/g,"");

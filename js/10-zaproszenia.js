@@ -647,7 +647,7 @@ function openWantForm(w,preset){
   wf.editId=w?w.id:null;
   wf.sigFor=!w&&preset&&preset.sig||null;   // 🟡 zaproszenie z „Mam ochotę” — ta osoba zostanie zaproszona
   wf.vis="all";wf.pick=new Set();wf.gr="";   // 👥 wf.gr: grupa zaproszenia (KROK 71)
-  wf.test=true;$("wtestwrap").classList.toggle("hide",!!w||!testOk);wfTestSync();
+  wf.test=!DEMO;$("wtestwrap").classList.toggle("hide",!!w||!testOk||DEMO);wfTestSync();   // 🎮 w demo bez przełącznika „testowe”
   wf.route=null;wf.routeName="";wf.routeHad=hasRoute(w);wf.routeTouched=false;$("wrfile").value="";
   wf.rbId=w&&w.route_base_id||null;wf.rbAdd=null;wf.rbName="";
   $("wroutewrap").classList.toggle("hide",!wRouteOk);
@@ -1138,7 +1138,7 @@ $("wsave").onclick=async()=>{
     const lbl=wfLabel(d)+(rng?"–"+hhmm(d2):"");
     if(sigInv){say("Wysłane ✔ "+lbl+" — "+(nicks[sigInv]||"ta osoba")+" dostanie zaproszenie.");return}
     say(wasEdit?"Zapisano ✔ "+lbl+(visMsg||(editedPriv&&visOk?" — zaproszeni dostaną powiadomienie.":""))
-      :priv&&wf.gr?"Wysłane 👥 do grupy „"+grNm(wf.gr)+"”"+(ids.length?" i "+ids.length+" "+osob(ids.length):"")+" ✔ Dostaną powiadomienie w aplikacji.":priv?"Wysłane 🔒 do "+ids.length+" "+osob(ids.length)+" ✔ Dostaną powiadomienie w aplikacji.":testOk&&wf.test?"Wysłane 🧪 testowe zaproszenie na "+lbl+" ✔ (na kanale Telegram z oznaczeniem TESTOWE)":"Wysłane ✔ Zaproszenie na "+lbl+" jest też na kanale Telegram.");
+      :priv&&wf.gr?"Wysłane 👥 do grupy „"+grNm(wf.gr)+"”"+(ids.length?" i "+ids.length+" "+osob(ids.length):"")+" ✔ Dostaną powiadomienie w aplikacji.":priv?"Wysłane 🔒 do "+ids.length+" "+osob(ids.length)+" ✔ Dostaną powiadomienie w aplikacji.":testOk&&wf.test?"Wysłane 🧪 testowe zaproszenie na "+lbl+" ✔ (na kanale Telegram z oznaczeniem TESTOWE)":"Wysłane ✔ Zaproszenie na "+lbl+(DEMO?" (demo — nikt poza Tobą go nie zobaczy).":" jest też na kanale Telegram."));
   }catch(e){say("Nie udało się: "+(e&&e.message?e.message:"błąd"))}
 };
 /* ---------- Twoje zaproszenie (zamiast dużego przycisku) ---------- */
