@@ -1032,6 +1032,14 @@ html.tcalm .want.wgrp.test,html.tcalm .mywant.wgrp.test,html.tcalm .nit.wgrp.tes
 .latenote{margin:8px 0 0;font-weight:600;color:var(--acc)}
 .acts .latenote{margin:0}
 /* 🧪 Ekipa demo (KROK 74, js/18): plakietka DEMO przy nicku i panel „Zaproszenia testowe” */
+/* 👁 nazwa grupy z ikonami (oko / przekreślone oko / kłódka) i kółkiem z liczbą członków — w całej aplikacji */
+.grnmw{display:inline-flex;align-items:center;gap:.3em;max-width:100%;min-width:0;vertical-align:middle}
+.grnm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.grbg{display:inline-flex;align-items:center;gap:3px;flex:none;color:var(--mut);font-weight:400}.grbg>span{display:inline-flex}
+.grbg .ui-i{width:.95em;height:.95em;stroke-width:2.2}
+.grmc{min-width:20px;height:20px;padding:0 6px;box-sizing:border-box;border-radius:999px;background:var(--fill);color:var(--ink);font-size:12px;font-weight:700;line-height:20px;text-align:center;letter-spacing:0;margin-left:2px}
+.sname .grmc{min-width:24px;height:24px;line-height:24px;font-size:13px}
+.grtag>.grbg{overflow:visible;color:var(--white)}.grtag .grmc{background:rgba(255,255,255,.28);color:var(--white);min-width:18px;height:18px;line-height:18px;padding:0 5px}
 .nkdemo{display:inline-block;margin-left:.35em;padding:0 .35em;border:1.5px solid #c9261c;border-radius:5px;color:#c9261c;font-size:.68em;font-weight:800;letter-spacing:.04em;line-height:1.45;vertical-align:.12em}
 html[data-theme=dark] .nkdemo{border-color:#ff7a70;color:#ff7a70}
 .dmstep{display:flex;align-items:center;gap:2px;flex:none}.dmstep b{min-width:40px;text-align:center;font-size:18px}

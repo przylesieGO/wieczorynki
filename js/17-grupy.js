@@ -22,7 +22,12 @@ function grInk(c){
 // nowa grupa: pierwszy kolor z paletki, którego nie mam jeszcze w swoich grupach
 const grFreeCol=()=>{const U=new Set(grMine.filter(m=>m.status==="active"&&grG[m.group_id]).map(m=>grG[m.group_id].color));return Object.keys(PL_COL).find(c=>!U.has(c))||"blue"};
 const grIc=x=>GR_ICONS.includes(x&&x.icon)?x.icon:"users";
-const grNmTag=x=>esc(x.name)+(x.owner&&typeof demoIds!=="undefined"&&demoIds.has(x.owner)?'<span class="nkdemo" title="grupa demo — konta testowe">DEMO</span>':'');   // 🧪 KROK 75: plakietka przy grupach kont demo
+// 👁 przy nazwie grupy w całej aplikacji (2026-11-23, wariant A): oko = jawna, przekreślone oko = ukryta, kłódka = dołączenie na prośbę (wolne — bez ikony), kółko = liczba członków
+const grMemN=x=>grG[x.id]&&(grRole(x.id)||grG[x.id].members!=null)?grCnt(x.id):x.members!=null?+x.members:null;
+function grBadges(x){if(!x)return "";const G=grG[x.id]||{},vis=x.visibility||G.visibility,jm=x.join_mode||G.join_mode,n=grMemN(x);
+  return '<span class="grbg">'+(vis==="hidden"?'<span title="ukryta">'+uiIcon("eyeoff")+'</span>':'<span title="jawna">'+uiIcon("eye")+'</span>')
+   +(jm==="request"?'<span title="dołączenie na prośbę">'+uiIcon("lock")+'</span>':'')+(n!=null?'<span class="grmc" title="członkowie">'+n+'</span>':'')+'</span>'}
+const grNmTag=x=>'<span class="grnmw"><span class="grnm">'+esc(x.name)+'</span>'+(x.owner&&typeof demoIds!=="undefined"&&demoIds.has(x.owner)?'<span class="nkdemo" title="grupa demo — konta testowe">DEMO</span>':'')+grBadges(x)+'</span>';   // 🧪 KROK 75: plakietka przy grupach kont demo
 const grIco=(x,big)=>'<span class="grico'+(big?' big':'')+'" style="background:'+grCol(x)+'" aria-hidden="true">'+uiIcon(grIc(x))+'</span>';
 const grMy=g=>grMine.find(m=>m.group_id===g)||null;
 const grSt=g=>{const m=grMy(g);return m?m.status:""};
@@ -94,7 +99,7 @@ function grHubHtml(){
   if(inv.length||grReqs.length)h+='<div class="ios"><div class="ios-gh">Do Ciebie</div><div class="grbox">'+inv.map(grInvRow).join("")+grReqs.map(r=>grReqRow(r,true)).join("")+'</div></div>';
   h+=gGrp("Moje grupy",act.map(m=>{const x=grG[m.group_id],n=grCnt(x.id),R=GR_ROLE[m.role];
       const un=grUnN(x.id);
-      return gRow(grCol(x),grIc(x),grNmTag(x),[R?R[0].toUpperCase()+R.slice(1):"",grOsob(n),x.visibility==="hidden"?"ukryta":"",un?(un===1?"nowe ogłoszenie":"nowe ogłoszenia"):""].filter(Boolean).join(" · "),un?'<span class="ios-bdg" aria-label="Nowe ogłoszenia: '+un+'">'+un+'</span>':'','data-gx="open" data-gid="'+esc(x.id)+'"')})
+      return gRow(grCol(x),grIc(x),grNmTag(x),[R?R[0].toUpperCase()+R.slice(1):"",un?(un===1?"nowe ogłoszenie":"nowe ogłoszenia"):""].filter(Boolean).join(" · "),un?'<span class="ios-bdg" aria-label="Nowe ogłoszenia: '+un+'">'+un+'</span>':'','data-gx="open" data-gid="'+esc(x.id)+'"')})
     .concat(req.map(m=>{const x=grG[m.group_id];return gRow(grCol(x),grIc(x),grNmTag(x),"Prośba wysłana — czekasz na przyjęcie","",'data-gx="open" data-gid="'+esc(x.id)+'"')})));
   if(!act.length&&!req.length&&!inv.length)h+='<p class="note" style="margin:10px 14px 0;font-size:14px;text-align:left">Nie należysz jeszcze do żadnej grupy. Załóż własną albo znajdź grupę niżej.</p>';
   if(grOn()){
@@ -117,7 +122,7 @@ function grFindHtml(){
   return '<div class="grbox">'+grFind.map(x=>{const st=grSt(x.id)||x.my_status||"",full=+x.members>=+x.member_limit;
     const btn=st==="active"?'<span class="note">Jesteś</span>':st==="requested"?'<span class="note">Czekasz</span>':st==="invited"?'<button type="button" class="b small" data-gx="acc" data-gid="'+esc(x.id)+'">Dołącz</button>'
       :full?'<span class="note">Pełna</span>':'<button type="button" class="b small'+(x.join_mode==="open"?'':' w')+'" data-gx="join" data-gid="'+esc(x.id)+'">'+(x.join_mode==="open"?"Dołącz":"Poproś")+'</button>';
-    return '<div class="grir">'+grIco(x)+'<span class="grt" data-gx="open" data-gid="'+esc(x.id)+'"><b>'+grNmTag(x)+'</b><small>'+[x.area?esc(x.area):"",grOsob(+x.members||0),x.join_mode==="open"?"wolne dołączanie":"na prośbę"].filter(Boolean).join(" · ")+'</small></span>'+btn+'</div>'}).join("")+'</div>';
+    return '<div class="grir">'+grIco(x)+'<span class="grt" data-gx="open" data-gid="'+esc(x.id)+'"><b>'+grNmTag(x)+'</b><small>'+[x.area?esc(x.area):"",x.join_mode==="open"?"wolne dołączanie":"na prośbę"].filter(Boolean).join(" · ")+'</small></span>'+btn+'</div>'}).join("")+'</div>';
 }
 
 /* 👥 ekran grupy: Tablica / Ludzie / Statystyki / O grupie */
@@ -353,7 +358,7 @@ function grAdmHtml(){
   if(!grK)return h+'<p class="note grwait">'+(grLoading?"Wczytuję…":"Nie udało się wczytać grup (KROK 70?).")+'</p>';
   if(grK.reqs.length)h+='<div class="ios"><div class="ios-gh">Prośby o większy limit</div><div class="grbox">'+grK.reqs.map(grLimRow).join("")+'</div></div>';
   const L=grK.groups,act=L.filter(x=>!x.archived_at),arch=L.filter(x=>x.archived_at),row=x=>gRow(grCol(x),grIc(x),grNmTag(x),
-     [esc(nicks[x.owner]||"bez właściciela"),grOsob(grCnt(x.id))+" / "+x.member_limit,x.visibility==="hidden"?"ukryta":"jawna",x.archived_at?"archiwum":""].filter(Boolean).join(" · "),"",'data-gx="open" data-gid="'+esc(x.id)+'"');
+     [esc(nicks[x.owner]||"bez właściciela"),"limit "+x.member_limit,x.archived_at?"archiwum":""].filter(Boolean).join(" · "),"",'data-gx="open" data-gid="'+esc(x.id)+'"');
   h+=gGrp("Wszystkie grupy ("+act.length+")",act.map(row))+(act.length?'':'<p class="note grwait">Nikt jeszcze nie założył grupy.</p>')+gGrp("Archiwum ("+arch.length+")",arch.map(row));
   return h+'<p class="note" style="margin:10px 14px 0;font-size:13px;text-align:left">👑 Na czas rozwijania widzisz wszystkie grupy, także ukryte, i ich skład (wyłączenie — koniec KROKU 70).</p>';
 }
@@ -449,7 +454,7 @@ const grMemIds=g=>grAct(g).map(x=>x.user_id).filter(id=>id!==uid);
 // 🎨 etykieta wypełniona kolorem grupy (przyciemnionym pod biały napis) + biała ikona grupy; tło karty — odcień koloru grupy i pasek z lewej
 // klikalna: otwiera grupę (⚙️ → Grupy → grupa); działa na kartach, w Twoich zaproszeniach, w 🔔 i w okienku nowego zaproszenia
 function grTagId(g){const x=grG[g];
-  return '<span class="lockt grtag" role="button" tabindex="0" data-grgo="'+esc(g)+'" title="Otwórz grupę" style="background:'+(x?grInk(grCol(x)):'#6e6e73')+'">'+uiIcon(x?grIc(x):"users")+'<span>'+esc(x?x.name:"grupa")+'</span></span>'}
+  return '<span class="lockt grtag" role="button" tabindex="0" data-grgo="'+esc(g)+'" title="Otwórz grupę" style="background:'+(x?grInk(grCol(x)):'#6e6e73')+'">'+uiIcon(x?grIc(x):"users")+'<span>'+esc(x?x.name:"grupa")+'</span>'+(x?grBadges(x):'')+'</span>'}
 const wGrTag=w=>grTagId(w.group_id);
 /* 👥 wspólne grupy (2026-11-22): moje aktywne grupy, w których osoba też jest aktywnym członkiem — widać tylko członkom (reguły bazy), bez dodatkowych zapytań */
 const grHasMine=()=>!!(session&&grOk&&grFor===uid&&grMine.some(m=>m.status==="active"&&grG[m.group_id]&&!grG[m.group_id].archived_at));

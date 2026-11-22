@@ -307,7 +307,7 @@ function fltItems(k,q){
     else if(flt.where&&flt.where.slice(0,2)==="q:")out.push({v:flt.where,t:fltLabel("where"),ty:"",sc:33,ico:"search",free:1});
   }else if(k==="grp"){
     const L=wGrList().map(x=>({id:x.id,name:x.name}));if(flt.grp&&!L.some(x=>x.id===flt.grp))L.push({id:flt.grp,name:fltLabel("grp")});
-    L.forEach(x=>{const sc=fltScore(x.name,lc(fltQ.trim()),0,flt.grp===x.id);if(sc>=0)out.push({v:x.id,t:x.name,ty:"",sc,ico:"users"})});
+    L.forEach(x=>{const sc=fltScore(x.name,lc(fltQ.trim()),0,flt.grp===x.id);if(sc>=0)out.push({v:x.id,t:x.name,ty:"",sc,ico:"users",bdg:typeof grBadges==="function"&&grG[x.id]?grBadges(grG[x.id]):""})});
   }else{
     // bez wpisanego tekstu: osoby z zaproszeń (ulubieni i najczęściej wybierani niżej, czyli bliżej pola); z tekstem: wszyscy użytkownicy
     const fq=fltUfGet(),nk=nickKey(fltQ.trim()),ids=new Set(nk?Object.keys(nicks):[]);
@@ -328,7 +328,7 @@ function fltStackHtml(){
   if(!r.length)return '<div class="note">'+(q?'Nic nie znaleziono.':k==="where"?'Brak miejsc w zaproszeniach.':k==="grp"?'Brak grup.':'Brak osób w zaproszeniach — wpisz nick.')+'</div>';
   return (more?'<div class="note fmore">'+uiIcon("up")+'<span>jeszcze '+more+' — wpisz dalej, żeby zawęzić</span></div>':'')
    +'<div class="fulist">'+r.map(x=>{const on=flt[k]===x.v;
-     return '<button type="button" class="fusr'+(on?' on':'')+'" data-fk="'+k+'" data-fv="'+esc(x.v)+'"><span class="fuic'+(x.ico?' g':'')+'">'+(x.fav?uiIcon("starf"):x.ico?uiIcon(x.ico):'')+'</span><span class="fun">'+(x.free||x.user?esc(x.t):fltHl(x.t,q))+(x.user&&typeof demoTag==="function"?demoTag(x.v):'')+'</span>'+(x.ty?'<small>'+x.ty+'</small>':'')+(on?'<span class="fuck">'+uiIcon("check")+'</span>':'')+'</button>'}).join("")+'</div>';
+     return '<button type="button" class="fusr'+(on?' on':'')+'" data-fk="'+k+'" data-fv="'+esc(x.v)+'"><span class="fuic'+(x.ico?' g':'')+'">'+(x.fav?uiIcon("starf"):x.ico?uiIcon(x.ico):'')+'</span><span class="fun">'+(x.free||x.user?esc(x.t):fltHl(x.t,q))+(x.user&&typeof demoTag==="function"?demoTag(x.v):'')+(x.bdg||'')+'</span>'+(x.ty?'<small>'+x.ty+'</small>':'')+(on?'<span class="fuck">'+uiIcon("check")+'</span>':'')+'</button>'}).join("")+'</div>';
 }
 const fltHasGrp=()=>wGrList().length>0||!!flt.grp;
 // grupy: bombel w rzędzie Widoczność (po „Prywatne”), otwiera podekran z listą rosnącą w górę nad polem wpisywania
@@ -1444,7 +1444,7 @@ function whoGrHtml(){
   const sel=ws.vis!=="all"&&ws.gr?L.find(x=>x.id===ws.gr):null,col=!ws.grOpen;
   return secBar(uiIcon("users"),"Twoje grupy",L.length,col,sel?esc(sel.name):"",'data-k="grt"',!!sel)
    +'<div class="secb'+(col?' hide':'')+'">'+(col?'':L.map(x=>{const on=!!sel&&sel.id===x.id,n=grMemIds(x.id).length+1;
-     return '<button type="button" class="prow wgr'+(on?' on':'')+'" data-wgr="'+esc(x.id)+'"><span class="cbx">'+CHECK+'</span><span class="pnm">'+grIco(x)+'<span>'+esc(x.name)+'</span></span><span class="pon">'+n+' '+plf(n,["osoba","osoby","osób"])+'</span></button>'}).join(""))+'</div>';
+     return '<button type="button" class="prow wgr'+(on?' on':'')+'" data-wgr="'+esc(x.id)+'"><span class="cbx">'+CHECK+'</span><span class="pnm">'+grIco(x)+(typeof grNmTag==="function"?grNmTag(x):'<span>'+esc(x.name)+'</span>')+'</span></button>'}).join(""))+'</div>';
 }
 function whoListHtml(){
   if(ws.vis==="all")return '<div class="bsempty">🌍 Zaproszenie zobaczą wszyscy zalogowani, a wiadomość trafi na kanał Telegram.</div>';
