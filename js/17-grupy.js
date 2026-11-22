@@ -448,8 +448,16 @@ function grForWant(){return grOk?grMine.filter(m=>m.status==="active"&&grG[m.gro
 const grMemIds=g=>grAct(g).map(x=>x.user_id).filter(id=>id!==uid);
 // 🎨 etykieta wypełniona kolorem grupy (przyciemnionym pod biały napis) + biała ikona grupy; tło karty — odcień koloru grupy i pasek z lewej
 // klikalna: otwiera grupę (⚙️ → Grupy → grupa); działa na kartach, w Twoich zaproszeniach, w 🔔 i w okienku nowego zaproszenia
-function wGrTag(w){const x=grG[w.group_id];
-  return '<span class="lockt grtag" role="button" tabindex="0" data-grgo="'+esc(w.group_id)+'" title="Otwórz grupę" style="background:'+(x?grInk(grCol(x)):'#6e6e73')+'">'+uiIcon(x?grIc(x):"users")+'<span>'+esc(x?x.name:"grupa")+'</span></span>'}
+function grTagId(g){const x=grG[g];
+  return '<span class="lockt grtag" role="button" tabindex="0" data-grgo="'+esc(g)+'" title="Otwórz grupę" style="background:'+(x?grInk(grCol(x)):'#6e6e73')+'">'+uiIcon(x?grIc(x):"users")+'<span>'+esc(x?x.name:"grupa")+'</span></span>'}
+const wGrTag=w=>grTagId(w.group_id);
+/* 👥 wspólne grupy (2026-11-22): moje aktywne grupy, w których osoba też jest aktywnym członkiem — widać tylko członkom (reguły bazy), bez dodatkowych zapytań */
+const grHasMine=()=>!!(session&&grOk&&grFor===uid&&grMine.some(m=>m.status==="active"&&grG[m.group_id]&&!grG[m.group_id].archived_at));
+const grCommon=u=>!u||u===uid||!grHasMine()?[]:grMine.filter(m=>m.status==="active"&&grG[m.group_id]&&!grG[m.group_id].archived_at&&grUserSt(m.group_id,u)==="active").map(m=>m.group_id).sort((a,b)=>grG[a].name.localeCompare(grG[b].name,"pl"));
+function grCommonHtml(u){const C=grCommon(u);return C.length?'<div class="staz ucgr">'+uiIcon("users")+" "+(C.length>1?"Wspólne grupy":"Wspólna grupa")+': '+C.map(grTagId).join(" ")+'</div>':""}
+/* etykieta roli (właściciel / moderator) przy nicku zakładającego zaproszenie grupy — poza ekranem grupy (karty, 🔔, Twoje zaproszenia) */
+function grRoleOf(g,u){const m=g&&grMem[g]&&grMem[g].find(x=>x.user_id===u&&x.status==="active");return m&&GR_ROLE[m.role]||""}
+const grRoleTag=(w,u)=>{const r=w&&w.group_id?grRoleOf(w.group_id,u||w.user_id):"";return r?'<span class="grrole grrt">'+r+'</span>':""}
 function wGrCls(w){const x=grG[w.group_id];return ' wgrp" style="--gc:'+(x?grCol(x):'#8e8e93')}
 // 👥 klik w etykietę grupy → okno grupy; okienko nowego zaproszenia odkładamy na później (jak klik obok), 🔔 zamykamy
 function grTagGo(t){const g=t.dataset.grgo;if(!g||!session)return;

@@ -714,6 +714,7 @@ function userHtml(){
    // 🛡️ rola widoczna dla wszystkich zalogowanych (KROK 69) — wiadomo, do kogo pisać w razie problemów
    +(isSuper(userId)?'<div class="staz ucrole">👑 Główny administrator — możesz napisać w razie problemów</div>'
      :adminIds.includes(userId)?'<div class="staz ucrole">'+uiIcon("shield")+' Administrator aplikacji — możesz napisać w razie problemów</div>':'')
+   +(typeof grCommonHtml==="function"?grCommonHtml(userId):'')   // 👥 wspólne grupy (js/17)
    +(ux.city?'<div class="staz">'+uiIcon("pin")+' '+esc(ux.city)+'</div>':'')+(stazTxt(userId)?'<div class="staz">'+esc(stazTxt(userId))+'</div>':'')
    +(mu.length?'<div class="ucsoc">'+mu.map(([k,ic,t])=>'<a class="ucs" href="'+esc(medias[userId][k])+'" target="_blank" rel="noopener nofollow" title="'+esc(t)+'" aria-label="'+esc(t)+'">'+uiIcon(ic)+'</a>').join("")+'</div>':'')
    +(ux.phone&&userId!==uid?'<div class="uccall"><a class="ucb" href="tel:'+esc(ux.phone.replace(/[^0-9+]/g,""))+'">'+uiIcon("call")+' Zadzwoń</a><a class="ucb" href="sms:'+esc(ux.phone.replace(/[^0-9+]/g,""))+'">'+uiIcon("msg")+' SMS</a></div>'
@@ -884,16 +885,17 @@ function plRefresh(){try{if(gearOpen)renderGear();if(!$("whosheet").classList.co
 
 /* 🔎 filtry osób (lista > 8 osób): szukajka + Kobiety / Mężczyźni / ⭐ Ulubieni / 🟢 Teraz — wspólne dla Ustawień i okna „Kogo zapraszasz?” */
 const pf={};
-const pfS=k=>pf[k]||(pf[k]={q:"",g:"",fav:false,on:false,tst:false,adm:false});
-const pfOn=k=>{const s=pfS(k);return !!(s.q||s.g||s.fav||s.on||s.tst||s.adm)};
+const pfS=k=>pf[k]||(pf[k]={q:"",g:"",fav:false,on:false,tst:false,adm:false,grp:false});
+const pfOn=k=>{const s=pfS(k);return !!(s.q||s.g||s.fav||s.on||s.tst||s.adm||s.grp)};
 function pfMatch(k,id){const s=pfS(k);
   if(s.g&&genders[id]!==s.g)return false;if(s.fav&&!isFav(id))return false;if(s.on&&!onlineIds.includes(id))return false;
   if(s.tst&&!testerIds.has(id))return false;if(s.adm&&!adminIds.includes(id))return false;
+  if(s.grp&&!(typeof grCommon==="function"&&grCommon(id).length))return false;   // 👥 Z moich grup (js/17)
   if(s.q&&!nickKey(nicks[id]||"").includes(nickKey(s.q)))return false;return true}
 function pfChips(k){const s=pfS(k),c=(v,on,h)=>'<button type="button" class="fch pfc'+(on?' on':'')+'" data-pfk="'+k+'" data-pfc="'+v+'">'+h+'</button>';
   return '<div class="pfrow">'+(genderOk?c("K",s.g==="K",uiIcon("venus")+" Kobiety")+c("M",s.g==="M",uiIcon("mars")+" Mężczyźni"):'')
    +c("fav",s.fav,"⭐ Ulubieni")+c("on",s.on,"🟢 Teraz")
-   +(testerIds.size?c("tst",s.tst,uiIcon("syringe")+" Testerzy"):'')+(adminIds.length?c("adm",s.adm,uiIcon("shield")+" Administratorzy"):'')+(pfOn(k)&&k!=="who"?'<button type="button" class="fch pfc pfx" data-pfk="'+k+'" data-pfc="x">✕ Wyczyść</button>':'')+'</div>'}
+   +(testerIds.size?c("tst",s.tst,uiIcon("syringe")+" Testerzy"):'')+(adminIds.length?c("adm",s.adm,uiIcon("shield")+" Administratorzy"):'')+(k!=="gm"&&typeof grHasMine==="function"&&grHasMine()?c("grp",s.grp,uiIcon("users")+" Z moich grup"):'')+(pfOn(k)&&k!=="who"?'<button type="button" class="fch pfc pfx" data-pfk="'+k+'" data-pfc="x">✕ Wyczyść</button>':'')+'</div>'}
 const pfBar=(k,n)=>n>8?'<div class="pfbar" data-pfbar="'+k+'"><input class="bsq srch" type="search" data-pfq="'+k+'" placeholder="Szukaj nicku…" autocomplete="off" value="'+esc(pfS(k).q)+'">'+pfChips(k)+'</div>':'';
 // filtrowanie wierszy w Ustawieniach bez przerysowania panelu (pole szukania nie traci kursora)
 function pfApply(k){
@@ -906,7 +908,7 @@ document.addEventListener("input",e=>{const k=e.target.dataset&&e.target.dataset
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-pfc]");if(!b)return;
   const k=b.dataset.pfk,v=b.dataset.pfc,s=pfS(k);
-  if(v==="x"){s.g="";s.fav=false;s.on=false;s.tst=false;s.adm=false;s.q="";const q=document.querySelector('[data-pfq="'+k+'"]');if(q)q.value=""}
+  if(v==="x"){s.g="";s.fav=false;s.on=false;s.tst=false;s.adm=false;s.grp=false;s.q="";const q=document.querySelector('[data-pfq="'+k+'"]');if(q)q.value=""}
   else if(v==="K"||v==="M")s.g=s.g===v?"":v;else s[v]=!s[v];
   if(k==="who"){renderWho();return}
   const bar=document.querySelector('[data-pfbar="'+k+'"]');if(bar){const r=bar.querySelector(".pfrow");if(r)r.outerHTML=pfChips(k)}
