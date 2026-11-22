@@ -1033,7 +1033,6 @@ html[data-theme=dark] .nkdemo{border-color:#ff7a70;color:#ff7a70}
 .ios-it.dmcol{flex-direction:column;align-items:stretch;gap:8px}.dmcol .seg{margin-top:0}.dmcol input[type=range]{width:100%;margin:4px 0;accent-color:var(--accbtn)}.dmcol .note{margin:0}
 .dmact .ios-t{color:var(--acc);font-weight:600;text-align:center}
 .dmbikes{display:flex;flex-wrap:wrap;gap:6px;margin:8px 4px 0}.dmbk{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:13px;font-weight:600;background:var(--acc2);color:var(--ink)}.dmbk .ui-i{width:15px;height:15px}
-.dmsoon .ios-grp{opacity:.6}
 .sheetbox .stats.dmst{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.sheetbox .dmst .st{text-align:center;padding:8px 4px}.sheetbox .dmst .st b{font-size:22px}.sheetbox .dmst .st span{font-size:12.5px;line-height:1.2;display:block}
 /* 🧪 panel „Zaproszenia testowe” w zwijanych sekcjach + ochotnicy zbiorczo (2026-11-21) */
 .dmsec .stbody{text-align:left}.dmsec .ios-grp{background:var(--card)}.dmsec .ios-grp+.ios-grp{margin-top:8px}.dmsec .dmsb{background:var(--fill)}

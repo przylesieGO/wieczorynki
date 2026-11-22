@@ -4,12 +4,16 @@
    plakietka DEMO przy nickach i grupach kont demo.
    2026-11-21: panel w zwijanych sekcjach (Ekipa demo, Zaproszenia, Ochotnicy, Grupy demo, Odpowiedzi, Sprzątanie);
    ochotnicy zbiorczo: lista wszystkich osób z szukajką i filtrami, zaznaczanie wielu, Dodaj / Wypisz.
+   2026-11-22 (KROK 77): sekcja „Historia demo” — odbyte jazdy z ostatnich tygodni, „Jak poszło?”, jazdy grup demo,
+   wpisy na tablicach grup demo (admin_demo_history / admin_demo_history_wipe); listy kont i grup demo zwijane (domyślnie zwinięte).
    Wszystko robią funkcje bazy admin_demo_* (sprawdzają 👑); tabele demo_* są tylko do odczytu.
    Plik wczytywany jako ostatni: przy wczytaniu tylko rejestruje obsługę zdarzeń; niższe pliki wołają go przez typeof. */
 let demoIds=new Set(),demoVol=new Set(),demoSt=null,demoBusy=false,demoRet=false;
 let demoAcc=4,demoAccSet=false;   // ile kont demo (stepper „Konta demo”); demoAccSet = zmienione ręcznie, odświeżenie stanu go nie nadpisuje
 let demoGrN=3;   // ile grup demo założyć (stepper „Grupy demo”)
-const demoF={n:25,days:14,priv:30,grp:30,routes:true,ranges:true,answers:true,chan:false};
+const demoF={n:25,days:14,priv:30,grp:30,routes:true,ranges:true,answers:true,chan:false,
+  hw:12,hpw:0,hgrp:35,hposts:true};   // historia: tygodnie wstecz, jazd w tygodniu (0 = auto), % dla grup, wpisy na tablicach
+let demoLCol={acc:true,grp:true};   // zwinięte listy „Konta” i „Grupy” w panelu
 const DEMO_BIKE={mtb:"MTB",gravel:"Gravel",road:"Szosa",trekking:"Trekking"};
 const DEMO_DAYS=[[3,"3 dni"],[7,"7 dni"],[14,"14 dni"],[28,"4 tyg."]];
 const demoTag=id=>demoIds.has(id)?'<span class="nkdemo" title="konto demo — nie prawdziwa osoba">DEMO</span>':'';
@@ -42,6 +46,13 @@ const demoStep=(k,v,min,max,lbl,sub)=>'<div class="ios-it dmrow"><span class="io
   +'<b aria-live="polite">'+v+'</b><button type="button" class="dmsb" data-dx="'+k+'+" aria-label="'+lbl+': więcej"'+(v>=max||demoBusy?' disabled':'')+'>+</button></span></div>';
 const demoSw=(k,t,sub)=>'<div class="ios-it"><span class="ios-t">'+t+(sub?'<small>'+sub+'</small>':'')+'</span>'
   +'<button type="button" class="ios-sw'+(demoF[k]?' on':'')+'" role="switch" aria-checked="'+demoF[k]+'" aria-label="'+esc(t)+'" data-dx="sw" data-dk="'+k+'"></button></div>';
+
+// historia: „auto” jazd w tygodniu = ok. 0,6 × aktywne konta (jak w bazie), 2–40
+const demoNum=n=>(+n||0).toLocaleString("pl-PL");
+const demoHAuto=n=>Math.min(40,Math.max(2,Math.ceil(n*0.6)));
+// zwijana lista w sekcji (Konta / Grupy) — jak sekcje Ochotnicy
+const demoList=(k,ico,t,n,body)=>secBar(uiIcon(ico),t,n,demoLCol[k],'','data-dx="ltog" data-dl="'+k+'"',false)
+  +'<div class="fvbody secb'+(demoLCol[k]?' col':'')+'">'+body+'</div>';
 
 /* panel w zwijanych sekcjach (jak Statystyki: <details class="stsec">, stan w joinOpen); na start rozwinięte „Zaproszenia” */
 let demoOpen0=false,demoVF="",demoSel=new Set();   // demoVF: filtr ochotników ""|"vol"|"non"; demoSel: zaznaczeni do akcji zbiorczej
@@ -94,7 +105,7 @@ function demoHtml(){
   const grs=(s&&s.groups)||[],auto=!s||s.auto!==false,pd=(s&&s.pending)||{},tl=s&&s.tick_last;
   const nAct=made.filter(p=>p.slot<=act).length,nPd=(pd.g_invites||0)+(pd.g_requests||0)+(pd.rides||0);
   const bikes=Object.keys(DEMO_BIKE).map(b=>[b,made.filter(p=>p.bike===b&&p.slot<=act).length]).filter(x=>x[1]);
-  const nVol=demoPeople().filter(id=>demoVol.has(id)).length;
+  const nVol=demoPeople().filter(id=>demoVol.has(id)).length,hs=(s&&s.hist)||{};
   return '<button class="sback" data-c="backadmin">‹ Administracja</button><div class="sname" style="margin-top:26px">🧪 Zaproszenia testowe</div>'
    +'<div class="smail">Konta demo i zaproszenia do testów. Widzisz to tylko Ty (👑). Konta demo mają plakietkę <span class="nkdemo">DEMO</span> i nie da się na nie zalogować.</div>'
    +(er?'<p class="note" style="color:var(--bad)">Nie udało się wczytać: '+esc(er)+'</p>':'')
@@ -106,8 +117,8 @@ function demoHtml(){
      +'<button type="button" class="ios-it ios-row dmact" data-dx="acc"'+dis+'><span class="ios-t">'+(demoAcc>made.length?'Utwórz brakujące ('+(demoAcc-made.length)+')':'Ustaw liczbę kont')+'</span></button></div>'
      +'<p class="note">Mniejsza liczba niczego nie usuwa — generator i grupy biorą wtedy tylko pierwsze konta, reszta czeka.</p>'
      +(bikes.length?'<div class="dmbikes">'+bikes.map(([b,n])=>'<span class="dmbk dm-'+b+'">'+uiIcon(b==="road"?"road":b==="trekking"?"bike":b)+' '+DEMO_BIKE[b]+' '+n+'</span>').join("")+'</div>':'')
-     +(made.length?'<div class="bsgrp">Konta ('+made.length+')</div><div class="ios-grp">'+made.map(p=>p.user_id&&nicks[p.user_id]?gRow(p.slot<=act?"#ff9f0a":"#8e8e93",p.bike==="road"?"road":p.bike==="trekking"?"bike":p.bike,nk(p.user_id),
-        DEMO_BIKE[p.bike]+(p.slot<=act?'':' · nie losuje (poza liczbą kont)'),'','data-dx="user" data-du="'+esc(p.user_id)+'"'):'').join("")+'</div>':''))
+     +(made.length?demoList("acc","users","Konta",made.length,'<div class="ios-grp">'+made.map(p=>p.user_id&&nicks[p.user_id]?gRow(p.slot<=act?"#ff9f0a":"#8e8e93",p.bike==="road"?"road":p.bike==="trekking"?"bike":p.bike,nk(p.user_id),
+        DEMO_BIKE[p.bike]+(p.slot<=act?'':' · nie losuje (poza liczbą kont)'),'','data-dx="user" data-du="'+esc(p.user_id)+'"'):'').join("")+'</div>'):''))
    // 2. 🎲 zaproszenia: generator
    +demoSec("gen","Zaproszenia",ld?"…":(s&&s.test_wants||0)+" testowych",
      '<div class="ios-grp">'
@@ -132,10 +143,22 @@ function demoHtml(){
      '<div class="ios-grp">'
      +demoStep("grn",demoGrN,1,10,"Liczba nowych grup","Nazwy z puli 10 · limity jak u ludzi (3 założone, 15 przynależności)")
      +'<button type="button" class="ios-it ios-row dmact" data-dx="grp"'+(made.length>=2&&!demoBusy?'':' disabled')+'><span class="ios-t">Załóż '+demoGrN+' '+(demoGrN===1?'grupę':demoGrN<5?'grupy':'grup')+' demo</span></button></div>'
-     +(grs.length?'<div class="bsgrp">Grupy ('+grs.length+')</div><div class="ios-grp">'+grs.map(g=>'<div class="ios-it"><span class="ios-ic" style="background:'+(typeof grCol==="function"?grCol(g):"#0a84ff")+'">'+uiIcon(g.icon||"users")+'</span><span class="ios-t">'+esc(g.name)
-        +'<small>'+[g.members+' '+(g.members===1?'członek':'członków'),g.real?'prawdziwych: '+g.real:'',g.invited?'zaproszeni: '+g.invited:'',g.requested?'prośby: '+g.requested:'',g.visibility==="hidden"?'ukryta':'',g.join_mode==="open"?'wolne':'na prośbę'].filter(Boolean).join(' · ')+'</small></span></div>').join("")+'</div>':'')
+     +(grs.length?demoList("grp","users","Grupy",grs.length,'<div class="ios-grp">'+grs.map(g=>'<div class="ios-it"><span class="ios-ic" style="background:'+(typeof grCol==="function"?grCol(g):"#0a84ff")+'">'+uiIcon(g.icon||"users")+'</span><span class="ios-t">'+esc(g.name)
+        +'<small>'+[g.members+' '+(g.members===1?'członek':'członków'),g.real?'prawdziwych: '+g.real:'',g.invited?'zaproszeni: '+g.invited:'',g.requested?'prośby: '+g.requested:'',g.visibility==="hidden"?'ukryta':'',g.join_mode==="open"?'wolne':'na prośbę'].filter(Boolean).join(' · ')+'</small></span></div>').join("")+'</div>'):'')
      +(made.length<2?'<p class="note">Grupy zakładają konta demo — potrzebne co najmniej 2.</p>':'<p class="note">Ochotnicy dostają zaproszenia do grup. Grupy widzą na razie testerzy (przełącznik „Grupy”).</p>'))
-   // 5. 🤖 odpowiedzi kont demo
+   // 5. 📈 historia demo (KROK 77): przeszłe jazdy, raporty, wpisy na tablicach
+   +demoSec("hist","Historia demo",ld?"…":hs.rides?hs.rides+" jazd · "+demoNum(hs.km||0)+" km":"brak",
+     '<div class="stats admbar dmst">'+st(hs.rides||0,"odbytych jazd")+st(hs.reports||0,"raportów")+st(hs.posts||0,"wpisów")+'</div>'
+     +'<div class="ios-grp">'
+     +demoStep("hw",demoF.hw,1,26,"Tygodnie wstecz","Od wczoraj w przeszłość")
+     +demoStep("hpw",demoF.hpw||demoHAuto(nAct),1,40,"Jazd w tygodniu",demoF.hpw?"Ustawione ręcznie":"Auto — ok. 0,6 × aktywne konta ("+nAct+")")
+     +'<div class="ios-it dmcol"><label class="ios-t" for="dmhgrp">Jazdy grup demo<small id="dmhgrpt">'+demoF.hgrp+'% jazd — członkowie jednej grupy demo</small></label>'
+       +'<input id="dmhgrp" type="range" min="0" max="100" step="5" value="'+demoF.hgrp+'"'+(grs.length?'':' disabled')+'><small class="note">'+(grs.length?'Te jazdy wejdą do statystyk grupy.':'Najpierw załóż grupy demo (sekcja „Grupy demo”).')+'</small></div>'
+     +demoSw("hposts","Wpisy na tablicach grup demo","Kilka wpisów i 👍 na grupę, przypięte powitanie")
+     +'</div><button type="button" class="b sbtn" data-dx="hist"'+(nAct>=2&&!demoBusy?'':' disabled')+'>'+(demoBusy?'Pracuję…':'Dopisz historię (ok. '+demoF.hw*(demoF.hpw||demoHAuto(nAct))+' jazd)')+'</button>'
+     +(nAct>=2?'':'<p class="note">Potrzebne co najmniej 2 aktywne konta demo (sekcja „Ekipa demo”).</p>')
+     +'<p class="note">Jeżdżą i odpowiadają na „Jak poszło?” tylko konta demo (km, tempo, oceny) — ochotników to nie dotyczy. Jazdy mają 🧪 TEST, bez powiadomień i Telegramu (jedno podsumowanie do Ciebie). Konta demo dostają włączone „Moje jazdy” dla innych, żeby było widać wykresy. Każde kliknięcie dopisuje kolejne jazdy.</p>')
+   // 6. 🤖 odpowiedzi kont demo
    +demoSec("tick","Odpowiedzi kont demo",ld?"…":(auto?"same":"wyłączone")+" · czeka "+nPd,
      '<div class="ios-grp">'
      +'<div class="ios-it"><span class="ios-t">Odpowiadają same<small>Co 15 min: zaproszenia do grup i na rower, prośby do grup demo · po kilku minutach do ok. 4 h</small></span>'
@@ -144,14 +167,13 @@ function demoHtml(){
      +(tl?'<div class="ios-it"><span class="ios-t">Ostatnia tura<small>'+demoWhen(tl.at)+' · przyjęte: '+((tl.g_ok||0)+(tl.rq_ok||0)+(tl.ride_ok||0))+' · odmowy: '+((tl.g_no||0)+(tl.rq_no||0)+(tl.ride_no||0))+'</small></span></div>':'')
      +'<button type="button" class="ios-it ios-row dmact" data-dx="tick"'+(made.length&&!demoBusy?'':' disabled')+'><span class="ios-t">Odpowiedz teraz, bez czekania</span></button>'
      +'</div><p class="note">Po każdej turze, w której coś się stało — jedna wiadomość do Ciebie na Telegram.</p>')
-   // 6. 🧹 sprzątanie (zwinięte — same czerwone przyciski)
+   // 7. 🧹 sprzątanie (zwinięte — same czerwone przyciski)
    +demoSec("del","Sprzątanie","",
      '<div class="ios-grp">'+[gRow("#ff3b30","trash","Usuń wszystkie testowe zaproszenia","Konta demo zostają · potwierdzasz wpisując USUŃ",'','data-dx="testdel"'),
+      gRow("#ff3b30","trash","Usuń historię demo","Przeszłe jazdy kont demo z raportami i ich wpisy na tablicach · przyszłe zaproszenia zostają",
+        hs.rides||hs.posts?'<span class="ios-v">'+((hs.rides||0)+(hs.posts||0))+'</span>':'','data-dx="histdel"'+(hs.rides||hs.posts?dis:' disabled')),
       gRow("#ff3b30","trash","Zamknij grupy demo","Do archiwum, razem z prawdziwymi członkami",grs.length?'<span class="ios-v">'+grs.length+'</span>':'','data-dx="grwipe"'+(grs.length?dis:' disabled')),
-      gRow("#ff3b30","trash","Usuń konta demo","Wszystkie naraz, razem z ich zaproszeniami, listami i ulubionymi",made.length?'<span class="ios-v">'+made.length+'</span>':'','data-dx="wipe"'+(made.length?dis:' disabled'))].join("")+'</div>')
-   // 🔒 później
-   +'<div class="ios dmsoon"><div class="ios-gh">Wkrótce</div><div class="ios-grp">'
-   +iosIt("#8e8e93","list","Posty kont demo na tablicy grupy","",uiIcon("lock"))+'</div></div>';
+      gRow("#ff3b30","trash","Usuń konta demo","Wszystkie naraz, razem z ich zaproszeniami, listami i ulubionymi",made.length?'<span class="ios-v">'+made.length+'</span>':'','data-dx="wipe"'+(made.length?dis:' disabled'))].join("")+'</div>');
 }
 
 const demoWhen=t=>{const d=new Date(t);return isNaN(d)?"—":d.toLocaleString("pl-PL",{day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit"})};
@@ -198,6 +220,19 @@ $("gearpanel").addEventListener("click",async e=>{
   if(a==="auto"){const on=!(demoSt&&demoSt.auto!==false);await demoRun("admin_demo_auto",{p_on:on},()=>on?"🤖 Konta demo odpowiadają same":"Konta demo nie odpowiadają same");return}
   if(a==="tick"){await demoRun("admin_demo_tick",{p_force:true},d=>{d=d||{};const ok=(d.g_ok||0)+(d.rq_ok||0)+(d.ride_ok||0),no=(d.g_no||0)+(d.rq_no||0)+(d.ride_no||0);return ok+no?"🤖 Odpowiedzi: przyjęte "+ok+", odmowy "+no:"Nic nie czekało na odpowiedź"});
     if(typeof grReload==="function")grReload();return}
+  if(a==="ltog"){const k=b.dataset.dl;demoLCol[k]=!demoLCol[k];demoRender();return}
+  if(a==="hw-"||a==="hw+"){demoF.hw=Math.max(1,Math.min(26,demoF.hw+(a==="hw+"?1:-1)));demoRender();return}
+  if(a==="hpw-"||a==="hpw+"){const act=(demoSt&&demoSt.pool||[]).filter(p=>p.user_id&&p.slot<=(+demoSt.demo_active||0)).length;
+    demoF.hpw=Math.max(1,Math.min(40,(demoF.hpw||demoHAuto(act))+(a==="hpw+"?1:-1)));demoRender();return}
+  if(a==="hist"){
+    if(!await askOk("Dopisać historię jazd kontom demo?\n\nOk. "+demoF.hw*(demoF.hpw||demoHAuto((demoSt&&demoSt.pool||[]).filter(p=>p.user_id&&p.slot<=(+demoSt.demo_active||0)).length))+" odbytych jazd z ostatnich "+demoF.hw+" tyg., raporty „Jak poszło?”"+(demoF.hposts?" i wpisy na tablicach grup demo":"")+". Wszystko z 🧪 TEST, bez powiadomień.","Dopisz"))return;
+    await demoRun("admin_demo_history",{p_weeks:demoF.hw,p_per_week:demoF.hpw||null,p_group_pct:demoF.hgrp,p_posts:demoF.hposts},
+      d=>{d=d||{};return "📈 Historia: "+(d.rides||0)+" jazd ("+(d.group_rides||0)+" w grupach), "+(d.reports||0)+" raportów, "+demoNum(d.km||0)+" km"+(d.posts?", wpisów: "+d.posts:"")});
+    if(typeof grReload==="function")grReload();return}
+  if(a==="histdel"){const h=(demoSt&&demoSt.hist)||{};
+    if(!await askOk("Usunąć historię demo?\n\n"+(h.rides||0)+" przeszłych jazd kont demo z raportami „Jak poszło?” i "+(h.posts||0)+" wpisów kont demo na tablicach grup demo. Przyszłe zaproszenia, konta i grupy zostają.","Usuń historię",true))return;
+    await demoRun("admin_demo_history_wipe",{do_delete:true},d=>"🧹 Usunięto: jazd "+(d&&d.rides||0)+", wpisów "+(d&&d.posts||0));
+    if(typeof grReload==="function")grReload();return}
   if(a==="n-"||a==="n+"){demoF.n=Math.max(1,Math.min(60,demoF.n+(a==="n+"?1:-1)));demoRender();return}
   if(a==="days"){demoF.days=+b.dataset.dd;demoRender();return}
   if(a==="sw"){const k=b.dataset.dk;demoF[k]=!demoF[k];demoRender();return}
@@ -216,6 +251,7 @@ $("gearpanel").addEventListener("click",async e=>{
     await demoRun("admin_demo_wipe",{do_delete:true},d=>"🧹 Usunięto kont demo: "+(+d||0));return}
 });
 $("gearpanel").addEventListener("input",e=>{
+  if(e.target.id==="dmhgrp"){demoF.hgrp=+e.target.value;const g=$("dmhgrpt");if(g)g.textContent=demoF.hgrp+"% jazd — członkowie jednej grupy demo";return}
   if(e.target.id==="dmgrp"){demoF.grp=+e.target.value;const g=$("dmgrpt");if(g)g.textContent=demoF.grp+"% prywatnych — dla grupy demo autora";return}
   if(e.target.id!=="dmpriv")return;demoF.priv=+e.target.value;const t=$("dmprivt");if(t)t.textContent="jawne "+(100-demoF.priv)+"% · prywatne "+demoF.priv+"%"});
 // start: aplikacja mogła już wystartować ze stanu telefonu, zanim ten plik się wczytał → doczytaj konta demo od razu
