@@ -200,7 +200,7 @@ $("wantarch").addEventListener("click",e=>{const b=e.target.closest("[data-arch]
   if(b.dataset.arch==="t")archOpen=!archOpen;else archAll=!archAll;renderArch(wants)});
 /* ---------- 🔍 filtry zaproszeń (decyzje właściciela 2026-11-15 18:58: jak w makiecie filtry.png + z karty osoby) ---------- */
 // zapamiętane w telefonie; działają na listę zaproszeń (karty dni i Twoje zaproszenia), nie na 🔔
-const fltEmpty=()=>({who:"",grp:"",when:"",date:"",where:"",bike:"",pace:"",user:""});   // grp: 👥 grupa (KROK 71)
+const fltEmpty=()=>({who:"",grp:"",when:"",date:"",where:"",bike:"",pace:"",user:"",demo:""});   // grp: 👥 grupa (KROK 71)
 let flt=(()=>{try{return Object.assign(fltEmpty(),JSON.parse(localStorage.getItem("flt")||"{}"))}catch(e){return fltEmpty()}})(),fltQ="",fltUQ="";
 function fltSave(){try{localStorage.setItem("flt",JSON.stringify(flt))}catch(e){}}
 const fltKeys=()=>Object.keys(fltEmpty()).filter(k=>k!=="date"&&flt[k]);
@@ -231,11 +231,13 @@ function fltOk(w){
   if(flt.bike&&flt.bike!=="all"&&w.bike&&w.bike!==flt.bike)return false;
   if(flt.pace&&w.pace!==flt.pace)return false;
   if(flt.user&&w.user_id!==flt.user&&!j.includes(flt.user))return false;
+  if(flt.demo&&typeof demoIds!=="undefined"){const dm=demoIds.has(w.user_id);if(flt.demo==="only"&&!dm||flt.demo==="hide"&&dm)return false}   // zaproszenia od kont demo (dla wszystkich)
   return true;
 }
 const FLT_WHO=[["mine","🙋 Moje"],["going","✅ Jadę"],["fav","⭐ Ulubieni"],["open","🌍 Otwarte"],["priv","🔒 Prywatne"]];
 const FLT_WHEN=[["today","Dziś"],["tom","Jutro"],["wknd","Weekend"],["7d","7 dni"]];
 const FLT_BIKE=()=>[["all","🚲 Dla wszystkich"]].concat(Object.entries(BIKES));
+const FLT_DEMO=[["only","Tylko od kont demo"],["hide","Bez kont demo"]];
 const FLT_PACE=()=>Object.entries(PACES).map(([k,x])=>[k,x.e+" "+x.r.replace(" km/h","")]);
 function fltLabel(k){
   const v=flt[k],f=a=>(a.find(x=>x[0]===v)||[,v])[1];
@@ -246,6 +248,7 @@ function fltLabel(k){
   if(k==="pace")return f(FLT_PACE());
   if(k==="user")return "👤 "+(nicks[v]||"osoba");
   if(k==="grp")return "👥 "+grNm(v);
+  if(k==="demo")return f(FLT_DEMO);
   return v;
 }
 function renderWants(){try{renderSteps()}catch(e){}
@@ -291,6 +294,7 @@ function fltSecs(){
     where:fltWhereChips(),bike:FLT_BIKE().map(([v,t])=>fltChip("bike",v,t)).join(""),
     pace:FLT_PACE().map(([v,t])=>fltChip("pace",v,t)).join(""),user:fltUserChips(),
     test:[["0","Pokaż"],["1","Ukryj"]].map(([v,t])=>'<button type="button" class="fch'+((hideTest?"1":"0")===v?' on':'')+'" data-fk="ht" data-fv="'+v+'">'+t+'</button>').join(""),
+    demo:FLT_DEMO.map(([v,t])=>fltChip("demo",v,t)).join(""),
     grp:wGrList().map(x=>fltChip("grp",x.id,"👥 "+x.name)).join("")+(flt.grp&&!wGrList().some(x=>x.id===flt.grp)?fltChip("grp",flt.grp,fltLabel("grp")):"")};
 }
 function fltRefresh(){
@@ -302,7 +306,7 @@ function openFlt(){
   const p=$("fltsheet");p.classList.remove("hide");fltQ="";fltUQ="";
   const sec=(k,t,extra)=>'<div class="fsec"><div class="bsgrp">'+t+'</div>'+(extra||'')+'<div class="fchips" id="flt_'+k+'"></div></div>';
   p.innerHTML='<div class="bsbox fltbox" role="dialog" aria-modal="true" aria-label="Filtry"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="close">Zamknij</button><b>Filtry</b><button type="button" class="lnk" data-fk="clear" style="color:var(--bad);text-align:right">Wyczyść</button></div>'
-   +'<div class="bslist">'+sec("who","Czyje")+(wGrList().length||flt.grp?sec("grp","Grupa"):'')+sec("when","Kiedy")+(testOk?sec("test","Testowe 🧪"):'')
+   +'<div class="bslist">'+sec("who","Czyje")+(wGrList().length||flt.grp?sec("grp","Grupa"):'')+sec("when","Kiedy")+(testOk?sec("test","Testowe 🧪"):'')+((typeof demoIds!=="undefined"&&demoIds.size)||flt.demo?sec("demo","Konta demo"):'')
    +(placeOk?sec("where","Gdzie",'<input class="bsq srch" id="fltwq" type="search" placeholder="Miasto, dzielnica, miejsce…" autocomplete="off">'):'')
    +(bikeOk?sec("bike","Rower / teren"):'')+(paceOk?sec("pace","Tempo"):'')
    +sec("user","Osoba",'<input class="bsq srch" id="fltuq" type="search" placeholder="Nick…" autocomplete="off">')+'</div>'
