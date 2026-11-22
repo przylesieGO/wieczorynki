@@ -987,7 +987,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 .grwait{text-align:center;margin:14px 0}
 .grseg{margin:16px 0 4px}
 .grm .arow{justify-content:flex-start}.grm .arow .note{margin-left:6px;font-size:13px}.grm .arow .plrm{margin-left:auto}.grm .plrm.on{color:var(--acc)}
-.grrole{color:var(--acc);font-weight:600}.grrt{font-size:12px;margin:0 6px 0 4px;vertical-align:middle;white-space:nowrap}.ucgr{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;color:var(--mut)}.ucgr .ui-i{width:15px;height:15px}
+.grrole{color:var(--acc);font-weight:600}.b.small.nbgr{background:var(--fill);color:var(--mut)}.b.small.nbgr.on{background:var(--accbtn);color:#fff}.b.small.nbgr .ui-i{width:16px;height:16px}.nbgrw{margin-top:10px}.grrt{font-size:12px;margin:0 6px 0 4px;vertical-align:middle;white-space:nowrap}.ucgr{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;color:var(--mut)}.ucgr .ui-i{width:15px;height:15px}
 .gract{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;padding:8px 0 10px;border-bottom:1px solid var(--line)}
 button.b.bad{background:var(--bad);color:#fff}
 .grdesc{white-space:pre-line;font-size:16px;line-height:1.45;padding:10px 0 6px;text-align:left}.grarea{padding:0 0 10px;text-align:left;font-size:14px}.grarea .ui-i{width:15px;height:15px;vertical-align:-2px}

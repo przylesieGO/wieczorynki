@@ -451,6 +451,13 @@ $("gearpanel").addEventListener("click",async e=>{
       catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
       modBusy=false;renderGear();syncNow();return}
     if(a.dataset.a==="plcity"){fillPlaceCities(true);return}
+    if(a.dataset.a==="nbgrnew"){nbGr=!nbGr;a.classList.toggle("on",nbGr);a.setAttribute("aria-checked",nbGr);return}
+    if(a.dataset.a==="nbgr"&&isAdmin&&nickBans){   // 👥 KROK 79: słowo blokuje też nazwy grup
+      const b=nickBans.find(x=>x.key===a.dataset.id);if(!b)return;
+      try{const r=await sb.from("nick_bans").update({groups:!b.groups}).eq("key",b.key).select("key");if(r.error)throw r.error;if(!r.data||!r.data.length)throw new Error("brak uprawnień");
+        say("„"+b.word+"”: "+(b.groups?"tylko nicki":"nicki i nazwy grup"))}
+      catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+      await loadNickBans();renderGear();return}
     if((a.dataset.a==="nbdel"||a.dataset.a==="nbmode")&&isAdmin&&nickBans){   // 🚫 zakazane nicki (KROK 67)
       const b=nickBans.find(x=>x.key===a.dataset.id);if(!b)return;
       if(a.dataset.a==="nbmode"&&b.mode===a.dataset.m)return;
@@ -541,7 +548,7 @@ $("gearpanel").addEventListener("click",async e=>{
     if(!/^[a-z]{3,}$/.test(k)){inf.textContent="Słowo musi mieć co najmniej 3 litery.";return}
     if(nbMode==="contains"&&k.length<4){inf.textContent="„Zawiera” działa dla słów od 4 liter — wybierz „Dokładnie”.";return}
     if(nickBans&&nickBans.some(x=>x.key===k)){inf.textContent="To słowo już jest na liście.";return}
-    try{const r=await sb.from("nick_bans").insert({word:w,mode:nbMode}).select("key");
+    try{const r=await sb.from("nick_bans").insert(nbGrOk?{word:w,mode:nbMode,groups:nbGr}:{word:w,mode:nbMode}).select("key");
       if(r.error)throw r.error;i.value="";say("🚫 Dodano do zakazanych: "+w)}
     catch(err){inf.textContent=err&&err.code==="23505"?"To słowo już jest na liście.":"Nie udało się: "+(err&&err.message?err.message:"błąd");return}
     await loadNickBans();renderGear();return}

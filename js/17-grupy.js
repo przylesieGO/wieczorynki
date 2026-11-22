@@ -282,7 +282,7 @@ function renderGrSheet(first){
   const L1=sc?p.querySelector(".bslist"):null;if(L1)L1.scrollTop=sc;
   if(first)setTimeout(()=>{const i=$(gf.mode==="code"?"grcode":"grname");if(i&&!i.value)i.focus()},50);
 }
-const grInfo=t=>{const i=$("grinfo");if(i)i.textContent=t};
+const grInfo=t=>{const i=$("grinfo");if(i){i.textContent=t;if(t)i.scrollIntoView({block:"nearest"})}};   // komunikat widoczny także przy przewiniętym formularzu
 const grCodeOf=s=>{s=String(s||"").trim();const m=/grupa=([0-9a-z]+)/i.exec(s);return (m?m[1]:s).replace(/[^0-9a-z]/gi,"").toLowerCase()};
 async function grCheckCode(){
   grKeep();const c=grCodeOf(gf.code);if(c.length<4){grInfo("Wpisz kod albo wklej link.");return}

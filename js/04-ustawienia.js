@@ -607,9 +607,11 @@ function placesHtml(){
    +'<p class="note">Miejsca dodaje każdy przy tworzeniu zaproszenia („✏️ Inne miejsce…” albo „🗺️ Wskaż na mapie…” + „Dodaj do listy miejsc”). Pinezkę ustawia i miejsce usuwa autor albo 👑.</p></div>';
 }
 // 🚫 zakazane nicki (KROK 67) — listę edytuje każdy administrator; zakaz pilnuje baza (profiles_nick_rules)
-let nickBans=null,nbMode="exact";   // null = ładuję, false = brak KROKU 67
+let nickBans=null,nbMode="exact",nbGr=true,nbGrOk=false;   // null = ładuję, false = brak KROKU 67; nbGrOk = KROK 79 (słowo blokuje też nazwy grup)
 async function loadNickBans(){
-  try{const r=await sb.from("nick_bans").select("key,word,mode,added_by").order("word").limit(1000);if(r.error)throw r.error;nickBans=r.data||[]}
+  try{let r=await sb.from("nick_bans").select("key,word,mode,added_by,groups").order("word").limit(1000);nbGrOk=!r.error;
+    if(r.error)r=await sb.from("nick_bans").select("key,word,mode,added_by").order("word").limit(1000);   // bez KROKU 79
+    if(r.error)throw r.error;nickBans=r.data||[]}
   catch(e){nickBans=false}
 }
 // cyfry udające litery (Adm1n = admin) — tak samo jak nick_key_leet w bazie
@@ -618,13 +620,14 @@ const nbMatch=(n,key,mode)=>[nickKey(n),nickLeet(n)].some(k=>k===key||(mode==="c
 const nbHits=(key,mode)=>Object.keys(nicks).filter(id=>!isSuper(id)&&nbMatch(nicks[id],key,mode)).sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl"));
 const NB_M=[["exact","Dokładnie"],["contains","Zawiera"]];
 function nickBansHtml(){
-  const head='<button class="sback" data-c="backadm">‹ Administracja</button><div class="sname" style="margin-top:26px">🚫 Zakazane nicki</div>';
+  const head='<button class="sback" data-c="backadm">‹ Administracja</button><div class="sname" style="margin-top:26px">🚫 Zakazane nicki'+(nbGrOk?' i nazwy grup':'')+'</div>';
   if(nickBans===null)return head+'<div class="sleft"><div class="note">Ładuję…</div></div>';
   if(nickBans===false)return head+'<div class="sleft"><div class="note">Lista niedostępna — w bazie trzeba uruchomić KROK 67.</div></div>';
   const rows=nickBans.map(b=>{const h=nbHits(b.key,b.mode);
-    const sub=[b.added_by&&nicks[b.added_by]?'dodał(a) '+esc(nicks[b.added_by]):'',h.length?'⚠️ pasuje: '+h.map(id=>esc(nicks[id])).join(", "):''].filter(Boolean).join(" · ");
+    const sub=[b.added_by&&nicks[b.added_by]?'dodał(a) '+esc(nicks[b.added_by]):'',h.length?'⚠️ pasuje: '+h.map(id=>esc(nicks[id])).join(", "):'',nbGrOk&&!b.groups?'tylko nicki':''].filter(Boolean).join(" · ");
     return '<div class="arow" data-nb="'+esc(b.key)+'"><span><b>'+esc(b.word)+'</b>'+(sub?'<br><span class="note">'+sub+'</span>':'')+'</span>'
      +'<span class="arbtns" style="flex-wrap:nowrap;align-items:center"><span class="ios-seg">'+NB_M.map(([m,t])=>'<button type="button" data-a="nbmode" data-id="'+esc(b.key)+'" data-m="'+m+'" class="'+(b.mode===m?'on':'')+'"'+(m==="contains"&&b.key.length<4?' disabled title="Od 4 liter"':'')+'>'+t+'</button>').join("")+'</span>'
+     +(nbGrOk?'<button type="button" class="b small nbgr'+(b.groups?' on':'')+'" data-a="nbgr" data-id="'+esc(b.key)+'" aria-pressed="'+!!b.groups+'" title="'+(b.groups?'Blokuje też nazwy grup — dotknij, aby tylko nicki':'Tylko nicki — dotknij, aby blokować też nazwy grup')+'" aria-label="Nazwy grup: '+(b.groups?'tak':'nie')+'">'+uiIcon("users")+'</button>':'')
      +'<button class="b g small" data-a="nbdel" data-id="'+esc(b.key)+'" aria-label="Usuń „'+esc(b.word)+'”">🗑</button></span></div>'}).join("");
   return head+'<div class="sleft">'
    +(nickBans.length>8?'<input class="bsq srch" id="nbq" type="search" placeholder="Szukaj słowa…" autocomplete="off">':'')
@@ -632,10 +635,11 @@ function nickBansHtml(){
    +'<h3 style="margin-top:18px">Dodaj słowo</h3>'
    +'<input id="nbword" maxlength="20" autocomplete="off" placeholder="np. kierownik">'
    +'<div class="seg" id="nbseg">'+NB_M.map(([m,t])=>'<button type="button" data-nbm="'+m+'" class="'+(nbMode===m?'on':'')+'">'+t+'</button>').join("")+'</div>'
+   +(nbGrOk?'<div class="ios-grp nbgrw"><div class="ios-it"><span class="ios-t">Też w nazwach grup<small>Wyłącz np. dla nazw miejscowości</small></span><button type="button" class="ios-sw'+(nbGr?' on':'')+'" role="switch" aria-checked="'+nbGr+'" aria-label="Też w nazwach grup" data-a="nbgrnew"></button></div></div>':'')
    +'<div class="note" id="nbprev" style="margin-top:8px"></div>'
    +'<div class="note" id="nbinfo" style="color:var(--bad)"></div>'
    +'<button class="b sbtn" data-c="nbadd">Dodaj do listy</button>'
-   +'<p class="note">„Dokładnie” — cały nick równy słowu. „Zawiera” — słowo w dowolnym miejscu nicku (tylko słowa od 4 liter). Wielkość liter, polskie znaki, kropki i spacje nie mają znaczenia; cyfry udające litery też są wyłapywane (Adm1n = admin). Obecne nicki zostają — zmienisz je w Użytkownikach. 👑 nie dotyczy.</p></div>';
+   +'<p class="note">„Dokładnie” — cały nick równy słowu. „Zawiera” — słowo w dowolnym miejscu nicku (tylko słowa od 4 liter). Wielkość liter, polskie znaki, kropki i spacje nie mają znaczenia; cyfry udające litery też są wyłapywane (Adm1n = admin). Obecne nicki zostają — zmienisz je w Użytkownikach. 👑 nie dotyczy.'+(nbGrOk?' '+uiIcon("users")+' — słowo blokuje też nazwy grup (sprawdzana cała nazwa i każde słowo osobno); wyłącz np. dla nazw miejscowości.':'')+'</p></div>';
 }
 function nbPreview(){
   const i=$("nbword"),pv=$("nbprev");if(!i||!pv)return;
