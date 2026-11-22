@@ -104,10 +104,10 @@ bootTimer=setTimeout(()=>bootFail(),8000);
    W przeglądarce wbudowanej nie da się zainstalować aplikacji, logowanie potrafi zniknąć po zamknięciu, a pobieranie GPX
    i linki do Telegrama bywają zablokowane. Android: przycisk otwiera Chrome (intent); iPhone: kopiowanie linku + podpowiedź.
    ✕ chowa pasek do końca tej sesji karty. Kliknięcia liczą się w APP DEMO (id: iaopen, iacopy, iax). */
+let iaOff=false;   // ✕ chowa pasek tylko na tym ekranie — po wejściu do demo / odświeżeniu wraca (nie zapamiętujemy w telefonie)
 function iaBar(){
   const k=inAppKind(),b=$("iabar");if(!b)return;
-  let hid=false;try{hid=sessionStorage.getItem("iaHide")==="1"}catch(e){}
-  if(!k||hid){b.classList.add("hide");b.innerHTML="";return}
+  if(!k||iaOff){b.classList.add("hide");b.innerHTML="";return}
   const ua=navigator.userAgent||"",and=/Android/.test(ua),ios=/iPhone|iPad|iPod/.test(ua);
   const app={fb:"Facebooku",msg:"Messengerze",ig:"Instagramie"}[k]||"aplikacji";
   const u=location.href.split("#")[0],intent="intent://"+u.replace(/^https?:\/\//,"")+"#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url="+encodeURIComponent(u)+";end";
@@ -118,7 +118,7 @@ function iaBar(){
   b.classList.remove("hide");
 }
 $("iabar").addEventListener("click",e=>{
-  if(e.target.closest("#iax")){try{sessionStorage.setItem("iaHide","1")}catch(err){}iaBar();return}
+  if(e.target.closest("#iax")){iaOff=true;iaBar();return}
   if(e.target.closest("#iacopy")){const u=location.href.split("#")[0];
     const done=()=>say(/iPhone|iPad|iPod/.test(navigator.userAgent)?"Link skopiowany — wklej go w Safari":"Link skopiowany — wklej go w przeglądarce");
     try{navigator.clipboard.writeText(u).then(done,()=>prompt("Skopiuj link:",u))}catch(err){prompt("Skopiuj link:",u)}}
