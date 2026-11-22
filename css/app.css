@@ -1105,6 +1105,11 @@ html[data-theme=dark] .wx-drizzle{--wx:#c6a3ff;--wxb:rgba(170,120,255,.18)}html[
 /* ---- zwinięty dzień: kolorowe chipy (pogoda, tempo, rower); po rozwinięciu ukryte, bo to samo jest na kartach ---- */
 .wl4{order:3;flex-basis:100%;display:flex;flex-wrap:wrap;gap:5px;margin-top:-2px}
 details.wday[open] .wl4{display:none}
+/* zwinięta karta dnia z 2+ zaproszeniami: czerwone kółko z liczbą w rogu ramki i „stos” kart pod ramką; po rozwinięciu oba znikają */
+details.wday{position:relative}
+details.wday.wmulti:not([open]){margin-bottom:14px;box-shadow:0 5px 0 -3px var(--card),0 5px 0 -2px var(--line),0 10px 0 -6px var(--card),0 10px 0 -5px var(--line)}
+details.wday .wcnt{position:absolute;top:-9px;right:-6px;min-width:24px;height:24px;box-sizing:border-box;padding:0 7px;border-radius:999px;background:var(--sys-red);color:var(--white);border:2px solid var(--bg);font:800 12px/20px -apple-system,system-ui,sans-serif;text-align:center;pointer-events:none}
+details.wday[open] .wcnt{display:none}
 .wl4 .wpc{font-size:13px;padding:2px 9px}.wl4 .dwx:empty{display:none}
 .dwxc{display:inline-flex;gap:5px;white-space:nowrap;align-items:center;border-radius:999px;padding:2px 9px;font-size:13px;font-weight:700;color:var(--wx);background:var(--wxb)}
 html[data-theme=dark] .wx-storm.dwxc,html[data-theme=dark] .wx-cloud.dwxc{color:#c3cff5}
