@@ -338,15 +338,40 @@ function grGo(g){grId=g;grTab=grRole(g)?"board":"ppl";grOpenU="";grOpenP="";grEd
 
 /* 👑 Administracja → Grupy: wszystkie grupy (👑 tymczasowo widzi też ukryte — KROK 70) i prośby o większy limit */
 async function grKLoad(){
-  const [a,b,c]=await Promise.all([
+  const [a,b,c,d]=await Promise.all([
     sb.from("groups").select("id,owner,name,icon,descr,area,color,visibility,join_mode,member_limit,code,created_at,archived_at").order("created_at",{ascending:false}).limit(500),
     sb.from("group_limit_requests").select("id,group_id,asked_by,from_limit,to_limit,status,created_at").eq("status","pending").order("created_at").limit(100),
-    sb.from("group_members").select("group_id,user_id,role,status,invited_by,created_at,joined_at").limit(10000)]);
+    sb.from("group_members").select("group_id,user_id,role,status,invited_by,created_at,joined_at").limit(10000),
+    sb.rpc("admin_group_stats").then(r=>r,()=>({error:1}))]);   // 📊 KROK 84 — bez niego panel działa jak dawniej
   if(a.error||b.error||c.error){grK=null;return}
   const cnt={},mem={};(c.data||[]).forEach(x=>{(mem[x.group_id]=mem[x.group_id]||[]).push(x);if(x.status==="active")cnt[x.group_id]=(cnt[x.group_id]||0)+1});
   (a.data||[]).forEach(x=>{grG[x.id]=Object.assign({},grG[x.id]||{},x,{members:cnt[x.id]||0});if(!grMy(x.id))grMem[x.id]=mem[x.id]||[]});
   grK={groups:a.data||[],reqs:(b.data||[]).filter(r=>grG[r.group_id])};
+  grKS=null;if(d&&!d.error&&d.data){const by={};(d.data.groups||[]).forEach(s=>{by[s.id]=s});grKS={tot:d.data.tot||{},by}}
 }
+/* 📊 Statystyki grup (KROK 84, 2026-11-23) — tylko 👑: kafelki z podsumowaniem, liczba zaproszeń grupy w wierszu,
+   ▾ przy wierszu rozwija szczegóły (zaproszenia nadchodzące/odbyte, ostatnie, skład z rolami); dotknięcie wiersza otwiera grupę jak dawniej */
+let grKS=null;const grKOpen=new Set();
+const grKZ=n=>plf(n,["zaproszenie","zaproszenia","zaproszeń"]);
+function grKTiles(){if(!grKS)return "";const t=grKS.tot,T=(l,v,s)=>'<div class="grkt"><span>'+l+'</span><b>'+v+'</b>'+(s?'<small>'+s+'</small>':'')+'</div>';
+  return '<div class="ios"><div class="ios-gh">Statystyki grup</div><div class="grktl">'
+   +T("Aktywne grupy",t.active||0,t.archived?"+"+t.archived+" w archiwum":"")
+   +T("Jawne / ukryte",(t.public||0)+" / "+(t.hidden||0))
+   +T("Wolne / na prośbę",(t.open||0)+" / "+(t.request||0))
+   +T("Osób w grupach",t.people||0,(t.members||0)+" członkostw"+(t.members_demo?", demo "+t.members_demo:""))
+   +T("Zaproszenia grup",t.wants||0,(t.wants_up||0)+" nadchodzących")+'</div></div>'}
+function grKDet(x,s){const A=grAct(x.id).slice().sort((p,q)=>(q.role==="owner")-(p.role==="owner")||(q.role==="mod")-(p.role==="mod")||String(nicks[p.user_id]||"").localeCompare(String(nicks[q.user_id]||""),"pl"));
+  const L=[];
+  if(s){L.push("Zaproszenia: "+s.w+" razem · "+s.w_up+" nadchodzące · "+s.w_done+" odbyte"+(s.w_test?" · testowe "+s.w_test:""));
+    if(s.last)L.push("Ostatnie: "+esc(new Date(s.last.at).toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"}))+(s.last.title?" · „"+esc(s.last.title)+"”":""));
+    if(s.invited||s.requested)L.push([s.invited?"zaproszeni bez odpowiedzi: "+s.invited:"",s.requested?"proszą o dołączenie: "+s.requested:""].filter(Boolean).join(" · "))}
+  L.push("Skład: "+(A.length?A.map(m=>esc(nicks[m.user_id]||"ktoś")+(GR_ROLE[m.role]?'<span class="grkrl">'+GR_ROLE[m.role]+'</span>':'')).join(", "):"nikt"));
+  return '<div class="grkd">'+L.join("<br>")+'</div>'}
+function grKRow(x){const s=grKS&&grKS.by[x.id],op=grKOpen.has(x.id);
+  return '<div class="grkr'+(op?' on':'')+'"><button type="button" class="ios-it ios-row" data-gx="open" data-gid="'+esc(x.id)+'"><span class="ios-ic" style="background:'+grCol(x)+'">'+uiIcon(grIc(x))+'</span><span class="ios-t">'+grNmTag(x)
+   +'<small>'+[esc(nicks[x.owner]||"bez właściciela"),"limit "+x.member_limit,x.archived_at?"archiwum":""].filter(Boolean).join(" · ")+'</small></span>'
+   +(s?'<span class="grkw"><b>'+s.w+'</b>'+grKZ(s.w)+'</span>':'')+'</button>'
+   +'<button type="button" class="grkx" data-gx="kexp" data-gid="'+esc(x.id)+'" aria-expanded="'+op+'" aria-label="Szczegóły grupy"><svg class="ui-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>'+(op?grKDet(x,s):'')}
 const grKReqN=()=>isKingReal()&&grK?grK.reqs.length:0;
 function grLimRow(r){const x=grG[r.group_id];
   return '<div class="grir wrap">'+grIco(x)+'<span class="grt" data-gx="open" data-gid="'+esc(x.id)+'"><b>'+grNmTag(x)+'</b><small>'+esc(nicks[r.asked_by]||"właściciel")+' prosi: '+r.from_limit+' → '+r.to_limit+' · członków '+grCnt(x.id)+(grAct(x.id).some(m=>m.role==="mod")?' · jest moderator':'')+'</small></span>'
@@ -357,10 +382,10 @@ function grAdmHtml(){
   let h='<button class="sback" data-c="backadm">‹ Administracja</button><div class="sname" style="margin-top:26px">👥 Grupy 👑</div>';
   if(!grK)return h+'<p class="note grwait">'+(grLoading?"Wczytuję…":"Nie udało się wczytać grup (KROK 70?).")+'</p>';
   if(grK.reqs.length)h+='<div class="ios"><div class="ios-gh">Prośby o większy limit</div><div class="grbox">'+grK.reqs.map(grLimRow).join("")+'</div></div>';
-  const L=grK.groups,act=L.filter(x=>!x.archived_at),arch=L.filter(x=>x.archived_at),row=x=>gRow(grCol(x),grIc(x),grNmTag(x),
-     [esc(nicks[x.owner]||"bez właściciela"),"limit "+x.member_limit,x.archived_at?"archiwum":""].filter(Boolean).join(" · "),"",'data-gx="open" data-gid="'+esc(x.id)+'"');
+  h+=grKTiles();
+  const L=grK.groups,act=L.filter(x=>!x.archived_at),arch=L.filter(x=>x.archived_at),row=grKRow;
   h+=gGrp("Wszystkie grupy ("+act.length+")",act.map(row))+(act.length?'':'<p class="note grwait">Nikt jeszcze nie założył grupy.</p>')+gGrp("Archiwum ("+arch.length+")",arch.map(row));
-  return h+'<p class="note" style="margin:10px 14px 0;font-size:13px;text-align:left">👑 Na czas rozwijania widzisz wszystkie grupy, także ukryte, i ich skład (wyłączenie — koniec KROKU 70).</p>';
+  return h+'<p class="note grklg" style="margin:10px 14px 0;font-size:13px;text-align:left">'+uiIcon("eye")+' jawna · '+uiIcon("eyeoff")+' ukryta · '+uiIcon("lock")+' dołączenie na prośbę · kółko = członkowie · ▾ = szczegóły.<br>👑 Na czas rozwijania widzisz wszystkie grupy, także ukryte, i ich skład (wyłączenie — koniec KROKU 70).</p>';
 }
 
 /* 🔔 sekcja „Grupy”: zaproszenia do mnie i prośby do grup, w których jestem właścicielem / moderatorem (do załatwienia — liczą się do numerka) */
@@ -395,6 +420,7 @@ $("gearpanel").addEventListener("click",async e=>{
   const b=e.target.closest("[data-gx]");if(!b||b.disabled||!session)return;
   const a=b.dataset.gx,g=b.dataset.gid||grId,u=b.dataset.gu||"",nm=nicks[u]||"tę osobę",x=grG[g];
   if(a==="adm"){grFromAdm=false;gearView="gradm";renderGear();grReload();return}
+  if(a==="kexp"){grKOpen.has(g)?grKOpen.delete(g):grKOpen.add(g);renderGear();return}   // 📊 KROK 84: szczegóły grupy w Administracji
   if(a==="addto"){openGrPick(u);return}
   if(a==="hub"){grFromAdm=false;if(gearView==="nick")gearFrom="nick";grOpenU="";gearView="groups";renderGear();grReload();return}
   if(a==="open"){grFromAdm=gearView==="gradm"||(gearView==="group"&&grFromAdm);grGo(g);return}

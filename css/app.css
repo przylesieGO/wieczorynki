@@ -1040,6 +1040,14 @@ html.tcalm .want.wgrp.test,html.tcalm .mywant.wgrp.test,html.tcalm .nit.wgrp.tes
 .grmc{min-width:20px;height:20px;padding:0 6px;box-sizing:border-box;border-radius:999px;background:var(--fill);color:var(--ink);font-size:12px;font-weight:700;line-height:20px;text-align:center;letter-spacing:0;margin-left:2px}
 .sname .grmc{min-width:24px;height:24px;line-height:24px;font-size:13px}
 .grtag>.grbg{overflow:visible;color:var(--white)}.grtag .grmc{background:rgba(255,255,255,.28);color:var(--white);min-width:18px;height:18px;line-height:18px;padding:0 5px}
+/* 📊 Administracja → Grupy: statystyki (KROK 84) */
+.grktl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.grkt{background:var(--card);border-radius:12px;padding:9px 12px;box-shadow:var(--shadow)}.grkt span{display:block;font-size:12px;color:var(--mut)}.grkt b{font-size:22px;font-weight:700}.grkt small{display:block;font-size:12px;color:var(--mut)}
+.grkr{display:flex;align-items:stretch}.grkr+.grkr,.grkd+.grkr{border-top:.5px solid var(--line)}.grkr>.ios-row{flex:1;min-width:0}.grkr .ios-row .ios-chev{display:none}
+.grkw{flex:none;text-align:right;font-size:12px;color:var(--mut);line-height:1.2;margin-left:6px}.grkw b{display:block;font-size:17px;color:var(--ink)}
+.grkx{flex:none;width:44px;border:0;background:none;color:var(--mut);cursor:pointer;display:flex;align-items:center;justify-content:center}.grkx .ui-i{width:18px;height:18px;transition:transform .15s}.grkr.on .grkx .ui-i{transform:rotate(180deg)}.grklg .ui-i{width:14px;height:14px;vertical-align:-2px}
+.grkd{padding:2px 14px 10px 54px;font-size:13px;color:var(--mut);line-height:1.55}
+.grkrl{font-size:12px;font-weight:700;color:var(--acc);background:var(--acc2);border-radius:5px;padding:0 5px;margin-left:4px}
 .nkdemo{display:inline-block;margin-left:.35em;padding:0 .35em;border:1.5px solid #c9261c;border-radius:5px;color:#c9261c;font-size:.68em;font-weight:800;letter-spacing:.04em;line-height:1.45;vertical-align:.12em}
 html[data-theme=dark] .nkdemo{border-color:#ff7a70;color:#ff7a70}
 .dmstep{display:flex;align-items:center;gap:2px;flex:none}.dmstep b{min-width:40px;text-align:center;font-size:18px}
