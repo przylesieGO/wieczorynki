@@ -1139,3 +1139,16 @@ details.wday>summary{flex-wrap:wrap}details.wday>summary::after{align-self:cente
 .fsec .secbar .bschev{margin-left:0}
 #flt_when{flex-wrap:nowrap;gap:5px}#flt_when .fch{flex:none;padding:8px 11px}#flt_when .fdate input{width:92px;font-size:13px}
 .fusr.fumore{justify-content:center;color:var(--acc);font-weight:700}
+/* 🔍 okno Filtry (v111): rzędy bomblów przewijane w bok, przełączniki V/X, podekran „Gdzie” / „Osoba” z polem na dole (wyniki rosną w górę) */
+.fltbox .fchips{flex-wrap:nowrap;align-items:center;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;margin-right:-16px;padding-right:16px}
+.fltbox .fchips::-webkit-scrollbar{display:none}
+.fltbox .fchips .fch{flex:none;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.fltbox .fch .ui-i{width:16px;height:16px}
+.fch.ftg{background:var(--acc2);color:var(--acc)}
+.fch.ftg.off{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
+.secbar.fgo .bschev{transform:rotate(-90deg)}.fsec .secbar .wsplsel.fnone{color:var(--mut);font-weight:500}
+.fstk{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;padding-top:8px}
+.fstk .fulist{max-height:none;overflow:visible;flex:none}
+.fstk .fmore{display:flex;align-items:center;gap:6px;margin:0 2px 6px}.fstk .fmore .ui-i{width:14px;height:14px}
+.fstk mark{background:none;color:var(--acc);font-weight:800}.fusr.on mark{color:inherit}
+.fltbox>.bsq{margin-bottom:0}

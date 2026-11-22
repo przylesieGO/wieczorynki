@@ -238,7 +238,9 @@ async function loadRemote(selectId){
     const wSince=new Date(Date.now()-31*864e5).toISOString(); // + archiwum 30 dni (KROK 38)
     const wq=cols=>{wColsTry=cols;return sb.from("wants").select(cols).gte("starts_at",wSince).order("starts_at").limit(1000)};
     const WFULL="id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min,place,place_lat,place_lon,bike,place_city,place_area";
-    let w=await wq(WFULL+",route_base_id,title,title_auto,group_id");wGrOk=!w.error;   // 👥 zaproszenie dla grupy (KROK 71)
+    let w=await wq(WFULL+",route_base_id,title,title_auto,group_id,activity");   // + rodzaj zaproszenia (KROK 64) — filtr „Aktywność”; bez kolumny wracamy do dotychczasowego zapytania
+    if(w.error)w=await wq(WFULL+",route_base_id,title,title_auto,group_id");
+    wGrOk=!w.error;   // 👥 zaproszenie dla grupy (KROK 71)
     if(w.error)w=await wq(WFULL+",route_base_id,title,title_auto");titleOk=!w.error;   // 🏷 tytuł zaproszenia (KROK 65)
     if(w.error)w=await wq(WFULL+",route_base_id");
     rbOk=!w.error;   // 🗺️ baza tras (KROK 47)

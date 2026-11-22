@@ -200,10 +200,14 @@ $("wantarch").addEventListener("click",e=>{const b=e.target.closest("[data-arch]
   if(b.dataset.arch==="t")archOpen=!archOpen;else archAll=!archAll;renderArch(wants)});
 /* ---------- 🔍 filtry zaproszeń (decyzje właściciela 2026-11-15 18:58: jak w makiecie filtry.png + z karty osoby) ---------- */
 // zapamiętane w telefonie; działają na listę zaproszeń (karty dni i Twoje zaproszenia), nie na 🔔
-const fltEmpty=()=>({who:"",grp:"",when:"",date:"",where:"",bike:"",pace:"",user:"",demo:""});   // grp: 👥 grupa (KROK 71)
-let flt=(()=>{try{return Object.assign(fltEmpty(),JSON.parse(localStorage.getItem("flt")||"{}"))}catch(e){return fltEmpty()}})(),fltQ="",fltUQ="";
+const fltEmpty=()=>({who:"",vis:"",act:"",grp:"",when:"",date:"",where:"",bike:"",pace:"",user:"",demo:""});   // vis: Widoczność, act: Aktywność, grp: 👥 grupa (KROK 71)
+let flt=(()=>{let f;try{f=Object.assign(fltEmpty(),JSON.parse(localStorage.getItem("flt")||"{}"))}catch(e){f=fltEmpty()}
+  if(f.who==="priv"||f.who==="open"){f.vis=f.who;f.who=""}   // „Czyje” rozdzielone na Relację i Widoczność — stary zapis przenosimy
+  if(f.demo==="only")f.demo="";   // „Tylko od kont demo” zniknęło: konta demo to teraz przełącznik pokaż/ukryj
+  return f})(),fltQ="",fltSub="",fltScroll=0;
 function fltSave(){try{localStorage.setItem("flt",JSON.stringify(flt))}catch(e){}}
-const fltKeys=()=>Object.keys(fltEmpty()).filter(k=>k!=="date"&&flt[k]);
+const fltBikeOn=()=>!flt.act||flt.act==="bike";   // rodzaj roweru ma sens tylko dla roweru (albo bez wybranej aktywności)
+const fltKeys=()=>Object.keys(fltEmpty()).filter(k=>k!=="date"&&flt[k]&&(k!=="bike"||fltBikeOn()));
 const fltActive=()=>fltKeys().length>0;
 const wUpcoming=w=>!wDone(w);
 const lc=t=>(t||"").toLocaleLowerCase("pl");
@@ -215,8 +219,9 @@ function fltOk(w){
   if(flt.who==="going"&&(w.user_id===uid||!j.includes(uid)))return false;
   if(flt.who==="part"&&w.user_id!==uid&&!j.includes(uid))return false;   // biorę udział = moje + te, na które jadę
   if(flt.who==="fav"&&!(isFav(w.user_id)||j.some(isFav)))return false;
-  if(flt.who==="priv"&&w.visibility!=="private")return false;
-  if(flt.who==="open"&&w.visibility==="private")return false;
+  if(flt.vis==="priv"&&w.visibility!=="private")return false;
+  if(flt.vis==="open"&&w.visibility==="private")return false;
+  if(flt.act&&(w.activity||"bike")!==flt.act)return false;
   if(flt.grp&&wGr(w)!==flt.grp)return false;
   if(flt.when==="today"&&dd!==0)return false;
   if(flt.when==="tom"&&dd!==1)return false;
@@ -228,28 +233,32 @@ function fltOk(w){
     if(t==="a"&&(w.place_city+"|"+w.place_area)!==v)return false;
     if(t==="p"&&lc(w.place)!==lc(v))return false;
     if(t==="q"&&![w.place,w.place_city,w.place_area].some(x=>lc(x).includes(lc(v))))return false}
-  if(flt.bike==="all"&&w.bike)return false;
-  if(flt.bike&&flt.bike!=="all"&&w.bike&&w.bike!==flt.bike)return false;
+  if(fltBikeOn()){if(flt.bike==="all"&&w.bike)return false;
+    if(flt.bike&&flt.bike!=="all"&&w.bike&&w.bike!==flt.bike)return false}
   if(flt.pace&&w.pace!==flt.pace)return false;
   if(flt.user&&w.user_id!==flt.user&&!j.includes(flt.user))return false;
   if(flt.demo&&typeof demoIds!=="undefined"){const dm=demoIds.has(w.user_id);if(flt.demo==="only"&&!dm||flt.demo==="hide"&&dm)return false}   // zaproszenia od kont demo (dla wszystkich)
   return true;
 }
-const FLT_WHO=[["mine","🙋 Moje"],["going","✅ Jadę"],["part","Biorę udział"],["fav","⭐ Ulubieni"],["open","🌍 Otwarte"],["priv","🔒 Prywatne"]];
+const FLT_WHO=[["mine","Moje"],["going","Jadę"],["part","Biorę udział"],["fav","Ulubieni"]];   // „Biorę udział” tylko z licznika nad listą (w oknie bez bomblu)
+const FLT_VIS=[["open","Otwarte"],["priv","Prywatne"]];
+const FLT_ACT=[["bike","Rower"],["run","Bieganie"],["walk","Spacery"],["hike","Trekking"]];   // klucze jak SIG_ACT (js/11) i wants.activity
+const FLT_ICO={mine:"user",going:"check",fav:"star",open:"globe",priv:"lock",bike:"bike",run:"run",walk:"walk",hike:"tree"};
 const FLT_WHEN=[["today","Dziś"],["tom","Jutro"],["wknd","Weekend"],["7d","7 dni"]];
-const FLT_BIKE=()=>[["all","🚲 Dla wszystkich"]].concat(Object.entries(BIKES));
-const FLT_DEMO=[["only","Tylko od kont demo"],["hide","Bez kont demo"]];
+const FLT_BIKE=()=>[["all","Dla wszystkich"]].concat(Object.entries(BIKES).map(([k,t])=>[k,t.replace(/^\S+\s/,"")]));
 const FLT_PACE=()=>Object.entries(PACES).map(([k,x])=>[k,x.e+" "+x.r.replace(" km/h","")]);
 function fltLabel(k){
   const v=flt[k],f=a=>(a.find(x=>x[0]===v)||[,v])[1];
   if(k==="who")return f(FLT_WHO);
+  if(k==="vis")return f(FLT_VIS);
+  if(k==="act")return f(FLT_ACT);
   if(k==="when")return v==="date"?(flt.date?new Date(flt.date+"T12:00").toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"}):"Data"):f(FLT_WHEN);
-  if(k==="where"){const t=v.slice(0,1),x=v.slice(2);return t==="a"?x.replace("|"," · "):t==="q"?"„"+x+"”":t==="p"?"📍 "+x:x}
+  if(k==="where"){const t=v.slice(0,1),x=v.slice(2);return t==="a"?x.replace("|"," · "):t==="q"?"„"+x+"”":x}
   if(k==="bike")return f(FLT_BIKE());
   if(k==="pace")return f(FLT_PACE());
-  if(k==="user")return "👤 "+(nicks[v]||"osoba");
-  if(k==="grp")return "👥 "+grNm(v);
-  if(k==="demo")return f(FLT_DEMO);
+  if(k==="user")return nicks[v]||"osoba";
+  if(k==="grp")return grNm(v);
+  if(k==="demo")return v==="hide"?"Bez kont demo":v;
   return v;
 }
 function renderWants(){try{renderSteps()}catch(e){}
@@ -276,84 +285,105 @@ document.addEventListener("click",e=>{const x=e.target.closest("[data-fx]");if(!
 $("fltbtn").addEventListener("click",()=>openFlt());
 $("wstat").addEventListener("click",e=>{const b=e.target.closest("button[data-ws]");if(!b)return;   // licznik: pierwsza liczba = wszystkie, druga = tylko moje i te, na które jadę
   flt.who=b.dataset.ws==="part"&&flt.who!=="part"?"part":"";if(flt.who!=="part"&&b.dataset.ws==="all")flt.who="";fltSave();renderWants()});
-function fltChip(k,v,t){return '<button type="button" class="fch'+(flt[k]===v?' on':'')+'" data-fk="'+k+'" data-fv="'+esc(v)+'">'+esc(t)+'</button>'}
-function fltWhereChips(){
-  const up=wants.filter(wUpcoming),q=lc(fltQ.trim()),seen=new Set(),out=[];
-  const add=(v,t)=>{if(seen.has(v))return;seen.add(v);if(!q||lc(t).includes(q))out.push([v,t])};
-  up.forEach(w=>{if(w.place_city)add("c:"+w.place_city,w.place_city)});places.forEach(x=>{if(x.city)add("c:"+x.city,x.city)});
-  up.forEach(w=>{if(w.place_city&&w.place_area)add("a:"+w.place_city+"|"+w.place_area,w.place_city+" · "+w.place_area)});
-  up.forEach(w=>{if(w.place)add("p:"+w.place,"📍 "+w.place)});places.forEach(x=>add("p:"+x.name,"📍 "+x.name));
-  let h=(q?fltChip("where","q:"+fltQ.trim(),"🔍 „"+fltQ.trim()+"”"):'')+out.slice(0,14).map(([v,t])=>fltChip("where",v,t)).join("");
-  if(flt.where&&!seen.has(flt.where)&&flt.where.slice(0,2)!=="q:")h=fltChip("where",flt.where,fltLabel("where"))+h;
-  return h||'<span class="note">Brak miejsc w zaproszeniach.</span>';
-}
+function fltChip(k,v,t,ico){return '<button type="button" class="fch'+(flt[k]===v?' on':'')+'" data-fk="'+k+'" data-fv="'+esc(v)+'">'+(ico?uiIcon(ico):'')+esc(t)+'</button>'}
+// przełącznik pokaż/ukryj: zielone V = pokazywane, czerwone X = ukryte
+const fltTg=(k,t,off)=>'<button type="button" class="fch ftg'+(off?' off':'')+'" data-fk="'+k+'" aria-pressed="'+!off+'" aria-label="'+t+(off?': ukryte':': pokazywane')+'">'+uiIcon(off?"x":"check")+t+'</button>';
 const fltUfGet=()=>{try{return JSON.parse(localStorage.getItem("fltUF")||"{}")}catch(e){return {}}};
 function fltUfBump(id){const m=fltUfGet();m[id]=(m[id]||0)+1;try{localStorage.setItem("fltUF",JSON.stringify(m))}catch(e){}}
-// Osoba: lista — wybrana, ulubieni (⭐), najczęściej wybierani, reszta; bez szukania 12 pozycji, z szukaniem do 20
-function fltUserChips(){
-  const fq=fltUfGet(),q=nickKey(fltUQ.trim());
-  // bez szukania: tylko osoby z zaproszeń (ulubieni i najczęściej wybierani są wśród nich na górze); z szukaniem: wszyscy użytkownicy
-  const ids=new Set(q?Object.keys(nicks):[]);
-  if(!q){wants.filter(wUpcoming).forEach(w=>{ids.add(w.user_id);(joins[w.id]||[]).forEach(x=>ids.add(x))})}
-  if(flt.user)ids.add(flt.user);
-  const base=[...ids].filter(id=>nicks[id]&&id!==uid&&!modGone(id)&&(!q||nickKey(nicks[id]).includes(q)||id===flt.user));
-  const byNick=(a,b)=>nicks[a].localeCompare(nicks[b],"pl");
-  const sel=base.filter(id=>id===flt.user),fav=base.filter(id=>id!==flt.user&&isFav(id)).sort(byNick),
-    often=base.filter(id=>id!==flt.user&&!isFav(id)&&fq[id]>0).sort((a,b)=>fq[b]-fq[a]||byNick(a,b)),
-    rest=base.filter(id=>id!==flt.user&&!isFav(id)&&!(fq[id]>0)).sort(byNick);
-  let room=9999;
-  const row=id=>'<button type="button" class="fusr'+(id===flt.user?' on':'')+'" data-fk="user" data-fv="'+esc(id)+'"><span class="fuic">'+(isFav(id)?uiIcon("starf"):'')+'</span><span class="fun">'+esc(nicks[id])+(typeof demoTag==="function"?demoTag(id):'')+'</span>'+(fq[id]>0&&!isFav(id)?'<small>wybierano '+fq[id]+'×</small>':'')+(id===flt.user?'<span class="fuck">'+uiIcon("check")+'</span>':'')+'</button>';
-  const grp=(t,L)=>{L=L.slice(0,Math.max(room,0));room-=L.length;return L.length?'<div class="fulbl">'+t+'</div>'+L.map(row).join(""):''};
-  const h0=grp("Wybrana",sel)+grp("Ulubieni",fav)+grp("Najczęściej wybierani",often)+grp(q?"Wyniki":"W zaproszeniach",rest);
-  return h0?'<div class="fulist">'+h0+'</div>'+(q?'':'<div class="note" style="width:100%;margin-top:6px">Pozostałych użytkowników znajdziesz szukajką.</div>'):'<span class="note">'+(q?'Nikogo nie znaleziono.':'Brak osób w zaproszeniach — wpisz nick w szukajce.')+'</span>';
+function fltHl(t,q){if(!q)return esc(t);const i=lc(t).indexOf(q);return i<0?esc(t):esc(t.slice(0,i))+"<mark>"+esc(t.slice(i,i+q.length))+"</mark>"+esc(t.slice(i+q.length))}
+// ocena trafienia: im wyżej, tym bliżej pola wpisywania (lista rośnie w górę); wybrane zawsze zostają widoczne
+function fltScore(t,q,base,on){if(q){const l=lc(t);if(l.startsWith(q))base=20;else if(l.split(/[\s·|]+/).some(x=>x.startsWith(q)))base=15;else if(l.includes(q))base=10;else return -1}return base+(on?(q?3:30):0)}
+function fltItems(k,q){
+  const out=[];
+  if(k==="where"){
+    const up=wants.filter(wUpcoming),seen=new Set();
+    const add=(v,t,ty,b)=>{if(seen.has(v))return;seen.add(v);const sc=fltScore(t,q,b,flt.where===v);if(sc>=0)out.push({v,t,ty,sc})};
+    up.forEach(w=>{if(w.place_city)add("c:"+w.place_city,w.place_city,"miasto",2)});places.forEach(x=>{if(x.city)add("c:"+x.city,x.city,"miasto",2)});
+    up.forEach(w=>{if(w.place_city&&w.place_area)add("a:"+w.place_city+"|"+w.place_area,w.place_city+" · "+w.place_area,"dzielnica",1)});
+    up.forEach(w=>{if(w.place)add("p:"+w.place,w.place,"miejsce",0)});places.forEach(x=>add("p:"+x.name,x.name,"miejsce",0));
+    if(flt.where&&!seen.has(flt.where)&&flt.where.slice(0,2)!=="q:")out.push({v:flt.where,t:fltLabel("where"),ty:"",sc:33});
+    if(q)out.push({v:"q:"+fltQ.trim(),t:"Szukaj „"+fltQ.trim()+"”",ty:"",sc:100,ico:"search",free:1});
+    else if(flt.where&&flt.where.slice(0,2)==="q:")out.push({v:flt.where,t:fltLabel("where"),ty:"",sc:33,ico:"search",free:1});
+  }else{
+    // bez wpisanego tekstu: osoby z zaproszeń (ulubieni i najczęściej wybierani niżej, czyli bliżej pola); z tekstem: wszyscy użytkownicy
+    const fq=fltUfGet(),nk=nickKey(fltQ.trim()),ids=new Set(nk?Object.keys(nicks):[]);
+    if(!nk)wants.filter(wUpcoming).forEach(w=>{ids.add(w.user_id);(joins[w.id]||[]).forEach(x=>ids.add(x))});
+    if(flt.user)ids.add(flt.user);
+    [...ids].filter(id=>nicks[id]&&id!==uid&&!modGone(id)&&(!nk||nickKey(nicks[id]).includes(nk)||id===flt.user)).forEach(id=>{
+      const n=nickKey(nicks[id]);let sc=isFav(id)?2:fq[id]>0?1:0;
+      if(nk)sc=n.startsWith(nk)?20:10;
+      if(id===flt.user)sc+=nk?3:30;
+      out.push({v:id,t:nicks[id],ty:fq[id]>0&&!isFav(id)?"wybierano "+fq[id]+"×":"",sc,fav:isFav(id),user:1})});
+  }
+  return out;
 }
+function fltStackHtml(){
+  const k=fltSub,q=lc(fltQ.trim());
+  let r=fltItems(k,q).sort((a,b)=>a.sc-b.sc||b.t.localeCompare(a.t,"pl"));
+  const more=Math.max(0,r.length-6);r=r.slice(-6);
+  if(!r.length)return '<div class="note">'+(q?'Nic nie znaleziono.':k==="where"?'Brak miejsc w zaproszeniach.':'Brak osób w zaproszeniach — wpisz nick.')+'</div>';
+  return (more?'<div class="note fmore">'+uiIcon("up")+'<span>jeszcze '+more+' — wpisz dalej, żeby zawęzić</span></div>':'')
+   +'<div class="fulist">'+r.map(x=>{const on=flt[k]===x.v;
+     return '<button type="button" class="fusr'+(on?' on':'')+'" data-fk="'+k+'" data-fv="'+esc(x.v)+'"><span class="fuic">'+(x.fav?uiIcon("starf"):x.ico?uiIcon(x.ico):'')+'</span><span class="fun">'+(x.free||x.user?esc(x.t):fltHl(x.t,q))+(x.user&&typeof demoTag==="function"?demoTag(x.v):'')+'</span>'+(x.ty?'<small>'+x.ty+'</small>':'')+(on?'<span class="fuck">'+uiIcon("check")+'</span>':'')+'</button>'}).join("")+'</div>';
+}
+const fltHasDemo=()=>(typeof demoIds!=="undefined"&&demoIds.size)||!!flt.demo;
+const fltHasAct=()=>!!flt.act||wants.some(w=>w.activity&&w.activity!=="bike");   // sekcja „Aktywność” tylko gdy w zaproszeniach są inne aktywności niż rower
 function fltSecs(){
-  return {who:'<button type="button" class="fch'+(!flt.who?' on':'')+'" data-fk="who" data-fv="">Wszystkie</button>'+FLT_WHO.map(([v,t])=>fltChip("who",v,t)).join(""),
-    when:FLT_WHEN.filter(x=>x[0]!=="7d").map(([v,t])=>fltChip("when",v,t)).join("")+'<label class="fch fdate'+(flt.when==="date"?' on':'')+'">📅 <input type="date" id="fltdate" value="'+esc(flt.when==="date"?flt.date:"")+'"></label>',
-    where:fltWhereChips(),bike:FLT_BIKE().map(([v,t])=>fltChip("bike",v,t)).join(""),
-    pace:FLT_PACE().map(([v,t])=>fltChip("pace",v,t)).join(""),user:fltUserChips(),
-    test:[["0","Pokaż"],["1","Ukryj"]].map(([v,t])=>'<button type="button" class="fch'+((hideTest?"1":"0")===v?' on':'')+'" data-fk="ht" data-fv="'+v+'">'+t+'</button>').join(""),
-    demo:FLT_DEMO.map(([v,t])=>fltChip("demo",v,t)).join(""),
-    grp:wGrList().map(x=>fltChip("grp",x.id,"👥 "+x.name)).join("")+(flt.grp&&!wGrList().some(x=>x.id===flt.grp)?fltChip("grp",flt.grp,fltLabel("grp")):"")};
+  return {src:(testOk?fltTg("ht","Zaproszenia testowe",hideTest):'')+(fltHasDemo()?fltTg("tgdemo","Konta demo",flt.demo==="hide"):''),
+    vis:FLT_VIS.map(([v,t])=>fltChip("vis",v,t,FLT_ICO[v])).join(""),
+    act:FLT_ACT.map(([v,t])=>fltChip("act",v,t,typeof SIG_ACT!=="undefined"&&SIG_ACT[v]?SIG_ACT[v][0]:FLT_ICO[v])).join(""),
+    when:FLT_WHEN.filter(x=>x[0]!=="7d").map(([v,t])=>fltChip("when",v,t)).join("")+'<label class="fch fdate'+(flt.when==="date"?' on':'')+'">'+uiIcon("cal")+'<input type="date" id="fltdate" value="'+esc(flt.when==="date"?flt.date:"")+'"></label>',
+    who:FLT_WHO.filter(x=>x[0]!=="part").map(([v,t])=>fltChip("who",v,t,FLT_ICO[v])).join(""),
+    grp:wGrList().map(x=>fltChip("grp",x.id,x.name,"users")).join("")+(flt.grp&&!wGrList().some(x=>x.id===flt.grp)?fltChip("grp",flt.grp,fltLabel("grp"),"users"):""),
+    bike:FLT_BIKE().map(([v,t])=>fltChip("bike",v,t)).join(""),
+    pace:FLT_PACE().map(([v,t])=>fltChip("pace",v,t)).join("")};
 }
-function fltRefresh(){
+function fltDraw(){
+  if(fltSub){const s=$("fltstk");if(s)s.innerHTML=fltStackHtml();return}
   const S=fltSecs();Object.keys(S).forEach(k=>{const el=$("flt_"+k);if(el)el.innerHTML=S[k]});
-  ["where","bike","grp","user"].forEach(k=>{const el=$("fsum_"+k);if(el)el.textContent=flt[k]?(k==="user"?(nicks[flt.user]||"osoba"):fltLabel(k)):""});
+  ["where","user"].forEach(k=>{const el=$("fsum_"+k);if(!el)return;el.textContent=flt[k]?fltLabel(k):(k==="where"?"Wszędzie":"Wszyscy");el.classList.toggle("fnone",!flt[k])});
+  const bb=$("fltbikebox");if(bb)bb.classList.toggle("hide",!fltBikeOn());
   const n=wants.filter(wUpcoming).filter(fltOk).length;$("fltok").textContent=fltActive()?"Pokaż "+n+" "+(n===1?"zaproszenie":n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"zaproszenia":"zaproszeń"):"Gotowe";
-  renderWants();
 }
-function openFlt(){
-  const p=$("fltsheet");p.classList.remove("hide");fltQ="";fltUQ="";
-  const sec=(k,t,extra)=>'<div class="fsec"><div class="bsgrp">'+t+'</div>'+(extra||'')+'<div class="fchips" id="flt_'+k+'"></div></div>';
-  // sekcja rozwijana (Gdzie, Rower / teren): nagłówek jak secBar, podsumowanie wyboru obok; otwarta, gdy filtr jest ustawiony
-  const csec=(k,ico,t,extra)=>{const col=!flt[k];return '<div class="fsec"><button type="button" class="secbar'+(col?' col':'')+'" data-fk="tog" data-fv="'+k+'" aria-expanded="'+!col+'"><span class="bst">'+uiIcon(ico)+'<span>'+t+'</span></span><span class="wsplsel" id="fsum_'+k+'"></span><svg class="bschev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div id="fb_'+k+'"'+(col?' class="hide"':'')+'>'+(extra||'')+'<div class="fchips" id="flt_'+k+'"></div></div></div>'};
-  const hasDemo=(typeof demoIds!=="undefined"&&demoIds.size)||flt.demo;
-  p.innerHTML='<div class="bsbox fltbox" role="dialog" aria-modal="true" aria-label="Filtry"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="close">Zamknij</button><b>Filtry</b><button type="button" class="lnk" data-fk="clear" style="color:var(--bad);text-align:right">Wyczyść</button></div>'
-   +'<div class="bslist">'+((testOk||hasDemo)?'<div class="fsrc">'+(testOk?sec("test","Testowe zaproszenia"):'')+(hasDemo?sec("demo","Konta demo"):'')+'</div>':'')
-   +sec("when","Kiedy")+(paceOk?sec("pace","Tempo"):'')+sec("who","Czyje")+(wGrList().length||flt.grp?csec("grp","users","Grupa"):'')
-   +(placeOk?csec("where","pin","Gdzie",'<input class="bsq srch" id="fltwq" type="search" placeholder="Miasto, dzielnica, miejsce…" autocomplete="off">'):'')
-   +(bikeOk?csec("bike","bike","Rower / teren"):'')
-   +csec("user","user","Osoba",'<input class="bsq srch" id="fltuq" type="search" placeholder="Nick…" autocomplete="off">')+'</div>'
-   +'<button type="button" class="b big" id="fltok" data-fk="close">Gotowe</button></div>';
-  fltRefresh();
+function fltRefresh(){fltDraw();renderWants()}
+// okno: widok główny (bomble w rzędach przewijanych w bok) albo podekran „Gdzie” / „Osoba” z polem wpisywania na dole (wyniki rosną w górę)
+function fltMainHtml(){
+  const sec=(k,t)=>'<div class="fsec"><div class="bsgrp">'+t+'</div><div class="fchips" id="flt_'+k+'"></div></div>';
+  const go=(k,ico,t)=>'<div class="fsec"><button type="button" class="secbar fgo" data-fk="sub" data-fv="'+k+'"><span class="bst">'+uiIcon(ico)+'<span>'+t+'</span></span><span class="wsplsel" id="fsum_'+k+'"></span><svg class="bschev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>';
+  return '<div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="close">Zamknij</button><b>Filtry</b><button type="button" class="lnk" data-fk="clear" style="color:var(--bad);text-align:right">Wyczyść</button></div>'
+   +'<div class="bslist" id="fltlist">'+((testOk||fltHasDemo())?sec("src","Źródło zaproszeń"):'')+sec("vis","Widoczność")+(fltHasAct()?sec("act","Aktywność"):'')+sec("when","Kiedy")+sec("who","Relacja")
+   +(wGrList().length||flt.grp?sec("grp","Grupa"):'')+(bikeOk?'<div id="fltbikebox"'+(fltBikeOn()?'':' class="hide"')+'>'+sec("bike","Rodzaj roweru")+'</div>':'')+(paceOk?sec("pace","Tempo"):'')
+   +(placeOk?go("where","pin","Gdzie"):'')+go("user","user","Osoba")+'</div>'
+   +'<button type="button" class="b big" id="fltok" data-fk="close">Gotowe</button>';
 }
+function fltSubHtml(){
+  const T=fltSub==="where"?["Gdzie","Miasto, dzielnica, miejsce…"]:["Osoba","Nick…"];
+  return '<div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="back">Filtry</button><b>'+T[0]+'</b><span style="min-width:64px"></span></div>'
+   +'<div class="fstk" id="fltstk"></div><input class="bsq srch" id="fltq" type="search" placeholder="'+T[1]+'" autocomplete="off" value="'+esc(fltQ)+'">'
+   +'<button type="button" class="b big" data-fk="back">Gotowe</button>';
+}
+function renderFlt(){
+  const p=$("fltsheet");p.innerHTML='<div class="bsbox fltbox" role="dialog" aria-modal="true" aria-label="Filtry">'+(fltSub?fltSubHtml():fltMainHtml())+'</div>';
+  fltDraw();const l=$("fltlist");if(l&&fltScroll){l.scrollTop=fltScroll;fltScroll=0}
+}
+function openFlt(){$("fltsheet").classList.remove("hide");fltSub="";fltQ="";fltScroll=0;renderFlt()}
 function closeFlt(){const p=$("fltsheet");p.classList.add("hide");p.innerHTML=""}
 $("fltsheet").addEventListener("click",e=>{
   if(e.target===$("fltsheet")){closeFlt();return}
   const b=e.target.closest("[data-fk]");if(!b||b.tagName==="LABEL")return;
   const k=b.dataset.fk;
   if(k==="close"){closeFlt();return}
-  if(k==="clear"){flt=fltEmpty();fltQ="";fltUQ="";const a=$("fltwq"),c=$("fltuq");if(a)a.value="";if(c)c.value="";fltSave();fltRefresh();return}
-  if(k==="tog"){const t=b.dataset.fv,box=$("fb_"+t),open=box.classList.contains("hide");box.classList.toggle("hide",!open);b.classList.toggle("col",!open);b.setAttribute("aria-expanded",String(open));return}
-  if(k==="ht"){hideTest=b.dataset.fv==="1";try{localStorage.setItem("hideTest",hideTest?"1":"0")}catch(err){}deriveWants();fltRefresh();syncNow();return}   // to samo ustawienie co ⚙️ → Testy
+  if(k==="clear"){flt=fltEmpty();fltQ="";fltSave();fltRefresh();return}
+  if(k==="sub"){const l=$("fltlist");fltScroll=l?l.scrollTop:0;fltSub=b.dataset.fv;fltQ="";renderFlt();return}
+  if(k==="back"){fltSub="";fltQ="";renderFlt();return}
+  if(k==="tgdemo"){flt.demo=flt.demo==="hide"?"":"hide";fltSave();fltRefresh();return}
+  if(k==="ht"){hideTest=!hideTest;try{localStorage.setItem("hideTest",hideTest?"1":"0")}catch(err){}deriveWants();fltRefresh();syncNow();return}   // to samo ustawienie co ⚙️ → Testy
   const v=b.dataset.fv;flt[k]=flt[k]===v?"":v;if(k==="when")flt.date="";
+  if(k==="act"&&flt.act&&flt.act!=="bike")flt.bike="";   // rodzaj roweru nie dotyczy innych aktywności
   if(k==="user"&&flt.user)fltUfBump(flt.user);
   fltSave();fltRefresh();
 });
-$("fltsheet").addEventListener("input",e=>{
-  if(e.target.id==="fltwq"){fltQ=e.target.value;$("flt_where").innerHTML=fltWhereChips()}
-  if(e.target.id==="fltuq"){fltUQ=e.target.value;$("flt_user").innerHTML=fltUserChips()}
-});
+$("fltsheet").addEventListener("input",e=>{if(e.target.id==="fltq"){fltQ=e.target.value;const s=$("fltstk");if(s)s.innerHTML=fltStackHtml()}});
 $("fltsheet").addEventListener("change",e=>{if(e.target.id==="fltdate"){flt.date=e.target.value;flt.when=flt.date?"date":"";fltSave();fltRefresh()}});
 let placesGeoDone=false;
 async function fillPlaceCities(loud){
