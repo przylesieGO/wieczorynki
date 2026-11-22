@@ -304,6 +304,9 @@ function fltItems(k,q){
     if(flt.where&&!seen.has(flt.where)&&flt.where.slice(0,2)!=="q:")out.push({v:flt.where,t:fltLabel("where"),ty:"",sc:33});
     if(q)out.push({v:"q:"+fltQ.trim(),t:"Szukaj „"+fltQ.trim()+"”",ty:"",sc:100,ico:"search",free:1});
     else if(flt.where&&flt.where.slice(0,2)==="q:")out.push({v:flt.where,t:fltLabel("where"),ty:"",sc:33,ico:"search",free:1});
+  }else if(k==="grp"){
+    const L=wGrList().map(x=>({id:x.id,name:x.name}));if(flt.grp&&!L.some(x=>x.id===flt.grp))L.push({id:flt.grp,name:fltLabel("grp")});
+    L.forEach(x=>{const sc=fltScore(x.name,lc(fltQ.trim()),0,flt.grp===x.id);if(sc>=0)out.push({v:x.id,t:x.name,ty:"",sc,ico:"users"})});
   }else{
     // bez wpisanego tekstu: osoby z zaproszeń (ulubieni i najczęściej wybierani niżej, czyli bliżej pola); z tekstem: wszyscy użytkownicy
     const fq=fltUfGet(),nk=nickKey(fltQ.trim()),ids=new Set(nk?Object.keys(nicks):[]);
@@ -321,33 +324,28 @@ function fltStackHtml(){
   const k=fltSub,q=lc(fltQ.trim());
   let r=fltItems(k,q).sort((a,b)=>a.sc-b.sc||b.t.localeCompare(a.t,"pl"));
   const more=Math.max(0,r.length-6);r=r.slice(-6);
-  if(!r.length)return '<div class="note">'+(q?'Nic nie znaleziono.':k==="where"?'Brak miejsc w zaproszeniach.':'Brak osób w zaproszeniach — wpisz nick.')+'</div>';
+  if(!r.length)return '<div class="note">'+(q?'Nic nie znaleziono.':k==="where"?'Brak miejsc w zaproszeniach.':k==="grp"?'Brak grup.':'Brak osób w zaproszeniach — wpisz nick.')+'</div>';
   return (more?'<div class="note fmore">'+uiIcon("up")+'<span>jeszcze '+more+' — wpisz dalej, żeby zawęzić</span></div>':'')
    +'<div class="fulist">'+r.map(x=>{const on=flt[k]===x.v;
-     return '<button type="button" class="fusr'+(on?' on':'')+'" data-fk="'+k+'" data-fv="'+esc(x.v)+'"><span class="fuic">'+(x.fav?uiIcon("starf"):x.ico?uiIcon(x.ico):'')+'</span><span class="fun">'+(x.free||x.user?esc(x.t):fltHl(x.t,q))+(x.user&&typeof demoTag==="function"?demoTag(x.v):'')+'</span>'+(x.ty?'<small>'+x.ty+'</small>':'')+(on?'<span class="fuck">'+uiIcon("check")+'</span>':'')+'</button>'}).join("")+'</div>';
+     return '<button type="button" class="fusr'+(on?' on':'')+'" data-fk="'+k+'" data-fv="'+esc(x.v)+'"><span class="fuic'+(x.ico?' g':'')+'">'+(x.fav?uiIcon("starf"):x.ico?uiIcon(x.ico):'')+'</span><span class="fun">'+(x.free||x.user?esc(x.t):fltHl(x.t,q))+(x.user&&typeof demoTag==="function"?demoTag(x.v):'')+'</span>'+(x.ty?'<small>'+x.ty+'</small>':'')+(on?'<span class="fuck">'+uiIcon("check")+'</span>':'')+'</button>'}).join("")+'</div>';
 }
-let fltGrpOpen=!1;
 const fltHasGrp=()=>wGrList().length>0||!!flt.grp;
-// grupy: bombel obok „Ulubieni”, rozwija listę grup pod rzędem „Relacja”
-const fltGrpChip=()=>'<button type="button" class="fch'+(flt.grp?' on':'')+'" data-fk="grpopen" aria-expanded="'+fltGrpOpen+'">'+uiIcon("users")+esc(flt.grp?fltLabel("grp"):"Grupy")+'<svg class="fchev'+(fltGrpOpen?' up':'')+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>';
-const fltGrpList=()=>{const L=wGrList().map(x=>({id:x.id,name:x.name}));if(flt.grp&&!L.some(x=>x.id===flt.grp))L.push({id:flt.grp,name:fltLabel("grp")});
-  return '<div class="fulist">'+L.map(x=>{const on=flt.grp===x.id;return '<button type="button" class="fusr'+(on?' on':'')+'" data-fk="grp" data-fv="'+esc(x.id)+'"><span class="fuic">'+uiIcon("users")+'</span><span class="fun">'+esc(x.name)+'</span>'+(on?'<span class="fuck">'+uiIcon("check")+'</span>':'')+'</button>'}).join("")+'</div>'};
+// grupy: bombel w rzędzie Widoczność (po „Prywatne”), otwiera podekran z listą rosnącą w górę nad polem wpisywania
+const fltGrpChip=()=>'<button type="button" class="fch'+(flt.grp?' on':'')+'" data-fk="sub" data-fv="grp">'+uiIcon("users")+esc(flt.grp?fltLabel("grp"):"Grupy")+'<svg class="fchev r" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>';
 const fltHasDemo=()=>(typeof demoIds!=="undefined"&&demoIds.size)||!!flt.demo;
 const fltHasAct=()=>!!flt.act||wants.some(w=>w.activity&&w.activity!=="bike");   // sekcja „Aktywność” tylko gdy w zaproszeniach są inne aktywności niż rower
 function fltSecs(){
   return {src:(testOk?fltTg("ht","Zaproszenia testowe",hideTest):'')+(fltHasDemo()?fltTg("tgdemo","Konta demo",flt.demo==="hide"):''),
-    vis:FLT_VIS.map(([v,t])=>fltChip("vis",v,t,FLT_ICO[v])).join(""),
+    vis:FLT_VIS.map(([v,t])=>fltChip("vis",v,t,FLT_ICO[v])).join("")+(fltHasGrp()?fltGrpChip():""),
     act:FLT_ACT.map(([v,t])=>fltChip("act",v,t,typeof SIG_ACT!=="undefined"&&SIG_ACT[v]?SIG_ACT[v][0]:FLT_ICO[v])).join(""),
     when:FLT_WHEN.filter(x=>x[0]!=="7d").map(([v,t])=>fltChip("when",v,t)).join("")+'<label class="fch fdate'+(flt.when==="date"?' on':'')+'">'+uiIcon("cal")+'<input type="date" id="fltdate" value="'+esc(flt.when==="date"?flt.date:"")+'"></label>',
-    who:FLT_WHO.filter(x=>x[0]!=="part").map(([v,t])=>fltChip("who",v,t,FLT_ICO[v])).join("")+(fltHasGrp()?fltGrpChip():""),
-    grplist:fltGrpOpen&&fltHasGrp()?fltGrpList():"",
+    who:FLT_WHO.filter(x=>x[0]!=="part").map(([v,t])=>fltChip("who",v,t,FLT_ICO[v])).join(""),
     bike:FLT_BIKE().map(([v,t])=>fltChip("bike",v,t)).join(""),
     pace:FLT_PACE().map(([v,t])=>fltChip("pace",v,t)).join("")};
 }
 function fltDraw(){
   if(fltSub){const s=$("fltstk");if(s)s.innerHTML=fltStackHtml();return}
   const S=fltSecs();Object.keys(S).forEach(k=>{const el=$("flt_"+k);if(el)el.innerHTML=S[k]});
-  const gl=$("flt_grplist");if(gl)gl.classList.toggle("hide",!fltGrpOpen);
   ["where","user"].forEach(k=>{const el=$("fsum_"+k);if(!el)return;el.textContent=flt[k]?fltLabel(k):(k==="where"?"Wszędzie":"Wszyscy");el.classList.toggle("fnone",!flt[k])});
   const bb=$("fltbikebox");if(bb)bb.classList.toggle("hide",!fltBikeOn());
   const n=wants.filter(wUpcoming).filter(fltOk).length;$("fltok").textContent=fltActive()?"Pokaż "+n+" "+(n===1?"zaproszenie":n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"zaproszenia":"zaproszeń"):"Gotowe";
@@ -358,13 +356,12 @@ function fltMainHtml(){
   const sec=(k,t)=>'<div class="fsec"><div class="bsgrp">'+t+'</div><div class="fchips" id="flt_'+k+'"></div></div>';
   const go=(k,ico,t)=>'<div class="fsec"><button type="button" class="secbar fgo" data-fk="sub" data-fv="'+k+'"><span class="bst">'+uiIcon(ico)+'<span>'+t+'</span></span><span class="wsplsel" id="fsum_'+k+'"></span><svg class="bschev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>';
   return '<div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="close">Zamknij</button><b>Filtry</b><button type="button" class="lnk" data-fk="clear" style="color:var(--bad);text-align:right">Wyczyść</button></div>'
-   +'<div class="bslist" id="fltlist">'+((testOk||fltHasDemo())?sec("src","Źródło zaproszeń"):'')+sec("vis","Widoczność")+(fltHasAct()?sec("act","Aktywność"):'')+sec("when","Kiedy")+'<div class="fsec"><div class="bsgrp">Relacja</div><div class="fchips" id="flt_who"></div><div class="fgl hide" id="flt_grplist"></div></div>'
-   +(bikeOk?'<div id="fltbikebox"'+(fltBikeOn()?'':' class="hide"')+'>'+sec("bike","Rodzaj roweru")+'</div>':'')+(paceOk?sec("pace","Tempo"):'')
+   +'<div class="bslist" id="fltlist">'+((testOk||fltHasDemo())?sec("src","Źródło zaproszeń"):'')+sec("vis","Widoczność")+(fltHasAct()?sec("act","Aktywność"):'')+sec("when","Kiedy")+sec("who","Relacja")+(bikeOk?'<div id="fltbikebox"'+(fltBikeOn()?'':' class="hide"')+'>'+sec("bike","Rodzaj roweru")+'</div>':'')+(paceOk?sec("pace","Tempo"):'')
    +(placeOk?go("where","pin","Gdzie"):'')+go("user","user","Osoba")+'</div>'
    +'<button type="button" class="b big" id="fltok" data-fk="close">Gotowe</button>';
 }
 function fltSubHtml(){
-  const T=fltSub==="where"?["Gdzie","Miasto, dzielnica, miejsce…"]:["Osoba","Nick…"];
+  const T=fltSub==="where"?["Gdzie","Miasto, dzielnica, miejsce…"]:fltSub==="grp"?["Grupa","Nazwa grupy…"]:["Osoba","Nick…"];
   return '<div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="back">Filtry</button><b>'+T[0]+'</b><span style="min-width:64px"></span></div>'
    +'<div class="fstk" id="fltstk"></div><input class="bsq srch" id="fltq" type="search" placeholder="'+T[1]+'" autocomplete="off" value="'+esc(fltQ)+'">'
    +'<button type="button" class="b big" data-fk="back">Gotowe</button>';
@@ -373,7 +370,7 @@ function renderFlt(){
   const p=$("fltsheet");p.innerHTML='<div class="bsbox fltbox" role="dialog" aria-modal="true" aria-label="Filtry">'+(fltSub?fltSubHtml():fltMainHtml())+'</div>';
   fltDraw();const l=$("fltlist");if(l&&fltScroll){l.scrollTop=fltScroll;fltScroll=0}
 }
-function openFlt(){$("fltsheet").classList.remove("hide");fltSub="";fltGrpOpen=!1;fltQ="";fltScroll=0;renderFlt()}
+function openFlt(){$("fltsheet").classList.remove("hide");fltSub="";fltQ="";fltScroll=0;renderFlt()}
 function closeFlt(){const p=$("fltsheet");p.classList.add("hide");p.innerHTML=""}
 $("fltsheet").addEventListener("click",e=>{
   if(e.target===$("fltsheet")){closeFlt();return}
@@ -383,13 +380,11 @@ $("fltsheet").addEventListener("click",e=>{
   if(k==="clear"){flt=fltEmpty();fltQ="";fltSave();fltRefresh();return}
   if(k==="sub"){const l=$("fltlist");fltScroll=l?l.scrollTop:0;fltSub=b.dataset.fv;fltQ="";renderFlt();return}
   if(k==="back"){fltSub="";fltQ="";renderFlt();return}
-  if(k==="grpopen"){fltGrpOpen=!fltGrpOpen;fltDraw();return}
   if(k==="tgdemo"){flt.demo=flt.demo==="hide"?"":"hide";fltSave();fltRefresh();return}
   if(k==="ht"){hideTest=!hideTest;try{localStorage.setItem("hideTest",hideTest?"1":"0")}catch(err){}deriveWants();fltRefresh();syncNow();return}   // to samo ustawienie co ⚙️ → Testy
   const v=b.dataset.fv;flt[k]=flt[k]===v?"":v;if(k==="when")flt.date="";
   if(k==="act"&&flt.act&&flt.act!=="bike")flt.bike="";   // rodzaj roweru nie dotyczy innych aktywności
   if(k==="user"&&flt.user)fltUfBump(flt.user);
-  if(k==="grp")fltGrpOpen=!1;   // po wyborze grupy lista się zwija
   fltSave();fltRefresh();
 });
 $("fltsheet").addEventListener("input",e=>{if(e.target.id==="fltq"){fltQ=e.target.value;const s=$("fltstk");if(s)s.innerHTML=fltStackHtml()}});

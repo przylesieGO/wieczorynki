@@ -1152,7 +1152,7 @@ details.wday>summary{flex-wrap:wrap}details.wday>summary::after{align-self:cente
 .fstk .fmore{display:flex;align-items:center;gap:6px;margin:0 2px 6px}.fstk .fmore .ui-i{width:14px;height:14px}
 .fstk mark{background:none;color:var(--acc);font-weight:800}.fusr.on mark{color:inherit}
 .fltbox>.bsq{margin-bottom:0}
-/* v112: okno nie buja się na boki (ujemny margines rzędów wystawał poza listę); grupy rozwijane obok „Ulubieni” */
+/* v112: okno nie buja się na boki (ujemny margines rzędów wystawał poza listę); bombel „Grupy” w rzędzie Widoczność */
 .fltbox .bslist{overflow-x:hidden;overscroll-behavior-x:none}
-.fch .fchev{width:14px;height:14px;margin-left:2px;transition:transform .15s}.fch .fchev.up{transform:rotate(180deg)}
-.fgl{margin-top:8px}.fgl .fulist{max-height:min(220px,32vh)}
+.fch .fchev{width:14px;height:14px;margin-left:2px}.fch .fchev.r{transform:rotate(-90deg)}
+.fuic.g .ui-i{color:var(--mut)}.fusr.on .fuic.g .ui-i{color:inherit}
