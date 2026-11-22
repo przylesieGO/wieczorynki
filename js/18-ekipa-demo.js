@@ -11,7 +11,8 @@
 let demoIds=new Set(),demoVol=new Set(),demoSt=null,demoBusy=false,demoRet=false;
 let demoAcc=4,demoAccSet=false;   // ile kont demo (stepper „Konta demo”); demoAccSet = zmienione ręcznie, odświeżenie stanu go nie nadpisuje
 let demoGrN=3;   // ile grup demo założyć (stepper „Grupy demo”)
-const demoF={n:25,days:14,priv:30,grp:30,routes:true,ranges:true,answers:true,chan:false,
+const demoVolTxt=()=>demoF.vol?demoF.vol+" "+plf(demoF.vol,["ochotnik","ochotnicy","ochotników"])+" na zaproszenie":"bez ochotników — tylko konta demo";
+const demoF={n:25,days:14,priv:30,vol:3,grp:30,routes:true,ranges:true,answers:true,chan:false,
   hw:12,hpw:0,hgrp:35,hposts:true};   // historia: tygodnie wstecz, jazd w tygodniu (0 = auto), % dla grup, wpisy na tablicach
 let demoLCol={acc:true,grp:true};   // zwinięte listy „Konta” i „Grupy” w panelu
 const DEMO_BIKE={mtb:"MTB",gravel:"Gravel",road:"Szosa",trekking:"Trekking"};
@@ -127,6 +128,8 @@ function demoHtml(){
        +DEMO_DAYS.map(([d,l])=>'<button type="button" class="'+(demoF.days===d?'on':'')+'" aria-pressed="'+(demoF.days===d)+'" data-dx="days" data-dd="'+d+'">'+l+'</button>').join("")+'</div></div>'
      +'<div class="ios-it dmcol"><label class="ios-t" for="dmpriv">Jawne i prywatne<small id="dmprivt">jawne '+(100-demoF.priv)+'% · prywatne '+demoF.priv+'%</small></label>'
        +'<input id="dmpriv" type="range" min="0" max="100" step="10" value="'+demoF.priv+'"><small class="note">Prywatne dostają konta demo i ochotnicy (<span id="dmvoln">'+demoVol.size+'</span>).</small></div>'
+     +'<div class="ios-it dmcol"><label class="ios-t" for="dmvol">Ochotników na prywatne zaproszenie<small id="dmvolt">'+demoVolTxt()+'</small></label>'
+       +'<input id="dmvol" type="range" min="0" max="5" step="1" value="'+demoF.vol+'"><small class="note">Tylu losowych ochotników dopraszają konta demo do każdego prywatnego zaproszenia (nie więcej, niż masz ochotników). 0 = tylko konta demo.</small></div>'
      +'<div class="ios-it dmcol"><label class="ios-t" for="dmgrp">Prywatne dla grupy<small id="dmgrpt">'+demoF.grp+'% prywatnych — dla grupy demo autora</small></label>'
        +'<input id="dmgrp" type="range" min="0" max="100" step="10" value="'+demoF.grp+'"'+(grs.length?'':' disabled')+'><small class="note">'+(grs.length?'Dostają je członkowie grupy (też ochotnicy, którzy dołączyli).':'Najpierw załóż grupy demo (sekcja „Grupy demo”).')+'</small></div>'
      +demoSw("routes","Trasy z biblioteki tras","Mapa i GPX przy części zaproszeń")
@@ -242,7 +245,7 @@ $("gearpanel").addEventListener("click",async e=>{
     demoAccSet=false;await demoRun("admin_demo_accounts",{p_count:n,p_channel:false},d=>d&&d.created?"🧪 Utworzono "+d.created+" · generator losuje z "+n:"Generator losuje teraz z "+n+(n<made?" (pozostałe konta zostają)":""));return}
   if(a==="gen"){
     if(demoF.chan&&!await askOk("Wysłać podsumowanie także na kanał @PrzylesieGo?\n\nZobaczą je wszyscy na kanale, z dopiskiem, że to nie są prawdziwe jazdy.","Wyślij też na kanał"))return;
-    await demoRun("admin_demo_generate",{p_count:demoF.n,p_days:demoF.days,p_private_pct:demoF.priv,p_routes:demoF.routes,p_ranges:demoF.ranges,p_answers:demoF.answers,p_channel:demoF.chan,p_group_pct:demoF.grp},
+    await demoRun("admin_demo_generate",{p_count:demoF.n,p_days:demoF.days,p_private_pct:demoF.priv,p_routes:demoF.routes,p_ranges:demoF.ranges,p_answers:demoF.answers,p_channel:demoF.chan,p_group_pct:demoF.grp,p_vol_per:demoF.vol},
       d=>"🧪 Dodano "+(d&&d.created||0)+" zaproszeń testowych (prywatnych: "+(d&&d.private||0)+(d&&d.group?", dla grup: "+d.group:"")+")"+(d&&d.skipped?" · pominięte (nachodzące jazdy): "+d.skipped:""));return}
   if(a==="testdel"){   // ten sam ekran co dawniej (licznik + wpisz USUŃ), powrót do panelu
     demoRet=true;testDelN=null;gearView="testdel";renderGear();
@@ -254,6 +257,7 @@ $("gearpanel").addEventListener("click",async e=>{
 });
 $("gearpanel").addEventListener("input",e=>{
   if(e.target.id==="dmhgrp"){demoF.hgrp=+e.target.value;const g=$("dmhgrpt");if(g)g.textContent=demoF.hgrp+"% jazd — członkowie jednej grupy demo";return}
+  if(e.target.id==="dmvol"){demoF.vol=+e.target.value;const g=$("dmvolt");if(g)g.textContent=demoVolTxt();return}
   if(e.target.id==="dmgrp"){demoF.grp=+e.target.value;const g=$("dmgrpt");if(g)g.textContent=demoF.grp+"% prywatnych — dla grupy demo autora";return}
   if(e.target.id!=="dmpriv")return;demoF.priv=+e.target.value;const t=$("dmprivt");if(t)t.textContent="jawne "+(100-demoF.priv)+"% · prywatne "+demoF.priv+"%"});
 // start: aplikacja mogła już wystartować ze stanu telefonu, zanim ten plik się wczytał → doczytaj konta demo od razu
