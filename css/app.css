@@ -1128,3 +1128,12 @@ details.wday>summary{flex-wrap:wrap}details.wday>summary::after{align-self:cente
 .iain>.ui-i{width:22px;height:22px;margin-top:1px}.iatx{flex:1;display:flex;flex-direction:column;gap:2px}.iatx b{font-size:15px}
 .iax{flex:none;width:44px;height:44px;margin:-10px -4px 0 0;border:0;border-radius:50%;background:transparent;color:inherit;font-size:16px;cursor:pointer}
 .iabtns{display:flex;gap:8px;background:var(--iab);border-radius:0 0 14px 14px;padding:4px 14px 12px}.iabtns .b{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;font-size:15px;padding:12px 8px;min-height:44px}
+
+.fsrc{background:var(--fill);border-radius:12px;padding:4px 12px 10px;margin:6px 0 10px}.fsrc .fsec+.fsec{border-top:1px solid var(--line);margin-top:8px;padding-top:4px}
+.fsec .secbar{margin:8px 0 4px}.fsec .secbar .wsplsel{margin-left:auto;font-size:14px;font-weight:600;color:var(--acc);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fulist{width:100%;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.fulbl{font-size:12px;font-weight:700;color:var(--mut);padding:7px 12px 3px;background:var(--fill)}
+.fusr{display:flex;align-items:center;gap:8px;width:100%;border:0;border-top:1px solid var(--line);background:none;color:var(--ink);font:inherit;font-size:16px;font-weight:600;padding:11px 12px;text-align:left;cursor:pointer}
+.fulbl+.fusr{border-top:0}.fusr.on{background:var(--accbtn);color:var(--white)}.fusr small{margin-left:auto;font-size:12px;font-weight:400;color:var(--mut)}.fusr.on small{color:var(--white)}
+.fuic{width:18px;flex:none;display:inline-flex}.fuic .ui-i{width:16px;height:16px;color:#ffcc00}.fun{min-width:0;overflow:hidden;text-overflow:ellipsis}.fuck{margin-left:auto}.fuck .ui-i{width:18px;height:18px}
+.fsec .secbar .bschev{margin-left:0}
