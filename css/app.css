@@ -1156,3 +1156,6 @@ details.wday>summary{flex-wrap:wrap}details.wday>summary::after{align-self:cente
 .fltbox .bslist{overflow-x:hidden;overscroll-behavior-x:none}
 .fch .fchev{width:14px;height:14px;margin-left:2px}.fch .fchev.r{transform:rotate(-90deg)}
 .fuic.g .ui-i{color:var(--mut)}.fusr.on .fuic.g .ui-i{color:inherit}
+/* v114: rząd „Kiedy” jak pozostałe rzędy filtrów (ta sama wysokość, odstęp i padding, także pole daty) */
+.fltbox .fchips .fch{height:39px;padding-top:0;padding-bottom:0;box-sizing:border-box}
+#flt_when{gap:7px}#flt_when .fch{padding:0 13px}#flt_when .fdate{padding:0 11px;gap:5px}#flt_when .fdate input{font-size:14px;width:84px;padding:0;line-height:1}
