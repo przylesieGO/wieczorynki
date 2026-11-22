@@ -326,6 +326,12 @@ function fltStackHtml(){
    +'<div class="fulist">'+r.map(x=>{const on=flt[k]===x.v;
      return '<button type="button" class="fusr'+(on?' on':'')+'" data-fk="'+k+'" data-fv="'+esc(x.v)+'"><span class="fuic">'+(x.fav?uiIcon("starf"):x.ico?uiIcon(x.ico):'')+'</span><span class="fun">'+(x.free||x.user?esc(x.t):fltHl(x.t,q))+(x.user&&typeof demoTag==="function"?demoTag(x.v):'')+'</span>'+(x.ty?'<small>'+x.ty+'</small>':'')+(on?'<span class="fuck">'+uiIcon("check")+'</span>':'')+'</button>'}).join("")+'</div>';
 }
+let fltGrpOpen=!1;
+const fltHasGrp=()=>wGrList().length>0||!!flt.grp;
+// grupy: bombel obok „Ulubieni”, rozwija listę grup pod rzędem „Relacja”
+const fltGrpChip=()=>'<button type="button" class="fch'+(flt.grp?' on':'')+'" data-fk="grpopen" aria-expanded="'+fltGrpOpen+'">'+uiIcon("users")+esc(flt.grp?fltLabel("grp"):"Grupy")+'<svg class="fchev'+(fltGrpOpen?' up':'')+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>';
+const fltGrpList=()=>{const L=wGrList().map(x=>({id:x.id,name:x.name}));if(flt.grp&&!L.some(x=>x.id===flt.grp))L.push({id:flt.grp,name:fltLabel("grp")});
+  return '<div class="fulist">'+L.map(x=>{const on=flt.grp===x.id;return '<button type="button" class="fusr'+(on?' on':'')+'" data-fk="grp" data-fv="'+esc(x.id)+'"><span class="fuic">'+uiIcon("users")+'</span><span class="fun">'+esc(x.name)+'</span>'+(on?'<span class="fuck">'+uiIcon("check")+'</span>':'')+'</button>'}).join("")+'</div>'};
 const fltHasDemo=()=>(typeof demoIds!=="undefined"&&demoIds.size)||!!flt.demo;
 const fltHasAct=()=>!!flt.act||wants.some(w=>w.activity&&w.activity!=="bike");   // sekcja „Aktywność” tylko gdy w zaproszeniach są inne aktywności niż rower
 function fltSecs(){
@@ -333,14 +339,15 @@ function fltSecs(){
     vis:FLT_VIS.map(([v,t])=>fltChip("vis",v,t,FLT_ICO[v])).join(""),
     act:FLT_ACT.map(([v,t])=>fltChip("act",v,t,typeof SIG_ACT!=="undefined"&&SIG_ACT[v]?SIG_ACT[v][0]:FLT_ICO[v])).join(""),
     when:FLT_WHEN.filter(x=>x[0]!=="7d").map(([v,t])=>fltChip("when",v,t)).join("")+'<label class="fch fdate'+(flt.when==="date"?' on':'')+'">'+uiIcon("cal")+'<input type="date" id="fltdate" value="'+esc(flt.when==="date"?flt.date:"")+'"></label>',
-    who:FLT_WHO.filter(x=>x[0]!=="part").map(([v,t])=>fltChip("who",v,t,FLT_ICO[v])).join(""),
-    grp:wGrList().map(x=>fltChip("grp",x.id,x.name,"users")).join("")+(flt.grp&&!wGrList().some(x=>x.id===flt.grp)?fltChip("grp",flt.grp,fltLabel("grp"),"users"):""),
+    who:FLT_WHO.filter(x=>x[0]!=="part").map(([v,t])=>fltChip("who",v,t,FLT_ICO[v])).join("")+(fltHasGrp()?fltGrpChip():""),
+    grplist:fltGrpOpen&&fltHasGrp()?fltGrpList():"",
     bike:FLT_BIKE().map(([v,t])=>fltChip("bike",v,t)).join(""),
     pace:FLT_PACE().map(([v,t])=>fltChip("pace",v,t)).join("")};
 }
 function fltDraw(){
   if(fltSub){const s=$("fltstk");if(s)s.innerHTML=fltStackHtml();return}
   const S=fltSecs();Object.keys(S).forEach(k=>{const el=$("flt_"+k);if(el)el.innerHTML=S[k]});
+  const gl=$("flt_grplist");if(gl)gl.classList.toggle("hide",!fltGrpOpen);
   ["where","user"].forEach(k=>{const el=$("fsum_"+k);if(!el)return;el.textContent=flt[k]?fltLabel(k):(k==="where"?"Wszędzie":"Wszyscy");el.classList.toggle("fnone",!flt[k])});
   const bb=$("fltbikebox");if(bb)bb.classList.toggle("hide",!fltBikeOn());
   const n=wants.filter(wUpcoming).filter(fltOk).length;$("fltok").textContent=fltActive()?"Pokaż "+n+" "+(n===1?"zaproszenie":n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"zaproszenia":"zaproszeń"):"Gotowe";
@@ -351,8 +358,8 @@ function fltMainHtml(){
   const sec=(k,t)=>'<div class="fsec"><div class="bsgrp">'+t+'</div><div class="fchips" id="flt_'+k+'"></div></div>';
   const go=(k,ico,t)=>'<div class="fsec"><button type="button" class="secbar fgo" data-fk="sub" data-fv="'+k+'"><span class="bst">'+uiIcon(ico)+'<span>'+t+'</span></span><span class="wsplsel" id="fsum_'+k+'"></span><svg class="bschev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>';
   return '<div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="close">Zamknij</button><b>Filtry</b><button type="button" class="lnk" data-fk="clear" style="color:var(--bad);text-align:right">Wyczyść</button></div>'
-   +'<div class="bslist" id="fltlist">'+((testOk||fltHasDemo())?sec("src","Źródło zaproszeń"):'')+sec("vis","Widoczność")+(fltHasAct()?sec("act","Aktywność"):'')+sec("when","Kiedy")+sec("who","Relacja")
-   +(wGrList().length||flt.grp?sec("grp","Grupa"):'')+(bikeOk?'<div id="fltbikebox"'+(fltBikeOn()?'':' class="hide"')+'>'+sec("bike","Rodzaj roweru")+'</div>':'')+(paceOk?sec("pace","Tempo"):'')
+   +'<div class="bslist" id="fltlist">'+((testOk||fltHasDemo())?sec("src","Źródło zaproszeń"):'')+sec("vis","Widoczność")+(fltHasAct()?sec("act","Aktywność"):'')+sec("when","Kiedy")+'<div class="fsec"><div class="bsgrp">Relacja</div><div class="fchips" id="flt_who"></div><div class="fgl hide" id="flt_grplist"></div></div>'
+   +(bikeOk?'<div id="fltbikebox"'+(fltBikeOn()?'':' class="hide"')+'>'+sec("bike","Rodzaj roweru")+'</div>':'')+(paceOk?sec("pace","Tempo"):'')
    +(placeOk?go("where","pin","Gdzie"):'')+go("user","user","Osoba")+'</div>'
    +'<button type="button" class="b big" id="fltok" data-fk="close">Gotowe</button>';
 }
@@ -366,7 +373,7 @@ function renderFlt(){
   const p=$("fltsheet");p.innerHTML='<div class="bsbox fltbox" role="dialog" aria-modal="true" aria-label="Filtry">'+(fltSub?fltSubHtml():fltMainHtml())+'</div>';
   fltDraw();const l=$("fltlist");if(l&&fltScroll){l.scrollTop=fltScroll;fltScroll=0}
 }
-function openFlt(){$("fltsheet").classList.remove("hide");fltSub="";fltQ="";fltScroll=0;renderFlt()}
+function openFlt(){$("fltsheet").classList.remove("hide");fltSub="";fltGrpOpen=!1;fltQ="";fltScroll=0;renderFlt()}
 function closeFlt(){const p=$("fltsheet");p.classList.add("hide");p.innerHTML=""}
 $("fltsheet").addEventListener("click",e=>{
   if(e.target===$("fltsheet")){closeFlt();return}
@@ -376,11 +383,13 @@ $("fltsheet").addEventListener("click",e=>{
   if(k==="clear"){flt=fltEmpty();fltQ="";fltSave();fltRefresh();return}
   if(k==="sub"){const l=$("fltlist");fltScroll=l?l.scrollTop:0;fltSub=b.dataset.fv;fltQ="";renderFlt();return}
   if(k==="back"){fltSub="";fltQ="";renderFlt();return}
+  if(k==="grpopen"){fltGrpOpen=!fltGrpOpen;fltDraw();return}
   if(k==="tgdemo"){flt.demo=flt.demo==="hide"?"":"hide";fltSave();fltRefresh();return}
   if(k==="ht"){hideTest=!hideTest;try{localStorage.setItem("hideTest",hideTest?"1":"0")}catch(err){}deriveWants();fltRefresh();syncNow();return}   // to samo ustawienie co ⚙️ → Testy
   const v=b.dataset.fv;flt[k]=flt[k]===v?"":v;if(k==="when")flt.date="";
   if(k==="act"&&flt.act&&flt.act!=="bike")flt.bike="";   // rodzaj roweru nie dotyczy innych aktywności
   if(k==="user"&&flt.user)fltUfBump(flt.user);
+  if(k==="grp")fltGrpOpen=!1;   // po wyborze grupy lista się zwija
   fltSave();fltRefresh();
 });
 $("fltsheet").addEventListener("input",e=>{if(e.target.id==="fltq"){fltQ=e.target.value;const s=$("fltstk");if(s)s.innerHTML=fltStackHtml()}});
