@@ -1323,12 +1323,14 @@ function openWho(mode,wantId){
   if(mode==="pl"){ws.vis="pick";ws.pick=new Set(plIds(wantId))}   // 📋 osoby na liście (KROK 68)
   else if(mode==="form"){ws.vis=wf.vis;ws.pick=new Set(wf.vis==="fav"?favIds():wf.pick);whoLocked().forEach(id=>ws.pick.add(id))}
   else if(mode==="evf"){ws.vis="pick";ws.pick=new Set(ef&&ef.inv||[]);ws.msg=ef&&ef.invMsg||""}
+  else if(mode==="grn"){ws.vis="pick";ws.pick=new Set(wantId||[]);ws.want=null}   // 👥 nowa grupa (js/17): wybór wraca do formularza grupy
   else{ws.vis="pick";ws.pick=new Set()}
   // domyślnie: Listy zwinięte, ⭐ Ulubieni rozwinięci, Pozostali zwinięci; przy ≤10 osobach wszystko rozwinięte
   const few=whoPeople().length<=10;ws.col={f:false,o:!few};
   // 📋 wybrana już lista (np. przy edycji zaproszenia) → sekcja „Twoje listy” od razu rozwinięta
   const plSel=ws.vis==="pick"&&plOk&&plists.some(l=>{const A=whoPlAvail(l.id);return A.length&&A.every(id=>ws.pick.has(id))});
-  ws.plOpen=few||plSel;ws.grOpen=!!ws.gr||wGrList().length<=3;
+  ws.plOpen=few||plSel||mode==="grn";ws.grOpen=!!ws.gr||wGrList().length<=3;
+  $("whosheet").classList.toggle("ontop",mode==="grn");   // nad oknem formularza grupy (#grsheet)
   renderWho(true);
 }
 function closeWho(){const p=$("whosheet");p.classList.add("hide");p.innerHTML=""}
@@ -1390,7 +1392,7 @@ function renderWho(first){
   const p=$("whosheet");p.classList.remove("hide");
   if(first){
     const w=ws.mode==="add"?wants.find(x=>x.id===ws.want):null,ev=ws.mode==="ev"?evs.find(x=>x.id===ws.want):null;
-    p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-k="cancel">Anuluj</button><b>'+(ws.mode==="gr"?"Zaproś do grupy":ws.mode==="pl"?"Osoby na liście":ws.mode==="add"?"Zaproś kogoś jeszcze":whoEv()?"Zaproś na imprezę":"Kogo zapraszasz?")+'</b><span style="min-width:64px"></span></div>'
+    p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-k="cancel">Anuluj</button><b>'+(ws.mode==="grn"?"Kogo zaprosić do grupy?":ws.mode==="gr"?"Zaproś do grupy":ws.mode==="pl"?"Osoby na liście":ws.mode==="add"?"Zaproś kogoś jeszcze":whoEv()?"Zaproś na imprezę":"Kogo zapraszasz?")+'</b><span style="min-width:64px"></span></div>'
      +(ws.mode==="pl"&&plById(ws.want)?'<div class="note" id="wspln" style="margin-top:6px;text-align:center;font-size:14px"></div>':'')
      +(ws.mode==="gr"&&typeof grName==="function"?'<div class="note" style="margin-top:6px;text-align:center;font-size:14px">'+uiIcon("users")+' '+esc(grName(ws.want))+'</div>':'')
      +(ev?'<div class="note" style="margin-top:6px;text-align:center;font-size:14px">🏁 '+esc(ev.name)+' · '+esc(evDates(ev))+'</div>':'')
@@ -1415,9 +1417,9 @@ function renderWho(first){
     :ws.pick.size>=2&&plists.length<20?'<button type="button" class="lnk wsplm" data-k="plsave">📋 Zapisz wybór jako listę</button>':''):'';
   const jn=ws.mode==="form"&&wf.editId?(joins[wf.editId]||[]).filter(x=>x!==uid).length:0;
   const gSel=ws.mode==="form"&&ws.vis!=="all"&&ws.gr?grNm(ws.gr):"";
-  $("wshint").textContent=gSel?"👥 Zobaczą wszyscy członkowie grupy „"+gSel+"” — także ci, którzy dołączą później"+(ws.vis==="fav"?" — i Twoi ulubieni":" — i osoby wybrane niżej")+". Nie trafi na publiczny kanał Telegram."+(jn?" Osoby, które już dołączyły ("+jn+"), zostaną zaproszone.":""):ws.mode==="gr"?"👥 Dostaną zaproszenie do grupy w aplikacji (⚙️ → Grupy). Członkiem zostanie ten, kto je przyjmie. Wyszarzeni już są w grupie albo mają zaproszenie.":ws.mode==="pl"?"📋 Tylko Ty widzisz tę listę. Osoby nie dostaną żadnego powiadomienia.":whoEv()?"Dostaną powiadomienie w aplikacji i od bota na Telegramie (jeśli go połączyli). Zaprosić można osoby, które widzą zakładkę Imprezy.":ws.vis==="all"?"":ws.mode==="add"?"Dostaną powiadomienie i zobaczą to zaproszenie.":"🔒 Zaproszenie zobaczą tylko wybrane osoby (i kogo one doproszą). Nie trafi na publiczny kanał Telegram."+(jn?" Osoby, które już dołączyły ("+jn+"), zostaną zaproszone.":"");
+  $("wshint").textContent=gSel?"👥 Zobaczą wszyscy członkowie grupy „"+gSel+"” — także ci, którzy dołączą później"+(ws.vis==="fav"?" — i Twoi ulubieni":" — i osoby wybrane niżej")+". Nie trafi na publiczny kanał Telegram."+(jn?" Osoby, które już dołączyły ("+jn+"), zostaną zaproszone.":""):ws.mode==="grn"?(typeof grFree==="function"&&whoCount()>grFree()?"⚠️ Za dużo o "+(whoCount()-grFree())+" — wolnych miejsc w nowej grupie: "+grFree()+".":"👥 Zaproszenie dostaną po założeniu grupy. Wolnych miejsc: "+(typeof grFree==="function"?grFree():"")+"."):ws.mode==="gr"?"👥 Dostaną zaproszenie do grupy w aplikacji (⚙️ → Grupy). Członkiem zostanie ten, kto je przyjmie. Wyszarzeni już są w grupie albo mają zaproszenie.":ws.mode==="pl"?"📋 Tylko Ty widzisz tę listę. Osoby nie dostaną żadnego powiadomienia.":whoEv()?"Dostaną powiadomienie w aplikacji i od bota na Telegramie (jeśli go połączyli). Zaprosić można osoby, które widzą zakładkę Imprezy.":ws.vis==="all"?"":ws.mode==="add"?"Dostaną powiadomienie i zobaczą to zaproszenie.":"🔒 Zaproszenie zobaczą tylko wybrane osoby (i kogo one doproszą). Nie trafi na publiczny kanał Telegram."+(jn?" Osoby, które już dołączyły ("+jn+"), zostaną zaproszone.":"");
   const n=whoCount(),ok=$("wsok");
-  ok.textContent=ws.mode==="gr"?(n?"Zaproś do grupy · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.mode==="pl"?"Zapisz · "+n+" "+plf(n,["osoba","osoby","osób"]):ws.mode==="ev"?(n?"Zaproś · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.mode==="evf"?(n?"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]):"Gotowe · nikogo"):ws.mode==="add"?(n?"Zaproś · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.vis==="all"?"Gotowe · wszyscy":gSel?"Gotowe · 👥 "+gSel+(whoCount()?" + "+whoCount()+" "+plf(whoCount(),["osoba","osoby","osób"]):""):"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]);
+  ok.textContent=ws.mode==="grn"?"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]):ws.mode==="gr"?(n?"Zaproś do grupy · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.mode==="pl"?"Zapisz · "+n+" "+plf(n,["osoba","osoby","osób"]):ws.mode==="ev"?(n?"Zaproś · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.mode==="evf"?(n?"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]):"Gotowe · nikogo"):ws.mode==="add"?(n?"Zaproś · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.vis==="all"?"Gotowe · wszyscy":gSel?"Gotowe · 👥 "+gSel+(whoCount()?" + "+whoCount()+" "+plf(whoCount(),["osoba","osoby","osób"]):""):"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]);
   ok.disabled=(ws.mode==="add"||ws.mode==="ev"||ws.mode==="gr")&&!n;
 }
 $("whosheet").addEventListener("click",async e=>{
@@ -1460,6 +1462,7 @@ $("whosheet").addEventListener("click",async e=>{
     ids.forEach(id=>all?ws.pick.delete(id):ws.pick.add(id));renderWho();return}
   if(ws.mode==="gr"){const ids=[...ws.pick];if(!ids.length||typeof grInvite!=="function")return;k.disabled=true;   // 👥 KROK 70 (js/17)
     try{await grInvite(ws.want,ids);closeWho()}catch(err){k.disabled=false;say(grErr(err))}return}
+  if(ws.mode==="grn"){const ids=[...ws.pick];closeWho();if(typeof grPicked==="function")grPicked(ids);return}
   if(ws.mode==="evf"){if(ef){ef.inv=[...ws.pick];ef.invMsg=String(ws.msg||"").trim().slice(0,120);const L=$("evsheet").querySelector(".bslist"),st=L?L.scrollTop:0;renderEvForm();const L2=$("evsheet").querySelector(".bslist");if(L2)L2.scrollTop=st}closeWho();return}
   if(ws.mode==="ev"){const ids=[...ws.pick];if(!ids.length)return;k.disabled=true;
     try{await evInvite(ws.want,ids,ws.msg);closeWho();renderEvents();say("🏁 Zaproszono: "+ids.map(id=>nicks[id]).join(", ")+" ✔ Dostaną powiadomienie.")}

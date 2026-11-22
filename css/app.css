@@ -991,6 +991,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 .gract{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;padding:8px 0 10px;border-bottom:1px solid var(--line)}
 button.b.bad{background:var(--bad);color:#fff}
 .grdesc{white-space:pre-line;font-size:16px;line-height:1.45;padding:10px 0 6px;text-align:left}.grarea{padding:0 0 10px;text-align:left;font-size:14px}.grarea .ui-i{width:15px;height:15px;vertical-align:-2px}
+#whosheet.ontop{z-index:4300}.grform .pladd{margin-top:2px}.grform .secbar{margin-top:8px}.grcnt.over{color:var(--bad);font-weight:600}
 .grform label{margin-top:14px}.grform .seg{margin-top:2px}.grfh{margin-top:6px;font-size:13px}
 .gricons{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:6px 0 2px}
 .gricb{width:42px;height:42px;border-radius:12px;border:0;background:var(--fill);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}.gricb .ui-i{width:22px;height:22px}.gricb.on{color:#fff}

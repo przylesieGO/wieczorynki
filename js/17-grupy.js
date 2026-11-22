@@ -197,9 +197,30 @@ function grSheet(){let p=$("grsheet");if(!p){p=document.createElement("div");p.c
 function openGrForm(id,pre){
   if(!session)return;if(needProfile()){askNick();return}
   const x=id?grG[id]:null;pre=pre||{};
-  Object.assign(gf,{mode:"form",id:id||"",busy:false,ids:pre.ids||[],name:x?x.name:pre.name||"",icon:x?grIc(x):"users",descr:x?x.descr||"":"",area:x?x.area||"":"",
+  Object.assign(gf,{mode:"form",id:id||"",busy:false,ids:(pre.ids||[]).filter(u=>u!==uid),off:new Set(),invOpen:(pre.ids||[]).length<=10,name:x?x.name:pre.name||"",icon:x?grIc(x):"users",descr:x?x.descr||"":"",area:x?x.area||"":"",
     color:x?x.color:pre.color||grFreeCol(),vis:x?x.visibility:"public",join:x?x.join_mode:"request"});
   renderGrSheet(true);
+}
+/* 👥 nowa grupa z list (2026-11-22): kogo zaprosić od razu — wybór w oknie osób (openWho "grn": listy, ulubieni, filtry),
+   podgląd z ptaszkami (odznaczanie), licznik wolnych miejsc; za dużo osób = przycisk nieaktywny (group_invite przy przekroczeniu limitu odrzuca całość) */
+const grStartLim=()=>{const v=+(window.grStartLimV||0);return v>1?v:30};   // groups_member_limit z app_settings (js/14), domyślnie 30
+const grFree=()=>grStartLim()-1;   // jedno miejsce zajmuje zakładający
+const grIdsAll=()=>(gf.ids||[]).filter(u=>u!==uid&&nicks[u]&&!modGone(u));
+const grIdsOn=()=>grIdsAll().filter(u=>!gf.off.has(u));
+const grOver=()=>grIdsOn().length-grFree();
+function grPicked(ids){gf.ids=ids.filter(u=>u!==uid);gf.off=new Set();gf.invOpen=true;renderGrSheet()}   // powrót z okna wyboru osób
+function grInvHtml(){
+  const A=grIdsAll(),n=grIdsOn().length,F=grFree(),L=grStartLim(),ov=n-F,col=!gf.invOpen;
+  let h='<label>Zaproś od razu <span class="pe-opt">(opcjonalnie)</span></label>'
+   +'<button type="button" class="prow pladd" data-gk="who"><span class="cbx plplus">+</span><span class="pnm">'+(A.length?"Zmień wybór…":"Wybierz osoby… (Twoje listy, ulubieni)")+'</span></button>';
+  if(A.length){const all=n===A.length;
+    h+=secBar(uiIcon("users"),"Wybrane osoby",A.length,col,n<A.length?"zaznaczono "+n:"",'data-gk="invt"',false)
+     +'<div class="secb'+(col?' hide':'')+'"><div class="secact"><button type="button" class="lnk" data-gk="tglall">'+(all?"Odznacz wszystkich":"Zaznacz wszystkich")+'</button></div>'
+     +(col?'':A.sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl")).map(u=>'<button type="button" class="prow'+(gf.off.has(u)?'':' on')+'" data-gk="tgl" data-gu="'+esc(u)+'"><span class="cbx">'+CHECK+'</span><span class="pnm">'+nk(u)+'</span></button>').join(""))+'</div>'}
+  h+='<div class="note grfh grcnt'+(ov>0?' over':'')+'">'+(ov>0?"Za dużo o "+ov+" — odznacz "+ov+" "+plf(ov,["osobę","osoby","osób"])+". Wolnych miejsc: "+F+" (limit grupy "+L+", w tym Ty)."
+     :n?"Zaprosisz "+n+" "+plf(n,["osobę","osoby","osób"])+" · wolnych miejsc: "+F+". Członkiem zostanie ten, kto przyjmie zaproszenie."
+     :"Wolnych miejsc: "+F+" (limit grupy "+L+", w tym Ty). Zaproszenie dostaną pod 🔔.")+'</div>';
+  return h;
 }
 function openGrCode(code){
   if(!session){say("Zaloguj się, żeby dołączyć do grupy.");return}if(needProfile()){askNick();return}
@@ -237,8 +258,8 @@ function renderGrSheet(first){
        +(pv.descr?'<div class="grdesc" style="font-size:14px;padding-bottom:8px">'+esc(pv.descr)+'</div>':'')+'</div>':'');
     btn=pv?(st==="active"?'<button type="button" class="b big" data-gk="openg">Jesteś w tej grupie — otwórz</button>':st==="requested"?'<button type="button" class="b big w" data-gk="openg">Prośba już wysłana — otwórz</button>'
       :'<button type="button" class="b big" data-gk="joincode"'+(gf.busy?' disabled':'')+'>'+(st==="invited"||pv.join_mode==="open"?"Dołącz do grupy":"Poproś o dołączenie")+'</button>'):'';
-  }else{tt=gf.id?"Edytuj grupę":"Nowa grupa";const n=gf.ids.length;
-    body='<div class="bslist grform">'+(n?'<div class="note" style="margin-top:6px;text-align:center;font-size:14px">Po założeniu zaprosisz '+grOsob(n).replace("osoba","osobę")+' z listy — członkiem zostanie ten, kto przyjmie zaproszenie.</div>':'')
+  }else{tt=gf.id?"Edytuj grupę":"Nowa grupa";const n=gf.id?0:grIdsOn().length,ov=!gf.id&&grOver()>0;
+    body='<div class="bslist grform">'
      +'<label for="grname">Nazwa</label><input class="bsq" id="grname" type="text" maxlength="40" placeholder="Np. MTB Przylesie" autocomplete="off" value="'+esc(gf.name)+'">'
      +'<label>Ikona i kolor</label><div class="gricons" role="radiogroup" aria-label="Ikona grupy">'+GR_ICONS.map(k=>'<button type="button" class="gricb'+(gf.icon===k?' on':'')+'" data-gic="'+k+'"'+(gf.icon===k?' style="background:'+grCol(gf)+'"':'')+' aria-label="Ikona '+k+'">'+uiIcon(k)+'</button>').join("")+'</div>'
      +'<div class="plcols" role="radiogroup" aria-label="Kolor grupy">'+Object.keys(PL_COL).map(c=>'<button type="button" class="plcol'+(gf.color===c?' on':'')+'" data-gcl="'+c+'" style="background:'+PL_COL[c]+'" aria-label="Kolor '+c+'"></button>').join("")
@@ -252,10 +273,13 @@ function renderGrSheet(first){
      +'<div class="note grfh">'+(gf.vis==="public"?"Widać ją w wyszukiwarce (tylko zalogowani).":"Nie ma jej w wyszukiwarce — wejście tylko z zaproszenia albo linku.")+'</div>'
      +'<label>Dołączanie</label>'+grSeg("gjm",gf.join,[["request","Na prośbę"],["open","Wolne"]])
      +'<div class="note grfh">'+(gf.join==="open"?"Każdy, kto znajdzie grupę albo ma link, dołącza od razu. Członkowie też mogą zapraszać.":"Prośby przyjmuje właściciel albo moderator. Zapraszają właściciel i moderatorzy.")+'</div>'
+     +(gf.id?'':grInvHtml())
      +'<div class="note plinfo" id="grinfo"></div></div>';
-    btn='<button type="button" class="b big" data-gk="save"'+(gf.busy?' disabled':'')+'>'+(gf.id?"Zapisz zmiany":n?"Załóż grupę i zaproś "+n:"Załóż grupę")+'</button>';
+    btn='<button type="button" class="b big" data-gk="save"'+(gf.busy||ov?' disabled':'')+'>'+(gf.id?"Zapisz zmiany":n?"Załóż grupę i zaproś "+n:"Załóż grupę")+'</button>';
   }
+  const L0=first?null:p.querySelector(".bslist"),sc=L0?L0.scrollTop:0;
   p.innerHTML='<div class="bsbox bsauto" role="dialog" aria-modal="true"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-gk="close">Anuluj</button><b>'+tt+'</b><span style="min-width:64px"></span></div>'+body+btn+'</div>';
+  const L1=sc?p.querySelector(".bslist"):null;if(L1)L1.scrollTop=sc;
   if(first)setTimeout(()=>{const i=$(gf.mode==="code"?"grcode":"grname");if(i&&!i.value)i.focus()},50);
 }
 const grInfo=t=>{const i=$("grinfo");if(i)i.textContent=t};
@@ -280,6 +304,10 @@ grSheet().addEventListener("click",async e=>{
   const k=e.target.closest("[data-gk]");if(!k||k.disabled)return;const a=k.dataset.gk;
   if(a==="eyedrop"){try{const r=await new EyeDropper().open(),c=String(r&&r.sRGBHex||"").toLowerCase();if(GR_HEX.test(c)){gf.color=c;renderGrSheet()}}catch(err){}return}   // 🎨 pipeta (Chrome/Edge na komputerze)
   if(a==="close"){closeGr();return}
+  if(a==="who"){grKeep();openWho("grn",grIdsOn());return}   // 👥 okno wyboru osób nad formularzem
+  if(a==="invt"){gf.invOpen=!gf.invOpen;renderGrSheet();return}
+  if(a==="tgl"){const u=k.dataset.gu;gf.off.has(u)?gf.off.delete(u):gf.off.add(u);renderGrSheet();return}
+  if(a==="tglall"){const A=grIdsAll();gf.off=A.every(u=>!gf.off.has(u))?new Set(A):new Set();renderGrSheet();return}
   if(a==="check"){await grCheckCode();return}
   if(a==="pickg"){const g=k.dataset.gid;gf.busy=true;renderGrSheet();try{await grInvite(g,[gf.u])}catch(err){say(grErr(err))}gf.busy=false;if(gf.mode==="pick"&&!grSheet().classList.contains("hide"))renderGrSheet();return}
   if(a==="picknew"){openGrForm("",{ids:[gf.u]});return}
@@ -290,12 +318,13 @@ grSheet().addEventListener("click",async e=>{
     catch(err){gf.busy=false;renderGrSheet();grInfo(grErr(err))}return}
   if(a==="save"){grKeep();const n=gf.name.trim().replace(/\s+/g," ");
     if(n.length<3||n.length>40){grInfo("Nazwa grupy: od 3 do 40 znaków.");return}
+    const inv=gf.id?[]:grIdsOn();if(!gf.id&&grOver()>0){grInfo("Za dużo osób do zaproszenia — odznacz "+grOver()+".");return}
     gf.busy=true;renderGrSheet();
     const args={p_name:n,p_icon:gf.icon,p_descr:gf.descr.trim(),p_area:gf.area.trim(),p_visibility:gf.vis,p_join_mode:gf.join,p_color:gf.color};
     try{let g=gf.id;
       if(g){const r=await sb.rpc("group_update",Object.assign({g},args));if(r.error)throw r.error;closeGr();say("Zapisano grupę „"+n+"”")}
       else{const r=await sb.rpc("group_create",args);if(r.error)throw r.error;g=r.data;closeGr();say("👥 Założono grupę „"+n+"”");
-        if(gf.ids.length){try{await grInvite(g,gf.ids)}catch(err){say("Grupa założona, ale zaproszenia nie poszły: "+grErr(err))}}}
+        if(inv.length){try{await grInvite(g,inv)}catch(err){say("Grupa założona, ale zaproszenia nie poszły: "+grErr(err))}}}
       await grLoad();grGo(g);
     }catch(err){gf.busy=false;renderGrSheet();grInfo(grErr(err))}return}
 });
