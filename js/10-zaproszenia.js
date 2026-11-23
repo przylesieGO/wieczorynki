@@ -1597,7 +1597,10 @@ async function setPref(w,t){
   if(r.error)throw r.error;
   if((decls[w.id]||[]).includes(uid))await sb.from("want_declines").delete().eq("want_id",w.id).eq("user_id",uid);
 }
+// „Nie dam rady” baza przyjmuje tylko przed startem (want_open: starts_at > now) — po starcie przycisku nie pokazujemy
+const wDeclOk=w=>!!w&&new Date(w.starts_at).getTime()>Date.now();
 async function declineWant(w){
+  if(!wDeclOk(w))throw new Error("Jazda już ruszyła — „Nie dam rady” można zgłosić tylko przed startem.");
   // najpierw „Nie dam rady”, potem wypisanie — autor dostaje na Telegramie jedną wiadomość zamiast dwóch
   if(rangeOk&&!(decls[w.id]||[]).includes(uid)){const r=await sb.from("want_declines").insert({want_id:w.id});if(r.error&&r.error.code!=="23505")throw r.error}
   if((joins[w.id]||[]).includes(uid)){const r=await sb.from("want_joins").delete().eq("want_id",w.id).eq("user_id",uid);if(r.error)throw r.error}
@@ -1660,7 +1663,7 @@ function renderPick(){
    +slotsHtml(w,pk.sel,pk.other)+pickClashHtml(w)
    +'<button type="button" class="b big" data-k="ok"'+(pk.sel?'':' disabled')+'>'+(settle?'✅ Ustal: ':'Pasuje mi o ')+(pk.sel?hhmm(new Date(pk.sel)):'…')+'</button>'
    +(settle?'<div class="ptg">Zaproszeni i dołączeni dostaną powiadomienie. Kto wybrał inną godzinę, wypadnie z listy jadących i dostanie pytanie „Jadę?”.</div>'
-     :'<div class="pbtns"><button type="button" class="b w" data-k="no">Nie dam rady</button></div>')
+     :wDeclOk(w)?'<div class="pbtns"><button type="button" class="b w" data-k="no">Nie dam rady</button></div>':'')
    +'</div>';
   p.classList.remove("hide");
 }
