@@ -912,6 +912,7 @@ html[data-theme=dark] .wffoot{box-shadow:0 -10px 24px rgba(0,0,0,.45)}
 .pbtns{display:flex;gap:8px;margin-top:10px}.pbtns .b{flex:1;padding:12px 6px;font-size:15px;border-radius:12px}
 .popbox .b.big{margin-top:14px}
 .pcard{touch-action:pan-y;will-change:transform}
+.popbox .sclose{z-index:3}
 .pcard.inr{animation:pin-r .3s cubic-bezier(.2,.8,.2,1)}.pcard.inl{animation:pin-l .3s cubic-bezier(.2,.8,.2,1)}
 @keyframes pin-r{from{transform:translateX(70%);opacity:0}to{transform:none;opacity:1}}
 @keyframes pin-l{from{transform:translateX(-70%);opacity:0}to{transform:none;opacity:1}}
