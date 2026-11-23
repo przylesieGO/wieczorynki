@@ -44,9 +44,17 @@ function svToRow(b){
     svc_freq:s.freq==="daily"?"daily":"once",svc_name:t(s.name),svc_tel:t(s.tel)};
 }
 
+// przykład zapisany przez etap 1: pliki jako same nazwy (receipt / warranty / doc) → obiekty {name, demo}
+function svDemoFix(b){
+  const f=n=>n?{name:String(n).slice(0,60),demo:true}:null;
+  if(!b.files){b.files={receipt:f(b.receipt),warranty:f(b.warranty)};delete b.receipt;delete b.warranty}
+  delete b.kind;b.svc=b.svc||{};
+  b.parts=(b.parts||[]).map(p=>{if(p.file===undefined){p.file=f(p.doc);delete p.doc}return p});
+  return b;
+}
 /* 🔄 wczytanie (z jednorazowym przeniesieniem danych z etapu 1) */
 function svLoad(){
-  if(!svD||svD.for!==uid){const L=svLocal();svD={for:uid,ask:!!L.ask,bikes:(L.bikes||[]).filter(b=>b.demo),loaded:false,at:0,err:""};svSel=""}
+  if(!svD||svD.for!==uid){const L=svLocal();svD={for:uid,ask:!!L.ask,bikes:(L.bikes||[]).filter(b=>b.demo).map(svDemoFix),loaded:false,at:0,err:""};svSel=""}
   return svD;
 }
 async function svFetch(force){
