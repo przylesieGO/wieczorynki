@@ -1235,3 +1235,8 @@ details.wday[open].wpv{border-color:var(--priv)}
 .sv-open{background:none;border:0;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer;flex:1;min-width:0}.sv-open small{color:var(--acc)}
 .sv-chip .sv-cv{background:none;border:0;padding:0;font:inherit;color:inherit;display:inline-flex;align-items:center;gap:5px;cursor:pointer;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sv-chip .sv-cx{background:none;border:0;padding:0 0 0 4px;font-size:17px;line-height:1;color:var(--mut);cursor:pointer;flex:none}
+
+/* 🔤 pasek liter A–Z przy długich listach osób oraz przełącznik archiwum w Filtrach */
+.fulwrap{position:relative;width:100%;flex:none}.fulwrap .fulist.az{padding-right:18px}
+.faz{position:absolute;right:0;top:0;bottom:0;width:18px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:3px 0;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer;font-size:10px;font-weight:700;line-height:1;color:var(--acc)}
+.faz span{flex:1;display:flex;align-items:center;justify-content:center;width:100%}.faz span.on{background:var(--accbtn);color:var(--white);border-radius:6px}
