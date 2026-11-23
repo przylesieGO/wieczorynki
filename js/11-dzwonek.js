@@ -300,7 +300,7 @@ function popNks(lbl,ids,k,cnt){
    +(fn.length?'<span class="jf">· ⭐ '+esc(fn.join(", "))+'</span>':'')+'</summary>'
    +'<div class="jv">'+favFirst(ids).map(id=>'<div>'+nk(id)+(onlineIds.includes(id)?'<span class="note">🟢 teraz</span>':'')+'</div>').join("")+'</div></details>';
 }
-function renderPop(){
+function renderPop(dir){   // dir: -1 / 1 = karta wjeżdża z lewej / prawej (przesuw), bez dir — bez animacji
   const p=$("popsheet"),it=popList[popIdx];if(!it){closePop();return}
   const {n,w,moved}=it,d=new Date(w.starts_at),wd=d.toLocaleDateString("pl-PL",{weekday:"long"}),dd=dayDiff(d);
   const day=dd>=0&&dd<=2?["Dziś","Jutro","Pojutrze"][dd]:wd.charAt(0).toUpperCase()+wd.slice(1)+" "+d.getDate()+" "+MON3[d.getMonth()].toLowerCase();
@@ -320,7 +320,7 @@ function renderPop(){
     :big("join","Jadę! · "+hhmm(d))+'<div class="pbtns">'+sm("no","Nie dam rady","w")+sm("later","Przypomnij później","g")+'</div>';
   else btns=joined?big("read","OK 👍")+'<div class="pbtns">'+sm("leave","Rezygnuję","w")+'</div>'
     :big("join","Jadę! · "+hhmm(d))+'<div class="pbtns">'+sm("read","OK","w")+'</div>';
-  p.innerHTML='<div class="sheetbox popbox'+grCls(w)+'" role="dialog" aria-modal="true"><button class="sclose" data-q="later" aria-label="Później">✕</button>'
+  p.innerHTML='<div class="sheetbox popbox'+grCls(w)+'" role="dialog" aria-modal="true"><button class="sclose" data-q="later" aria-label="Później">✕</button><div class="pcard'+(dir?(dir>0?' inr':' inl'):'')+'">'
    +(isTest(w)?'<span class="ttag" style="margin-right:6px">🧪 TEST</span>':'')+'<span class="ptag">'+(set?'✅ GODZINA USTALONA':time?'🕖 ZMIANA GODZINY':'📩 NOWE ZAPROSZENIE'+(priv&&!wGr(w)?' · 🔒 PRYWATNE':''))+'</span>'+(wGr(w)?' '+grTagHtml(w):'')
    +'<div class="ph">'+nk(actor,"Ktoś")+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w,actor):'')+(set?' '+(genders[actor]==="K"?"ustaliła":"ustalił")+' godzinę':time?' '+(genders[actor]==="K"?"zmieniła":"zmienił")+' godzinę':' zaprasza Cię na rower')+'</div>'
    +'<div class="pwhen">'+esc(day+" "+wTime(w))+(dd>=0&&dd<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
@@ -332,15 +332,37 @@ function renderPop(){
    +(inv.length?popNks("Zaproszeni też",inv,"pinv"+w.id,false):'')
    +(going.length&&!open?popNks("Jadą już",going,"pgo"+w.id,true):'')
    +btns
-   +(popList.length>1?'<div class="pnav">'+popList.map((_,i)=>'<button type="button" data-pi="'+i+'" class="'+(i===popIdx?'on':'')+'" aria-label="Powiadomienie '+(i+1)+'"></button>').join("")+'<span>'+(popIdx+1)+' z '+popList.length+'</span></div>':'')
+   +'</div>'
+   +(popList.length>1?'<div class="pnav"><button type="button" class="parr" data-pd="-1" aria-label="Poprzednie zaproszenie"'+(popIdx===0?' disabled':'')+'>‹</button>'
+     +(popList.length<=6?'<span class="pdots">'+popList.map((_,i)=>'<button type="button" class="pdt'+(i===popIdx?' on':'')+'" data-pi="'+i+'" aria-label="Powiadomienie '+(i+1)+'"><i></i></button>').join("")+'</span>':'')
+     +'<button type="button" class="parr" data-pd="1" aria-label="Następne zaproszenie"'+(popIdx===popList.length-1?' disabled':'')+'>›</button></div><div class="pct">'+(popIdx+1)+' z '+popList.length+'</div>':'')
    +'<div class="ptg">Zaproszenie znajdziesz też na Starcie, w karcie dnia.</div></div>';
   p.classList.remove("hide");
 }
+/* ↔ karuzela zaproszeń w oknie startowym (2026-11-23, wariant C „przesuw”): przeciągnięcie karty palcem, strzałki ‹ › i kropki; karta wjeżdża z boku */
+let popSwiped=false;
+function popGo(k,dir){k=Math.max(0,Math.min(popList.length-1,k));if(k===popIdx)return;const d=dir||(k>popIdx?1:-1);popIdx=k;renderPop(d)}
+(()=>{const sh=$("popsheet");let x0=0,y0=0,card=null,on=false,id=null;
+  const snap=()=>{if(!card)return;card.style.transition="transform .22s cubic-bezier(.2,.8,.2,1)";card.style.transform="";card.style.opacity=""};
+  sh.addEventListener("pointerdown",e=>{if(popList.length<2||e.pointerType==="mouse"&&e.button)return;card=e.target.closest(".pcard");if(!card)return;x0=e.clientX;y0=e.clientY;on=false;id=e.pointerId;card.style.transition="none"});
+  sh.addEventListener("pointermove",e=>{if(!card||e.pointerId!==id)return;const dx=e.clientX-x0,dy=e.clientY-y0;
+    if(!on){if(Math.abs(dx)<10||Math.abs(dx)<Math.abs(dy)*1.2)return;on=true;try{sh.setPointerCapture(id)}catch(_){}}
+    const edge=(popIdx===0&&dx>0)||(popIdx===popList.length-1&&dx<0);
+    card.style.transform="translateX("+(edge?dx*.3:dx)+"px)";card.style.opacity=String(Math.max(.4,1-Math.abs(dx)/(sh.clientWidth*1.2)))});
+  const end=e=>{if(!card||e.pointerId!==id)return;const c=card,dx=e.clientX-x0;card=null;if(!on)return;on=false;popSwiped=true;setTimeout(()=>{popSwiped=false},350);
+    const d=dx<0?1:-1,ok=Math.abs(dx)>Math.min(110,sh.clientWidth*.22)&&((d>0&&popIdx<popList.length-1)||(d<0&&popIdx>0));
+    if(ok){c.style.transition="transform .18s ease-in,opacity .18s";c.style.transform="translateX("+(d>0?"-":"")+"110%)";c.style.opacity="0";setTimeout(()=>popGo(popIdx+d,d),170)}
+    else{c.style.transition="transform .22s cubic-bezier(.2,.8,.2,1)";c.style.transform="";c.style.opacity=""}};
+  sh.addEventListener("pointerup",end);sh.addEventListener("pointercancel",e=>{if(card&&e.pointerId===id){snap();card=null;on=false}});
+  document.addEventListener("keydown",e=>{if(!popOpen()||popList.length<2||/INPUT|TEXTAREA/.test((e.target||{}).tagName||""))return;if(e.key==="ArrowRight")popGo(popIdx+1,1);else if(e.key==="ArrowLeft")popGo(popIdx-1,-1)});
+})();
 function popNext(){popList=popPending();if(!popList.length){closePop();return}popIdx=Math.min(popIdx,popList.length-1);renderPop()}
 $("popsheet").addEventListener("click",async e=>{
+  if(popSwiped){popSwiped=false;return}   // klik po przeciągnięciu karty — pomijany
   const it=popList[popIdx];
   if(e.target===$("popsheet")){if(it){popIds(it).forEach(i=>popSnooze.add(i));saveSnooze()}popNext();return}
-  const dot=e.target.closest("button[data-pi]");if(dot){popIdx=+dot.dataset.pi;renderPop();return}
+  const dot=e.target.closest("button[data-pi]");if(dot){popGo(+dot.dataset.pi);return}
+  const arr=e.target.closest("button[data-pd]");if(arr){popGo(popIdx+(+arr.dataset.pd),+arr.dataset.pd);return}
   const st=e.target.closest("[data-t]");
   if(st&&it){
     if(st.dataset.t==="oth"){popOther=true;renderPop();const i=$("othtime");if(i)i.focus();return}
