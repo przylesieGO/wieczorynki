@@ -274,10 +274,10 @@ const DS_N={dev:{tel:"Telefon",tab:"Tablet",pc:"Komputer"},os:{android:"Android"
   ref:{fb:"Facebook",msg:"Messenger",ig:"Instagram",google:"Google",app:"Ekran logowania",direct:"Bezpośrednio / brak danych",inna:"Inne strony"},
   conn:{"slow-2g":"bardzo wolne","2g":"2G","3g":"3G","4g":"4G i szybsze"}};
 const DS_SCR={t0:"Zaproszenia",t1:"Wieczorynki",t2:"Zaawansowane",t3:"Imprezy",gearpanel:"Ustawienia",wantform:"Formularz zaproszenia",whosheet:"Wybór osób",
-  plsheet:"Listy",grsheet:"Grupa",fltsheet:"Filtry",repsheet:"Jak poszło?",evsheet:"Impreza",popsheet:"Okno / karta",picksheet:"Wybór",bellsheet:"Powiadomienia",
+  plsheet:"Listy",grsheet:"Grupa",fltsheet:"Filtry",srchsheet:"Szukaj",repsheet:"Jak poszło?",evsheet:"Impreza",popsheet:"Okno / karta",picksheet:"Wybór",bellsheet:"Powiadomienia",
   sigsheet:"Mam ochotę",welsheet:"Powitanie",homesheet:"Miejscowość",routesheet:"Trasa",rbsheet:"Baza tras",mapsheet:"Mapa",helpsheet:"Pomoc",demosheet:"Ocena demo",ratesheet:"Ocena aplikacji"};
 const DS_CL={"w:join":"Jadę! / Rezygnuję","w:pref":"Pasuje mi o…","w:inv":"Dopraszanie","w:del":"Usuń zaproszenie","id:fab":"Nowe zaproszenie (+)","id:bellbtn":"Dzwonek",
-  "id:gear":"Ustawienia","id:helpbtn":"Pomoc","id:pvend":"Wyjdź z demo","id:wsave":"Wyślij zaproszenie","id:wcancel":"Anuluj zaproszenie","id:wfx":"Zamknij formularz",
+  "id:gear":"Ustawienia","id:helpbtn":"Pomoc","id:srchbtn":"Szukaj","id:pvend":"Wyjdź z demo","id:wsave":"Wyślij zaproszenie","id:wcancel":"Anuluj zaproszenie","id:wfx":"Zamknij formularz",
   "id:t0":"Zakładka Zaproszenia","id:t1":"Zakładka Wieczorynki","id:t2":"Zakładka Zaawansowane","id:t3":"Zakładka Imprezy","id:honl":"Kto jest online","id:menick":"Mój nick",
   "id:wwho":"Kto zobaczy zaproszenie","u:karta":"Karta osoby (nick)","c:myrides":"Moje jazdy","c:back":"Wstecz","c:help":"Pomoc","dq:send":"Ocena demo: wyślij","dq:skip":"Ocena demo: bez oceny",
   "id:iaopen":"Pasek: Otwórz w Chrome","id:iacopy":"Pasek: Kopiuj link","id:iax":"Pasek: ukryj","ev:like":"Impreza: polub","ev:share":"Impreza: udostępnij","my:share":"Udostępnij zaproszenie","my:edit":"Edytuj zaproszenie"};

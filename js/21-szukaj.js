@@ -1,0 +1,287 @@
+/* 🔍 Wspólne wyszukiwanie — etap B (decyzje właściciela 2026-11-23/24, NASTEPNA_SESJA_wyszukiwanie)
+   Lupa w nagłówku (na wąskich ekranach w miejscu ❓ — Pomoc jest w ⚙️ → Pomoc i opinie).
+   Jedno okno szuka zawsze WSZYSTKIEGO (włączone Filtry nie zawężają): zaproszenia, imprezy, osoby, grupy, listy, trasy, serwis;
+   sekcja „Odbyte” osobno na końcu (najdalej od pola). Wyniki rosną w górę nad polem wpisywania (jak w podekranach Filtrów).
+   Bomble nad listą: rodzaje wyników z liczbą trafień. Kliknięcie otwiera istniejące miejsce w aplikacji.
+   Przełącznik „Szukaj też w opcjach aplikacji”: słownik SR_OPT (JEDNO miejsce — każda nowa opcja = wpis tutaj, zasada w README):
+   wynik pokazuje ścieżkę („⚙️ → Edytuj profil → …”), a kliknięcie otwiera to miejsce i pulsuje ustawienie.
+   👑 szuka też we wszystkich prywatnych zaproszeniach i grupach (dane, które baza i tak daje 👑).
+   Plik wczytywany jako ostatni: przy wczytaniu tylko rejestruje obsługę zdarzeń. Bez nowych zapytań do bazy poza
+   jednorazowym dociągnięciem tras / grup / serwisu przy pierwszym otwarciu okna (oszczędzanie limitów serwera). */
+let srQ="",srTy="all",srOpt=(()=>{try{return localStorage.getItem("srOpt")==="1"}catch(e){return false}})(),srMore=false;
+const srNorm=t=>String(t||"").toLocaleLowerCase("pl").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/ł/g,"l");
+// trafienie: wszystkie słowa zapytania muszą wystąpić; punkty: początek nazwy 3, początek słowa 2, w środku 1 (-1 = brak)
+function srScore(name,hay,q){
+  const W=srNorm(q).split(/\s+/).filter(Boolean);if(!W.length)return 0;
+  const n=srNorm(name),h=n+" "+srNorm(hay);
+  if(!W.every(w=>h.includes(w)))return -1;
+  if(n.startsWith(W[0]))return 3;
+  return W.every(w=>(" "+h).includes(" "+w))?2:1;
+}
+const SR_TY=[["want","Zaproszenia","bike"],["ev","Imprezy","medal"],["ride","Wieczorynki","moon"],["user","Osoby","user"],["grp","Grupy","users"],["list","Listy","list"],["route","Trasy","map"],["sv","Serwis","wrench"],["opt","Opcje","sliders"],["done","Odbyte","archive"]];
+const srTyName=k=>(SR_TY.find(x=>x[0]===k)||[,""])[1];
+// kolejność sekcji od góry; najbliżej pola (na dole) — opcje i zaproszenia, „Odbyte” na samej górze (koniec listy)
+const SR_ORDER=["done","sv","route","list","grp","user","ride","ev","want","opt"];
+
+/* ---------- źródła danych (to, co aplikacja już ma w pamięci) ---------- */
+// zaproszenia bez filtrów i bez ukrywania testowych (to samo co deriveWants, tylko bez „hideTest”)
+function srWants(){
+  if(DEMO||!wRaw.length)return wants.slice();
+  const since=Date.now()-31*864e5;
+  let a=wRaw.filter(x=>new Date(x.starts_at).getTime()>=since);
+  if(!isAdmin)a=a.filter(x=>x.user_id===uid||!modGone(x.user_id));
+  if(pv)a=a.filter(x=>x.visibility!=="private"||x.user_id===uid||(invs[x.id]||[]).some(y=>y.u===uid)||wInvMe(x)||(joins[x.id]||[]).includes(uid));
+  return a;
+}
+const srDay=d=>{const dd=dayDiff(d),wd=d.toLocaleDateString("pl-PL",{weekday:"long"});
+  return [dd===0?"dziś":dd===1?"jutro":dd===-1?"wczoraj":"",wd,d.toLocaleDateString("pl-PL",{day:"numeric",month:"long"}),d.getDate()+"."+String(d.getMonth()+1).padStart(2,"0")].join(" ")};
+// rodzaj roweru, tempo i aktywność jako słowa do szukania („gravel”, „turystycznie”, „bieg”…)
+const srWantTags=w=>[w.bike&&BIKES[w.bike]?BIKES[w.bike].replace(/^\S+\s/,""):"",w.bike==="ebike"?"elektryk elektryczny":"",
+  w.pace&&PACES[w.pace]?PACES[w.pace].n+" "+PACES[w.pace].d:"",w.activity&&SIG_ACT[w.activity]?SIG_ACT[w.activity][1]+" "+SIG_ACT[w.activity][2]:"",
+  w.route_km!=null||w.km?Math.round(+(w.route_km||w.km))+" km":""].join(" ");
+const srWhen=d=>{const dd=dayDiff(d);return dd===0?"Dziś":dd===1?"Jutro":dd===-1?"Wczoraj":d.toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"})};
+function srItems(q){
+  const out=[],add=(k,id,t,sub,ico,hay,go,ord)=>{const sc=srScore(t,hay,q);if(sc>=0)out.push({k,id,t,sub,ico,sc,go,ord:ord==null?0:ord})};
+  // 🚲 zaproszenia (nadchodzące) i odbyte (ostatnie 30 dni)
+  srWants().forEach(w=>{
+    const d=new Date(w.starts_at),done=wDone(w),ppl=(joins[w.id]||[]).map(nickOf).join(" "),
+      t=w.title||"Jazda — "+nickOf(w.user_id),
+      sub=srWhen(d)+" · "+(isOpen(w)?wTime(w):hhmm(d))+(w.title?" · "+nickOf(w.user_id):"")+(w.place?" · "+w.place:"")+(w.visibility==="private"?" · prywatne":"")+(w.is_test?" · TEST":""),
+      hay=[nickOf(w.user_id),ppl,invIds(w).map(nickOf).join(" "),srWantTags(w),w.place,w.place_city,w.place_area,w.note,srDay(d),w.visibility==="private"?"prywatne":"otwarte",w.is_test?"test testowe":"",
+        typeof wGr==="function"&&wGr(w)&&typeof grG!=="undefined"&&grG[wGr(w)]?grG[wGr(w)].name:""].join(" ");
+    if(done){if(Date.now()-d.getTime()<30*864e5)add("done",w.id,t,sub,"archive",hay+" odbyte archiwum",()=>srGoArch(w),d.getTime())}   // odbyte: najświeższe na dole (przy polu)
+    else add("want",w.id,t,sub,w.visibility==="private"?"lock":"bike",hay,()=>srGoWant(w),-d.getTime())});
+  // 🏁 imprezy (minione → Odbyte)
+  if(typeof evs!=="undefined"&&evOk&&tabOk(3))evs.forEach(e=>{
+    const past=evPast(e),d=new Date(e.date_from+"T12:00"),sub=srWhen(d)+(e.place?" · "+e.place:"")+" · impreza";
+    add(past?"done":"ev",e.id,e.name,sub,"medal",[e.place,e.note,srDay(d),"impreza zawody"].join(" "),()=>srGoEv(e.id),past?d.getTime():-d.getTime())});
+  // 🌙 wieczorynki (zakładka Wieczorynki; minione → Odbyte)
+  if(typeof tabOk==="function"&&tabOk(1))sorted.forEach((r,i)=>{
+    const d=new Date(r.when),past=d.getTime()<Date.now()-3*36e5,sub=srWhen(d)+" · "+hhmm(d)+(r.place?" · "+r.place:"")+" · wieczorynka";
+    add(past?"done":"ride",r.id,r.title||"Wieczorynka",sub,"moon",[r.place,r.owner,r.note,r.route_title,r.route_desc,(rsvps[r.id]||[]).map(nickOf).join(" "),r.pace&&PACES[r.pace]?PACES[r.pace].n:"",srDay(d),"wieczorynka"].join(" "),()=>srGoRide(i),past?d.getTime():-d.getTime())});
+  // 👤 osoby
+  if(session)Object.keys(nicks).forEach(id=>{if(!isAdmin&&modGone(id))return;
+    const sub=[id===uid?"to Ty":"",isFav(id)?"ulubiony":"",onlineIds.includes(id)?"teraz online":"",adminIds.includes(id)?"administrator":"",testerIds.has(id)?"tester":"",typeof demoIds!=="undefined"&&demoIds.has(id)?"konto demo":""].filter(Boolean).join(" · ");
+    add("user",id,nicks[id],sub,isFav(id)?"starf":"user",sub,()=>srGoUser(id))});
+  // 👥 grupy: moje, jawne z wyszukiwarki grup; 👑 — wszystkie
+  if(session&&typeof grG!=="undefined")Object.values(grG).forEach(g=>{if(!g||!g.id||!g.name)return;
+    const mine=typeof grMy==="function"&&grMy(g.id);if(!mine&&g.visibility!=="public"&&!isKingReal())return;
+    const sub=[g.visibility==="public"?"jawna":"ukryta",g.members!=null?g.members+" "+plf(+g.members,["osoba","osoby","osób"]):"",mine?(mine.status==="active"?"jesteś w grupie":"zaproszenie"):"",g.archived_at?"archiwum":""].filter(Boolean).join(" · ");
+    add("grp",g.id,g.name,sub,"users",[g.descr,g.area].join(" "),()=>grGo(g.id))});
+  // 📋 listy
+  if(session&&typeof plOk!=="undefined"&&plOk)plists.forEach(l=>{const ids=plIds(l.id);
+    add("list",l.id,l.name,ids.length+" "+plf(ids.length,["osoba","osoby","osób"]),"list",ids.map(nickOf).join(" "),()=>srGoGear(()=>{plId=l.id;pf.pl=null;gearView="plist"}))});
+  // 🗺️ trasy z bazy
+  if(rbOk&&rbList)rbList.forEach(x=>{if(x.hidden&&!isAdmin)return;
+    add("route",x.id,x.name,Math.round(+x.km)+" km"+(x.start_city?" · "+x.start_city:"")+(x.hidden?" · ukryta":""),"map",[x.start_city,x.bike,"trasa gpx"].join(" "),()=>srGoRoute(x.id))});
+  // 🔧 serwis: rowery i wymienione części
+  if(typeof svOn==="function"&&svOn()){const d=svLoad();d.bikes.filter(b=>!b.demo).forEach(b=>{
+    const ty=(SV_TYPES.find(x=>x[0]===b.type)||[,,""])[2];
+    add("sv",b.id,b.name||"Rower",[ty,b.brand,b.model].filter(Boolean).join(" · "),"wrench",[b.brand,b.model,ty,b.frame,"rower serwis"].join(" "),()=>srGoBike(b.id));
+    (b.parts||[]).forEach(p=>add("sv",b.id+":"+p.id,p.name+(p.brand?" · "+p.brand:""),(p.date?svDate(p.date)+" · ":"")+(b.name||"Rower"),"wrench",[p.brand,b.name,"część wymiana"].join(" "),()=>srGoBike(b.id)))})}
+  // ⚙️ opcje aplikacji (słownik)
+  if(srOpt)SR_OPT().forEach(o=>{if(o.ok===false)return;add("opt",o.t,o.t,o.p,o.i||"sliders",o.s||"",()=>srGoOpt(o))});
+  return out;
+}
+
+/* ---------- ⚙️ słownik opcji aplikacji — JEDNO miejsce (zasada: każda nowa opcja = wpis tutaj) ----------
+   t: nazwa, s: synonimy (szukane, niewidoczne), p: ścieżka pokazywana w wyniku, i: ikona,
+   go: kolejne przyciski do kliknięcia w ⚙️ (od ekranu głównego), hl: element do podświetlenia na końcu,
+   fn: zamiast ⚙️ — funkcja otwierająca miejsce poza ustawieniami, ok: czy opcja jest dostępna dla tej osoby */
+const SR_PROF='[data-c="nick"]';
+function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal(),ADM='[data-c="admin"]';
+  return [
+  {t:"Edytuj profil",s:"profil zdjęcie awatar fotka",p:"Ustawienia → Edytuj profil",i:"user",go:[SR_PROF],ok:S},
+  {t:"Zmień nick",s:"nick nazwa pseudonim ksywka",p:"Ustawienia → Edytuj profil → Nick",i:"pencil",go:[SR_PROF],hl:'[data-c="nickopen"]',ok:S},
+  {t:"Zdjęcie profilowe",s:"zdjęcie awatar fotka foto",p:"Ustawienia → Edytuj profil → Zdjęcie",i:"cam",go:[SR_PROF],hl:".pe-av",ok:S&&profExOk},
+  {t:"Płeć",s:"płeć kobieta mężczyzna kolor nicku",p:"Ustawienia → Edytuj profil → Płeć",i:"users",go:[SR_PROF],hl:"#gsex",ok:S&&genderOk},
+  {t:"Moja miejscowość",s:"miejscowość miasto okolica odległość dom",p:"Ustawienia → Edytuj profil → Miejscowość",i:"pin",go:[SR_PROF],hl:'[data-home="1"]',ok:S},
+  {t:"Telefon",s:"telefon numer zadzwoń sms",p:"Ustawienia → Edytuj profil → Telefon",i:"phone",go:[SR_PROF],hl:'[data-pe="phone"]',ok:S&&profExOk},
+  {t:"Moje media",s:"strava instagram youtube facebook media linki",p:"Ustawienia → Edytuj profil → Moje media",i:"link",go:[SR_PROF],hl:'[data-pet="mopen"]',ok:S&&profExOk},
+  {t:"Moje jazdy",s:"jazdy kalendarz rekordy km statystyki historia seria",p:"Ustawienia → Edytuj profil → Moje jazdy",i:"bike",go:[SR_PROF,'[data-c="myrides"]'],ok:S&&reportOk},
+  {t:"Moja teczka",s:"teczka konto wszystko",p:"Ustawienia → Edytuj profil → Moja teczka 👑",i:"folder",go:[SR_PROF],hl:'[data-a="tk"]',ok:KR},
+  {t:"Serwis rowerowy",s:"serwis rower przebieg łańcuch części paragon gwarancja",p:"Ustawienia → Edytuj profil → Serwis rowerowy",i:"wrench",go:[SR_PROF,'[data-sv="open"]'],ok:typeof svOn==="function"&&svOn()},
+  {t:"Ulubieni i listy",s:"ulubieni gwiazdka listy znajomi",p:"Ustawienia → Edytuj profil → Ulubieni i listy",i:"starf",go:[SR_PROF,'[data-c="favs"]'],ok:S&&favOk},
+  {t:"Nowa lista osób",s:"lista utwórz dodaj listę",p:"Ustawienia → Edytuj profil → Ulubieni i listy → Nowa lista",i:"list",go:[SR_PROF,'[data-c="favs"]'],hl:'[data-c="plnew"]',ok:S&&typeof plOk!=="undefined"&&plOk},
+  {t:"Grupy",s:"grupy klub drużyna paczka załóż grupę",p:"Ustawienia → Ludzie → Grupy",i:"users",go:['[data-gx="hub"]'],ok:S&&typeof grOn==="function"&&grOn()},
+  {t:"Prywatność",s:"prywatność kto widzi ukryj rekordy kalendarz",p:"Ustawienia → Edytuj profil → Prywatność",i:"lock",go:[SR_PROF,'[data-c="priv"]'],ok:S&&reportOk},
+  {t:"Telegram",s:"telegram powiadomienia bot wiadomości",p:"Ustawienia → Edytuj profil → Powiadomienia → Telegram",i:"send",go:[SR_PROF,'[data-c="tg"]'],ok:typeof tgOn==="function"&&tgOn()},
+  {t:"Kanał @PrzylesieGo",s:"kanał telegram ogłoszenia",p:"Ustawienia → Edytuj profil → Powiadomienia",i:"mega",go:[SR_PROF],hl:'a[href="https://t.me/PrzylesieGo"]',ok:S},
+  {t:"Zmień hasło",s:"hasło password",p:"Ustawienia → Edytuj profil → Konto → Zmień hasło",i:"key",go:[SR_PROF,'[data-c="pwd"]'],ok:S},
+  {t:"Baza tras",s:"trasy gpx mapa odkryj",p:"Ustawienia → Baza tras",i:"map",fn:()=>openRb(),ok:!!rbOk},
+  {t:"Pytaj „Jak poszło?”",s:"jak poszło ankieta ocena po jeździe km",p:"Ustawienia → Jazdy i zaproszenia",i:"bike",hl:"[data-ro]",ok:S&&reportOk},
+  {t:"Motyw: jasny / ciemny",s:"motyw ciemny jasny tryb nocny dark wygląd kolory",p:"Ustawienia → Wygląd i ekran → Motyw",i:"moon",hl:"[data-t]"},
+  {t:"Nick na górze ekranu",s:"nick nagłówek pokaż ukryj",p:"Ustawienia → Wygląd i ekran",i:"user",hl:"[data-sn]",ok:S},
+  {t:"Pomoc przy starcie",s:"pomoc start powitanie",p:"Ustawienia → Wygląd i ekran",i:"help",hl:"[data-hs]"},
+  {t:"Testowe zaproszenia",s:"test testowe ukryj pokaż",p:"Ustawienia → Testy",i:"flask",hl:"[data-ht]",ok:S&&testOk&&!DEMO},
+  {t:"Spokojny wygląd testowych",s:"test miganie ramka",p:"Ustawienia → Testy",i:"flask",hl:"[data-tc]",ok:S&&testOk&&!DEMO},
+  {t:"Funkcje testowe (BETA)",s:"beta nowe funkcje tester",p:"Ustawienia → Testy",i:"flask",hl:"[data-beta]",ok:meTester()&&!DEMO},
+  {t:"Zostań testerem",s:"tester testowanie",p:"Ustawienia → na górze",i:"syringe",hl:".tcard",ok:S&&typeof testerCardHtml==="function"&&!!testerCardHtml()},
+  {t:"Pomoc — co potrafi aplikacja",s:"pomoc instrukcja jak działa nowości wersja",p:"Ustawienia → Pomoc i opinie",i:"help",fn:()=>openHelp()},
+  {t:"Oceń aplikację / zgłoś błąd",s:"błąd zgłoś opinia ocena pomysł uwagi",p:"Ustawienia → Pomoc i opinie",i:"msg",go:['[data-c="fb"]'],ok:S&&fbOk},
+  {t:"Zainstaluj aplikację",s:"instaluj ikona ekran telefon",p:"Ustawienia → Pomoc i opinie",i:"phone",go:['[data-c="inst"]'],ok:!isStandalone()},
+  {t:"Wyloguj",s:"wyloguj wyjdź",p:"Ustawienia → na dole",i:"logout",hl:'[data-c="out"]',ok:S},
+  {t:"Usuń konto",s:"usuń konto skasuj rodo",p:"Ustawienia → na dole",i:"trash",hl:'[data-c="del"]',ok:S},
+  {t:"Zaloguj się / załóż konto",s:"zaloguj konto rejestracja",p:"Ustawienia",i:"user",hl:'[data-c="login"]',ok:!S},
+  {t:"Filtry zaproszeń",s:"filtry filtruj kiedy gdzie osoba rower tempo",p:"Zaproszenia → Filtry",i:"sliders",fn:()=>{show(0);openFlt()},ok:S},
+  {t:"Zaproś na rower",s:"zaproś nowe zaproszenie utwórz jazda",p:"Zaproszenia → ➕",i:"plus",fn:()=>{show(0);openWantForm(null)},ok:S&&!pv},
+  {t:"Powiadomienia",s:"powiadomienia dzwonek",p:"Dzwonek w nagłówku",i:"alarm",fn:()=>$("bellbtn").click(),ok:S},
+  {t:"Archiwum zaproszeń",s:"archiwum odbyte zakończone historia",p:"Zaproszenia → Archiwum (na dole)",i:"archive",fn:()=>{show(0);archOpen=true;renderWants();setTimeout(()=>srPulse($("wantarch")),120)},ok:S},
+  {t:"Imprezy",s:"imprezy zawody maraton wyścig",p:"Zakładka Imprezy",i:"medal",fn:()=>show(3),ok:typeof tabOk==="function"&&tabOk(3)},
+  // 🛡️ Administracja
+  {t:"Administracja",s:"admin panel",p:"Ustawienia → Administracja",i:"shield",go:[ADM],ok:A},
+  {t:"Statystyki",s:"statystyki logowania aktywność wykresy",p:"Ustawienia → Administracja → Narzędzia",i:"chart",go:[ADM,'[data-c="stats"]'],ok:A},
+  {t:"Zgłoszenia od użytkowników",s:"zgłoszenia błędy uwagi opinie",p:"Ustawienia → Administracja → Narzędzia",i:"msg",go:[ADM,'[data-c="fbadmin"]'],ok:A&&fbOk},
+  {t:"Użytkownicy",s:"użytkownicy konta lista osób",p:"Ustawienia → Administracja → Narzędzia",i:"users",go:[ADM,'[data-c="users"]'],ok:A},
+  {t:"Prywatność (administracja)",s:"prywatność kto co widzi",p:"Ustawienia → Administracja → Narzędzia",i:"lock",go:[ADM,'[data-c="privadm"]'],ok:A},
+  {t:"Uprawnienia",s:"administratorzy testerzy uprawnienia",p:"Ustawienia → Administracja → Narzędzia",i:"shield",go:[ADM,'[data-c="perms"]'],ok:A},
+  {t:"Funkcje testowe (flagi)",s:"flagi funkcje testowe wszyscy testerzy",p:"Ustawienia → Administracja → Narzędzia",i:"flask",go:[ADM,'[data-c="flags"]'],ok:K&&testerOk},
+  {t:"Kolory nicków",s:"kolory nicków płeć",p:"Ustawienia → Administracja → Narzędzia",i:"palette",go:[ADM,'[data-c="colors"]'],ok:A&&genderOk},
+  {t:"Zakazane nicki",s:"zakazane słowa nicki blokada",p:"Ustawienia → Administracja → Narzędzia",i:"hand",go:[ADM,'[data-c="nickbans"]'],ok:A},
+  {t:"Miejsca zbiórki",s:"miejsca zbiórki punkty",p:"Ustawienia → Administracja → Narzędzia",i:"pin",go:[ADM,'[data-c="places"]'],ok:A&&placeOk},
+  {t:"Grupy — wszystkie (👑)",s:"grupy statystyki grup limit prośby",p:"Ustawienia → Administracja → Narzędzia",i:"users",go:[ADM,'[data-gx="adm"]'],ok:KR},
+  {t:"Zaproszenia testowe / Ekipa demo",s:"generator demo ekipa ochotnicy testowe",p:"Ustawienia → Administracja → Generator zaproszeń",i:"flask",go:[ADM,'[data-dx="open"]'],ok:KR},
+  {t:"Wszystkie zaproszenia (👑)",s:"wszystkie prywatne zaproszenia",p:"Ustawienia → Administracja → Zaproszenia",i:"eye",go:[ADM,'[data-c="allw"]'],ok:K},
+  {t:"Archiwum zaproszeń (👑)",s:"archiwum zakończone jazdy wszystkie",p:"Ustawienia → Administracja → Zaproszenia",i:"archive",go:[ADM,'[data-c="karch"]'],ok:K},
+  {t:"Widoczny online",s:"niewidoczny online ukryj obecność",p:"Ustawienia → Administracja → Moja widoczność",i:"eye",go:[ADM],hl:"[data-ho]",ok:typeof canStealth==="function"&&canStealth()},
+  {t:"Podgląd aplikacji",s:"podgląd jak widzi gość użytkownik tester",p:"Ustawienia → Podgląd aplikacji 👑",i:"eye",hl:'[data-c="pv"]',ok:KR}];
+}
+
+/* ---------- przejścia do miejsc w aplikacji ---------- */
+function srPulse(el){if(!el)return;el.scrollIntoView({behavior:"smooth",block:"center"});el.classList.remove("srhl");void el.offsetWidth;el.classList.add("srhl");setTimeout(()=>el.classList.remove("srhl"),3200)}
+const srWait=(f,ms)=>new Promise(res=>{const t0=Date.now(),go=()=>{const v=f();if(v||Date.now()-t0>(ms||1500))res(v||null);else setTimeout(go,50)};go()});
+/* 🖍 trafienie widać tam, dokąd prowadzi wynik (jak „Znajdź na stronie” w przeglądarce):
+   karta pulsuje zieloną obwódką (3 × 1 s), a szukane słowa dostają żółte tło na ok. 6 s i powoli gasną */
+let srGoQ="";
+function srMark(root,q){
+  const W=srNorm(q).split(/\s+/).filter(w=>w.length>=2);if(!root||!W.length)return;
+  const tw=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.nodeValue.trim()&&!n.parentElement.closest("mark,script,style,input,textarea,select,svg")?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT});
+  const nodes=[];while(tw.nextNode())nodes.push(tw.currentNode);
+  const made=[];
+  nodes.slice(0,400).forEach(node=>{const t=node.nodeValue,n=[...t].map(c=>srNorm(c).charAt(0)||c).join("");if(n.length!==t.length)return;
+    const R=[];W.forEach(w=>{let i=n.indexOf(w);while(i>=0){R.push([i,i+w.length]);i=n.indexOf(w,i+w.length)}});if(!R.length)return;
+    R.sort((a,b)=>a[0]-b[0]);const M=[];R.forEach(r=>{const l=M[M.length-1];if(l&&r[0]<=l[1])l[1]=Math.max(l[1],r[1]);else M.push(r.slice())});
+    const f=document.createDocumentFragment();let p=0;M.forEach(([a,b])=>{if(a>p)f.appendChild(document.createTextNode(t.slice(p,a)));const m=document.createElement("mark");m.className="srmk";m.textContent=t.slice(a,b);f.appendChild(m);made.push(m);p=b});
+    if(p<t.length)f.appendChild(document.createTextNode(t.slice(p)));node.parentNode.replaceChild(f,node)});
+  setTimeout(()=>made.forEach(m=>m.classList.add("out")),5200);
+  setTimeout(()=>made.forEach(m=>{const pa=m.parentNode;if(!pa)return;pa.replaceChild(document.createTextNode(m.textContent),m);pa.normalize()}),6400);
+}
+// pulsowanie + zaznaczenie słów; el może pojawić się chwilę później (renderowanie, przewijanie)
+async function srFocus(find,q,box){const el=await srWait(find,1500);if(el){srPulse(el);srMark(el,q)}else if(box)srMark(box,q)}
+function srGoGear(set){gearOpen=true;gearFrom="";set();renderGear()}
+// zaproszenie ukryte przez Filtry albo „ukryj testowe” — najpierw je odsłoń, potem przewiń do karty
+function srReveal(w,arch){let m="";
+  if(hideTest&&w.is_test){hideTest=false;try{localStorage.setItem("hideTest","0")}catch(e){}deriveWants();m="Pokazuję też testowe zaproszenia."}
+  if(session&&(!arch||flt.arch)&&fltActive()&&!fltOk(w)){flt=fltEmpty();fltSave();m="Wyłączyłem filtry, żeby pokazać ten wynik."}   // archiwum filtrujemy tylko z „Filtruj też archiwum”
+  return m}
+function srGoWant(w){const m=srReveal(w);const x=wants.find(y=>y.id===w.id);if(!x){say("Tego zaproszenia nie da się teraz pokazać.");return}goToWant(x);if(m)setTimeout(()=>say(m),400);
+  setTimeout(()=>srFocus(()=>document.querySelector('#mywant .want[data-wid="'+x.id+'"],#wantlist .want[data-wid="'+x.id+'"]'),srGoQ),150)}
+function srGoArch(w){
+  if(!session){say("Archiwum widzą zalogowani.");return}
+  const m=srReveal(w,true);
+  show(0);archOpen=true;archAll=true;renderWants();
+  setTimeout(()=>{const el=document.querySelector('#wantarch .ai[data-wid="'+w.id+'"]');if(el){srPulse(el);srMark(el,srGoQ)}else{srPulse($("wantarch"));say("Tej jazdy nie widać w archiwum (30 dni).")}if(m)say(m)},80)}
+function srGoEv(id){evGo(id);setTimeout(()=>srFocus(()=>{const h=document.querySelector('#p3 [data-ev="tog"][data-id="'+id+'"]');return h&&h.closest(".ev")},srGoQ),150)}
+function srGoRide(i){show(1);showRide(i);rcarScrollTo(i,true);setTimeout(()=>srFocus(()=>$("ridecard").textContent.trim()&&$("ridecard"),srGoQ),200)}
+function srGoUser(id){if(id===uid){srGoGear(()=>{gearView="main"});const b=$("gearpanel").querySelector(SR_PROF);if(b)b.click();return}
+  userBack="";tkFrom=false;userId=id;srGoGear(()=>{gearView="user"});if(isAdmin){delete admInfo[id];loadAdmInfo(id)}
+  setTimeout(()=>srMark($("gearpanel").querySelector(".sheetbox"),srGoQ),120)}
+async function srGoRoute(id){if(gearOpen){gearOpen=false;renderGear()}await rbLoad();rb.mode="browse";rb.open=id;rb.add=null;$("rbsheet").classList.remove("hide");renderRb();setTimeout(()=>srMark($("rbsheet"),srGoQ),150)}
+function srGoBike(id){srGoGear(()=>{gearView="serwis";svSel=id;svPartOpen=false});svFetch(true)}
+async function srGoOpt(o){
+  if(o.fn){o.fn();return}
+  srGoGear(()=>{gearView="main"});
+  const P=$("gearpanel");
+  for(const s of o.go||[]){const b=await srWait(()=>P.querySelector(s));if(!b){say("Ta opcja nie jest teraz dostępna.");return}b.click()}
+  if(o.hl){const el=await srWait(()=>P.querySelector(o.hl));if(!el){say("Ta opcja nie jest teraz dostępna.");return}srPulse(el.closest(".ios-it,.tcard,.gprof,.pe-av")||el)}
+}
+
+/* ---------- okno ---------- */
+function srCounts(L){const c={};L.forEach(x=>c[x.k]=(c[x.k]||0)+1);return c}
+function srChips(L){
+  const q=srQ.trim(),c=srCounts(L),av=SR_TY.filter(([k])=>k!=="opt"||srOpt).filter(([k])=>!q||c[k]||srTy===k);
+  const ch=(k,t,ico,n)=>'<button type="button" class="fch'+(srTy===k?' on':'')+'" data-sk="ty" data-sv="'+k+'">'+uiIcon(ico)+esc(t)+(n!=null&&q?'<span class="fcn">'+n+'</span>':'')+'</button>';
+  return ch("all","Wszystko","search",L.length)+av.map(([k,t,ico])=>ch(k,t,ico,c[k]||0)).join("");
+}
+// podświetlenie słów zapytania w nazwie (bez względu na polskie znaki: „lodz” znajdzie i podświetli „Łódź”)
+function srHl(t,q){t=String(t||"");const W=srNorm(q).split(/\s+/).filter(Boolean);if(!W.length)return esc(t);
+  const n=[...t].map(c=>srNorm(c).charAt(0)||c).join(""),on=new Array(t.length).fill(false);
+  if(n.length===t.length)W.forEach(w=>{let i=n.indexOf(w);while(i>=0){for(let j=i;j<i+w.length;j++)on[j]=true;i=n.indexOf(w,i+w.length)}});
+  let s="",m=false;[...t].forEach((c,i)=>{if(on[i]!==m){s+=on[i]?"<mark>":"</mark>";m=on[i]}s+=esc(c)});return s+(m?"</mark>":"")}
+function srRow(x,q){return '<button type="button" class="fusr srr" data-sk="go" data-sv="'+esc(x.k+"|"+x.id)+'"><span class="fuic g">'+uiIcon(x.ico)+'</span><span class="fun"><span class="srt">'+srHl(x.t,q)+(x.k==="user"&&typeof demoTag==="function"?demoTag(x.id):'')+'</span>'+(x.sub?'<small class="srsub">'+esc(x.sub)+'</small>':'')+'</span></button>'}
+function srListHtml(L){
+  const q=srQ.trim(),all=srTy==="all";
+  if(!q&&all)return '<div class="note srhint">'+uiIcon("search")+' Wpisz, czego szukasz — zaproszenia, imprezy, wieczorynki, osoby, grupy, listy, trasy'+(srOpt?', opcje aplikacji':'')+'.<br>Filtry nie zawężają wyszukiwania. Bombel u góry pokaże wszystko z jednego rodzaju.</div>';
+  const S=all?L:L.filter(x=>x.k===srTy);
+  if(!S.length&&!all&&L.length)return '<div class="note srhint">W „'+esc(srTyName(srTy))+'” nic dla „'+esc(q)+'”.</div><button type="button" class="b g big srall" data-sk="ty" data-sv="all">Pokaż wszystkie wyniki ('+L.length+')</button>';   // wybrany rodzaj pusty, a inne mają trafienia
+  if(!S.length)return '<div class="note srhint">Nic nie znaleziono'+(q?' dla „'+esc(q)+'”':'')+'.'+(!srOpt&&q?'<br>Szukasz ustawienia? Włącz „Szukaj też w opcjach aplikacji”.':'')+'</div>';
+  const by={};S.forEach(x=>(by[x.k]=by[x.k]||[]).push(x));
+  return '<div class="fulist srlist">'+SR_ORDER.filter(k=>by[k]).map(k=>{
+    // w sekcji: najlepsze trafienia na dole (przy polu); bez tekstu — od najbliższych dat / alfabetycznie
+    const A=by[k].sort((a,b)=>q?(a.sc-b.sc||b.ord-a.ord||a.t.localeCompare(b.t,"pl")):(k==="want"||k==="ev"||k==="ride"||k==="done"?a.ord-b.ord:a.t.localeCompare(b.t,"pl"))),   // bez tekstu: nazwy od góry alfabetycznie (jak w Filtrach), daty — najbliższe na dole
+      lim=all&&!srMore?4:0,cut=lim&&A.length>lim,V=cut?A.slice(-lim):A;
+    return '<div class="fulbl">'+esc(srTyName(k))+' · '+A.length+'</div>'+(cut?'<button type="button" class="fusr fumore" data-sk="ty" data-sv="'+k+'">Pokaż wszystkie ('+A.length+') ›</button>':'')+V.map(x=>srRow(x,q)).join("")}).join("")+'</div>';
+}
+let srLast=[];
+function srDraw(keepScroll){
+  const box=$("srstk");if(!box)return;
+  srLast=srItems(srQ.trim());
+  $("srchips").innerHTML=srChips(srLast);
+  const old=box.querySelector(".fulist"),fromBottom=keepScroll&&old?old.scrollHeight-old.clientHeight-old.scrollTop:0;
+  box.innerHTML=srListHtml(srLast);srSel=-1;
+  const u=box.querySelector(".fulist");if(u)u.scrollTop=Math.max(0,u.scrollHeight-u.clientHeight-fromBottom);
+  const c=$("srclr");if(c)c.style.visibility=srQ||srTy!=="all"?"visible":"hidden";
+}
+function renderSrch(){
+  const p=$("srchsheet");
+  p.innerHTML='<div class="bsbox fltbox srbox" role="dialog" aria-modal="true" aria-label="Szukaj"><div class="bsgrab"></div>'
+   +'<div class="bshead"><button type="button" class="lnk" data-sk="close">Zamknij</button><b>Szukaj</b><button type="button" class="lnk" id="srclr" data-sk="clear" style="color:var(--bad);text-align:right;min-width:64px">Wyczyść</button></div>'
+   +'<div class="fchips srchips" id="srchips"></div>'
+   +'<div class="fstk" id="srstk"></div>'
+   +'<div class="ios-it sropt"><span class="ios-ic" style="background:#8e8e93">'+uiIcon("sliders")+'</span><span class="ios-t">Szukaj też w opcjach aplikacji<small>Pokaże, gdzie jest ustawienie, i od razu je otworzy</small></span>'+iosSw(srOpt,"data-sk","opt")+'</div>'
+   +'<input class="bsq srch" id="srq" type="search" placeholder="Szukaj w aplikacji…" autocomplete="off" enterkeyhint="search" value="'+esc(srQ)+'"></div>';
+  srDraw();
+}
+// pierwsze otwarcie: dociągnij to, czego aplikacja jeszcze nie ma w pamięci (trasy, jawne grupy, 👑 wszystkie grupy, serwis)
+function srPreload(){
+  const re=()=>{if(!$("srchsheet").classList.contains("hide"))srDraw(true)};
+  if(rbOk&&session&&!rbList)rbLoad().then(re,()=>{});
+  if(typeof grOn==="function"&&grOn()&&grFind===null&&typeof grSearch==="function")grSearch("").then(re,()=>{});
+  if(isKingReal()&&typeof grK!=="undefined"&&!grK&&typeof grKLoad==="function")grKLoad().then(re,()=>{});
+  if(typeof svOn==="function"&&svOn()&&!svLoad().loaded)svFetch().then(re,()=>{});
+}
+function openSrch(){
+  if(gearOpen){gearOpen=false;renderGear()}
+  srMore=false;srTy="all";$("srchsheet").classList.remove("hide");   // każde otwarcie zaczyna od „Wszystko” (wpisany tekst zostaje)
+  renderSrch();srPreload();
+  setTimeout(()=>{const i=$("srq");if(i)try{i.focus({preventScroll:true})}catch(e){i.focus()}},60);
+}
+function closeSrch(){const p=$("srchsheet");p.classList.add("hide");p.innerHTML=""}
+$("srchbtn").onclick=openSrch;
+$("srchsheet").addEventListener("click",e=>{
+  if(e.target===$("srchsheet")){closeSrch();return}
+  const b=e.target.closest("[data-sk]");if(!b)return;
+  const k=b.dataset.sk,v=b.dataset.sv;
+  if(k==="close"){closeSrch();return}
+  if(k==="clear"){srQ="";srTy="all";srMore=false;const i=$("srq");if(i){i.value="";i.focus()}srDraw();return}
+  if(k==="opt"){srOpt=!srOpt;try{localStorage.setItem("srOpt",srOpt?"1":"0")}catch(err){}if(!srOpt&&srTy==="opt")srTy="all";b.classList.toggle("on",srOpt);b.setAttribute("aria-checked",srOpt);srDraw();return}
+  if(k==="ty"){srTy=srTy===v&&!b.classList.contains("fumore")?"all":v;srMore=false;srDraw();const c=$("srchips"),on=c&&c.querySelector(".fch.on");if(on)on.scrollIntoView({block:"nearest",inline:"center"});return}
+  if(k==="go"){const x=srLast.find(y=>y.k+"|"+y.id===v);if(!x)return;srGoQ=x.k==="opt"?"":srQ.trim();closeSrch();x.go();return}
+});
+$("srchsheet").addEventListener("input",e=>{if(e.target.id==="srq"){srQ=e.target.value;srDraw()}});
+/* ⌨️ klawiatura (komputer): „/” albo Ctrl/⌘+K otwiera okno; ↑ ↓ wybierają wynik, Enter otwiera (bez wyboru — najlepszy, czyli dolny), Esc zamyka */
+let srSel=-1;
+function srSelPaint(){const R=[...document.querySelectorAll("#srstk .srr")];R.forEach((b,i)=>b.classList.toggle("srsel",i===srSel));const b=R[srSel];if(b)b.scrollIntoView({block:"nearest"})}
+$("srchsheet").addEventListener("keydown",e=>{
+  if(e.key==="Escape"){e.preventDefault();closeSrch();return}
+  if(e.target.id!=="srq")return;
+  const R=[...document.querySelectorAll("#srstk .srr")];
+  if(e.key==="ArrowUp"||e.key==="ArrowDown"){if(!R.length)return;e.preventDefault();srSel=srSel<0?R.length-1:Math.max(0,Math.min(R.length-1,srSel+(e.key==="ArrowUp"?-1:1)));srSelPaint();return}
+  if(e.key==="Enter"){e.preventDefault();const b=R[srSel>=0?srSel:R.length-1];if(b)b.click();else e.target.blur()}});
+document.addEventListener("keydown",e=>{
+  if(!$("srchsheet").classList.contains("hide")||!$("srchbtn").offsetParent)return;
+  const t=e.target,typing=t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+  if((e.key==="k"||e.key==="K")&&(e.ctrlKey||e.metaKey)||(e.key==="/"&&!typing&&!e.ctrlKey&&!e.metaKey&&!e.altKey)){e.preventDefault();openSrch()}});
+// na wąskich ekranach ❓ jest schowane (CSS) — kropkę „Nowości” pokazujemy wtedy na ⚙️
+(()=>{const mq=window.matchMedia?matchMedia("(max-width:600px)"):null;const sync=()=>{const g=$("gear");if(g)g.classList.toggle("newdot",!!mq&&mq.matches&&relNew())};
+  sync();if(mq)try{mq.addEventListener("change",sync)}catch(e){mq.addListener&&mq.addListener(sync)}})();

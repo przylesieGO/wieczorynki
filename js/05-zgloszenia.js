@@ -17,7 +17,7 @@ const APP_REL=[
 ];
 const APP_VER=APP_REL[0].v;
 const relNew=()=>{try{return localStorage.getItem("seenVer")!==APP_VER}catch(e){return false}};
-function relMark(){try{localStorage.setItem("seenVer",APP_VER)}catch(e){}const b=$("helpbtn");if(b)b.classList.remove("newdot")}
+function relMark(){try{localStorage.setItem("seenVer",APP_VER)}catch(e){}const b=$("helpbtn");if(b)b.classList.remove("newdot");const g=$("gear");if(g)g.classList.remove("newdot")}
 const FB_KIND={bug:"🐞 Błąd",idea:"💡 Pomysł",rating:"⭐ Ocena",msg:"✉️ Wiadomość",tester:"💉 Chce testować",gpost:"🚩 Wpis w grupie"};
 const FB_ST={new:"nowe",accepted:"przyjęte",done:"zrobione",rejected:"odrzucone"};
 const fbMineUnread=()=>fbList.filter(f=>f.user_id===uid&&f.user_unread);

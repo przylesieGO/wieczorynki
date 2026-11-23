@@ -265,7 +265,7 @@ function dsEnv(){
     ref,tag:/^[a-z0-9]{1,8}$/.test(tag)?tag:undefined,conn:c&&c.effectiveType||undefined};
 }
 // 🖥️ bieżący ekran: najwyższe otwarte okno (kolejność jak w index.html), w Ustawieniach podstrona; inaczej zakładka
-const DS_SHEETS=["gearpanel","wantform","whosheet","plsheet","grsheet","fltsheet","repsheet","evsheet","popsheet","picksheet","bellsheet","sigsheet","welsheet","homesheet","routesheet","rbsheet","mapsheet","helpsheet","demosheet","ratesheet"];
+const DS_SHEETS=["gearpanel","wantform","whosheet","plsheet","grsheet","fltsheet","srchsheet","repsheet","evsheet","popsheet","picksheet","bellsheet","sigsheet","welsheet","homesheet","routesheet","rbsheet","mapsheet","helpsheet","demosheet","ratesheet"];
 function dsScreen(){
   let s="";for(const id of DS_SHEETS){const e=document.getElementById(id);if(e&&!e.classList.contains("hide"))s=id}
   if(s==="gearpanel"&&typeof gearView==="string"&&gearView)s="g_"+gearView.toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,14);

@@ -168,7 +168,7 @@ function archSum(L){
 function archItem(w){
   const d=new Date(w.starts_at),ex=wExpired(w),pp=wPeople(w),k=kmOf(w);
   const dd=dayDiff(d),dt=(dd===0?"Dziś":dd===-1?"Wczoraj":d.toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"}))+" · "+(isOpen(w)?wTime(w):hhmm(d));
-  return '<div class="ai'+(isTest(w)?' test':'')+'">'+wTitleHtml(w)+'<div class="ait"><b>'+esc(dt)+'</b>'+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+'<span class="'+(ex?'aex':'aok')+'">'+(ex?'⌛ wygasło':'zakończone')+'</span></div>'
+  return '<div class="ai'+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'">'+wTitleHtml(w)+'<div class="ait"><b>'+esc(dt)+'</b>'+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+'<span class="'+(ex?'aex':'aok')+'">'+(ex?'⌛ wygasło':'zakończone')+'</span></div>'
    +'<div class="ail">'+nk(w.user_id)+(w.place?' · 📍 '+esc(w.place+(w.place_city?' · '+w.place_city:'')):'')+'</div>'
    +(ex?'<div class="ail note">Godzina nieustalona, nikt nie dołączył.</div>':(()=>{const S=repSum(w);
      return (S?'<div class="ail">✅ Potwierdziło '+S.yes.length+' z '+pp.length+': '+S.yes.map(id=>nk(id)).join(" ")+'</div>'+(pp.length>S.n?'<div class="ail note">❓ bez odpowiedzi: '+(pp.length-S.n)+'</div>':'')
