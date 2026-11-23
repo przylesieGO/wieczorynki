@@ -1206,6 +1206,8 @@ details.wday>summary{padding:10px 10px;gap:10px}
 .whb.hpriv:not(.hlive),.whrs b.hpriv:not(.hlive){background:var(--priv);color:var(--white)}
 /* rozwinięty dzień: godziny pozostałych zaproszeń przygaszone, godzina zaproszenia widocznego w karuzeli w pełnym kolorze (.hon) */
 details.wday[open] .whrs:has(.hon) .whb:not(.hon){opacity:.4}details.wday .whb{transition:opacity .2s}
+/* rozwinięty dzień: zwykłe godziny w kontrze (jasny motyw — ciemne, ciemny — jasne); zwinięty bez zmian */
+details.wday[open] .whb:not(.hpriv):not(.hlive){background:#3a3a3c;color:#f2f2f7}html[data-theme=dark] details.wday[open] .whb:not(.hpriv):not(.hlive){background:#d1d1d6;color:#1c1c1e}
 details.wday[open].wpv{border-color:var(--priv)}
 .slot.clash{background:#fff3c4;color:#6b4a00}html[data-theme=dark] .slot.clash{background:#4a3f12;color:#ffe08a}
 .slot.clash.on{background:var(--accbtn);color:#fff;box-shadow:0 0 0 2px #e0a800}
