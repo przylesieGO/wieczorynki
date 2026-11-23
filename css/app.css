@@ -257,7 +257,7 @@ html[data-theme=dark] .fcard::after{background:rgba(0,0,0,.25);box-shadow:0 1px 
 .mybtns{display:flex;gap:8px;margin-top:12px}.mybtns .b{flex:1;padding:12px 8px;font-size:15px}
 .mydel{display:block;margin:6px auto 0;border:0;background:none;color:var(--bad);font:inherit;font-size:15px;font-weight:600;cursor:pointer;padding:6px}
 .mynew{display:block;margin:10px auto 0}
-.mycar{display:flex;gap:10px}
+.mycar{display:flex;align-items:flex-start;gap:10px}
 .mycar.multi{overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -4px;padding:0 4px}
 .mycar.multi::-webkit-scrollbar{display:none}
 .mycar .mywant{flex:0 0 100%;min-width:0;scroll-snap-align:center;box-sizing:border-box}.mywant,.want{min-width:0;overflow-wrap:anywhere}
@@ -342,7 +342,7 @@ details.jlist[open]>summary{border-radius:11px 11px 0 0}
 .wl2{flex-wrap:wrap;row-gap:2px}.whrs{display:inline-flex;gap:4px;flex:none}.whrs.whrsall{flex-wrap:wrap;row-gap:4px}
 .whrs b,.whb{font:inherit;font-size:13px;font-weight:800;color:var(--ink);background:var(--fill);border:0;border-radius:10px;padding:1px 7px;line-height:1.5}
 .whb{cursor:pointer;-webkit-tap-highlight-color:transparent}.whb:active{background:var(--navon)}.whrs b.hlive,.whb.hlive{background:var(--sys-orange);color:var(--white)}
-.dcar{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:0 10px 4px}
+.dcar{display:flex;align-items:flex-start;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:0 10px 4px}
 .dcar::-webkit-scrollbar{display:none}
 details.wday .dcar .want{flex:0 0 calc(100% - 26px);min-width:0;margin:0;scroll-snap-align:center;box-sizing:border-box}
 .ddots{align-items:center;margin:6px 0 10px}.ddots span{font-size:12px;color:var(--mut);margin-left:4px}
