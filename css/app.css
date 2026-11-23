@@ -1238,5 +1238,5 @@ details.wday[open].wpv{border-color:var(--priv)}
 
 /* 🔤 pasek liter A–Z przy długich listach osób oraz przełącznik archiwum w Filtrach */
 .fulwrap{display:flex;flex-direction:column;gap:6px;width:100%;flex:none}.fulwrap .fulist{width:100%}
-.faz{display:flex;gap:2px;padding:3px;border-radius:12px;background:var(--soft);overflow:hidden;white-space:nowrap;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer;font-size:12px;font-weight:800;line-height:1;color:var(--accbtn)}
-.faz span{flex:1 0 auto;min-width:22px;padding:7px 3px;text-align:center;border-radius:9px}.faz span.on{background:var(--accbtn);color:var(--white)}
+.faz{display:flex;gap:2px;padding:3px;border-radius:12px;background:var(--soft);border:1.5px solid var(--accbtn);overflow:hidden;white-space:nowrap;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer;font-size:15px;font-weight:900;line-height:1;color:var(--accbtn)}
+.faz span{flex:1 0 auto;min-width:26px;padding:9px 3px;text-align:center;border-radius:9px}.faz span.on{background:var(--accbtn);color:var(--white)}
