@@ -1135,8 +1135,8 @@ details.wday.wmulti:not([open]){margin-bottom:14px;box-shadow:0 5px 0 -3px var(-
 details.wday .wbd{position:absolute;top:10px;right:12px;display:flex;gap:6px;align-items:center;pointer-events:none}
 details.wday .wcnt,details.wday .wlk{min-width:30px;height:30px;box-sizing:border-box;border-radius:999px;color:var(--white);display:inline-flex;align-items:center;justify-content:center}
 details.wday .wcnt{padding:0 9px;background:var(--sys-red);font:800 15px/1 -apple-system,system-ui,sans-serif}
-details.wday .wlk{background:var(--priv)}details.wday .wlk .ui-i{width:16px;height:16px}
-details.wday.wbg1 .wl1{padding-right:38px}details.wday.wbg2 .wl1{padding-right:76px}
+details.wday .wlk{background:var(--priv);gap:4px;padding:0 10px;font:800 15px/1 -apple-system,system-ui,sans-serif}details.wday .wlk .ui-i{width:16px;height:16px}
+details.wday.wbc .wl1{padding-right:38px}details.wday.wbk .wl1{padding-right:62px}details.wday.wbk.wbc .wl1{padding-right:98px}
 details.wday[open] .wbd{display:none}
 .lockt.priv{background:var(--priv);color:var(--white)}
 .wl4 .wpc{font-size:13px;padding:2px 9px}.wl4 .dwx:empty{display:none}
