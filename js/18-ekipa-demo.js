@@ -37,7 +37,7 @@ const demoAdmRow=()=>isKingReal()?gRow("#ff9f0a","flask","Zaproszenia testowe","
   demoIds.size?'<span class="ios-v">'+demoIds.size+'</span>':'','data-dx="open"'):'';
 
 // karta osoby → Administrator: ochotnik (dostaje prywatne zaproszenia od kont demo)
-const demoVolRow=id=>isKingReal()&&id!==uid&&!demoIds.has(id)&&nicks[id]
+const demoVolRow=id=>isKingReal()&&!demoIds.has(id)&&nicks[id]
   ?gRow("#ff9f0a","flask",demoVol.has(id)?"Ochotnik Ekipy demo":"Dodaj do ochotników Ekipy demo",
      demoVol.has(id)?"Dostaje prywatne zaproszenia od kont demo · dotknij, aby wypisać":"Tylko za zgodą tej osoby — dostanie prywatne zaproszenia od kont demo",
      demoVol.has(id)?'<span class="ios-v ok">'+uiIcon("check")+'</span>':'','data-dx="vol" data-du="'+esc(id)+'"'+(demoBusy?' disabled':'')):'';
@@ -63,7 +63,7 @@ const demoSec=(k,h,sum,body)=>'<details class="stsec dmsec" data-j="dm_'+k+'"'+(
 function demoRender(){const x=document.querySelector("#gearpanel .sheetbox"),y=x?x.scrollTop:0;renderGear();const z=document.querySelector("#gearpanel .sheetbox");if(z&&gearView==="demo")z.scrollTop=y}
 
 // 🙋 ochotnicy: wszyscy prawdziwi użytkownicy (bez kont demo i bez Ciebie), szukajka + filtry osób + Ochotnicy / Nie-ochotnicy, zaznaczanie wielu
-const demoPeople=()=>Object.keys(nicks).filter(id=>id!==uid&&!demoIds.has(id));
+const demoPeople=()=>Object.keys(nicks).filter(id=>!demoIds.has(id));   // 👑 też może być ochotnikiem (2026-11-23)
 const demoVShown=()=>demoPeople().filter(id=>demoVF==="vol"?demoVol.has(id):demoVF==="non"?!demoVol.has(id):true);
 function demoVolChips(){const all=demoPeople(),nv=all.filter(id=>demoVol.has(id)).length;
   const c=(v,l,n)=>'<button type="button" class="fch'+(demoVF===v?' on':'')+'" aria-pressed="'+(demoVF===v)+'" data-dx="vf" data-dv="'+v+'">'+l+' <span class="fcn">'+n+'</span></button>';

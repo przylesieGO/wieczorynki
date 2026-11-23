@@ -222,7 +222,7 @@ function maybeFb(){
 }
 // 👤 ⚙️ → Edytuj profil: grupy „Profil” (Moje jazdy, Ulubieni, Moja miejscowość, Prywatność) i „Powiadomienia” (Telegram, kanał) — przeniesione z głównego ekranu
 function profHubHtml(){
-  return gGrp("Profil",profExRows().concat([reportOk?gRow("#34c759","bike","Moje jazdy","Kalendarz, rekordy, km w sezonie",userRides[uid]&&userRides[uid].n?'<span class="ios-v">'+userRides[uid].n+'</span>':'','data-c="myrides"'):"",favOk?gRow("#ffcc00","starf",plOk?"Ulubieni i listy":"Ulubieni",plOk&&plists.length?"Listy: "+plists.length+" · ulubieni zawsze na górze":"Zawsze na górze list",favs.size?'<span class="ios-v">'+favs.size+'</span>':'','data-c="favs"'):"",typeof grRow==="function"?grRow():"",
+  return gGrp("Profil",profExRows().concat([isKingReal()?gRow("#5e5ce6","folder","Moja teczka","Wszystko o Twoim koncie w jednym miejscu (👑)","",'data-a="tk" data-id="'+esc(uid)+'"'):"",reportOk?gRow("#34c759","bike","Moje jazdy","Kalendarz, rekordy, km w sezonie",userRides[uid]&&userRides[uid].n?'<span class="ios-v">'+userRides[uid].n+'</span>':'','data-c="myrides"'):"",favOk?gRow("#ffcc00","starf",plOk?"Ulubieni i listy":"Ulubieni",plOk&&plists.length?"Listy: "+plists.length+" · ulubieni zawsze na górze":"Zawsze na górze list",favs.size?'<span class="ios-v">'+favs.size+'</span>':'','data-c="favs"'):"",typeof grRow==="function"?grRow():"",
   (profExOk&&pe?"":((evGeoOk&&tabOk(3))||rbOk?gRow("#ff9f0a","pin","Moja miejscowość",rbOk&&!(evGeoOk&&tabOk(3))?"Odległość do tras":"Odległość do imprez i tras",'<span class="ios-v">'+(homeGet()?esc(homeGet().name):'Ustaw')+'</span>','data-home="1"'):"")),reportOk?gRow("#5856d6","lock","Prywatność","Kto widzi Twoje jazdy i rekordy","",'data-c="priv"'):""]))
    +(profExOk&&pe?'<p class="note pe-note">'+uiIcon("lock")+' Zdjęcie i media widzą zalogowani. Miejscowość i telefon — tylko gdy włączysz. Goście nie widzą nic.</p>':'')
    +gGrp("Powiadomienia",[tgOn()?gRow("#0a84ff","send","Telegram"+betaTag("telegram_dm"),"Powiadomienia prosto na telefon",tgLink?'<span class="ios-v ok">'+uiIcon("check")+'Połączony</span>':'<span class="ios-v">Połącz</span>','data-c="tg"'):"",
@@ -483,7 +483,7 @@ $("gearpanel").addEventListener("click",async e=>{
         on?stealthIds.delete(id):stealthIds.add(id);renderGear();say(on?"Odebrano ukrywanie obecności: "+nickOf(id):"👻 "+nickOf(id)+" może teraz ukryć swoją obecność online")}
       catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
       return}
-    if(a.dataset.a==="tk"){tkOpen(a.dataset.id,gearView==="admin"?"admin":"user");return}
+    if(a.dataset.a==="tk"){tkOpen(a.dataset.id,gearView==="admin"?"admin":gearView==="nick"?"nick":"user");return}
     if(a.dataset.a==="urow"&&isAdmin){const id=a.dataset.id;if(!nicks[id])return;
       if(isKingReal()){tkOpen(id,"users");return}
       userBack="users";tkFrom=false;userId=id;gearView="user";renderGear();delete admInfo[id];loadAdmInfo(id);return}
@@ -522,7 +522,7 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="myrides"){delete userRides[uid];gearView="myrides";renderGear();return}   // 🚴 KROK 62 — zawsze świeże dane
   if(c==="privadm"){privAdm=null;gearView="privadm";renderGear();return}
   if(c==="userback2m"){gearView=tkFrom&&tkId===modDelId?"teczka":"user";renderGear();return}
-  if(c==="tkback"){tkFrom=false;gearView=["admin","users","stats"].includes(tkBack)?tkBack:"user";renderGear();return}
+  if(c==="tkback"){tkFrom=false;gearView=["admin","users","stats","nick"].includes(tkBack)?tkBack:"user";renderGear();return}
   if(c==="users"){usersBack="admin";gearView="users";renderGear();return}
   if(c==="perms"){gearView="perms";renderGear();return}
   if(c==="onlineadm"||c==="onlinestats"){onlBack=c==="onlinestats"?"stats":"admin";gearView="online";renderGear();return}

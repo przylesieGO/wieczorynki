@@ -771,7 +771,7 @@ function teczkaHtml(){
   if(profExOk&&!(id in uxCache)){uxCache[id]={};loadUx(id)}
   const ln=(l,v)=>'<div class="admln">'+l+': <b>'+v+'</b></div>',box=(h,b)=>'<div class="admbox"><b>'+h+'</b>'+b+'</div>';
   const dt=t=>t?esc(new Date(t).toLocaleDateString("pl-PL",{day:"numeric",month:"short",year:"numeric"})):'—';
-  const TKB={admin:"Administracja",users:"Użytkownicy",stats:"Statystyki"};
+  const TKB={admin:"Administracja",users:"Użytkownicy",stats:"Statystyki",nick:"Edytuj profil"};
   const head='<button class="sback" data-c="tkback">‹ '+esc(TKB[tkBack]||nickOf(id))+'</button>'
    +'<div class="sname" style="margin-top:26px">📁 Teczka</div><div class="bigpill">'+nk(id)+'</div>';
   if(!d)return head+'<div class="note">Wczytuję…</div>';
