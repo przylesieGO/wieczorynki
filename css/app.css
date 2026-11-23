@@ -252,8 +252,8 @@ html[data-theme=dark] .fcard::after{background:rgba(0,0,0,.25);box-shadow:0 1px 
 .nit .wtl,.ai .wtl{font-size:15px}.nit .wtl .ui-i,.ai .wtl .ui-i{width:16px;height:16px}
 .lnk{border:0;background:none;color:var(--acc);font:inherit;font-size:15px;font-weight:600;cursor:pointer;padding:6px 2px}
 #wcancel{color:var(--mut)}
-.mywant{margin-top:12px}.mywant>.want{margin-top:6px}
-.mywhen{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 8px;padding:0 4px;font-size:20px;letter-spacing:-.01em}.mywhen b{font-weight:800}.mywhen span{font-size:15px;color:var(--mut)}.mywhen i{margin-left:auto;font-style:normal;font-size:13px;font-weight:600;color:var(--mut)}
+.mywant{margin-top:12px}.mywant>.want{margin-top:0}.wtopm{font-size:15px;gap:6px}.wtopm:empty{display:none}.wtopm .ttag{margin:0}
+.mywhen{display:flex;align-items:baseline;flex-wrap:wrap;gap:0 8px;font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.15;margin-top:4px}.mywhen b{font-weight:800}.mywhen span{font-size:18px;font-weight:600;color:var(--mut);letter-spacing:0}.mywhen.rng{font-size:24px}.mywhen.rng span{font-size:15px}.wtopm .wcnt{margin-left:auto;font-style:normal;font-size:13px;font-weight:600;color:var(--mut)}
 .mybtns{display:flex;gap:8px;margin-top:12px}.mybtns .b{flex:1;padding:12px 8px;font-size:15px}
 .mydel{display:block;margin:6px auto 0;border:0;background:none;color:var(--bad);font:inherit;font-size:15px;font-weight:600;cursor:pointer;padding:6px}
 .mynew{display:block;margin:10px auto 0}

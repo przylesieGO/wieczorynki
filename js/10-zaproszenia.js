@@ -572,14 +572,15 @@ function myPickHtml(w,myp,joined,mine){
   const a=hhmm(new Date(myp)),b=hhmm(new Date(w.starts_at));
   return '<div class="meta">🕖 Twój wybór: <b>'+esc(a)+'</b>'+(a===b?' · ustalono na tę godzinę':' · ustalono <b>'+esc(b)+'</b>')+'</div>';
 }
-function wantHtml(w){
+// top = karta w sekcji „Twoje zaproszenia” ({d: duży dzień i godzina pod tytułem, n: „1 z N”}): bez „Ty zapraszasz”, nicku i „(Twoje zaproszenie)” — tylko TEST, grupa/prywatne i status godziny
+function wantHtml(w,top){
     const j=joins[w.id]||[],mine=w.user_id===uid,joined=j.includes(uid),others=j.filter(x=>x!==w.user_id);
     const priv=isPriv(w),canInv=priv&&!mine&&wantCanInvite(w);
     // admin widzi cudze prywatne zaproszenie tylko podglądowo (bez „Jadę!”), chyba że jest zaproszony
     const peek=priv&&!mine&&!wInvMe(w)&&!joined;
     const open=isOpen(w)&&!wLive(w),myp=(prefs[w.id]||{})[uid],dec=(decls[w.id]||[]).includes(uid),live=wLive(w);
     const myOpen=mine&&open&&!live;   // własne zaproszenie z godziną do ustalenia: na wąskim ekranie linki pod „Ustal”, na szerokim ikony Zmień ustaloną / Edytuj obok „Ustal” jako osobna grupa od Zaproś / Udostępnij / Kosz
-    return '<div class="want'+(mine?' mine':'')+(isTest(w)?' test':'')+grCls(w)+'" data-wid="'+esc(w.id)+'"'+(priv?' data-priv="1"':'')+'>'+(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+'<div class="wtop">'+nk(w.user_id)+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w):'')+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?(wGr(w)?grTagHtml(w)+(peek?'<span class="lockt">👁 podgląd admina</span>':''):'<span class="lockt priv">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>'):'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
+    return '<div class="want'+(mine?' mine':'')+(isTest(w)?' test':'')+grCls(w)+'" data-wid="'+esc(w.id)+'"'+(priv?' data-priv="1"':'')+'>'+(top?'<div class="wtop wtopm">'+testTag(w)+(priv?(wGr(w)?grTagHtml(w):'<span class="lockt priv">🔒 prywatne</span>'):'')+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(top.n?'<i class="wcnt">'+top.n+'</i>':'')+'</div>'+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+top.d:(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+'<div class="wtop">'+nk(w.user_id)+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w):'')+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?(wGr(w)?grTagHtml(w)+(peek?'<span class="lockt">👁 podgląd admina</span>':''):'<span class="lockt priv">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>'):'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>')
      +(live?liveHtml(w):'')
      +paceHtml(w)+bikeHtml(w)+(live?'':durLineHtml(w))+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+(live?'':wxHtml(w))+routeBoxHtml(w)
      +invitedHtml(w)
@@ -1250,7 +1251,8 @@ function renderMyWant(){
   // kilka zaproszeń: karuzela przewijana w bok (z kropkami); slajd = wiersz z dniem i godziną + ta sama karta co w kalendarzu (wantHtml)
   const card=(w,i)=>{
     const d=new Date(w.starts_at),wd=d.toLocaleDateString("pl-PL",{weekday:"long"}),n=dayDiff(d),rel=n>=0&&n<=2;
-    return '<div class="mywant" data-i="'+i+'" data-wid="'+esc(w.id)+'"><div class="mywhen"><b>'+esc(rel?["Dziś","Jutro","Pojutrze"][n]:wd.charAt(0).toUpperCase()+wd.slice(1))+' '+esc(wTime(w))+'</b>'+(rel?'<span>'+esc(wd)+'</span>':'')+(mine.length>1?'<i>'+(i+1)+' z '+mine.length+'</i>':'')+'</div>'+wantHtml(w)+'</div>';
+    const when='<div class="mywhen'+(isOpen(w)?' rng':'')+'"><b>'+esc(rel?["Dziś","Jutro","Pojutrze"][n]:wd.charAt(0).toUpperCase()+wd.slice(1))+' '+esc(wTime(w))+'</b>'+(rel?'<span>'+esc(wd)+'</span>':'')+'</div>';
+    return '<div class="mywant" data-i="'+i+'" data-wid="'+esc(w.id)+'">'+wantHtml(w,{d:when,n:mine.length>1?(i+1)+' z '+mine.length:''})+'</div>';
   };
   const multi=mine.length>1,keep=multi?Math.min(myIdx,mine.length-1):0;
   box.innerHTML='<div class="mycar'+(multi?' multi':'')+'" id="mycar">'+mine.map(card).join("")+'</div>'
