@@ -5,7 +5,7 @@ const darkMq=window.matchMedia?matchMedia("(prefers-color-scheme: dark)"):null;
 function applyTheme(){
   const dark=themeMode==="dark"||(themeMode==="auto"&&darkMq&&darkMq.matches);
   document.documentElement.dataset.theme=dark?"dark":"light";
-  const m=document.querySelector('meta[name=theme-color]');if(m)m.content=dark?"#1c1c1e":"#f5f5f7";
+  const m=document.querySelector('meta[name=theme-color]');if(m)m.content=dark?"#1c1c1e":"#e8e9ed";
 }
 function setTheme(t){themeMode=t;try{localStorage.setItem("theme",t)}catch(e){}applyTheme()}
 if(darkMq&&darkMq.addEventListener)darkMq.addEventListener("change",applyTheme);
@@ -153,7 +153,7 @@ function colorsHtml(){
   return '<button class="sback" data-c="backadmin">‹ Administracja</button>'
    +'<div class="sname" style="margin-top:26px">🎨 Kolory nicków</div>'
    +'<div class="sleft">'+blk("K","👩 Kobiety")+blk("M","👨 Mężczyźni")
-   +'<h3>Podgląd</h3><div class="cprev"><div style="background:#fff" id="pvL"></div><div style="background:#2c2c2e" id="pvD"></div></div>'
+   +'<h3>Podgląd</h3><div class="cprev"><div style="background:#f5f5f7" id="pvL"></div><div style="background:#2c2c2e" id="pvD"></div></div>'
    +'<p class="note">Sprawdź, czy nicki są czytelne w trybie jasnym (góra) i ciemnym (dół). Szara pigułka to nick bez podanej płci. Zmiana działa u wszystkich po odświeżeniu danych (do 1 minuty).</p>'
    +'<div class="note" id="colinfo" style="color:var(--bad)"></div>'
    +'<button class="b sbtn" data-c="colsave">Zapisz kolory</button>'
