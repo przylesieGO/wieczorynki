@@ -586,7 +586,7 @@ function wantHtml(w){
      +(open?tallyHtml(w):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w)+(live?'':myPickHtml(w,myp,joined,mine)))
      +(wLate(w)&&!mine&&!peek&&!joined?lateNote():'')
      +'<div class="acts">'
-     +(mine?(live?'':(open?'<button class="b join" data-my="settle" data-id="'+esc(w.id)+'" title="Ustal godzinę">✅ Ustal '+esc(hhmm(new Date(wBest(w))))+'</button><div class="agrp ed"><button class="ib" data-my="settlepick" data-id="'+esc(w.id)+'" title="Zmień ustaloną godzinę" aria-label="Zmień ustaloną godzinę">'+SVG(UI_P.clock)+'</button><button class="ib" data-my="edit" data-id="'+esc(w.id)+'" title="Edytuj zaproszenie" aria-label="Edytuj zaproszenie">'+ICON.edit+'</button></div><div class="agrp tools">':'<button class="b g join" data-my="edit" data-id="'+esc(w.id)+'">✏️ Edytuj</button>')
+     +(mine?(live?'':(open?'<button class="b join" data-my="settle" data-id="'+esc(w.id)+'" title="Ustal godzinę">✅ Ustal '+esc(hhmm(new Date(wBest(w))))+'</button><div class="agrp ed"><button class="ib" data-my="settlepick" data-id="'+esc(w.id)+'" title="Zmień ustaloną godzinę" aria-label="Zmień ustaloną godzinę">'+SVG(UI_P.clock)+'</button><button class="ib" data-my="edit" data-id="'+esc(w.id)+'" title="Edytuj zaproszenie" aria-label="Edytuj zaproszenie">'+ICON.edit+'</button></div><div class="agrp tools">':(fromRange(w)?'<button class="b join" data-my="settlepick" data-id="'+esc(w.id)+'" title="Zmień ustaloną godzinę" aria-label="Zmień ustaloną godzinę '+esc(hhmm(new Date(w.starts_at)))+'">'+uiIcon("tick")+' '+esc(hhmm(new Date(w.starts_at)))+' · '+uiIcon("clock")+'</button><button class="ib" data-my="edit" data-id="'+esc(w.id)+'" title="Edytuj zaproszenie" aria-label="Edytuj zaproszenie">'+ICON.edit+'</button>':'<button class="b g join" data-my="edit" data-id="'+esc(w.id)+'">✏️ Edytuj</button>'))
         +(priv?'<button class="ib" data-my="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
         +'<button class="ib" data-my="share" data-id="'+esc(w.id)+'" title="Udostępnij" aria-label="Udostępnij">'+ICON.share+'</button>'):live&&!wLate(w)&&!joined?'<span class="note" style="flex:1">🚴 Jazda trwa — dołączyć już nie można.</span>':peek?'<span class="note" style="flex:1">Nie jesteś zaproszony — możesz tylko podejrzeć lub usunąć.</span>'
        :open?'<button class="b join'+(joined?' g':'')+'" data-w="pref" data-id="'+esc(w.id)+'">'+(joined&&myp?'✓ '+esc(hhmm(new Date(myp)))+' · zmień':dec?'Jednak mogę? Wybierz godzinę':'Pasuje mi o…')+'</button>'
@@ -1657,7 +1657,7 @@ function pickClashHtml(w){
   return '<div class="pkclash">⚠️ '+(c.user_id===uid?'Masz już swoją jazdę '+esc(when)+'.':'Jedziesz już '+esc(when)+' ('+esc(nickOf(c.user_id))+').')+' Ta godzina się z nią zderza.</div>';
 }
 function renderPick(){
-  const w=wants.find(x=>x.id===pk.want),p=$("picksheet");if(!w||!isOpen(w)){closePick();return}
+  const w=wants.find(x=>x.id===pk.want),p=$("picksheet");if(!w||!(isOpen(w)||(pk.mode==="settle"&&fromRange(w)))){closePick();return}
   const settle=pk.mode==="settle",d=new Date(w.range_from),wd=d.toLocaleDateString("pl-PL",{weekday:"long"});
   p.innerHTML='<div class="sheetbox popbox" role="dialog" aria-modal="true"><button class="sclose" data-k="close" aria-label="Zamknij">✕</button>'
    +'<span class="ptag">'+(settle?'✅ USTAL GODZINĘ':'🕖 KIEDY MOŻESZ?')+'</span>'
