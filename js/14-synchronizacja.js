@@ -87,7 +87,7 @@ async function syncProfiles(ids){
 }
 async function syncMe(){
   const [nt,fv,tl]=await Promise.all([
-    visOk?sb.from("notifications").select("id,kind,want_id,actor,created_at,read_at").eq("user_id",uid).is("group_id",null).gte("created_at",new Date(Date.now()-30*864e5).toISOString()).order("created_at",{ascending:false}).limit(80):Promise.resolve({data:notifs}),
+    visOk?sb.from("notifications").select("id,kind,want_id,actor,created_at,read_at,bike_id").eq("user_id",uid).is("group_id",null).gte("created_at",new Date(Date.now()-30*864e5).toISOString()).order("created_at",{ascending:false}).limit(80):Promise.resolve({data:notifs}),
     sb.from("favorites").select("fav_id").eq("user_id",uid).limit(1000),
     sb.from("telegram_links").select("tg_name,linked_at").eq("user_id",uid).limit(1)]);
   if(nt.error||fv.error)throw nt.error||fv.error;
@@ -267,7 +267,7 @@ async function loadRemote(selectId){
       return {data:out}};
     const [iv,nt,dc]=visOk?await Promise.all([
       byWant("want_invitees","want_id,user_id,added_by"),
-      sb.from("notifications").select("id,kind,want_id,actor,created_at,read_at").eq("user_id",uid).is("group_id",null).gte("created_at",new Date(Date.now()-30*864e5).toISOString()).order("created_at",{ascending:false}).limit(80),
+      sb.from("notifications").select("id,kind,want_id,actor,created_at,read_at,bike_id").eq("user_id",uid).is("group_id",null).gte("created_at",new Date(Date.now()-30*864e5).toISOString()).order("created_at",{ascending:false}).limit(80),
       rangeOk?byWant("want_declines","want_id,user_id"):Promise.resolve({data:[]})
     ]):[{data:[]},{data:[]},{data:[]}];
     decls={};((dc&&!dc.error&&dc.data)||[]).forEach(x=>{(decls[x.want_id]=decls[x.want_id]||[]).push(x.user_id)});

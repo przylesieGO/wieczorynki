@@ -688,6 +688,7 @@ async function gearDeleteAccount(){
   if(!await askOk("Na pewno usunąć konto? Tej operacji nie można cofnąć.","Usuń konto",1))return;
   deleting=true;inf.textContent="Usuwam konto…";
   try{
+    if(typeof svWipeFiles==="function")await svWipeFiles();   // 🔧 paragony w storage (KROK 88) — baza ich sama nie skasuje
     const r=await sb.rpc("delete_my_account");
     if(r.error){
       const m=r.error.message||"";
