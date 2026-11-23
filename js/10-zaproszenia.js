@@ -583,8 +583,10 @@ function wantHtml(w){
      +(live?liveHtml(w):'')
      +paceHtml(w)+bikeHtml(w)+(live?'':durLineHtml(w))+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+(live?'':wxHtml(w))+routeBoxHtml(w)
      +invitedHtml(w)
-     +(open?tallyHtml(w):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w)+(live?'':myPickHtml(w,myp,joined,mine)))
+     +(mine&&open&&new Date(w.range_from).getTime()>Date.now()+36e5?'<div class="meta">🕖 Ustali się sama o '+esc(hhmm(new Date(new Date(w.range_from).getTime()-36e5)))+', jeśli jej nie wybierzesz</div>':'')
+     +(open?tallyHtml(w)+(mine&&wTally(w).length?'<div class="prop">✨ Propozycja: <b>'+esc(hhmm(new Date(wBest(w))))+'</b> — pasuje '+wTally(w)[0].ids.length+' '+plf(wTally(w)[0].ids.length,["osobie","osobom","osobom"])+'</div>':''):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w)+(live?'':myPickHtml(w,myp,joined,mine)))
      +(wLate(w)&&!mine&&!peek&&!joined?lateNote():'')
+     +(mine&&live?'<div class="linfo">🔒 Jazda trwa — nie można już edytować, dołączać ani doprosić. Po zakończeniu trafi do archiwum.</div>':'')
      +'<div class="acts">'
      +(mine?(live?'':(open?'<button class="b join" data-my="settle" data-id="'+esc(w.id)+'" title="Ustal godzinę">✅ Ustal '+esc(hhmm(new Date(wBest(w))))+'</button><div class="agrp ed"><button class="ib" data-my="settlepick" data-id="'+esc(w.id)+'" title="Zmień ustaloną godzinę" aria-label="Zmień ustaloną godzinę">'+SVG(UI_P.clock)+'</button><button class="ib" data-my="edit" data-id="'+esc(w.id)+'" title="Edytuj zaproszenie" aria-label="Edytuj zaproszenie">'+ICON.edit+'</button></div><div class="agrp tools">':(fromRange(w)?'<button class="b join" data-my="settlepick" data-id="'+esc(w.id)+'" title="Zmień ustaloną godzinę" aria-label="Zmień ustaloną godzinę '+esc(hhmm(new Date(w.starts_at)))+'">'+uiIcon("tick")+' '+esc(hhmm(new Date(w.starts_at)))+' · zmień</button><button class="ib" data-my="edit" data-id="'+esc(w.id)+'" title="Edytuj zaproszenie" aria-label="Edytuj zaproszenie">'+ICON.edit+'</button>':'<button class="b g join" data-my="edit" data-id="'+esc(w.id)+'">✏️ Edytuj</button>'))
         +(priv?'<button class="ib" data-my="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
@@ -1245,30 +1247,10 @@ function renderMyWant(){
   const bd=$("wbadge");bd.innerHTML='<span class="fbn">'+others+'</span><span class="fbd"> dziś</span>';bd.classList.toggle("hide",!others);
   myCnt=mine.length;
   if(!mine.length||!myOn()){box.innerHTML="";return}
-  // kilka zaproszeń: karuzela przewijana w bok (z kropkami)
+  // kilka zaproszeń: karuzela przewijana w bok (z kropkami); slajd = wiersz z dniem i godziną + ta sama karta co w kalendarzu (wantHtml)
   const card=(w,i)=>{
-    const d=new Date(w.starts_at),j=(joins[w.id]||[]).filter(x=>x!==uid);
-    const wd=d.toLocaleDateString("pl-PL",{weekday:"long"}),n=dayDiff(d);
-    const priv=isPriv(w),ni=(invs[w.id]||[]).length;
-    const live=wLive(w);
-    if(live)return '<div class="mywant live'+(isTest(w)?' test':'')+grCls(w)+'" data-i="'+i+'" data-wid="'+esc(w.id)+'"><div class="myh">🙋 Ty zapraszasz '+trwaTag()+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+(mine.length>1?' · '+(i+1)+' z '+mine.length:'')+'</div>'
-     +wTitleHtml(w)+'<div class="myt">'+esc(relDay(new Date(w.starts_at))+" "+hhmm(new Date(w.starts_at)))+'</div>'+liveHtml(w)
-     +paceHtml(w)+bikeHtml(w)+placeHtml(w)+(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')
-     +'<div class="mym">'+joinedHtml("my"+w.id,j,'Jedziesz sam(a).')+'</div>'
-     +'<div class="linfo">🔒 Jazda trwa — nie można już edytować, dołączać ani doprosić. Po zakończeniu trafi do archiwum.</div>'
-     +'<div class="acts"><button class="b g join" data-my="share" data-id="'+esc(w.id)+'">Udostępnij</button><button class="ib del" data-my="del" data-id="'+esc(w.id)+'" title="Usuń zaproszenie" aria-label="Usuń zaproszenie">'+ICON.del+'</button></div></div>';
-    return '<div class="mywant'+(isTest(w)?' test':'')+grCls(w)+'" data-i="'+i+'" data-wid="'+esc(w.id)+'"><div class="myh">🙋 Ty zapraszasz'+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+(mine.length>1?' · '+(i+1)+' z '+mine.length:'')+(priv?(wGr(w)?grTagHtml(w):'<span class="lockt">🔒 dla '+ni+' '+osob(ni)+'</span>'):'')+'</div>'
-     +wTitleHtml(w)+'<div class="myt'+(isOpen(w)?' rng':'')+'">'+esc(n>=0&&n<=2?["Dziś","Jutro","Pojutrze"][n]+" "+wTime(w):wd.charAt(0).toUpperCase()+wd.slice(1)+" "+wTime(w))+(n>=0&&n<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
-     +(isOpen(w)?'<div class="mym">🕖 Godzina do ustalenia'+(new Date(w.range_from).getTime()>Date.now()+36e5?' — ustali się sama '+esc(hhmm(new Date(new Date(w.range_from).getTime()-36e5)))+', jeśli jej nie wybierzesz':'')+'</div>':fromRange(w)?'<div class="mym">✅ Godzina ustalona</div>':'')
-     +paceHtml(w)+bikeHtml(w)+durLineHtml(w)+placeHtml(w)+(w.note?'<div class="mym">💬 '+esc(w.note)+'</div>':'')+wxHtml(w)+routeBoxHtml(w)
-     +(priv?'<div class="mym">'+invitedHtml(w)+'</div>':'')
-     +(isOpen(w)?'<div class="mym">'+tallyHtml(w)+'</div>'+(wTally(w).length?'<div class="prop">✨ Propozycja: <b>'+esc(hhmm(new Date(wBest(w))))+'</b> — pasuje '+wTally(w)[0].ids.length+' '+plf(wTally(w)[0].ids.length,["osobie","osobom","osobom"])+'</div>':'')
-       :'<div class="mym">'+joinedHtml("my"+w.id,j,'Na razie nikt nie dołączył.')+declHtml(w)+'</div>')
-     +'<div class="acts">'+(isOpen(w)?'<button class="b join" data-my="settle" data-id="'+esc(w.id)+'" title="Ustal godzinę">✅ Ustal '+esc(hhmm(new Date(wBest(w))))+'</button>':'<button class="b g join" data-my="edit" data-id="'+esc(w.id)+'">✏️ Edytuj</button>')
-     +(priv?'<button class="ib" data-my="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
-     +'<button class="ib" data-my="share" data-id="'+esc(w.id)+'" title="Udostępnij" aria-label="Udostępnij">'+ICON.share+'</button>'
-     +'<button class="ib del" data-my="del" data-id="'+esc(w.id)+'" title="Odwołaj zaproszenie" aria-label="Odwołaj zaproszenie">'+ICON.del+'</button></div>'
-     +(isOpen(w)?'<div class="myl"><button class="lnk" data-my="settlepick" data-id="'+esc(w.id)+'">Zmień ustaloną ›</button><button class="lnk" data-my="edit" data-id="'+esc(w.id)+'">Edytuj ›</button></div>':'')+'</div>';
+    const d=new Date(w.starts_at),wd=d.toLocaleDateString("pl-PL",{weekday:"long"}),n=dayDiff(d),rel=n>=0&&n<=2;
+    return '<div class="mywant" data-i="'+i+'" data-wid="'+esc(w.id)+'"><div class="mywhen"><b>'+esc(rel?["Dziś","Jutro","Pojutrze"][n]:wd.charAt(0).toUpperCase()+wd.slice(1))+' '+esc(wTime(w))+'</b>'+(rel?'<span>'+esc(wd)+'</span>':'')+(mine.length>1?'<i>'+(i+1)+' z '+mine.length+'</i>':'')+'</div>'+wantHtml(w)+'</div>';
   };
   const multi=mine.length>1,keep=multi?Math.min(myIdx,mine.length-1):0;
   box.innerHTML='<div class="mycar'+(multi?' multi':'')+'" id="mycar">'+mine.map(card).join("")+'</div>'
@@ -1291,6 +1273,7 @@ $("mywant").addEventListener("scroll",e=>{
 async function myClick(e){
   const dot=e.target.closest("button[data-dot]");
   if(dot){const c=$("mycar"),it=c&&c.children[+dot.dataset.dot];if(it)c.scrollTo({left:it.offsetLeft-c.offsetLeft,behavior:"smooth"});return}
+  const bw=e.target.closest("#mywant button[data-w=\"del\"]");if(bw){askDelete("want",bw.dataset.id);return}
   const b=e.target.closest("button[data-my]");if(!b)return;
   const w=wants.find(x=>x.id===b.dataset.id);
   if(b.dataset.my==="new"){openWantForm(null);return}

@@ -194,7 +194,7 @@ function goToWant(w){
   if(w.user_id===uid&&myOn()){
     const mine=wants.filter(x=>x.user_id===uid&&new Date(x.starts_at).getTime()>=Date.now()-3*36e5).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
     myIdx=Math.max(0,mine.findIndex(x=>x.id===w.id));renderWants();
-    el=document.querySelector('#mywant .mywant[data-wid="'+w.id+'"]');
+    el=document.querySelector('#mywant .want[data-wid="'+w.id+'"]');
   }else{
     const k=localIso(new Date(w.starts_at)).slice(0,10);wantOpenDay=k;
     const ord=wants.filter(x=>localIso(new Date(x.starts_at)).slice(0,10)===k&&new Date(x.starts_at).getTime()>=Date.now()-3*36e5&&!wAbove(x))
