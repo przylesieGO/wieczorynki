@@ -1228,3 +1228,4 @@ details.wday[open].wpv{border-color:var(--priv)}
 .sv-two{display:flex;gap:8px}.sv-two>*{flex:1;min-width:0}.sv-fin{width:100%;box-sizing:border-box}.sv-fdoc{align-self:flex-start}
 .sv-call{display:inline-flex;align-items:center;gap:5px;flex:none;text-decoration:none}.sv-call .ui-i{width:15px;height:15px}.sv-call{width:36px;height:36px;padding:0;justify-content:center;border-radius:50%}.sv-call .ui-i{width:17px;height:17px}.sv-late{color:var(--bad)}
 .sv-form .sv-fin{background:var(--card)}
+.sv-ex{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.04em;color:var(--mut);background:var(--line);border-radius:999px;padding:1px 7px;vertical-align:1px;margin-left:6px;text-transform:none}.sv-exl{text-align:center;margin-top:2px}

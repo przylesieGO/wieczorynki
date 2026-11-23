@@ -43,7 +43,7 @@ function svRidesLoad(force){
 }
 function svBikeOfRide(t){const h=svLoad().hist;let b="";for(const x of h){if(x.t<=t)b=x.b;else break}return b}
 function svAppKm(b){
-  if(!b.app||!svRides)return 0;
+  if(b.demo||!b.app||!svRides)return 0;
   return svRides.reduce((a,r)=>a+(r.ride_at&&svBikeOfRide(r.ride_at)===b.id?(+r.km||0):0),0);
 }
 const svTotal=b=>svNum(b.kmStart)+svAppKm(b);
@@ -54,11 +54,23 @@ function svSetActive(id){
 const svPartDef=k=>SV_PARTS.find(p=>p[0]===k)||SV_PARTS[SV_PARTS.length-1];
 const svIcoT=t=>(SV_TYPES.find(x=>x[0]===t)||SV_TYPES[SV_TYPES.length-1])[1];
 const svNameT=t=>(SV_TYPES.find(x=>x[0]===t)||SV_TYPES[SV_TYPES.length-1])[2];
+// 🧪 przykładowy rower (tylko w tej przeglądarce): pokazuje, co potrafi sekcja; można w nim wszystko zmieniać,
+// ale nie bywa aktywny i nie dostaje km z aplikacji; „Usuń przykład” bez pytania (da się przywrócić)
+const svReal=()=>svLoad().bikes.filter(b=>!b.demo);
+const svExTag='<span class="sv-ex">PRZYKŁAD</span>';
+function svDemoBike(){
+  const dd=n=>{const x=new Date(Date.now()+n*864e5);return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0")};
+  const P=(k,brand,price,days,km,doc)=>{const def=svPartDef(k);return {id:svId(),k,name:def[1],brand,price,date:dd(days),km,life:def[2],doc:doc||""}};
+  return {id:svId(),demo:true,name:"Szary gravel",type:"gravel",kind:"std",brand:"Kross",model:"Esker 4.0",buy:dd(-540),frame:"WTU000X0001",
+    receipt:"paragon_rower.jpg",warranty:"gwarancja.pdf",app:false,kmStart:3420,
+    parts:[P("chain","Shimano",129,-60,1900,"paragon_lancuch.jpg"),P("pads","Shimano",69,-150,600),P("tyre","Schwalbe",189,-40,2500),P("cass","Shimano",159,-200,600)],
+    svc:{date:dd(40),notify:true,before:"3",freq:"once",name:"Serwis Pod Lasem",tel:"000 000 001"},status:"ready",pick:dd(1),pickNotify:true};
+}
 
 /* ⚙️ → Edytuj profil → wiersz „Serwis rowerowy” (pod „Moje jazdy”) */
 function svRow(){
   if(!svOn())return "";
-  const n=svLoad().bikes.length;
+  const n=svReal().length;
   return gRow("#ff9500","wrench","Serwis rowerowy"+betaTag("serwis_rowerowy"),"Rowery, przebieg, wymiany, paragony",n?'<span class="ios-v">'+n+'</span>':'','data-sv="open"');
 }
 
@@ -99,13 +111,15 @@ function svHtml(){
   const d=svLoad();svRidesLoad();
   let h=backBtn()+'<div class="sname" style="margin-top:26px">Serwis rowerowy'+betaTag("serwis_rowerowy")+'</div><div class="smail">Rowery, przebieg, wymiany części i serwis.</div>';
   // 1. Moje rowery
-  h+=gGrp("Moje rowery · "+d.bikes.length,d.bikes.map(b=>'<button type="button" class="ios-it ios-row sv-bike'+(b.id===d.active?' act':'')+(b.id===svSel?' sel':'')+'" data-sv="sel" data-bid="'+esc(b.id)+'"><span class="ios-ic" style="background:#ff9500">'+uiIcon(svIcoT(b.type))+'</span><span class="ios-t">'+esc(b.name||"Rower")
+  h+=gGrp("Moje rowery · "+d.bikes.length,d.bikes.map(b=>'<button type="button" class="ios-it ios-row sv-bike'+(b.id===d.active?' act':'')+(b.id===svSel?' sel':'')+'" data-sv="sel" data-bid="'+esc(b.id)+'"><span class="ios-ic" style="background:#ff9500">'+uiIcon(svIcoT(b.type))+'</span><span class="ios-t">'+esc(b.name||"Rower")+(b.demo?svExTag:"")
       +'<small>'+[svNameT(b.type),b.id===d.active?"aktywny":"",b.status==="svc"?"w serwisie":b.status==="ready"?"do odbioru":""].filter(Boolean).join(" · ")+'</small></span><span class="ios-v">'+svKm(svTotal(b))+'</span><span class="ios-chev" aria-hidden="true">›</span></button>')
-    .concat([gRow("#34c759","plus","Dodaj rower","Gravel, MTB, szosa…","",'data-sv="add"'),d.bikes.length>1?svSw("ask",d.ask,"Pytaj o rower przy jeździe","Na razie km idą na rower aktywny — pytanie przy „Jak poszło?” w kolejnej wersji"):""]));
+    .concat([gRow("#34c759","plus","Dodaj rower","Gravel, MTB, szosa…","",'data-sv="add"'),
+      d.bikes.length?"":gRow("#8e8e93","bike","Zobacz przykład","Rower z wymianami, paskami zużycia i serwisem","",'data-sv="ex"'),
+      svReal().length>1?svSw("ask",d.ask,"Pytaj o rower przy jeździe","Na razie km idą na rower aktywny — pytanie przy „Jak poszło?” w kolejnej wersji"):""]));
   const b=svBike(svSel);
   if(!b)return h+'<p class="note pe-note">'+uiIcon("lock")+' Dodaj pierwszy rower — przebieg, wymiany części i terminy serwisu zapiszesz w jednym miejscu.</p>'+svNote();
   // 2. Rower
-  h+=gGrp("Rower: "+esc(b.name||"bez nazwy"),[
+  h+=gGrp("Rower: "+esc(b.name||"bez nazwy")+(b.demo?svExTag:""),[
     svLine("#ff9500","pencil","Nazwa",svIn("name",b.name,"Np. Szary gravel")),
     '<div class="ios-it sv-col"><span class="sv-lb">Typ</span>'+svSeg("type",SV_TYPES.map(x=>[x[0],x[2]]),b.type)+'</div>',
     '<div class="ios-it sv-col"><span class="sv-lb">Rodzaj</span>'+svSeg("kind",SV_KINDS,b.kind||"std")+'</div>',
@@ -115,12 +129,13 @@ function svHtml(){
     svLine("#636366","lock","Nr ramy",svIn("frame",b.frame,"Opcja")),
     svDoc("receipt",b.receipt,"Paragon zakupu"),
     svDoc("warranty",b.warranty,"Gwarancja"),
-    b.id===d.active?'<div class="ios-it"><span class="ios-t">Aktywny rower<small>Na niego trafiają km z „Jak poszło?”</small></span><span class="ios-v ok">'+uiIcon("check")+'Tak</span></div>'
+    b.demo?'<div class="ios-it"><span class="ios-t">Przykładowy rower<small>Możesz w nim wszystko zmieniać · km z aplikacji na niego nie trafiają</small></span></div>'
+    :b.id===d.active?'<div class="ios-it"><span class="ios-t">Aktywny rower<small>Na niego trafiają km z „Jak poszło?”</small></span><span class="ios-v ok">'+uiIcon("check")+'Tak</span></div>'
       :'<button type="button" class="ios-it ios-row" data-sv="act"><span class="ios-t">Ustaw jako aktywny<small>Nowe jazdy z aplikacji będą liczone na ten rower</small></span><span class="ios-chev" aria-hidden="true">›</span></button>']);
   // 3. Przebieg
   const app=svAppKm(b);
-  h+='<div class="ios"><div class="ios-gh">Przebieg</div><div class="ios-grp"><div class="ios-it sv-sum"><span class="sv-big">'+svKm(svTotal(b))+'</span><small>'+(b.app?'w tym z aplikacji: '+(svRides?svKm(app):"…"):'km z aplikacji wyłączone')+'</small></div>'
-    +svSw("app",b.app,"Dodawaj km z aplikacji","Z „Jak poszło?”, gdy ten rower jest aktywny · „Km na start” = przebieg sprzed aplikacji")
+  h+='<div class="ios"><div class="ios-gh">Przebieg</div><div class="ios-grp"><div class="ios-it sv-sum"><span class="sv-big">'+svKm(svTotal(b))+'</span><small>'+(b.demo?'przykładowy przebieg':b.app?'w tym z aplikacji: '+(svRides?svKm(app):"…"):'km z aplikacji wyłączone')+'</small></div>'
+    +(b.demo?"":svSw("app",b.app,"Dodawaj km z aplikacji","Z „Jak poszło?”, gdy ten rower jest aktywny · „Km na start” = przebieg sprzed aplikacji"))
     +svLine("#8e8e93","road","Km na start",svIn("kmStart",b.kmStart,"0",' inputmode="numeric" maxlength="7"'))+'</div></div>';
   // 4. Wymiany części
   const parts=(b.parts||[]).slice().sort((x,y)=>(y.date||"").localeCompare(x.date||""));
@@ -142,7 +157,8 @@ function svHtml(){
   h+=gGrp("Rower w serwisie",['<div class="ios-it sv-col">'+svSeg("status",SV_STATUS,st)+'</div>',
     st!=="me"?svLine("#ff9500","cal","Odbiór"+(b.pick?'<small>'+svWhen(svDaysTo(b.pick))+'</small>':''),'<input class="pe-in" type="date" id="sv-pick" data-sf="pick" value="'+esc(b.pick||"")+'" aria-label="Data odbioru">'):"",
     st!=="me"?svSw("pickNotify",b.pickNotify,"Powiadom o odbiorze","Wersja testowa: samo ustawienie"):""]);
-  h+='<button class="sdanger" data-sv="del">Usuń rower „'+esc(b.name||"Rower")+'”…</button>';
+  h+=b.demo?'<button class="sdanger" data-sv="exrm">Usuń przykład</button>':'<button class="sdanger" data-sv="del">Usuń rower „'+esc(b.name||"Rower")+'”…</button>';
+  if(!b.demo&&!d.bikes.some(x=>x.demo))h+='<div class="sv-exl"><button type="button" class="lnk" data-sv="ex">Pokaż przykładowy rower</button></div>';
   return h+svNote();
 }
 const svNote=()=>'<p class="note pe-note">'+uiIcon("lock")+' Dane widzisz tylko Ty. Wersja testowa: zapisane tylko w tej przeglądarce — na innym telefonie ich nie będzie. Pliki paragonów nie są jeszcze wysyłane (zapisujemy samą nazwę).</p>';
@@ -153,13 +169,17 @@ $("gearpanel").addEventListener("click",async e=>{
   const t=e.target.closest("[data-sv]");if(!t||!session)return;
   const a=t.dataset.sv,d=svLoad(),b=svBike(svSel);
   if(a==="open"){if(!svOn())return;if(gearView==="nick")gearFrom="nick";gearView="serwis";svPartOpen=false;svRidesLoad(true);renderGear();return}
-  if(a==="add"){const n=d.bikes.length+1,nb={id:svId(),name:"Rower "+n,type:"gravel",kind:"std",app:true,kmStart:"",parts:[],svc:{},status:"me"};
+  if(a==="ex"){if(d.bikes.some(x=>x.demo))return;const nb=svDemoBike();d.bikes.push(nb);svSel=nb.id;svPartOpen=false;svSave(1);renderGear();
+    say("🚲 Przykładowy rower — możesz w nim wszystko zmieniać. Usuniesz go jednym kliknięciem.");return}
+  if(a==="add"){const n=svReal().length+1,nb={id:svId(),name:"Rower "+n,type:"gravel",kind:"std",app:true,kmStart:"",parts:[],svc:{},status:"me"};
     d.bikes.push(nb);svSel=nb.id;if(!d.active)svSetActive(nb.id);svSave(1);renderGear();
     const i=$("sv-name");if(i){i.focus();i.select()}return}
   if(a==="sel"){svSel=t.dataset.bid;svPartOpen=false;renderGear();return}
   if(a==="sw"&&t.dataset.f==="ask"){d.ask=!d.ask;svSave(1);renderGear();return}
   if(!b)return;
-  if(a==="act"){svSetActive(b.id);svSave(1);renderGear();say("🚲 Aktywny rower: "+(b.name||"Rower"));return}
+  if(a==="exrm"){if(!b.demo)return;d.bikes=d.bikes.filter(x=>x!==b);svSel=d.active||(d.bikes[0]&&d.bikes[0].id)||"";svPartOpen=false;svSave(1);renderGear();
+    say("Usunięto przykład. Przywrócisz go linkiem „Pokaż przykładowy rower”.");return}
+  if(a==="act"){if(b.demo)return;svSetActive(b.id);svSave(1);renderGear();say("🚲 Aktywny rower: "+(b.name||"Rower"));return}
   if(a==="seg"){svSetPath(b,t.dataset.f,t.dataset.v);svSave(1);renderGear();return}
   if(a==="sw"){const f=t.dataset.f,cur=f.startsWith("s.")?(b.svc||{})[f.slice(2)]:b[f];svSetPath(b,f,!cur);svSave(1);renderGear();return}
   if(a==="docrm"){e.preventDefault();b[t.dataset.f]="";svSave(1);renderGear();return}
@@ -174,7 +194,7 @@ $("gearpanel").addEventListener("click",async e=>{
     if(!await askOk("Usunąć wymianę „"+p.name+"”"+(p.date?" z "+svDate(p.date):"")+"?","Usuń",1))return;
     b.parts=b.parts.filter(x=>x!==p);svSave(1);renderGear();return}
   if(a==="del"){if(!await askOk("Usunąć rower „"+(b.name||"Rower")+"” razem z historią wymian? Tego nie da się cofnąć.","Usuń",1))return;
-    d.bikes=d.bikes.filter(x=>x!==b);if(d.active===b.id){d.active="";const nx=d.bikes[0];if(nx)svSetActive(nx.id)}
+    d.bikes=d.bikes.filter(x=>x!==b);if(d.active===b.id){d.active="";const nx=d.bikes.find(x=>!x.demo);if(nx)svSetActive(nx.id)}
     svSel=d.active||(d.bikes[0]&&d.bikes[0].id)||"";svSave(1);renderGear();say("Usunięto rower.");return}
 });
 // ✏️ pola: zapis na bieżąco (bez przerysowania — kursor zostaje), przerysowanie przy „change” (sumy, nagłówki)
