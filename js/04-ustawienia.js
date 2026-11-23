@@ -19,7 +19,7 @@ const showNickHtml=()=>'<div class="note" style="margin-top:14px">Nick na górze
 // 🧪 testowe zaproszenia: Pokaż / Ukryj (zapamiętane w telefonie; swoje i te, do których dołączyłeś, zostają)
 let hideTest=false;try{hideTest=localStorage.getItem("hideTest")==="1"}catch(e){}
 // 🧪 spokojny wygląd kart testowych: sama etykieta TEST, bez migania/pasków/przygaszenia (klasa tcalm na <html>, zapamiętane w telefonie)
-let testCalm=false;try{testCalm=localStorage.getItem("testCalm")==="1"}catch(e){}
+let testCalm=true;try{testCalm=localStorage.getItem("testCalm")!=="0"}catch(e){}
 document.documentElement.classList.toggle("tcalm",testCalm);
 const hideTestHtml=()=>testOk?'<div class="note" style="margin-top:14px">Testowe zaproszenia 🧪</div><div class="seg">'+[["0","Pokaż"],["1","Ukryj"]].map(([k,t])=>'<button data-ht="'+k+'" class="'+((hideTest?"1":"0")===k?"on":"")+'">'+t+'</button>').join("")+'</div><div class="note" style="margin-top:6px">„Ukryj” — widzisz tylko prawdziwe jazdy. Twoje testowe i te, do których dołączyłeś, zostają.</div>':'';
 function renderMeNick(){const el=$("menick");if(!el)return;const on=showNick&&!!session&&!!me.nick;el.classList.toggle("hide",!on);el.innerHTML=on?'<i title="Zalogowany">👤 </i>'+nk(uid):''}
