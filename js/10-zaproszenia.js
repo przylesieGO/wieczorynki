@@ -1610,6 +1610,12 @@ function pickClash(w,t){
   return wants.filter(x=>x.id!==w.id&&!isOpen(x)&&wantEnd(x).getTime()>Date.now()&&(x.user_id===uid||(joins[x.id]||[]).includes(uid)))
     .find(x=>t<wantEnd(x).getTime()+g&&wantStart(x).getTime()<en+g)||null;
 }
+// 🔁 zatwierdzenie godziny („Ustal godzinę”, „Pasuje mi o…”) jak „Jadę!”: własna jazda w tym czasie → blokada, zapisany na cudzą → „Przenieś się”
+async function pickClashOk(w,t){
+  const c=pickClash(w,t);if(!c)return true;
+  if(c.user_id===uid){const cs=wantStart(c);say("Prowadzisz jazdę "+relDay(cs).toLowerCase()+" "+hhmm(cs)+"–"+hhmm(wantEnd(c))+" — najpierw ją usuń albo wybierz inną godzinę.");return false}
+  return leaveForClash(c,new Date(t));
+}
 function slotsHtml(w,sel,other){
   const C=new Map(wTally(w).map(x=>[x.t,x.ids.length])),ts=wSlots(w),extra=[...C.keys()].filter(t=>!ts.includes(t)).sort((a,b)=>a-b);
   return '<div class="slots">'+ts.concat(extra).map(t=>'<button type="button" class="slot'+(t===sel?' on':'')+(pickClash(w,t)?' clash':'')+'" data-t="'+t+'">'+hhmm(new Date(t))+(C.get(t)?'<span class="c">· '+C.get(t)+'</span>':'')+'</button>').join("")
@@ -1669,6 +1675,7 @@ $("picksheet").addEventListener("click",async e=>{
   k.disabled=true;
   try{
     if(k.dataset.k==="ok"&&pk.sel){
+      if(!await pickClashOk(w,pk.sel)){k.disabled=false;return}
       if(pk.mode==="settle"){await settleWant(w,pk.sel);say("✅ Ustalono "+wfLabel(new Date(pk.sel))+" — zaproszeni dostaną powiadomienie.")}
       else{await setPref(w,pk.sel);say("✔ Pasuje Ci "+hhmm(new Date(pk.sel))+" — "+nickOf(w.user_id)+" to zobaczy.")}
     }else if(k.dataset.k==="no"){await declineWant(w);say("OK — zapisano „Nie dam rady”.")}

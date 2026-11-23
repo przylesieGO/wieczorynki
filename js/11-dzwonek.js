@@ -383,7 +383,7 @@ $("popsheet").addEventListener("click",async e=>{
       try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}
     }
     if(q==="join"&&(decls[it.w.id]||[]).includes(uid))await sb.from("want_declines").delete().eq("want_id",it.w.id).eq("user_id",uid);
-    if(q==="pref"){if(!chosen)return;await setPref(it.w,chosen)}
+    if(q==="pref"){if(!chosen)return;if(!await pickClashOk(it.w,chosen))return;await setPref(it.w,chosen)}
     if(q==="no")await declineWant(it.w);
     if(q==="leave"){const r=await sb.from("want_joins").delete().eq("want_id",it.w.id).eq("user_id",uid);if(r.error)throw r.error}
     const ids=popIds(it),r=await sb.from("notifications").update({read_at:new Date().toISOString()}).in("id",ids);
