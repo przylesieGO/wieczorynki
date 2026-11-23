@@ -1,6 +1,6 @@
 /* ---------- 🏁 imprezy masowe — MVP (KROK 40; założenia właściciela 2026-11-15 20:58) ---------- */
 let evGeoOk=false,evExtraOk=false,evOk=false,evs=[],evDist={},evPart={},evOpen="",evFlt="",evArchOpen=false,ef=null;
-const EV_BIKE={gravel:["🪨","Gravel","Jadę"],road:["🛣","Szosa","Jadę"],mtb:["⛰","MTB","Jadę"],any:["🚲","Dowolny rower","Jadę"],run:["🏃","Bieg","Biegnę"],walk:["🚶","Marsz","Idę"],tri:["🏊","Triathlon","Startuję"],other:["🏅","Inne","Biorę udział"]};
+const EV_BIKE={gravel:["🪨","Gravel","Jadę"],road:["🛣","Szosa","Jadę"],mtb:["⛰","MTB","Jadę"],ebike:["⚡","E-bike","Jadę"],any:["🚲","Dowolny rower","Jadę"],run:["🏃","Bieg","Biegnę"],walk:["🚶","Marsz","Idę"],tri:["🏊","Triathlon","Startuję"],other:["🏅","Inne","Biorę udział"]};
 const evVerb=b=>(EV_BIKE[b]||EV_BIKE.other)[2];
 let evLikes={};
 let evPub=false,evCnt={};   // 👤 imprezy dla gości (KROK 61): dane z events_pub(), evCnt = liczba zapisanych (bez nicków)
@@ -222,7 +222,7 @@ function renderEvents(){
   if(!evLoaded&&!evLoading&&tabOk(3)){evLoading=true;(session?loadEvents():loadEventsPub()).then(()=>{evLoading=false;renderEvents();try{snapSave()}catch(e){}}).catch(()=>{evLoading=false})}
   const box=$("evlist");if(!box)return;
   $("evbeta").innerHTML=betaTag("tab_events");$("evadd").classList.toggle("hide",!session);
-  $("evchips").innerHTML=(evGeoOk?'<button type="button" class="fch near'+(evNearOn?' on':'')+'" data-evnear="1">📍 W okolicy'+(evNearOn?' · '+evNearR+' km':'')+'</button>':'')+[["","Wszystkie"],["gravel","🪨 Gravel"],["road","🛣 Szosa"],["mtb","⛰ MTB"],["run","🏃 Bieg"],["walk","🚶 Marsz"]].concat(session?[["mine","🙋 Moje"]]:[]).concat(isAdmin&&evs.some(x=>x.delete_req_at)?[["delreq","🗑 Do usunięcia ("+evs.filter(x=>x.delete_req_at).length+")"]]:[]).map(([v,t])=>'<button type="button" class="fch'+(evFlt===v?' on':'')+'" data-evf="'+v+'">'+t+'</button>').join("");
+  $("evchips").innerHTML=(evGeoOk?'<button type="button" class="fch near'+(evNearOn?' on':'')+'" data-evnear="1">📍 W okolicy'+(evNearOn?' · '+evNearR+' km':'')+'</button>':'')+[["","Wszystkie"],["gravel","🪨 Gravel"],["road","🛣 Szosa"],["mtb","⛰ MTB"],["ebike","⚡ E-bike"],["run","🏃 Bieg"],["walk","🚶 Marsz"]].concat(session?[["mine","🙋 Moje"]]:[]).concat(isAdmin&&evs.some(x=>x.delete_req_at)?[["delreq","🗑 Do usunięcia ("+evs.filter(x=>x.delete_req_at).length+")"]]:[]).map(([v,t])=>'<button type="button" class="fch'+(evFlt===v?' on':'')+'" data-evf="'+v+'">'+t+'</button>').join("");
   $("evnear").innerHTML=evNearHtml();
   $("evcnt").innerHTML=evOk?evCountHtml():"";
   if(!evOk){box.innerHTML='<div class="note" style="margin-top:12px">Imprezy jeszcze niedostępne (KROK 40 w bazie).</div>';$("evarch").innerHTML="";return}

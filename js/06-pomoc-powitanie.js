@@ -104,7 +104,7 @@ function helpFullHtml(){
      "<b>Kilka zaproszeń dziennie</b> — ale nie mogą na siebie nachodzić (+15 min zapasu). Gdy nachodzą, okienko pod zegarem i pasek nad „Wyślij” robią się żółte, a „Ustaw 11:55” podpowiada najwcześniejszą wolną godzinę.",
      "<b>🧪 Testowe / 🚴 Prawdziwe:</b> testowe są na próbę (czerwona migająca plakietka TEST, na kanale z oznaczeniem). Możesz je ukryć: ⚙️ → Testy → „Testowe zaproszenia”.",
      "<b>Kto zobaczy?</b> 🌍 Wszyscy (także kanał Telegram) albo 🔒 ⭐ Ulubieni / 👥 wybrane osoby. Prywatne widzą tylko zaproszeni; mogą doprosić kolejne osoby.",
-     "<b>🚲 Rower / teren</b>: dla wszystkich (domyślnie), szosa, gravel, MTB, trekking.",
+     "<b>🚲 Rower / teren</b>: dla wszystkich (domyślnie), szosa, gravel, MTB, trekking, e-bike.",
      "<b>📍 Punkt zbiórki</b> (opcjonalnie): wybierz z listy, „✏️ Inne miejsce…” albo „🗺️ Wskaż na mapie…”. Przełącznik „Dodaj do listy miejsc” zapisze miejsce dla wszystkich. Na karcie „Mapa ›” otwiera nawigację.",
      "<b>Notatka:</b> gotowe (Kebab RIDE, Coffee Ride ☕, SPEEDAY…) albo własna. „↺ Jak ostatnio” ustawia godzinę z poprzedniego razu.",
      "<b>📚 Wybierz z bazy tras</b> — gotowa trasa jednym dotknięciem. Przełącznik „📚 Dodaj trasę do bazy tras” zapisze Twój plik GPX dla wszystkich (z nazwą).",

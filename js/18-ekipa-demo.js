@@ -15,7 +15,7 @@ const demoVolTxt=()=>demoF.vol?demoF.vol+" "+plf(demoF.vol,["ochotnik","ochotnic
 const demoF={n:25,days:14,priv:30,vol:3,grp:30,routes:true,ranges:true,answers:true,chan:false,
   hw:12,hpw:0,hgrp:35,hposts:true};   // historia: tygodnie wstecz, jazd w tygodniu (0 = auto), % dla grup, wpisy na tablicach
 let demoLCol={acc:true,grp:true};   // zwinięte listy „Konta” i „Grupy” w panelu
-const DEMO_BIKE={mtb:"MTB",gravel:"Gravel",road:"Szosa",trekking:"Trekking"};
+const DEMO_BIKE={mtb:"MTB",gravel:"Gravel",road:"Szosa",trekking:"Trekking",ebike:"E-bike"};
 const DEMO_DAYS=[[3,"3 dni"],[7,"7 dni"],[14,"14 dni"],[28,"4 tyg."]];
 const demoTag=id=>demoIds.has(id)?'<span class="nkdemo" title="konto demo — nie prawdziwa osoba">DEMO</span>':'';
 const demoErr=e=>say((e&&e.message)||"Nie udało się — spróbuj jeszcze raz.");

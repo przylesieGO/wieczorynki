@@ -4,8 +4,8 @@
    Etap 1: dane TYLKO w tej przeglądarce (localStorage, osobno dla każdego konta), bez bazy i bez powiadomień w tle —
    przełączniki „Powiadom” zapisują samo ustawienie. Etap 2 (osobny KROK SQL): tabele bikes / bike_parts / bike_services, storage na paragony.
    Plik wczytywany po js/18: przy wczytaniu tylko rejestruje obsługę zdarzeń; js/05 woła svRow() / svHtml() przez typeof. */
-const SV_TYPES=[["gravel","gravel","Gravel"],["mtb","mtb","MTB"],["road","road","Szosa"],["trek","bike","Trekking"],["city","bike","Miejski"],["other","bike","Inny"]];
-const SV_KINDS=[["std","Klasyczny"],["e","Elektryczny"]];
+const SV_TYPES=[["gravel","gravel","Gravel"],["mtb","mtb","MTB"],["road","road","Szosa"],["trek","bike","Trekking"],["ebike","ebike","E-bike"],["city","bike","Miejski"],["other","bike","Inny"]];
+const SV_KINDS=[["std","Klasyczny"],["e","Ze wspomaganiem"]];
 // części eksploatacyjne: [klucz, nazwa, km do wymiany (0 = bez paska)]
 const SV_PARTS=[["chain","Łańcuch",2000],["cass","Kaseta",6000],["pads","Klocki hamulcowe",3000],["tyre","Opona",5000],["tube","Dętka",0],["cable","Linki / pancerze",5000],["other","Inna część",0]];
 const SV_BEFORE=[["1","1 dzień"],["3","3 dni"],["7","Tydzień"]];
@@ -52,8 +52,8 @@ function svSetActive(id){
   d.active=id;d.hist.push({b:id,t:d.hist.length?new Date().toISOString():"1970-01-01T00:00:00Z"});   // pierwszy rower: wszystkie dotychczasowe jazdy
 }
 const svPartDef=k=>SV_PARTS.find(p=>p[0]===k)||SV_PARTS[SV_PARTS.length-1];
-const svIcoT=t=>(SV_TYPES.find(x=>x[0]===t)||SV_TYPES[5])[1];
-const svNameT=t=>(SV_TYPES.find(x=>x[0]===t)||SV_TYPES[5])[2];
+const svIcoT=t=>(SV_TYPES.find(x=>x[0]===t)||SV_TYPES[SV_TYPES.length-1])[1];
+const svNameT=t=>(SV_TYPES.find(x=>x[0]===t)||SV_TYPES[SV_TYPES.length-1])[2];
 
 /* ⚙️ → Edytuj profil → wiersz „Serwis rowerowy” (pod „Moje jazdy”) */
 function svRow(){

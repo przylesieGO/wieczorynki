@@ -38,7 +38,7 @@ const repTodoN=()=>{const r=repBell();return r?r.todo.length:0};
 function autoTitle(d,bike){if(!d)return "";
   const dw=(d.getDay()+6)%7,h=d.getHours(),st=["Poniedziałkow","Wtorkow","Środow","Czwartkow","Piątkow","Sobotn","Niedzieln"][dw],soft=dw===5;
   const [g,pora]=h<5?["f","nocna jazda"]:h<10?["m","poranek"]:h<13?["n","przedpołudnie"]:h<17?["n","popołudnie"]:h<21?["m","wieczór"]:["f","nocna jazda"];
-  return st+(soft?{m:"i",n:"ie",f:"ia"}[g]:{m:"y",n:"e",f:"a"}[g])+" "+pora+({road:" na szosie",gravel:" na gravelu",mtb:" w terenie",trekking:" turystycznie"}[bike]||"")}
+  return st+(soft?{m:"i",n:"ie",f:"ia"}[g]:{m:"y",n:"e",f:"a"}[g])+" "+pora+({road:" na szosie",gravel:" na gravelu",mtb:" w terenie",trekking:" turystycznie",ebike:" na e-bike’u"}[bike]||"")}
 // tytuł domyślny wpisany w pole; dopóki autor go nie zmieni, nadąża za dniem, godziną i rowerem
 function wfTitleHint(){const el=$("wtitlehint"),inp=$("wtitle");if(!el||!inp)return;
   if(wf.titleAuto)inp.value=autoTitle(wfDate(),wf.bike);
@@ -830,7 +830,7 @@ function durLineHtml(w){
   return '<div class="wdur">'+(k!=null&&!hasRoute(w)?'📏 '+kmTxt(k).replace(",0","")+' km · ':'')+'⏱ '+(open?'jazda ok. '+durTxt(wantDur(w)):'ok. '+hhmm(wantStart(w))+'–'+hhmm(wantEnd(w)))+'</div>';
 }
 const paceTxt=p=>PACES[p]?PACES[p].e+' '+PACES[p].n+' · '+PACES[p].r:'⏱ '+p;
-const BIKES={road:"🛣 Szosa",gravel:"🪨 Gravel",mtb:"⛰ MTB",trekking:"🌳 Trekking"};
+const BIKES={road:"🛣 Szosa",gravel:"🪨 Gravel",mtb:"⛰ MTB",trekking:"🌳 Trekking",ebike:"⚡ E-bike"};
 const bikeHtml=w=>w&&w.bike&&BIKES[w.bike]?'<div class="wpcw"><span class="wpc wbk">'+BIKES[w.bike]+'</span></div>':'';
 const paceHtml=w=>w&&w.pace?'<div class="wpcw"><span class="wpc wpc-'+(PACES[w.pace]?w.pace:'own')+'">'+esc(paceTxt(w.pace))+'</span></div>':'';
 function wfPaceSync(){
@@ -1016,7 +1016,7 @@ $("wpacesel").addEventListener("change",()=>{const v=$("wpacesel").value;
   if(v==="*"){wf.pace=null;$("wpaceown").value="";$("wpaceown").classList.remove("hide");$("wpaceown").focus()}
   else{wf.pace=v||null;$("wpaceown").classList.add("hide")}
   wfRouteSync()});
-const WBIKE=[["","bike","Każdy"],["road","road","Szosa"],["gravel","gravel","Gravel"],["mtb","mtb","MTB"],["trekking","tree","Trekking"]];
+const WBIKE=[["","bike","Każdy"],["road","road","Szosa"],["gravel","gravel","Gravel"],["mtb","mtb","MTB"],["trekking","tree","Trekking"],["ebike","ebike","E-bike"]];
 function wbikeRender(){const el=$("wbikesel");if(!el)return;el.innerHTML=WBIKE.map(([v,k,t])=>'<button type="button" class="wbk'+((wf.bike||"")===v?' on':'')+'" data-wbk="'+v+'" aria-pressed="'+((wf.bike||"")===v)+'">'+uiIcon(k)+'<span>'+t+'</span></button>').join("")}
 $("wbikesel").addEventListener("click",e=>{const b=e.target.closest("[data-wbk]");if(!b)return;wf.bike=b.dataset.wbk||null;wbikeRender();wfTitleHint()});
 $("wpaceown").addEventListener("input",()=>{wf.pace=$("wpaceown").value.trim().slice(0,30)||null;wfRouteSync()});
