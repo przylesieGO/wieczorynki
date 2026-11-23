@@ -463,7 +463,7 @@ function renderWants0(){
      +'<div class="wl2">'+pplHtml+'</div></div>'+wl4Html(d.ws)
      +(cnt>1||dPriv?'<span class="wbd">'+(dPriv?'<span class="wlk" aria-label="'+dPriv+' prywatne">'+uiIcon("lock")+dPriv+'</span>':'')+(cnt>1?'<span class="wcnt" aria-label="'+cnt+' '+zg+'">'+cnt+'</span>':'')+'</span>':'')
      +'</summary>'+mineTop.map(wantDayHtml).join("")+(ord.length>1
-       ?'<div class="dcar" data-day="'+d.k+'">'+ord.map(wantHtml).join("")+'</div><div class="mydots ddots">'+ord.map((_,i)=>'<button type="button" data-ddot="'+i+'" class="'+(i===(dayIdx[d.k]||0)?'on':'')+'" aria-label="Zaproszenie '+(i+1)+'"></button>').join("")+'<span>'+(Math.min(dayIdx[d.k]||0,ord.length-1)+1)+' z '+ord.length+'</span></div>'
+       ?'<div class="dcar" data-day="'+d.k+'">'+ord.map(wantHtml).join("")+'</div><div class="mydots ddots"><button type="button" class="darr" data-dd="-1" aria-label="Poprzednie zaproszenie"'+((dayIdx[d.k]||0)<=0?' disabled':'')+'>‹</button>'+ord.map((_,i)=>'<button type="button" data-ddot="'+i+'" class="'+(i===(dayIdx[d.k]||0)?'on':'')+'" aria-label="Zaproszenie '+(i+1)+'"></button>').join("")+'<button type="button" class="darr" data-dd="1" aria-label="Następne zaproszenie"'+((dayIdx[d.k]||0)>=ord.length-1?' disabled':'')+'>›</button><span>'+(Math.min(dayIdx[d.k]||0,ord.length-1)+1)+' z '+ord.length+'</span></div>'
        :ord.length?wantHtml(ord[0]):'')+'</details>';
   }).join("");
   box.querySelectorAll(".dcar").forEach(c=>dcarRestore(c));
@@ -485,7 +485,14 @@ function dcarGoto(c,idx,smooth){
   const left=it.offsetLeft-c.offsetLeft-(c.clientWidth-it.offsetWidth)/2;
   if(smooth)c.scrollTo({left,behavior:"smooth"});else c.scrollLeft=left;
   dayIdx[c.dataset.day]=idx;wdPvSync(c,idx);
-  const dots=c.nextElementSibling;if(dots){[...dots.querySelectorAll("button")].forEach((b,i)=>b.classList.toggle("on",i===idx));const sp=dots.querySelector("span");if(sp)sp.textContent=(idx+1)+" z "+c.children.length}
+  dcarDots(c,idx);
+}
+// kropki, licznik „n z m” i strzałki ‹ › pod karuzelą dnia
+function dcarDots(c,idx){
+  const dots=c.nextElementSibling;if(!dots)return;
+  [...dots.querySelectorAll("button[data-ddot]")].forEach((b,i)=>b.classList.toggle("on",i===idx));
+  const sp=dots.querySelector("span");if(sp)sp.textContent=(idx+1)+" z "+c.children.length;
+  const a=dots.querySelectorAll("button[data-dd]");if(a.length===2){a[0].disabled=idx<=0;a[1].disabled=idx>=c.children.length-1}
 }
 function dcarRestore(c,tries){
   // dzień mógł się właśnie otworzyć — przeglądarka czasem nie zdążyła jeszcze policzyć szerokości w tej samej klatce
@@ -497,9 +504,11 @@ $("wantlist").addEventListener("scroll",e=>{
   const mid=c.scrollLeft+c.clientWidth/2;let best=0,bd=1e9;
   [...c.children].forEach((x,i)=>{const d=Math.abs(x.offsetLeft-c.offsetLeft+x.offsetWidth/2-mid);if(d<bd){bd=d;best=i}});
   dayIdx[c.dataset.day]=best;wdPvSync(c,best);
-  const dots=c.nextElementSibling;if(dots){[...dots.querySelectorAll("button")].forEach((b,i)=>b.classList.toggle("on",i===best));const sp=dots.querySelector("span");if(sp)sp.textContent=(best+1)+" z "+c.children.length}
+  dcarDots(c,best);
 },true);
 $("wantlist").addEventListener("click",e=>{
+  const ar=e.target.closest("button[data-dd]");
+  if(ar){const c=ar.closest(".ddots").previousElementSibling;if(c)dcarGoto(c,Math.max(0,Math.min(c.children.length-1,(dayIdx[c.dataset.day]||0)+(+ar.dataset.dd))),true);return}
   const b=e.target.closest("button[data-ddot]");if(!b)return;
   const c=b.closest(".ddots").previousElementSibling;if(c)dcarGoto(c,+b.dataset.ddot,true);
 });
