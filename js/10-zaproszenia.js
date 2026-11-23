@@ -455,7 +455,8 @@ function renderWants0(){
     const wdCap=wd.charAt(0).toUpperCase()+wd.slice(1);
     const l1=n>=0&&n<=2?esc(["Dziś","Jutro","Pojutrze"][n])+' <i>· '+esc(wdCap)+'</i>':esc(wdCap);
     const dPriv=d.ws.filter(isPriv).length;
-    return '<details class="wday'+(cnt>1?' wmulti':'')+(dPriv?' wdpk':'')+(cnt>1?' wdpn':'')+'" data-day="'+d.k+'"'+(open?' open':'')+'><summary>'
+    const curW=ord.length?ord[Math.min(dayIdx[d.k]||0,ord.length-1)]:null,pvNow=mineTop.some(isPriv)||(!!curW&&isPriv(curW));
+    return '<details class="wday'+(cnt>1?' wmulti':'')+(dPriv?' wdpk':'')+(cnt>1?' wdpn':'')+(pvNow?' wpv':'')+'" data-day="'+d.k+'"'+(open?' open':'')+'><summary>'
      +'<div class="ftile'+(n===0?' today':'')+(d.ws.some(wLive)?' live':'')+'">'+ftInner(dt)+ftWxHtml(d.ws)+'</div>'
      +'<div class="wtx"><div class="wl1">'+l1+' · <span class="whrs'+(open?' whrsall':'')+'">'+wHrsHtml(d.ws,open)+'</span></div>'
      +'<div class="wl3">Od: '+esc(authTxt)+'</div>'
@@ -472,16 +473,18 @@ function renderWants0(){
 /* godziny w nagłówku karty dnia: zwinięta karta — 4 + „+N” (etykieta); rozwinięta — wszystkie, klikalne (przewijają/otwierają właściwe zaproszenie w karuzeli) */
 function wHrsHtml(ws,open){
   const hw=ws.filter(wLive).concat(ws.filter(w=>!wLive(w)));
-  const mk=w=>'<button type="button" class="whb'+(wLive(w)?' hlive':'')+'" data-whr="'+esc(w.id)+'"'+(wLive(w)?' title="Trwa"':'')+'>'+wTime(w)+'</button>';
+  const mk=w=>'<button type="button" class="whb'+(wLive(w)?' hlive':'')+(isPriv(w)?' hpriv':'')+'" data-whr="'+esc(w.id)+'"'+(wLive(w)?' title="Trwa"':'')+'>'+wTime(w)+'</button>';
   return open?hw.map(mk).join(""):hw.slice(0,4).map(mk).join("")+(hw.length>4?'<b class="whmore">+'+(hw.length-4)+'</b>':'');
 }
 /* karuzela zaproszeń w karcie dnia */
 const dayIdx={};
+// fioletowa ramka otwartego dnia, gdy widać w nim zaproszenie prywatne (aktualna karta karuzeli lub własne u góry)
+function wdPvSync(c,idx){const d=c.closest("details.wday");if(!d)return;const it=c.children[idx];d.classList.toggle("wpv",!!d.querySelector(":scope>.want[data-priv]")||!!(it&&it.dataset.priv==="1"))}
 function dcarGoto(c,idx,smooth){
   const it=c.children[idx];if(!it)return;
   const left=it.offsetLeft-c.offsetLeft-(c.clientWidth-it.offsetWidth)/2;
   if(smooth)c.scrollTo({left,behavior:"smooth"});else c.scrollLeft=left;
-  dayIdx[c.dataset.day]=idx;
+  dayIdx[c.dataset.day]=idx;wdPvSync(c,idx);
   const dots=c.nextElementSibling;if(dots){[...dots.querySelectorAll("button")].forEach((b,i)=>b.classList.toggle("on",i===idx));const sp=dots.querySelector("span");if(sp)sp.textContent=(idx+1)+" z "+c.children.length}
 }
 function dcarRestore(c,tries){
@@ -493,7 +496,7 @@ $("wantlist").addEventListener("scroll",e=>{
   const c=e.target;if(!(c.classList&&c.classList.contains("dcar")))return;
   const mid=c.scrollLeft+c.clientWidth/2;let best=0,bd=1e9;
   [...c.children].forEach((x,i)=>{const d=Math.abs(x.offsetLeft-c.offsetLeft+x.offsetWidth/2-mid);if(d<bd){bd=d;best=i}});
-  dayIdx[c.dataset.day]=best;
+  dayIdx[c.dataset.day]=best;wdPvSync(c,best);
   const dots=c.nextElementSibling;if(dots){[...dots.querySelectorAll("button")].forEach((b,i)=>b.classList.toggle("on",i===best));const sp=dots.querySelector("span");if(sp)sp.textContent=(best+1)+" z "+c.children.length}
 },true);
 $("wantlist").addEventListener("click",e=>{
@@ -550,7 +553,7 @@ document.addEventListener("toggle",e=>{
 const wAbove=w=>w.user_id===uid&&!!document.querySelector('#mywant [data-wid="'+w.id+'"]');
 function wantDayHtml(w){
   const jn=(joins[w.id]||[]).length;
-  return '<div class="want wmine'+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'"><div class="wmn"><span class="wmt">'+uiIcon("hand")+'<b>Twoje · '+esc(wTime(w))+'</b></span>'
+  return '<div class="want wmine'+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'"'+(isPriv(w)?' data-priv="1"':'')+'><div class="wmn"><span class="wmt">'+uiIcon("hand")+'<b>Twoje · '+esc(wTime(w))+'</b></span>'
    +'<span class="wms">'+(jn?'dołączyło: '+jn:'nikt jeszcze nie dołączył')+(isTest(w)?' · test':'')+'</span></div>'
    +'<button type="button" class="lnk wmup" data-wmup="'+esc(w.id)+'" aria-label="Pokaż wyżej">Wyżej ↑</button></div>';
 }
@@ -566,7 +569,7 @@ function wantHtml(w){
     // admin widzi cudze prywatne zaproszenie tylko podglądowo (bez „Jadę!”), chyba że jest zaproszony
     const peek=priv&&!mine&&!wInvMe(w)&&!joined;
     const open=isOpen(w)&&!wLive(w),myp=(prefs[w.id]||{})[uid],dec=(decls[w.id]||[]).includes(uid),live=wLive(w);
-    return '<div class="want'+(mine?' mine':'')+(isTest(w)?' test':'')+grCls(w)+'" data-wid="'+esc(w.id)+'">'+(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+'<div class="wtop">'+nk(w.user_id)+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w):'')+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?(wGr(w)?grTagHtml(w)+(peek?'<span class="lockt">👁 podgląd admina</span>':''):'<span class="lockt priv">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>'):'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
+    return '<div class="want'+(mine?' mine':'')+(isTest(w)?' test':'')+grCls(w)+'" data-wid="'+esc(w.id)+'"'+(priv?' data-priv="1"':'')+'>'+(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+'<div class="wtop">'+nk(w.user_id)+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w):'')+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?(wGr(w)?grTagHtml(w)+(peek?'<span class="lockt">👁 podgląd admina</span>':''):'<span class="lockt priv">🔒 prywatne'+(peek?' · 👁 podgląd admina':'')+'</span>'):'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
      +(live?liveHtml(w):'')
      +paceHtml(w)+bikeHtml(w)+(live?'':durLineHtml(w))+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+(live?'':wxHtml(w))+routeBoxHtml(w)
      +invitedHtml(w)

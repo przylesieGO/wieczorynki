@@ -1131,7 +1131,6 @@ html[data-theme=dark] .wx-drizzle{--wx:#c6a3ff;--wxb:rgba(170,120,255,.18)}html[
 details.wday[open] .wl4{display:none}
 /* zwinięta karta dnia z 2+ zaproszeniami: czerwone kółko z liczbą w rogu ramki i „stos” kart pod ramką; po rozwinięciu oba znikają */
 details.wday{position:relative}
-details.wday.wmulti:not([open]){margin-bottom:14px;box-shadow:0 5px 0 -3px var(--card),0 5px 0 -2px var(--line),0 10px 0 -6px var(--card),0 10px 0 -5px var(--line)}
 details.wday .wbd{position:absolute;top:10px;right:12px;display:flex;gap:6px;align-items:center;pointer-events:none}
 details.wday .wcnt,details.wday .wlk{min-width:30px;height:30px;box-sizing:border-box;border-radius:999px;color:var(--white);display:inline-flex;align-items:center;justify-content:center}
 details.wday .wcnt{padding:0 9px;background:var(--sys-red);font:800 15px/1 -apple-system,system-ui,sans-serif}
@@ -1194,3 +1193,9 @@ details.wday>summary{flex-wrap:wrap;width:100%;box-sizing:border-box}details.wda
 .fltbox .fchips .fch{height:39px;padding-top:0;padding-bottom:0;box-sizing:border-box}
 #flt_when{gap:7px}#flt_when .fch{padding:0 13px}#flt_when .fdate{padding:0 11px;gap:5px}#flt_when .fdate input{font-size:14px;width:84px;padding:0;line-height:1}
 .fltbox .fchips .fch{margin:0}   /* pole daty to <label> — globalny margines etykiet spychał je poniżej linii pozostałych bomblów */
+
+/* karta dnia: szersza zawartość (mniejsze marginesy), fioletowa godzina i ramka dla zaproszeń prywatnych */
+#wantlist details.wday{margin-left:-12px;margin-right:-12px}
+details.wday>summary{padding:10px 10px;gap:10px}
+.whb.hpriv:not(.hlive),.whrs b.hpriv:not(.hlive){background:var(--priv);color:var(--white)}
+details.wday[open].wpv{border-color:var(--priv)}
