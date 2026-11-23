@@ -1,5 +1,5 @@
-:root{color-scheme:light;--white:#fff;--sys-red:#ff3b30;--sys-orange:#ff9f0a;--sys-green:#34c759;--bg:#f5f5f7;--card:#fff;--fill:#f2f2f7;--ink:#1d1d1f;--mut:#6e6e73;--line:#e5e5ea;--acc:#248a3d;--accbtn:#248a3d;--acc2:#e8f5ec;--navbg:#e4e4e9;--navon:#fff;--bad:#d64545;--good:#2a9d5c;--warn:#fff6dc;--hdrbg:rgba(245,245,247,.82);--shadow:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.05)}
-html[data-theme=dark]{color-scheme:dark;--bg:#1c1c1e;--card:#2c2c2e;--fill:#3a3a3c;--ink:#f5f5f7;--mut:#a1a1a6;--line:#3a3a3c;--acc:#4cd964;--accbtn:#2e9e4e;--acc2:#1f3a29;--navbg:#3a3a3c;--navon:#636366;--warn:#3d3519;--hdrbg:rgba(28,28,30,.82);--shadow:0 1px 2px rgba(0,0,0,.4)}
+:root{color-scheme:light;--priv:#7b4bd1;--white:#fff;--sys-red:#ff3b30;--sys-orange:#ff9f0a;--sys-green:#34c759;--bg:#f5f5f7;--card:#fff;--fill:#f2f2f7;--ink:#1d1d1f;--mut:#6e6e73;--line:#e5e5ea;--acc:#248a3d;--accbtn:#248a3d;--acc2:#e8f5ec;--navbg:#e4e4e9;--navon:#fff;--bad:#d64545;--good:#2a9d5c;--warn:#fff6dc;--hdrbg:rgba(245,245,247,.82);--shadow:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.05)}
+html[data-theme=dark]{color-scheme:dark;--priv:#8e5fe0;--bg:#1c1c1e;--card:#2c2c2e;--fill:#3a3a3c;--ink:#f5f5f7;--mut:#a1a1a6;--line:#3a3a3c;--acc:#4cd964;--accbtn:#2e9e4e;--acc2:#1f3a29;--navbg:#3a3a3c;--navon:#636366;--warn:#3d3519;--hdrbg:rgba(28,28,30,.82);--shadow:0 1px 2px rgba(0,0,0,.4)}
 html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 76px)}
 a{color:var(--acc)}
 .seg{display:flex;gap:2px;padding:3px;background:var(--navbg);border-radius:10px;margin-top:12px}
@@ -1132,8 +1132,13 @@ details.wday[open] .wl4{display:none}
 /* zwinięta karta dnia z 2+ zaproszeniami: czerwone kółko z liczbą w rogu ramki i „stos” kart pod ramką; po rozwinięciu oba znikają */
 details.wday{position:relative}
 details.wday.wmulti:not([open]){margin-bottom:14px;box-shadow:0 5px 0 -3px var(--card),0 5px 0 -2px var(--line),0 10px 0 -6px var(--card),0 10px 0 -5px var(--line)}
-details.wday .wcnt{position:absolute;top:-9px;right:-6px;min-width:24px;height:24px;box-sizing:border-box;padding:0 7px;border-radius:999px;background:var(--sys-red);color:var(--white);border:2px solid var(--bg);font:800 12px/20px -apple-system,system-ui,sans-serif;text-align:center;pointer-events:none}
-details.wday[open] .wcnt{display:none}
+details.wday .wbd{position:absolute;top:10px;right:12px;display:flex;gap:6px;align-items:center;pointer-events:none}
+details.wday .wcnt,details.wday .wlk{min-width:30px;height:30px;box-sizing:border-box;border-radius:999px;color:var(--white);display:inline-flex;align-items:center;justify-content:center}
+details.wday .wcnt{padding:0 9px;background:var(--sys-red);font:800 15px/1 -apple-system,system-ui,sans-serif}
+details.wday .wlk{background:var(--priv)}details.wday .wlk .ui-i{width:16px;height:16px}
+details.wday.wbg1 .wl1{padding-right:38px}details.wday.wbg2 .wl1{padding-right:76px}
+details.wday[open] .wbd{display:none}
+.lockt.priv{background:var(--priv);color:var(--white)}
 .wl4 .wpc{font-size:13px;padding:2px 9px}.wl4 .dwx:empty{display:none}
 .dwxc{display:inline-flex;gap:5px;white-space:nowrap;align-items:center;border-radius:999px;padding:2px 9px;font-size:13px;font-weight:700;color:var(--wx);background:var(--wxb)}
 html[data-theme=dark] .wx-storm.dwxc,html[data-theme=dark] .wx-cloud.dwxc{color:#c3cff5}
