@@ -208,6 +208,18 @@ let flt=(()=>{let f;try{f=Object.assign(fltEmpty(),JSON.parse(localStorage.getIt
   f.demo="";   // konta demo (i testowe zaproszenia, js/04) są zawsze pokazane po wejściu do aplikacji; ukrycie działa tylko do zamknięcia
   return f})(),fltQ="",fltSub="",fltScroll=0;
 function fltSave(){try{localStorage.setItem("flt",JSON.stringify(flt))}catch(e){}}
+// 🧹 filtry nie przechodzą między wejściami do aplikacji (jak w sklepach online): każde nowe wczytanie i powrót po 15+ min przerwy zaczyna bez filtrów
+const FLT_AWAY=15*6e4;
+const fltSeen=()=>{try{localStorage.setItem("fltSeen",String(Date.now()))}catch(e){}};
+function fltExpire(first){let t=0;try{t=+localStorage.getItem("fltSeen")||0}catch(e){}
+  if(first||(t&&Date.now()-t>FLT_AWAY)){
+    const had=JSON.stringify(flt)!==JSON.stringify(fltEmpty());
+    flt=fltEmpty();fltSave();fltQ="";
+    if(had&&!first&&session)try{renderWants()}catch(e){}}
+  fltSeen()}
+fltExpire(true);
+document.addEventListener("visibilitychange",()=>{if(document.hidden)fltSeen();else fltExpire()});
+setInterval(()=>{if(!document.hidden)fltSeen()},6e4);
 const fltBikeOn=()=>!flt.act||flt.act==="bike";   // rodzaj roweru ma sens tylko dla roweru (albo bez wybranej aktywności)
 const fltAdm=()=>!!session&&isSuper(uid);   // 👑 filtry „Zaproszeni” (to) i „Prywatne od osoby” (by) — tylko główny administrator
 const fltOn=k=>Array.isArray(flt[k])?flt[k].length>0:!!flt[k];
