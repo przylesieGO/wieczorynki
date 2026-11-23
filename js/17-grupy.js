@@ -27,7 +27,7 @@ const grMemN=x=>grG[x.id]&&(grRole(x.id)||grG[x.id].members!=null)?grCnt(x.id):x
 function grBadges(x){if(!x)return "";const G=grG[x.id]||{},vis=x.visibility||G.visibility,jm=x.join_mode||G.join_mode,n=grMemN(x);
   return '<span class="grbg">'+(vis==="hidden"?'<span title="ukryta">'+uiIcon("eyeoff")+'</span>':'<span title="jawna">'+uiIcon("eye")+'</span>')
    +(jm==="request"?'<span title="dołączenie na prośbę">'+uiIcon("lock")+'</span>':'')+(n!=null?'<span class="grmc" title="członkowie">'+n+'</span>':'')+'</span>'}
-const grNmTag=x=>'<span class="grnmw"><span class="grnm">'+esc(x.name)+'</span>'+(x.owner&&typeof demoIds!=="undefined"&&demoIds.has(x.owner)?'<span class="nkdemo" title="grupa demo — konta testowe">DEMO</span>':'')+grBadges(x)+'</span>';   // 🧪 KROK 75: plakietka przy grupach kont demo
+const grNmTag=(x,noBg)=>'<span class="grnmw"><span class="grnm">'+esc(x.name)+'</span>'+(x.owner&&typeof demoIds!=="undefined"&&demoIds.has(x.owner)?'<span class="nkdemo" title="grupa demo — konta testowe">DEMO</span>':'')+(noBg?'':grBadges(x))+'</span>';   // 🧪 KROK 75: plakietka przy grupach kont demo
 const grIco=(x,big)=>'<span class="grico'+(big?' big':'')+'" style="background:'+grCol(x)+'" aria-hidden="true">'+uiIcon(grIc(x))+'</span>';
 const grMy=g=>grMine.find(m=>m.group_id===g)||null;
 const grSt=g=>{const m=grMy(g);return m?m.status:""};
@@ -128,8 +128,9 @@ function grFindHtml(){
 /* 👥 ekran grupy: Tablica / Ludzie / Statystyki / O grupie */
 function grGroupHtml(){
   const g=grId,x=grG[g],st=grSt(g),role=grRole(g),mod=grIsMod(g),own=role==="owner";
-  const meta=[x.visibility==="hidden"?"ukryta":"jawna",x.join_mode==="open"?"wolne dołączanie":"na prośbę",grOsob(grCnt(g))].join(" · ");
-  let h=(grFromAdm&&isKingReal()?'<button class="sback" data-gx="adm">‹ Wszystkie grupy</button>':'<button class="sback" data-gx="hub">‹ Grupy</button>')+'<div class="grhead">'+grIco(x,true)+'<div class="sname">'+grNmTag(x)
+  // nagłówek grupy: ikony nie przy nazwie, tylko w linii pod nią (2026-11-23) — przy każdej informacji jej ikona
+  const meta=[x.visibility==="hidden"?uiIcon("eyeoff")+"ukryta":uiIcon("eye")+"jawna",x.join_mode==="open"?"wolne dołączanie":uiIcon("lock")+"na prośbę",uiIcon("users")+grOsob(grCnt(g))].join(" · ");
+  let h=(grFromAdm&&isKingReal()?'<button class="sback" data-gx="adm">‹ Wszystkie grupy</button>':'<button class="sback" data-gx="hub">‹ Grupy</button>')+'<div class="grhead">'+grIco(x,true)+'<div class="sname">'+grNmTag(x,1)
    +(own?'<span class="pledb" role="button" tabindex="0" data-gx="edit" title="Edytuj grupę" aria-label="Edytuj grupę">'+uiIcon("pencil")+'</span>':'')+'</div>'
    +'<div class="smail">'+meta+(GR_ROLE[role]?' · <span class="grrole">'+GR_ROLE[role]+'</span>':'')+'</div></div>';
   if(st==="invited"){const m=grMy(g);
