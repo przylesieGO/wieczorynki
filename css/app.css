@@ -1136,7 +1136,7 @@ details.wday .wbd{position:absolute;top:10px;right:12px;display:flex;gap:6px;ali
 details.wday .wcnt,details.wday .wlk{min-width:30px;height:30px;box-sizing:border-box;border-radius:999px;color:var(--white);display:inline-flex;align-items:center;justify-content:center}
 details.wday .wcnt{padding:0 9px;background:var(--sys-red);font:800 15px/1 -apple-system,system-ui,sans-serif}
 details.wday .wlk{background:var(--priv);gap:4px;padding:0 10px;font:800 15px/1 -apple-system,system-ui,sans-serif}details.wday .wlk .ui-i{width:16px;height:16px}
-details.wday.wbk .wl1::before,details.wday.wbc .wl1::before{content:"";float:right;height:34px;width:38px}details.wday.wbk .wl1::before{width:62px}details.wday.wbk.wbc .wl1::before{width:98px}
+details.wday.wdpk .wl1::before,details.wday.wdpn .wl1::before{content:"";float:right;height:34px;width:38px}details.wday.wdpk .wl1::before{width:62px}details.wday.wdpk.wdpn .wl1::before{width:98px}
 details.wday[open] .wbd{display:none}
 .lockt.priv{background:var(--priv);color:var(--white)}
 .wl4 .wpc{font-size:13px;padding:2px 9px}.wl4 .dwx:empty{display:none}

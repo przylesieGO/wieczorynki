@@ -455,7 +455,7 @@ function renderWants0(){
     const wdCap=wd.charAt(0).toUpperCase()+wd.slice(1);
     const l1=n>=0&&n<=2?esc(["Dziś","Jutro","Pojutrze"][n])+' <i>· '+esc(wdCap)+'</i>':esc(wdCap);
     const dPriv=d.ws.filter(isPriv).length;
-    return '<details class="wday'+(cnt>1?' wmulti':'')+(dPriv?' wbk':'')+(cnt>1?' wbc':'')+'" data-day="'+d.k+'"'+(open?' open':'')+'><summary>'
+    return '<details class="wday'+(cnt>1?' wmulti':'')+(dPriv?' wdpk':'')+(cnt>1?' wdpn':'')+'" data-day="'+d.k+'"'+(open?' open':'')+'><summary>'
      +'<div class="ftile'+(n===0?' today':'')+(d.ws.some(wLive)?' live':'')+'">'+ftInner(dt)+ftWxHtml(d.ws)+'</div>'
      +'<div class="wtx"><div class="wl1">'+l1+' · <span class="whrs'+(open?' whrsall':'')+'">'+wHrsHtml(d.ws,open)+'</span></div>'
      +'<div class="wl3">Od: '+esc(authTxt)+'</div>'
