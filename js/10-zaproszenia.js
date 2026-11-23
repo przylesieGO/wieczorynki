@@ -354,17 +354,23 @@ function fltStackHtml(){
   const r=fltItems(k,q).sort((a,b)=>a.sc-b.sc||a.t.localeCompare(b.t,"pl"));
   if(!r.length)return '<div class="note">'+(q?'Nic nie znaleziono.':k==="where"?'Brak miejsc w zaproszeniach.':k==="grp"?'Brak grup.':'Brak osób.')+'</div>';
   const sel=mu&&flt[k].length?'<div class="fltchips fselr">'+flt[k].map(u=>'<button type="button" class="fac" data-fk="'+k+'" data-fv="'+esc(u)+'">'+esc(nicks[u]||"osoba")+' ✕</button>').join("")+'</div>':'';
-  const L1=x=>(x.t||"").trim().charAt(0).toLocaleUpperCase("pl"),az=mu&&!q&&r.length>12?[...new Set(r.map(L1).filter(c=>/\p{L}/u.test(c)))].sort((a,b)=>a.localeCompare(b,"pl")):[];   // pasek A–Z: tylko przy długiej liście osób i bez wpisanego tekstu
+  const L1=x=>(x.t||"").trim().charAt(0).toLocaleUpperCase("pl"),az=!q&&r.length>12?[...new Set(r.map(L1).filter(c=>/\p{L}/u.test(c)))].sort((a,b)=>a.localeCompare(b,"pl")):[];   // pasek A–Z: przy długiej liście (osoby, miejsca, grupy) i bez wpisanego tekstu
   return sel
-   +'<div class="fulwrap">'+'<div class="fulist'+(az.length?' az':'')+'">'+r.map(x=>{const on=mu?flt[k].includes(x.v):flt[k]===x.v;
+   +'<div class="fulwrap">'+(az.length?'<div class="faz" id="faz" aria-hidden="true" data-all="'+esc(az.join(""))+'"></div>':'')+'<div class="fulist'+(az.length?' az':'')+'">'+r.map(x=>{const on=mu?flt[k].includes(x.v):flt[k]===x.v;
      return '<button type="button" class="fusr'+(on?' on':'')+'" data-fl="'+esc(L1(x))+'" data-fk="'+k+'" data-fv="'+esc(x.v)+'"><span class="fuic'+(x.ico?' g':'')+'">'+(x.fav?uiIcon("starf"):x.ico?uiIcon(x.ico):'')+'</span><span class="fun">'+(x.free||x.user?esc(x.t):fltHl(x.t,q))+(x.user&&typeof demoTag==="function"?demoTag(x.v):'')+(x.bdg||'')+'</span>'+(x.ty?'<small>'+x.ty+'</small>':'')+(x.cnt!=null?'<b class="fucnt'+(x.cnt?'':' z')+'">'+x.cnt+'</b>':'')+(on?'<span class="fuck">'+uiIcon("check")+'</span>':'')+'</button>'}).join("")+'</div>'
-   +(az.length?'<div class="faz" id="faz" aria-hidden="true">'+az.map(c=>'<span>'+esc(c)+'</span>').join("")+'</div>':'')+'</div>';
+   +'</div>';
 }
-// pasek liter: dotknięcie albo przesuwanie palcem po literach przewija listę do pierwszej osoby na daną literę
+// pasek liter nad listą: gdy wszystkie się nie mieszczą, łączy je w przedziały (A–C, D–G…)
+function fltAzFit(){const z=$("faz");if(!z)return;const A=[...z.dataset.all];
+  for(let g=1;g<=A.length;g++){const G=[];for(let i=0;i<A.length;i+=g)G.push(A.slice(i,i+g));
+    z.innerHTML=G.map(x=>'<span data-l="'+esc(x.join(""))+'">'+esc(x.length>1?x[0]+"–"+x[x.length-1]:x[0])+'</span>').join("");
+    if(z.scrollWidth<=z.clientWidth+1)break}}
+window.addEventListener("resize",()=>{if(fltSub)fltAzFit()});   // obrót telefonu: przelicz przedziały liter
+// dotknięcie albo przesuwanie palcem po pasku przewija listę do pierwszej pozycji na daną literę (przedział)
 function fltAzGo(e){const z=$("faz"),l=document.querySelector("#fltsheet .fulist");if(!z||!l)return;
-  const sp=[...z.children],r=z.getBoundingClientRect(),i=Math.max(0,Math.min(sp.length-1,Math.floor((e.clientY-r.top)/r.height*sp.length)));
+  const sp=[...z.children],r=z.getBoundingClientRect(),i=Math.max(0,Math.min(sp.length-1,Math.floor((e.clientX-r.left)/r.width*sp.length)));
   sp.forEach((x,n)=>x.classList.toggle("on",n===i));
-  const t=[...l.querySelectorAll(".fusr")].find(b=>b.dataset.fl===sp[i].textContent);
+  const t=[...l.querySelectorAll(".fusr")].find(b=>sp[i].dataset.l.includes(b.dataset.fl));
   if(t)l.scrollTop=t.offsetTop-l.offsetTop}
 $("fltsheet").addEventListener("pointerdown",e=>{const z=e.target.closest("#faz");if(!z)return;e.preventDefault();try{z.setPointerCapture(e.pointerId)}catch(x){}z.dataset.dn="1";fltAzGo(e)});
 $("fltsheet").addEventListener("pointermove",e=>{const z=e.target.closest("#faz");if(z&&z.dataset.dn)fltAzGo(e)});
@@ -384,7 +390,7 @@ function fltSecs(){
     pace:FLT_PACE().map(([v,t])=>fltChip("pace",v,t)).join("")};
 }
 let fltStkY=null;   // odległość przewinięcia listy od dołu — żeby wybór osoby nie przeskakiwał listy
-function fltStkPaint(keep){const s=$("fltstk");if(!s)return;s.innerHTML=fltStackHtml();const cb=$("fltclr");if(cb)cb.style.visibility=fltOn(fltSub)?"visible":"hidden";   // „Wyczyść” tylko gdy coś wybrano
+function fltStkPaint(keep){const s=$("fltstk");if(!s)return;s.innerHTML=fltStackHtml();fltAzFit();const cb=$("fltclr");if(cb)cb.style.visibility=fltOn(fltSub)?"visible":"hidden";   // „Wyczyść” tylko gdy coś wybrano
   const u=s.querySelector(".fulist");if(u)u.scrollTop=keep!=null?Math.max(0,u.scrollHeight-u.clientHeight-keep):u.scrollHeight}
 function fltDraw(){
   if(fltSub){fltStkPaint(fltStkY);fltStkY=null;return}
