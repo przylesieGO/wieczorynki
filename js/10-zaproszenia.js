@@ -868,7 +868,7 @@ function wfDurSync(){
       i.innerHTML+='<div class="wclash">⚠️ Nachodzi na Twoją jazdę '+esc(relDay(cs).toLowerCase())+' '+hhmm(cs)+'–'+hhmm(ce)+'. Najwcześniej o <b>'+hhmm(nx)+'</b>.'+(wf.jump?' <button type="button" class="lnk wjump">Ustaw '+hhmm(nx)+'</button>':'')+'</div>'}
     else i.innerHTML+='<div class="wclash">⚠️ '+esc(relDay(cs))+' o '+hhmm(cs)+' masz już jazdę — ta skończyłaby się ok. '+hhmm(en)+'. Wybierz wcześniejszą godzinę albo krótszą jazdę.</div>'}
   const jc=cl?null:wfJoinedClash(st,en);   // 🔁 zapisany na inną jazdę w tym czasie — przy wysyłaniu „Przenieś się” (jak przy „Jadę!”)
-  if(jc){const cs=wantStart(jc),ce=wantEnd(jc);i.innerHTML+='<div class="wclash">🔁 Jedziesz już '+esc(relDay(cs).toLowerCase())+' '+hhmm(cs)+'–'+hhmm(ce)+' ('+esc(nickOf(jc.user_id))+') — przy wysyłaniu zapytam, czy się przenieść.</div>'}
+  if(jc){const sp=rideSpan(jc),cs=sp[0],ce=sp[1];i.innerHTML+='<div class="wclash">🔁 Jedziesz już '+esc(relDay(cs).toLowerCase())+' '+hhmm(cs)+'–'+hhmm(ce)+' ('+esc(nickOf(jc.user_id))+') — przy wysyłaniu zapytam, czy się przenieść.</div>'}
   i.classList.toggle("bad",!!cl);
   const fb=$("wfclash");
   if(cl){const cs=wantStart(cl),ce=wantEnd(cl);
@@ -879,8 +879,8 @@ function wfDurSync(){
 // czy nowe zaproszenie nachodzi na jazdę innej osoby, na którą jestem zapisany (z zapasem 15 min)
 function wfJoinedClash(st,en){
   const g=RIDE_GAP*60000;
-  return wants.filter(w=>w.user_id!==uid&&w.id!==wf.editId&&!isOpen(w)&&wantEnd(w).getTime()>Date.now()&&(joins[w.id]||[]).includes(uid))
-    .find(w=>st.getTime()<wantEnd(w).getTime()+g&&wantStart(w).getTime()<en.getTime()+g)||null;
+  return wants.filter(w=>w.user_id!==uid&&w.id!==wf.editId&&rideMine(w)&&rideSpan(w)[1].getTime()>Date.now())   // także otwarte zaproszenie, w którym wybrałem godzinę
+    .find(w=>st.getTime()<rideSpan(w)[1].getTime()+g&&rideSpan(w)[0].getTime()<en.getTime()+g)||null;
 }
 // czy nowe zaproszenie nachodzi na inne moje (z zapasem 15 min)
 function wfClash(st,en){
