@@ -17,7 +17,7 @@ const backBtn=()=>'<button class="sback" data-c="back">‹ '+(gearFrom==="nick"?
 let showNick=true;try{showNick=localStorage.getItem("showNick")!=="0"}catch(e){}
 const showNickHtml=()=>'<div class="note" style="margin-top:14px">Nick na górze ekranu</div><div class="seg">'+[["1","Pokaż"],["0","Ukryj"]].map(([k,t])=>'<button data-sn="'+k+'" class="'+((showNick?"1":"0")===k?"on":"")+'">'+t+'</button>').join("")+'</div>';
 // 🧪 testowe zaproszenia: Pokaż / Ukryj (zapamiętane w telefonie; swoje i te, do których dołączyłeś, zostają)
-let hideTest=false;try{hideTest=localStorage.getItem("hideTest")==="1"}catch(e){}
+let hideTest=false;try{localStorage.removeItem("hideTest")}catch(e){}   // testowe zaproszenia są zawsze pokazane po wejściu do aplikacji (ukrycie działa tylko do zamknięcia)
 // 🧪 spokojny wygląd kart testowych: sama etykieta TEST, bez migania/pasków/przygaszenia (klasa tcalm na <html>, zapamiętane w telefonie)
 let testCalm=true;try{testCalm=localStorage.getItem("testCalm")!=="0"}catch(e){}
 document.documentElement.classList.toggle("tcalm",testCalm);

@@ -621,6 +621,7 @@ details.stsec[open]>summary::after{transform:rotate(90deg)}
 button.onl.off{background:var(--fill);color:var(--mut)}
 .wstat{display:inline-flex;align-items:center;gap:6px;font-size:16px;font-weight:700;color:var(--ink);min-width:0}.wstat .ui-i{width:18px;height:18px}.wstat button{border:0;background:none;font:inherit;color:inherit;cursor:pointer;padding:3px 8px;border-radius:999px}.wstat button.on{background:var(--accbtn);color:var(--white)}.wstat s{text-decoration:none;color:var(--mut);font-weight:400}
 .hdbtns{display:inline-flex;gap:6px;align-items:center;flex:none}
+.hdl{display:inline-flex;gap:8px;align-items:center;min-width:0;flex-wrap:wrap}   /* po lewej: Filtry + licznik zaproszeń */
 .fbtn{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line);background:var(--fill);color:var(--ink);border-radius:999px;padding:6px 11px;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
 .fbtn .fico{width:14px;height:14px}.fbtn.on{background:var(--accbtn);border-color:var(--accbtn);color:var(--white)}.fbtn .fn{background:var(--soft);color:var(--accbtn);border-radius:999px;padding:0 6px;font-size:12px}
 .fltbar{margin-top:10px}.fltchips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}

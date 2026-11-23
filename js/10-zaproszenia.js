@@ -200,14 +200,15 @@ $("wantarch").addEventListener("click",e=>{const b=e.target.closest("[data-arch]
   if(b.dataset.arch==="t")archOpen=!archOpen;else archAll=!archAll;renderArch(wants)});
 /* ---------- 🔍 filtry zaproszeń (decyzje właściciela 2026-11-15 18:58: jak w makiecie filtry.png + z karty osoby) ---------- */
 // zapamiętane w telefonie; działają na listę zaproszeń (karty dni i Twoje zaproszenia), nie na 🔔
-const fltEmpty=()=>({who:"",vis:"",act:"",grp:"",when:"",date:"",where:"",bike:"",pace:"",user:"",demo:""});   // vis: Widoczność, act: Aktywność, grp: 👥 grupa (KROK 71)
+const fltEmpty=()=>({who:"",vis:"",act:"",grp:"",when:"",date:"",where:"",bike:"",pace:"",user:"",demo:"",to:"",by:""});   // vis: Widoczność, act: Aktywność, grp: 👥 grupa (KROK 71)
 let flt=(()=>{let f;try{f=Object.assign(fltEmpty(),JSON.parse(localStorage.getItem("flt")||"{}"))}catch(e){f=fltEmpty()}
   if(f.who==="priv"||f.who==="open"){f.vis=f.who;f.who=""}   // „Czyje” rozdzielone na Relację i Widoczność — stary zapis przenosimy
-  if(f.demo==="only")f.demo="";   // „Tylko od kont demo” zniknęło: konta demo to teraz przełącznik pokaż/ukryj
+  f.demo="";   // konta demo (i testowe zaproszenia, js/04) są zawsze pokazane po wejściu do aplikacji; ukrycie działa tylko do zamknięcia
   return f})(),fltQ="",fltSub="",fltScroll=0;
 function fltSave(){try{localStorage.setItem("flt",JSON.stringify(flt))}catch(e){}}
 const fltBikeOn=()=>!flt.act||flt.act==="bike";   // rodzaj roweru ma sens tylko dla roweru (albo bez wybranej aktywności)
-const fltKeys=()=>Object.keys(fltEmpty()).filter(k=>k!=="date"&&flt[k]&&(k!=="bike"||fltBikeOn()));
+const fltAdm=()=>!!session&&isSuper(uid);   // 👑 filtry „Zaproszeni” (to) i „Prywatne od osoby” (by) — tylko główny administrator
+const fltKeys=()=>Object.keys(fltEmpty()).filter(k=>k!=="date"&&flt[k]&&(k!=="bike"||fltBikeOn())&&((k!=="to"&&k!=="by")||fltAdm()));
 const fltActive=()=>fltKeys().length>0;
 const wUpcoming=w=>!wDone(w);
 const lc=t=>(t||"").toLocaleLowerCase("pl");
@@ -237,6 +238,8 @@ function fltOk(w){
   if(fltBikeOn()){if(flt.bike==="all"&&w.bike)return false;
     if(flt.bike&&flt.bike!=="all"&&w.bike&&w.bike!==flt.bike)return false}
   if(flt.pace&&w.pace!==flt.pace)return false;
+  if(fltAdm()&&flt.to&&!(w.visibility==="private"&&(invIds(w).includes(flt.to)||(wGr(w)&&typeof grAct==="function"&&grAct(w.group_id).some(x=>x.user_id===flt.to)))))return false;   // prywatne, w których osoba jest na liście zaproszonych albo w grupie
+  if(fltAdm()&&flt.by&&!(w.visibility==="private"&&w.user_id===flt.by))return false;   // prywatne wystawione przez osobę
   if(flt.user&&w.user_id!==flt.user&&!j.includes(flt.user))return false;
   if(flt.demo&&typeof demoIds!=="undefined"){const dm=demoIds.has(w.user_id);if(flt.demo==="only"&&!dm||flt.demo==="hide"&&dm)return false}   // zaproszenia od kont demo (dla wszystkich)
   return true;
@@ -258,6 +261,8 @@ function fltLabel(k){
   if(k==="bike")return f(FLT_BIKE());
   if(k==="pace")return f(FLT_PACE());
   if(k==="user")return nicks[v]||"osoba";
+  if(k==="to")return "Do: "+(nicks[v]||"osoba");
+  if(k==="by")return "Od: "+(nicks[v]||"osoba");
   if(k==="grp")return grNm(v);
   if(k==="demo")return v==="hide"?"Bez kont demo":v;
   return v;
@@ -312,11 +317,12 @@ function fltItems(k,q){
     // bez wpisanego tekstu: osoby z zaproszeń (ulubieni i najczęściej wybierani niżej, czyli bliżej pola); z tekstem: wszyscy użytkownicy
     const fq=fltUfGet(),nk=nickKey(fltQ.trim()),ids=new Set(nk?Object.keys(nicks):[]);
     if(!nk)wants.filter(wUpcoming).forEach(w=>{ids.add(w.user_id);(joins[w.id]||[]).forEach(x=>ids.add(x))});
-    if(flt.user)ids.add(flt.user);
-    [...ids].filter(id=>nicks[id]&&id!==uid&&!modGone(id)&&(!nk||nickKey(nicks[id]).includes(nk)||id===flt.user)).forEach(id=>{
+    const cu=flt[k];   // wybrana osoba w tym podekranie (user / to / by)
+    if(cu)ids.add(cu);
+    [...ids].filter(id=>nicks[id]&&(id!==uid||k!=="user")&&!modGone(id)&&(!nk||nickKey(nicks[id]).includes(nk)||id===cu)).forEach(id=>{
       const n=nickKey(nicks[id]);let sc=isFav(id)?2:fq[id]>0?1:0;
       if(nk)sc=n.startsWith(nk)?20:10;
-      if(id===flt.user)sc+=nk?3:30;
+      if(id===cu)sc+=nk?3:30;
       out.push({v:id,t:nicks[id],ty:fq[id]>0&&!isFav(id)?"wybierano "+fq[id]+"×":"",sc,fav:isFav(id),user:1})});
   }
   return out;
@@ -347,7 +353,7 @@ function fltSecs(){
 function fltDraw(){
   if(fltSub){const s=$("fltstk");if(s)s.innerHTML=fltStackHtml();return}
   const S=fltSecs();Object.keys(S).forEach(k=>{const el=$("flt_"+k);if(el)el.innerHTML=S[k]});
-  ["where","user"].forEach(k=>{const el=$("fsum_"+k);if(!el)return;el.textContent=flt[k]?fltLabel(k):(k==="where"?"Wszędzie":"Wszyscy");el.classList.toggle("fnone",!flt[k])});
+  ["where","user","to","by"].forEach(k=>{const el=$("fsum_"+k);if(!el)return;el.textContent=flt[k]?(k==="to"||k==="by"?(nicks[flt[k]]||"osoba"):fltLabel(k)):(k==="where"?"Wszędzie":k==="to"||k==="by"?"Wybierz":"Wszyscy");el.classList.toggle("fnone",!flt[k])});
   const bb=$("fltbikebox");if(bb)bb.classList.toggle("hide",!fltBikeOn());
   const n=wants.filter(wUpcoming).filter(fltOk).length;$("fltok").textContent=fltActive()?"Pokaż "+n+" "+(n===1?"zaproszenie":n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"zaproszenia":"zaproszeń"):"Gotowe";
 }
@@ -358,11 +364,11 @@ function fltMainHtml(){
   const go=(k,ico,t)=>'<div class="fsec"><button type="button" class="secbar fgo" data-fk="sub" data-fv="'+k+'"><span class="bst">'+uiIcon(ico)+'<span>'+t+'</span></span><span class="wsplsel" id="fsum_'+k+'"></span><svg class="bschev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>';
   return '<div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="close">Zamknij</button><b>Filtry</b><button type="button" class="lnk" data-fk="clear" style="color:var(--bad);text-align:right">Wyczyść</button></div>'
    +'<div class="bslist" id="fltlist">'+((testOk||fltHasDemo())?sec("src","Źródło zaproszeń"):'')+sec("vis","Widoczność")+(fltHasAct()?sec("act","Aktywność"):'')+sec("when","Kiedy")+sec("who","Relacja")+(bikeOk?'<div id="fltbikebox"'+(fltBikeOn()?'':' class="hide"')+'>'+sec("bike","Rodzaj roweru")+'</div>':'')+(paceOk?sec("pace","Tempo"):'')
-   +(placeOk?go("where","pin","Gdzie"):'')+go("user","user","Osoba")+'</div>'
+   +(placeOk?go("where","pin","Gdzie"):'')+go("user","user","Osoba")+(fltAdm()?'<div class="bsgrp">👑 Administrator</div>'+go("to","mail","Zaproszeni: osoba")+go("by","lock","Prywatne od osoby"):'')+'</div>'
    +'<button type="button" class="b big" id="fltok" data-fk="close">Gotowe</button>';
 }
 function fltSubHtml(){
-  const T=fltSub==="where"?["Gdzie","Miasto, dzielnica, miejsce…"]:fltSub==="grp"?["Grupa","Nazwa grupy…"]:["Osoba","Nick…"];
+  const T=fltSub==="where"?["Gdzie","Miasto, dzielnica, miejsce…"]:fltSub==="grp"?["Grupa","Nazwa grupy…"]:fltSub==="to"?["Zaproszeni","Nick osoby…"]:fltSub==="by"?["Prywatne od","Nick osoby…"]:["Osoba","Nick…"];
   return '<div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="back">Filtry</button><b>'+T[0]+'</b><span style="min-width:64px"></span></div>'
    +'<div class="fstk" id="fltstk"></div><input class="bsq srch" id="fltq" type="search" placeholder="'+T[1]+'" autocomplete="off" value="'+esc(fltQ)+'">'
    +'<button type="button" class="b big" data-fk="back">Gotowe</button>';
@@ -385,7 +391,7 @@ $("fltsheet").addEventListener("click",e=>{
   if(k==="ht"){hideTest=!hideTest;try{localStorage.setItem("hideTest",hideTest?"1":"0")}catch(err){}deriveWants();fltRefresh();syncNow();return}   // to samo ustawienie co ⚙️ → Testy
   const v=b.dataset.fv;flt[k]=flt[k]===v?"":v;if(k==="when")flt.date="";
   if(k==="act"&&flt.act&&flt.act!=="bike")flt.bike="";   // rodzaj roweru nie dotyczy innych aktywności
-  if(k==="user"&&flt.user)fltUfBump(flt.user);
+  if((k==="user"||k==="to"||k==="by")&&flt[k])fltUfBump(flt[k]);
   fltSave();fltRefresh();
 });
 $("fltsheet").addEventListener("input",e=>{if(e.target.id==="fltq"){fltQ=e.target.value;const s=$("fltstk");if(s)s.innerHTML=fltStackHtml()}});
