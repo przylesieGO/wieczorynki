@@ -17,8 +17,10 @@ function agoTxt(ts){
   const m=Math.round((Date.now()-new Date(ts).getTime())/60000);
   if(m<1)return "przed chwilą";if(m<60)return m+" min temu";
   const h=Math.round(m/60);if(h<24)return h+" h temu";
-  return dayDiff(new Date(ts))===-1?"wczoraj":new Date(ts).toLocaleDateString("pl-PL",{day:"numeric",month:"short"});
+  const d=new Date(ts);return (dayDiff(d)===-1?"wczoraj":d.toLocaleDateString("pl-PL",{day:"numeric",month:"short"})+",")+" "+hhmm(d);   // starsze niż doba — z godziną
 }
+// kiedy zaproszenie do mnie przyszło: moje powiadomienie „zaproszenie” (też dopraszanie), inaczej utworzenie zaproszenia
+function wSentAt(w){const n=notifs.filter(x=>x.want_id===w.id&&x.kind==="invite").sort((a,b)=>new Date(a.created_at)-new Date(b.created_at))[0];return n?n.created_at:w.created_at||null}
 // krótki opis nowości (najświeższe nieprzeczytane powiadomienie przy zaproszeniu)
 function newsTxt(n,w){
   const a=n.actor||w.user_id,K=genders[a]==="K",v=(m,k)=>K?k:m,who='<b>'+esc(nickOf(a))+'</b>',pf=(prefs[w.id]||{})[a];
@@ -43,12 +45,13 @@ function bellRowHtml(w){
     :nk(w.user_id)+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w):'')+' '+(isPriv(w)?'zaprasza Cię'+(wGr(w)?'':' 🔒'):'zaprasza wszystkich'))+(wGr(w)?' '+grTagHtml(w):'');   // 👥 KROK 71
   const sub=mine?[w.note?esc(w.note):'',isOpen(w)?'🕖 do ustalenia':'','🚴 jedzie '+(jn+1),dn?'🙅 '+dn:''].filter(Boolean).join(' · ')
     :[when,w.note?esc(w.note):'',joined?'🚴 Jedziesz':dec?'Nie dasz rady':act?(wLate(w)?'🏃 ruszyła — możesz jeszcze dogonić!':'⏳ czeka na Twoją odpowiedź'):''].filter(Boolean).join(' · ');
+  const sent=!mine&&!un.length&&wSentAt(w)?' · <span class="nsent">wysłane '+agoTxt(wSentAt(w))+'</span>':'';   // przeczytane: kiedy przyszło (nieprzeczytane mają to w ramce nowości)
   const news=un.length?'<div class="nnews">'+N_ICON[un[0].kind]+' '+newsTxt(un[0],w)+' · '+agoTxt(un[0].created_at)+(un.length>1?' <span class="nmore">+'+(un.length-1)+'</span>':'')+'</div>':'';
   const btns=act?'<div class="sb">'+(isOpen(w)?'<button type="button" class="b" data-na="pref" data-wid="'+esc(w.id)+'">Pasuje mi o…</button>'
       :'<button type="button" class="b" data-na="join" data-wid="'+esc(w.id)+'">Jadę! · '+esc(hhmm(new Date(w.starts_at)))+'</button>')
     +(wDeclOk(w)?'<button type="button" class="b w" data-na="no" data-wid="'+esc(w.id)+'">Nie dam rady</button>':'')+'</div>':'';
   return '<div class="nit'+(mine?' mine':'')+(un.length?' new':'')+(isTest(w)?' test':'')+grCls(w)+'" data-wid="'+esc(w.id)+'"><div class="ic">'+(mine?'🙋':isPriv(w)?'📩':'🌍')+'</div>'
-   +'<div class="tx">'+testTag(w)+wTitleHtml(w)+title+'<div class="w">'+sub+'</div>'+news+btns+'</div>'+(un.length?(act?'<span class="dot"></span>':bsMk("w:"+w.id)):'')+'</div>';
+   +'<div class="tx">'+testTag(w)+wTitleHtml(w)+title+'<div class="w">'+sub+sent+'</div>'+news+btns+'</div>'+(un.length?(act?'<span class="dot"></span>':bsMk("w:"+w.id)):'')+'</div>';
 }
 // 🆕 nowi użytkownicy (wszyscy zalogowani — decyzja 2026-11-20): konta z nickiem z ostatnich 14 dni,
 // bez ukrytych/zablokowanych (admini widzą wszystkich); „przeczytane” zapamiętane w tym urządzeniu

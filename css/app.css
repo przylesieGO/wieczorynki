@@ -1212,3 +1212,4 @@ details.wday[open].wpv{border-color:var(--priv)}
 .slot.clash{background:#fff3c4;color:#6b4a00}html[data-theme=dark] .slot.clash{background:#4a3f12;color:#ffe08a}
 .slot.clash.on{background:var(--accbtn);color:#fff;box-shadow:0 0 0 2px #e0a800}
 .pkclash{margin-top:10px;padding:9px 12px;border-radius:12px;background:#fff3c4;color:#6b4a00;font-size:14px;font-weight:600;line-height:1.35}html[data-theme=dark] .pkclash{background:#4a3f12;color:#ffe08a}
+.nit .nsent{opacity:.75;white-space:nowrap}

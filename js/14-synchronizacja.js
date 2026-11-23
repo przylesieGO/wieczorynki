@@ -237,7 +237,7 @@ async function loadRemote(selectId){
     // zaproszenia tylko z ostatnich 7 dni i przyszłe (wcześniej: 200 najstarszych — nowe by znikały)
     const wSince=new Date(Date.now()-31*864e5).toISOString(); // + archiwum 30 dni (KROK 38)
     const wq=cols=>{wColsTry=cols;return sb.from("wants").select(cols).gte("starts_at",wSince).order("starts_at").limit(1000)};
-    const WFULL="id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min,place,place_lat,place_lon,bike,place_city,place_area";
+    const WFULL="id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min,place,place_lat,place_lon,bike,place_city,place_area,created_at";   // created_at — „wysłane …” w 🔔
     let w=await wq(WFULL+",route_base_id,title,title_auto,group_id,activity");   // + rodzaj zaproszenia (KROK 64) — filtr „Aktywność”; bez kolumny wracamy do dotychczasowego zapytania
     if(w.error)w=await wq(WFULL+",route_base_id,title,title_auto,group_id");
     wGrOk=!w.error;   // 👥 zaproszenie dla grupy (KROK 71)
