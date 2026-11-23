@@ -1136,7 +1136,7 @@ details.wday .wbd{position:absolute;top:10px;right:12px;display:flex;gap:6px;ali
 details.wday .wcnt,details.wday .wlk{min-width:30px;height:30px;box-sizing:border-box;border-radius:999px;color:var(--white);display:inline-flex;align-items:center;justify-content:center}
 details.wday .wcnt{padding:0 9px;background:var(--sys-red);font:800 15px/1 -apple-system,system-ui,sans-serif}
 details.wday .wlk{background:var(--priv);gap:4px;padding:0 10px;font:800 15px/1 -apple-system,system-ui,sans-serif}details.wday .wlk .ui-i{width:16px;height:16px}
-details.wday.wbc .wl1{padding-right:38px}details.wday.wbk .wl1{padding-right:62px}details.wday.wbk.wbc .wl1{padding-right:98px}
+details.wday.wbk .wl1::before,details.wday.wbc .wl1::before{content:"";float:right;height:34px;width:38px}details.wday.wbk .wl1::before{width:62px}details.wday.wbk.wbc .wl1::before{width:98px}
 details.wday[open] .wbd{display:none}
 .lockt.priv{background:var(--priv);color:var(--white)}
 .wl4 .wpc{font-size:13px;padding:2px 9px}.wl4 .dwx:empty{display:none}
@@ -1144,7 +1144,7 @@ details.wday[open] .wbd{display:none}
 html[data-theme=dark] .wx-storm.dwxc,html[data-theme=dark] .wx-cloud.dwxc{color:#c3cff5}
 .wl2 b{color:var(--ink)}
 details.wday>summary{align-items:flex-start}details.wday>summary .ftile{margin-top:4px}
-details.wday>summary{flex-wrap:wrap}details.wday>summary::after{align-self:center}.dwx{display:contents}.dwxc .ui-i{width:15px;height:15px}
+details.wday>summary{flex-wrap:wrap;width:100%;box-sizing:border-box}details.wday>summary::after{align-self:center}.dwx{display:contents}.dwxc .ui-i{width:15px;height:15px}
 
 /* 📊 KROK 81: APP DEMO (js/18) i ocena przy wyjściu z demo (js/19) */
 .dsseg{margin:10px 0 6px}.dsseg.dstg{display:grid;grid-template-columns:1fr 1fr}.sheetbox .dsseg.dstg button{font-size:15px;padding:11px 4px}.dsbars{gap:2px}
