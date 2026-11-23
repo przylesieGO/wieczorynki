@@ -1140,6 +1140,10 @@ details.wday .wlk{background:var(--priv);gap:4px;padding:0 10px;font:800 15px/1 
 details.wday.wdpk .wl1::before,details.wday.wdpn .wl1::before{content:"";float:right;height:34px;width:38px}details.wday.wdpk .wl1::before{width:62px}details.wday.wdpk.wdpn .wl1::before{width:98px}
 details.wday[open] .wbd{display:none}
 .lockt.priv{background:var(--priv);color:var(--white)}
+.want.peek{position:relative}.want.peek>.wtl{padding-right:34px}
+.pkcorner{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;background:var(--priv);color:var(--white);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.18)}.pkcorner .ui-i{width:18px;height:18px}
+.pkbar{flex:1;min-width:0;display:flex;align-items:center;gap:8px;background:color-mix(in srgb,var(--priv) 12%,transparent);color:var(--priv);border-radius:12px;padding:7px 10px;font-size:13px;line-height:1.3}.pkbar>.ui-i{width:22px;height:22px;flex:none}.pkbar b{display:block;font-size:14px}.pkbar span{color:var(--mut)}.pkbar span b{color:var(--priv)}
+html[data-theme=dark] .pkbar{background:color-mix(in srgb,var(--priv) 22%,transparent)}
 .wl4 .wpc{font-size:13px;padding:2px 9px}.wl4 .dwx:empty{display:none}
 .dwxc{display:inline-flex;gap:5px;white-space:nowrap;align-items:center;border-radius:999px;padding:2px 9px;font-size:13px;font-weight:700;color:var(--wx);background:var(--wxb)}
 html[data-theme=dark] .wx-storm.dwxc,html[data-theme=dark] .wx-cloud.dwxc{color:#c3cff5}
