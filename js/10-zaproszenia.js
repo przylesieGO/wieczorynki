@@ -360,7 +360,8 @@ function fltSecs(){
     pace:FLT_PACE().map(([v,t])=>fltChip("pace",v,t)).join("")};
 }
 let fltStkY=null;   // odległość przewinięcia listy od dołu — żeby wybór osoby nie przeskakiwał listy
-function fltStkPaint(keep){const s=$("fltstk");if(!s)return;s.innerHTML=fltStackHtml();const u=s.querySelector(".fulist");if(u)u.scrollTop=keep!=null?Math.max(0,u.scrollHeight-u.clientHeight-keep):u.scrollHeight}
+function fltStkPaint(keep){const s=$("fltstk");if(!s)return;s.innerHTML=fltStackHtml();const cb=$("fltclr");if(cb)cb.style.visibility=fltOn(fltSub)?"visible":"hidden";   // „Wyczyść” tylko gdy coś wybrano
+  const u=s.querySelector(".fulist");if(u)u.scrollTop=keep!=null?Math.max(0,u.scrollHeight-u.clientHeight-keep):u.scrollHeight}
 function fltDraw(){
   if(fltSub){fltStkPaint(fltStkY);fltStkY=null;return}
   const S=fltSecs();Object.keys(S).forEach(k=>{const el=$("flt_"+k);if(el)el.innerHTML=S[k]});
@@ -380,7 +381,7 @@ function fltMainHtml(){
 }
 function fltSubHtml(){
   const T=fltSub==="where"?["Gdzie","Miasto, dzielnica, miejsce…"]:fltSub==="grp"?["Grupa","Nazwa grupy…"]:fltSub==="to"?["Zaproszeni","Nick osoby…"]:fltSub==="by"?["Prywatne od","Nick osoby…"]:["Osoba","Nick…"];
-  return '<div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="back">Filtry</button><b>'+T[0]+'</b><span style="min-width:64px"></span></div>'
+  return '<div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="back">Filtry</button><b>'+T[0]+'</b><button type="button" class="lnk" id="fltclr" data-fk="clearsub" style="color:var(--bad);text-align:right;min-width:64px">Wyczyść</button></div>'
    +'<div class="fstk" id="fltstk"></div><input class="bsq srch" id="fltq" type="search" placeholder="'+T[1]+'" autocomplete="off" value="'+esc(fltQ)+'">'
    +'<button type="button" class="b big" data-fk="back">Gotowe</button>';
 }
@@ -400,6 +401,7 @@ $("fltsheet").addEventListener("click",e=>{
   if(k==="clear"){flt=fltEmpty();fltQ="";fltSave();fltRefresh();return}
   if(k==="sub"){const l=$("fltlist");fltScroll=l?l.scrollTop:0;fltSub=b.dataset.fv;fltQ="";renderFlt();return}
   if(k==="back"){fltSub="";fltQ="";renderFlt();return}
+  if(k==="clearsub"){const u0=document.querySelector("#fltsheet .fulist");fltStkY=u0?u0.scrollHeight-u0.clientHeight-u0.scrollTop:null;flt[fltSub]=FLT_MULTI.includes(fltSub)?[]:"";fltSave();fltRefresh();return}   // czyści wybór tylko w tym podekranie
   if(k==="tgdemo"){flt.demo=flt.demo==="hide"?"":"hide";fltSave();fltRefresh();return}
   if(k==="ht"){hideTest=!hideTest;try{localStorage.setItem("hideTest",hideTest?"1":"0")}catch(err){}deriveWants();fltRefresh();syncNow();return}   // to samo ustawienie co ⚙️ → Testy
   const v=b.dataset.fv;
