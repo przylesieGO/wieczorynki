@@ -268,8 +268,8 @@ html[data-theme=dark] .fcard::after{background:rgba(0,0,0,.25);box-shadow:0 1px 
 .mydots button{position:relative;width:8px;height:8px;padding:0;border:0;border-radius:50%;background:var(--line);cursor:pointer}
 .mydots button::after{content:"";position:absolute;inset:-10px -4px}
 .mydots button.on{background:var(--acc);width:20px;border-radius:4px}
-.mydots .darr{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--fill);color:var(--ink);font-size:17px;line-height:1}.mydots .darr::after{inset:-6px}.mydots .darr:disabled{opacity:.3;cursor:default}
-@media (hover:hover) and (pointer:fine){.mydots .darr{width:34px;height:34px;font-size:22px}.mydots .darr::after{inset:-4px}}
+.mydots .darr{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--fill);color:var(--ink);font-size:17px;line-height:1}.mydots .darr::after{inset:-6px}.mydots .darr:disabled{opacity:.3;cursor:default}.mydots .darr svg{width:14px;height:14px;display:block}
+@media (hover:hover) and (pointer:fine){.mydots .darr{width:34px;height:34px}.mydots .darr svg{width:18px;height:18px}.mydots .darr::after{inset:-4px}}
 .wlead{font-size:16px;color:var(--mut);margin:12px 6px 6px}
 .wpts{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:10px 0 18px}
 .wpts span{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-size:13px;font-weight:600}
