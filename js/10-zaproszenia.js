@@ -814,6 +814,10 @@ const kmOf=w=>w?(w.route_km!=null?+w.route_km:w.km!=null?+w.km:null):null;
 const wantDur=w=>{const k=kmOf(w);return k?Math.round(k/wPaceKmh(w.pace)*60):(w&&w.dur_min)||DUR_DEF};
 const wantStart=w=>new Date(isOpen(w)?w.range_from:w.starts_at);
 const wantEnd=w=>new Date(new Date(isOpen(w)?w.range_to:w.starts_at).getTime()+wantDur(w)*60000);
+// 🕐 moja jazda: zwykła → start i koniec zaproszenia; otwarte zaproszenie, w którym wybrałem godzinę („Pasuje mi o…”) → od mojej godziny
+const myPref=x=>isOpen(x)&&x.user_id!==uid&&(joins[x.id]||[]).includes(uid)?(prefs[x.id]||{})[uid]||null:null;
+const rideSpan=x=>{const p=myPref(x);return p?[new Date(p),new Date(new Date(p).getTime()+wantDur(x)*60000)]:[wantStart(x),wantEnd(x)]};
+const rideMine=x=>(!isOpen(x)||!!myPref(x))&&(x.user_id===uid||(joins[x.id]||[]).includes(uid));
 const hasDurInfo=w=>!!w&&(kmOf(w)!=null||!!w.dur_min);
 function durLineHtml(w){
   if(!distOk||!hasDurInfo(w))return "";
@@ -887,8 +891,8 @@ function wfClash(st,en){
 // 🔁 „Jadę!” a inna Twoja jazda w tym czasie (+15 min zapasu, jak przy zakładaniu): prowadzisz → blokada; jesteś zapisany → „Przenieś się”
 function joinClash(w){
   const g=RIDE_GAP*60000,s=wantStart(w).getTime(),e=wantEnd(w).getTime();
-  return wants.filter(x=>x.id!==w.id&&!isOpen(x)&&wantEnd(x).getTime()>Date.now()&&(x.user_id===uid||(joins[x.id]||[]).includes(uid)))
-    .find(x=>s<wantEnd(x).getTime()+g&&wantStart(x).getTime()<e+g)||null;
+  return wants.filter(x=>x.id!==w.id&&rideMine(x)&&rideSpan(x)[1].getTime()>Date.now())
+    .find(x=>s<rideSpan(x)[1].getTime()+g&&rideSpan(x)[0].getTime()<e+g)||null;
 }
 async function joinClashOk(w){
   if(isOpen(w))return true;
@@ -898,7 +902,7 @@ async function joinClashOk(w){
 }
 // „Przenieś się”: pytanie i wypisanie z jazdy c (wspólne dla „Jadę!” i zakładania zaproszenia)
 async function leaveForClash(c,to){
-  const cs=wantStart(c),when=relDay(cs).toLowerCase()+" "+hhmm(cs)+"–"+hhmm(wantEnd(c));
+  const sp=rideSpan(c),cs=sp[0],when=relDay(cs).toLowerCase()+" "+hhmm(cs)+"–"+hhmm(sp[1])+" (ok. "+durTxt(wantDur(c))+")";
   if(!await askOk("Jedziesz już "+when+". Przenieść się na "+(dayDiff(to)===dayDiff(cs)?"":relDay(to).toLowerCase()+" ")+hhmm(to)+"?\n\nZrezygnujesz z tamtej jazdy ("+nickOf(c.user_id)+" dostanie powiadomienie).","Przenieś się"))return false;
   const r=await sb.from("want_joins").delete().eq("want_id",c.id).eq("user_id",uid);
   if(r.error){say("Nie udało się zrezygnować z tamtej jazdy: "+r.error.message);return false}
@@ -1296,6 +1300,7 @@ async function myClick(e){
   if(b.dataset.my==="settlepick"){openPick("settle",w.id);return}
   if(b.dataset.my==="settle"){
     const t=wBest(w);
+    if(!await pickClashOk(w,t))return;
     if(!await askOk("Ustalić godzinę "+hhmm(new Date(t))+"? Zaproszeni dostaną powiadomienie.","Ustal "+hhmm(new Date(t))))return;
     try{await settleWant(w,t);await syncNow();say("✅ Ustalono "+wfLabel(new Date(t))+" — zaproszeni dostaną powiadomienie.")}
     catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
@@ -1618,8 +1623,8 @@ async function settleWant(w,t){
 // czy jazda zaczynająca się o t (czas trwania jak w zaproszeniu, +15 min zapasu) nachodzi na inną moją jazdę (prowadzę albo jestem zapisany); zaproszenia otwarte pomijane
 function pickClash(w,t){
   const g=RIDE_GAP*60000,en=t+wantDur(w)*60000;
-  return wants.filter(x=>x.id!==w.id&&!isOpen(x)&&wantEnd(x).getTime()>Date.now()&&(x.user_id===uid||(joins[x.id]||[]).includes(uid)))
-    .find(x=>t<wantEnd(x).getTime()+g&&wantStart(x).getTime()<en+g)||null;
+  return wants.filter(x=>x.id!==w.id&&rideMine(x)&&rideSpan(x)[1].getTime()>Date.now())
+    .find(x=>t<rideSpan(x)[1].getTime()+g&&rideSpan(x)[0].getTime()<en+g)||null;
 }
 // 🔁 zatwierdzenie godziny („Ustal godzinę”, „Pasuje mi o…”) jak „Jadę!”: własna jazda w tym czasie → blokada, zapisany na cudzą → „Przenieś się”
 async function pickClashOk(w,t){
@@ -1646,14 +1651,14 @@ function openPick(mode,id){
   const w=wants.find(x=>x.id===id);if(!w||!session)return;
   if(needProfile()){askNick();return}
   const my=(prefs[id]||{})[uid];
-  pk.mode=mode;pk.want=id;pk.other=false;pk.sel=mode==="settle"?wBest(w):my?tkey(my):null;
+  pk.mode=mode;pk.want=id;pk.other=false;pk.sel=mode==="settle"?(w.settled_at?tkey(w.starts_at):wBest(w)):my?tkey(my):null;
   renderPick();
 }
 function closePick(){const p=$("picksheet");p.classList.add("hide");p.innerHTML=""}
 // ⚠️ komunikat pod godzinami: wybrana godzina zderza się z inną moją jazdą (tylko ostrzeżenie, bez blokady)
 function pickClashHtml(w){
   const c=pk.sel?pickClash(w,pk.sel):null;if(!c)return '';
-  const cs=wantStart(c),when=relDay(cs).toLowerCase()+' '+hhmm(cs)+'–'+hhmm(wantEnd(c));
+  const sp=rideSpan(c),cs=sp[0],when=relDay(cs).toLowerCase()+' '+hhmm(cs)+'–'+hhmm(sp[1])+' (ok. '+durTxt(wantDur(c))+')';
   return '<div class="pkclash">⚠️ '+(c.user_id===uid?'Masz już swoją jazdę '+esc(when)+'.':'Jedziesz już '+esc(when)+' ('+esc(nickOf(c.user_id))+').')+' Ta godzina się z nią zderza.</div>';
 }
 function renderPick(){
