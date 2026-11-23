@@ -222,7 +222,8 @@ function maybeFb(){
 }
 // 👤 ⚙️ → Edytuj profil: grupy „Profil” (Moje jazdy, Ulubieni, Moja miejscowość, Prywatność) i „Powiadomienia” (Telegram, kanał) — przeniesione z głównego ekranu
 function profHubHtml(){
-  return gGrp("Profil",profExRows().concat([isKingReal()?gRow("#5e5ce6","folder","Moja teczka","Wszystko o Twoim koncie w jednym miejscu (👑)","",'data-a="tk" data-id="'+esc(uid)+'"'):"",reportOk?gRow("#34c759","bike","Moje jazdy","Kalendarz, rekordy, km w sezonie",userRides[uid]&&userRides[uid].n?'<span class="ios-v">'+userRides[uid].n+'</span>':'','data-c="myrides"'):"",favOk?gRow("#ffcc00","starf",plOk?"Ulubieni i listy":"Ulubieni",plOk&&plists.length?"Listy: "+plists.length+" · ulubieni zawsze na górze":"Zawsze na górze list",favs.size?'<span class="ios-v">'+favs.size+'</span>':'','data-c="favs"'):"",typeof grRow==="function"?grRow():"",
+  return gGrp("Profil",profExRows().concat([isKingReal()?gRow("#5e5ce6","folder","Moja teczka","Wszystko o Twoim koncie w jednym miejscu (👑)","",'data-a="tk" data-id="'+esc(uid)+'"'):"",reportOk?gRow("#34c759","bike","Moje jazdy","Kalendarz, rekordy, km w sezonie",userRides[uid]&&userRides[uid].n?'<span class="ios-v">'+userRides[uid].n+'</span>':'','data-c="myrides"'):"",typeof svRow==="function"?svRow():"",   // 🔧 serwis rowerowy (js/20, flaga „serwis_rowerowy”)
+  favOk?gRow("#ffcc00","starf",plOk?"Ulubieni i listy":"Ulubieni",plOk&&plists.length?"Listy: "+plists.length+" · ulubieni zawsze na górze":"Zawsze na górze list",favs.size?'<span class="ios-v">'+favs.size+'</span>':'','data-c="favs"'):"",typeof grRow==="function"?grRow():"",
   (profExOk&&pe?"":((evGeoOk&&tabOk(3))||rbOk?gRow("#ff9f0a","pin","Moja miejscowość",rbOk&&!(evGeoOk&&tabOk(3))?"Odległość do tras":"Odległość do imprez i tras",'<span class="ios-v">'+(homeGet()?esc(homeGet().name):'Ustaw')+'</span>','data-home="1"'):"")),reportOk?gRow("#5856d6","lock","Prywatność","Kto widzi Twoje jazdy i rekordy","",'data-c="priv"'):""]))
    +(profExOk&&pe?'<p class="note pe-note">'+uiIcon("lock")+' Zdjęcie i media widzą zalogowani. Miejscowość i telefon — tylko gdy włączysz. Goście nie widzą nic.</p>':'')
    +gGrp("Powiadomienia",[tgOn()?gRow("#0a84ff","send","Telegram"+betaTag("telegram_dm"),"Powiadomienia prosto na telefon",tgLink?'<span class="ios-v ok">'+uiIcon("check")+'Połączony</span>':'<span class="ios-v">Połącz</span>','data-c="tg"'):"",
@@ -263,6 +264,7 @@ function renderGear(){
   else if(gearView==="priv"&&session)body=privPageHtml();
   else if(gearView==="testdel"&&isSuper(uid))body=testDelHtml();
   else if(gearView==="demo"&&session&&isKingReal()&&typeof demoHtml==="function")body=demoHtml();   // 🧪 Ekipa demo (KROK 74, js/18)
+  else if(gearView==="serwis"&&session&&typeof svHtml==="function"&&svOn())body=svHtml();   // 🔧 serwis rowerowy (js/20)
   else if(gearView==="favs"&&session)body=favsHtml();
   else if(gearView==="plist"&&session)body=plistHtml();
   else if((gearView==="groups"||gearView==="group"||gearView==="gradm")&&session&&typeof grHtml==="function")body=grHtml();   // 👥 grupy (KROK 70, js/17)
@@ -308,8 +310,10 @@ function renderGear(){
   // przewinięcie: odświeżenie tego samego ekranu (sync, doczytanie danych) nie wraca na górę; zmiana ekranu zaczyna od góry
   const scrKey=gearView+"|"+(typeof userId!=="undefined"?userId:"")+"|"+(typeof grId!=="undefined"?grId:"")+"|"+(typeof plId!=="undefined"?plId:""),oldBox=p.querySelector(".sheetbox"),keepScr=oldBox&&gearScrKey===scrKey?oldBox.scrollTop:0;
   gearScrKey=scrKey;
+  const keepSv=gearView==="serwis"&&document.activeElement&&/^sv-/.test(document.activeElement.id)?[document.activeElement.id,(()=>{try{return document.activeElement.selectionStart}catch(e){return null}})()]:null;   // 🔧 kursor w polu serwisu zostaje po odświeżeniu
   p.innerHTML='<div class="sheetbox"><button class="sclose" data-c="close" aria-label="Zamknij">✕</button>'+body+'</div>';
   if(keepScr){const nb=p.querySelector(".sheetbox");if(nb)nb.scrollTop=keepScr}
+  if(keepSv&&$(keepSv[0])){const i=$(keepSv[0]);i.focus();try{if(keepSv[1]!=null)i.setSelectionRange(keepSv[1],keepSv[1])}catch(e){}}
   const s=$("adminsel");
   if(s&&keepSel&&[...s.options].some(o=>o.value===keepSel))s.value=keepSel;
   if(keepCol&&$("colK")){["K","M"].forEach(g=>{$("col"+g).value=keepCol["c"+g];$("nob"+g).checked=keepCol["b"+g]==="none";if(keepCol["b"+g]!=="none")$("bg"+g).value=keepCol["b"+g]})}

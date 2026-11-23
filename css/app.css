@@ -1213,3 +1213,18 @@ details.wday[open].wpv{border-color:var(--priv)}
 .slot.clash.on{background:var(--accbtn);color:#fff;box-shadow:0 0 0 2px #e0a800}
 .pkclash{margin-top:10px;padding:9px 12px;border-radius:12px;background:#fff3c4;color:#6b4a00;font-size:14px;font-weight:600;line-height:1.35}html[data-theme=dark] .pkclash{background:#4a3f12;color:#ffe08a}
 .nit .nsent{opacity:.75;white-space:nowrap}
+/* 🔧 Serwis rowerowy (js/20) — klocki ⚙️ (ios-it, seg, fch, ios-sw); aktywny rower = zielona kreska z lewej, wybrany = jaśniejsze tło */
+.sv-bike.act{box-shadow:inset 3px 0 0 var(--sys-green)}.sv-bike.sel{background:var(--line)}
+.sv-ln .sv-lb,.sv-col .sv-lb{flex:none;width:96px;color:var(--mut);font-size:15px;line-height:1.2}.sv-lb small{display:block;font-size:12px;margin-top:2px}.sv-lb small.sv-late{color:var(--bad)}.sv-ln .pe-in{text-align:right}.sv-ln input[type=date]{min-height:0}
+.ios-it.sv-col{flex-direction:column;align-items:stretch;gap:6px}.sv-col .sv-lb{width:auto;font-size:13px}.sv-seg{margin-top:0}.sv-seg.g3{display:grid;grid-template-columns:repeat(3,1fr)}
+.sv-doc{cursor:pointer}.sv-file{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.sv-x{padding:4px 2px;color:var(--bad)}
+.sv-sum{flex-direction:column;align-items:flex-start;gap:2px}.sv-big{font-size:28px;font-weight:700;letter-spacing:-.01em}.sv-sum small{font-size:13px;color:var(--mut)}
+.sv-part{align-items:flex-start}.sv-part .ios-t b{font-weight:600}.sv-del{margin:0;flex:none}
+.sv-wear{height:6px;border-radius:3px;background:var(--line);margin:7px 0 3px;overflow:hidden}.sv-wear i{display:block;height:100%;border-radius:3px;background:var(--sys-green)}
+.sv-wear.mid i{background:var(--sys-orange)}.sv-wear.bad i{background:var(--sys-red)}.sv-wt{font-size:12px!important}
+.sv-chip{display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:4px 10px;border-radius:999px;background:var(--navbg);color:var(--ink);font-size:13px;font-weight:600;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;position:relative}
+.sv-chip .ui-i{width:14px;height:14px;flex:none}.sv-chip.add{color:var(--acc);cursor:pointer;background:none;border:1px dashed var(--line)}
+.ios-it.sv-form{flex-direction:column;align-items:stretch;gap:8px}.sv-chips{display:flex;flex-wrap:wrap;gap:6px}.sv-chips .fch{padding:6px 11px;font-size:14px}
+.sv-two{display:flex;gap:8px}.sv-two>*{flex:1;min-width:0}.sv-fin{width:100%;box-sizing:border-box}.sv-fdoc{align-self:flex-start}
+.sv-call{display:inline-flex;align-items:center;gap:5px;flex:none;text-decoration:none}.sv-call .ui-i{width:15px;height:15px}.sv-call{width:36px;height:36px;padding:0;justify-content:center;border-radius:50%}.sv-call .ui-i{width:17px;height:17px}.sv-late{color:var(--bad)}
+.sv-form .sv-fin{background:var(--card)}
