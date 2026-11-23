@@ -6,7 +6,7 @@
    Ostatni stan zapisany w telefonie (localStorage „snap”) — start pokazuje go od razu i dociąga zmiany.
    Bez KROKU 56 (błąd sync_since) — jak dawniej: pełne wczytanie co minutę. */
 let lastTick=Date.now(),syncN=null,syncOk=false,syncTicks=0,syncP=null,syncAgain=false,wRaw=[],wCols=null,wColsTry=null,titleOk=false;
-const SNAP_V=3,SNAP_MAX=2500000,SYNC_FULL_EVERY=15;
+const SNAP_V=4,SNAP_MAX=2500000,SYNC_FULL_EVERY=15;
 function deriveWants(){
   const since=Date.now()-31*864e5;
   let a=wRaw.filter(x=>new Date(x.starts_at).getTime()>=since);
