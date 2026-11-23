@@ -458,7 +458,7 @@ function renderWants0(){
     const curW=ord.length?ord[Math.min(dayIdx[d.k]||0,ord.length-1)]:null,pvNow=mineTop.some(isPriv)||(!!curW&&isPriv(curW));
     return '<details class="wday'+(cnt>1?' wmulti':'')+(dPriv?' wdpk':'')+(cnt>1?' wdpn':'')+(pvNow?' wpv':'')+'" data-day="'+d.k+'"'+(open?' open':'')+'><summary>'
      +'<div class="ftile'+(n===0?' today':'')+(d.ws.some(wLive)?' live':'')+'">'+ftInner(dt)+ftWxHtml(d.ws)+'</div>'
-     +'<div class="wtx"><div class="wl1">'+l1+' · <span class="whrs'+(open?' whrsall':'')+'">'+wHrsHtml(d.ws,open)+'</span></div>'
+     +'<div class="wtx"><div class="wl1">'+l1+' · <span class="whrs'+(open?' whrsall':'')+'">'+wHrsHtml(d.ws,open,ord.length?ord[Math.min(dayIdx[d.k]||0,ord.length-1)].id:'')+'</span></div>'
      +'<div class="wl3">Od: '+esc(authTxt)+'</div>'
      +'<div class="wl2">'+pplHtml+'</div></div>'+wl4Html(d.ws)
      +(cnt>1||dPriv?'<span class="wbd">'+(dPriv?'<span class="wlk" aria-label="'+dPriv+' prywatne">'+uiIcon("lock")+dPriv+'</span>':'')+(cnt>1?'<span class="wcnt" aria-label="'+cnt+' '+zg+'">'+cnt+'</span>':'')+'</span>':'')
@@ -471,15 +471,15 @@ function renderWants0(){
   wsecSync();
 }
 /* godziny w nagłówku karty dnia: zwinięta karta — 4 + „+N” (etykieta); rozwinięta — wszystkie, klikalne (przewijają/otwierają właściwe zaproszenie w karuzeli) */
-function wHrsHtml(ws,open){
+function wHrsHtml(ws,open,cur){   // cur = zaproszenie widoczne w rozwiniętym dniu (.hon) — pozostałe godziny przygaszone, tylko gdy dzień otwarty
   const hw=ws.filter(wLive).concat(ws.filter(w=>!wLive(w)));
-  const mk=w=>'<button type="button" class="whb'+(wLive(w)?' hlive':'')+(isPriv(w)?' hpriv':'')+'" data-whr="'+esc(w.id)+'"'+(wLive(w)?' title="Trwa"':'')+'>'+wTime(w)+'</button>';
+  const mk=w=>'<button type="button" class="whb'+(wLive(w)?' hlive':'')+(isPriv(w)?' hpriv':'')+(w.id===cur?' hon':'')+'" data-whr="'+esc(w.id)+'"'+(wLive(w)?' title="Trwa"':'')+'>'+wTime(w)+'</button>';
   return open?hw.map(mk).join(""):hw.slice(0,4).map(mk).join("")+(hw.length>4?'<b class="whmore">+'+(hw.length-4)+'</b>':'');
 }
 /* karuzela zaproszeń w karcie dnia */
 const dayIdx={};
 // fioletowa ramka otwartego dnia, gdy widać w nim zaproszenie prywatne (aktualna karta karuzeli lub własne u góry)
-function wdPvSync(c,idx){const d=c.closest("details.wday");if(!d)return;const it=c.children[idx];d.classList.toggle("wpv",!!d.querySelector(":scope>.want[data-priv]")||!!(it&&it.dataset.priv==="1"))}
+function wdPvSync(c,idx){const d=c.closest("details.wday");if(!d)return;const it=c.children[idx];d.querySelectorAll(".whb").forEach(b=>b.classList.toggle("hon",!!it&&b.dataset.whr===it.dataset.wid));d.classList.toggle("wpv",!!d.querySelector(":scope>.want[data-priv]")||!!(it&&it.dataset.priv==="1"))}
 function dcarGoto(c,idx,smooth){
   const it=c.children[idx];if(!it)return;
   const left=it.offsetLeft-c.offsetLeft-(c.clientWidth-it.offsetWidth)/2;

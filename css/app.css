@@ -1204,6 +1204,8 @@ details.wday>summary{flex-wrap:wrap;width:100%;box-sizing:border-box}details.wda
 #wantlist details.wday{margin-left:-12px;margin-right:-12px}
 details.wday>summary{padding:10px 10px;gap:10px}
 .whb.hpriv:not(.hlive),.whrs b.hpriv:not(.hlive){background:var(--priv);color:var(--white)}
+/* rozwinięty dzień: godziny pozostałych zaproszeń przygaszone, godzina zaproszenia widocznego w karuzeli w pełnym kolorze (.hon) */
+details.wday[open] .whrs:has(.hon) .whb:not(.hon){opacity:.4}details.wday .whb{transition:opacity .2s}
 details.wday[open].wpv{border-color:var(--priv)}
 .slot.clash{background:#fff3c4;color:#6b4a00}html[data-theme=dark] .slot.clash{background:#4a3f12;color:#ffe08a}
 .slot.clash.on{background:var(--accbtn);color:#fff;box-shadow:0 0 0 2px #e0a800}
