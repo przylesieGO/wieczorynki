@@ -1604,9 +1604,15 @@ async function settleWant(w,t){
   if(r.error||!r.data||!r.data.length)throw new Error(r.error?r.error.message:"brak uprawnień");
 }
 // przyciski godzin co 15 min (+ godziny spoza zakresu, które ktoś już wybrał) i „Inna godzina…”
+// czy jazda zaczynająca się o t (czas trwania jak w zaproszeniu, +15 min zapasu) nachodzi na inną moją jazdę (prowadzę albo jestem zapisany); zaproszenia otwarte pomijane
+function pickClash(w,t){
+  const g=RIDE_GAP*60000,en=t+wantDur(w)*60000;
+  return wants.filter(x=>x.id!==w.id&&!isOpen(x)&&wantEnd(x).getTime()>Date.now()&&(x.user_id===uid||(joins[x.id]||[]).includes(uid)))
+    .find(x=>t<wantEnd(x).getTime()+g&&wantStart(x).getTime()<en+g)||null;
+}
 function slotsHtml(w,sel,other){
   const C=new Map(wTally(w).map(x=>[x.t,x.ids.length])),ts=wSlots(w),extra=[...C.keys()].filter(t=>!ts.includes(t)).sort((a,b)=>a-b);
-  return '<div class="slots">'+ts.concat(extra).map(t=>'<button type="button" class="slot'+(t===sel?' on':'')+'" data-t="'+t+'">'+hhmm(new Date(t))+(C.get(t)?'<span class="c">· '+C.get(t)+'</span>':'')+'</button>').join("")
+  return '<div class="slots">'+ts.concat(extra).map(t=>'<button type="button" class="slot'+(t===sel?' on':'')+(pickClash(w,t)?' clash':'')+'" data-t="'+t+'">'+hhmm(new Date(t))+(C.get(t)?'<span class="c">· '+C.get(t)+'</span>':'')+'</button>').join("")
    +'<button type="button" class="slot oth" data-t="oth">Inna godzina…</button></div>'
    +(other?'<div class="othin"><input type="time" id="othtime" step="900" value="'+hhmm(new Date(sel||tkey(w.range_to)))+'"><button type="button" class="b small" data-t="othok">OK</button></div>':'');
 }
@@ -1627,6 +1633,12 @@ function openPick(mode,id){
   renderPick();
 }
 function closePick(){const p=$("picksheet");p.classList.add("hide");p.innerHTML=""}
+// ⚠️ komunikat pod godzinami: wybrana godzina zderza się z inną moją jazdą (tylko ostrzeżenie, bez blokady)
+function pickClashHtml(w){
+  const c=pk.sel?pickClash(w,pk.sel):null;if(!c)return '';
+  const cs=wantStart(c),when=relDay(cs).toLowerCase()+' '+hhmm(cs)+'–'+hhmm(wantEnd(c));
+  return '<div class="pkclash">⚠️ '+(c.user_id===uid?'Masz już swoją jazdę '+esc(when)+'.':'Jedziesz już '+esc(when)+' ('+esc(nickOf(c.user_id))+').')+' Ta godzina się z nią zderza.</div>';
+}
 function renderPick(){
   const w=wants.find(x=>x.id===pk.want),p=$("picksheet");if(!w||!isOpen(w)){closePick();return}
   const settle=pk.mode==="settle",d=new Date(w.range_from),wd=d.toLocaleDateString("pl-PL",{weekday:"long"});
@@ -1636,7 +1648,7 @@ function renderPick(){
    +wTitleHtml(w)+'<div class="pwhen">'+esc(relDay(d)+" "+wTime(w))+'<span>'+esc(wd)+'</span></div>'
    +(w.note?'<div class="pnote">💬 '+esc(w.note)+'</div>':'')
    +'<div class="pmeta">'+(settle?'Liczba = ilu osobom pasuje. Wybierz godzinę startu:':'Wybierz godzinę (liczba = ilu już ją wybrało):')+'</div>'
-   +slotsHtml(w,pk.sel,pk.other)
+   +slotsHtml(w,pk.sel,pk.other)+pickClashHtml(w)
    +'<button type="button" class="b big" data-k="ok"'+(pk.sel?'':' disabled')+'>'+(settle?'✅ Ustal: ':'Pasuje mi o ')+(pk.sel?hhmm(new Date(pk.sel)):'…')+'</button>'
    +(settle?'<div class="ptg">Zaproszeni i dołączeni dostaną powiadomienie. Kto wybrał inną godzinę, wypadnie z listy jadących i dostanie pytanie „Jadę?”.</div>'
      :'<div class="pbtns"><button type="button" class="b w" data-k="no">Nie dam rady</button></div>')
