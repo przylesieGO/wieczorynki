@@ -200,15 +200,18 @@ $("wantarch").addEventListener("click",e=>{const b=e.target.closest("[data-arch]
   if(b.dataset.arch==="t")archOpen=!archOpen;else archAll=!archAll;renderArch(wants)});
 /* ---------- 🔍 filtry zaproszeń (decyzje właściciela 2026-11-15 18:58: jak w makiecie filtry.png + z karty osoby) ---------- */
 // zapamiętane w telefonie; działają na listę zaproszeń (karty dni i Twoje zaproszenia), nie na 🔔
-const fltEmpty=()=>({who:"",vis:"",act:"",grp:"",when:"",date:"",where:"",bike:"",pace:"",user:"",demo:"",to:"",by:""});   // vis: Widoczność, act: Aktywność, grp: 👥 grupa (KROK 71)
+const fltEmpty=()=>({who:"",vis:"",act:"",grp:"",when:"",date:"",where:"",bike:"",pace:"",user:[],demo:"",to:[],by:[]});   // vis: Widoczność, act: Aktywność, grp: 👥 grupa (KROK 71); user / to / by: tablice id osób
+const FLT_MULTI=["user","to","by"];   // osoby, które można wybrać kilka naraz
 let flt=(()=>{let f;try{f=Object.assign(fltEmpty(),JSON.parse(localStorage.getItem("flt")||"{}"))}catch(e){f=fltEmpty()}
   if(f.who==="priv"||f.who==="open"){f.vis=f.who;f.who=""}   // „Czyje” rozdzielone na Relację i Widoczność — stary zapis przenosimy
+  FLT_MULTI.forEach(k=>{if(!Array.isArray(f[k]))f[k]=f[k]?[f[k]]:[]});   // stary zapis: jedna osoba jako tekst
   f.demo="";   // konta demo (i testowe zaproszenia, js/04) są zawsze pokazane po wejściu do aplikacji; ukrycie działa tylko do zamknięcia
   return f})(),fltQ="",fltSub="",fltScroll=0;
 function fltSave(){try{localStorage.setItem("flt",JSON.stringify(flt))}catch(e){}}
 const fltBikeOn=()=>!flt.act||flt.act==="bike";   // rodzaj roweru ma sens tylko dla roweru (albo bez wybranej aktywności)
 const fltAdm=()=>!!session&&isSuper(uid);   // 👑 filtry „Zaproszeni” (to) i „Prywatne od osoby” (by) — tylko główny administrator
-const fltKeys=()=>Object.keys(fltEmpty()).filter(k=>k!=="date"&&flt[k]&&(k!=="bike"||fltBikeOn())&&((k!=="to"&&k!=="by")||fltAdm()));
+const fltOn=k=>Array.isArray(flt[k])?flt[k].length>0:!!flt[k];
+const fltKeys=()=>Object.keys(fltEmpty()).filter(k=>k!=="date"&&fltOn(k)&&(k!=="bike"||fltBikeOn())&&((k!=="to"&&k!=="by")||fltAdm()));
 const fltActive=()=>fltKeys().length>0;
 const wUpcoming=w=>!wDone(w);
 const lc=t=>(t||"").toLocaleLowerCase("pl");
@@ -238,9 +241,9 @@ function fltOk(w){
   if(fltBikeOn()){if(flt.bike==="all"&&w.bike)return false;
     if(flt.bike&&flt.bike!=="all"&&w.bike&&w.bike!==flt.bike)return false}
   if(flt.pace&&w.pace!==flt.pace)return false;
-  if(fltAdm()&&flt.to&&!(w.visibility==="private"&&(invIds(w).includes(flt.to)||(wGr(w)&&typeof grAct==="function"&&grAct(w.group_id).some(x=>x.user_id===flt.to)))))return false;   // prywatne, w których osoba jest na liście zaproszonych albo w grupie
-  if(fltAdm()&&flt.by&&!(w.visibility==="private"&&w.user_id===flt.by))return false;   // prywatne wystawione przez osobę
-  if(flt.user&&w.user_id!==flt.user&&!j.includes(flt.user))return false;
+  if(fltAdm()&&flt.to.length&&!(w.visibility==="private"&&flt.to.some(u=>invIds(w).includes(u)||(wGr(w)&&typeof grAct==="function"&&grAct(w.group_id).some(x=>x.user_id===u)))))return false;   // prywatne, w których osoba jest na liście zaproszonych albo w grupie
+  if(fltAdm()&&flt.by.length&&!(w.visibility==="private"&&flt.by.includes(w.user_id)))return false;   // prywatne wystawione przez osobę
+  if(flt.user.length&&!flt.user.some(u=>w.user_id===u||j.includes(u)))return false;
   if(flt.demo&&typeof demoIds!=="undefined"){const dm=demoIds.has(w.user_id);if(flt.demo==="only"&&!dm||flt.demo==="hide"&&dm)return false}   // zaproszenia od kont demo (dla wszystkich)
   return true;
 }
@@ -251,6 +254,7 @@ const FLT_ICO={mine:"user",going:"check",inv:"mail",fav:"star",open:"globe",priv
 const FLT_WHEN=[["today","Dziś"],["tom","Jutro"],["wknd","Weekend"],["7d","7 dni"]];
 const FLT_BIKE=()=>[["all","Dla wszystkich"]].concat(Object.entries(BIKES).map(([k,t])=>[k,t.replace(/^\S+\s/,"")]));
 const FLT_PACE=()=>Object.entries(PACES).map(([k,x])=>[k,x.e+" "+x.r.replace(" km/h","")]);
+const fltNm=a=>{const n=a.map(u=>nicks[u]||"osoba");return n.length>2?n.slice(0,2).join(", ")+" +"+(n.length-2):n.join(", ")};   // „Jan, Ola +1”
 function fltLabel(k){
   const v=flt[k],f=a=>(a.find(x=>x[0]===v)||[,v])[1];
   if(k==="who")return f(FLT_WHO);
@@ -260,9 +264,9 @@ function fltLabel(k){
   if(k==="where"){const t=v.slice(0,1),x=v.slice(2);return t==="a"?x.replace("|"," · "):t==="q"?"„"+x+"”":x}
   if(k==="bike")return f(FLT_BIKE());
   if(k==="pace")return f(FLT_PACE());
-  if(k==="user")return nicks[v]||"osoba";
-  if(k==="to")return "Do: "+(nicks[v]||"osoba");
-  if(k==="by")return "Od: "+(nicks[v]||"osoba");
+  if(k==="user")return fltNm(v);
+  if(k==="to")return "Do: "+fltNm(v);
+  if(k==="by")return "Od: "+fltNm(v);
   if(k==="grp")return grNm(v);
   if(k==="demo")return v==="hide"?"Bez kont demo":v;
   return v;
@@ -286,7 +290,7 @@ function renderWants(){try{renderSteps()}catch(e){}
   if(!shown){const l=$("wantlist");if(l)l.innerHTML='<div class="note" style="margin-top:12px">Brak zaproszeń dla tych filtrów. <button type="button" class="lnk" data-fx="*">Wyczyść filtry</button></div>'}
 }
 document.addEventListener("click",e=>{const x=e.target.closest("[data-fx]");if(!x||!x.closest("#fltbar,#wantlist"))return;
-  if(x.dataset.fx==="*")flt=fltEmpty();else{flt[x.dataset.fx]="";if(x.dataset.fx==="when")flt.date=""}
+  if(x.dataset.fx==="*")flt=fltEmpty();else{flt[x.dataset.fx]=FLT_MULTI.includes(x.dataset.fx)?[]:"";if(x.dataset.fx==="when")flt.date=""}
   fltSave();renderWants()});
 $("fltbtn").addEventListener("click",()=>openFlt());
 $("wstat").addEventListener("click",e=>{const b=e.target.closest("button[data-ws]");if(!b)return;   // licznik: pierwsza liczba = wszystkie, druga = tylko moje i te, na które jadę
@@ -299,6 +303,14 @@ function fltUfBump(id){const m=fltUfGet();m[id]=(m[id]||0)+1;try{localStorage.se
 function fltHl(t,q){if(!q)return esc(t);const i=lc(t).indexOf(q);return i<0?esc(t):esc(t.slice(0,i))+"<mark>"+esc(t.slice(i,i+q.length))+"</mark>"+esc(t.slice(i+q.length))}
 // ocena trafienia: im wyżej, tym bliżej pola wpisywania (lista rośnie w górę); wybrane zawsze zostają widoczne
 function fltScore(t,q,base,on){if(q){const l=lc(t);if(l.startsWith(q))base=20;else if(l.split(/[\s·|]+/).some(x=>x.startsWith(q)))base=15;else if(l.includes(q))base=10;else return -1}return base+(on?(q?3:30):0)}
+// liczba nadchodzących zaproszeń przy osobie — tyle, ile pokaże filtr (user: autor albo jadący; to: prywatne, na liście zaproszonych albo w grupie; by: prywatne wystawione przez osobę)
+function fltCnt(k){const c={};
+  wants.filter(wUpcoming).forEach(w=>{
+    if(k==="by"){if(w.visibility==="private")c[w.user_id]=(c[w.user_id]||0)+1;return}
+    const s=new Set(k==="to"?(w.visibility==="private"?invIds(w):[]):[w.user_id].concat(joins[w.id]||[]));
+    if(k==="to"&&w.visibility==="private"&&wGr(w)&&typeof grAct==="function")grAct(w.group_id).forEach(x=>s.add(x.user_id));
+    s.forEach(u=>c[u]=(c[u]||0)+1)});
+  return c}
 function fltItems(k,q){
   const out=[];
   if(k==="where"){
@@ -314,27 +326,24 @@ function fltItems(k,q){
     const L=wGrList().map(x=>({id:x.id,name:x.name}));if(flt.grp&&!L.some(x=>x.id===flt.grp))L.push({id:flt.grp,name:fltLabel("grp")});
     L.forEach(x=>{const sc=fltScore(x.name,lc(fltQ.trim()),0,flt.grp===x.id);if(sc>=0)out.push({v:x.id,t:x.name,ty:"",sc,ico:"users",bdg:typeof grBadges==="function"&&grG[x.id]?grBadges(grG[x.id]):""})});
   }else{
-    // bez wpisanego tekstu: osoby z zaproszeń (ulubieni i najczęściej wybierani niżej, czyli bliżej pola); z tekstem: wszyscy użytkownicy
-    const fq=fltUfGet(),nk=nickKey(fltQ.trim()),ids=new Set(nk?Object.keys(nicks):[]);
-    if(!nk)wants.filter(wUpcoming).forEach(w=>{ids.add(w.user_id);(joins[w.id]||[]).forEach(x=>ids.add(x))});
-    const cu=flt[k];   // wybrana osoba w tym podekranie (user / to / by)
-    if(cu)ids.add(cu);
-    [...ids].filter(id=>nicks[id]&&(id!==uid||k!=="user")&&!modGone(id)&&(!nk||nickKey(nicks[id]).includes(nk)||id===cu)).forEach(id=>{
-      const n=nickKey(nicks[id]);let sc=isFav(id)?2:fq[id]>0?1:0;
+    // wszyscy użytkownicy: ulubieni i najczęściej wybierani na dole (bliżej pola), reszta alfabetycznie wyżej; z tekstem — trafienia
+    const fq=fltUfGet(),nk=nickKey(fltQ.trim()),cu=flt[k],cc=fltCnt(k);   // cu = wybrane osoby (user / to / by)
+    Object.keys(nicks).filter(id=>(id!==uid||k!=="user")&&!modGone(id)&&(!nk||nickKey(nicks[id]).includes(nk)||cu.includes(id))).forEach(id=>{
+      const n=nickKey(nicks[id]);let sc=(isFav(id)?2:fq[id]>0?1:0)+Math.min(fq[id]||0,99)/100;
       if(nk)sc=n.startsWith(nk)?20:10;
-      if(id===cu)sc+=nk?3:30;
-      out.push({v:id,t:nicks[id],ty:fq[id]>0&&!isFav(id)?"wybierano "+fq[id]+"×":"",sc,fav:isFav(id),user:1})});
+      out.push({v:id,t:nicks[id],ty:fq[id]>0&&!isFav(id)?"wybierano "+fq[id]+"×":"",sc,fav:isFav(id),user:1,cnt:cc[id]||0})});
   }
   return out;
 }
+// lista wyników: cała, przewijana (okno ok. 6 wierszy), od góry alfabetycznie; najlepsze trafienia i ulubieni na dole, przy polu wpisywania
 function fltStackHtml(){
-  const k=fltSub,q=lc(fltQ.trim());
-  let r=fltItems(k,q).sort((a,b)=>a.sc-b.sc||b.t.localeCompare(a.t,"pl"));
-  const more=Math.max(0,r.length-6);r=r.slice(-6);
-  if(!r.length)return '<div class="note">'+(q?'Nic nie znaleziono.':k==="where"?'Brak miejsc w zaproszeniach.':k==="grp"?'Brak grup.':'Brak osób w zaproszeniach — wpisz nick.')+'</div>';
-  return (more?'<div class="note fmore">'+uiIcon("up")+'<span>jeszcze '+more+' — wpisz dalej, żeby zawęzić</span></div>':'')
-   +'<div class="fulist">'+r.map(x=>{const on=flt[k]===x.v;
-     return '<button type="button" class="fusr'+(on?' on':'')+'" data-fk="'+k+'" data-fv="'+esc(x.v)+'"><span class="fuic'+(x.ico?' g':'')+'">'+(x.fav?uiIcon("starf"):x.ico?uiIcon(x.ico):'')+'</span><span class="fun">'+(x.free||x.user?esc(x.t):fltHl(x.t,q))+(x.user&&typeof demoTag==="function"?demoTag(x.v):'')+(x.bdg||'')+'</span>'+(x.ty?'<small>'+x.ty+'</small>':'')+(on?'<span class="fuck">'+uiIcon("check")+'</span>':'')+'</button>'}).join("")+'</div>';
+  const k=fltSub,q=lc(fltQ.trim()),mu=FLT_MULTI.includes(k);
+  const r=fltItems(k,q).sort((a,b)=>a.sc-b.sc||a.t.localeCompare(b.t,"pl"));
+  if(!r.length)return '<div class="note">'+(q?'Nic nie znaleziono.':k==="where"?'Brak miejsc w zaproszeniach.':k==="grp"?'Brak grup.':'Brak osób.')+'</div>';
+  const sel=mu&&flt[k].length?'<div class="fltchips fselr">'+flt[k].map(u=>'<button type="button" class="fac" data-fk="'+k+'" data-fv="'+esc(u)+'">'+esc(nicks[u]||"osoba")+' ✕</button>').join("")+'</div>':'';
+  return sel
+   +'<div class="fulist">'+r.map(x=>{const on=mu?flt[k].includes(x.v):flt[k]===x.v;
+     return '<button type="button" class="fusr'+(on?' on':'')+'" data-fk="'+k+'" data-fv="'+esc(x.v)+'"><span class="fuic'+(x.ico?' g':'')+'">'+(x.fav?uiIcon("starf"):x.ico?uiIcon(x.ico):'')+'</span><span class="fun">'+(x.free||x.user?esc(x.t):fltHl(x.t,q))+(x.user&&typeof demoTag==="function"?demoTag(x.v):'')+(x.bdg||'')+'</span>'+(x.ty?'<small>'+x.ty+'</small>':'')+(x.cnt!=null?'<b class="fucnt'+(x.cnt?'':' z')+'">'+x.cnt+'</b>':'')+(on?'<span class="fuck">'+uiIcon("check")+'</span>':'')+'</button>'}).join("")+'</div>';
 }
 const fltHasGrp=()=>wGrList().length>0||!!flt.grp;
 // grupy: bombel w rzędzie Widoczność (po „Prywatne”), otwiera podekran z listą rosnącą w górę nad polem wpisywania
@@ -350,10 +359,12 @@ function fltSecs(){
     bike:FLT_BIKE().map(([v,t])=>fltChip("bike",v,t)).join(""),
     pace:FLT_PACE().map(([v,t])=>fltChip("pace",v,t)).join("")};
 }
+let fltStkY=null;   // odległość przewinięcia listy od dołu — żeby wybór osoby nie przeskakiwał listy
+function fltStkPaint(keep){const s=$("fltstk");if(!s)return;s.innerHTML=fltStackHtml();const u=s.querySelector(".fulist");if(u)u.scrollTop=keep!=null?Math.max(0,u.scrollHeight-u.clientHeight-keep):u.scrollHeight}
 function fltDraw(){
-  if(fltSub){const s=$("fltstk");if(s)s.innerHTML=fltStackHtml();return}
+  if(fltSub){fltStkPaint(fltStkY);fltStkY=null;return}
   const S=fltSecs();Object.keys(S).forEach(k=>{const el=$("flt_"+k);if(el)el.innerHTML=S[k]});
-  ["where","user","to","by"].forEach(k=>{const el=$("fsum_"+k);if(!el)return;el.textContent=flt[k]?(k==="to"||k==="by"?(nicks[flt[k]]||"osoba"):fltLabel(k)):(k==="where"?"Wszędzie":k==="to"||k==="by"?"Wybierz":"Wszyscy");el.classList.toggle("fnone",!flt[k])});
+  ["where","user","to","by"].forEach(k=>{const el=$("fsum_"+k);if(!el)return;el.textContent=fltOn(k)?(k==="to"||k==="by"?fltNm(flt[k]):fltLabel(k)):(k==="where"?"Wszędzie":k==="to"||k==="by"?"Wybierz":"Wszyscy");el.classList.toggle("fnone",!fltOn(k))});
   const bb=$("fltbikebox");if(bb)bb.classList.toggle("hide",!fltBikeOn());
   const n=wants.filter(wUpcoming).filter(fltOk).length;$("fltok").textContent=fltActive()?"Pokaż "+n+" "+(n===1?"zaproszenie":n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"zaproszenia":"zaproszeń"):"Gotowe";
 }
@@ -377,7 +388,9 @@ function renderFlt(){
   const p=$("fltsheet");p.innerHTML='<div class="bsbox fltbox" role="dialog" aria-modal="true" aria-label="Filtry">'+(fltSub?fltSubHtml():fltMainHtml())+'</div>';
   fltDraw();const l=$("fltlist");if(l&&fltScroll){l.scrollTop=fltScroll;fltScroll=0}
 }
-function openFlt(){$("fltsheet").classList.remove("hide");fltSub="";fltQ="";fltScroll=0;renderFlt()}
+function openFlt(){$("fltsheet").classList.remove("hide");fltSub="";fltQ="";fltScroll=0;renderFlt();
+  // 👑 „Zaproszeni” musi znać skład wszystkich grup (także tych, do których 👑 nie należy) — jedno wczytanie na sesję
+  if(fltAdm()&&typeof grK!=="undefined"&&!grK&&typeof grKLoad==="function")grKLoad().then(()=>{if(!$("fltsheet").classList.contains("hide"))fltDraw()}).catch(()=>{})}
 function closeFlt(){const p=$("fltsheet");p.classList.add("hide");p.innerHTML=""}
 $("fltsheet").addEventListener("click",e=>{
   if(e.target===$("fltsheet")){closeFlt();return}
@@ -389,12 +402,15 @@ $("fltsheet").addEventListener("click",e=>{
   if(k==="back"){fltSub="";fltQ="";renderFlt();return}
   if(k==="tgdemo"){flt.demo=flt.demo==="hide"?"":"hide";fltSave();fltRefresh();return}
   if(k==="ht"){hideTest=!hideTest;try{localStorage.setItem("hideTest",hideTest?"1":"0")}catch(err){}deriveWants();fltRefresh();syncNow();return}   // to samo ustawienie co ⚙️ → Testy
-  const v=b.dataset.fv;flt[k]=flt[k]===v?"":v;if(k==="when")flt.date="";
+  const v=b.dataset.fv;
+  if(fltSub){const u0=document.querySelector("#fltsheet .fulist");fltStkY=u0?u0.scrollHeight-u0.clientHeight-u0.scrollTop:null}
+  if(FLT_MULTI.includes(k)){const i=flt[k].indexOf(v);if(i<0){flt[k].push(v);fltUfBump(v)}else flt[k].splice(i,1)}   // osoby: dodaj / zdejmij z wyboru
+  else flt[k]=flt[k]===v?"":v;
+  if(k==="when")flt.date="";
   if(k==="act"&&flt.act&&flt.act!=="bike")flt.bike="";   // rodzaj roweru nie dotyczy innych aktywności
-  if((k==="user"||k==="to"||k==="by")&&flt[k])fltUfBump(flt[k]);
   fltSave();fltRefresh();
 });
-$("fltsheet").addEventListener("input",e=>{if(e.target.id==="fltq"){fltQ=e.target.value;const s=$("fltstk");if(s)s.innerHTML=fltStackHtml()}});
+$("fltsheet").addEventListener("input",e=>{if(e.target.id==="fltq"){fltQ=e.target.value;fltStkPaint(null)}});
 $("fltsheet").addEventListener("change",e=>{if(e.target.id==="fltdate"){flt.date=e.target.value;flt.when=flt.date?"date":"";fltSave();fltRefresh()}});
 let placesGeoDone=false;
 async function fillPlaceCities(loud){

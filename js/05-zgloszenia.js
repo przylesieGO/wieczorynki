@@ -434,7 +434,7 @@ $("gearpanel").addEventListener("click",async e=>{
     if(a.dataset.a==="fav"){await toggleFav(a.dataset.id);return}
     if(a.dataset.a==="pladd"){openPl("user",{u:a.dataset.id});return}   // 📋 karta osoby → Listy
     if(a.dataset.a==="fbmsg"&&isAdmin){fbTo=a.dataset.id;fbMsgTxt="";gearView="fbmsg";renderGear();const i=$("fbmsgtext");if(i)i.focus();return}
-    if(a.dataset.a==="fltuser"){const id=a.dataset.id;flt=fltEmpty();flt.user=id;fltSave();gearOpen=false;renderGear();show(0);renderWants();setTimeout(()=>{const c=$("fltbar");if(c)c.scrollIntoView({behavior:"smooth",block:"center"})},80);return}
+    if(a.dataset.a==="fltuser"){const id=a.dataset.id;flt=fltEmpty();flt.user=[id];fltSave();gearOpen=false;renderGear();show(0);renderWants();setTimeout(()=>{const c=$("fltbar");if(c)c.scrollIntoView({behavior:"smooth",block:"center"})},80);return}
     if(a.dataset.a==="invite"){const id=a.dataset.id;gearOpen=false;renderGear();show(0);openWantForm(null,{pick:[id]});return}
     if(a.dataset.a==="trm"){
       if(!isSuper(uid))return;
