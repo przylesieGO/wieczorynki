@@ -474,7 +474,6 @@ function sigFabSync(fabOn){
   const done=Date.now()<sigDoneT;
   b.classList.toggle("hide",!fabOn||!(sigFabOn()||done));b.classList.toggle("done",done);
   b.classList.toggle("act",!done&&sigActive());sigFabHtml();
-  if(sigView==="mine")renderSig();   // okienko „Twój sygnał” odświeża się razem z synchronizacją
 }
 // 👋 machająca dłoń (zamiast koła, 2026-11-24): żółta na zielonym tle, taka sama w obu motywach (wariant A), z łukami ruchu — kształt inny niż ✋ w liczniku „Jadę”
 const sigWheel='<svg viewBox="0 0 30 30" fill="none" aria-hidden="true"><path class="wva" d="M4.4 10.6a7 7 0 0 1 2.4-4M1.6 9.2a10 10 0 0 1 3.4-5.6" stroke="#f5d04e" stroke-width="2.1" stroke-linecap="round" opacity=".9"/><g transform="translate(-2 -1)"><g class="wvh" stroke="#f5d04e" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M23 14V9.2a1.9 1.9 0 0 0-3.8 0V14M19.2 13V7.4a1.9 1.9 0 0 0-3.8 0V13M15.4 13.4V9.2a1.9 1.9 0 0 0-3.8 0v7.6"/><path d="M23 11.4a1.9 1.9 0 1 1 3.8 0V17a7.6 7.6 0 0 1-7.6 7.6h-1.9c-2.7 0-4.3-.8-5.7-2.2l-3.4-3.4a1.9 1.9 0 0 1 2.7-2.7l2.5 2.5"/></g></g></svg>';
@@ -532,7 +531,7 @@ function renderSigMine(){
    +(sig2Ok?'<button type="button" class="lnk sgmbell" data-sg="bell">Cała ekipa pod 🔔 ›</button>':'')
    +'<div class="pbtns"><button type="button" class="b w" data-sg="edit">Zmień</button><button type="button" class="b w" data-sg="cancel">Wycofaj</button></div>'
    +'</div>';
-  p.classList.remove("hide");
+  if(p.classList.contains("hide"))p.classList.remove("hide");   // bez zbędnej zmiany klasy (obserwator okienek wywołuje updateFab)
 }
 function renderSig(){
   if(sigView==="mine"){renderSigMine();return}

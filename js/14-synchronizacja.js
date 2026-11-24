@@ -106,7 +106,8 @@ async function syncFb(){
 // to, co robi się po każdym wczytaniu danych (pełnym i przyrostowym)
 async function afterData(){
   try{await sigLoad()}catch(e){sigOk=false}   // 🟡 „Mam ochotę” (KROK 64)
-  sigFabSync();if(sigOn())renderBell();
+  sigFabSync();if(sigView==="mine")renderSig();   // okienko „Twój sygnał” odświeża się z synchronizacją
+  if(sigOn())renderBell();
   maybePopup();
   maybeHelp();
   maybeFb();
