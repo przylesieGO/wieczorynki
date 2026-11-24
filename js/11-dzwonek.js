@@ -522,7 +522,7 @@ function renderSigMine(){
   p.innerHTML='<div class="sheetbox popbox sigbox sgmine" role="dialog" aria-modal="true"><button class="sclose" data-sg="later" aria-label="Zamknij">✕</button>'
    +'<span class="ptag">TWÓJ SYGNAŁ</span>'
    +'<div class="ph sgmh"><span class="sgmic">'+uiIcon(a[0])+'</span>'+esc(a[1])+' · '+esc(hhmm(new Date(m.created_at)))+'</div>'
-   +(sigMsgTxt(m)?'<div class="sgmsg sgmm">'+sigMsgTxt(m)+'</div>':'')
+   +(sigMsgTxt(m)?'<div class="sgmsg sgmm">'+sigMsgTxt(m)+'</div>':'')+'<div class="sgwx">'+sigWxHtml()+'</div>'
    +'<div class="pmeta">'+(sigPriv(m)?uiIcon("lock")+' Widzi '+to+' '+plf(to,["osoba","osoby","osób"])+' (pod 🔔).':'Widzą wszyscy zalogowani (pod 🔔'+(tg?' i na kanale Telegram':'')+').')+' Wygasa z końcem dnia.</div>'
    +(sig2Ok?'<div class="sglbl">Też mają ochotę'+(n?' ('+n+')':'')+'</div>'
      +(n?'<div class="sgrl">'+R.map(id=>'<span class="sgrc">'+uiIcon("hand")+nk(id)+'</span>').join("")+'</div>'
@@ -531,6 +531,7 @@ function renderSigMine(){
    +(sig2Ok?'<button type="button" class="lnk sgmbell" data-sg="bell">Cała ekipa pod 🔔 ›</button>':'')
    +'<div class="pbtns"><button type="button" class="b w" data-sg="edit">Zmień</button><button type="button" class="b w" data-sg="cancel">Wycofaj</button></div>'
    +'</div>';
+  sigFillWx();
   if(p.classList.contains("hide"))p.classList.remove("hide");   // bez zbędnej zmiany klasy (obserwator okienek wywołuje updateFab)
 }
 function renderSig(){
@@ -600,12 +601,15 @@ async function sigReact(owner){
     if(r.error)throw r.error;
     if(on)sigReacts[owner]=(sigReacts[owner]||[]).filter(id=>id!==uid);else(sigReacts[owner]=sigReacts[owner]||[]).push(uid);
     try{navigator.vibrate&&navigator.vibrate(on?8:25)}catch(e){}
+    if(!on)bsDoneAdd([sigKey(x)]);   // dłoń „Też mam ochotę!” odhacza też wiersz (przeczytane) — sprawa załatwiona
     say(on?"Cofnięte.":"👋 "+nickOf(owner)+" dostanie znać, że też masz ochotę.");
     renderBell();if($("bellsheet")&&!$("bellsheet").classList.contains("hide"))renderBellSheet();if(sigView==="pop")renderSigPop();
     sigDirty=true;syncNow();
   }catch(e){say(sigErr(e))}
 }
 // komunikat sygnału → tytuł zaproszenia (≥ 6 znaków, jak tytuły w bazie) albo notatka (krótszy) — decyzja właściciela 2026-11-24 03:59
+// „Zaproś Ania ›” — nick bez odmiany (nicki nie są imionami), skrócony do 14 znaków
+const sigInvLbl=id=>{const n=String(nicks[id]||"").trim();return n?"Zaproś "+esc(n.length>14?n.slice(0,13)+"…":n)+" ›":"Zaproś ›"};
 const sigPreset=x=>{const t=x&&x.msg&&!x.msg_hidden?String(x.msg).trim():"";return t.length>=6?{title:t}:t?{note:t}:{}};
 const sigInviteFor=id=>{const x=sigs.find(s=>s.user_id===id);show(0);openWantForm(null,Object.assign({sig:id},sigPreset(x)))};
 // 🟡 „Zaproś chętnych ›” (decyzja 2026-11-24 03:07, wariant A + link): prywatne zaproszenie na dziś z zakresem godzin do osób,
@@ -646,6 +650,47 @@ function sigSuperHtml(S,rows){
     +'<button type="button" class="b sgsupbtn" data-sgsup="1">'+uiIcon("users")+' Super ekipa ('+ids.length+') ›</button></div>'
     +'<div class="sgsupbody">'+rows+'</div></div>';
 }
+// ✨ „z jajem” (2026-11-24): wtrącenie pogody przy ekstremach (burza, ulewa, śnieg, upał, mróz, silne porywy) pod komunikatem w okienkach sygnału
+let sigWxC={t:0,x:null};
+const sigWxHtml=()=>sigWxC.x?uiIcon(sigWxC.x[0])+'<span>'+esc(sigWxC.x[1])+'</span>':'';
+async function sigWxCalc(){
+  try{
+    const J=await getWxJ(WX_LAT,WX_LON),H=J.hourly,off=(J.utc_offset_seconds||0)*1000,i=H.time.indexOf(new Date(Date.now()+off+30*60000).toISOString().slice(0,13)+":00");
+    if(i<0)return null;
+    const t=H.temperature_2m?H.temperature_2m[i]:null,g=H.wind_gusts_10m?H.wind_gusts_10m[i]:0,c=H.weather_code?H.weather_code[i]:null,mm=H.precipitation?H.precipitation[i]:0;
+    if(c!=null&&c>=95)return ["storm","Dziś burze — wybierzcie trasę blisko domu."];
+    if(c===65||c===67||c===82||mm>=2)return ["rain","Dziś ulewny deszcz — peleryna się przyda."];
+    if(c!=null&&c>=71&&c<=86)return ["snow","Dziś śnieg — ostrożnie na zakrętach."];
+    if(t!=null&&t>=30)return ["flame","Upał "+Math.round(t)+"°C — zabierz dużo wody."];
+    if(t!=null&&t<=0)return ["snow","Mróz "+Math.round(t)+"°C — ubierz się na cebulkę."];
+    if(g>=50)return ["windy","Porywy do "+Math.round(g)+" km/h — wiatr będzie wiał w oczy."];
+    return null;
+  }catch(e){return null}
+}
+function sigFillWx(){
+  if(Date.now()-sigWxC.t<6e5)return;
+  sigWxC.t=Date.now();   // jedno zapytanie na 10 minut
+  sigWxCalc().then(x=>{sigWxC.x=x;const h=sigWxHtml();document.querySelectorAll("#sigsheet .sgwx").forEach(e=>{e.innerHTML=h})});
+}
+// 🎉 konfetti u autora: gdy przybywa osób z „Też mam ochotę!” (pierwszy raz po otwarciu aplikacji — też, gdy reakcje przyszły pod jego nieobecność)
+function sigConfettiBurst(){
+  if(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches)return;
+  const c=document.createElement("div");c.className="sgconf";c.setAttribute("aria-hidden","true");
+  const cols=["#f5b82e","#248a3d","#2f7fd1","#d64545","#9b59b6","#ff9f0a"];
+  for(let i=0;i<36;i++){const p=document.createElement("i");
+    p.style.cssText="left:"+(Math.random()*100)+"%;background:"+cols[i%cols.length]+";--x:"+Math.round((Math.random()-.5)*160)+"px;--r:"+Math.round(Math.random()*720-360)+"deg;animation-delay:"+(Math.random()*.35).toFixed(2)+"s;animation-duration:"+(1.5+Math.random()*.9).toFixed(2)+"s";
+    c.appendChild(p)}
+  document.body.appendChild(c);setTimeout(()=>c.remove(),2900);
+  try{navigator.vibrate&&navigator.vibrate([20,40,20])}catch(e){}
+}
+function sigConfetti(){
+  if(DEMO||!uid)return;
+  const m=sigMine(),k="sigRc:"+uid+":"+sigToday();
+  if(!m||m.cancelled_at||!sig2Ok){return}
+  const n=sigReactIds(m).filter(id=>id!==uid).length,prev=lsGet(k);
+  lsSet(k,String(n));
+  if(n>0&&(prev==null||n>+prev))sigConfettiBurst();
+}
 async function sigHideMsg(owner){
   if(!isAdmin||!await askOk("Ukryć komunikat „"+((sigs.find(s=>s.user_id===owner)||{}).msg||"")+"”?\n\nZniknie u wszystkich. "+nickOf(owner)+" nie wpisze dziś nowego komunikatu (sygnał zostaje).","Ukryj",true))return;
   const r=await sb.rpc("sig_hide_msg",{o:owner,d:sigDay||sigToday()});
@@ -666,7 +711,7 @@ function sigRow(x,un){
   const to=me&&sigPriv(x)?(sigTo[uid]||[]).length:0;
   const E=sig2Ok&&x.activity==="bike"?sigEkipaOthers(x):[],chetni=me&&E.length,ekipa=!me&&mine&&E.length>=2;   // 🚲 „Zaproś ekipę ›” — autor (są chętni) lub osoba z reakcją (w ekipie min. 2 inne osoby)
   const btn=me?'<span class="sgbtns">'+(chetni?'<button type="button" class="lnk stgo" data-sgc="'+esc(x.user_id)+'">Zaproś ekipę ('+E.length+') ›</button>':'')+'<button type="button" class="lnk stgo" data-sge="1">Zmień</button><button type="button" class="lnk stgo" data-sgx="1">Wycofaj</button></span>'
-    :'<span class="sgbtns">'+(x.activity==="bike"?'<button type="button" class="lnk stgo" data-sgz="'+esc(x.user_id)+'">Zaproś ›</button>':'')+(ekipa?'<button type="button" class="lnk stgo" data-sgc="'+esc(x.user_id)+'">Zaproś ekipę ('+E.length+') ›</button>':'')
+    :'<span class="sgbtns">'+(x.activity==="bike"?'<button type="button" class="lnk stgo" data-sgz="'+esc(x.user_id)+'">'+sigInvLbl(x.user_id)+'</button>':'')+(ekipa?'<button type="button" class="lnk stgo" data-sgc="'+esc(x.user_id)+'">Zaproś ekipę ('+E.length+') ›</button>':'')
       +(sig2Ok?'<button type="button" class="sgre'+(mine?' on':'')+'" data-sgr="'+esc(x.user_id)+'" aria-pressed="'+mine+'" title="'+(mine?'Cofnij':'Też mam ochotę!')+'" aria-label="'+(mine?'Cofnij „Też mam ochotę”':'Też mam ochotę!')+'">'+uiIcon("hand")+(rc?'<b>'+rc+'</b>':'')+'</button>':'')+'</span>';
   return '<div class="nit stn sgrow'+(un?' new':'')+'"><div class="ic">'+uiIcon(a[0])+'</div><div class="tx">'+(me?'<b>Ty</b>':nk(x.user_id))
     +(x.is_test?' <span class="ttag">🧪 TEST</span>':'')+(sigPriv(x)?' <span class="sgpriv">'+uiIcon("lock")+(me?' '+to+' '+plf(to,["osoba","osoby","osób"]):' do Ciebie')+'</span>':'')
@@ -712,7 +757,8 @@ function renderSigPop(){
      +'<div class="sgpnick">'+nk(x.user_id)+(sigPriv(x)?' <span class="sgpriv">'+uiIcon("lock")+' do Ciebie</span>':'')+'</div>'
      +'<div class="sgpbub">'+(sigMsgTxt(x)||'Mam dziś ochotę '+esc(a[2])+'!')+'<small>'+esc(a[1].toLowerCase())+' · '+esc(hhmm(new Date(x.created_at)))+'</small></div>'
      +(rc?'<div class="sgrt">'+sigReactTxt(x)+'</div>':'')
-     +'<div class="pbtns">'+(x.activity==="bike"?'<button type="button" class="b" data-sgz="'+esc(x.user_id)+'">Zaproś ›</button>':'')
+     +'<div class="sgwx">'+sigWxHtml()+'</div>'
+     +'<div class="pbtns">'+(x.activity==="bike"?'<button type="button" class="b" data-sgz="'+esc(x.user_id)+'">'+sigInvLbl(x.user_id)+'</button>':'')
        +(sig2Ok?'<button type="button" class="b w sgre2'+(mine?' on':'')+'" data-sgr="'+esc(x.user_id)+'" aria-pressed="'+mine+'">'+uiIcon("hand")+' '+(mine?'Też masz ochotę ✔':'Też mam ochotę!')+'</button>':'')+'</div>'
      +'</div>'};
   p.innerHTML='<div class="sheetbox popbox sigbox sgpop" role="dialog" aria-modal="true"><button class="sclose" data-sg="popx" aria-label="Zamknij">✕</button>'
@@ -723,6 +769,7 @@ function renderSigPop(){
    +'<div class="pbtns"><button type="button" class="b w" data-sg="popx">Później</button></div>'
    +'<div class="note sgpnote">Wyłączysz te okienka w ⚙️ → Jazdy i zaproszenia.</div></div>';
   p.classList.remove("hide");
+  sigFillWx();
   const c=$("sgpc");if(c){c.scrollLeft=sigPopI*c.clientWidth;
     c.onscroll=()=>{const i=Math.round(c.scrollLeft/Math.max(1,c.clientWidth));if(i!==sigPopI){sigPopI=i;p.querySelectorAll(".sgpdots button").forEach((b,j)=>b.classList.toggle("on",j===i))}}}
 }
