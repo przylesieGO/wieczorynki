@@ -459,6 +459,7 @@ html[data-theme=dark] .sigfab{box-shadow:0 6px 16px rgba(0,0,0,.5)}
 @keyframes sghike{0%,30%,100%{transform:rotate(0)}8%{transform:rotate(7deg)}16%{transform:rotate(-5deg)}24%{transform:rotate(2deg)}}
 @media (prefers-reduced-motion:reduce){.sigacts .wbk.on .ui-i{animation:none}}
 .sgrow .ic .ui-i{width:21px;height:21px;color:var(--acc)}
+.wsigrest{margin-top:6px}.wsigrest .lnk{font-size:14px;padding:4px 0}.wsigrest .note{font-size:13px}
 /* 🟡 „Mam ochotę” 2.0 (KROK 90): komunikat, „Kto zobaczy?”, reakcje, pop-up „X ma ochotę” */
 .sglbl{font-size:13px;font-weight:700;color:var(--mut);margin:14px 0 6px}.sglbl .note{font-weight:400}
 .sgmsgs{display:flex;flex-wrap:wrap;gap:6px}.sgmsgs .chip{padding:7px 12px;font-size:14px;font-weight:600}

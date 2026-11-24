@@ -787,6 +787,7 @@ function openWantForm(w,preset){
   if(needProfile()){askNick();return}
   wf.editId=w?w.id:null;
   wf.sigFor=!w&&preset&&preset.sig||null;   // 🟡 zaproszenie z „Mam ochotę” — ta osoba zostanie zaproszona
+  wf.sigRest=!w&&preset&&preset.sigRest||[];wf.sigChetni=!w&&preset&&preset.sigChetni||0;   // 🟡 „Zaproś chętnych” z własnego sygnału: pozostali odbiorcy sygnału (link „+ dopisz”)
   wf.vis="all";wf.pick=new Set();wf.gr="";   // 👥 wf.gr: grupa zaproszenia (KROK 71)
   wf.test=!DEMO;$("wtestwrap").classList.toggle("hide",!!w||!testOk||DEMO);wfTestSync();   // 🎮 w demo bez przełącznika „testowe”
   wf.route=null;wf.routeName="";wf.routeHad=hasRoute(w);wf.routeTouched=false;$("wrfile").value="";
@@ -823,7 +824,7 @@ function openWantForm(w,preset){
   wf.h2=e.getHours();wf.m2=e.getMinutes();$("fch2").textContent=pad(wf.h2);$("fcm2").textContent=pad(wf.m2);
   $("wmode").classList.toggle("hide",!rangeOk||(!!w&&fromRange(w)));
   wfSetMode(rangeEdit||(wf.sigFor&&rangeOk)?"range":"one");
-  $("wnote").value=w?(w.note||""):"";wfNoteSync();wf.noAuto=!!w&&!w.title&&!w.title_auto;   // starsze zaproszenie bez tytułu — bez domyślnego (decyzja: tylko nowe)
+  $("wnote").value=w?(w.note||""):(preset&&preset.note||"");wfNoteSync();wf.noAuto=!!w&&!w.title&&!w.title_auto;   // starsze zaproszenie bez tytułu — bez domyślnego (decyzja: tylko nowe)
   wf.titleAuto=!wf.noAuto&&(!w||!!w.title_auto);$("wtitle").value=w&&!wf.titleAuto?(w.title||""):"";wfTitleHint();$("wtitlewrap").classList.toggle("hide",!titleOk);
   const L=lastWant();
   $("wlast").classList.toggle("hide",!L||!!w);
@@ -1432,7 +1433,22 @@ function renderWhoBtn(){
     :(()=>{const l=plOk&&plMatch(ids);return l?["📋",l.name+" ("+ids.length+")",names.join(", ")]:["👥","Wybrane osoby ("+ids.length+")",names.join(", ")||"Nikogo nie wybrano"]})();
   b.className="who"+(wf.vis==="all"?"":" priv");
   b.innerHTML='<span class="wic">'+ic+'</span><span class="wtx"><b>'+esc(t)+'</b><span>'+esc(s)+'</span></span><span class="war">›</span>';
+  wfSigRestSync();
 }
+// 🟡 „Zaproś chętnych” (z własnego sygnału „Mam ochotę”): link „+ dopisz pozostałych odbiorców sygnału (N)”
+// i ostrzeżenie, że przy „Wszyscy” chętni nie dostaną imiennego zaproszenia
+function wfSigRestSync(){
+  const b=$("wwho");if(!b)return;let el=$("wsigrest");
+  if(!el){el=document.createElement("div");el.id="wsigrest";el.className="wsigrest";b.after(el)}
+  const rest=(wf.sigRest||[]).filter(id=>nicks[id]&&id!==uid&&!(wf.vis==="pick"&&wf.pick.has(id)));
+  const all=wf.vis==="all"&&!wf.gr;
+  el.innerHTML=(wf.sigChetni&&all?'<div class="note">⚠️ Przy „Wszyscy” chętni nie dostaną imiennego zaproszenia — zobaczą je tylko na liście.</div>':'')
+    +(rest.length&&!all?'<button type="button" class="lnk" data-k="sigrest">+ dopisz pozostałych odbiorców sygnału ('+rest.length+')</button>':'');
+  el.classList.toggle("hide",!el.innerHTML);
+}
+document.addEventListener("click",e=>{if(!e.target.closest('#wsigrest [data-k="sigrest"]'))return;
+  if(wf.vis!=="pick"){wf.pick=new Set(wf.vis==="fav"?favIds():[]);wf.vis="pick"}
+  (wf.sigRest||[]).forEach(id=>{if(nicks[id]&&id!==uid)wf.pick.add(id)});renderWhoBtn();try{wfUpdate()}catch(err){}});
 $("wwho").onclick=()=>openWho("form");
 /* okno „Kogo zapraszasz?” (wysuwane od dołu): wybór do formularza albo dopraszanie do zaproszenia */
 const ws={mode:"form",vis:"all",pick:new Set(),want:null,q:""};

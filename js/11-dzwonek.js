@@ -219,7 +219,8 @@ $("bellsheet").addEventListener("click",async e=>{
   const evb=e.target.closest("[data-evb]");if(evb){closeBell();evGo(evb.dataset.evb);return}
   const sgz=e.target.closest("[data-sgz]");if(sgz){const id=sgz.dataset.sgz;closeBell();show(0);openWantForm(null,{sig:id});return}
   if(e.target.closest("[data-sgx]")){closeBell();sigCancel();return}
-  if(e.target.closest("[data-sge]")){closeBell();openSig("pick");return}   // ✏️ „Zmień” własny sygnał (KROK 90)
+  if(e.target.closest("[data-sge]")){closeBell();openSig("pick");return}
+  if(e.target.closest("[data-sgc]")){closeBell();sigInviteKeen();return}   // ✏️ „Zmień” własny sygnał (KROK 90)
   const sgr=e.target.closest("[data-sgr]");if(sgr){sigReact(sgr.dataset.sgr);return}   // 👋 „Też mam ochotę”
   const sgh=e.target.closest("[data-sgh]");if(sgh){sigHideMsg(sgh.dataset.sgh);return}   // 🛡️ admin ukrywa komunikat
   const mk1=e.target.closest("[data-mk]");   // ✓ przy pozycji
@@ -561,6 +562,15 @@ async function sigReact(owner){
     sigDirty=true;syncNow();
   }catch(e){say(sigErr(e))}
 }
+// 🟡 „Zaproś chętnych ›” (decyzja 2026-11-24 03:07, wariant A + link): prywatne zaproszenie na dziś z zakresem godzin do osób,
+// które dały „Też mam ochotę!”; przy prywatnym sygnale w formularzu link „+ dopisz pozostałych odbiorców sygnału”
+function sigInviteKeen(){
+  const m=sigMine();if(!m||m.cancelled_at)return;
+  const keen=sigReactIds(m).filter(id=>id!==uid&&nicks[id]);
+  if(!keen.length){say("Nikt jeszcze nie dał znać, że też ma ochotę.");return}
+  const rest=sigPriv(m)?(sigTo[uid]||[]).filter(id=>!keen.includes(id)):[];
+  show(0);openWantForm(null,{sig:uid,pick:keen,sigRest:rest,sigChetni:keen.length,note:m.msg&&!m.msg_hidden?m.msg:""});
+}
 async function sigHideMsg(owner){
   if(!isAdmin||!await askOk("Ukryć komunikat „"+((sigs.find(s=>s.user_id===owner)||{}).msg||"")+"”?\n\nZniknie u wszystkich. "+nickOf(owner)+" nie wpisze dziś nowego komunikatu (sygnał zostaje).","Ukryj",true))return;
   const r=await sb.rpc("sig_hide_msg",{o:owner,d:sigDay||sigToday()});
@@ -579,7 +589,8 @@ const sigReactTxt=x=>{const L=sigReactIds(x);if(!L.length)return '';
 function sigRow(x,un){
   const a=SIG_ACT[x.activity]||SIG_ACT.bike,me=x.user_id===uid,d=new Date(x.created_at),rc=sigReactIds(x).length,mine=sigIReact(x);
   const to=me&&sigPriv(x)?(sigTo[uid]||[]).length:0;
-  const btn=me?'<span class="sgbtns"><button type="button" class="lnk stgo" data-sge="1">Zmień</button><button type="button" class="lnk stgo" data-sgx="1">Wycofaj</button></span>'
+  const chetni=me&&sig2Ok&&x.activity==="bike"&&rc;   // 🟡 „Zaproś chętnych” — zaproszenie od razu z osobami, które dały „Też mam ochotę!”
+  const btn=me?'<span class="sgbtns">'+(chetni?'<button type="button" class="lnk stgo" data-sgc="1">Zaproś chętnych ›</button>':'')+'<button type="button" class="lnk stgo" data-sge="1">Zmień</button><button type="button" class="lnk stgo" data-sgx="1">Wycofaj</button></span>'
     :'<span class="sgbtns">'+(x.activity==="bike"?'<button type="button" class="lnk stgo" data-sgz="'+esc(x.user_id)+'">Zaproś ›</button>':'')
       +(sig2Ok?'<button type="button" class="sgre'+(mine?' on':'')+'" data-sgr="'+esc(x.user_id)+'" aria-pressed="'+mine+'" title="'+(mine?'Cofnij':'Też mam ochotę!')+'" aria-label="'+(mine?'Cofnij „Też mam ochotę”':'Też mam ochotę!')+'">'+uiIcon("hand")+(rc?'<b>'+rc+'</b>':'')+'</button>':'')+'</span>';
   return '<div class="nit stn sgrow'+(un?' new':'')+'"><div class="ic">'+uiIcon(a[0])+'</div><div class="tx">'+(me?'<b>Ty</b>':nk(x.user_id))

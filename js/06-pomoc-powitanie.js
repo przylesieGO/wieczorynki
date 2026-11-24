@@ -131,6 +131,7 @@ function helpFullHtml(){
      "<b>Kto zobaczy?</b> Wszyscy (także kanał Telegram) albo tylko wybrane osoby — wybór jak przy zaproszeniach: ulubieni, listy, grupy, pojedyncze osoby. Prywatny sygnał nie trafia na kanał.",
      "Inni dostają <b>okienko „X ma ochotę”</b> ze zdjęciem i komunikatem (kilka osób — przewijasz w bok), a pod 🔔 sekcję <b>„Mają ochotę dziś”</b>. „Zaproś ›” otwiera zaproszenie na dziś z zakresem godzin.",
      "<b>Dłoń „Też mam ochotę!”</b> — dajesz znać, że też chcesz jechać; reakcje się sumują, a autor dostaje powiadomienie (i wiadomość od bota, jeśli go połączył).",
+     "<b>Zaproś chętnych ›</b> (pod 🔔, przy Twoim sygnale rowerowym) — od razu prywatne zaproszenie na dziś z zakresem godzin do osób, które dały „Też mam ochotę!”. Przy prywatnym sygnale link „+ dopisz pozostałych odbiorców sygnału” dopisze resztę. Możesz też zmienić na „Wszyscy” — wtedy chętni nie dostaną imiennego zaproszenia.",
      "Swój sygnał zmienisz albo wycofasz pod 🔔. Sygnał wygasa z końcem dnia. Okienka wyłączysz w ⚙️ → Jazdy i zaproszenia."]):'')
    +(tabOk(3)?sec("🏁 Imprezy",[
      "Rajdy, gravele, maratony, biegi i marsze. Na karcie: data, miejsce, dystanse (z przewyższeniem i limitem czasu), „🏁 start za 12 dni”, zapisy trwają / zakończone, kto z nas jedzie.",
