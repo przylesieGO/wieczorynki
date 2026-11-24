@@ -225,6 +225,7 @@ $("bellsheet").addEventListener("click",async e=>{
   const sgz=e.target.closest("[data-sgz]");if(sgz){const id=sgz.dataset.sgz;closeBell();sigInviteFor(id);return}
   if(e.target.closest("[data-sgx]")){closeBell();sigCancel();return}
   if(e.target.closest("[data-sge]")){closeBell();openSig("pick");return}
+  if(e.target.closest("[data-sgsup]")){closeBell();sigInviteSuper();return}   // 🚲 „Super ekipa ›”
   const sgc=e.target.closest("[data-sgc]");if(sgc){closeBell();sigInviteEkipa(sgc.dataset.sgc);return}   // 🚲 „Zaproś ekipę ›”
   const sgcx=e.target.closest("[data-sgcx]");if(sgcx){markRead([sgcx.dataset.sgcx]);renderBellSheet();return}   // ✓ „wycofał(a) sygnał” (KROK 91)   // ✏️ „Zmień” własny sygnał (KROK 90)
   const sgr=e.target.closest("[data-sgr]");if(sgr){sigReact(sgr.dataset.sgr);return}   // 👋 „Też mam ochotę”
@@ -627,6 +628,23 @@ function sigInviteEkipa(owner){
   if(!sigIReact(x)||E.length<2){say("Zaproś ekipę może osoba, która dała „Też mam ochotę!” — gdy w ekipie są co najmniej 2 osoby poza Tobą.");return}
   show(0);openWantForm(null,Object.assign({sig:owner,pick:E,sigChetni:E.length},sigPreset(x)));
 }
+// 🚲 „Super ekipa” (klamra pod 🔔): suma ekip z dzisiejszych sygnałów rowerowych, w których jestem (autor albo dłoń) — min. 2 sygnały i 3 osoby poza mną.
+// Organizatorem zaproszenia jest ten, kto kliknie; autorzy pozostałych sygnałów wchodzą jako zaproszeni. Bez pytania o zgodę.
+const sigSuperSigs=()=>sig2Ok?sigList().filter(x=>x.activity==="bike"&&(x.user_id===uid||sigIReact(x))):[];
+const sigSuperIds=S=>[...new Set(S.flatMap(sigEkipaOthers))];
+const sigSuperOn=S=>S.length>=2&&sigSuperIds(S).length>=3;
+function sigInviteSuper(){
+  const S=sigSuperSigs();if(!sigSuperOn(S)){say("Super ekipa pojawia się, gdy jesteś w co najmniej 2 sygnałach rowerowych i w sumie jest 3 osoby poza Tobą.");return}
+  const ids=sigSuperIds(S),mine=S.find(x=>x.user_id===uid),src=mine||S[0];
+  show(0);openWantForm(null,Object.assign({sig:src.user_id,pick:ids,sigChetni:ids.length},sigPreset(src)));
+}
+const sigMiniAv=id=>{const a=avData[id]&&avData[id].d;return '<span class="sgmav'+(genders[id]==="K"?' k':'')+(a?' ph':'')+'">'+(a?avImg(id,"gavi"):esc(String(nicks[id]||"?").charAt(0).toUpperCase()))+'</span>'};
+function sigSuperHtml(S,rows){
+  const ids=sigSuperIds(S),show4=ids.slice(0,4),more=ids.length-show4.length;
+  return '<div class="sgsup"><div class="sgsupbar"><span class="sgstack">'+show4.map(sigMiniAv).join("")+(more>0?'<span class="sgmav more">+'+more+'</span>':'')+'</span>'
+    +'<button type="button" class="b sgsupbtn" data-sgsup="1">'+uiIcon("users")+' Super ekipa ('+ids.length+') ›</button></div>'
+    +'<div class="sgsupbody">'+rows+'</div></div>';
+}
 async function sigHideMsg(owner){
   if(!isAdmin||!await askOk("Ukryć komunikat „"+((sigs.find(s=>s.user_id===owner)||{}).msg||"")+"”?\n\nZniknie u wszystkich. "+nickOf(owner)+" nie wpisze dziś nowego komunikatu (sygnał zostaje).","Ukryj",true))return;
   const r=await sb.rpc("sig_hide_msg",{o:owner,d:sigDay||sigToday()});
@@ -661,7 +679,9 @@ function sigBellHtml(){
   if(!sigOn())return "";
   const L=sigList(),C=sigCancelUn();if(!L.length&&!C.length)return "";
   const U=new Set(sigUnread()),RU=sigReactUn().length;
-  return bsSec("sig",'🚲 Ekipa na dziś',U.size+RU+C.length,L.length+C.length,L.slice().sort((a,b)=>(U.has(b)?1:0)-(U.has(a)?1:0)).map(x=>sigRow(x,U.has(x)||(x.user_id===uid&&RU>0))).join("")+C.map(sigCancelRow).join("")
+  const SS=sigSuperSigs(),sup=sigSuperOn(SS),sorted=L.slice().sort((a,b)=>(U.has(b)?1:0)-(U.has(a)?1:0)),rowf=x=>sigRow(x,U.has(x)||(x.user_id===uid&&RU>0));
+  const rowsAll=(sup?sigSuperHtml(SS,sorted.filter(x=>SS.includes(x)).map(rowf).join(""))+sorted.filter(x=>!SS.includes(x)).map(rowf).join(""):sorted.map(rowf).join(""));
+  return bsSec("sig",'🚲 Ekipa na dziś',U.size+RU+C.length,L.length+C.length,rowsAll+C.map(sigCancelRow).join("")
     +'<div class="bsempty">Bez godziny i trasy. „Zaproś” otwiera zaproszenie na dziś z zakresem godzin — domyślnie widzi je tylko ta osoba (dostanie powiadomienie); w „Kto zobaczy?” możesz dopisać innych.'+(sig2Ok?' Dłoń = „też mam ochotę” — autor dostanie znać. „Zaproś ekipę” zaprasza od razu autora i wszystkich, którzy dali dłoń — bez pytania o zgodę.':'')+'</div>');
 }
 /* 💬 pop-up „X ma ochotę” (KROK 90): raz na sygnał; kilka naraz — jedno okienko przewijane w bok */

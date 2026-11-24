@@ -1322,4 +1322,12 @@ mark.srmk.out{background:transparent;color:inherit;box-shadow:none}
 .sgrl{display:flex;flex-wrap:wrap;gap:6px;max-height:132px;overflow-y:auto;text-align:left}
 .sgrc{display:inline-flex;align-items:center;gap:5px;padding:5px 11px 5px 8px;border-radius:999px;background:var(--fill);font-size:14px}.sgrc .ui-i{width:16px;height:16px;color:#c98a0b;flex:none}html[data-theme=dark] .sgrc .ui-i{color:#f5c94e}
 .sgmine .note{text-align:left}.sgmkeen{margin-top:14px}.sgmbell{display:block;margin:12px auto 0}
+/* 🚲 „Super ekipa”: klamra łącząca sygnały, w których jestem + kapsuła ze stosem awatarów */
+.sgsup{margin:6px 0 10px}
+.sgsupbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 2px 8px}
+.sgstack{display:inline-flex;align-items:center;padding-left:8px;min-width:0}
+.sgmav{width:30px;height:30px;margin-left:-8px;border-radius:50%;border:2px solid var(--card);background:linear-gradient(135deg,var(--sys-green),#1f9d55);color:var(--white);font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;flex:none;box-sizing:border-box}
+.sgmav.ph{background:var(--fill)}.sgmav .gavi{width:100%;height:100%;object-fit:cover;display:block}.sgmav.more{background:var(--fill);color:var(--ink);font-size:11px}
+.sgsupbtn{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:6px 14px;font-size:15px}.sgsupbtn .ui-i{width:18px;height:18px}
+.sgsupbody{border-left:3px solid var(--acc);border-radius:14px 0 0 14px;padding-left:6px;margin-left:4px}
 @media (prefers-reduced-motion:reduce){.sigfab.act svg{animation:none}}
