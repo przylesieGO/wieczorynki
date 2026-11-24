@@ -198,9 +198,9 @@ async function oldLoad(d){
     let q=sb.from("wants").select(wCols||"id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min,place,place_city,place_area,bike").lt("starts_at",to).order("starts_at",{ascending:false}).limit(1000);
     if(d)q=q.gte("starts_at",new Date(Date.now()-d*864e5).toISOString());
     const r=await q;if(r.error)throw r.error;
-    const L=(r.data||[]).filter(x=>(isAdmin||x.user_id===uid||!modGone(x.user_id))&&!(hideTest&&x.is_test&&x.user_id!==uid)),J={};
+    const L=(r.data||[]).filter(x=>(isAdmin||x.user_id===uid||!modGone(x.user_id))&&!(hideTest&&x.is_test&&x.user_id!==uid)),J={};   // demo ukryte w ⚙️ — niżej, po wczytaniu dołączeń
     for(let i=0;i<L.length;i+=100){const j=await sb.from("want_joins").select("want_id,user_id").in("want_id",L.slice(i,i+100).map(x=>x.id));(j.data||[]).forEach(x=>(J[x.want_id]=J[x.want_id]||[]).push(x.user_id))}
-    wOld=L;jOld=J;oldDays=d;
+    wOld=typeof demoHidU==="function"?L.filter(x=>!demoHidU(x.user_id)||(J[x.id]||[]).includes(uid)):L;jOld=J;oldDays=d;   // ⚙️ Ekipa demo ukryta (KROK 95)
   })();
   try{await oldP}finally{oldP=null}
 }
@@ -464,7 +464,7 @@ const fltGrpChip=()=>'<button type="button" class="fch'+(flt.grp?' on':'')+'" da
 const fltHasDemo=()=>(typeof demoIds!=="undefined"&&demoIds.size)||!!flt.demo;
 const fltHasAct=()=>!!flt.act||wants.some(w=>w.activity&&w.activity!=="bike");   // sekcja „Aktywność” tylko gdy w zaproszeniach są inne aktywności niż rower
 function fltSecs(){
-  return {src:fltChip("arch","1","Filtruj też archiwum","clock")+(flt.arch?ARCH_R.map(([d,t])=>'<button type="button" class="fch'+(archDays===d?' on':'')+'" data-fk="arng" data-fv="'+d+'">'+t+'</button>').join(""):'')+(testOk?fltTg("ht","Zaproszenia testowe",hideTest):'')+(fltHasDemo()?fltTg("tgdemo","Konta demo",flt.demo==="hide"):''),
+  return {src:fltChip("arch","1","Filtruj też archiwum","clock")+(flt.arch?ARCH_R.map(([d,t])=>'<button type="button" class="fch'+(archDays===d?' on':'')+'" data-fk="arng" data-fv="'+d+'">'+t+'</button>').join(""):'')+(testOk?fltTg("ht","Zaproszenia testowe",hideTest):'')+(fltHasDemo()?fltTg("tgdemo","Konta demo",flt.demo==="hide"||(typeof demoOpt!=="undefined"&&!demoOpt.show&&!demoPeek)):''),
     vis:FLT_VIS.map(([v,t])=>fltChip("vis",v,t,FLT_ICO[v])).join("")+(fltHasGrp()?fltGrpChip():""),
     act:FLT_ACT().filter(([v])=>fltScope!=="ev"||(actOf(v).ev_kinds||[]).length).map(([v,t])=>fltChip("act",v,t,actOf(v).icon)).join(""),
     when:FLT_WHEN.filter(x=>x[0]!=="7d").map(([v,t])=>fltChip("when",v,t)).join("")+'<label class="fch fdate'+(flt.when==="date"?' on':'')+'">'+uiIcon("cal")+'<input type="date" id="fltdate" value="'+esc(flt.when==="date"?flt.date:"")+'"></label>',
@@ -520,7 +520,7 @@ $("fltsheet").addEventListener("click",e=>{
   if(k==="back"){fltSub="";fltQ="";renderFlt();return}
   if(k==="clearsub"){const u0=document.querySelector("#fltsheet .fulist");fltStkY=u0?u0.scrollHeight-u0.clientHeight-u0.scrollTop:null;flt[fltSub]=FLT_MULTI.includes(fltSub)?[]:"";fltSave();fltRefresh();return}   // czyści wybór tylko w tym podekranie
   if(k==="arng"){archRange(+b.dataset.fv);return}   // zakres archiwum (30 dni / 3 mies. / rok / wszystko)
-  if(k==="tgdemo"){flt.demo=flt.demo==="hide"?"":"hide";fltSave();fltRefresh();return}
+  if(k==="tgdemo"){if(typeof demoOpt!=="undefined"&&!demoOpt.show){demoPeek=!demoPeek;flt.demo="";deriveWants();renderBell()}else flt.demo=flt.demo==="hide"?"":"hide";fltSave();fltRefresh();return}   // Ekipa demo ukryta w ⚙️ → odsłonięcie do zamknięcia aplikacji (KROK 95)
   if(k==="ht"){hideTest=!hideTest;try{localStorage.setItem("hideTest",hideTest?"1":"0")}catch(err){}deriveWants();fltRefresh();syncNow();return}   // to samo ustawienie co ⚙️ → Testy
   const v=b.dataset.fv;
   if(fltSub){const u0=document.querySelector("#fltsheet .fulist");fltStkY=u0?u0.scrollHeight-u0.clientHeight-u0.scrollTop:null}

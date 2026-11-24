@@ -20,10 +20,46 @@ const DEMO_DAYS=[[3,"3 dni"],[7,"7 dni"],[14,"14 dni"],[28,"4 tyg."]];
 const demoTag=id=>demoIds.has(id)?'<span class="nkdemo" title="konto demo — nie prawdziwa osoba">DEMO</span>':'';
 const demoErr=e=>say((e&&e.message)||"Nie udało się — spróbuj jeszcze raz.");
 
+/* ⚙️ → Jazdy i zaproszenia → „Ekipa demo” (KROK 95): ustawienie na koncie (tabela user_opts), kopia w telefonie per konto.
+   show = pokazuj zaproszenia i sygnały kont demo (Twoje i te, na które jedziesz / którym dałeś dłoń, zostają);
+   notif = 🔔 i Telegram od kont demo (wycisza baza; przy show=false baza wycisza też).
+   demoPeek: przełącznik „Konta demo” w Filtrach albo wynik wyszukiwania odsłania demo do zamknięcia aplikacji. */
+let demoOpt={show:true,notif:true},demoPeek=false,demoOptAt=0,demoOptFor="";
+const demoOptKey=()=>"demoOpt:"+uid;
+const demoHidU=u=>!demoOpt.show&&!demoPeek&&!!u&&u!==uid&&demoIds.has(u);   // czy chować treści tej osoby (konto demo)
+async function demoOptLoad(){
+  if(!session||DEMO)return;
+  if(demoOptFor!==uid){demoOptFor=uid;demoOptAt=0;demoPeek=false;
+    try{demoOpt=Object.assign({show:true,notif:true},JSON.parse(localStorage.getItem(demoOptKey())||"{}"))}catch(e){demoOpt={show:true,notif:true}}
+    if(!demoOpt.show)try{deriveWants();refreshUi()}catch(e){}}   // start ze stanu telefonu: lista mogła być policzona przed odczytem
+  if(Date.now()-demoOptAt<6e5)return;   // z bazy najwyżej co 10 min (zmienia się tylko z tego ekranu)
+  try{const r=await sb.from("user_opts").select("demo_show,demo_notif").eq("user_id",uid).maybeSingle();if(r.error)return;
+    demoOptAt=Date.now();const o=r.data?{show:r.data.demo_show!==false,notif:r.data.demo_notif!==false}:{show:true,notif:true};
+    const ch=o.show!==demoOpt.show;demoOpt=o;lsSet(demoOptKey(),JSON.stringify(o));
+    if(ch){deriveWants();refreshUi()}}catch(e){}
+}
+async function demoOptSet(k,v){
+  const old=Object.assign({},demoOpt);demoOpt[k]=v;if(k==="show")demoPeek=false;
+  lsSet(demoOptKey(),JSON.stringify(demoOpt));deriveWants();refreshUi();renderGear();
+  try{const row={demo_show:demoOpt.show,demo_notif:demoOpt.notif,updated_at:new Date().toISOString()};
+    let r=await sb.from("user_opts").update(row).eq("user_id",uid).select("user_id");
+    if(!r.error&&!(r.data&&r.data.length))r=await sb.from("user_opts").insert(Object.assign({user_id:uid},row)).select("user_id");
+    if(r.error)throw r.error;demoOptAt=Date.now();
+    say(k==="show"?(v?"Widzisz Ekipę demo.":"Ekipa demo ukryta — zostają jazdy, na które jedziesz. Odsłonisz ją w Filtrach.")
+      :(v?"Powiadomienia od Ekipy demo włączone.":"Bez powiadomień od Ekipy demo (🔔 i Telegram)."))}
+  catch(e){demoOpt=old;lsSet(demoOptKey(),JSON.stringify(old));deriveWants();refreshUi();renderGear();say("Nie udało się zapisać — spróbuj jeszcze raz.")}
+}
+// wiersze w ⚙️ (js/06 setRidesHtml): drugi przełącznik tylko gdy demo jest widoczne
+const demoOptHtml=()=>!session||DEMO?"":
+  iosIt("#ff9f0a","users","Pokazuj Ekipę demo",demoOpt.show?"Zmyślone konta do zabawy — ich zaproszenia i sygnały „Mam ochotę”":"Ukryta — zostają jazdy, na które jedziesz",iosSw(demoOpt.show,"data-dmo","show"))
+  +(demoOpt.show?iosIt("#ff9f0a","bell","Powiadomienia od Ekipy demo",demoOpt.notif?"🔔 i Telegram, gdy konto demo Cię zaprasza albo dołącza":"Wyłączone — bez 🔔 i Telegramu od kont demo",iosSw(demoOpt.notif,"data-dmo","notif")):"");
+document.addEventListener("click",e=>{const b=e.target.closest("button[data-dmo]");if(!b||!session)return;const k=b.dataset.dmo;demoOptSet(k,!demoOpt[k])});
+
 // wczytanie: kto jest kontem demo (wszyscy zalogowani) + ochotnicy (👑)
 async function demoLoad(){
   if(!session){demoIds=new Set();demoVol=new Set();return}
   try{const r=await sb.from("demo_accounts").select("user_id");if(!r.error)demoIds=new Set((r.data||[]).map(x=>x.user_id))}catch(e){}
+  await demoOptLoad();   // ⚙️ Ekipa demo (KROK 95)
   if(isKingReal()){try{const v=await sb.from("demo_volunteers").select("user_id");if(!v.error)demoVol=new Set((v.data||[]).map(x=>x.user_id))}catch(e){}}
 }
 async function demoStatus(){

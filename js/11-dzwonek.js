@@ -458,7 +458,7 @@ const sigPriv=x=>x.vis==="pick";
 const sigReactIds=x=>(sigReacts[x.user_id]||[]).filter(id=>id===uid||!modGone(id));
 const sigIReact=x=>(sigReacts[x.user_id]||[]).includes(uid);
 // widoczne sygnały: bez wycofanych, ukrytych / zablokowanych i (przy „ukryj testowe”) cudzych testowych
-const sigList=()=>sigs.filter(x=>!x.cancelled_at&&(x.user_id===uid||!modGone(x.user_id))&&!(hideTest&&x.is_test&&x.user_id!==uid))
+const sigList=()=>sigs.filter(x=>!x.cancelled_at&&(x.user_id===uid||!modGone(x.user_id))&&!(hideTest&&x.is_test&&x.user_id!==uid)&&!(typeof demoHidU==="function"&&demoHidU(x.user_id)&&!sigIReact(x)))   // ⚙️ Ekipa demo ukryta (KROK 95): zostaje sygnał, któremu dałeś dłoń
   .sort((a,b)=>(a.user_id===uid?-1:b.user_id===uid?1:0)||String(b.created_at).localeCompare(String(a.created_at)));
 const sigKey=x=>"sg:"+x.user_id+"|"+x.created_at;
 const sigSk=(o,t)=>o+"|"+new Date(t).getTime();   // klucz pamięci okienek w bazie (KROK 92)

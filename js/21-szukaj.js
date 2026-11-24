@@ -123,6 +123,8 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Zmień hasło",s:"hasło password",p:"Ustawienia → Edytuj profil → Konto → Zmień hasło",i:"key",go:[SR_PROF,'[data-c="pwd"]'],ok:S},
   {t:"Baza tras",s:"trasy gpx mapa odkryj",p:"Ustawienia → Baza tras",i:"map",fn:()=>openRb(),ok:!!rbOk},
   {t:"Pytaj „Jak poszło?”",s:"jak poszło ankieta ocena po jeździe km",p:"Ustawienia → Jazdy i zaproszenia",i:"bike",hl:"[data-ro]",ok:S&&reportOk},
+  {t:"Ekipa demo: pokazuj",s:"ekipa demo konta demo zmyślone ukryj pokaż zombie testowe osoby",p:"Ustawienia → Jazdy i zaproszenia",i:"users",hl:'[data-dmo="show"]',ok:S&&!DEMO},
+  {t:"Powiadomienia od Ekipy demo",s:"ekipa demo powiadomienia telegram dzwonek wycisz konta demo",p:"Ustawienia → Jazdy i zaproszenia",i:"bell",hl:'[data-dmo="notif"]',ok:S&&!DEMO&&typeof demoOpt!=="undefined"&&demoOpt.show},
   {t:"Okienka „Mam ochotę”",s:"mam ochotę okienko pop-up sygnał wyłącz",p:"Ustawienia → Jazdy i zaproszenia",i:"hand",hl:"[data-sgp]",ok:S&&typeof sigOn==="function"&&sigOn()},
   {t:"Motyw: jasny / ciemny",s:"motyw ciemny jasny tryb nocny dark wygląd kolory",p:"Ustawienia → Wygląd i ekran → Motyw",i:"moon",hl:"[data-t]"},
   {t:"Nick na górze ekranu",s:"nick nagłówek pokaż ukryj",p:"Ustawienia → Wygląd i ekran",i:"user",hl:"[data-sn]",ok:S},
@@ -193,6 +195,7 @@ function srGoGear(set){gearOpen=true;gearFrom="";set();renderGear()}
 // zaproszenie ukryte przez Filtry albo „ukryj testowe” — najpierw je odsłoń, potem przewiń do karty
 function srReveal(w,arch){let m="";
   if(hideTest&&w.is_test){hideTest=false;try{localStorage.setItem("hideTest","0")}catch(e){}deriveWants();m="Pokazuję też testowe zaproszenia."}
+  if(typeof demoHidU==="function"&&demoHidU(w.user_id)){demoPeek=true;deriveWants();m="Pokazuję też Ekipę demo (do zamknięcia aplikacji)."}   // ⚙️ Ekipa demo ukryta (KROK 95)
   if(session&&(!arch||flt.arch)&&fltActive()&&!fltOk(w)){flt=fltEmpty();fltSave();m="Wyłączyłem filtry, żeby pokazać ten wynik."}   // archiwum filtrujemy tylko z „Filtruj też archiwum”
   return m}
 function srGoWant(w){const m=srReveal(w);const x=wants.find(y=>y.id===w.id);if(!x){say("Tego zaproszenia nie da się teraz pokazać.");return}goToWant(x);if(m)setTimeout(()=>say(m),400);

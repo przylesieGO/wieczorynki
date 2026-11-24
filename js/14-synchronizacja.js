@@ -11,6 +11,7 @@ function deriveWants(){
   const since=Date.now()-31*864e5;
   let a=wRaw.filter(x=>new Date(x.starts_at).getTime()>=since);
   if(hideTest)a=a.filter(x=>!x.is_test||x.user_id===uid||(joins[x.id]||[]).includes(uid));
+  if(typeof demoHidU==="function")a=a.filter(x=>!demoHidU(x.user_id)||(joins[x.id]||[]).includes(uid));   // ⚙️ Ekipa demo ukryta (KROK 95, js/18)
   wantsAll=a.slice();
   if(!isAdmin)a=a.filter(x=>x.user_id===uid||!modGone(x.user_id));
   // 👁 podgląd: cudze prywatne zaproszenia, do których 👑 nie jest zaproszony — jak u zwykłego użytkownika (niewidoczne)
@@ -317,6 +318,7 @@ async function loadRemote(selectId){
     wants=ok(w)||[];wRaw=wants.slice();wCols=w.error?null:wColsTry;
     joins={};prefs={};(ok(j)||[]).forEach(x=>{(joins[x.want_id]=joins[x.want_id]||[]).push(x.user_id);if(x.pref_at)(prefs[x.want_id]=prefs[x.want_id]||{})[x.user_id]=x.pref_at});
     if(hideTest)wants=wants.filter(x=>!x.is_test||x.user_id===uid||(joins[x.id]||[]).includes(uid));
+    if(typeof demoHidU==="function")wants=wants.filter(x=>!demoHidU(x.user_id)||(joins[x.id]||[]).includes(uid));   // ⚙️ Ekipa demo (KROK 95)
     lib=ok(l)||[];
     startPresence();
     adminIds=(ok(ad)||[]).map(x=>x.user_id);isAdmin=adminIds.includes(uid)&&!pv;
