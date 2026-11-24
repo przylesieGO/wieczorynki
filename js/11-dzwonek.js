@@ -464,18 +464,28 @@ const sigCancelRow=n=>'<div class="nit stn sgrow new"><div class="ic">'+uiIcon("
   +'<div class="w">'+(genders[n.actor]==="K"?'wycofała':'wycofał')+' swój sygnał „Mam ochotę” · '+esc(hhmm(new Date(n.created_at)))+'</div></div>'
   +'<button type="button" class="nmk" data-sgcx="'+esc(n.id)+'" aria-label="Oznacz jako przeczytane" title="Oznacz jako przeczytane">'+uiIcon("check")+'</button></div>';
 const sigTodayBusy=()=>wants.some(w=>dayDiff(new Date(w.starts_at))===0&&!wDone(w)&&!w.is_test&&!(typeof demoIds!=="undefined"&&demoIds.has(w.user_id)));   // testowe i od kont demo nie chowają koła
-const sigFabOn=()=>sigOn()&&sigOk&&!is_banned_me()&&!sigTodayBusy()&&!(sigMine()&&!sigMine().cancelled_at);
+const sigActive=()=>{const m=sigMine();return !!m&&!m.cancelled_at};   // mój sygnał jest dziś aktywny
+const sigFabOn=()=>sigOn()&&sigOk&&!is_banned_me()&&!sigTodayBusy();   // przycisk zostaje też po wysłaniu sygnału (wygląda wtedy inaczej i otwiera „Twój sygnał”)
 function is_banned_me(){return typeof modBanned!=="undefined"&&modBanned.has(uid)}
 function sigFabSync(fabOn){
   const b=$("sigfab");if(!b)return;
   if(fabOn===undefined)fabOn=!$("fab").classList.contains("hide");
   const done=Date.now()<sigDoneT;
   b.classList.toggle("hide",!fabOn||!(sigFabOn()||done));b.classList.toggle("done",done);
+  b.classList.toggle("act",!done&&sigActive());sigFabHtml();
+  if(sigView==="mine")renderSig();   // okienko „Twój sygnał” odświeża się razem z synchronizacją
 }
 // 👋 machająca dłoń (zamiast koła, 2026-11-24): żółta na zielonym tle, taka sama w obu motywach (wariant A), z łukami ruchu — kształt inny niż ✋ w liczniku „Jadę”
 const sigWheel='<svg viewBox="0 0 30 30" fill="none" aria-hidden="true"><path class="wva" d="M4.4 10.6a7 7 0 0 1 2.4-4M1.6 9.2a10 10 0 0 1 3.4-5.6" stroke="#f5d04e" stroke-width="2.1" stroke-linecap="round" opacity=".9"/><g transform="translate(-2 -1)"><g class="wvh" stroke="#f5d04e" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M23 14V9.2a1.9 1.9 0 0 0-3.8 0V14M19.2 13V7.4a1.9 1.9 0 0 0-3.8 0V13M15.4 13.4V9.2a1.9 1.9 0 0 0-3.8 0v7.6"/><path d="M23 11.4a1.9 1.9 0 1 1 3.8 0V17a7.6 7.6 0 0 1-7.6 7.6h-1.9c-2.7 0-4.3-.8-5.7-2.2l-3.4-3.4a1.9 1.9 0 0 1 2.7-2.7l2.5 2.5"/></g></g></svg>';
 const sigCheck='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="#248a3d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-function sigFabHtml(){const b=$("sigfab");if(b)b.innerHTML=Date.now()<sigDoneT?sigCheck:sigWheel}
+function sigFabHtml(){
+  const b=$("sigfab");if(!b)return;
+  const done=Date.now()<sigDoneT,m=sigMine(),act=!done&&sigActive(),n=act?sigReactIds(m).filter(id=>id!==uid).length:0;
+  // aktywny sygnał: mniejsza dłoń + plakietka (liczba „Też mam ochotę” albo zielony ptaszek)
+  const h=done?sigCheck:act?sigWheel+'<span class="sigbdg'+(n?' n':'')+'">'+(n?n:sigCheck)+'</span>':sigWheel;
+  if(b.dataset.h!==h){b.dataset.h=h;b.innerHTML=h}
+  b.setAttribute("aria-label",act?"Twój sygnał „Mam ochotę”"+(n?" — "+n+" "+plf(n,["osoba","osoby","osób"])+" też ma ochotę":"")+" — otwórz":"Mam ochotę — daj znać, że chcesz dziś pojeździć");
+}
 function closeSig(){$("sigsheet").classList.add("hide");$("sigsheet").innerHTML="";sigView=""}
 function openSig(view){
   if(!session)return;sigView=view||"pick";const m=sigMine();
@@ -503,7 +513,27 @@ function sigMsgHtml(){
    +'<button type="button" class="chip'+(sg.own?' on':'')+'" data-sgm="" aria-pressed="'+sg.own+'">Inne…</button></div>'
    +(sg.own?'<input class="sgown" id="sgown" maxlength="40" placeholder="Twój komunikat, np. Jadę nad Bug" value="'+esc(sg.msg)+'" autocomplete="off"><div class="note sgcnt" id="sgcnt">'+sg.msg.length+'/40</div>':'');
 }
+// 🟡 „Twój sygnał” (okienko z przycisku z dłonią po wysłaniu): kto dał „Też mam ochotę”, Zaproś chętnych, Zmień, Wycofaj
+function renderSigMine(){
+  const p=$("sigsheet"),m=sigMine();
+  if(!m||m.cancelled_at){closeSig();return}
+  const a=SIG_ACT[m.activity]||SIG_ACT.bike,R=sigReactIds(m).filter(id=>id!==uid&&nicks[id]),n=R.length,to=sigPriv(m)?(sigTo[uid]||[]).length:0;
+  const tg=flags.mam_ochote&&flags.mam_ochote.state==="all"&&!sigPriv(m);
+  p.innerHTML='<div class="sheetbox popbox sigbox sgmine" role="dialog" aria-modal="true"><button class="sclose" data-sg="later" aria-label="Zamknij">✕</button>'
+   +'<span class="ptag">TWÓJ SYGNAŁ</span>'
+   +'<div class="ph sgmh"><span class="sgmic">'+uiIcon(a[0])+'</span>'+esc(a[1])+' · '+esc(hhmm(new Date(m.created_at)))+'</div>'
+   +(sigMsgTxt(m)?'<div class="sgmsg sgmm">'+sigMsgTxt(m)+'</div>':'')
+   +'<div class="pmeta">'+(sigPriv(m)?uiIcon("lock")+' Widzi '+to+' '+plf(to,["osoba","osoby","osób"])+' (pod 🔔).':'Widzą wszyscy zalogowani (pod 🔔'+(tg?' i na kanale Telegram':'')+').')+' Wygasa z końcem dnia.</div>'
+   +(sig2Ok?'<div class="sglbl">Też mają ochotę'+(n?' ('+n+')':'')+'</div>'
+     +(n?'<div class="sgrl">'+R.map(id=>'<span class="sgrc">'+uiIcon("hand")+nk(id)+'</span>').join("")+'</div>'
+        :'<div class="note">Na razie nikt. Gdy ktoś da „Też mam ochotę!”, zobaczysz to tutaj i dostaniesz powiadomienie.</div>'):'')
+   +(sig2Ok&&m.activity==="bike"&&n?'<button type="button" class="b big sgmkeen" data-sg="keen">Zaproś chętnych ›</button>':'')
+   +'<div class="pbtns"><button type="button" class="b w" data-sg="edit">Zmień</button><button type="button" class="b w" data-sg="cancel">Wycofaj</button></div>'
+   +'</div>';
+  p.classList.remove("hide");
+}
 function renderSig(){
+  if(sigView==="mine"){renderSigMine();return}
   if(sigView==="pop"){renderSigPop();return}
   const p=$("sigsheet"),intro=sigView==="intro",tg=flags.mam_ochote&&flags.mam_ochote.state==="all"&&sg.vis!=="pick",edit=!!(sigMine()&&!sigMine().cancelled_at);
   const fo=document.activeElement&&document.activeElement.id==="sgown";
@@ -550,7 +580,7 @@ async function sigSend(){
     if(!edit){sigDoneT=Date.now()+2600;sigFabHtml();sigFabSync();setTimeout(()=>{sigFabHtml();sigFabSync()},2700)}
     say(edit?"Zapisano ✔ "+SIG_ACT[sigPick][1]+(priv?" · widzi "+ids.length+" "+plf(ids.length,["osoba","osoby","osób"]):""):
       (genders[uid]==="K"?"Dałaś":"Dałeś")+" znać ✔ "+SIG_ACT[sigPick][1]+", dziś — "+(priv?ids.length+" "+plf(ids.length,["osoba zobaczy","osoby zobaczą","osób zobaczy"]):"inni zobaczą")+" pod 🔔.");
-    sigDirty=true;await syncNow();
+    sigDirty=true;await syncNow();sigFabSync();
   }catch(e){sigBusy=false;renderSig();say(sigErr(e))}
 }
 async function sigCancel(){
@@ -668,14 +698,14 @@ function renderSigPop(){
 // (gdy przy starcie otwarta jest Pomoc albo inne okienko — pokazuje się zaraz po jego zamknięciu, najpóźniej 3 min od startu)
 let sigIntroDone=false;const sigT0=Date.now();
 function maybeSigIntro(){
-  if(sigIntroDone||Date.now()-sigT0>18e4||!sigFabOn()||$("fab").classList.contains("hide"))return;
+  if(sigIntroDone||Date.now()-sigT0>18e4||!sigFabOn()||sigActive()||$("fab").classList.contains("hide"))return;
   const n=+(lsGet("sigIntro")||0);if(n>=3){sigIntroDone=true;return}
   if([...document.querySelectorAll(".sheet")].some(x=>!x.classList.contains("hide"))||gearOpen||needProfile()||pwMode||!$("wantform").classList.contains("hide"))return;
   sigIntroDone=true;lsSet("sigIntro",String(n+1));openSig("intro");
 }
 {const mo=new MutationObserver(()=>{setTimeout(()=>{if(!sigIntroDone)maybeSigIntro();maybeSigPop()},450)});document.querySelectorAll(".sheet").forEach(el=>{if(el.id!=="sigsheet")mo.observe(el,{attributes:true,attributeFilter:["class"]})})}
 $("sigfab").innerHTML=sigWheel;
-$("sigfab").onclick=()=>{if(Date.now()<sigDoneT)return;openSig("pick")};
+$("sigfab").onclick=()=>{if(Date.now()<sigDoneT)return;openSig(sigActive()?"mine":"pick")};
 $("sigsheet").addEventListener("click",e=>{
   if(e.target===$("sigsheet")){closeSig();return}
   const a=e.target.closest("[data-sga]");if(a){if(sigPick!==a.dataset.sga&&!sg.own)sg.msg="";sigPick=a.dataset.sga;renderSig();return}
@@ -687,6 +717,7 @@ $("sigsheet").addEventListener("click",e=>{
   const b=e.target.closest("[data-sg]");if(!b)return;
   const k=b.dataset.sg;
   if(k==="later"||k==="popx")closeSig();else if(k==="send")sigSend();else if(k==="who")openWho("sig");
+  else if(k==="edit")openSig("pick");else if(k==="keen"){closeSig();sigInviteKeen()}else if(k==="cancel"){closeSig();sigCancel()}
 });
 $("sigsheet").addEventListener("input",e=>{if(e.target.id==="sgown"){sg.msg=e.target.value.slice(0,40);const c=$("sgcnt");if(c)c.textContent=sg.msg.length+"/40"}});
 // wybór z okna „Kogo zapraszasz?” (js/10, tryb „sig”) wraca tutaj

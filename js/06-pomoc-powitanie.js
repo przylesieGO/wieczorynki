@@ -126,13 +126,13 @@ function helpFullHtml(){
      tg?"<b>Bot Telegram</b> napisze prywatnie: zaproszenie, zmiana godziny i szczegółów, ustalenie startu, kto dołączył, przypomnienie ~1 h przed jazdą. Włączysz: ⚙️ → Edytuj profil → Telegram → Połącz z Telegramem → w Telegramie START. Wyłączysz tam samo (Rozłącz).":"",
      session?"<b>Kanał @PrzylesieGo</b> na Telegramie — ogłoszenia nowych jazd dla wszystkich.":""].filter(Boolean))
    +(typeof sigOn==="function"&&sigOn()?sec("🟡 Mam ochotę",[
-     "Masz ochotę na jazdę, ale bez pomysłu na godzinę i trasę? Dotknij <b>zielonego kółka z dłonią</b> nad ➕ (widać je, gdy na dziś nie ma zaproszeń). Wybierz: rower, bieg, spacer albo trekking.",
+     "Masz ochotę na jazdę, ale bez pomysłu na godzinę i trasę? Dotknij <b>zielonego kółka z dłonią</b> nad ➕ (widać je, gdy na dziś nie ma zaproszeń). Po wysłaniu sygnału kółko zostaje — z mniejszą dłonią i plakietką (zielony ptaszek albo liczba „Też mam ochotę”). Wybierz: rower, bieg, spacer albo trekking.",
      "<b>Komunikat</b> (opcjonalnie): jeden z gotowych, np. „Nogi same kręcą”, albo „Inne…” — własny, do 40 znaków (bez wulgaryzmów i linków; administrator może go ukryć).",
      "<b>Kto zobaczy?</b> Wszyscy (także kanał Telegram) albo tylko wybrane osoby — wybór jak przy zaproszeniach: ulubieni, listy, grupy, pojedyncze osoby. Prywatny sygnał nie trafia na kanał.",
      "Inni dostają <b>okienko „X ma ochotę”</b> ze zdjęciem i komunikatem (kilka osób — przewijasz w bok), a pod 🔔 sekcję <b>„Mają ochotę dziś”</b>. „Zaproś ›” otwiera zaproszenie na dziś z zakresem godzin.",
      "<b>Dłoń „Też mam ochotę!”</b> — dajesz znać, że też chcesz jechać; reakcje się sumują, a autor dostaje powiadomienie (i wiadomość od bota, jeśli go połączył).",
      "<b>Zaproś chętnych ›</b> (pod 🔔, przy Twoim sygnale rowerowym) — od razu prywatne zaproszenie na dziś z zakresem godzin do osób, które dały „Też mam ochotę!”; komunikat sygnału staje się tytułem zaproszenia (tak samo przy „Zaproś ›” z cudzego sygnału). Przy prywatnym sygnale link „+ dopisz pozostałych odbiorców sygnału” dopisze resztę. Możesz też zmienić na „Wszyscy” — wtedy chętni nie dostaną imiennego zaproszenia.",
-     "Swój sygnał zmienisz albo wycofasz pod 🔔. Po wycofaniu znika u wszystkich, reakcje się zerują, a osoby z „Też mam ochotę!” dostaną ciche powiadomienie. Ponowne „Daj znać” tego dnia to nowy sygnał (kanał Telegram dostaje wiadomość raz dziennie). Sygnał wygasa z końcem dnia. Okienka wyłączysz w ⚙️ → Jazdy i zaproszenia."]):'')
+     "Swój sygnał otworzysz <b>dotknięciem kółka z dłonią</b> (okienko „Twój sygnał”: kto ma też ochotę, „Zaproś chętnych ›”, „Zmień”, „Wycofaj”) albo pod 🔔. Po wycofaniu znika u wszystkich, reakcje się zerują, a osoby z „Też mam ochotę!” dostaną ciche powiadomienie. Ponowne „Daj znać” tego dnia to nowy sygnał (kanał Telegram dostaje wiadomość raz dziennie). Sygnał wygasa z końcem dnia. Okienka wyłączysz w ⚙️ → Jazdy i zaproszenia."]):'')
    +(tabOk(3)?sec("🏁 Imprezy",[
      "Rajdy, gravele, maratony, biegi i marsze. Na karcie: data, miejsce, dystanse (z przewyższeniem i limitem czasu), „🏁 start za 12 dni”, zapisy trwają / zakończone, kto z nas jedzie.",
      "<b>Rozwiń kartę</b>, wybierz dystans i kliknij „Jadę!” (przy biegu „Biegnę”, przy marszu „Idę”). ❤ Lubię, 📅 do Google Kalendarza, udostępnij.",
@@ -202,7 +202,7 @@ function helpHtml(){
    +'</ol>'
    +'<div class="htips"><div>⭐ Dotknij nicku — karta osoby, ulubieni, listy, „Zaproś na rower”.</div>'
    +'<div>🔍 <b>Lupa</b> w nagłówku szuka wszystkiego: zaproszeń, imprez, osób, grup, tras — i opcji aplikacji.</div>'
-   +(typeof sigOn==="function"&&sigOn()?'<div>🟡 <b>Mam ochotę</b> — zielone kółko z dłonią nad ➕: daj znać, że chcesz dziś jechać, bez godziny i trasy.</div>':'')
+   +(typeof sigOn==="function"&&sigOn()?'<div>🟡 <b>Mam ochotę</b> — zielone kółko z dłonią nad ➕: daj znać, że chcesz dziś jechać, bez godziny i trasy. Po wysłaniu dotknij go, by zmienić albo wycofać sygnał.</div>':'')
    +(rbOk?'<div>🗺️ <b>Baza tras</b> w ⚙️ — oceny, pogoda na jazdę i lista „co zabrać”.</div>':'')
    +'<div>🚴 Po jeździe aplikacja zapyta <b>„Jak poszło?”</b> — km, średnia, ocena trasy.</div>'
    +'<div>🧪 Zaproszenia z czerwoną plakietką <b>TEST</b> są na próbę — śmiało klikaj. Ukryjesz je w ⚙️.</div>'
