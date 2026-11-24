@@ -433,8 +433,8 @@ body.hasfab .toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
 body.wfopen .toast{bottom:calc(var(--wffh,130px) + 12px);width:max-content;max-width:min(88vw,520px);text-align:center;font-weight:600;padding:12px 18px;box-shadow:0 8px 28px rgba(0,0,0,.35)}
 @media (prefers-reduced-motion:reduce){.fab,.fab .fabt{transition:none}}
 /* 🟡 „Mam ochotę” (KROK 64): okrągły przycisk z kołem z logo nad ➕ — mniejszy, żeby ➕ został głównym */
-.sigfab{position:fixed;right:max(calc(21px + env(safe-area-inset-right,0px)),calc((100vw - 900px)/2 + 21px));bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:1500;width:48px;height:48px;padding:0;border:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--card);color:var(--card);cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 6px 16px rgba(0,0,0,.18),0 1px 3px rgba(0,0,0,.12);transition:transform .12s,background .2s}
-.sigfab svg{width:32px;height:32px;animation:sigspin 6s ease-in-out infinite}
+.sigfab{position:fixed;right:max(calc(21px + env(safe-area-inset-right,0px)),calc((100vw - 900px)/2 + 21px));bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:1500;width:48px;height:48px;padding:0;border:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#248a3d;color:#248a3d;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 6px 16px rgba(0,0,0,.18),0 1px 3px rgba(0,0,0,.12);transition:transform .12s,background .2s}
+.sigfab svg{width:32px;height:32px}.sigfab svg .wvh{transform-box:fill-box;transform-origin:45% 95%;animation:sigwave 6s ease-in-out infinite}
 /* dymek „Mam ochotę” nad kołem: półprzezroczysty (nie narzuca się); komputer — po najechaniu / fokusie, telefon — raz dziennie na kilka sekund (js/11) */
 .sigtip{position:fixed;right:max(calc(79px + env(safe-area-inset-right,0px)),calc((100vw - 900px)/2 + 79px));bottom:calc(99px + env(safe-area-inset-bottom,0px));z-index:1500;pointer-events:none;opacity:0;transition:opacity .25s;font-size:13px;font-weight:700;white-space:nowrap;padding:5px 11px;border-radius:10px;color:#3a2a00;background:#f5b82e;border:1px solid #d9a022}
 html[data-theme=dark] .sigtip{color:#3a2a00;background:#f5b82e;border-color:#d9a022}
@@ -445,13 +445,20 @@ html[data-theme=dark] .sigtip{color:#3a2a00;background:#f5b82e;border-color:#d9a
 @media (hover:hover){.sigfab:hover+.sigtip,.sigfab:focus-visible+.sigtip{opacity:.55}}
 @media (prefers-reduced-motion:reduce){.sigtip{transition:none}}
 .sigfab:active{transform:scale(.92)}
-.sigfab.done{background:#248a3d}.sigfab.done svg{width:26px;height:26px;animation:none}
+.sigfab.done{background:#fff}.sigfab.done svg{width:26px;height:26px;animation:none}
 html[data-theme=dark] .sigfab{box-shadow:0 6px 16px rgba(0,0,0,.5)}
-@keyframes sigspin{0%,72%{transform:rotate(0)}100%{transform:rotate(360deg)}}
-.signote{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--mut);line-height:1.35}.sigmini{flex:none;width:26px;height:26px;border-radius:50%;background:var(--card);color:var(--card);box-shadow:0 1px 4px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center}.sigmini svg{width:19px;height:19px}
+@keyframes sigwave{0%,70%,100%{transform:rotate(0)}75%{transform:rotate(-16deg)}80%{transform:rotate(12deg)}85%{transform:rotate(-12deg)}90%{transform:rotate(8deg)}95%{transform:rotate(-4deg)}}
+.signote{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--mut);line-height:1.35}.sigmini{flex:none;width:26px;height:26px;border-radius:50%;background:#248a3d;color:#248a3d;box-shadow:0 1px 4px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center}.sigmini svg{width:19px;height:19px}
 .sigacts{grid-template-columns:repeat(4,1fr);margin-top:12px}
+/* 🚲🏃🚶🌲 „Mam ochotę”: wybrana aktywność rusza się jak dłoń na przycisku — krótki ruch (od razu po wyborze), potem spokój; cykl 6 s */
+.sigacts .wbk.on .ui-i{transform-box:fill-box;transform-origin:50% 100%;animation:6s ease-in-out infinite}.sigacts .wbk.on[data-sga=bike] .ui-i{animation-name:sgbike}.sigacts .wbk.on[data-sga=run] .ui-i{animation-name:sgrun}.sigacts .wbk.on[data-sga=walk] .ui-i{animation-name:sgwalk}.sigacts .wbk.on[data-sga=hike] .ui-i{animation-name:sghike}
+@keyframes sgbike{0%,30%,100%{transform:translateX(0)}8%{transform:translateX(4px) rotate(-4deg)}16%{transform:translateX(-3px)}23%{transform:translateX(1px)}}
+@keyframes sgrun{0%,30%,100%{transform:translateY(0)}6%,18%{transform:translateY(-4px)}12%,24%{transform:translateY(0)}}
+@keyframes sgwalk{0%,30%,100%{transform:rotate(0)}7%{transform:rotate(-9deg)}15%{transform:rotate(8deg)}23%{transform:rotate(-4deg)}}
+@keyframes sghike{0%,30%,100%{transform:rotate(0)}8%{transform:rotate(7deg)}16%{transform:rotate(-5deg)}24%{transform:rotate(2deg)}}
+@media (prefers-reduced-motion:reduce){.sigacts .wbk.on .ui-i{animation:none}}
 .sgrow .ic .ui-i{width:21px;height:21px;color:var(--acc)}
-@media (prefers-reduced-motion:reduce){.sigfab svg{animation:none}}
+@media (prefers-reduced-motion:reduce){.sigfab svg .wvh{animation:none}}
 /* ikony konturowe (styl App Store / SF Symbols) */
 .ui-i{width:1.05em;height:1.05em;vertical-align:-.17em;display:inline-block;flex:none}
 .gear{display:flex;align-items:center;justify-content:center}.gear .ui-i{width:22px;height:22px;vertical-align:middle}

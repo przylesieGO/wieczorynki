@@ -404,7 +404,7 @@ $("popsheet").addEventListener("click",async e=>{
 });
 
 /* ---------- 🟡 „Mam ochotę” (KROK 64): sygnał „mam dziś ochotę pojeździć / pobiegać / na spacer / na wędrówkę” ----------
-   Okrągły przycisk z kołem nad ➕ — tylko gdy na dziś nie ma zaproszeń i nie dałeś jeszcze znać.
+   Okrągły przycisk z machającą dłonią 👋 nad ➕ — tylko gdy na dziś nie ma zaproszeń i nie dałeś jeszcze znać.
    Pod 🔔 sekcja „Mają ochotę dziś” (przy rowerze „Zaproś” → zaproszenie publiczne z zakresem godzin, ta osoba zaproszona).
    Pop-up z zachętą przy pierwszych 3 wejściach. Przełącznik w 🚦 Funkcje testowe: „mam_ochote”. Kanał Telegram wysyła baza. */
 const SIG_ACT={bike:["bike","Rower","pojeździć na rowerze"],run:["run","Bieg","pobiegać"],walk:["walk","Spacer","na spacer"],hike:["tree","Trekking","na wędrówkę"]};
@@ -432,14 +432,15 @@ function sigFabSync(fabOn){
   const done=Date.now()<sigDoneT;
   b.classList.toggle("hide",!fabOn||!(sigFabOn()||done));b.classList.toggle("done",done);
 }
-const sigWheel='<svg viewBox="0 0 30 30" fill="none" aria-hidden="true"><circle cx="15" cy="15" r="10.5" stroke="#f5b82e" stroke-width="4.5"/><circle cx="15" cy="15" r="2" fill="#f5b82e"/><path d="M15 3.5v4.5" stroke="currentColor" stroke-width="2.2"/></svg>';
-const sigCheck='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+// 👋 machająca dłoń (zamiast koła, 2026-11-24): żółta na zielonym tle, taka sama w obu motywach (wariant A), z łukami ruchu — kształt inny niż ✋ w liczniku „Jadę”
+const sigWheel='<svg viewBox="0 0 30 30" fill="none" aria-hidden="true"><path class="wva" d="M4.4 10.6a7 7 0 0 1 2.4-4M1.6 9.2a10 10 0 0 1 3.4-5.6" stroke="#f5d04e" stroke-width="2.1" stroke-linecap="round" opacity=".9"/><g transform="translate(-2 -1)"><g class="wvh" stroke="#f5d04e" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M23 14V9.2a1.9 1.9 0 0 0-3.8 0V14M19.2 13V7.4a1.9 1.9 0 0 0-3.8 0V13M15.4 13.4V9.2a1.9 1.9 0 0 0-3.8 0v7.6"/><path d="M23 11.4a1.9 1.9 0 1 1 3.8 0V17a7.6 7.6 0 0 1-7.6 7.6h-1.9c-2.7 0-4.3-.8-5.7-2.2l-3.4-3.4a1.9 1.9 0 0 1 2.7-2.7l2.5 2.5"/></g></g></svg>';
+const sigCheck='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="#248a3d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 function sigFabHtml(){const b=$("sigfab");if(b)b.innerHTML=Date.now()<sigDoneT?sigCheck:sigWheel}
 function closeSig(){$("sigsheet").classList.add("hide");$("sigsheet").innerHTML="";sigView=""}
 function openSig(view){if(!session)return;sigView=view||"pick";const m=sigMine();if(m&&SIG_ACT[m.activity])sigPick=m.activity;renderSig()}
 function renderSig(){
   const p=$("sigsheet"),intro=sigView==="intro",tg=flags.mam_ochote&&flags.mam_ochote.state==="all";
-  // jedno okienko: przy pierwszych wejściach (intro) z zachętą i podpowiedzią, gdzie jest koło; z koła — sam wybór
+  // jedno okienko: przy pierwszych wejściach (intro) z zachętą i podpowiedzią, gdzie jest dłoń; z dłoni — sam wybór
   p.innerHTML='<div class="sheetbox popbox sigbox" role="dialog" aria-modal="true"><button class="sclose" data-sg="later" aria-label="Zamknij">✕</button>'
    +'<span class="ptag">MAM OCHOTĘ</span>'
    +'<div class="ph">'+(intro?'Nie masz pomysłu na jazdę, ale masz ochotę pojeździć?':'Na co masz dziś ochotę?')+'</div>'
@@ -448,7 +449,7 @@ function renderSig(){
    +'<div class="wbike sigacts">'+Object.keys(SIG_ACT).map(k=>'<button type="button" class="wbk'+(sigPick===k?' on':'')+'" data-sga="'+k+'" aria-pressed="'+(sigPick===k)+'">'+uiIcon(SIG_ACT[k][0])+'<span>'+SIG_ACT[k][1]+'</span></button>').join("")+'</div>'
    +'<button type="button" class="b big" data-sg="send"'+(sigBusy?' disabled':'')+'>Daj znać</button>'
    +'<div class="pbtns"><button type="button" class="b w" data-sg="later">'+(intro?'Później':'Nie teraz')+'</button></div>'
-   +(intro?'<div class="signote"><span class="sigmini">'+sigWheel+'</span>Później znajdziesz to pod kołem w prawym dolnym rogu ekranu.</div>':'')
+   +(intro?'<div class="signote"><span class="sigmini">'+sigWheel+'</span>Później znajdziesz to pod dłonią 👋 w prawym dolnym rogu ekranu.</div>':'')
    +'</div>';
   p.classList.remove("hide");
 }
@@ -471,7 +472,7 @@ async function sigSend(){
 }
 async function sigCancel(){
   try{const r=await sb.from("ride_signals").update({cancelled_at:new Date().toISOString()}).eq("user_id",uid).eq("day",sigDay||sigToday()).select("user_id");
-    if(r.error)throw r.error;sigDirty=true;await syncNow();say("Wycofane — przycisk z kołem wrócił nad ➕.")}
+    if(r.error)throw r.error;sigDirty=true;await syncNow();say("Wycofane — przycisk z dłonią wrócił nad ➕.")}
   catch(e){say("Nie udało się: "+(e&&e.message?e.message:"błąd"))}
 }
 // 🔔 sekcja „Mają ochotę dziś”
@@ -489,7 +490,7 @@ function sigBellHtml(){
   return bsSec("sig",'🚲 Mają ochotę dziś',U.size,L.length,L.slice().sort((a,b)=>(U.has(b)?1:0)-(U.has(a)?1:0)).map(x=>sigRow(x,U.has(x))).join("")
     +'<div class="bsempty">Bez godziny i trasy. „Zaproś” otwiera zaproszenie na dziś z zakresem godzin — domyślnie widzi je tylko ta osoba (dostanie powiadomienie); w „Kto zobaczy?” możesz dopisać innych.</div>');
 }
-// pop-up z zachętą: pierwsze 3 wejścia (raz na uruchomienie), tylko gdy przycisk z kołem jest widoczny
+// pop-up z zachętą: pierwsze 3 wejścia (raz na uruchomienie), tylko gdy przycisk z dłonią jest widoczny
 // (gdy przy starcie otwarta jest Pomoc albo inne okienko — pokazuje się zaraz po jego zamknięciu, najpóźniej 3 min od startu)
 let sigIntroDone=false;const sigT0=Date.now();
 function maybeSigIntro(){
