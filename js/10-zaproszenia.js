@@ -825,7 +825,10 @@ function openWantForm(w,preset){
   $("wmode").classList.toggle("hide",!rangeOk||(!!w&&fromRange(w)));
   wfSetMode(rangeEdit||(wf.sigFor&&rangeOk)?"range":"one");
   $("wnote").value=w?(w.note||""):(preset&&preset.note||"");wfNoteSync();wf.noAuto=!!w&&!w.title&&!w.title_auto;   // starsze zaproszenie bez tytułu — bez domyślnego (decyzja: tylko nowe)
-  wf.titleAuto=!wf.noAuto&&(!w||!!w.title_auto);$("wtitle").value=w&&!wf.titleAuto?(w.title||""):"";wfTitleHint();$("wtitlewrap").classList.toggle("hide",!titleOk);
+  wf.titleAuto=!wf.noAuto&&(!w||!!w.title_auto);$("wtitle").value=w&&!wf.titleAuto?(w.title||""):"";
+  // 🟡 z „Mam ochotę”: komunikat sygnału od razu jako tytuł (tytuł w bazie: 6–40 znaków; krótszy → notatka, js/11 sigPreset)
+  if(!w&&preset&&preset.title&&titleOk){wf.titleAuto=false;$("wtitle").value=String(preset.title).slice(0,40)}
+  wfTitleHint();$("wtitlewrap").classList.toggle("hide",!titleOk);
   const L=lastWant();
   $("wlast").classList.toggle("hide",!L||!!w);
   if(L)$("wlast").textContent="↺ Jak ostatnio: "+pad(L.h)+":"+pad(L.m)+(L.note?" · "+L.note:"");

@@ -114,8 +114,10 @@ function renderBell(){
 // na zwiniętej: czerwone kółko z liczbą nieprzeczytanych (albo szare z liczbą pozycji, gdy nic nowego)
 const bsColGet=()=>{try{return JSON.parse(localStorage.getItem("bellCol")||"{}")}catch(e){return {}}};
 const BS_MK={nu:1,lg:1,dl:1,ev:1,sig:1,forme:1,mine:1};   // sekcje z przyciskiem „Oznacz sekcję jako przeczytane”
+// 🔔 otwarta lista nie przeskakuje przy odświeżeniu w tle (2026-11-24): kolejność sekcji i zwinięcie z poprzedniego widoku (bsLive)
+let bsLive=null;
 function bsSec(k,title,un,total,body){
-  const st=bsColGet(),col=k in st?!!st[k]:!un;
+  const st=bsColGet(),col=k in st?!!st[k]:bsLive&&k in bsLive.col?bsLive.col[k]:!un;
   return '<button type="button" class="bsec bsect'+(col?' col':'')+(un?' unr':'')+'" data-bsec="'+k+'" aria-expanded="'+(!col)+'"><span class="bst">'+title+'</span>'
    +(un?'<span class="cnt">'+un+'</span>':col&&total?'<span class="cnt0">'+total+'</span>':'')
    +'<svg class="bschev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>'
@@ -140,6 +142,8 @@ function tstBellHtml(){
 }
 function renderBellSheet(){
   const p=$("bellsheet"),{forme:forMe,mine}=bsWants();
+  const prevS=p.classList.contains("hide")?[]:[...p.querySelectorAll(".bsect[data-bsec]")];
+  bsLive=prevS.length?{ord:prevS.map(b=>b.dataset.bsec),col:Object.fromEntries(prevS.map(b=>[b.dataset.bsec,b.classList.contains("col")]))}:null;
   const keep=p.querySelector(".bslist"),st=keep?keep.scrollTop:0,nu=bellUnread().length+nuUnread().length+lgUnread().length+dlUnread().length+evBellUn().length+sigUnread().length+sigReactUn().length+sigCancelUn().length+(typeof grPostUnN==="function"?grPostUnN():0)+(typeof svBellN==="function"?svBellN():0),EVB=evBellItems(),EVu=new Set(evBellUn().map(evKey)),LG=lgRows(),LGu=new Set(lgUnread()),DL=dlRows(),DLu=new Set(dlUnread()),LS=lsRows(),NU=nuList(),NUu=new Set(nuUnread()),SA=stepsAvail()?stepsList():[],SL=SA.filter(x=>!x.ok),uf=(L,U,g)=>L.slice().sort((a,b)=>(U.has(g(b))?1:0)-(U.has(g(a))?1:0)),sid=x=>x;
   const SEC=[
    (SL.length?bsSec("start",'✨ Dokończ start · '+(SA.length-SL.length)+' z '+SA.length,lsGet("stepsHide")==="1"?0:SL.length,SL.length,
@@ -170,7 +174,8 @@ function renderBellSheet(){
       mine.length?mine.map(bellRowHtml).join(""):'<div class="bsempty">Nie masz aktywnych zaproszeń. <button type="button" class="lnk" data-bk="new">Idziemy na rower? ›</button></div>')
    
   ].filter(Boolean),bsUn=h=>/class="bsec bsect[^"]*\bunr\b/.test(h);
-  SEC.sort((a,b)=>bsUn(b)-bsUn(a));   // sekcje z nowościami na górze
+  const bsK=h=>(h.match(/data-bsec="([^"]+)"/)||[])[1],bsI=h=>{const i=bsLive?bsLive.ord.indexOf(bsK(h)):-1;return i<0?999:i};
+  SEC.sort((a,b)=>bsLive?bsI(a)-bsI(b):bsUn(b)-bsUn(a));   // sekcje z nowościami na górze — tylko przy otwarciu; potem kolejność stoi
   p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Powiadomienia"><div class="bsgrab"></div>'
    +'<div class="bshead"><button type="button" class="lnk" data-bk="close">Zamknij</button><b>🔔 Powiadomienia</b>'
    +(nu?'<button type="button" class="lnk" data-bk="all" style="text-align:right">✓ Przeczytane</button>':'<span style="min-width:64px"></span>')+'</div>'
@@ -217,7 +222,7 @@ $("bellsheet").addEventListener("click",async e=>{
   const stb=e.target.closest("[data-sb]");   // „Dokończ start” (nie nazywać „sb” — to połączenie z bazą)
   if(stb){const k=stb.dataset.sb;closeBell();renderBell();stepGo(k);return}
   const evb=e.target.closest("[data-evb]");if(evb){closeBell();evGo(evb.dataset.evb);return}
-  const sgz=e.target.closest("[data-sgz]");if(sgz){const id=sgz.dataset.sgz;closeBell();show(0);openWantForm(null,{sig:id});return}
+  const sgz=e.target.closest("[data-sgz]");if(sgz){const id=sgz.dataset.sgz;closeBell();sigInviteFor(id);return}
   if(e.target.closest("[data-sgx]")){closeBell();sigCancel();return}
   if(e.target.closest("[data-sge]")){closeBell();openSig("pick");return}
   if(e.target.closest("[data-sgc]")){closeBell();sigInviteKeen();return}
@@ -569,6 +574,9 @@ async function sigReact(owner){
     sigDirty=true;syncNow();
   }catch(e){say(sigErr(e))}
 }
+// komunikat sygnału → tytuł zaproszenia (≥ 6 znaków, jak tytuły w bazie) albo notatka (krótszy) — decyzja właściciela 2026-11-24 03:59
+const sigPreset=x=>{const t=x&&x.msg&&!x.msg_hidden?String(x.msg).trim():"";return t.length>=6?{title:t}:t?{note:t}:{}};
+const sigInviteFor=id=>{const x=sigs.find(s=>s.user_id===id);show(0);openWantForm(null,Object.assign({sig:id},sigPreset(x)))};
 // 🟡 „Zaproś chętnych ›” (decyzja 2026-11-24 03:07, wariant A + link): prywatne zaproszenie na dziś z zakresem godzin do osób,
 // które dały „Też mam ochotę!”; przy prywatnym sygnale w formularzu link „+ dopisz pozostałych odbiorców sygnału”
 function sigInviteKeen(){
@@ -576,7 +584,7 @@ function sigInviteKeen(){
   const keen=sigReactIds(m).filter(id=>id!==uid&&nicks[id]);
   if(!keen.length){say("Nikt jeszcze nie dał znać, że też ma ochotę.");return}
   const rest=sigPriv(m)?(sigTo[uid]||[]).filter(id=>!keen.includes(id)):[];
-  show(0);openWantForm(null,{sig:uid,pick:keen,sigRest:rest,sigChetni:keen.length,note:m.msg&&!m.msg_hidden?m.msg:""});
+  show(0);openWantForm(null,Object.assign({sig:uid,pick:keen,sigRest:rest,sigChetni:keen.length},sigPreset(m)));
 }
 async function sigHideMsg(owner){
   if(!isAdmin||!await askOk("Ukryć komunikat „"+((sigs.find(s=>s.user_id===owner)||{}).msg||"")+"”?\n\nZniknie u wszystkich. "+nickOf(owner)+" nie wpisze dziś nowego komunikatu (sygnał zostaje).","Ukryj",true))return;
@@ -674,7 +682,7 @@ $("sigsheet").addEventListener("click",e=>{
   const mm=e.target.closest("[data-sgm]");
   if(mm){const t=mm.dataset.sgm;if(!t){sg.own=!sg.own;sg.msg="";renderSig();if(sg.own){const i=$("sgown");if(i)i.focus()}}else{sg.own=false;sg.msg=sg.msg===t?"":t;renderSig()}return}
   const rr=e.target.closest("[data-sgr]");if(rr){sigReact(rr.dataset.sgr);return}
-  const z=e.target.closest("[data-sgz]");if(z){const id=z.dataset.sgz;closeSig();show(0);openWantForm(null,{sig:id});return}
+  const z=e.target.closest("[data-sgz]");if(z){const id=z.dataset.sgz;closeSig();sigInviteFor(id);return}
   const dt=e.target.closest("[data-sgd]");if(dt){sigPopI=+dt.dataset.sgd;const c=$("sgpc");if(c)c.scrollTo({left:sigPopI*c.clientWidth,behavior:"smooth"});return}
   const b=e.target.closest("[data-sg]");if(!b)return;
   const k=b.dataset.sg;
