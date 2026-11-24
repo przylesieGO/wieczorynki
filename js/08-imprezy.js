@@ -199,22 +199,33 @@ $("homesheet").addEventListener("click",async e=>{
 });
 $("homesheet").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="homeq"){e.preventDefault();homeFind()}});
 document.addEventListener("click",e=>{if(e.target.closest("[data-home]")){openHome()}});
+// filtr imprez = wspólny silnik Filtrów (fltEvOk, js/10 — etap C) + „W okolicy” + 🗑 „Do usunięcia” (admin, tylko tutaj)
 function evMatch(e){
   if(!nearOk(e))return false;
-  if(!evFlt)return true;
-  if(evFlt==="mine")return !!evMine(e)||e.created_by===uid;
-  if(evFlt==="delreq")return !!e.delete_req_at;
-  if(evFlt==="run"||evFlt==="walk")return (evDist[e.id]||[]).some(d=>d.bike===evFlt);
-  return (evDist[e.id]||[]).some(d=>d.bike===evFlt||d.bike==="any");
+  if(evFlt==="delreq"&&!e.delete_req_at)return false;
+  return typeof fltEvOk!=="function"||fltEvOk(e);
+}
+const evFltOn=()=>evFlt==="delreq"||(typeof fltActiveFor==="function"&&fltActiveFor("ev"));
+// szybkie bomble nad listą — skróty do tych samych filtrów co w oknie „Filtry imprez”
+const EV_QUICK=[["gravel","🪨 Gravel"],["road","🛣 Szosa"],["mtb","⛰ MTB"],["ebike","⚡ E-bike"],["run","🏃 Bieg"],["walk","🚶 Marsz"]];
+function evQuickOn(v){if(v==="")return !evFltOn();if(v==="delreq")return evFlt==="delreq";if(v==="mine")return flt.who==="mine";
+  return v==="run"||v==="walk"?flt.act===v:flt.act==="bike"&&flt.bike===v}
+function evQuick(v){
+  if(v===""){(FLT_KINDS.ev||[]).forEach(k=>{flt[k]=FLT_MULTI.includes(k)?[]:""});flt.date="";evFlt=""}
+  else if(v==="delreq")evFlt=evFlt==="delreq"?"":"delreq";
+  else if(v==="mine")flt.who=flt.who==="mine"?"":"mine";
+  else if(v==="run"||v==="walk"){flt.act=flt.act===v?"":v;flt.bike=""}
+  else if(evQuickOn(v)){flt.act="";flt.bike=""}else{flt.act="bike";flt.bike=v}
+  fltSave();fltRefresh();
 }
 /* 🔢 licznik imprez (decyzja właściciela 2026-11-17 05:30: wariant B, liczba zmienia się z filtrami)
    bez filtra: „24 imprezy w kalendarzu · 18 nadchodzących · 3 w okolicy (100 km)”; z filtrem: „Pasuje 12 z 24 imprez · 9 nadchodzących” */
 function evCountHtml(){
   const all=evs.length;if(!all)return "";
-  const UP=["nadchodząca","nadchodzące","nadchodzących"],flt=!!evFlt||(evNearOn&&evGeoOk);
-  const M=flt?evs.filter(evMatch):evs,up=M.filter(e=>!evPast(e)).length;
-  const P=[flt?'Pasuje <b>'+M.length+'</b> z '+all+' '+(all===1?'imprezy':'imprez'):'<b>'+all+'</b> '+plf(all,["impreza","imprezy","imprez"])+' w kalendarzu',up+' '+plf(up,UP)];
-  if(!flt&&evGeoOk&&originGet()){const k=evs.filter(e=>{if(evPast(e))return false;const d=evKm(e);return d!=null&&d<=evNearR}).length;if(k)P.push(k+' w okolicy ('+evNearR+' km)')}
+  const UP=["nadchodząca","nadchodzące","nadchodzących"],fon=evFltOn()||(evNearOn&&evGeoOk);
+  const M=fon?evs.filter(evMatch):evs,up=M.filter(e=>!evPast(e)).length;
+  const P=[fon?'Pasuje <b>'+M.length+'</b> z '+all+' '+(all===1?'imprezy':'imprez'):'<b>'+all+'</b> '+plf(all,["impreza","imprezy","imprez"])+' w kalendarzu',up+' '+plf(up,UP)];
+  if(!fon&&evGeoOk&&originGet()){const k=evs.filter(e=>{if(evPast(e))return false;const d=evKm(e);return d!=null&&d<=evNearR}).length;if(k)P.push(k+' w okolicy ('+evNearR+' km)')}
   return P.map(x=>x.replace(/ (?![^<]*>)/g,"\u00a0")).join(' · ');   // części nie łamią się w środku
 }
 function renderEvents(){
@@ -222,7 +233,11 @@ function renderEvents(){
   if(!evLoaded&&!evLoading&&tabOk(3)){evLoading=true;(session?loadEvents():loadEventsPub()).then(()=>{evLoading=false;renderEvents();try{snapSave()}catch(e){}}).catch(()=>{evLoading=false})}
   const box=$("evlist");if(!box)return;
   $("evbeta").innerHTML=betaTag("tab_events");$("evadd").classList.toggle("hide",!session);
-  $("evchips").innerHTML=(evGeoOk?'<button type="button" class="fch near'+(evNearOn?' on':'')+'" data-evnear="1">📍 W okolicy'+(evNearOn?' · '+evNearR+' km':'')+'</button>':'')+[["","Wszystkie"],["gravel","🪨 Gravel"],["road","🛣 Szosa"],["mtb","⛰ MTB"],["ebike","⚡ E-bike"],["run","🏃 Bieg"],["walk","🚶 Marsz"]].concat(session?[["mine","🙋 Moje"]]:[]).concat(isAdmin&&evs.some(x=>x.delete_req_at)?[["delreq","🗑 Do usunięcia ("+evs.filter(x=>x.delete_req_at).length+")"]]:[]).map(([v,t])=>'<button type="button" class="fch'+(evFlt===v?' on':'')+'" data-evf="'+v+'">'+t+'</button>').join("");
+  $("evchips").innerHTML=(evGeoOk?'<button type="button" class="fch near'+(evNearOn?' on':'')+'" data-evnear="1">📍 W okolicy'+(evNearOn?' · '+evNearR+' km':'')+'</button>':'')
+   +(session?'<button type="button" class="fch evfb'+(evFltOn()?' on':'')+'" data-evflt="1">'+uiIcon("sliders")+'Filtry'+(fltKeysFor("ev").length?'<span class="fcn">'+fltKeysFor("ev").length+'</span>':'')+'</button>':'')
+   +[["","Wszystkie"]].concat(EV_QUICK).concat(session?[["mine","🙋 Moje"]]:[]).concat(isAdmin&&evs.some(x=>x.delete_req_at)?[["delreq","🗑 Do usunięcia ("+evs.filter(x=>x.delete_req_at).length+")"]]:[]).map(([v,t])=>'<button type="button" class="fch'+(evQuickOn(v)?' on':'')+'" data-evf="'+v+'">'+t+'</button>').join("");
+  const fb=$("evfltbar");if(fb){const K=session?fltKeysFor("ev"):[];fb.classList.toggle("hide",!K.length);   // aktywne filtry (też ustawione w Zaproszeniach) — każdy z ✕
+    fb.innerHTML=K.length?'<div class="fltchips">'+K.map(k=>'<button type="button" class="fac" data-fx="'+k+'">'+esc(fltLabel(k))+' ✕</button>').join("")+'<button type="button" class="lnk fclr" data-fx="*">Wyczyść</button></div>':''}
   $("evnear").innerHTML=evNearHtml();
   $("evcnt").innerHTML=evOk?evCountHtml():"";
   if(!evOk){box.innerHTML='<div class="note" style="margin-top:12px">Imprezy jeszcze niedostępne (KROK 40 w bazie).</div>';$("evarch").innerHTML="";return}
@@ -233,7 +248,7 @@ function renderEvents(){
   up.filter(e=>!topSet.has(e.id)).forEach(e=>{const d=new Date(e.date_from+"T12:00"),k=d.toLocaleDateString("pl-PL",{month:"long",year:"numeric"});if(k!==m){m=k;h+='<div class="evmon">'+esc(k)+'</div>'}h+=evCard(e)});
   const noGeo=evNearOn&&evGeoOk&&originGet()?evs.filter(e=>!evPast(e)&&!evHasGeo(e)).length:0;
   box.innerHTML=(evNearOn&&evGeoOk&&!originGet()?'<div class="note" style="margin-top:12px">Ustaw swoją miejscowość albo użyj lokalizacji, żeby zobaczyć imprezy w okolicy.</div>':
-     h||'<div class="note" style="margin-top:12px">'+(evNearOn&&evGeoOk?'Brak imprez w promieniu '+evNearR+' km — zwiększ promień.':evFlt?'Brak imprez dla tego filtra.':(session?'Nie ma jeszcze imprez. Dodaj pierwszą — „＋ Dodaj imprezę”.':'Nie ma jeszcze imprez.'))+'</div>')
+     h||'<div class="note" style="margin-top:12px">'+(evNearOn&&evGeoOk?'Brak imprez w promieniu '+evNearR+' km — zwiększ promień.':evFltOn()?'Brak imprez dla tych filtrów. <button type="button" class="lnk" data-fxall="1">Wyczyść filtry</button>':(session?'Nie ma jeszcze imprez. Dodaj pierwszą — „＋ Dodaj imprezę”.':'Nie ma jeszcze imprez.'))+'</div>')
    +(noGeo?'<div class="note evnogeo">'+noGeo+' '+plf(noGeo,["impreza","imprezy","imprez"])+' bez miejsca na mapie (np. „do ogłoszenia”) — nie wiadomo, czy '+(noGeo===1?'jest':'są')+' blisko.</div>':'');
   $("evarch").innerHTML=past.length?'<div class="arch"><button type="button" class="ah" data-ev="arch">🗄 Minione imprezy<span>'+past.length+' '+(evArchOpen?'⌃':'⌄')+'</span></button>'+(evArchOpen?past.map(evCard).join(""):'')+'</div>':'';
 }
@@ -251,7 +266,8 @@ async function evLeave(e){
     evPart[e.id]=(evPart[e.id]||[]).filter(x=>x.user_id!==uid);renderEvents();say("Zrezygnowano.")}catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
 }
 $("p3").addEventListener("click",async e=>{
-  const f=e.target.closest("[data-evf]");if(f){evFlt=evFlt===f.dataset.evf?"":f.dataset.evf;renderEvents();return}
+  const f=e.target.closest("[data-evf]");if(f){evQuick(f.dataset.evf);return}
+  if(e.target.closest("[data-evflt]")){openFlt("ev");return}
   if(e.target.closest("[data-evnear]")){evNearOn=!evNearOn;try{localStorage.setItem("evNearOn",evNearOn?"1":"0")}catch(err){}
     renderEvents();if(evNearOn&&!originGet())openHome();return}
   const rr=e.target.closest("[data-evr]");if(rr){evNearR=+rr.dataset.evr;try{localStorage.setItem("evNearR",String(evNearR))}catch(err){}renderEvents();return}

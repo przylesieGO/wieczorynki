@@ -8,6 +8,7 @@
    👑 szuka też we wszystkich prywatnych zaproszeniach i grupach (dane, które baza i tak daje 👑).
    Plik wczytywany jako ostatni: przy wczytaniu tylko rejestruje obsługę zdarzeń. Bez nowych zapytań do bazy poza
    jednorazowym dociągnięciem tras / grup / serwisu przy pierwszym otwarciu okna (oszczędzanie limitów serwera). */
+let srPosts=null,srPostsP=null,srOldBusy=false,srOldMsg="";   // 📣 wpisy z tablic moich grup (wczytane raz przy otwarciu okna); 🗄 „Szukaj starszych”
 let srQ="",srTy="all",srOpt=(()=>{try{return localStorage.getItem("srOpt")==="1"}catch(e){return false}})(),srMore=false;
 const srNorm=t=>String(t||"").toLocaleLowerCase("pl").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/ł/g,"l");
 // trafienie: wszystkie słowa zapytania muszą wystąpić; punkty: początek nazwy 3, początek słowa 2, w środku 1 (-1 = brak)
@@ -18,10 +19,10 @@ function srScore(name,hay,q){
   if(n.startsWith(W[0]))return 3;
   return W.every(w=>(" "+h).includes(" "+w))?2:1;
 }
-const SR_TY=[["want","Zaproszenia","bike"],["ev","Imprezy","medal"],["ride","Wieczorynki","moon"],["user","Osoby","user"],["grp","Grupy","users"],["list","Listy","list"],["route","Trasy","map"],["sv","Serwis","wrench"],["opt","Opcje","sliders"],["done","Odbyte","archive"]];
+const SR_TY=[["want","Zaproszenia","bike"],["sig","Mam ochotę","hand"],["ev","Imprezy","medal"],["ride","Wieczorynki","moon"],["user","Osoby","user"],["grp","Grupy","users"],["post","Tablice grup","mega"],["list","Listy","list"],["route","Trasy","map"],["sv","Serwis","wrench"],["opt","Opcje","sliders"],["done","Odbyte","archive"]];
 const srTyName=k=>(SR_TY.find(x=>x[0]===k)||[,""])[1];
 // kolejność sekcji od góry; najbliżej pola (na dole) — opcje i zaproszenia, „Odbyte” na samej górze (koniec listy)
-const SR_ORDER=["done","sv","route","list","grp","user","ride","ev","want","opt"];
+const SR_ORDER=["done","sv","route","list","post","grp","user","ride","ev","sig","want","opt"];
 
 /* ---------- źródła danych (to, co aplikacja już ma w pamięci) ---------- */
 // zaproszenia bez filtrów i bez ukrywania testowych (to samo co deriveWants, tylko bez „hideTest”)
@@ -51,6 +52,18 @@ function srItems(q){
         typeof wGr==="function"&&wGr(w)&&typeof grG!=="undefined"&&grG[wGr(w)]?grG[wGr(w)].name:""].join(" ");
     if(done){if(Date.now()-d.getTime()<30*864e5)add("done",w.id,t,sub,"archive",hay+" odbyte archiwum",()=>srGoArch(w),d.getTime())}   // odbyte: najświeższe na dole (przy polu)
     else add("want",w.id,t,sub,w.visibility==="private"?"lock":"bike",hay,()=>srGoWant(w),-d.getTime())});
+  // 🗄 starsze niż 30 dni — tylko po „Szukaj starszych” (wOld, js/10; baza daje zwykłemu użytkownikowi jego jazdy, 👑 — wszystkie)
+  if(typeof wOld!=="undefined"&&wOld.length){const have=new Set(wRaw.map(x=>x.id));wOld.forEach(w=>{if(have.has(w.id))return;
+    const d=new Date(w.starts_at),J=jOld[w.id]||[],t=w.title||"Jazda — "+nickOf(w.user_id);
+    add("done",w.id,t,srWhen(d)+" · "+d.getFullYear()+(w.place?" · "+w.place:"")+(w.visibility==="private"?" · prywatne":"")+" · starsze",w.visibility==="private"?"lock":"archive",
+      [nickOf(w.user_id),J.map(nickOf).join(" "),srWantTags(w),w.place,w.place_city,w.place_area,w.note,srDay(d),"odbyte archiwum starsze"].join(" "),()=>srGoArch(w),d.getTime())})}
+  // 🙋 „Mam ochotę” — dzisiejsze sygnały (to, co widać pod 🔔)
+  if(typeof sigOn==="function"&&sigOn())sigList().forEach(x=>{const a=SIG_ACT[x.activity]||SIG_ACT.bike,me=x.user_id===uid,R=sigReactIds(x);
+    add("sig",x.user_id,(me?"Ty":nickOf(x.user_id))+" — ma ochotę "+a[2],"dziś · "+hhmm(new Date(x.created_at))+(x.msg&&!x.msg_hidden?" · „"+x.msg+"”":"")+(R.length?" · też: "+R.length:"")+(sigPriv(x)?" · prywatny":""),"hand",
+      [nickOf(x.user_id),a[1],x.msg_hidden?"":x.msg,R.map(nickOf).join(" "),"mam ochotę sygnał dziś ekipa"].join(" "),()=>srGoSig(x.user_id),-new Date(x.created_at).getTime())});
+  // 📣 tablice moich grup (najnowsze wpisy)
+  if(srPosts)srPosts.forEach(p=>{const g=typeof grG!=="undefined"&&grG[p.group_id];if(!g)return;const b=String(p.body||"").replace(/\s+/g," ").trim();
+    add("post",p.id,b.length>60?b.slice(0,59)+"…":b,g.name+" · "+nickOf(p.author)+" · "+agoTxt(p.created_at),"mega",[b,g.name,nickOf(p.author),"tablica ogłoszenie wpis"].join(" "),()=>srGoPost(p),-new Date(p.created_at).getTime())});
   // 🏁 imprezy (minione → Odbyte)
   if(typeof evs!=="undefined"&&evOk&&tabOk(3))evs.forEach(e=>{
     const past=evPast(e),d=new Date(e.date_from+"T12:00"),sub=srWhen(d)+(e.place?" · "+e.place:"")+" · impreza";
@@ -124,7 +137,10 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Wyloguj",s:"wyloguj wyjdź",p:"Ustawienia → na dole",i:"logout",hl:'[data-c="out"]',ok:S},
   {t:"Usuń konto",s:"usuń konto skasuj rodo",p:"Ustawienia → na dole",i:"trash",hl:'[data-c="del"]',ok:S},
   {t:"Zaloguj się / załóż konto",s:"zaloguj konto rejestracja",p:"Ustawienia",i:"user",hl:'[data-c="login"]',ok:!S},
-  {t:"Filtry zaproszeń",s:"filtry filtruj kiedy gdzie osoba rower tempo",p:"Zaproszenia → Filtry",i:"sliders",fn:()=>{show(0);openFlt()},ok:S},
+  {t:"Filtry zaproszeń",s:"filtry filtruj kiedy gdzie osoba rower tempo zawijanie mam ochotę sygnały",p:"Zaproszenia → Filtry (działają też w Imprezach i w „Mam ochotę” pod 🔔)",i:"sliders",fn:()=>{show(0);openFlt()},ok:S},
+  {t:"Filtry imprez",s:"filtry imprez bieg marsz gravel szosa mtb kiedy gdzie zapisany",p:"Imprezy → Filtry",i:"sliders",fn:()=>{show(3);openFlt("ev")},ok:S&&typeof tabOk==="function"&&tabOk(3)},
+  {t:"Zakres archiwum (starsze jazdy)",s:"archiwum starsze 3 miesiące rok wszystko historia stare jazdy zakres",p:"Zaproszenia → Archiwum (na dole) → 3 mies. / Rok / Wszystko",i:"archive",fn:()=>{show(0);archOpen=true;renderWants();setTimeout(()=>srPulse(document.querySelector("#wantarch .arng")||$("wantarch")),120)},ok:S},
+  {t:"Szukaj starszych",s:"szukaj starszych stare jazdy archiwum ostatnio szukane historia wyszukiwania",p:"Lupa → wpisz tekst → Szukaj starszych",i:"search",fn:()=>openSrch(),ok:S},
   {t:"Zaproś na rower",s:"zaproś nowe zaproszenie utwórz jazda",p:"Zaproszenia → ➕",i:"plus",fn:()=>{show(0);openWantForm(null)},ok:S&&!pv},
   {t:"Powiadomienia",s:"powiadomienia dzwonek",p:"Dzwonek w nagłówku",i:"alarm",fn:()=>$("bellbtn").click(),ok:S},
   {t:"Mam ochotę",s:"mam ochotę sygnał chęć jazdy dłoń machanie bez godziny bieg spacer trekking też mam ochotę zaproś chętnych zaproś ekipę ekipa na dziś super ekipa wspólna jazda konfetti pogoda twój sygnał zmień wycofaj",p:"Zielone kółko z dłonią nad ➕ (zostaje po wysłaniu — dotknij, by zmienić lub wycofać); „Ekipa na dziś” pod 🔔",i:"hand",fn:()=>{show(0);openSig(typeof sigActive==="function"&&sigActive()?"mine":"pick")},ok:S&&typeof sigOn==="function"&&sigOn()},
@@ -183,8 +199,16 @@ function srGoWant(w){const m=srReveal(w);const x=wants.find(y=>y.id===w.id);if(!
 function srGoArch(w){
   if(!session){say("Archiwum widzą zalogowani.");return}
   const m=srReveal(w,true);
+  if(Date.now()-new Date(w.starts_at).getTime()>30*864e5&&typeof oldDays!=="undefined")archDays=oldDays;   // starsza jazda: archiwum w zakresie z „Szukaj starszych”
   show(0);archOpen=true;archAll=true;renderWants();
   setTimeout(()=>{const el=document.querySelector('#wantarch .ai[data-wid="'+w.id+'"]');if(el){srPulse(el);srMark(el,srGoQ)}else{srPulse($("wantarch"));say("Tej jazdy nie widać w archiwum (30 dni).")}if(m)say(m)},80)}
+// 🙋 sygnał: otwórz 🔔, rozwiń „Ekipa na dziś” i pokaż wiersz osoby
+async function srGoSig(id){show(0);const b=$("bellbtn");if(b&&$("bellsheet").classList.contains("hide"))b.click();
+  const h=await srWait(()=>document.querySelector('#bellsheet [data-bsec="sig"]'));if(h&&h.getAttribute("aria-expanded")==="false")h.click();
+  srFocus(()=>{const r=document.querySelector(id===uid?'#bellsheet [data-sge]':'#bellsheet [data-sgr="'+id+'"],#bellsheet [data-sgz="'+id+'"]');return r&&r.closest(".sgrow")},srGoQ,$("bellsheet"))}
+// 📣 wpis z tablicy: otwórz grupę na zakładce Tablica
+function srGoPost(p){if(typeof grGo!=="function")return;grGo(p.group_id);
+  srFocus(()=>document.querySelector('#gearpanel .gpost[data-pid="'+p.id+'"]'),srGoQ)}
 function srGoEv(id){evGo(id);setTimeout(()=>srFocus(()=>{const h=document.querySelector('#p3 [data-ev="tog"][data-id="'+id+'"]');return h&&h.closest(".ev")},srGoQ),150)}
 function srGoRide(i){show(1);showRide(i);rcarScrollTo(i,true);setTimeout(()=>srFocus(()=>$("ridecard").textContent.trim()&&$("ridecard"),srGoQ),200)}
 function srGoUser(id){if(id===uid){srGoGear(()=>{gearView="main"});const b=$("gearpanel").querySelector(SR_PROF);if(b)b.click();return}
@@ -213,14 +237,35 @@ function srHl(t,q){t=String(t||"");const W=srNorm(q).split(/\s+/).filter(Boolean
   if(n.length===t.length)W.forEach(w=>{let i=n.indexOf(w);while(i>=0){for(let j=i;j<i+w.length;j++)on[j]=true;i=n.indexOf(w,i+w.length)}});
   let s="",m=false;[...t].forEach((c,i)=>{if(on[i]!==m){s+=on[i]?"<mark>":"</mark>";m=on[i]}s+=esc(c)});return s+(m?"</mark>":"")}
 function srRow(x,q){return '<button type="button" class="fusr srr" data-sk="go" data-sv="'+esc(x.k+"|"+x.id)+'"><span class="fuic g">'+uiIcon(x.ico)+'</span><span class="fun"><span class="srt">'+srHl(x.t,q)+(x.k==="user"&&typeof demoTag==="function"?demoTag(x.id):'')+'</span>'+(x.sub?'<small class="srsub">'+esc(x.sub)+'</small>':'')+'</span></button>'}
+/* 🕘 historia wyszukiwań: ostatnie 8 haseł w tym telefonie (po kliknięciu wyniku albo Enter) */
+const srHistGet=()=>{try{const a=JSON.parse(localStorage.getItem("srHist")||"[]");return Array.isArray(a)?a.filter(x=>typeof x==="string"):[]}catch(e){return []}};
+function srHistAdd(q){q=String(q||"").trim();if(q.length<2)return;const a=[q].concat(srHistGet().filter(x=>srNorm(x)!==srNorm(q))).slice(0,8);try{localStorage.setItem("srHist",JSON.stringify(a))}catch(e){}}
+function srHistHtml(){const H=srHistGet();if(!H.length)return "";
+  return '<div class="fulist srlist srhist"><div class="fulbl">Ostatnio szukane<button type="button" class="lnk srhclr" data-sk="hclr">Wyczyść</button></div>'
+   +H.slice().reverse().map(t=>'<button type="button" class="fusr" data-sk="hq" data-sv="'+esc(t)+'"><span class="fuic g">'+uiIcon("clock")+'</span><span class="fun">'+esc(t)+'</span></button>').join("")+'</div>'}
+/* 🗄 „Szukaj starszych”: zaproszenia sprzed ponad 30 dni dociągane z bazy dopiero na żądanie (zakres jak w archiwum) */
+const srOldOk=()=>!!session&&!DEMO&&typeof oldLoad==="function"&&["all","done","want"].includes(srTy);
+function srOldHtml(){
+  if(!srOldOk()||!srQ.trim())return "";
+  const R=ARCH_R.filter(x=>x[0]!==30),on=oldDays!==30;
+  return '<div class="srold"><span class="srolt">'+uiIcon("archive")+(on?'Szukam też w starszych: '+esc(archRName(oldDays).toLowerCase()):'Szukaj starszych niż 30 dni')+(isSuper(uid)?'':' <small>(Twoje jazdy)</small>')+'</span>'
+   +'<span class="fchips srolc">'+R.map(([d,t])=>'<button type="button" class="fch'+(on&&oldDays===d?' on':'')+'" data-sk="old" data-sv="'+d+'">'+t+'</button>').join("")+'</span>'
+   +(srOldBusy?'<span class="note">Wczytuję…</span>':srOldMsg?'<span class="note">'+esc(srOldMsg)+'</span>':'')+'</div>'}
+async function srOldGo(d){if(srOldBusy)return;srOldBusy=true;srOldMsg="";srDraw(true);
+  try{await oldLoad(d);srOldMsg=wOld.length?"":"Brak starszych jazd."}catch(err){srOldMsg="Nie udało się: "+(err&&err.message||"błąd")}
+  srOldBusy=false;srDraw(true)}
+// A–Z przy długiej liście nazw (osoby, grupy, listy, trasy) bez wpisanego tekstu — ten sam pasek co w Filtrach
+const SR_AZ=["user","grp","list","route"];
 function srListHtml(L){
   const q=srQ.trim(),all=srTy==="all";
-  if(!q&&all)return '<div class="note srhint">'+uiIcon("search")+' Wpisz, czego szukasz — zaproszenia, imprezy, wieczorynki, osoby, grupy, listy, trasy'+(srOpt?', opcje aplikacji':'')+'.<br>Filtry nie zawężają wyszukiwania. Bombel u góry pokaże wszystko z jednego rodzaju.</div>';
+  if(!q&&all)return srHistHtml()+'<div class="note srhint">'+uiIcon("search")+' Wpisz, czego szukasz — zaproszenia, „Mam ochotę”, imprezy, wieczorynki, osoby, grupy i ich tablice, listy, trasy'+(srOpt?', opcje aplikacji':'')+'.<br>Filtry nie zawężają wyszukiwania. Bombel u góry pokaże wszystko z jednego rodzaju.</div>';
   const S=all?L:L.filter(x=>x.k===srTy);
   if(!S.length&&!all&&L.length)return '<div class="note srhint">W „'+esc(srTyName(srTy))+'” nic dla „'+esc(q)+'”.</div><button type="button" class="b g big srall" data-sk="ty" data-sv="all">Pokaż wszystkie wyniki ('+L.length+')</button>';   // wybrany rodzaj pusty, a inne mają trafienia
-  if(!S.length)return '<div class="note srhint">Nic nie znaleziono'+(q?' dla „'+esc(q)+'”':'')+'.'+(!srOpt&&q?'<br>Szukasz ustawienia? Włącz „Szukaj też w opcjach aplikacji”.':'')+'</div>';
+  if(!S.length)return srOldHtml()+'<div class="note srhint">Nic nie znaleziono'+(q?' dla „'+esc(q)+'”':'')+'.'+(!srOpt&&q?'<br>Szukasz ustawienia? Włącz „Szukaj też w opcjach aplikacji”.':'')+'</div>';
+  if(!q&&SR_AZ.includes(srTy)&&S.length>12){const L1=x=>(x.t||"").trim().charAt(0).toLocaleUpperCase("pl"),A=S.slice().sort((a,b)=>a.t.localeCompare(b.t,"pl")),az=[...new Set(A.map(L1).filter(c=>/\p{L}/u.test(c)))].sort((a,b)=>a.localeCompare(b,"pl"));
+    return '<div class="fulwrap">'+(az.length?'<div class="faz" id="srfaz" aria-hidden="true" data-all="'+esc(az.join(""))+'"></div>':'')+'<div class="fulist srlist'+(az.length?' az':'')+'"><div class="fulbl">'+esc(srTyName(srTy))+' · '+A.length+'</div>'+A.map(x=>srRow(x,q).replace('<button type="button" class="fusr srr"','<button type="button" class="fusr srr" data-fl="'+esc(L1(x))+'"')).join("")+'</div></div>'}
   const by={};S.forEach(x=>(by[x.k]=by[x.k]||[]).push(x));
-  return '<div class="fulist srlist">'+SR_ORDER.filter(k=>by[k]).map(k=>{
+  return '<div class="fulist srlist">'+srOldHtml()+SR_ORDER.filter(k=>by[k]).map(k=>{
     // w sekcji: najlepsze trafienia na dole (przy polu); bez tekstu — od najbliższych dat / alfabetycznie
     const A=by[k].sort((a,b)=>q?(a.sc-b.sc||b.ord-a.ord||a.t.localeCompare(b.t,"pl")):(k==="want"||k==="ev"||k==="ride"||k==="done"?a.ord-b.ord:a.t.localeCompare(b.t,"pl"))),   // bez tekstu: nazwy od góry alfabetycznie (jak w Filtrach), daty — najbliższe na dole
       lim=all&&!srMore?4:0,cut=lim&&A.length>lim,V=cut?A.slice(-lim):A;
@@ -232,7 +277,7 @@ function srDraw(keepScroll){
   srLast=srItems(srQ.trim());
   $("srchips").innerHTML=srChips(srLast);
   const old=box.querySelector(".fulist"),fromBottom=keepScroll&&old?old.scrollHeight-old.clientHeight-old.scrollTop:0;
-  box.innerHTML=srListHtml(srLast);srSel=-1;
+  box.innerHTML=srListHtml(srLast);srSel=-1;if($("srfaz"))fltAzFit("srfaz");
   const u=box.querySelector(".fulist");if(u)u.scrollTop=Math.max(0,u.scrollHeight-u.clientHeight-fromBottom);
   const c=$("srclr");if(c)c.style.visibility=srQ||srTy!=="all"?"visible":"hidden";
 }
@@ -253,6 +298,9 @@ function srPreload(){
   if(typeof grOn==="function"&&grOn()&&grFind===null&&typeof grSearch==="function")grSearch("").then(re,()=>{});
   if(isKingReal()&&typeof grK!=="undefined"&&!grK&&typeof grKLoad==="function")grKLoad().then(re,()=>{});
   if(typeof svOn==="function"&&svOn()&&!svLoad().loaded)svFetch().then(re,()=>{});
+  if(!srPosts&&!srPostsP&&session&&!DEMO&&typeof grMine!=="undefined"){const G=grMine.filter(m=>m.status==="active").map(m=>m.group_id);
+    if(G.length)srPostsP=sb.from("group_posts").select("id,group_id,author,body,created_at").in("group_id",G).order("created_at",{ascending:false}).limit(300)
+      .then(r=>{srPosts=r.error?[]:(r.data||[]);srPostsP=null;re()},()=>{srPosts=[];srPostsP=null})}
 }
 function openSrch(){
   if(gearOpen){gearOpen=false;renderGear()}
@@ -270,7 +318,10 @@ $("srchsheet").addEventListener("click",e=>{
   if(k==="clear"){srQ="";srTy="all";srMore=false;const i=$("srq");if(i){i.value="";i.focus()}srDraw();return}
   if(k==="opt"){srOpt=!srOpt;try{localStorage.setItem("srOpt",srOpt?"1":"0")}catch(err){}if(!srOpt&&srTy==="opt")srTy="all";b.classList.toggle("on",srOpt);b.setAttribute("aria-checked",srOpt);srDraw();return}
   if(k==="ty"){srTy=srTy===v&&!b.classList.contains("fumore")?"all":v;srMore=false;srDraw();const c=$("srchips"),on=c&&c.querySelector(".fch.on");if(on)on.scrollIntoView({block:"nearest",inline:"center"});return}
-  if(k==="go"){const x=srLast.find(y=>y.k+"|"+y.id===v);if(!x)return;srGoQ=x.k==="opt"?"":srQ.trim();closeSrch();x.go();return}
+  if(k==="go"){const x=srLast.find(y=>y.k+"|"+y.id===v);if(!x)return;srGoQ=x.k==="opt"?"":srQ.trim();srHistAdd(srQ);closeSrch();x.go();return}
+  if(k==="hq"){srQ=v;const i=$("srq");if(i){i.value=v;i.focus()}srDraw();return}   // 🕘 hasło z historii
+  if(k==="hclr"){try{localStorage.removeItem("srHist")}catch(err){}srDraw();return}
+  if(k==="old"){srOldGo(+v);return}
 });
 $("srchsheet").addEventListener("input",e=>{if(e.target.id==="srq"){srQ=e.target.value;srDraw()}});
 /* ⌨️ klawiatura (komputer): „/” albo Ctrl/⌘+K otwiera okno; ↑ ↓ wybierają wynik, Enter otwiera (bez wyboru — najlepszy, czyli dolny), Esc zamyka */
@@ -281,7 +332,11 @@ $("srchsheet").addEventListener("keydown",e=>{
   if(e.target.id!=="srq")return;
   const R=[...document.querySelectorAll("#srstk .srr")];
   if(e.key==="ArrowUp"||e.key==="ArrowDown"){if(!R.length)return;e.preventDefault();srSel=srSel<0?R.length-1:Math.max(0,Math.min(R.length-1,srSel+(e.key==="ArrowUp"?-1:1)));srSelPaint();return}
-  if(e.key==="Enter"){e.preventDefault();const b=R[srSel>=0?srSel:R.length-1];if(b)b.click();else e.target.blur()}});
+  if(e.key==="Enter"){e.preventDefault();srHistAdd(srQ);const b=R[srSel>=0?srSel:R.length-1];if(b)b.click();else e.target.blur()}});
+// pasek liter A–Z (jak w Filtrach): dotknięcie / przesuwanie palcem przewija listę
+$("srchsheet").addEventListener("pointerdown",e=>{const z=e.target.closest("#srfaz");if(!z)return;e.preventDefault();try{z.setPointerCapture(e.pointerId)}catch(x){}z.dataset.dn="1";fltAzGo(e,z)});
+$("srchsheet").addEventListener("pointermove",e=>{const z=e.target.closest("#srfaz");if(z&&z.dataset.dn)fltAzGo(e,z)});
+$("srchsheet").addEventListener("pointerup",()=>{const z=$("srfaz");if(z){delete z.dataset.dn;[...z.children].forEach(x=>x.classList.remove("on"))}});
 document.addEventListener("keydown",e=>{
   if(!$("srchsheet").classList.contains("hide")||!$("srchbtn").offsetParent)return;
   const t=e.target,typing=t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));

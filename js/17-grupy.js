@@ -551,7 +551,7 @@ function grPostHtml(p){
     +(mod?'<button type="button" class="b small w" data-gx="ppin" data-pid="'+esc(p.id)+'">'+(p.pinned?"Odepnij":"Przypnij na górze")+'</button>':'')
     +(!me?'<button type="button" class="b small w" data-gx="prep" data-pid="'+esc(p.id)+'">Zgłoś</button>':'')
     +(me||mod?'<button type="button" class="b small bad" data-gx="pdel" data-pid="'+esc(p.id)+'">Usuń</button>':'');
-  return '<div class="gpost'+(grEditP===p.id?' gped':'')+'"><div class="gph">'+nk(p.author,"usunięte konto")+'<span class="note">'+esc(agoTxt(p.created_at))+(p.edited_at?' · edytowano':'')+'</span>'
+  return '<div class="gpost'+(grEditP===p.id?' gped':'')+'" data-pid="'+esc(p.id)+'"><div class="gph">'+nk(p.author,"usunięte konto")+'<span class="note">'+esc(agoTxt(p.created_at))+(p.edited_at?' · edytowano':'')+'</span>'
     +'<button type="button" class="plrm'+(open?' on':'')+'" data-gx="pman" data-pid="'+esc(p.id)+'" aria-expanded="'+open+'" aria-label="Opcje wpisu" title="Opcje wpisu">'+uiIcon("sliders")+'</button></div>'
     +'<div class="gpb">'+esc(p.body)+'</div>'
     +'<div class="gpf"><button type="button" class="gplk'+(mine?' on':'')+'" data-gx="plike" data-pid="'+esc(p.id)+'" aria-pressed="'+mine+'" aria-label="Polecam'+(lk.length?' — '+lk.length:'')+'">'+uiIcon("thumb")+(lk.length?'<span>'+lk.length+'</span>':'')+'</button>'

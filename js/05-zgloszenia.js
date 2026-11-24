@@ -7,8 +7,9 @@ const APP_REL=[
   {v:"0.10",d:"24.11.2026",items:[
     ["hand","<b>Mam ochotę</b> — zielone kółko z dłonią nad ➕: daj znać, że chcesz dziś jechać, biegać albo iść na spacer. Komunikat („Nogi same kręcą”), wybór, kto zobaczy, i dłoń „Też mam ochotę!”."],
     ["users","<b>Masz z kim jechać!</b> — gdy ekipa z sygnału rośnie, wszyscy w niej dostają znać (🔔 i bot); po wspólnym zaproszeniu „Jedziecie razem ›”, a kto dołączy później — „Dopisz ›” u organizatora."],
-    ["search","<b>Lupa</b> w nagłówku — jedno okno szuka zaproszeń, imprez, osób, grup, list, tras, serwisu i opcji aplikacji."],
-    ["sliders","<b>Filtry</b> od nowa: źródło (testowe, demo), widoczność, zaproszony, aktywność, kilka osób naraz, pasek liter A–Z."],
+    ["search","<b>Lupa</b> w nagłówku — jedno okno szuka zaproszeń, „Mam ochotę”, imprez, osób, grup i ich tablic, list, tras, serwisu i opcji aplikacji; pamięta ostatnie hasła, a „Szukaj starszych” sięga dalej niż 30 dni."],
+    ["sliders","<b>Filtry</b> od nowa: źródło (testowe, demo), widoczność, zaproszony, aktywność, kilka osób naraz, pasek liter A–Z — wspólne dla zaproszeń, imprez i „Mam ochotę”."],
+    ["archive","<b>Archiwum</b> dalej niż 30 dni: 3 mies. / Rok / Wszystko (Twoje jazdy)."],
     ["paste","<b>Listy osób</b> (⚙️ → Edytuj profil → Ulubieni i listy) — całą listę zaprosisz jednym dotknięciem."],
     ["users","<b>Grupy</b> z tablicą ogłoszeń i statystykami — w testach (dla testerów)."],
     ["wrench","<b>Serwis rowerowy</b>: rowery, historia napraw, paragony, przypomnienia — w testach (dla testerów)."],

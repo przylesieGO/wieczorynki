@@ -183,22 +183,56 @@ function archItem(w){
       +myRepHtml(w)
       +(repCan(w)&&!myRep(w)?'<button type="button" class="b g rbtn" data-arch="rep" data-id="'+esc(w.id)+'">✍️ Jak poszło? Uzupełnij</button>':repCan(w)?'<button type="button" class="lnk rbtn" data-arch="rep" data-id="'+esc(w.id)+'">✏️ Zmień swoją odpowiedź</button>':'')})())+'</div>';
 }
-function renderArch(all){
+/* 🗄 starsze jazdy (etap C, KROK 93, 2026-11-24): archiwum i wyszukiwanie mogą sięgać dalej niż 30 dni — dociągane z bazy
+   dopiero na żądanie (zakres w archiwum, w Filtrach albo „Szukaj starszych”). Zwykły użytkownik dostaje z bazy tylko starsze
+   zaproszenia, które sam wystawił albo na które jechał; 👑 — wszystkie. */
+const ARCH_R=[[30,"30 dni"],[90,"3 mies."],[365,"Rok"],[0,"Wszystko"]];   // 0 = bez granicy
+let archDays=30,wOld=[],jOld={},oldDays=30,oldP=null,archBusy=false;
+const archRName=d=>(ARCH_R.find(x=>x[0]===d)||[,""])[1];
+const oldCovers=d=>d===30||oldDays===0||d!==0&&d<=oldDays;
+async function oldLoad(d){
+  if(oldCovers(d))return;
+  if(oldP){await oldP.catch(()=>{});if(oldCovers(d))return}
+  oldP=(async()=>{
+    const to=new Date(Date.now()-30*864e5).toISOString();
+    let q=sb.from("wants").select(wCols||"id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min,place,place_city,place_area,bike").lt("starts_at",to).order("starts_at",{ascending:false}).limit(1000);
+    if(d)q=q.gte("starts_at",new Date(Date.now()-d*864e5).toISOString());
+    const r=await q;if(r.error)throw r.error;
+    const L=(r.data||[]).filter(x=>(isAdmin||x.user_id===uid||!modGone(x.user_id))&&!(hideTest&&x.is_test&&x.user_id!==uid)),J={};
+    for(let i=0;i<L.length;i+=100){const j=await sb.from("want_joins").select("want_id,user_id").in("want_id",L.slice(i,i+100).map(x=>x.id));(j.data||[]).forEach(x=>(J[x.want_id]=J[x.want_id]||[]).push(x.user_id))}
+    wOld=L;jOld=J;oldDays=d;
+  })();
+  try{await oldP}finally{oldP=null}
+}
+const oldIn=d=>{const t=d?Date.now()-d*864e5:0;return wOld.filter(w=>new Date(w.starts_at).getTime()>=t)};
+// starsze zaproszenia nie mają dołączeń w `joins` — na czas rysowania / liczenia dokładamy je z jOld
+const withOldJoins=f=>{if(!wOld.length)return f();const sv=joins;joins=Object.assign({},jOld,joins);try{return f()}finally{joins=sv}};
+const archList=all=>{const since=Date.now()-30*864e5;return all.filter(w=>wDone(w)&&new Date(w.starts_at).getTime()>since).concat(archDays===30?[]:oldIn(archDays))};
+const archRngHtml=()=>'<div class="fchips arng">'+ARCH_R.map(([d,t])=>'<button type="button" class="fch'+(archDays===d?' on':'')+'" data-arch="rng" data-d="'+d+'">'+t+'</button>').join("")+'</div>'
+  +(archBusy?'<div class="note anote">Wczytuję starsze jazdy…</div>':archDays!==30&&!isSuper(uid)?'<div class="note anote">Starsze niż 30 dni: tylko Twoje jazdy — wystawione przez Ciebie albo z Twoim „Jadę!”.</div>':'');
+function renderArch(all){withOldJoins(()=>renderArch0(all))}
+function renderArch0(all){
   const box=$("wantarch");if(!box)return;
   if(!session){box.innerHTML="";return}
-  const since=Date.now()-30*864e5,fa=!!flt.arch&&fltActive(),L0=all.filter(w=>wDone(w)&&new Date(w.starts_at).getTime()>since),L=(fa?L0.filter(fltOk):L0).sort((a,b)=>new Date(b.starts_at)-new Date(a.starts_at));   // przełącznik „Filtruj też archiwum” (okno Filtry)
-  if(!L0.length){box.innerHTML="";return}
-  if(!L.length){box.innerHTML='<div class="arch"><div class="ah" style="cursor:default">🗄 Archiwum · 30 dni · filtry<span>0 / '+L0.length+'</span></div><div class="note anote">Żadna zakończona jazda nie pasuje do filtrów.</div></div>';return}
+  const fa=!!flt.arch&&fltActive(),L0=archList(all),L=(fa?L0.filter(fltOk):L0).sort((a,b)=>new Date(b.starts_at)-new Date(a.starts_at));   // przełącznik „Filtruj też archiwum” (okno Filtry)
+  if(!L0.length&&archDays===30&&!archBusy){box.innerHTML="";return}
+  if(!L.length){box.innerHTML='<div class="arch"><div class="ah" style="cursor:default">🗄 Archiwum · '+archRName(archDays)+(fa?' · filtry':'')+'<span>0'+(fa?' / '+L0.length:'')+'</span></div>'+archRngHtml()+'<div class="note anote">'+(archBusy?'':fa?'Żadna zakończona jazda nie pasuje do filtrów.':'Brak zakończonych jazd w tym okresie.')+'</div></div>';return}
   const S=archSum(L),show=archAll?L:L.slice(0,3);
-  box.innerHTML='<div class="arch"><button type="button" class="ah" data-arch="t">🗄 Archiwum · 30 dni'+(fa?' · filtry':'')+(repPending().length?' <em class="rpend">✍️ '+repPending().length+'</em>':'')+'<span>'+(fa?L.length+' / '+L0.length:L.length)+' '+(archOpen?'⌃':'⌄')+'</span></button>'
-   +(archOpen?'<div class="asum">📊 '+(fa?'Z filtrami: ':'Ostatnie 30 dni: ')+S.n+' '+plf(S.n,["jazda","jazdy","jazd"])+' · '+S.p+' '+plf(S.p,["osoba","osoby","osób"])+(S.km?' · ok. '+S.km+' km'+(S.real?(S.real===S.n?'':' (część z planu)'):' (plan)'):'')+(S.kmh!=null?' · ⚡ śr. '+fmt1(S.kmh)+' km/h':'')+'</div>'
+  box.innerHTML='<div class="arch"><button type="button" class="ah" data-arch="t">🗄 Archiwum · '+archRName(archDays)+(fa?' · filtry':'')+(repPending().length?' <em class="rpend">✍️ '+repPending().length+'</em>':'')+'<span>'+(fa?L.length+' / '+L0.length:L.length)+' '+(archOpen?'⌃':'⌄')+'</span></button>'
+   +(archOpen?archRngHtml()+'<div class="asum">📊 '+(fa?'Z filtrami: ':archDays===30?'Ostatnie 30 dni: ':archDays?'Archiwum ('+archRName(archDays)+'): ':'Całe archiwum: ')+S.n+' '+plf(S.n,["jazda","jazdy","jazd"])+' · '+S.p+' '+plf(S.p,["osoba","osoby","osób"])+(S.km?' · ok. '+S.km+' km'+(S.real?(S.real===S.n?'':' (część z planu)'):' (plan)'):'')+(S.kmh!=null?' · ⚡ śr. '+fmt1(S.kmh)+' km/h':'')+'</div>'
      +show.map(archItem).join("")
      +(L.length>3?'<button type="button" class="lnk amore" data-arch="all">'+(archAll?'Zwiń ⌃':'Pokaż wszystkie ('+L.length+') ›')+'</button>':'')
      +'<div class="note anote">„Pojechało” = autor i osoby z „Jadę!”; „Potwierdziło” i km — z odpowiedzi „🚴 Jak poszło?”.</div>':'')+'</div>';
 }
 $("wantarch").addEventListener("click",e=>{const b=e.target.closest("[data-arch]");if(!b)return;
   if(b.dataset.arch==="rep"){openReport(b.dataset.id);return}
+  if(b.dataset.arch==="rng"){archRange(+b.dataset.d);return}
   if(b.dataset.arch==="t")archOpen=!archOpen;else archAll=!archAll;renderArch(wants)});
+// zmiana zakresu archiwum (z archiwum i z okna Filtry) — starsze dociągamy z bazy tylko raz
+async function archRange(d){
+  if(!oldCovers(d)){archBusy=true;renderWants()}
+  try{await oldLoad(d);archDays=d}catch(err){say("Nie udało się wczytać starszych jazd: "+(err&&err.message||"błąd"))}
+  archBusy=false;archOpen=true;if($("fltok"))fltDraw();renderWants()}
 /* ---------- 🔍 filtry zaproszeń (decyzje właściciela 2026-11-15 18:58: jak w makiecie filtry.png + z karty osoby) ---------- */
 // zapamiętane w telefonie; działają na listę zaproszeń (karty dni i Twoje zaproszenia), nie na 🔔
 const fltEmpty=()=>({who:"",vis:"",act:"",grp:"",when:"",date:"",where:"",bike:"",pace:"",user:[],demo:"",to:[],by:[],arch:""});   // vis: Widoczność, act: Aktywność, grp: 👥 grupa (KROK 71); user / to / by: tablice id osób
@@ -207,7 +241,7 @@ let flt=(()=>{let f;try{f=Object.assign(fltEmpty(),JSON.parse(localStorage.getIt
   if(f.who==="priv"||f.who==="open"){f.vis=f.who;f.who=""}   // „Czyje” rozdzielone na Relację i Widoczność — stary zapis przenosimy
   FLT_MULTI.forEach(k=>{if(!Array.isArray(f[k]))f[k]=f[k]?[f[k]]:[]});   // stary zapis: jedna osoba jako tekst
   f.demo="";   // konta demo (i testowe zaproszenia, js/04) są zawsze pokazane po wejściu do aplikacji; ukrycie działa tylko do zamknięcia
-  return f})(),fltQ="",fltSub="",fltScroll=0;
+  return f})(),fltQ="",fltSub="",fltScroll=0,fltScope="";   // fltScope: "" = zaproszenia, "ev" = imprezy (okno Filtrów otwarte z zakładki Imprezy)
 function fltSave(){try{localStorage.setItem("flt",JSON.stringify(flt))}catch(e){}}
 // 🧹 filtry nie przechodzą między wejściami do aplikacji (jak w sklepach online): każde nowe wczytanie i powrót po 15+ min przerwy zaczyna bez filtrów
 const FLT_AWAY=15*6e4;
@@ -230,6 +264,62 @@ const wUpcoming=w=>!wDone(w);
 const lc=t=>(t||"").toLocaleLowerCase("pl");
 // najbliższy weekend; w niedzielę: dziś + następny weekend
 function fltWknd(){const d=new Date().getDay();return d===6?[0,1]:d===0?[0,6,7]:[6-d,7-d]}
+/* 🧩 wspólny silnik filtrów (etap C, 2026-11-24): JEDEN stan `flt` dla zaproszeń, imprez (js/08) i „Mam ochotę” (🔔, js/11).
+   Wspólne wymiary: Aktywność, Rodzaj roweru, Kiedy, Gdzie, Relacja, Osoba. Każdy rodzaj sprawdza tylko wymiary, które ma —
+   pozostałe go nie zawężają (np. tempo nie ukrywa imprez). FLT_KINDS = które wymiary liczą się przy danym rodzaju. */
+const FLT_KINDS={ev:["act","bike","when","where","who","user"],sig:["act","when","vis","who","user","demo"]};
+const fltKeysFor=k=>FLT_KINDS[k]?fltKeys().filter(x=>FLT_KINDS[k].includes(x)):fltKeys();
+const fltActiveFor=k=>fltKeysFor(k).length>0;
+// Kiedy: d0…d1 = zakres dni od dziś (zaproszenie: jeden dzień, impreza wielodniowa: od–do)
+function fltWhenOk(d0,d1){const w=flt.when,in1=d=>d0<=d&&d<=d1;
+  if(!w)return true;
+  if(w==="today")return in1(0);
+  if(w==="tom")return in1(1);
+  if(w==="wknd")return fltWknd().some(in1);
+  if(w==="7d")return d1>=0&&d0<=6;
+  if(w==="date")return !flt.date||in1(dayDiff(new Date(flt.date+"T12:00")));
+  return true}
+// Gdzie: miasto / dzielnica / miejsce / wpisany tekst; bez miasta w danych (imprezy) — szukamy w nazwie miejsca
+function fltWhereOk(city,area,place){if(!flt.where)return true;
+  const t=flt.where.slice(0,1),v=flt.where.slice(2),loose=!city&&!area,has=x=>lc(place).includes(lc(x));
+  if(t==="c")return loose?has(v):city===v;
+  if(t==="a")return loose?has(v.split("|").pop()):(city+"|"+area)===v;
+  if(t==="p")return lc(place)===lc(v)||loose&&has(v);
+  if(t==="q")return [place,city,area].some(x=>lc(x).includes(lc(v)));
+  return true}
+// 🏁 impreza: aktywność i rower z dystansów, kiedy = od–do, relacja = zapisany / autor / zaproszony
+const FLT_EVACT={gravel:"bike",road:"bike",mtb:"bike",ebike:"bike",any:"bike",run:"run",walk:"walk"};
+function fltEvOk(e){
+  if(!fltActiveFor("ev"))return true;
+  const D=evDist[e.id]||[],P=(evPart[e.id]||[]).map(x=>x.user_id),me=P.includes(uid),own=e.created_by===uid;
+  if(flt.act&&!D.some(d=>FLT_EVACT[d.bike]===flt.act))return false;
+  if(fltBikeOn()&&flt.bike&&!D.some(d=>d.bike==="any"||flt.bike!=="all"&&d.bike===flt.bike))return false;
+  if(!fltWhenOk(evDays(e),Math.round((new Date(evEnd(e)+"T12:00")-new Date(todayIso()+"T12:00"))/864e5)))return false;
+  if(!fltWhereOk(null,null,e.place))return false;
+  if(flt.who==="mine"&&!me&&!own)return false;
+  if(flt.who==="going"&&!me)return false;
+  if(flt.who==="part"&&!me&&!own)return false;
+  if(flt.who==="inv"&&!evInv.some(x=>x.event_id===e.id&&x.user_id===uid))return false;
+  if(flt.who==="fav"&&!(P.some(isFav)||isFav(e.created_by)))return false;
+  if(flt.user.length&&!flt.user.some(u=>P.includes(u)||e.created_by===u))return false;
+  return true}
+// 🙋 „Mam ochotę”: zawsze dziś; relacja: mój / dałem dłoń / prywatny do mnie; osoba: autor albo ktoś z dłonią
+function fltSigOk(x){
+  if(!session||!fltActiveFor("sig"))return true;
+  const R=sigReacts[x.user_id]||[],ppl=[x.user_id].concat(R);
+  if(flt.act&&(x.activity||"bike")!==flt.act)return false;
+  if(!fltWhenOk(0,0))return false;
+  if(flt.vis==="priv"&&!sigPriv(x)||flt.vis==="open"&&sigPriv(x))return false;
+  if(flt.who==="mine"&&x.user_id!==uid)return false;
+  if((flt.who==="going"||flt.who==="part")&&x.user_id!==uid&&!R.includes(uid))return false;
+  if(flt.who==="inv"&&!(sigPriv(x)&&(sigTo[x.user_id]||[]).includes(uid)))return false;
+  if(flt.who==="fav"&&!ppl.some(isFav))return false;
+  if(flt.user.length&&!flt.user.some(u=>ppl.includes(u)))return false;
+  if(flt.demo==="hide"&&typeof demoIds!=="undefined"&&demoIds.has(x.user_id))return false;
+  return true}
+// „Wyczyść filtry” z 🔔 i z zakładki Imprezy
+document.addEventListener("click",e=>{if(!e.target.closest("[data-fxall]"))return;flt=fltEmpty();fltSave();fltRefresh();
+  if($("bellsheet")&&!$("bellsheet").classList.contains("hide"))renderBellSheet()});
 function fltOk(w){
   const j=joins[w.id]||[],dd=dayDiff(new Date(w.starts_at));
   if(flt.who==="mine"&&w.user_id!==uid)return false;
@@ -241,16 +331,8 @@ function fltOk(w){
   if(flt.vis==="open"&&w.visibility==="private")return false;
   if(flt.act&&(w.activity||"bike")!==flt.act)return false;
   if(flt.grp&&wGr(w)!==flt.grp)return false;
-  if(flt.when==="today"&&dd!==0)return false;
-  if(flt.when==="tom"&&dd!==1)return false;
-  if(flt.when==="wknd"&&!fltWknd().includes(dd))return false;
-  if(flt.when==="7d"&&(dd<0||dd>6))return false;
-  if(flt.when==="date"&&flt.date&&localIso(new Date(w.starts_at)).slice(0,10)!==flt.date)return false;
-  if(flt.where){const [t,v]=[flt.where.slice(0,1),flt.where.slice(2)];
-    if(t==="c"&&w.place_city!==v)return false;
-    if(t==="a"&&(w.place_city+"|"+w.place_area)!==v)return false;
-    if(t==="p"&&lc(w.place)!==lc(v))return false;
-    if(t==="q"&&![w.place,w.place_city,w.place_area].some(x=>lc(x).includes(lc(v))))return false}
+  if(!fltWhenOk(dd,dd))return false;
+  if(!fltWhereOk(w.place_city,w.place_area,w.place))return false;
   if(fltBikeOn()){if(flt.bike==="all"&&w.bike)return false;
     if(flt.bike&&flt.bike!=="all"&&w.bike&&w.bike!==flt.bike)return false}
   if(flt.pace&&w.pace!==flt.pace)return false;
@@ -302,9 +384,9 @@ function renderWants(){try{renderSteps()}catch(e){}
    +'<div class="note fcnt">'+shown+' z '+up.length+' zaproszeń</div>';
   if(!shown){const l=$("wantlist");if(l)l.innerHTML='<div class="note" style="margin-top:12px">Brak zaproszeń dla tych filtrów. <button type="button" class="lnk" data-fx="*">Wyczyść filtry</button></div>'}
 }
-document.addEventListener("click",e=>{const x=e.target.closest("[data-fx]");if(!x||!x.closest("#fltbar,#wantlist"))return;
+document.addEventListener("click",e=>{const x=e.target.closest("[data-fx]");if(!x||!x.closest("#fltbar,#wantlist,#evfltbar"))return;
   if(x.dataset.fx==="*")flt=fltEmpty();else{flt[x.dataset.fx]=FLT_MULTI.includes(x.dataset.fx)?[]:"";if(x.dataset.fx==="when")flt.date=""}
-  fltSave();renderWants()});
+  fltSave();fltRefresh()});
 $("fltbtn").addEventListener("click",()=>openFlt());
 $("wstat").addEventListener("click",e=>{const b=e.target.closest("button[data-ws]");if(!b)return;   // licznik: pierwsza liczba = wszystkie, druga = tylko moje i te, na które jadę
   flt.who=b.dataset.ws==="part"&&flt.who!=="part"?"part":"";if(flt.who!=="part"&&b.dataset.ws==="all")flt.who="";fltSave();renderWants()});
@@ -318,6 +400,7 @@ function fltHl(t,q){if(!q)return esc(t);const i=lc(t).indexOf(q);return i<0?esc(
 function fltScore(t,q,base,on){if(q){const l=lc(t);if(l.startsWith(q))base=20;else if(l.split(/[\s·|]+/).some(x=>x.startsWith(q)))base=15;else if(l.includes(q))base=10;else return -1}return base+(on?(q?3:30):0)}
 // liczba nadchodzących zaproszeń przy osobie — tyle, ile pokaże filtr (user: autor albo jadący; to: prywatne, na liście zaproszonych albo w grupie; by: prywatne wystawione przez osobę)
 function fltCnt(k){const c={};
+  if(fltScope==="ev"){evs.filter(e=>!evPast(e)).forEach(e=>new Set([e.created_by].concat((evPart[e.id]||[]).map(x=>x.user_id))).forEach(u=>{if(u)c[u]=(c[u]||0)+1}));return c}   // 🏁 imprezy: autor albo zapisany
   wants.filter(wUpcoming).forEach(w=>{
     if(k==="by"){if(w.visibility==="private")c[w.user_id]=(c[w.user_id]||0)+1;return}
     const s=new Set(k==="to"?(w.visibility==="private"?invIds(w):[]):[w.user_id].concat(joins[w.id]||[]));
@@ -327,11 +410,12 @@ function fltCnt(k){const c={};
 function fltItems(k,q){
   const out=[];
   if(k==="where"){
-    const up=wants.filter(wUpcoming),seen=new Set();
+    const up=fltScope==="ev"?[]:wants.filter(wUpcoming),seen=new Set();
     const add=(v,t,ty,b)=>{if(seen.has(v))return;seen.add(v);const sc=fltScore(t,q,b,flt.where===v);if(sc>=0)out.push({v,t,ty,sc})};
+    if(fltScope==="ev")evs.filter(e=>!evPast(e)&&e.place).forEach(e=>add("p:"+e.place,e.place,"impreza",0));   // 🏁 miejsca imprez
     up.forEach(w=>{if(w.place_city)add("c:"+w.place_city,w.place_city,"miasto",2)});places.forEach(x=>{if(x.city)add("c:"+x.city,x.city,"miasto",2)});
     up.forEach(w=>{if(w.place_city&&w.place_area)add("a:"+w.place_city+"|"+w.place_area,w.place_city+" · "+w.place_area,"dzielnica",1)});
-    up.forEach(w=>{if(w.place)add("p:"+w.place,w.place,"miejsce",0)});places.forEach(x=>add("p:"+x.name,x.name,"miejsce",0));
+    up.forEach(w=>{if(w.place)add("p:"+w.place,w.place,"miejsce",0)});if(fltScope!=="ev")places.forEach(x=>add("p:"+x.name,x.name,"miejsce",0));
     if(flt.where&&!seen.has(flt.where)&&flt.where.slice(0,2)!=="q:")out.push({v:flt.where,t:fltLabel("where"),ty:"",sc:33});
     if(q)out.push({v:"q:"+fltQ.trim(),t:"Szukaj „"+fltQ.trim()+"”",ty:"",sc:100,ico:"search",free:1});
     else if(flt.where&&flt.where.slice(0,2)==="q:")out.push({v:flt.where,t:fltLabel("where"),ty:"",sc:33,ico:"search",free:1});
@@ -352,7 +436,7 @@ function fltItems(k,q){
 function fltStackHtml(){
   const k=fltSub,q=lc(fltQ.trim()),mu=FLT_MULTI.includes(k);
   const r=fltItems(k,q).sort((a,b)=>a.sc-b.sc||a.t.localeCompare(b.t,"pl"));
-  if(!r.length)return '<div class="note">'+(q?'Nic nie znaleziono.':k==="where"?'Brak miejsc w zaproszeniach.':k==="grp"?'Brak grup.':'Brak osób.')+'</div>';
+  if(!r.length)return '<div class="note">'+(q?'Nic nie znaleziono.':k==="where"?'Brak miejsc w '+(fltScope==="ev"?'imprezach':'zaproszeniach')+'.':k==="grp"?'Brak grup.':'Brak osób.')+'</div>';
   const sel=mu&&flt[k].length?'<div class="fltchips fselr">'+flt[k].map(u=>'<button type="button" class="fac" data-fk="'+k+'" data-fv="'+esc(u)+'">'+esc(nicks[u]||"osoba")+' ✕</button>').join("")+'</div>':'';
   const L1=x=>(x.t||"").trim().charAt(0).toLocaleUpperCase("pl"),az=!q&&r.length>12?[...new Set(r.map(L1).filter(c=>/\p{L}/u.test(c)))].sort((a,b)=>a.localeCompare(b,"pl")):[];   // pasek A–Z: przy długiej liście (osoby, miejsca, grupy) i bez wpisanego tekstu
   return sel
@@ -361,13 +445,13 @@ function fltStackHtml(){
    +'</div>';
 }
 // pasek liter nad listą: gdy wszystkie się nie mieszczą, łączy je w przedziały (A–C, D–G…)
-function fltAzFit(){const z=$("faz");if(!z)return;const A=[...z.dataset.all];
+function fltAzFit(id){const z=$(id||"faz");if(!z)return;const A=[...z.dataset.all];
   for(let g=1;g<=A.length;g++){const G=[];for(let i=0;i<A.length;i+=g)G.push(A.slice(i,i+g));
     z.innerHTML=G.map(x=>'<span data-l="'+esc(x.join(""))+'">'+esc(x.length>1?x[0]+"–"+x[x.length-1]:x[0])+'</span>').join("");
     if(z.scrollWidth<=z.clientWidth+1)break}}
 window.addEventListener("resize",()=>{if(fltSub)fltAzFit()});   // obrót telefonu: przelicz przedziały liter
 // dotknięcie albo przesuwanie palcem po pasku przewija listę do pierwszej pozycji na daną literę (przedział)
-function fltAzGo(e){const z=$("faz"),l=document.querySelector("#fltsheet .fulist");if(!z||!l)return;
+function fltAzGo(e,z0){const z=z0||$("faz"),l=z&&z.parentNode.querySelector(".fulist");if(!z||!l)return;
   const sp=[...z.children],r=z.getBoundingClientRect(),i=Math.max(0,Math.min(sp.length-1,Math.floor((e.clientX-r.left)/r.width*sp.length)));
   sp.forEach((x,n)=>x.classList.toggle("on",n===i));
   const t=[...l.querySelectorAll(".fusr")].find(b=>sp[i].dataset.l.includes(b.dataset.fl));
@@ -381,9 +465,9 @@ const fltGrpChip=()=>'<button type="button" class="fch'+(flt.grp?' on':'')+'" da
 const fltHasDemo=()=>(typeof demoIds!=="undefined"&&demoIds.size)||!!flt.demo;
 const fltHasAct=()=>!!flt.act||wants.some(w=>w.activity&&w.activity!=="bike");   // sekcja „Aktywność” tylko gdy w zaproszeniach są inne aktywności niż rower
 function fltSecs(){
-  return {src:fltChip("arch","1","Filtruj też archiwum","clock")+(testOk?fltTg("ht","Zaproszenia testowe",hideTest):'')+(fltHasDemo()?fltTg("tgdemo","Konta demo",flt.demo==="hide"):''),
+  return {src:fltChip("arch","1","Filtruj też archiwum","clock")+(flt.arch?ARCH_R.map(([d,t])=>'<button type="button" class="fch'+(archDays===d?' on':'')+'" data-fk="arng" data-fv="'+d+'">'+t+'</button>').join(""):'')+(testOk?fltTg("ht","Zaproszenia testowe",hideTest):'')+(fltHasDemo()?fltTg("tgdemo","Konta demo",flt.demo==="hide"):''),
     vis:FLT_VIS.map(([v,t])=>fltChip("vis",v,t,FLT_ICO[v])).join("")+(fltHasGrp()?fltGrpChip():""),
-    act:FLT_ACT.map(([v,t])=>fltChip("act",v,t,typeof SIG_ACT!=="undefined"&&SIG_ACT[v]?SIG_ACT[v][0]:FLT_ICO[v])).join(""),
+    act:FLT_ACT.filter(([v])=>fltScope!=="ev"||Object.values(FLT_EVACT).includes(v)).map(([v,t])=>fltChip("act",v,t,typeof SIG_ACT!=="undefined"&&SIG_ACT[v]?SIG_ACT[v][0]:FLT_ICO[v])).join(""),
     when:FLT_WHEN.filter(x=>x[0]!=="7d").map(([v,t])=>fltChip("when",v,t)).join("")+'<label class="fch fdate'+(flt.when==="date"?' on':'')+'">'+uiIcon("cal")+'<input type="date" id="fltdate" value="'+esc(flt.when==="date"?flt.date:"")+'"></label>',
     who:FLT_WHO.filter(x=>x[0]!=="part").map(([v,t])=>fltChip("who",v,t,FLT_ICO[v])).join(""),
     bike:FLT_BIKE().map(([v,t])=>fltChip("bike",v,t)).join(""),
@@ -397,15 +481,19 @@ function fltDraw(){
   const S=fltSecs();Object.keys(S).forEach(k=>{const el=$("flt_"+k);if(el)el.innerHTML=S[k]});
   ["where","user","to","by"].forEach(k=>{const el=$("fsum_"+k);if(!el)return;el.textContent=fltOn(k)?(k==="to"||k==="by"?fltNm(flt[k]):fltLabel(k)):(k==="where"?"Wszędzie":k==="to"||k==="by"?"Wybierz":"Wszyscy");el.classList.toggle("fnone",!fltOn(k))});
   const bb=$("fltbikebox");if(bb)bb.classList.toggle("hide",!fltBikeOn());
-  const n=wants.filter(wUpcoming).filter(fltOk).length,na=flt.arch&&fltActive()?wants.filter(w=>wDone(w)&&Date.now()-new Date(w.starts_at).getTime()<30*864e5).filter(fltOk).length:0;$("fltok").textContent=fltActive()?"Pokaż "+n+" "+(n===1?"zaproszenie":n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"zaproszenia":"zaproszeń")+(flt.arch?" + "+na+" w archiwum":""):"Gotowe";
+  if(fltScope==="ev"){const ne=evs.filter(e=>!evPast(e)&&evMatch(e)).length;$("fltok").textContent=fltActiveFor("ev")?"Pokaż "+ne+" "+plf(ne,["imprezę","imprezy","imprez"]):"Gotowe";return}
+  const n=wants.filter(wUpcoming).filter(fltOk).length,na=flt.arch&&fltActive()?withOldJoins(()=>archList(wants).filter(fltOk).length):0;$("fltok").textContent=fltActive()?"Pokaż "+n+" "+(n===1?"zaproszenie":n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"zaproszenia":"zaproszeń")+(flt.arch?" + "+na+" w archiwum":""):"Gotowe";
 }
-function fltRefresh(){fltDraw();renderWants()}
+function fltRefresh(){if($("fltok"))fltDraw();renderWants();if(typeof renderEvents==="function"&&curTab===3)renderEvents()}
 // okno: widok główny (bomble w rzędach przewijanych w bok) albo podekran „Gdzie” / „Osoba” z polem wpisywania na dole (wyniki rosną w górę)
 function fltMainHtml(){
   const sec=(k,t)=>'<div class="fsec"><div class="bsgrp">'+t+'</div><div class="fchips" id="flt_'+k+'"></div></div>';
   const go=(k,ico,t)=>'<div class="fsec"><button type="button" class="secbar fgo" data-fk="sub" data-fv="'+k+'"><span class="bst">'+uiIcon(ico)+'<span>'+t+'</span></span><span class="wsplsel" id="fsum_'+k+'"></span><svg class="bschev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>';
+  if(fltScope==="ev")return '<div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="close">Zamknij</button><b>Filtry imprez</b><button type="button" class="lnk" data-fk="clear" style="color:var(--bad);text-align:right">Wyczyść</button></div>'
+   +'<div class="bslist" id="fltlist"><div class="note fscope">Te same filtry działają w Zaproszeniach i w „Mam ochotę” pod 🔔.</div>'+sec("act","Aktywność")+'<div id="fltbikebox"'+(fltBikeOn()?'':' class="hide"')+'>'+sec("bike","Rodzaj roweru")+'</div>'+sec("when","Kiedy")+sec("who","Relacja")
+   +go("where","pin","Gdzie")+go("user","user","Osoba")+'</div><button type="button" class="b big" id="fltok" data-fk="close">Gotowe</button>';
   return '<div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="close">Zamknij</button><b>Filtry</b><button type="button" class="lnk" data-fk="clear" style="color:var(--bad);text-align:right">Wyczyść</button></div>'
-   +'<div class="bslist" id="fltlist">'+sec("src","Źródło i archiwum")+sec("vis","Widoczność")+(fltHasAct()?sec("act","Aktywność"):'')+sec("when","Kiedy")+sec("who","Relacja")+(bikeOk?'<div id="fltbikebox"'+(fltBikeOn()?'':' class="hide"')+'>'+sec("bike","Rodzaj roweru")+'</div>':'')+(paceOk?sec("pace","Tempo"):'')
+   +'<div class="bslist" id="fltlist"><div class="note fscope">Działają też w Imprezach i w „Mam ochotę” pod 🔔 — tam, gdzie mają sens.</div>'+sec("src","Źródło i archiwum")+sec("vis","Widoczność")+(fltHasAct()?sec("act","Aktywność"):'')+sec("when","Kiedy")+sec("who","Relacja")+(bikeOk?'<div id="fltbikebox"'+(fltBikeOn()?'':' class="hide"')+'>'+sec("bike","Rodzaj roweru")+'</div>':'')+(paceOk?sec("pace","Tempo"):'')
    +(placeOk?go("where","pin","Gdzie"):'')+go("user","user","Osoba")+(fltAdm()?'<div class="bsgrp">👑 Administrator</div>'+go("to","mail","Zaproszeni: osoba")+go("by","lock","Prywatne od osoby"):'')+'</div>'
    +'<button type="button" class="b big" id="fltok" data-fk="close">Gotowe</button>';
 }
@@ -419,7 +507,7 @@ function renderFlt(){
   const p=$("fltsheet");p.innerHTML='<div class="bsbox fltbox" role="dialog" aria-modal="true" aria-label="Filtry">'+(fltSub?fltSubHtml():fltMainHtml())+'</div>';
   fltDraw();const l=$("fltlist");if(l&&fltScroll){l.scrollTop=fltScroll;fltScroll=0}
 }
-function openFlt(){$("fltsheet").classList.remove("hide");fltSub="";fltQ="";fltScroll=0;renderFlt();
+function openFlt(scope){fltScope=scope||"";$("fltsheet").classList.remove("hide");fltSub="";fltQ="";fltScroll=0;renderFlt();
   // 👑 „Zaproszeni” musi znać skład wszystkich grup (także tych, do których 👑 nie należy) — jedno wczytanie na sesję
   if(fltAdm()&&typeof grK!=="undefined"&&!grK&&typeof grKLoad==="function")grKLoad().then(()=>{if(!$("fltsheet").classList.contains("hide"))fltDraw()}).catch(()=>{})}
 function closeFlt(){const p=$("fltsheet");p.classList.add("hide");p.innerHTML=""}
@@ -432,6 +520,7 @@ $("fltsheet").addEventListener("click",e=>{
   if(k==="sub"){const l=$("fltlist");fltScroll=l?l.scrollTop:0;fltSub=b.dataset.fv;fltQ="";renderFlt();return}
   if(k==="back"){fltSub="";fltQ="";renderFlt();return}
   if(k==="clearsub"){const u0=document.querySelector("#fltsheet .fulist");fltStkY=u0?u0.scrollHeight-u0.clientHeight-u0.scrollTop:null;flt[fltSub]=FLT_MULTI.includes(fltSub)?[]:"";fltSave();fltRefresh();return}   // czyści wybór tylko w tym podekranie
+  if(k==="arng"){archRange(+b.dataset.fv);return}   // zakres archiwum (30 dni / 3 mies. / rok / wszystko)
   if(k==="tgdemo"){flt.demo=flt.demo==="hide"?"":"hide";fltSave();fltRefresh();return}
   if(k==="ht"){hideTest=!hideTest;try{localStorage.setItem("hideTest",hideTest?"1":"0")}catch(err){}deriveWants();fltRefresh();syncNow();return}   // to samo ustawienie co ⚙️ → Testy
   const v=b.dataset.fv;

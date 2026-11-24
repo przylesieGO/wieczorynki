@@ -793,11 +793,13 @@ function sigRow(x,un){
 }
 function sigBellHtml(){
   if(!sigOn())return "";
-  const L=sigList(),C=sigCancelUn(),EK=sigEkipaUn(),LT=sigLateUn();if(!L.length&&!C.length&&!LT.length)return "";
+  const L0=sigList(),C=sigCancelUn(),EK=sigEkipaUn(),LT=sigLateUn();if(!L0.length&&!C.length&&!LT.length)return "";
+  const L=typeof fltSigOk==="function"?L0.filter(x=>x.user_id===uid||fltSigOk(x)):L0,nf=L0.length-L.length;   // 🔍 wspólne Filtry (etap C): mój sygnał zawsze widać
+  const fnote=nf?'<div class="bsempty sgfnote">'+uiIcon("sliders")+' Filtry ukrywają '+nf+' '+plf(nf,["sygnał","sygnały","sygnałów"])+' ('+esc(fltKeysFor("sig").map(fltLabel).join(", "))+') · <button type="button" class="lnk" data-fxall="1">Pokaż wszystkie</button></div>':'';
   const U=new Set(sigUnread()),RU=sigReactUn().length;
   const SS=sigSuperSigs(),sup=sigSuperOn(SS),sorted=L.slice().sort((a,b)=>(U.has(b)?1:0)-(U.has(a)?1:0)),rowf=x=>sigRow(x,U.has(x)||(x.user_id===uid&&RU>0));
   const rowsAll=(sup?sigSuperHtml(SS,sorted.filter(x=>SS.includes(x)).map(rowf).join(""))+sorted.filter(x=>!SS.includes(x)).map(rowf).join(""):sorted.map(rowf).join(""));
-  return bsSec("sig",'🚲 Ekipa na dziś',U.size+RU+C.length+EK.length+LT.length,L.length+C.length+EK.length+LT.length,LT.map(sigLateRow).join("")+EK.map(sigEkipaRow).join("")+rowsAll+C.map(sigCancelRow).join("")
+  return bsSec("sig",'🚲 Ekipa na dziś',U.size+RU+C.length+EK.length+LT.length,L.length+C.length+EK.length+LT.length,LT.map(sigLateRow).join("")+EK.map(sigEkipaRow).join("")+rowsAll+fnote+C.map(sigCancelRow).join("")
     +'<div class="bsempty">Bez godziny i trasy. „Zaproś” otwiera zaproszenie na dziś z zakresem godzin — domyślnie widzi je tylko ta osoba (dostanie powiadomienie); w „Kto zobaczy?” możesz dopisać innych.'+(sig2Ok?' Dłoń = „też mam ochotę” — autor dostanie znać. „Zaproś ekipę” zaprasza od razu autora i wszystkich, którzy dali dłoń — bez pytania o zgodę.':'')+'</div>');
 }
 /* 💬 pop-up „X ma ochotę” (KROK 90): raz na sygnał; kilka naraz — jedno okienko przewijane w bok */
