@@ -133,6 +133,7 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Spokojny wygląd testowych",s:"test miganie ramka",p:"Ustawienia → Testy",i:"flask",hl:"[data-tc]",ok:S&&testOk&&!DEMO},
   {t:"Funkcje testowe (BETA)",s:"beta nowe funkcje tester",p:"Ustawienia → Testy",i:"flask",hl:"[data-beta]",ok:meTester()&&!DEMO},
   {t:"Zostań testerem",s:"tester testowanie",p:"Ustawienia → na górze",i:"syringe",hl:".tcard",ok:S&&typeof testerCardHtml==="function"&&!!testerCardHtml()},
+  {t:"Zamknij okno z dołu (✕)",s:"zamknij okno krzyżyk przewijanie dół koniec",p:"Długie okno → przewiń na sam dół",i:"x",fn:()=>say("Przewiń długie okno na sam dół — okrągły ✕ zamyka je bez wracania na górę.")},
   {t:"Pomoc — co potrafi aplikacja",s:"pomoc instrukcja jak działa nowości wersja",p:"Ustawienia → Pomoc i opinie",i:"help",fn:()=>openHelp()},
   {t:"Oceń aplikację / zgłoś błąd",s:"błąd zgłoś opinia ocena pomysł uwagi",p:"Ustawienia → Pomoc i opinie",i:"msg",go:['[data-c="fb"]'],ok:S&&fbOk},
   {t:"Zainstaluj aplikację",s:"instaluj ikona ekran telefon",p:"Ustawienia → Pomoc i opinie",i:"phone",go:['[data-c="inst"]'],ok:!isStandalone()},

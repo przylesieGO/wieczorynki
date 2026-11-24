@@ -249,3 +249,19 @@ function askOk(msg,ok,danger){
 // 📱 przeglądarka wbudowana w aplikację (Facebook, Messenger, Instagram, inne WebView) — pasek „Otwórz w przeglądarce” (js/16), statystyki demo (js/19)
 function inAppKind(){const ua=navigator.userAgent||"";
   return /Messenger|Orca-Android/.test(ua)?"msg":/FBAN|FBAV|FB_IAB|FBIOS/.test(ua)?"fb":/Instagram/.test(ua)?"ig":/; wv\)/.test(ua)?"wv":""}
+
+// ✕ na dole przewijanego okna (2026-11-24): okrągły przycisk na końcu treści długiego okna (.sheetbox z ✕ na górze) —
+// widać go dopiero po przewinięciu do samego dołu; zamyka okno tak jak ✕ na górze, bez przewijania w górę.
+// Stoi w treści (nie pływa), więc niczego nie zasłania. Okna wysuwane od dołu (.bsbox) mają stały nagłówek z „Zamknij” — bez zmian.
+{let q=0;
+ const fix=()=>{q=0;document.querySelectorAll(".sheet:not(.hide) .sheetbox").forEach(b=>{
+   const top=b.querySelector(":scope>.sclose");let x=b.querySelector(":scope>.sbotx");
+   const need=!!top&&b.scrollHeight-(x?x.offsetHeight+18:0)>b.clientHeight+80;
+   if(need&&!x){x=document.createElement("button");x.type="button";x.className="sbotx";x.textContent="✕";
+     x.setAttribute("aria-label",top.getAttribute("aria-label")||"Zamknij");b.appendChild(x)}
+   else if(!need&&x)x.remove()})};
+ const ask=()=>{if(!q)q=setTimeout(fix,60)};
+ new MutationObserver(ask).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:["class"]});
+ window.addEventListener("resize",ask);
+ document.addEventListener("click",e=>{const x=e.target.closest(".sbotx");if(!x)return;e.preventDefault();e.stopPropagation();
+   const t=x.parentElement.querySelector(":scope>.sclose");if(t)t.click()},true)}
