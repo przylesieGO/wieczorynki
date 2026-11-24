@@ -126,7 +126,7 @@ function helpFullHtml(){
      tg?"<b>Bot Telegram</b> napisze prywatnie: zaproszenie, zmiana godziny i szczegółów, ustalenie startu, kto dołączył, przypomnienie ~1 h przed jazdą. Włączysz: ⚙️ → Edytuj profil → Telegram → Połącz z Telegramem → w Telegramie START. Wyłączysz tam samo (Rozłącz).":"",
      session?"<b>Kanał @PrzylesieGo</b> na Telegramie — ogłoszenia nowych jazd dla wszystkich.":""].filter(Boolean))
    +(typeof sigOn==="function"&&sigOn()?sec("🟡 Mam ochotę",[
-     "Masz ochotę na jazdę, ale bez pomysłu na godzinę i trasę? Dotknij <b>zielonego kółka z dłonią</b> nad ➕ (widać je, gdy na dziś nie ma zaproszeń). Po wysłaniu sygnału kółko zostaje — z mniejszą dłonią i plakietką (zielony ptaszek albo liczba „Też mam ochotę”). Wybierz: rower, bieg, spacer albo trekking.",
+     "Masz ochotę na jazdę, ale bez pomysłu na godzinę i trasę? Dotknij <b>zielonego kółka z dłonią</b> nad ➕ (widać je, gdy na dziś nie ma zaproszeń). Po wysłaniu sygnału kółko zostaje — z mniejszą dłonią i plakietką (zielony ptaszek po lewej i liczba „Też mam ochotę” po prawej). Wybierz: rower, bieg, spacer albo trekking.",
      "<b>Komunikat</b> (opcjonalnie): jeden z gotowych, np. „Nogi same kręcą”, albo „Inne…” — własny, do 40 znaków (bez wulgaryzmów i linków; administrator może go ukryć).",
      "<b>Kto zobaczy?</b> Wszyscy (także kanał Telegram) albo tylko wybrane osoby — wybór jak przy zaproszeniach: ulubieni, listy, grupy, pojedyncze osoby. Prywatny sygnał nie trafia na kanał.",
      "Inni dostają <b>okienko „X ma ochotę”</b> ze zdjęciem i komunikatem (kilka osób — przewijasz w bok), a pod 🔔 sekcję <b>„Mają ochotę dziś”</b>. „Zaproś ›” otwiera zaproszenie na dziś z zakresem godzin.",

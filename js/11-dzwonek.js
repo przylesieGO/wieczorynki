@@ -481,8 +481,8 @@ const sigCheck='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5
 function sigFabHtml(){
   const b=$("sigfab");if(!b)return;
   const done=Date.now()<sigDoneT,m=sigMine(),act=!done&&sigActive(),n=act?sigReactIds(m).filter(id=>id!==uid).length:0;
-  // aktywny sygnał: mniejsza dłoń + plakietka (liczba „Też mam ochotę” albo zielony ptaszek)
-  const h=done?sigCheck:act?sigWheel+'<span class="sigbdg'+(n?' n':'')+'">'+(n?n:sigCheck)+'</span>':sigWheel;
+  // aktywny sygnał: mniejsza dłoń + zielony ptaszek po lewej i (gdy są reakcje) licznik „Też mam ochotę” po prawej
+  const h=done?sigCheck:act?sigWheel+'<span class="sigbdg l">'+sigCheck+'</span>'+(n?'<span class="sigbdg r n">'+n+'</span>':''):sigWheel;
   if(b.dataset.h!==h){b.dataset.h=h;b.innerHTML=h}
   b.setAttribute("aria-label",act?"Twój sygnał „Mam ochotę”"+(n?" — "+n+" "+plf(n,["osoba","osoby","osób"])+" też ma ochotę":"")+" — otwórz":"Mam ochotę — daj znać, że chcesz dziś pojeździć");
 }
