@@ -27,13 +27,13 @@ const GW_TOURS={
   {sel:"#sigfab",act:"click",wait:300,title:"Znajdź Reakcję",
    text:"Nie masz pomysłu na jazdę, ale masz ochotę pojeździć? Ta okrągła Reakcja daje znać innym — bez godziny i trasy. Kliknij ją.",
    miss:"Reakcji teraz nie widać: dziś masz już własne zaproszenie albo ekran, na którym jej nie ma (jest na Starcie). Wróć na Start — Reakcja stoi nad plusem."},
-  {sel:".sigacts",wait:4000,title:"Wybierz aktywność",
+  {sel:".sigacts",tap:true,wait:4000,title:"Wybierz aktywność",
    text:"Rower, bieg, spacer albo trekking (wędrówka piesza). Dotknij tej, na którą masz dziś ochotę."},
-  {sel:".sgmsgs",opt:true,wait:600,title:"Komunikat (opcjonalnie)",
+  {sel:".sgmsgs",opt:true,tap:true,wait:600,title:"Komunikat (opcjonalnie)",
    text:"Krótkie hasło dla innych, np. dokąd albo jak szybko. „Inne…” pozwala wpisać własne (do 40 znaków). Możesz to pominąć."},
   {sel:'[data-sg="who"]',opt:true,wait:600,title:"Kto zobaczy?",
-   text:"Domyślnie wszyscy zalogowani. Możesz wybrać same osoby, listę albo grupę — wtedy sygnał widzą tylko one."},
-  {sel:'[data-sg="send"]',wait:600,title:"Daj znać",last:true,
+   text:"Domyślnie wszyscy zalogowani. Możesz wybrać same osoby, listę albo grupę — wtedy sygnał widzą tylko one. Ustawisz to po przewodniku."},
+  {sel:'[data-sg="send"]',tap:true,wait:600,title:"Daj znać",last:true,
    text:"Kliknij, a inni zobaczą Twój sygnał pod 🔔 i będą mogli Cię zaprosić. Sygnał wygasa z końcem dnia, a wycofasz go w okienku „Twój sygnał”.<span class=\"gwm\">Ja niczego za Ciebie nie wyślę — to Twoja decyzja.</span>"}
  ]}
 };
@@ -81,12 +81,12 @@ GW_TOURS.mam_ochote_pelny={name:"Mam ochotę — cała historia (rower)",steps:[
   {ch:"Dajesz znać",sel:"#sigfab",act:"click",wait:300,title:"Znajdź Reakcję",
    text:"Masz ochotę pojeździć, ale bez pomysłu na godzinę i trasę? Ta Reakcja daje znać innym. Kliknij ją.",
    miss:"Reakcji teraz nie widać: dziś masz już własne zaproszenie albo jesteś na ekranie, gdzie jej nie ma (jest na Starcie nad plusem). Przejdź na Start i uruchom przewodnik ponownie."},
-  {ch:"Dajesz znać",sel:'.sigacts [data-sga="bike"]',wait:4000,title:"Wybierz „Rower”",
+  {ch:"Dajesz znać",sel:'.sigacts [data-sga="bike"]',tap:true,wait:4000,title:"Wybierz „Rower”",
    text:"Dotknij „Rower”. Bieg, spacer i trekking działają tak samo — zmieniają się tylko słowa w powiadomieniach."},
-  {ch:"Dajesz znać",sel:".sgmsgs",opt:true,wait:600,title:"Komunikat (opcjonalnie)",
+  {ch:"Dajesz znać",sel:".sgmsgs",opt:true,tap:true,wait:600,title:"Komunikat (opcjonalnie)",
    text:"Krótkie hasło, np. „Nogi same kręcą”. „Inne…” pozwala wpisać własne (do 40 znaków). To hasło zobaczą inni i może zostać tytułem wspólnego zaproszenia."},
   {ch:"Dajesz znać",sel:'[data-sg="who"]',opt:true,wait:600,title:"Kto zobaczy?",
-   text:"Domyślnie wszyscy zalogowani (i kanał Telegram @PrzylesieGo). Możesz wybrać osoby, listę albo grupę — wtedy sygnał jest prywatny i na kanał nie idzie."},
+   text:"Domyślnie wszyscy zalogowani (i kanał Telegram @PrzylesieGo). Możesz wybrać osoby, listę albo grupę — wtedy sygnał jest prywatny i na kanał nie idzie. Ustawisz to po przewodniku."},
   {ch:"Dajesz znać",sel:'[data-sg="send"]',wait:600,title:"Daj znać",
    text:"To ten przycisk wysyła sygnał. Ja go nie kliknę za Ciebie. Kliknij „Dalej” w moim dymku, a pokażę, co dzieje się potem."},
   {ch:"Po wysłaniu",pre:GW_CL,title:"Co się dzieje po „Daj znać”",demo:GW_D.fab,
@@ -142,14 +142,15 @@ function gwStart(id,from){
     else if(a==="click"){const el=gwEl(T.steps[GW.i].sel);if(el)el.click()}
   };
   GW.timer=setInterval(gwTick,120);
-  // ekran pod przewodnikiem nieklikalny — wolno tylko w dymek i we wskazany element (krok na prawdziwym ekranie)
+  // ekran pod przewodnikiem nieklikalny — wolno tylko w dymek i we wskazany element w krokach „kliknij” (act/tap);
+  // nasłuch na window w fazie przechwytywania — przed obsługą aplikacji na document
   const blk=e=>{if(!GW.cur||!GW.root)return;if(GW.root.contains(e.target))return;
-    const st=GW_TOURS[GW.cur].steps[GW.i],el=st&&!st.demo&&!GW.miss&&gwEl(st.sel);
+    const st=GW_TOURS[GW.cur].steps[GW.i],el=st&&(st.act==="click"||st.tap)&&!st.demo&&!GW.miss&&gwEl(st.sel);
     if(el&&el.contains(e.target))return;
     e.preventDefault();e.stopPropagation();e.stopImmediatePropagation()};
   const EV=["click","pointerdown","pointerup","mousedown","mouseup","touchstart","touchend","dblclick","contextmenu"];
-  EV.forEach(t=>document.addEventListener(t,blk,{capture:true,passive:false}));
-  GW.unblk=()=>EV.forEach(t=>document.removeEventListener(t,blk,{capture:true}));
+  EV.forEach(t=>window.addEventListener(t,blk,{capture:true,passive:false}));
+  GW.unblk=()=>EV.forEach(t=>window.removeEventListener(t,blk,{capture:true}));
   gwShow(from||0,1);return true;
 }
 async function gwShow(i,dir){
