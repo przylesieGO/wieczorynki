@@ -15,7 +15,11 @@ const hhmm=d=>pad(d.getHours())+":"+pad(d.getMinutes());
 function relDay(d){const n=dayDiff(d);return n===0?"Dziś":n===1?"Jutro":n===2?"Pojutrze":d.toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"})}
 function relWhen(s){const d=new Date(s);return relDay(d)+" o "+hhmm(d)}
 function slug(s){return String(s||"trasa").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/ł/g,"l").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"trasa"}
-function say(t){const m=$("toast");if(document.body.classList.contains("wfopen")){const f=document.querySelector(".wffoot");if(f)document.body.style.setProperty("--wffh",f.offsetHeight+"px")}m.textContent=t;m.classList.remove("hide");clearTimeout(say.t);say.t=setTimeout(()=>m.classList.add("hide"),6000)}
+// odpowiedź na zaproszenie, które w międzyczasie odwołano / zaczęło się / zmieniło (lista jeszcze się nie odświeżyła):
+// baza odrzuca zapis (reguły dostępu albo brak zaproszenia) — zamiast technicznego komunikatu ludzki tekst i od razu odświeżenie
+const SAY_GONE=/row-level security policy for table "(want_joins|want_declines|want_invitees)"|violates foreign key constraint "want_(joins|declines|invitees)_want_id/;
+function say(t){if(SAY_GONE.test(String(t))){t="To zaproszenie zostało odwołane albo już się zaczęło — odświeżam listę.";setTimeout(()=>{try{if(typeof syncNow==="function")syncNow()}catch(e){}},50)}
+  const m=$("toast");if(document.body.classList.contains("wfopen")){const f=document.querySelector(".wffoot");if(f)document.body.style.setProperty("--wffh",f.offsetHeight+"px")}m.textContent=t;m.classList.remove("hide");clearTimeout(say.t);say.t=setTimeout(()=>m.classList.add("hide"),6000)}
 function routeKm(p){let s=0;for(let i=1;i<p.length;i++)s+=dist(p[i-1],p[i]);return s}
 function paceKmh(p){const m=/(\d+)/.exec(p||"");return m?+m[1]:24}
 const NICK_RE=/^[A-Za-z0-9ĄąĆćĘęŁłŃńÓóŚśŹźŻż ._-]{2,20}$/;
