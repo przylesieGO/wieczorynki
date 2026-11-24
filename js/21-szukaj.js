@@ -247,9 +247,9 @@ function srHistHtml(){const H=srHistGet();if(!H.length)return "";
 const srOldOk=()=>!!session&&!DEMO&&typeof oldLoad==="function"&&["all","done","want"].includes(srTy);
 function srOldHtml(){
   if(!srOldOk()||!srQ.trim())return "";
-  const R=ARCH_R.filter(x=>x[0]!==30),on=srOldR!==30;
-  return '<div class="srold"><span class="srolt">'+uiIcon("archive")+(on?'Szukam też w starszych: '+esc(archRName(srOldR).toLowerCase())+' <button type="button" class="lnk" data-sk="old" data-sv="30">wyłącz</button>':'Szukaj starszych niż 30 dni')+(isSuper(uid)?'':' <small>(Twoje jazdy)</small>')+'</span>'
-   +'<span class="fchips srolc">'+R.map(([d,t])=>'<button type="button" class="fch'+(on&&srOldR===d?' on':'')+'" data-sk="old" data-sv="'+d+'">'+t+'</button>').join("")+'</span>'
+  const R=ARCH_R,on=srOldR!==30;   // ten sam rząd co w archiwum: 30 dni (domyślnie) · 3 mies. · Rok · Wszystko
+  return '<div class="srold"><span class="srolt">'+uiIcon("archive")+(on?'Szukam też w starszych: '+esc(archRName(srOldR).toLowerCase()):'Jazdy z ostatnich 30 dni — szukaj starszych:')+(isSuper(uid)?'':' <small>(Twoje jazdy)</small>')+'</span>'
+   +'<span class="fchips srolc">'+R.map(([d,t])=>'<button type="button" class="fch'+(srOldR===d?' on':'')+'" data-sk="old" data-sv="'+d+'">'+t+'</button>').join("")+'</span>'
    +(srOldBusy?'<span class="note">Wczytuję…</span>':srOldMsg?'<span class="note">'+esc(srOldMsg)+'</span>':'')+'</div>'}
 // d = 30 albo ponowne dotknięcie wybranego zakresu → wyłącz; mniejszy zakres po większym nie pobiera nic z bazy (oldIn przycina)
 async function srOldGo(d){if(srOldBusy)return;
