@@ -162,6 +162,15 @@ const demoK=(k,no,t,st,ok,desc,body)=>'<details class="stsec dmsec dmk" data-j="
   +'<span class="dmkn'+(ok?' ok':'')+'" aria-hidden="true">'+no+'</span><span class="dmkt">'+t+'</span><span class="stsum">'+st+'</span></summary>'
   +'<div class="stbody"><p class="note dmkd">'+desc+'</p>'+body+'</div></details>';
 
+// 🎭 zmiana ustawień żywej Ekipy: od razu na ekranie, w bazie jedno wywołanie (zwraca nowy stan) — bez przeładowania całego panelu i synchronizacji
+let demoLiveQ=0;
+async function demoLiveSet(args,opt,okMsg){
+  if(!demoSt||demoSt.err)return;const old=demoSt.live||{},my=++demoLiveQ;
+  demoSt.live=Object.assign({},old,opt);demoRender();
+  try{const r=await sb.rpc("admin_demo_live",args);if(r.error)throw r.error;
+    if(my===demoLiveQ){demoSt.live=r.data||demoSt.live;demoRender()}say(okMsg(r.data))}
+  catch(e){if(my===demoLiveQ){demoSt.live=old;demoRender()}demoErr(e)}
+}
 /* 🎭 Żywa Ekipa demo (KROK 96–98): przełącznik, Ruch (zaproszeń na dobę), aktywności, liczniki dnia, ostatnia tura */
 function demoLiveSec(s,ld,pool){
   const lv=(s&&s.live)||{},on=!!lv.on,rate=demoLR||lv.rate||4,LA=new Set(lv.acts||[]),td=lv.today||{},last=lv.last;
@@ -316,19 +325,19 @@ $("gearpanel").addEventListener("click",async e=>{
   if(a==="tick"){await demoRun("admin_demo_tick",{p_force:true},d=>{d=d||{};const ok=(d.g_ok||0)+(d.rq_ok||0)+(d.ride_ok||0),no=(d.g_no||0)+(d.rq_no||0)+(d.ride_no||0);return ok+no?"🤖 Odpowiedzi: przyjęte "+ok+", odmowy "+no:"Nic nie czekało na odpowiedź"});
     if(typeof grReload==="function")grReload();return}
   // 🎭 żywa Ekipa (KROK 98)
-  if(a==="live"){const on=!(demoSt&&demoSt.live&&demoSt.live.on);await demoRun("admin_demo_live",{p_on:on},()=>on?"🎭 Żywa Ekipa demo włączona":"Żywa Ekipa demo wyłączona");return}
+  if(a==="live"){const on=!(demoSt&&demoSt.live&&demoSt.live.on);demoLiveSet({p_on:on},{on},()=>on?"🎭 Żywa Ekipa demo włączona":"Żywa Ekipa demo wyłączona");return}
   if(a==="lact"){const L=new Set((demoSt&&demoSt.live&&demoSt.live.acts)||[]),k=b.dataset.da;L.has(k)?L.delete(k):L.add(k);
     if(!L.size){say("Zostaw co najmniej jedną aktywność.");return}
-    await demoRun("admin_demo_live",{p_acts:[...L]},d=>"🎭 Żywa Ekipa: "+((d&&d.acts)||[]).map(x=>actOf(x).name.toLowerCase()).join(", "));return}
+    demoLiveSet({p_acts:[...L]},{acts:[...L]},d=>"🎭 Żywa Ekipa: "+((d&&d.acts)||[]).map(x=>actOf(x).name.toLowerCase()).join(", "));return}
   if(a==="gact"){const G=new Set(demoGAs()),k=b.dataset.da;G.has(k)?G.delete(k):G.add(k);
     if(!G.size){say("Zostaw co najmniej jedną aktywność.");return}
     demoGA=G.size===demoActs().length?null:G;demoRender();return}
   if(a==="dacts"){const id=b.dataset.du,k=b.dataset.da,P=(demoSt&&demoSt.pool||[]).find(x=>x.user_id===id);if(!P)return;
     const A=new Set(P.acts||[]);A.has(k)?A.delete(k):A.add(k);if(!A.size){say("Konto demo musi mieć co najmniej jedną aktywność.");return}
-    demoBusy=true;demoRender();
-    try{const r=await sb.rpc("admin_demo_acts",{p_u:id,p_acts:[...A]});if(r.error)throw r.error;P.acts=r.data||[...A];
-      say((nicks[id]||"Konto")+": "+P.acts.map(x=>actOf(x).name.toLowerCase()).join(", "))}catch(err){demoErr(err)}
-    demoBusy=false;demoRender();return}
+    const old=P.acts;P.acts=[...A];demoRender();   // od razu na ekranie; przy błędzie wraca
+    try{const r=await sb.rpc("admin_demo_acts",{p_u:id,p_acts:[...A]});if(r.error)throw r.error;P.acts=r.data||P.acts;
+      say((nicks[id]||"Konto")+": "+P.acts.map(x=>actOf(x).name.toLowerCase()).join(", "))}catch(err){P.acts=old;demoErr(err)}
+    demoRender();return}
   if(a==="ltog"){const k=b.dataset.dl;demoLCol[k]=!demoLCol[k];demoRender();return}
   if(a==="hw-"||a==="hw+"){demoF.hw=Math.max(1,Math.min(26,demoF.hw+(a==="hw+"?1:-1)));demoRender();return}
   if(a==="hpw-"||a==="hpw+"){const act=(demoSt&&demoSt.pool||[]).filter(p=>p.user_id&&p.slot<=(+demoSt.demo_active||0)).length;
@@ -372,7 +381,7 @@ $("gearpanel").addEventListener("input",e=>{
 });
 // Ruch żywej Ekipy: zapis po puszczeniu suwaka
 $("gearpanel").addEventListener("change",async e=>{if(e.target.id!=="dmlive"||!isKingReal())return;const r=+e.target.value;
-  await demoRun("admin_demo_live",{p_rate:r},()=>"🎭 Ruch: "+demoLiveTx(r));demoLR=null;demoRender()});
+  demoLR=null;demoLiveSet({p_rate:r},{rate:r},()=>"🎭 Ruch: "+demoLiveTx(r))});
 // filtry osób w Ochotnikach (obsługa w js/04) — po kliknięciu odśwież pasek akcji
 document.addEventListener("click",e=>{const b=e.target.closest('[data-pfk="dvol"]');if(b&&$("dmvact"))setTimeout(()=>{$("dmvact").innerHTML=demoVolAct()})});
 // start: aplikacja mogła już wystartować ze stanu telefonu, zanim ten plik się wczytał → doczytaj konta demo od razu
