@@ -468,7 +468,7 @@ html[data-theme=dark] .sigfab{box-shadow:0 6px 16px rgba(0,0,0,.5)}
 .sigbox .who{margin-bottom:12px}.sigbox .who .wtx span{display:block;font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sgmsg{font-size:14px;margin-top:3px;color:var(--ink);font-style:italic}.sgmsg .sghide{font-style:normal;font-size:13px;margin-left:6px}
 .sgpriv{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:700;color:var(--priv);vertical-align:1px}.sgpriv .ui-i{width:12px;height:12px}
-.sgrt{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--mut);margin-top:3px}.sgrt .ui-i{color:#c98a0b;flex:none}html[data-theme=dark] .sgrt .ui-i{color:#f5c94e}
+.sgrt .sgrn{font-size:13px;color:var(--ink);margin-right:2px}.sgrt>span{flex:1;min-width:0}.sgrt{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--mut);margin-top:3px}.sgrt .ui-i{color:#c98a0b;flex:none}html[data-theme=dark] .sgrt .ui-i{color:#f5c94e}
 .sgbtns{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}
 .sgre{display:inline-flex;align-items:center;gap:4px;min-height:32px;padding:4px 10px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:14px;cursor:pointer}
 .sgre .ui-i{width:17px;height:17px;color:#c98a0b}.sgre b{font-size:13px}

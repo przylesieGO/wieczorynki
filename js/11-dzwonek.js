@@ -102,7 +102,7 @@ function lsRow(x){
 const bellUnread=()=>notifs.filter(n=>!n.read_at&&nWant(n)&&(ME_KINDS.includes(n.kind)||OWN_KINDS.includes(n.kind)));
 function renderBell(){
   const b=$("bellbtn");if(!b)return;
-  const on=!!session&&visOk,n=on?bellUnread().length+fbMineUnread().length+fbAdmUnread().length+nuUnread().length+stepsBadge()+evBellUn().length+repTodoN()+sigUnread().length+sigReactUn().length+(typeof grBellN==="function"?grBellN():0)+(typeof svBellN==="function"?svBellN():0):0,bd=$("bellbadge");
+  const on=!!session&&visOk,n=on?bellUnread().length+fbMineUnread().length+fbAdmUnread().length+nuUnread().length+stepsBadge()+evBellUn().length+repTodoN()+sigUnread().length+sigReactUn().length+sigCancelUn().length+(typeof grBellN==="function"?grBellN():0)+(typeof svBellN==="function"?svBellN():0):0,bd=$("bellbadge");
   b.classList.toggle("hide",!on);
   bd.textContent=n>9?"9+":String(n);bd.classList.toggle("hide",!n);
   b.setAttribute("aria-label",n?"Powiadomienia — nowe: "+n:"Powiadomienia");
@@ -140,7 +140,7 @@ function tstBellHtml(){
 }
 function renderBellSheet(){
   const p=$("bellsheet"),{forme:forMe,mine}=bsWants();
-  const keep=p.querySelector(".bslist"),st=keep?keep.scrollTop:0,nu=bellUnread().length+nuUnread().length+lgUnread().length+dlUnread().length+evBellUn().length+sigUnread().length+sigReactUn().length+(typeof grPostUnN==="function"?grPostUnN():0)+(typeof svBellN==="function"?svBellN():0),EVB=evBellItems(),EVu=new Set(evBellUn().map(evKey)),LG=lgRows(),LGu=new Set(lgUnread()),DL=dlRows(),DLu=new Set(dlUnread()),LS=lsRows(),NU=nuList(),NUu=new Set(nuUnread()),SA=stepsAvail()?stepsList():[],SL=SA.filter(x=>!x.ok),uf=(L,U,g)=>L.slice().sort((a,b)=>(U.has(g(b))?1:0)-(U.has(g(a))?1:0)),sid=x=>x;
+  const keep=p.querySelector(".bslist"),st=keep?keep.scrollTop:0,nu=bellUnread().length+nuUnread().length+lgUnread().length+dlUnread().length+evBellUn().length+sigUnread().length+sigReactUn().length+sigCancelUn().length+(typeof grPostUnN==="function"?grPostUnN():0)+(typeof svBellN==="function"?svBellN():0),EVB=evBellItems(),EVu=new Set(evBellUn().map(evKey)),LG=lgRows(),LGu=new Set(lgUnread()),DL=dlRows(),DLu=new Set(dlUnread()),LS=lsRows(),NU=nuList(),NUu=new Set(nuUnread()),SA=stepsAvail()?stepsList():[],SL=SA.filter(x=>!x.ok),uf=(L,U,g)=>L.slice().sort((a,b)=>(U.has(g(b))?1:0)-(U.has(g(a))?1:0)),sid=x=>x;
   const SEC=[
    (SL.length?bsSec("start",'✨ Dokończ start · '+(SA.length-SL.length)+' z '+SA.length,lsGet("stepsHide")==="1"?0:SL.length,SL.length,
       SL.map(x=>'<div class="nit stn"><div class="ic">'+({inst:"📲",ride:"🚴",tg:"🔔",fav:"⭐"}[x.k]||"✨")+'</div><div class="tx"><b>'+x.t.replace(" ⭐","")+'</b></div>'+(x.go?'<button type="button" class="lnk stgo" data-sb="'+x.k+'">'+x.go+' ›</button>':'')+'</div>').join("")
@@ -220,7 +220,8 @@ $("bellsheet").addEventListener("click",async e=>{
   const sgz=e.target.closest("[data-sgz]");if(sgz){const id=sgz.dataset.sgz;closeBell();show(0);openWantForm(null,{sig:id});return}
   if(e.target.closest("[data-sgx]")){closeBell();sigCancel();return}
   if(e.target.closest("[data-sge]")){closeBell();openSig("pick");return}
-  if(e.target.closest("[data-sgc]")){closeBell();sigInviteKeen();return}   // ✏️ „Zmień” własny sygnał (KROK 90)
+  if(e.target.closest("[data-sgc]")){closeBell();sigInviteKeen();return}
+  const sgcx=e.target.closest("[data-sgcx]");if(sgcx){markRead([sgcx.dataset.sgcx]);renderBellSheet();return}   // ✓ „wycofał(a) sygnał” (KROK 91)   // ✏️ „Zmień” własny sygnał (KROK 90)
   const sgr=e.target.closest("[data-sgr]");if(sgr){sigReact(sgr.dataset.sgr);return}   // 👋 „Też mam ochotę”
   const sgh=e.target.closest("[data-sgh]");if(sgh){sigHideMsg(sgh.dataset.sgh);return}   // 🛡️ admin ukrywa komunikat
   const mk1=e.target.closest("[data-mk]");   // ✓ przy pozycji
@@ -232,7 +233,7 @@ $("bellsheet").addEventListener("click",async e=>{
   const mks=e.target.closest("[data-mks]");   // ✓ cała sekcja
   if(mks){const k=mks.dataset.mks;
     if(k==="nu")nuMarkSeen();else if(k==="lg")lsSet("lgSeen",String(Date.now()));else if(k==="dl")lsSet("dlSeen",String(Date.now()));
-    else if(k==="ev")lsSet("evBell",String(Date.now()));else if(k==="sig"){lsSet("sigSeen",new Date().toISOString());markRead(sigReactUn().map(n=>n.id))}
+    else if(k==="ev")lsSet("evBell",String(Date.now()));else if(k==="sig"){lsSet("sigSeen",new Date().toISOString());markRead(sigReactUn().concat(sigCancelUn()).map(n=>n.id))}
     else if(k==="forme"||k==="mine"){markRead(bsWants()[k].flatMap(w=>wUnread(w).filter(n=>!nNeedsAct(n)).map(n=>n.id)));return}
     renderBell();return}
   const rpb=e.target.closest("[data-rep]");if(rpb){const id=rpb.dataset.rep;closeBell();repAskedAdd(id);openReport(id);return}
@@ -245,7 +246,7 @@ $("bellsheet").addEventListener("click",async e=>{
   if(k){
     if(k.dataset.bk==="close")closeBell();
     else if(k.dataset.bk==="new"){closeBell();show(0);openWantForm(null)}
-    else{nuMarkSeen();lsSet("lgSeen",String(Date.now()));lsSet("dlSeen",String(Date.now()));lsSet("evBell",String(Date.now()));lsSet("sigSeen",new Date().toISOString());if(typeof grPostReadAll==="function")grPostReadAll();await markRead(bellUnread().map(n=>n.id).concat(typeof svBellRead==="function"?svBellRead():[],sigReactUn().map(n=>n.id)));renderBell();renderBellSheet()}
+    else{nuMarkSeen();lsSet("lgSeen",String(Date.now()));lsSet("dlSeen",String(Date.now()));lsSet("evBell",String(Date.now()));lsSet("sigSeen",new Date().toISOString());if(typeof grPostReadAll==="function")grPostReadAll();await markRead(bellUnread().map(n=>n.id).concat(typeof svBellRead==="function"?svBellRead():[],sigReactUn().concat(sigCancelUn()).map(n=>n.id)));renderBell();renderBellSheet()}
     return;
   }
   const a=e.target.closest("button[data-na]");
@@ -452,6 +453,11 @@ const sigUnread=()=>{if(!sigOn())return [];const s=lsGet("sigSeen")||"",D=bsDone
 // 👋 „X też ma ochotę” (KROK 90) — nieprzeczytane powiadomienia z dziś, gdy mój sygnał jest aktywny
 const sigReactUn=()=>{const m=sigMine();if(!sigOn()||!m||m.cancelled_at)return [];const t=sigToday();
   return notifs.filter(n=>n.kind==="sig_react"&&!n.read_at&&localIso(new Date(n.created_at)).slice(0,10)===t)};
+// ✋ „X wycofał(a) sygnał” (KROK 91) — do osób, które dały „Też mam ochotę!”; nieprzeczytane z ostatnich 20 h
+const sigCancelUn=()=>sigOn()?notifs.filter(n=>n.kind==="sig_cancel"&&!n.read_at&&Date.now()-new Date(n.created_at).getTime()<72e6):[];
+const sigCancelRow=n=>'<div class="nit stn sgrow new"><div class="ic">'+uiIcon("hand")+'</div><div class="tx">'+nk(n.actor)
+  +'<div class="w">'+(genders[n.actor]==="K"?'wycofała':'wycofał')+' swój sygnał „Mam ochotę” · '+esc(hhmm(new Date(n.created_at)))+'</div></div>'
+  +'<button type="button" class="nmk" data-sgcx="'+esc(n.id)+'" aria-label="Oznacz jako przeczytane" title="Oznacz jako przeczytane">'+uiIcon("check")+'</button></div>';
 const sigTodayBusy=()=>wants.some(w=>dayDiff(new Date(w.starts_at))===0&&!wDone(w)&&!w.is_test&&!(typeof demoIds!=="undefined"&&demoIds.has(w.user_id)));   // testowe i od kont demo nie chowają koła
 const sigFabOn=()=>sigOn()&&sigOk&&!is_banned_me()&&!sigTodayBusy()&&!(sigMine()&&!sigMine().cancelled_at);
 function is_banned_me(){return typeof modBanned!=="undefined"&&modBanned.has(uid)}
@@ -544,7 +550,8 @@ async function sigSend(){
 }
 async function sigCancel(){
   try{const r=await sb.from("ride_signals").update({cancelled_at:new Date().toISOString()}).eq("user_id",uid).eq("day",sigDay||sigToday()).select("user_id");
-    if(r.error)throw r.error;sigDirty=true;await syncNow();say("Wycofane — przycisk z dłonią wrócił nad ➕.")}
+    if(r.error)throw r.error;const n=sig2Ok&&sigMine()?sigReactIds(sigMine()).filter(id=>id!==uid).length:0;sigDirty=true;await syncNow();
+    say("Wycofane — przycisk z dłonią wrócił nad ➕."+(n?" "+n+" "+plf(n,["osoba z „Też mam ochotę” dostanie","osoby z „Też mam ochotę” dostaną","osób z „Też mam ochotę” dostanie"])+" znać.":""))}
   catch(e){say("Nie udało się: "+(e&&e.message?e.message:"błąd"))}
 }
 // 👋 „Też mam ochotę!” — reakcja (nie własny sygnał); drugie kliknięcie cofa
@@ -583,7 +590,7 @@ const sigReactTxt=x=>{const L=sigReactIds(x);if(!L.length)return '';
   const me=L.includes(uid),o=L.filter(id=>id!==uid),n=o.length;
   // „Ty, Kasia i Piotr też mają ochotę” / „Kasia i 3 inne osoby…” (przy więcej niż 2 cudzych)
   const nm=(me?['Ty']:[]).concat(n<=2?o.map(id=>esc(nickOf(id))):[esc(nickOf(o[0])),(n-1)+' '+plf(n-1,["inna osoba","inne osoby","innych osób"])]);
-  return uiIcon("hand")+' <span>'+(nm.length>1?nm.slice(0,-1).join(", ")+' i '+nm[nm.length-1]:nm[0])
+  return uiIcon("hand")+'<b class="sgrn">'+L.length+'</b><span>'+(nm.length>1?nm.slice(0,-1).join(", ")+' i '+nm[nm.length-1]:nm[0])
     +' '+(L.length>1?'też mają':'też '+(me?'masz':'ma'))+' ochotę</span>';};
 // 🔔 sekcja „Mają ochotę dziś”
 function sigRow(x,un){
@@ -603,20 +610,21 @@ function sigRow(x,un){
 }
 function sigBellHtml(){
   if(!sigOn())return "";
-  const L=sigList();if(!L.length)return "";
+  const L=sigList(),C=sigCancelUn();if(!L.length&&!C.length)return "";
   const U=new Set(sigUnread()),RU=sigReactUn().length;
-  return bsSec("sig",'🚲 Mają ochotę dziś',U.size+RU,L.length,L.slice().sort((a,b)=>(U.has(b)?1:0)-(U.has(a)?1:0)).map(x=>sigRow(x,U.has(x)||(x.user_id===uid&&RU>0))).join("")
+  return bsSec("sig",'🚲 Mają ochotę dziś',U.size+RU+C.length,L.length+C.length,L.slice().sort((a,b)=>(U.has(b)?1:0)-(U.has(a)?1:0)).map(x=>sigRow(x,U.has(x)||(x.user_id===uid&&RU>0))).join("")+C.map(sigCancelRow).join("")
     +'<div class="bsempty">Bez godziny i trasy. „Zaproś” otwiera zaproszenie na dziś z zakresem godzin — domyślnie widzi je tylko ta osoba (dostanie powiadomienie); w „Kto zobaczy?” możesz dopisać innych.'+(sig2Ok?' Dłoń = „też mam ochotę” — autor dostanie znać.':'')+'</div>');
 }
 /* 💬 pop-up „X ma ochotę” (KROK 90): raz na sygnał; kilka naraz — jedno okienko przewijane w bok */
 const sigPopOff=()=>lsGet("sigPopOff")==="1";
-function sigPopSeen(){try{return new Set(JSON.parse(lsGet("sigPop")||"[]"))}catch(e){return new Set()}}
+// pamięć pokazanych okienek — osobno dla każdego konta (zakładki ?konto=N w jednej przeglądarce)
+function sigPopSeen(){try{return new Set(JSON.parse(lsGet("sigPop:"+uid)||"[]"))}catch(e){return new Set()}}
 function maybeSigPop(){
   if(!sigOn()||!sigOk||sigPopOff()||DEMO)return;
   if([...document.querySelectorAll(".sheet")].some(x=>!x.classList.contains("hide"))||gearOpen||needProfile()||pwMode||!$("wantform").classList.contains("hide"))return;
-  const S=sigPopSeen(),D=bsDone(),L=sigList().filter(x=>x.user_id!==uid&&!S.has(sigKey(x))&&!D.has(sigKey(x))&&!x.is_test);
+  const S=sigPopSeen(),L=sigList().filter(x=>x.user_id!==uid&&!S.has(sigKey(x))&&!x.is_test);
   if(!L.length)return;
-  L.forEach(x=>S.add(sigKey(x)));lsSet("sigPop",JSON.stringify([...S].slice(-120)));
+  L.forEach(x=>S.add(sigKey(x)));lsSet("sigPop:"+uid,JSON.stringify([...S].slice(-120)));
   sigPopQ=L.map(x=>x.user_id);sigPopI=0;sigView="pop";renderSigPop();
 }
 function sigAvHtml(id){
