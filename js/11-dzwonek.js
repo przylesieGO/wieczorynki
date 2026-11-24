@@ -502,6 +502,7 @@ function sigEkipaRide(x){
   if(!x||typeof wants==="undefined")return null;
   const E=new Set(sigEkipa(x));if(E.size<2)return null;
   return wants.find(w=>E.has(w.user_id)&&dayDiff(new Date(w.range_from||w.starts_at))===0&&!wDone(w)
+    &&sigWPeople(w).has(uid)   // tylko gdy ja jestem w zaproszeniu (👑 widzi cudze prywatne — to nie znaczy, że jedzie)
     &&invIds(w).concat(joins[w.id]||[]).some(id=>id!==w.user_id&&E.has(id)))||null;
 }
 const sigEkipaRow=n=>{const x=sigs.find(s=>s.user_id===n.actor),E=x?sigEkipaOthers(x):[];
@@ -761,9 +762,9 @@ function sigRow(x,un){
   const a=SIG_ACT[x.activity]||SIG_ACT.bike,me=x.user_id===uid,d=new Date(x.created_at),rc=sigReactIds(x).length,mine=sigIReact(x);
   const to=me&&sigPriv(x)?(sigTo[uid]||[]).length:0;
   const RW=sig2Ok&&x.activity==="bike"&&(me||mine)?sigEkipaRide(x):null;   // 🚲 KROK 92: ekipa ma już wspólne zaproszenie na dziś
+  const busy=!RW&&(me||mine)&&sigBusyO.has(x.user_id);   // ekipa już jedzie (prywatne zaproszenie, mnie w nim nie ma)
   const E=sig2Ok&&x.activity==="bike"&&!RW&&!busy?sigEkipaOthers(x):[],chetni=me&&E.length,ekipa=!me&&mine&&E.length>=2;   // 🚲 „Zaproś ekipę ›” — autor (są chętni) lub osoba z reakcją (w ekipie min. 2 inne osoby)
   const late=RW&&wantCanInvite(RW)?sigEkipa(x).filter(id=>!sigWPeople(RW).has(id)):[];   // 🚲 KROK 92b: ktoś z ekipy jeszcze nie w zaproszeniu
-  const busy=!RW&&(me||mine)&&sigBusyO.has(x.user_id);   // ekipa już jedzie (prywatne zaproszenie, mnie w nim nie ma)
   const rw=(RW?'<button type="button" class="lnk stgo" data-sgw="'+esc(RW.id)+'">Jedziecie razem ›</button>':'')
     +(late.length?'<button type="button" class="lnk stgo" data-sgadd="'+esc(RW.id+'|'+late.join(","))+'">'+sigAddLbl(late)+'</button>':'');
   const btn=me?'<span class="sgbtns">'+rw+(chetni?'<button type="button" class="lnk stgo" data-sgc="'+esc(x.user_id)+'">Zaproś ekipę ('+E.length+') ›</button>':'')+'<button type="button" class="lnk stgo" data-sge="1">Zmień</button><button type="button" class="lnk stgo" data-sgx="1">Wycofaj</button></span>'
