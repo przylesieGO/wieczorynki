@@ -1446,3 +1446,6 @@ html[data-theme=dark] .hgwav svg{filter:drop-shadow(0 0 1.2px rgba(255,255,255,.
 .dmgacts{margin-top:8px}
 .dmbk.dm-act{background:#dcf1e3;color:#1d6a3a}html[data-theme=dark] .dmbk.dm-act{background:#1f3a29;color:#9fdcb4}
 .dmlast{line-height:1.45;margin-top:4px}
+
+/* 🕘 Kolejność „od najnowszych”: dopisek „dodano …” w karcie dnia */
+.wl3 .wnew{font-style:normal;font-weight:600;color:var(--mut)}

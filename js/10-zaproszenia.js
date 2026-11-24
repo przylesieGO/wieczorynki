@@ -235,7 +235,7 @@ async function archRange(d){
   archBusy=false;archOpen=true;if($("fltok"))fltDraw();renderWants()}
 /* ---------- 🔍 filtry zaproszeń (decyzje właściciela 2026-11-15 18:58: jak w makiecie filtry.png + z karty osoby) ---------- */
 // zapamiętane w telefonie; działają na listę zaproszeń (karty dni i Twoje zaproszenia), nie na 🔔
-const fltEmpty=()=>({who:"",vis:"",act:"",grp:"",when:"",date:"",where:"",bike:"",pace:"",user:[],demo:"",to:[],by:[],arch:""});   // vis: Widoczność, act: Aktywność, grp: 👥 grupa (KROK 71); user / to / by: tablice id osób
+const fltEmpty=()=>({who:"",vis:"",act:"",grp:"",when:"",date:"",where:"",bike:"",pace:"",user:[],demo:"",to:[],by:[],arch:"",sort:""});   // sort:"new" = Kolejność „od najnowszych” (data dodania; nic nie ukrywa, znika razem z filtrami); vis: Widoczność, act: Aktywność, grp: 👥 grupa (KROK 71); user / to / by: tablice id osób
 const FLT_MULTI=["user","to","by"];   // osoby, które można wybrać kilka naraz
 let flt=(()=>{let f;try{f=Object.assign(fltEmpty(),JSON.parse(localStorage.getItem("flt")||"{}"))}catch(e){f=fltEmpty()}
   if(f.who==="priv"||f.who==="open"){f.vis=f.who;f.who=""}   // „Czyje” rozdzielone na Relację i Widoczność — stary zapis przenosimy
@@ -345,6 +345,7 @@ const FLT_WHO=[["mine","Moje"],["going","Jadę"],["inv","Zaproszony"],["part","B
 const FLT_VIS=[["open","Otwarte"],["priv","Prywatne"]];
 const FLT_ACT=()=>actList.filter(x=>actAvail().includes(x)||flt.act===x.key).map(x=>[x.key,x.name_many]);   // 🏃 z bazy (KROK 94), klucze jak wants.activity
 const FLT_ICO={mine:"user",going:"check",inv:"mail",fav:"star",open:"globe",priv:"lock"};   // ikony aktywności — actOf(k).icon
+const FLT_SORT=[["new","Od najnowszych"]];   // Kolejność kart dni: domyślnie wg terminu, „od najnowszych” = wg daty dodania zaproszenia
 const FLT_WHEN=[["today","Dziś"],["tom","Jutro"],["wknd","Weekend"],["7d","7 dni"]];
 const FLT_BIKE=()=>[["all","Dla wszystkich"]].concat(Object.entries(BIKES).map(([k,t])=>[k,t.replace(/^\S+\s/,"")]));
 const FLT_PACE=()=>Object.entries(PACES).map(([k,x])=>[k,x.e+" "+x.r.replace(" km/h","")]);
@@ -352,6 +353,7 @@ const fltNm=a=>{const n=a.map(u=>nicks[u]||"osoba");return n.length>2?n.slice(0,
 function fltLabel(k){
   const v=flt[k],f=a=>(a.find(x=>x[0]===v)||[,v])[1];
   if(k==="who")return f(FLT_WHO);
+  if(k==="sort")return "Kolejność: "+f(FLT_SORT).toLowerCase();
   if(k==="vis")return f(FLT_VIS);
   if(k==="act")return f(FLT_ACT());
   if(k==="when")return v==="date"?(flt.date?new Date(flt.date+"T12:00").toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"}):"Data"):f(FLT_WHEN);
@@ -464,7 +466,8 @@ const fltGrpChip=()=>'<button type="button" class="fch'+(flt.grp?' on':'')+'" da
 const fltHasDemo=()=>(typeof demoIds!=="undefined"&&demoIds.size)||!!flt.demo;
 const fltHasAct=()=>!!flt.act||wants.some(w=>w.activity&&w.activity!=="bike");   // sekcja „Aktywność” tylko gdy w zaproszeniach są inne aktywności niż rower
 function fltSecs(){
-  return {src:fltChip("arch","1","Filtruj też archiwum","clock")+(flt.arch?ARCH_R.map(([d,t])=>'<button type="button" class="fch'+(archDays===d?' on':'')+'" data-fk="arng" data-fv="'+d+'">'+t+'</button>').join(""):'')+(testOk?fltTg("ht","Zaproszenia testowe",hideTest):'')+(fltHasDemo()?fltTg("tgdemo","Konta demo",flt.demo==="hide"||(typeof demoOpt!=="undefined"&&!demoOpt.show&&!demoPeek)):''),
+  return {sort:fltChip("sort","new","Od najnowszych","clock"),
+    src:fltChip("arch","1","Filtruj też archiwum","clock")+(flt.arch?ARCH_R.map(([d,t])=>'<button type="button" class="fch'+(archDays===d?' on':'')+'" data-fk="arng" data-fv="'+d+'">'+t+'</button>').join(""):'')+(testOk?fltTg("ht","Zaproszenia testowe",hideTest):'')+(fltHasDemo()?fltTg("tgdemo","Konta demo",flt.demo==="hide"||(typeof demoOpt!=="undefined"&&!demoOpt.show&&!demoPeek)):''),
     vis:FLT_VIS.map(([v,t])=>fltChip("vis",v,t,FLT_ICO[v])).join("")+(fltHasGrp()?fltGrpChip():""),
     act:FLT_ACT().filter(([v])=>fltScope!=="ev"||(actOf(v).ev_kinds||[]).length).map(([v,t])=>fltChip("act",v,t,actOf(v).icon)).join(""),
     when:FLT_WHEN.filter(x=>x[0]!=="7d").map(([v,t])=>fltChip("when",v,t)).join("")+'<label class="fch fdate'+(flt.when==="date"?' on':'')+'">'+uiIcon("cal")+'<input type="date" id="fltdate" value="'+esc(flt.when==="date"?flt.date:"")+'"></label>',
@@ -492,7 +495,7 @@ function fltMainHtml(){
    +'<div class="bslist" id="fltlist"><div class="note fscope">Te same filtry działają w Zaproszeniach i w „Mam ochotę” pod 🔔.</div>'+sec("act","Aktywność")+'<div id="fltbikebox"'+(fltBikeOn()?'':' class="hide"')+'>'+sec("bike","Rodzaj roweru")+'</div>'+sec("when","Kiedy")+sec("who","Relacja")
    +go("where","pin","Gdzie")+go("user","user","Osoba")+'</div><button type="button" class="b big" id="fltok" data-fk="close">Gotowe</button>';
   return '<div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="close">Zamknij</button><b>Filtry</b><button type="button" class="lnk" data-fk="clear" style="color:var(--bad);text-align:right">Wyczyść</button></div>'
-   +'<div class="bslist" id="fltlist"><div class="note fscope">Działają też w Imprezach i w „Mam ochotę” pod 🔔 — tam, gdzie mają sens.</div>'+sec("src","Źródło i archiwum")+sec("vis","Widoczność")+(fltHasAct()?sec("act","Aktywność"):'')+sec("when","Kiedy")+sec("who","Relacja")+(bikeOk?'<div id="fltbikebox"'+(fltBikeOn()?'':' class="hide"')+'>'+sec("bike","Rodzaj roweru")+'</div>':'')+(paceOk?sec("pace","Tempo"):'')
+   +'<div class="bslist" id="fltlist"><div class="note fscope">Działają też w Imprezach i w „Mam ochotę” pod 🔔 — tam, gdzie mają sens.</div>'+sec("src","Źródło i archiwum")+sec("vis","Widoczność")+(fltHasAct()?sec("act","Aktywność"):'')+sec("when","Kiedy")+sec("sort","Kolejność")+sec("who","Relacja")+(bikeOk?'<div id="fltbikebox"'+(fltBikeOn()?'':' class="hide"')+'>'+sec("bike","Rodzaj roweru")+'</div>':'')+(paceOk?sec("pace","Tempo"):'')
    +(placeOk?go("where","pin","Gdzie"):'')+go("user","user","Osoba")+(fltAdm()?'<div class="bsgrp">👑 Administrator</div>'+go("to","mail","Zaproszeni: osoba")+go("by","lock","Prywatne od osoby"):'')+'</div>'
    +'<button type="button" class="b big" id="fltok" data-fk="close">Gotowe</button>';
 }
@@ -569,7 +572,8 @@ function renderWants0(){
      +'<button type="button" class="b wembtn" data-wnew="1">'+uiIcon("plus")+' Zaproś na rower</button></div>';wsecSync();return}
   // grupowanie po dniu: jedna rozwijana karta na dzień
   const days=[];
-  list.slice().sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at)).forEach(w=>{
+  const byNew=flt.sort==="new",cr=w=>new Date(w.created_at||w.starts_at);   // Kolejność „od najnowszych”: karty dni wg najświeższego zaproszenia, w dniu też od najświeższego
+  list.slice().sort(byNew?(a,b)=>cr(b)-cr(a):(a,b)=>new Date(a.starts_at)-new Date(b.starts_at)).forEach(w=>{
     const k=localIso(new Date(w.starts_at)).slice(0,10);
     let d=days.find(x=>x.k===k);if(!d){d={k,ws:[]};days.push(d)}
     d.ws.push(w);
@@ -602,7 +606,7 @@ function renderWants0(){
     return '<details class="wday'+(cnt>1?' wmulti':'')+(dPriv?' wdpk':'')+(cnt>1?' wdpn':'')+(pvNow?' wpv':'')+'" data-day="'+d.k+'"'+(open?' open':'')+'><summary>'
      +'<div class="ftile'+(n===0?' today':'')+(d.ws.some(wLive)?' live':'')+'">'+ftInner(dt)+ftWxHtml(d.ws)+'</div>'
      +'<div class="wtx"><div class="wl1">'+l1+' · <span class="whrs'+(open?' whrsall':'')+'">'+wHrsHtml(d.ws,open,ord.length?ord[Math.min(dayIdx[d.k]||0,ord.length-1)].id:'')+'</span></div>'
-     +'<div class="wl3">Od: '+esc(authTxt)+'</div>'
+     +'<div class="wl3">Od: '+esc(authTxt)+(byNew&&typeof agoTxt==="function"?' <i class="wnew">· dodano '+esc(agoTxt(cr(d.ws[0])))+'</i>':'')+'</div>'
      +'<div class="wl2">'+pplHtml+'</div></div>'+wl4Html(d.ws)
      +(cnt>1||dPriv?'<span class="wbd">'+(dPriv?'<span class="wlk" aria-label="'+dPriv+' prywatne">'+uiIcon("lock")+dPriv+'</span>':'')+(cnt>1?'<span class="wcnt" aria-label="'+cnt+' '+zg+'">'+cnt+'</span>':'')+'</span>':'')
      +'</summary>'+mineTop.map(wantDayHtml).join("")+(ord.length>1
