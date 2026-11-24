@@ -459,7 +459,7 @@ const sigUnread=()=>{if(!sigOn())return [];const s=lsGet("sigSeen")||"",D=bsDone
 const sigReactUn=()=>{const m=sigMine();if(!sigOn()||!m||m.cancelled_at)return [];const t=sigToday();
   return notifs.filter(n=>n.kind==="sig_react"&&!n.read_at&&localIso(new Date(n.created_at)).slice(0,10)===t)};
 // ✋ „X wycofał(a) sygnał” (KROK 91) — do osób, które dały „Też mam ochotę!”; nieprzeczytane z ostatnich 20 h
-const sigCancelUn=()=>sigOn()?notifs.filter(n=>n.kind==="sig_cancel"&&!n.read_at&&Date.now()-new Date(n.created_at).getTime()<72e6):[];
+const sigCancelUn=()=>sigOn()?notifs.filter(n=>n.kind==="sig_cancel"&&!n.read_at&&Date.now()-new Date(n.created_at).getTime()<72e6&&!sigs.some(x=>x.user_id===n.actor&&!x.cancelled_at)):[];   // znika, gdy ta osoba dała dziś znać ponownie
 const sigCancelRow=n=>'<div class="nit stn sgrow new"><div class="ic">'+uiIcon("hand")+'</div><div class="tx">'+nk(n.actor)
   +'<div class="w">'+(genders[n.actor]==="K"?'wycofała':'wycofał')+' swój sygnał „Mam ochotę” · '+esc(hhmm(new Date(n.created_at)))+'</div></div>'
   +'<button type="button" class="nmk" data-sgcx="'+esc(n.id)+'" aria-label="Oznacz jako przeczytane" title="Oznacz jako przeczytane">'+uiIcon("check")+'</button></div>';
