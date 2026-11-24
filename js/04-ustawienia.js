@@ -130,7 +130,7 @@ function testDelHtml(){
   const dr=typeof demoRet!=="undefined"&&demoRet;   // 🧪 przyszedł z panelu „Zaproszenia testowe” (js/18)
   return (dr?'<button class="sback" data-dx="open">‹ Zaproszenia testowe</button>':'<button class="sback" data-c="backadmin">‹ Administracja</button>')+'<div class="sname" style="margin-top:26px">🧹 Usuń testowe zaproszenia</div>'
    +'<div class="sleft"><div class="arow" style="flex-direction:column;align-items:flex-start;gap:4px"><b>'+(testDelN==null?'Liczę…':'Testowych zaproszeń: '+testDelN)+'</b>'
-   +'<span class="note">Znikną na zawsze razem z dołączeniami, zaproszonymi, odpowiedziami i powiadomieniami. Prawdziwe zaproszenia (bez 🧪) zostają. Dziennik aktywności zostaje.</span></div>'
+   +'<span class="note"><b>Także przeszłe jazdy z historii demo i ich raporty „Jak poszło?”.</b> Znikną na zawsze razem z dołączeniami, zaproszonymi, odpowiedziami i powiadomieniami. Prawdziwe zaproszenia (bez 🧪) zostają. Dziennik aktywności zostaje.</span></div>'
    +'<label for="gtdel" style="font-size:15px;margin-top:16px">Aby potwierdzić, wpisz <b>USUŃ</b></label><input id="gtdel" maxlength="10" autocomplete="off" autocapitalize="characters">'
    +'<div class="note" id="gtdelinfo" style="color:var(--bad)"></div>'
    +'<button class="b sbtn" style="background:var(--bad)" data-c="testdelgo"'+(testDelN?'':' disabled')+'>Usuń testowe zaproszenia</button></div>';

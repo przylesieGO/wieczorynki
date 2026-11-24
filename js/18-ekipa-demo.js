@@ -218,7 +218,7 @@ function demoHtml(){
    // na stałe: ochotnicy, odpowiedzi, sprzątanie
    +'<div class="bsgrp gl dmkgap"><span>Na stałe</span></div>'
    +demoSec("vol","Ochotnicy",nVol||"brak",demoVolHtml())
-   +demoSec("tick","Odpowiedzi kont demo",ld?"…":(auto?"same":"wyłączone")+" · czeka "+nPd,
+   +demoSec("tick","Odpowiedzi kont demo",ld?"…":(auto?"same":"wyłączone")+(nPd?" · czeka "+nPd:""),
      '<p class="note dmkd">Gdy zaprosisz konto demo albo poprosisz o wejście do grupy demo — konto odpowie samo po kilku minutach (do ok. 4 h).</p>'
      +'<div class="ios-grp">'
      +'<div class="ios-it"><span class="ios-t">Odpowiadają same<small>Sprawdzane co 15 min</small></span>'
@@ -228,7 +228,7 @@ function demoHtml(){
      +'<button type="button" class="ios-it ios-row dmact" data-dx="tick"'+(made.length&&!demoBusy?'':' disabled')+'><span class="ios-t">Odpowiedz teraz, bez czekania</span></button>'
      +'</div><p class="note">Po każdej turze, w której coś się stało — jedna wiadomość do Ciebie na Telegram.</p>')
    +demoSec("del","Sprzątanie","",
-     '<div class="ios-grp">'+[gRow("#ff3b30","trash","Usuń wszystkie testowe zaproszenia","Konta demo zostają · potwierdzasz wpisując USUŃ",'','data-dx="testdel"'),
+     '<div class="ios-grp">'+[gRow("#ff3b30","trash","Usuń wszystkie testowe zaproszenia","Przyszłe i przeszłe (też historia demo) · konta i grupy zostają · wpisujesz USUŃ",'','data-dx="testdel"'),
       gRow("#ff3b30","trash","Usuń historię demo","Przeszłe jazdy kont demo z raportami i ich wpisy na tablicach · przyszłe zaproszenia zostają",
         hs.rides||hs.posts?'<span class="ios-v">'+((hs.rides||0)+(hs.posts||0))+'</span>':'','data-dx="histdel"'+(hs.rides||hs.posts?dis:' disabled')),
       gRow("#ff3b30","trash","Zamknij grupy demo","Do archiwum, razem z prawdziwymi członkami",grs.length?'<span class="ios-v">'+grs.length+'</span>':'','data-dx="grwipe"'+(grs.length?dis:' disabled')),
