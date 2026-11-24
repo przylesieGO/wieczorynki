@@ -1121,6 +1121,23 @@ html[data-theme=dark] .nkdemo{border-color:#ff7a70;color:#ff7a70}
 .dmsec .bsgrp{margin:14px 2px 6px}.dmsec .note{margin:8px 2px 0}.dmsec .sbtn{margin-top:10px}
 .dmvact{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.dmsec .dmvact .sbtn{margin:0;padding:12px 8px;font-size:15px}
 .dmvclr{display:block;margin:8px auto 0;font-size:13px}.dmvlist{margin-top:8px;background:var(--card);border-radius:14px;padding:0 12px 4px}.dmvlist .bsgrp{margin:0;padding:12px 0 4px}.dmvlist .prow:last-of-type{border-bottom:0}.dmvlist .pfnone{padding:8px 0}.dmvlist .prow .pjn{margin-left:auto}
+/* Zaproszenia testowe — przebieg krok po kroku (2026-11-24): tytuły do lewej, numer kroku, ciaśniejsze bomble, lista ochotników ~7 wierszy */
+details.dmsec>summary{text-align:left}details.dmsec>summary>span:first-child:not(.dmkn),.dmsec .dmkt{flex:1;min-width:0}.dmsec .stsum{flex:none;white-space:nowrap;margin-left:0}
+.dmkn{flex:none;width:26px;height:26px;border-radius:50%;background:var(--card);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--line);font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.dmkn.ok{background:var(--accbtn);color:var(--white);box-shadow:none}
+.dmsec .dmkd{margin:0 2px 10px;font-size:14px;line-height:1.4}
+.dmsec .dmin{margin:-2px 14px 8px}
+.ios-it.dmyn{gap:10px}.dmyn .seg{flex:none;margin:0;min-width:128px}
+.dmkgap{margin:22px 4px 2px}
+.dmsec .pfrow{justify-content:flex-start;gap:5px;margin:6px 0 0}.dmsec .pfrow .fch{padding:5px 10px;font-size:13px;gap:4px}.dmsec .pfrow .fch .ui-i{width:13px;height:13px}
+.dmsec .pfbar{margin:6px 0 0}.dmsec .pfbar .bsq{padding-top:8px;padding-bottom:8px}
+.dmvbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 8px;margin:10px 2px 6px}.dmvbar .lnk{font-size:14px;padding:0}
+.dmvbtn{display:flex;gap:6px;flex:none}.dmvb{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;font-size:14px;background:var(--accbtn);color:var(--white)}.dmvb .ui-i{width:14px;height:14px}
+.dmvb.g{background:var(--fill);color:var(--ink)}.dmvb:disabled{opacity:.4;cursor:default}
+.dmsec .dmvlist{margin-top:0;padding:0 12px;max-height:min(330px,45vh);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;border:1px solid var(--line)}
+.dmsec .dmvlist .prow{padding:6px 2px}
+.dmsec label.ios-t{font-size:16px;color:var(--ink);margin:0}.dmcol .seg button{white-space:nowrap}.dmyn .seg{min-width:0}.dmyn .seg button{padding:4px 16px;min-height:0;height:auto;font-size:15px}.dmsec .dmst{margin:8px 0}
+.dmvbar .lnk{white-space:nowrap;font-size:13px}.dmvb{padding:5px 10px;font-size:13px;white-space:nowrap}.dmsec .dmvlist .prow .pnm{overflow:hidden}.dmsec .dmvlist .prow .pjn{flex:none}
 /* 📣 Tablica ogłoszeń grupy (KROK 76) — te same klocki co grupy: .grbox, .plrm, .gract, .bsmsg */
 .gpost{padding:10px 0;border-bottom:1px solid var(--line);text-align:left}.gpost:last-child{border-bottom:0}
 .gpost.gped{opacity:.55}

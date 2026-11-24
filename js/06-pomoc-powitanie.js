@@ -153,6 +153,10 @@ function helpFullHtml(){
      "<b>🎒 Co zabrać</b> — lista dopasowana do pogody i długości jazdy; odhaczaj, co już spakowane (zapamiętane w telefonie).",
      "<b>⭐ Oceń trasę</b> — gwiazdki, malownicza, trudność, ruch aut, plakietki i komentarz (widzą wszyscy). <b>🚲 Zaproś na tę trasę</b> otwiera formularz z wybraną trasą.",
      "Trasy dodaje się z zaproszenia z plikiem GPX (przełącznik w formularzu albo „📚 Do bazy tras” na karcie). Autor i admin zmieniają nazwę, ukrywają i usuwają."]):'')
+   +(typeof isKingReal==="function"&&isKingReal()?sec("🧪 Zaproszenia testowe (tylko 👑)",[   // js/18 — panel 👑
+     "<b>⚙️ → Administracja → Zaproszenia testowe</b> — zmyślone konta i zaproszenia do zabawy. Idziesz krokami od góry: <b>1 Konta demo</b> (ile kont gra) → <b>2 Grupy demo</b> (Tak/Nie) → <b>3 Zaproszenia</b> → <b>4 Historia</b> (Tak/Nie). Numer kroku zielenieje, gdy krok jest zrobiony; po prawej stan, np. „✓ 20 kont” albo „czeka na krok 1”.",
+     "Każdy suwak ma opis na przykładzie, np. „jawne 70 % — z 10 zaproszeń 7 widzi każdy, 3 tylko zaproszeni”. „Nie” przy grupach = zaproszenia i historia bez grup.",
+     "Niżej, <b>Na stałe</b>: <b>Ochotnicy</b> (prawdziwe osoby za ich zgodą — filtry, lista, Dodaj / Wypisz nad listą), <b>Odpowiedzi kont demo</b> i <b>Sprzątanie</b>."]):'')
    +sec("⭐ Ludzie",[
      "Dotknij nicku: karta osoby — zdjęcie, „Z nami od…”, media, a jeśli ktoś pozwolił: miejscowość i „Zadzwoń / SMS”; „🚴 Zaproś na rower”, ☆ dodaj do ulubionych. ⭐ ulubieni są zawsze na górze list.",
      "🟢 zielona kropka przy nicku = osoba ma teraz otwartą aplikację. Przy nickach: ⭐ ulubiony, 💉 tester, 💡 3 zrealizowane pomysły/zgłoszenia, 👑 główny admin. Administratorów pokaże filtr „Administratorzy” w oknach wyboru osób — do nich piszesz, gdy coś nie działa."])
