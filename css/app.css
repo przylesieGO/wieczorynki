@@ -1321,5 +1321,5 @@ mark.srmk.out{background:transparent;color:inherit;box-shadow:none}
 .sgmine .sglbl{text-align:left}
 .sgrl{display:flex;flex-wrap:wrap;gap:6px;max-height:132px;overflow-y:auto;text-align:left}
 .sgrc{display:inline-flex;align-items:center;gap:5px;padding:5px 11px 5px 8px;border-radius:999px;background:var(--fill);font-size:14px}.sgrc .ui-i{width:16px;height:16px;color:#c98a0b;flex:none}html[data-theme=dark] .sgrc .ui-i{color:#f5c94e}
-.sgmine .note{text-align:left}.sgmkeen{margin-top:14px}
+.sgmine .note{text-align:left}.sgmkeen{margin-top:14px}.sgmbell{display:block;margin:12px auto 0}
 @media (prefers-reduced-motion:reduce){.sigfab.act svg{animation:none}}
