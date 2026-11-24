@@ -8,7 +8,7 @@
    👑 szuka też we wszystkich prywatnych zaproszeniach i grupach (dane, które baza i tak daje 👑).
    Plik wczytywany jako ostatni: przy wczytaniu tylko rejestruje obsługę zdarzeń. Bez nowych zapytań do bazy poza
    jednorazowym dociągnięciem tras / grup / serwisu przy pierwszym otwarciu okna (oszczędzanie limitów serwera). */
-let srPosts=null,srPostsP=null,srOldBusy=false,srOldMsg="";   // 📣 wpisy z tablic moich grup (wczytane raz przy otwarciu okna); 🗄 „Szukaj starszych”
+let srPosts=null,srPostsP=null,srOldBusy=false,srOldMsg="",srOldR=30;   // srOldR: zakres „Szukaj starszych” wybrany w oknie (30 = wyłączone); dane mogą sięgać dalej (wOld)   // 📣 wpisy z tablic moich grup (wczytane raz przy otwarciu okna); 🗄 „Szukaj starszych”
 let srQ="",srTy="all",srOpt=(()=>{try{return localStorage.getItem("srOpt")==="1"}catch(e){return false}})(),srMore=false;
 const srNorm=t=>String(t||"").toLocaleLowerCase("pl").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/ł/g,"l");
 // trafienie: wszystkie słowa zapytania muszą wystąpić; punkty: początek nazwy 3, początek słowa 2, w środku 1 (-1 = brak)
@@ -53,7 +53,7 @@ function srItems(q){
     if(done){if(Date.now()-d.getTime()<30*864e5)add("done",w.id,t,sub,"archive",hay+" odbyte archiwum",()=>srGoArch(w),d.getTime())}   // odbyte: najświeższe na dole (przy polu)
     else add("want",w.id,t,sub,w.visibility==="private"?"lock":"bike",hay,()=>srGoWant(w),-d.getTime())});
   // 🗄 starsze niż 30 dni — tylko po „Szukaj starszych” (wOld, js/10; baza daje zwykłemu użytkownikowi jego jazdy, 👑 — wszystkie)
-  if(typeof wOld!=="undefined"&&wOld.length){const have=new Set(wRaw.map(x=>x.id));wOld.forEach(w=>{if(have.has(w.id))return;
+  if(typeof wOld!=="undefined"&&srOldR!==30){const have=new Set(wRaw.map(x=>x.id));oldIn(srOldR).forEach(w=>{if(have.has(w.id))return;
     const d=new Date(w.starts_at),J=jOld[w.id]||[],t=w.title||"Jazda — "+nickOf(w.user_id);
     add("done",w.id,t,srWhen(d)+" · "+d.getFullYear()+(w.place?" · "+w.place:"")+(w.visibility==="private"?" · prywatne":"")+" · starsze",w.visibility==="private"?"lock":"archive",
       [nickOf(w.user_id),J.map(nickOf).join(" "),srWantTags(w),w.place,w.place_city,w.place_area,w.note,srDay(d),"odbyte archiwum starsze"].join(" "),()=>srGoArch(w),d.getTime())})}
@@ -199,7 +199,7 @@ function srGoWant(w){const m=srReveal(w);const x=wants.find(y=>y.id===w.id);if(!
 function srGoArch(w){
   if(!session){say("Archiwum widzą zalogowani.");return}
   const m=srReveal(w,true);
-  if(Date.now()-new Date(w.starts_at).getTime()>30*864e5&&typeof oldDays!=="undefined")archDays=oldDays;   // starsza jazda: archiwum w zakresie z „Szukaj starszych”
+  if(Date.now()-new Date(w.starts_at).getTime()>30*864e5&&srOldR!==30)archDays=srOldR;   // starsza jazda: archiwum w zakresie z „Szukaj starszych”
   show(0);archOpen=true;archAll=true;renderWants();
   setTimeout(()=>{const el=document.querySelector('#wantarch .ai[data-wid="'+w.id+'"]');if(el){srPulse(el);srMark(el,srGoQ)}else{srPulse($("wantarch"));say("Tej jazdy nie widać w archiwum (30 dni).")}if(m)say(m)},80)}
 // 🙋 sygnał: otwórz 🔔, rozwiń „Ekipa na dziś” i pokaż wiersz osoby
@@ -247,12 +247,15 @@ function srHistHtml(){const H=srHistGet();if(!H.length)return "";
 const srOldOk=()=>!!session&&!DEMO&&typeof oldLoad==="function"&&["all","done","want"].includes(srTy);
 function srOldHtml(){
   if(!srOldOk()||!srQ.trim())return "";
-  const R=ARCH_R.filter(x=>x[0]!==30),on=oldDays!==30;
-  return '<div class="srold"><span class="srolt">'+uiIcon("archive")+(on?'Szukam też w starszych: '+esc(archRName(oldDays).toLowerCase()):'Szukaj starszych niż 30 dni')+(isSuper(uid)?'':' <small>(Twoje jazdy)</small>')+'</span>'
-   +'<span class="fchips srolc">'+R.map(([d,t])=>'<button type="button" class="fch'+(on&&oldDays===d?' on':'')+'" data-sk="old" data-sv="'+d+'">'+t+'</button>').join("")+'</span>'
+  const R=ARCH_R.filter(x=>x[0]!==30),on=srOldR!==30;
+  return '<div class="srold"><span class="srolt">'+uiIcon("archive")+(on?'Szukam też w starszych: '+esc(archRName(srOldR).toLowerCase())+' <button type="button" class="lnk" data-sk="old" data-sv="30">wyłącz</button>':'Szukaj starszych niż 30 dni')+(isSuper(uid)?'':' <small>(Twoje jazdy)</small>')+'</span>'
+   +'<span class="fchips srolc">'+R.map(([d,t])=>'<button type="button" class="fch'+(on&&srOldR===d?' on':'')+'" data-sk="old" data-sv="'+d+'">'+t+'</button>').join("")+'</span>'
    +(srOldBusy?'<span class="note">Wczytuję…</span>':srOldMsg?'<span class="note">'+esc(srOldMsg)+'</span>':'')+'</div>'}
-async function srOldGo(d){if(srOldBusy)return;srOldBusy=true;srOldMsg="";srDraw(true);
-  try{await oldLoad(d);srOldMsg=wOld.length?"":"Brak starszych jazd."}catch(err){srOldMsg="Nie udało się: "+(err&&err.message||"błąd")}
+// d = 30 albo ponowne dotknięcie wybranego zakresu → wyłącz; mniejszy zakres po większym nie pobiera nic z bazy (oldIn przycina)
+async function srOldGo(d){if(srOldBusy)return;
+  if(d===30||d===srOldR){srOldR=30;srOldMsg="";srDraw(true);return}
+  srOldBusy=true;srOldMsg="";srDraw(true);
+  try{await oldLoad(d);srOldR=d;srOldMsg=oldIn(d).length?"":"Brak starszych jazd w tym okresie."}catch(err){srOldMsg="Nie udało się: "+(err&&err.message||"błąd")}
   srOldBusy=false;srDraw(true)}
 // A–Z przy długiej liście nazw (osoby, grupy, listy, trasy) bez wpisanego tekstu — ten sam pasek co w Filtrach
 const SR_AZ=["user","grp","list","route"];
