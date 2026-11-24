@@ -128,6 +128,7 @@ function helpFullHtml(){
      tg?"<b>Bot Telegram</b> napisze prywatnie: zaproszenie, zmiana godziny i szczegółów, ustalenie startu, kto dołączył, przypomnienie ~1 h przed jazdą. Włączysz: ⚙️ → Edytuj profil → Telegram → Połącz z Telegramem → w Telegramie START. Wyłączysz tam samo (Rozłącz).":"",
      session?"<b>Kanał @PrzylesieGo</b> na Telegramie — ogłoszenia nowych jazd dla wszystkich.":""].filter(Boolean))
    +(typeof sigOn==="function"&&sigOn()?sec("🟡 Mam ochotę",[
+     "<b>Przewodnik Gawron</b> — animowany kruk na rowerze pokazuje krok po kroku, jak dać znać (podświetla przyciski; niczego nie wysyła). Startuje sam przy pierwszym wejściu; ponownie uruchomisz go tutaj albo na górze Pomocy:"+'<span class="gwgo"><button type="button" class="fch on" data-gwgo="mam_ochote">'+uiIcon("hand")+' Jak dać znać (5 kroków)</button><button type="button" class="fch" data-gwgo="mam_ochote_pelny">Cała historia (15 kroków)</button></span>',
      "Masz ochotę na jazdę, ale bez pomysłu na godzinę i trasę? Dotknij <b>zielonego kółka z dłonią</b> nad ➕ (widać je, gdy na dziś nie ma zaproszeń). Po wysłaniu sygnału kółko zostaje — z mniejszą dłonią i plakietką (zielony ptaszek po lewej i liczba „Też mam ochotę” po prawej). Wybierz: rower, bieg, spacer albo trekking.",
      "<b>Komunikat</b> (opcjonalnie): jeden z gotowych, np. „Nogi same kręcą”, albo „Inne…” — własny, do 40 znaków (bez wulgaryzmów i linków; administrator może go ukryć).",
      "<b>Kto zobaczy?</b> Wszyscy (także kanał Telegram) albo tylko wybrane osoby — wybór jak przy zaproszeniach: ulubieni, listy, grupy, pojedyncze osoby. Prywatny sygnał nie trafia na kanał.",
@@ -205,6 +206,7 @@ function helpHtml(){
   return '<div class="sheetbox popbox hbox" role="dialog" aria-modal="true" aria-label="Pomoc"><button class="sclose" data-h="close" aria-label="Zamknij">✕</button>'
    +'<div class="ph" style="margin-top:0">Jak to działa?</div>'
    +relHtml()
+   +(session&&typeof sigOn==="function"&&sigOn()&&typeof GW_SVG!=="undefined"?'<div class="hinst hgw"><span class="hgwav">'+GW_SVG+'</span><div class="hinsth">Gawron pokaże Ci „Mam ochotę”</div><div class="hinstl">Animowany przewodnik krok po kroku — podświetla przyciski na ekranie. Niczego za Ciebie nie wysyła.</div>'+'<span class="gwgo"><button type="button" class="fch on" data-gwgo="mam_ochote">'+uiIcon("hand")+' Jak dać znać (5 kroków)</button><button type="button" class="fch" data-gwgo="mam_ochote_pelny">Cała historia (15 kroków)</button></span>'+'</div>':'')
    +inst
    +'<ol class="hst">'
    +st(1,"Zaproś na rower — ➕ w prawym dolnym rogu.","Dzień i godzina (albo zakres, np. 17–19 — każdy wybierze, kiedy może). Do tego, jeśli chcesz: tempo, dystans, trasa GPX, punkt zbiórki. Dla wszystkich albo 🔒 tylko dla wybranych.")

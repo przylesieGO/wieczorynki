@@ -5,6 +5,7 @@ const fbf={kind:"bug",rating:0,text:"",dev:true};let fbReplyTxt="",fbMsgTxt="";
 // Nowe wydanie: dopisz pozycję na początku APP_REL (wersja, data, nowości) — w ❓ Pomocy pokaże się „Co nowego” i kropka przy ❓.
 const APP_REL=[
   {v:"0.10",d:"24.11.2026",items:[
+    ["bike","<b>Gawron pokaże Ci drogę</b> — animowany przewodnik (kruk na rowerze) krok po kroku przez „Mam ochotę”. Startuje sam przy pierwszym wejściu; ponownie — na górze Pomocy."],
     ["hand","<b>Mam ochotę</b> — zielone kółko z dłonią nad ➕: daj znać, że chcesz dziś jechać, biegać albo iść na spacer. Komunikat („Nogi same kręcą”), wybór, kto zobaczy, i dłoń „Też mam ochotę!”."],
     ["users","<b>Masz z kim jechać!</b> — gdy ekipa z sygnału rośnie, wszyscy w niej dostają znać (🔔 i bot); po wspólnym zaproszeniu „Jedziecie razem ›”, a kto dołączy później — „Dopisz ›” u organizatora."],
     ["search","<b>Lupa</b> w nagłówku — jedno okno szuka zaproszeń, „Mam ochotę”, imprez, osób, grup i ich tablic, list, tras, serwisu i opcji aplikacji; pamięta ostatnie hasła, a „Szukaj starszych” sięga dalej niż 30 dni."],

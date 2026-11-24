@@ -1370,3 +1370,66 @@ mark.srmk.out{background:transparent;color:inherit;box-shadow:none}
 .srbox .fulwrap .faz{flex:none}
 /* 🏃 KROK 94: plakietka aktywności na karcie zaproszenia (bieg / spacer / wędrówka) — w miejscu plakietki roweru */
 .wpc.wbk.wact{background:#dcf1e3;color:#1d6a3a}html[data-theme=dark] .wpc.wbk.wact{background:#1f3a29;color:#9fdcb4}.wpc.wact .ui-i{width:15px;height:15px}
+/* ===== Gawron — animowany przewodnik po aplikacji (js/22-przewodnik.js) ===== */
+#gw{position:fixed;inset:0;z-index:5000;pointer-events:none}
+#gw.hide{display:none}
+/* podświetlenie: „dziura” w przyciemnieniu; klikanie przechodzi do prawdziwego elementu */
+.gwspot{position:fixed;border-radius:14px;box-shadow:0 0 0 9999px rgba(8,10,14,.58);pointer-events:none;transition:left .4s cubic-bezier(.3,.7,.2,1),top .4s cubic-bezier(.3,.7,.2,1),width .4s cubic-bezier(.3,.7,.2,1),height .4s cubic-bezier(.3,.7,.2,1),border-radius .3s}
+.gwspot::after{content:"";position:absolute;inset:-4px;border-radius:inherit;border:2.5px solid #f5d04e;animation:gwring 1.7s ease-out infinite}
+.gwspot.none::after{display:none}
+@keyframes gwring{0%{opacity:.95;transform:scale(1)}100%{opacity:0;transform:scale(1.12)}}
+/* dymek */
+.gwb{position:fixed;left:12px;right:12px;margin:0 auto;max-width:420px;box-sizing:border-box;pointer-events:auto;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:20px;padding:14px 16px 12px;box-shadow:0 12px 40px rgba(0,0,0,.35)}
+.gwb.top{top:calc(104px + env(safe-area-inset-top,0px))}
+.gwb.bot{bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+.gwk{font-size:12px;font-weight:800;letter-spacing:.03em;color:var(--acc);margin:0 40px 4px 0}
+.gwt{font-size:17px;font-weight:700;margin:0 40px 4px 0}
+.gwp{font-size:15px;line-height:1.4;color:var(--ink)}
+.gwp .gwm{color:var(--mut);font-size:13px;display:block;margin-top:6px}
+.gwx{position:absolute;top:8px;right:8px;width:30px;height:30px;border:0;border-radius:50%;background:var(--fill);color:var(--ink);font-size:14px;cursor:pointer}
+.gwdots{display:flex;gap:6px;justify-content:center;margin:12px 0 2px}
+.gwdots i{width:7px;height:7px;border-radius:50%;background:var(--line);transition:background .2s,transform .2s}
+.gwdots i.on{background:var(--acc);transform:scale(1.25)}
+.gwbtns{display:flex;align-items:center;gap:8px;margin-top:10px}
+.gwbtns .sp{flex:1}
+.gwbtns .b{width:auto;flex:0 0 auto;padding:9px 18px;margin:0;font-size:15px}
+.gwbtns .lnk{color:var(--mut);font-size:14px}
+/* Gawron jedzie po górnej krawędzi dymku */
+.gwav{position:absolute;left:2px;top:-82px;width:128px;height:91px;pointer-events:none;animation:gwride .75s cubic-bezier(.2,.8,.25,1) both}
+.gwav svg{width:100%;height:100%;overflow:visible}
+html[data-theme=dark] .gwav svg{filter:drop-shadow(0 0 1.2px rgba(255,255,255,.8))}
+@keyframes gwride{0%{transform:translateX(-130px)}70%{transform:translateX(4px)}100%{transform:translateX(0)}}
+.gwav .gww{transform-box:fill-box;transform-origin:center;animation:gwspin .9s linear infinite}
+.gwav.arrive .gww{animation-duration:.25s}
+.gwav .gwbody{animation:gwbob .45s ease-in-out infinite alternate}
+.gwav .gwwing{transform-box:fill-box;transform-origin:15% 20%;animation:gwflap 1.1s ease-in-out infinite}
+.gwav .gwtail{transform-box:fill-box;transform-origin:100% 50%;animation:gwtail .9s ease-in-out infinite alternate}
+.gwav .gwl1,.gwav .gwl2{transform-box:fill-box;transform-origin:50% 0;animation:gwleg .9s ease-in-out infinite alternate}
+.gwav .gwl2{animation-direction:alternate-reverse}
+@keyframes gwspin{to{transform:rotate(360deg)}}
+@keyframes gwbob{from{transform:translateY(0)}to{transform:translateY(-1.8px)}}
+@keyframes gwflap{0%,100%{transform:rotate(0)}50%{transform:rotate(-9deg)}}
+@keyframes gwtail{from{transform:rotate(-4deg)}to{transform:rotate(5deg)}}
+@keyframes gwleg{from{transform:rotate(-16deg)}to{transform:rotate(16deg)}}
+/* krok z kliknięciem: przycisk „pokaż mi” delikatnie pulsuje */
+.gwbtns .b.nudge{animation:gwnudge 1.6s ease-in-out infinite}
+@keyframes gwnudge{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@media (prefers-reduced-motion:reduce){.gwav,.gwav *,.gwspot::after,.gwbtns .b.nudge{animation:none!important}.gwspot{transition:none}}
+/* wersja rozbudowana: rozdziały, pasek postępu, przykładowe karty */
+.gwscroll{max-height:min(52vh,430px);overflow-y:auto;overflow-x:hidden;margin-right:-6px;padding-right:6px}
+.gwbar{height:5px;border-radius:3px;background:var(--line);margin:12px 0 2px;overflow:hidden}
+.gwbar i{display:block;height:100%;background:var(--acc);border-radius:3px;transition:width .35s}
+.gwdemo{position:relative;margin-top:10px;padding:22px 8px 8px;border:1.5px dashed var(--line);border-radius:14px;background:var(--bg);pointer-events:none;text-align:left}
+.gwdtag{position:absolute;top:5px;left:10px;font-size:10px;font-weight:800;letter-spacing:.06em;color:var(--mut)}
+.gwdemo .nit{margin:0 0 6px}.gwdemo .nit:last-child{margin-bottom:0}
+.gwdemo .sgsup{margin:0}.gwdemo .sgsupbtn{pointer-events:none}
+.gwdemo .sglbl{margin-top:8px}.gwdemo .sglbl:first-child{margin-top:0}
+.gwdemo .sgmkeen{margin-top:10px;width:100%}
+.gwfld{border:1px solid var(--line);border-radius:12px;padding:9px 12px;background:var(--card);font-size:15px;margin-top:4px}
+.gwdemo .who{margin-top:4px}
+.gwfabw{display:flex;justify-content:center;padding:6px 0 4px}
+.gwpop{text-align:center;padding:4px 4px 0}.gwpop .gwq{font-size:16px;font-weight:600;margin-top:6px}.gwpop .gwm{color:var(--mut);font-size:13px}
+.gwpb{display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap}.gwpb .b{width:auto;padding:8px 14px;font-size:14px}
+.hinst.hgw{position:relative;padding-top:12px}.hgwav{float:right;width:84px;height:60px;margin:-6px -4px 0 6px}.hgwav svg{width:100%;height:100%;overflow:visible}
+html[data-theme=dark] .hgwav svg{filter:drop-shadow(0 0 1.2px rgba(255,255,255,.8))}
+.hinst .gwgo,.hfs .gwgo{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;clear:both}
