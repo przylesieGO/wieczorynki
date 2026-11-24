@@ -629,14 +629,16 @@ function sigInviteEkipa(owner){
   show(0);openWantForm(null,Object.assign({sig:owner,pick:E,sigChetni:E.length},sigPreset(x)));
 }
 // 🚲 „Super ekipa” (klamra pod 🔔): suma ekip z dzisiejszych sygnałów rowerowych, w których jestem (autor albo dłoń) — min. 2 sygnały i 3 osoby poza mną.
-// Organizatorem zaproszenia jest ten, kto kliknie; autorzy pozostałych sygnałów wchodzą jako zaproszeni. Bez pytania o zgodę.
+// Organizatorem zaproszenia jest ten, kto kliknie; tytuł to „SUPER EKIPA”, a w notatce jest jego komunikat „Mam ochotę”; autorzy pozostałych sygnałów wchodzą jako zaproszeni. Bez pytania o zgodę.
 const sigSuperSigs=()=>sig2Ok?sigList().filter(x=>x.activity==="bike"&&(x.user_id===uid||sigIReact(x))):[];
 const sigSuperIds=S=>[...new Set(S.flatMap(sigEkipaOthers))];
 const sigSuperOn=S=>S.length>=2&&sigSuperIds(S).length>=3;
 function sigInviteSuper(){
   const S=sigSuperSigs();if(!sigSuperOn(S)){say("Super ekipa pojawia się, gdy jesteś w co najmniej 2 sygnałach rowerowych i w sumie jest 3 osoby poza Tobą.");return}
   const ids=sigSuperIds(S),mine=S.find(x=>x.user_id===uid),src=mine||S[0];
-  show(0);openWantForm(null,Object.assign({sig:src.user_id,pick:ids,sigChetni:ids.length},sigPreset(src)));
+  // tytuł „SUPER EKIPA”; w notatce komunikat „Mam ochotę” osoby, która kliknęła (o ile ma własny sygnał z komunikatem)
+  const note=mine&&mine.msg&&!mine.msg_hidden?String(mine.msg).trim():"";
+  show(0);openWantForm(null,Object.assign({sig:src.user_id,pick:ids,sigChetni:ids.length,title:"SUPER EKIPA"},note?{note}:{}));
 }
 const sigMiniAv=id=>{const a=avData[id]&&avData[id].d;return '<span class="sgmav'+(genders[id]==="K"?' k':'')+(a?' ph':'')+'">'+(a?avImg(id,"gavi"):esc(String(nicks[id]||"?").charAt(0).toUpperCase()))+'</span>'};
 function sigSuperHtml(S,rows){
