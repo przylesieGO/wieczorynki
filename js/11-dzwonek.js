@@ -176,10 +176,18 @@ function renderBellSheet(){
   ].filter(Boolean),bsUn=h=>/class="bsec bsect[^"]*\bunr\b/.test(h);
   const bsK=h=>(h.match(/data-bsec="([^"]+)"/)||[])[1],bsI=h=>{const i=bsLive?bsLive.ord.indexOf(bsK(h)):-1;return i<0?999:i};
   SEC.sort((a,b)=>bsLive?bsI(a)-bsI(b):bsUn(b)-bsUn(a));   // sekcje z nowościami na górze — tylko przy otwarciu; potem kolejność stoi
+  const head='<div class="bshead"><button type="button" class="lnk" data-bk="close">Zamknij</button><b>🔔 Powiadomienia</b>'
+   +(nu?'<button type="button" class="lnk" data-bk="all" style="text-align:right">✓ Przeczytane</button>':'<span style="min-width:64px"></span>')+'</div>',list=SEC.join("");
+  // okno już otwarte: podmiana tylko tego, co się zmieniło (bez ponownej animacji okna i migania) — 2026-11-24
+  const box=p.classList.contains("hide")?null:p.querySelector(".bsbox");
+  if(box&&box.querySelector(".bshead")&&keep){
+    if(p._bsH!==head){box.querySelector(".bshead").outerHTML=head;p._bsH=head}
+    if(p._bsL!==list){keep.innerHTML=list;keep.scrollTop=st;p._bsL=list}
+    return}
+  p._bsH=head;p._bsL=list;
   p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Powiadomienia"><div class="bsgrab"></div>'
-   +'<div class="bshead"><button type="button" class="lnk" data-bk="close">Zamknij</button><b>🔔 Powiadomienia</b>'
-   +(nu?'<button type="button" class="lnk" data-bk="all" style="text-align:right">✓ Przeczytane</button>':'<span style="min-width:64px"></span>')+'</div>'
-   +'<div class="bslist">'+SEC.join("")+'</div><div class="bshint">Podświetlone = nowe. Znaczek ✓ oznacza pozycję jako przeczytaną (albo całą sekcję). Dotknij nagłówka, żeby zwinąć lub rozwinąć.</div></div>';
+   +head
+   +'<div class="bslist">'+list+'</div><div class="bshint">Podświetlone = nowe. Znaczek ✓ oznacza pozycję jako przeczytaną (albo całą sekcję). Dotknij nagłówka, żeby zwinąć lub rozwinąć.</div></div>';
   p.classList.remove("hide");
   const nl=p.querySelector(".bslist");if(nl)nl.scrollTop=st;
 }
@@ -641,20 +649,24 @@ async function sigCancel(){
   catch(e){say("Nie udało się: "+(e&&e.message?e.message:"błąd"))}
 }
 // 👋 „Też mam ochotę!” — reakcja (nie własny sygnał); drugie kliknięcie cofa
+const sigReactBusy={};   // blokada podwójnego kliknięcia w czasie zapisu
 async function sigReact(owner){
   const x=sigs.find(s=>s.user_id===owner);if(!x||owner===uid||!sig2Ok)return;
-  const on=sigIReact(x),day=sigDay||sigToday();
+  const on=sigIReact(x),day=sigDay||sigToday(),prev=(sigReacts[owner]||[]).slice();
+  if(sigReactBusy[owner])return;sigReactBusy[owner]=true;
+  // od razu na ekranie (jedno przerysowanie), zapis w tle; przy błędzie wraca poprzedni stan
+  if(on)sigReacts[owner]=prev.filter(id=>id!==uid);else sigReacts[owner]=prev.concat(uid);
+  try{navigator.vibrate&&navigator.vibrate(on?8:25)}catch(e){}
+  if(!on)bsDoneAdd([sigKey(x)]);   // dłoń „Też mam ochotę!” odhacza też wiersz (przeczytane) — sprawa załatwiona
+  renderBell();if(sigView==="pop")renderSigPop();   // renderBell przerysowuje też otwarte 🔔
   try{
     const r=on?await sb.from("ride_signal_reacts").delete().eq("owner",owner).eq("day",day).eq("user_id",uid)
       :await sb.from("ride_signal_reacts").insert({owner,day});
     if(r.error)throw r.error;
-    if(on)sigReacts[owner]=(sigReacts[owner]||[]).filter(id=>id!==uid);else(sigReacts[owner]=sigReacts[owner]||[]).push(uid);
-    try{navigator.vibrate&&navigator.vibrate(on?8:25)}catch(e){}
-    if(!on)bsDoneAdd([sigKey(x)]);   // dłoń „Też mam ochotę!” odhacza też wiersz (przeczytane) — sprawa załatwiona
     say(on?"Cofnięte.":"👋 "+nickOf(owner)+" dostanie znać, że też masz ochotę.");
-    renderBell();if($("bellsheet")&&!$("bellsheet").classList.contains("hide"))renderBellSheet();if(sigView==="pop")renderSigPop();
     sigDirty=true;syncNow();
-  }catch(e){say(sigErr(e))}
+  }catch(e){sigReacts[owner]=prev;renderBell();if(sigView==="pop")renderSigPop();say(sigErr(e))}
+  finally{sigReactBusy[owner]=false}
 }
 // komunikat sygnału → tytuł zaproszenia (≥ 6 znaków, jak tytuły w bazie) albo notatka (krótszy) — decyzja właściciela 2026-11-24 03:59
 // „Zaproś Ania ›” — nick bez odmiany (nicki nie są imionami), skrócony do 14 znaków
