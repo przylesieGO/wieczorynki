@@ -367,10 +367,12 @@ function fltLabel(k){
   if(k==="demo")return v==="hide"?"Bez kont demo":v;
   return v;
 }
+let wantsNoFlt=null;   // wszystkie zaproszenia bez filtrów — „Moje” (👤) zawsze pokazuje wszystkie Twoje, filtry ich nie chowają
 function renderWants(){try{renderSteps()}catch(e){}
   const all=wants,on=!!session&&fltActive();
   if(on)wants=all.filter(fltOk);
-  try{renderWants0()}finally{wants=all}
+  wantsNoFlt=all;
+  try{renderWants0()}finally{wants=all;wantsNoFlt=null}
   renderArch(all);
   const ws=$("wstat");if(ws){const up=all.filter(wUpcoming),me=up.filter(w=>w.user_id===uid||(joins[w.id]||[]).includes(uid)).length;   // widoczne dla mnie / biorę udział
     ws.classList.toggle("hide",!session);ws.innerHTML=uiIcon("hand")+'<button type="button" data-ws="all" class="'+(flt.who!=="part"?"on":"")+'">'+up.length+'</button><s>/</s><button type="button" data-ws="part" class="'+(flt.who==="part"?"on":"")+'">'+me+'</button>';
@@ -572,6 +574,7 @@ function renderWants0(){
      +'<button type="button" class="b wembtn" data-wnew="1">'+uiIcon("plus")+' Zaproś na rower</button></div>';wsecSync();return}
   // grupowanie po dniu: jedna rozwijana karta na dzień
   const days=[];
+  if(typeof lastSort!=="undefined"&&lastSort!==flt.sort){lastSort=flt.sort;Object.keys(dayIdx).forEach(k=>delete dayIdx[k])}   // zmiana kolejności: karuzele dni od początku (pierwsza = najnowsza dodana)
   const byNew=flt.sort==="new",cr=w=>new Date(w.created_at||w.starts_at);   // Kolejność „od najnowszych”: karty dni wg najświeższego zaproszenia, w dniu też od najświeższego
   list.slice().sort(byNew?(a,b)=>cr(b)-cr(a):(a,b)=>new Date(a.starts_at)-new Date(b.starts_at)).forEach(w=>{
     const k=localIso(new Date(w.starts_at)).slice(0,10);
@@ -605,7 +608,7 @@ function renderWants0(){
     const curW=ord.length?ord[Math.min(dayIdx[d.k]||0,ord.length-1)]:null,pvNow=mineTop.some(isPriv)||(!!curW&&isPriv(curW));
     return '<details class="wday'+(cnt>1?' wmulti':'')+(dPriv?' wdpk':'')+(cnt>1?' wdpn':'')+(pvNow?' wpv':'')+'" data-day="'+d.k+'"'+(open?' open':'')+'><summary>'
      +'<div class="ftile'+(n===0?' today':'')+(d.ws.some(wLive)?' live':'')+'">'+ftInner(dt)+ftWxHtml(d.ws)+'</div>'
-     +'<div class="wtx"><div class="wl1">'+l1+' · <span class="whrs'+(open?' whrsall':'')+'">'+wHrsHtml(d.ws,open,ord.length?ord[Math.min(dayIdx[d.k]||0,ord.length-1)].id:'')+'</span></div>'
+     +'<div class="wtx"><div class="wl1">'+l1+' · <span class="whrs'+(open?' whrsall':'')+'">'+wHrsHtml(d.ws,open,ord.length?ord[Math.min(dayIdx[d.k]||0,ord.length-1)].id:'',d.k)+'</span></div>'
      +'<div class="wl3">Od: '+esc(authTxt)+(byNew&&typeof agoTxt==="function"?' <i class="wnew">· dodano '+esc(agoTxt(cr(d.ws[0])))+'</i>':'')+'</div>'
      +'<div class="wl2">'+pplHtml+'</div></div>'+wl4Html(d.ws)
      +(cnt>1||dPriv?'<span class="wbd">'+(dPriv?'<span class="wlk" aria-label="'+dPriv+' prywatne">'+uiIcon("lock")+dPriv+'</span>':'')+(cnt>1?'<span class="wcnt" aria-label="'+cnt+' '+zg+'">'+cnt+'</span>':'')+'</span>':'')
@@ -618,7 +621,10 @@ function renderWants0(){
   wsecSync();
 }
 /* godziny w nagłówku karty dnia: zwinięta karta — 4 + „+N” (etykieta); rozwinięta — wszystkie, klikalne (przewijają/otwierają właściwe zaproszenie w karuzeli) */
-function wHrsHtml(ws,open,cur){   // cur = zaproszenie widoczne w rozwiniętym dniu (.hon) — pozostałe godziny przygaszone, tylko gdy dzień otwarty
+// Twoje zaproszenia z tego dnia pokazane osobno na górze (👤 włączone) — ich godziny są też w nagłówku karty dnia (zielone / gradient)
+const wMyDay=k=>myOn()?(wantsNoFlt||wants).filter(w=>w.user_id===uid&&!wDone(w)&&localIso(new Date(w.starts_at)).slice(0,10)===k):[];
+function wHrsHtml(ws0,open,cur,k){
+  const ex=k?wMyDay(k).filter(w=>!ws0.includes(w)):[],ws=ex.length?ws0.concat(ex).sort(flt.sort==="new"?(a,b)=>new Date(b.created_at||b.starts_at)-new Date(a.created_at||a.starts_at):(a,b)=>new Date(a.starts_at)-new Date(b.starts_at)):ws0;   // cur = zaproszenie widoczne w rozwiniętym dniu (.hon) — pozostałe godziny przygaszone, tylko gdy dzień otwarty
   const hw=ws.filter(wLive).concat(ws.filter(w=>!wLive(w)));
   // .hme = Twoje zaproszenie: godzina w stylu plakietki „Ty” (zielona); prywatne — gradient fiolet → zielony
   const mk=w=>'<button type="button" class="whb'+(wLive(w)?' hlive':'')+(isPriv(w)?' hpriv':'')+(w.user_id===uid?' hme':'')+(w.id===cur?' hon':'')+'" data-whr="'+esc(w.id)+'"'+(wLive(w)?' title="Trwa"':w.user_id===uid?' title="Twoje zaproszenie"':'')+'>'+wTime(w)+'</button>';
@@ -629,6 +635,7 @@ function wHrsHtml(ws,open,cur){   // cur = zaproszenie widoczne w rozwiniętym d
 }
 /* karuzela zaproszeń w karcie dnia */
 const dayIdx={};
+let lastSort=flt.sort;
 // fioletowa ramka otwartego dnia, gdy widać w nim zaproszenie prywatne (aktualna karta karuzeli lub własne u góry)
 function wdPvSync(c,idx){const d=c.closest("details.wday");if(!d)return;const it=c.children[idx];d.querySelectorAll(".whb").forEach(b=>b.classList.toggle("hon",!!it&&b.dataset.whr===it.dataset.wid));d.classList.toggle("wpv",!!d.querySelector(":scope>.want[data-priv]")||!!(it&&it.dataset.priv==="1"))}
 function dcarGoto(c,idx,smooth){
@@ -674,6 +681,8 @@ $("wantlist").addEventListener("click",e=>{
     if(d.open)dcarGoto(dc,idx,true);else{dayIdx[d.dataset.day]=idx;d.open=true}
   }else{
     const pin=d.querySelector('[data-wid="'+CSS.escape(wid)+'"]');
+    const my=!pin&&document.querySelector('#mywant [data-wid="'+CSS.escape(wid)+'"]');
+    if(my){const c=$("mycar");if(c)c.scrollLeft=my.offsetLeft-c.offsetLeft;$("wsecmy").scrollIntoView({behavior:"smooth",block:"start"});return}   // moje zaproszenie z góry („Moje” włączone)
     if(!d.open)d.open=true;
     if(pin)requestAnimationFrame(()=>pin.scrollIntoView({block:"nearest",behavior:"smooth"}));
   }
@@ -683,7 +692,7 @@ const MON3=["STY","LUT","MAR","KWI","MAJ","CZE","LIP","SIE","WRZ","PAŹ","LIS","
 $("wantlist").addEventListener("toggle",e=>{
   const d=e.target;if(!(d.classList&&d.classList.contains("wday")))return;
   const byUser=d.dataset.user==="1";delete d.dataset.user;
-  const wh=d.querySelector(".whrs");if(wh){wh.classList.toggle("whrsall",d.open);wh.innerHTML=wHrsHtml(wdayWs[d.dataset.day]||[],d.open)}
+  const wh=d.querySelector(".whrs");if(wh){wh.classList.toggle("whrsall",d.open);wh.innerHTML=wHrsHtml(wdayWs[d.dataset.day]||[],d.open,undefined,d.dataset.day)}
   if(d.open){
     wantOpenDay=d.dataset.day;
     const dc=d.querySelector(".dcar");if(dc)requestAnimationFrame(()=>dcarRestore(dc));
@@ -734,7 +743,7 @@ function wantHtml(w,top){
     const peek=priv&&!mine&&!wInvMe(w)&&!joined;
     const open=isOpen(w)&&!wLive(w),myp=(prefs[w.id]||{})[uid],dec=(decls[w.id]||[]).includes(uid),live=wLive(w);
     const myOpen=mine&&open&&!live;   // własne zaproszenie z godziną do ustalenia: na wąskim ekranie linki pod „Ustal”, na szerokim ikony Zmień ustaloną / Edytuj obok „Ustal” jako osobna grupa od Zaproś / Udostępnij / Kosz
-    return '<div class="want'+(mine?' mine':'')+(peek?' peek':'')+(isTest(w)?' test':'')+grCls(w)+'" data-wid="'+esc(w.id)+'"'+(priv?' data-priv="1"':'')+'>'+(peek?pkCorner:'')+(top?'<div class="wtop wtopm">'+testTag(w)+(priv?(wGr(w)?grTagHtml(w):'<span class="lockt priv">🔒 prywatne</span>'):'')+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(top.n?'<i class="wcnt">'+top.n+'</i>':'')+'</div>'+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+top.d:(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+'<div class="wtop">'+nk(w.user_id)+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w):'')+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?(wGr(w)?grTagHtml(w):'<span class="lockt priv">🔒 prywatne</span>'):'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>')
+    return '<div class="want'+(mine?' mine':'')+(peek?' peek':'')+(isTest(w)?' test':'')+grCls(w)+'" data-wid="'+esc(w.id)+'"'+(priv?' data-priv="1"':'')+'>'+(peek?pkCorner:'')+(top?'<div class="wtop wtopm">'+testTag(w)+(priv?(wGr(w)?grTagHtml(w):'<span class="lockt priv">🔒 prywatne</span>'):'')+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(top.n?'<i class="wcnt">'+top.n+'</i>':'')+'</div>'+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+top.d:(peek?testTag(w):'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w)+wAddedTag(w))+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+'<div class="wtop">'+nk(w.user_id)+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w):'')+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?(wGr(w)?grTagHtml(w):'<span class="lockt priv">🔒 prywatne</span>'):'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>')
      +(live?liveHtml(w):'')
      +paceHtml(w)+bikeHtml(w)+(live?'':durLineHtml(w))+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+(live?'':wxHtml(w))+routeBoxHtml(w)
      +invitedHtml(w)
@@ -1418,13 +1427,15 @@ function wsecSync(){const hasMy=myCnt>0,hasCal=!!$("wantlist").querySelector(".w
   if(!sw.firstChild){sw.innerHTML=uiIcon("user");so.innerHTML=uiIcon("clock")}   // dwie ikony: 🕓 od najnowszych (wg daty dodania) | 👤 moje osobno na górze
   const sn=flt.sort==="new";so.classList.toggle("on",sn);so.setAttribute("aria-pressed",String(sn));
   $("wsecmyn").textContent=hasMy?' · '+myCnt+(on?'':' · w kalendarzu'):''}
-$("mysort").addEventListener("click",()=>{flt.sort=flt.sort==="new"?"":"new";fltSave();fltRefresh();say(flt.sort==="new"?"Od najnowszych — wg daty dodania.":"Kolejność wg godziny jazdy.")});   // to samo co filtr „Kolejność”
-$("mysw").addEventListener("click",()=>{const on=!myOn();try{localStorage.setItem("myOff",on?"0":"1")}catch(e){}renderWants();say(on?"Twoje zaproszenia — osobno na górze.":"Twoje zaproszenia — w kalendarzu, na swoich godzinach.")});
+$("mysort").addEventListener("click",()=>{flt.sort=flt.sort==="new"?"":"new";if(flt.sort==="new")try{localStorage.setItem("myOff","1")}catch(e){}   // toggle: 🕓 i 👤 nie świecą naraz — włączenie sortowania zwija „Moje” do kalendarza
+  fltSave();fltRefresh();say(flt.sort==="new"?"Od najnowszych — wg daty dodania (Moje w kalendarzu).":"Kolejność wg godziny jazdy.")});   // to samo co filtr „Kolejność”
+$("mysw").addEventListener("click",()=>{const on=!myOn();try{localStorage.setItem("myOff",on?"0":"1")}catch(e){}if(on&&flt.sort==="new"){flt.sort="";fltSave()}   // toggle: włączenie „Moje” wyłącza sortowanie
+  renderWants();say(on?"Twoje zaproszenia — osobno na górze.":"Twoje zaproszenia — w kalendarzu, na swoich godzinach.")});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-wmup]");if(!b)return;const w=wants.find(x=>x.id===b.dataset.wmup);if(w)goToWant(w)});
 function renderMyWant(){
   const box=$("mywant");if(!box)return;
   const act=w=>!wDone(w);
-  const mine=wants.filter(w=>w.user_id===uid&&act(w)).sort(flt.sort==="new"?(a,b)=>new Date(b.created_at||b.starts_at)-new Date(a.created_at||a.starts_at):(a,b)=>new Date(a.starts_at)-new Date(b.starts_at));   // „od najnowszych” działa też w karuzeli Moich
+  const mine=(wantsNoFlt||wants).filter(w=>w.user_id===uid&&act(w)).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));   // karuzela „Moje”: wg terminu jazdy (jak w kalendarzu); „od najnowszych” robi 🕓 w kartach dni
   const others=wants.filter(w=>w.user_id!==uid&&act(w)&&dayDiff(new Date(w.starts_at))===0).length;
   const bd=$("wbadge");bd.innerHTML='<span class="fbn">'+others+'</span><span class="fbd"> dziś</span>';bd.classList.toggle("hide",!others);
   myCnt=mine.length;
@@ -1510,6 +1521,8 @@ $("wantlist").addEventListener("click",async e=>{
 let visOk=false,invs={},notifs=[];
 /* 🧪 zaproszenia testowe (KROK 22) */
 let testOk=false;const isTest=w=>!!w&&!!w.is_test&&!pv&&!PV_GUEST;   // w podglądzie 👑 testowe wyglądają jak prawdziwe
+// data dodania na karcie — tylko przy włączonym 🕓 „od najnowszych”
+const wAddedTag=w=>{if(flt.sort!=="new"||!w.created_at)return "";const d=new Date(w.created_at);return '<span class="wadd">dodano '+String(d.getDate()).padStart(2,"0")+'.'+String(d.getMonth()+1).padStart(2,"0")+' '+d.toLocaleTimeString("pl-PL",{hour:"2-digit",minute:"2-digit"})+'</span>'};
 const testTag=w=>isTest(w)?'<span class="ttag">🧪 TEST</span>':'';
 const CHECK='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const plf=(n,f)=>n===1?f[0]:(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20))?f[1]:f[2];
