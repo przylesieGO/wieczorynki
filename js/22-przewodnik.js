@@ -2,7 +2,7 @@
    Ładowany OSTATNI (po 21-szukaj.js); przy wczytaniu nic z innych plików nie jest wywoływane.
    Użycie: Gawron.start("mam_ochote")  ·  Gawron.stop()  ·  Gawron.seen("mam_ochote")  ·  Gawron.list()
    Start z Pomocy: przycisk z data-gwgo="<id przewodnika>" (zamyka Pomoc i uruchamia przewodnik).
-   Nic nie wysyła i niczego nie klika za użytkownika poza krokiem „Pokaż mi” (kliknięcie wskazanego przycisku). */
+   Ekran pod przewodnikiem jest nieklikalny (poza wskazanym elementem). Nic nie wysyła i niczego nie klika za użytkownika poza krokiem „Pokaż mi” (kliknięcie wskazanego przycisku). */
 const GW_SVG='<svg viewBox="0 0 140 100" aria-hidden="true">'
  +'<g class="gww"><circle cx="30" cy="72" r="20" fill="none" stroke="#3b3f4a" stroke-width="4"/><circle cx="30" cy="72" r="17" fill="none" stroke="#9aa0ad" stroke-width="1"/><path d="M30 52v40M10 72h40M16 58l28 28M44 58 16 86" stroke="#9aa0ad" stroke-width="1.4"/></g>'
  +'<g class="gww"><circle cx="108" cy="72" r="20" fill="none" stroke="#3b3f4a" stroke-width="4"/><circle cx="108" cy="72" r="17" fill="none" stroke="#9aa0ad" stroke-width="1"/><path d="M108 52v40M88 72h40M94 58l28 28M122 58 94 86" stroke="#9aa0ad" stroke-width="1.4"/></g>'
@@ -24,9 +24,9 @@ const GW_SVG='<svg viewBox="0 0 140 100" aria-hidden="true">'
 
 const GW_TOURS={
  mam_ochote:{name:"Mam ochotę — jak dać znać",steps:[
-  {sel:"#sigfab",act:"click",wait:300,title:"Znajdź dłoń",
-   text:"Nie masz pomysłu na jazdę, ale masz ochotę pojeździć? Ta okrągła dłoń daje znać innym — bez godziny i trasy. Kliknij ją.",
-   miss:"Dłoni teraz nie widać: dziś masz już własne zaproszenie albo ekran, na którym jej nie ma (jest na Starcie). Wróć na Start — dłoń stoi nad plusem."},
+  {sel:"#sigfab",act:"click",wait:300,title:"Znajdź Reakcję",
+   text:"Nie masz pomysłu na jazdę, ale masz ochotę pojeździć? Ta okrągła Reakcja daje znać innym — bez godziny i trasy. Kliknij ją.",
+   miss:"Reakcji teraz nie widać: dziś masz już własne zaproszenie albo ekran, na którym jej nie ma (jest na Starcie). Wróć na Start — Reakcja stoi nad plusem."},
   {sel:".sigacts",wait:4000,title:"Wybierz aktywność",
    text:"Rower, bieg, spacer albo trekking (wędrówka piesza). Dotknij tej, na którą masz dziś ochotę."},
   {sel:".sgmsgs",opt:true,wait:600,title:"Komunikat (opcjonalnie)",
@@ -55,7 +55,7 @@ function gwFab(n){   // dłoń po wysłaniu sygnału: ptaszek po lewej, licznik 
    +'<span class="sigbdg l">'+sigCheck+'</span>'+(n?'<span class="sigbdg r n">'+n+'</span>':'')+'</span></div>';
 }
 const GW_D={
- fab:()=>gwD(gwFab(0)+'<div class="gwm">Dłoń z zielonym ptaszkiem = sygnał wysłany.</div>'),
+ fab:()=>gwD(gwFab(0)+'<div class="gwm">Reakcja z zielonym ptaszkiem = sygnał wysłany.</div>'),
  pop:()=>gwD('<div class="gwpop"><span class="sgpav" style="width:64px;height:64px;font-size:28px;margin:0 auto 6px">A</span>'
    +'<b>Asia ma ochotę</b><div class="gwq">„Nogi same kręcą”</div><div class="gwm">rower · 07:45</div>'
    +'<div class="gwpb">'+gwBtn("Zaproś Asię ›","b")+gwBtn(gwI("hand")+" Też mam ochotę!","b w sgre2")+'</div></div>'),
@@ -73,14 +73,14 @@ const GW_D={
    +'<div class="sglbl">📍 Punkt zbiórki</div><div class="gwfld">Przylesie</div>'
    +'<div class="sglbl">Notatka</div><div class="gwfld">Nogi same kręcą</div></div>'),
  together:()=>gwD(gwRow({nick:"Ekipa na dziś",ic:"users",w:"zaproszenie „SUPER EKIPA” · Przylesie · 07:30",b:[gwBtn("Jedziecie razem ›")]})
-   +gwRow({nick:"Ola dała dłoń",ic:"users",w:"po założeniu zaproszenia",nw:1,b:[gwBtn("Dopisz Olę ›")]}))
+   +gwRow({nick:"Ola dała Reakcję",ic:"users",w:"po założeniu zaproszenia",nw:1,b:[gwBtn("Dopisz Olę ›")]}))
 };
 const GW_CL=()=>{if(typeof closeSig==="function")closeSig()};
 
 GW_TOURS.mam_ochote_pelny={name:"Mam ochotę — cała historia (rower)",steps:[
-  {ch:"Dajesz znać",sel:"#sigfab",act:"click",wait:300,title:"Znajdź dłoń",
-   text:"Masz ochotę pojeździć, ale bez pomysłu na godzinę i trasę? Ta dłoń daje znać innym. Kliknij ją.",
-   miss:"Dłoni teraz nie widać: dziś masz już własne zaproszenie albo jesteś na ekranie, gdzie jej nie ma (jest na Starcie nad plusem). Przejdź na Start i uruchom przewodnik ponownie."},
+  {ch:"Dajesz znać",sel:"#sigfab",act:"click",wait:300,title:"Znajdź Reakcję",
+   text:"Masz ochotę pojeździć, ale bez pomysłu na godzinę i trasę? Ta Reakcja daje znać innym. Kliknij ją.",
+   miss:"Reakcji teraz nie widać: dziś masz już własne zaproszenie albo jesteś na ekranie, gdzie jej nie ma (jest na Starcie nad plusem). Przejdź na Start i uruchom przewodnik ponownie."},
   {ch:"Dajesz znać",sel:'.sigacts [data-sga="bike"]',wait:4000,title:"Wybierz „Rower”",
    text:"Dotknij „Rower”. Bieg, spacer i trekking działają tak samo — zmieniają się tylko słowa w powiadomieniach."},
   {ch:"Dajesz znać",sel:".sgmsgs",opt:true,wait:600,title:"Komunikat (opcjonalnie)",
@@ -90,25 +90,25 @@ GW_TOURS.mam_ochote_pelny={name:"Mam ochotę — cała historia (rower)",steps:[
   {ch:"Dajesz znać",sel:'[data-sg="send"]',wait:600,title:"Daj znać",
    text:"To ten przycisk wysyła sygnał. Ja go nie kliknę za Ciebie. Kliknij „Dalej” w moim dymku, a pokażę, co dzieje się potem."},
   {ch:"Po wysłaniu",pre:GW_CL,title:"Co się dzieje po „Daj znać”",demo:GW_D.fab,
-   text:"Okienko się zamyka, a dłoń zostaje na ekranie — z zielonym ptaszkiem. Dotkniesz jej w każdej chwili, żeby zobaczyć „Twój sygnał”: kto ma też ochotę, „Zmień” i „Wycofaj”. Sygnał wygasa z końcem dnia."},
+   text:"Okienko się zamyka, a Reakcja zostaje na ekranie — z zielonym ptaszkiem. Dotkniesz jej w każdej chwili, żeby zobaczyć „Twój sygnał”: kto ma też ochotę, „Zmień” i „Wycofaj”. Sygnał wygasa z końcem dnia."},
   {ch:"Po wysłaniu",title:"Co widzą inni",demo:GW_D.pop,
    text:"Znajomi dostają takie okienko: zdjęcie, Twój komunikat i dwa przyciski. Gdy kilka osób da znać naraz, przewijają je w bok. „OK” zamyka i oznacza wiersz pod 🔔 jako przeczytany."},
   {ch:"Po wysłaniu",sel:"#bellbtn",soft:true,title:"Gdzie to leży pod 🔔",demo:GW_D.row,
-   text:"Pod dzwonkiem jest sekcja „Ekipa na dziś”: wiersz każdego sygnału, nieprzeczytane na górze. Dłoń przy wierszu to „Też mam ochotę!”, a „Zaproś …” zakłada zaproszenie na dziś z zakresem godzin."},
+   text:"Pod dzwonkiem jest sekcja „Ekipa na dziś”: wiersz każdego sygnału, nieprzeczytane na górze. Reakcja przy wierszu to „Też mam ochotę!”, a „Zaproś …” zakłada zaproszenie na dziś z zakresem godzin."},
   {ch:"Ktoś odpowiada",title:"Ktoś klika „Też mam ochotę!”",demo:GW_D.mine1,
-   text:"Kasia dotyka dłoni przy Twoim sygnale. Dostajesz powiadomienie pod 🔔 (i wiadomość od bota, jeśli go połączysz), na ekranie leci konfetti, a na dłoni pojawia się licznik. Reakcje się sumują."},
+   text:"Kasia dotyka Reakcji przy Twoim sygnale. Dostajesz powiadomienie pod 🔔 (i wiadomość od bota, jeśli go połączysz), na ekranie leci konfetti, a na Reakcji pojawia się licznik. Reakcje się sumują."},
   {ch:"Ktoś odpowiada",sel:"#sigfab",soft:true,title:"Gdzie widzisz odpowiedź",demo:GW_D.mine,
-   text:"Dotknij dłoni: „Twój sygnał” pokazuje listę osób z „Też mam ochotę” i przycisk „Zaproś ekipę”. Ta sama lista jest pod 🔔 przy Twoim sygnale."},
+   text:"Dotknij Reakcji: „Twój sygnał” pokazuje listę osób z „Też mam ochotę” i przycisk „Zaproś ekipę”. Ta sama lista jest pod 🔔 przy Twoim sygnale."},
   {ch:"Kilka osób",title:"Rośnie ekipa",demo:GW_D.withme,
-   text:"Jeden sygnał to jedna ekipa: autor plus osoby z dłonią. Gdy dochodzi kolejna osoba, wszyscy z ekipy dostają „Masz z kim jechać!” z przyciskiem „Zaproś ekipę ›”. Otworzy je każdy z ekipy, bez pytania o zgodę."},
+   text:"Jeden sygnał to jedna ekipa: autor plus osoby z Reakcją. Gdy dochodzi kolejna osoba, wszyscy z ekipy dostają „Masz z kim jechać!” z przyciskiem „Zaproś ekipę ›”. Otworzy je każdy z ekipy, bez pytania o zgodę."},
   {ch:"Kilka osób",title:"Kilka sygnałów naraz: Super ekipa",demo:GW_D.sup,
-   text:"Gdy jesteś w co najmniej 2 sygnałach rowerowych (jako autor albo z dłonią), a łącznie jest 3 osoby poza Tobą, pod 🔔 klamra łączy te sygnały. „Super ekipa (N) ›” otwiera jedno zaproszenie do wszystkich naraz."},
+   text:"Gdy jesteś w co najmniej 2 sygnałach rowerowych (jako autor albo z Reakcją), a łącznie jest 3 osoby poza Tobą, pod 🔔 klamra łączy te sygnały. „Super ekipa (N) ›” otwiera jedno zaproszenie do wszystkich naraz."},
   {ch:"Wspólna jazda",title:"Zakładasz zaproszenie na Przylesie",demo:GW_D.form,
    text:"Formularz otwiera się z gotowymi osobami: prywatne zaproszenie tylko do chętnych, tytuł „SUPER EKIPA” (albo komunikat sygnału), a w notatce Twoje hasło. Ty wybierasz zakres godzin i Punkt zbiórki — np. Przylesie — i klikasz „Zaproś”.<span class=\"gwm\">Organizatorem jest ten, kto kliknął.</span>"},
   {ch:"Wspólna jazda",title:"Po założeniu zaproszenia",demo:GW_D.together,
-   text:"Powiadomienia „Masz z kim jechać” znikają, a przy sygnale pojawia się „Jedziecie razem ›” — przenosi do zaproszenia. Gdy ktoś da dłoń później, organizator dostaje „Dopisz Nick ›”, a nowa osoba widzi „Ekipa już jedzie” i nie zakłada drugiego zaproszenia."},
+   text:"Powiadomienia „Masz z kim jechać” znikają, a przy sygnale pojawia się „Jedziecie razem ›” — przenosi do zaproszenia. Gdy ktoś da Reakcję później, organizator dostaje „Dopisz Nick ›”, a nowa osoba widzi „Ekipa już jedzie” i nie zakłada drugiego zaproszenia."},
   {ch:"Gotowe",last:true,title:"Cała droga w skrócie",
-   text:"1. Dajesz znać (dłoń → Rower → Daj znać).<br>2. Inni widzą okienko i wiersz pod 🔔.<br>3. Ktoś odpowiada „Też mam ochotę!” — licznik na dłoni.<br>4. Ekipa rośnie — „Zaproś ekipę ›” albo „Super ekipa ›”.<br>5. Zaproszenie na Przylesie, potem „Jedziecie razem ›”.<span class=\"gwm\">Wygasa z końcem dnia. Wycofasz sygnał w „Twój sygnał”.</span>"}
+   text:"1. Dajesz znać (Reakcja → Rower → Daj znać).<br>2. Inni widzą okienko i wiersz pod 🔔.<br>3. Ktoś odpowiada „Też mam ochotę!” — licznik na Reakcji.<br>4. Ekipa rośnie — „Zaproś ekipę ›” albo „Super ekipa ›”.<br>5. Zaproszenie na Przylesie, potem „Jedziecie razem ›”.<span class=\"gwm\">Wygasa z końcem dnia. Wycofasz sygnał w „Twój sygnał”.</span>"}
 ]};
 
 const GW={cur:null,i:0,tk:0,root:null,spot:null,bub:null,timer:0,off:null};
@@ -120,6 +120,7 @@ function gwWait(sel,ms){return new Promise(res=>{const t0=Date.now();(function p
 
 function gwStop(done){
   if(GW.off){GW.off();GW.off=null}
+  if(GW.unblk){GW.unblk();GW.unblk=null}
   clearInterval(GW.timer);GW.timer=0;GW.tk++;
   if(done&&GW.cur)gwMark(GW.cur);
   if(GW.root){GW.root.remove();GW.root=GW.spot=GW.bub=null}
@@ -141,6 +142,14 @@ function gwStart(id,from){
     else if(a==="click"){const el=gwEl(T.steps[GW.i].sel);if(el)el.click()}
   };
   GW.timer=setInterval(gwTick,120);
+  // ekran pod przewodnikiem nieklikalny — wolno tylko w dymek i we wskazany element (krok na prawdziwym ekranie)
+  const blk=e=>{if(!GW.cur||!GW.root)return;if(GW.root.contains(e.target))return;
+    const st=GW_TOURS[GW.cur].steps[GW.i],el=st&&!st.demo&&!GW.miss&&gwEl(st.sel);
+    if(el&&el.contains(e.target))return;
+    e.preventDefault();e.stopPropagation();e.stopImmediatePropagation()};
+  const EV=["click","pointerdown","pointerup","mousedown","mouseup","touchstart","touchend","dblclick","contextmenu"];
+  EV.forEach(t=>document.addEventListener(t,blk,{capture:true,passive:false}));
+  GW.unblk=()=>EV.forEach(t=>document.removeEventListener(t,blk,{capture:true}));
   gwShow(from||0,1);return true;
 }
 async function gwShow(i,dir){
