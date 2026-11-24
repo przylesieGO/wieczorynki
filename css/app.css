@@ -1077,6 +1077,12 @@ html[data-theme=dark] .want.wgrp,html[data-theme=dark] .nit.wgrp{--gcb:color-mix
 .want.wgrp.test,.nit.wgrp.test{background:repeating-linear-gradient(135deg,transparent 0 10px,rgba(229,72,77,.04) 10px 20px),var(--gcb)}
 .popbox.wgrp{border-top:6px solid var(--gc,#8e8e93);background:color-mix(in srgb,var(--gc,#8e8e93) 12%,var(--card))}
 html[data-theme=dark] .popbox.wgrp{background:color-mix(in srgb,var(--gc,#8e8e93) 22%,var(--card))}
+/* 🔒 okno „Nowe zaproszenie” po wejściu do aplikacji: prywatne = fioletowe jak karta w kalendarzu (2026-11-24) */
+.popbox.ppriv:not(.wgrp){border-top:6px solid var(--priv);background:color-mix(in srgb,var(--priv) 10%,var(--card))}
+html[data-theme=dark] .popbox.ppriv:not(.wgrp){background:color-mix(in srgb,var(--priv) 20%,var(--card))}
+.popbox.ppriv .ptag:not(.wgrp){color:var(--priv);background:color-mix(in srgb,var(--priv) 16%,transparent)}
+.popbox.ppriv .pwhen{color:var(--priv)}.popbox.ppriv .pwhen span{color:var(--mut)}
+.popbox .sgpriv.pp{font-size:13px;margin-left:6px}
 /* 🎨 własny kolor w formularzu grupy (KROK 72): kółko z tęczą, wybrany — w swoim kolorze; ukryty systemowy wybierak w środku */
 .plcust{position:relative;overflow:hidden;display:inline-block;background:conic-gradient(var(--sys-red),var(--sys-orange),#ffd60a,#30d158,#40c8e0,#0a84ff,#bf5af2,var(--sys-red))}
 .plcust input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0}

@@ -346,8 +346,8 @@ function renderPop(dir){   // dir: -1 / 1 = karta wjeżdża z lewej / prawej (pr
     :big("join",AV.verb+"! · "+hhmm(d))+'<div class="pbtns">'+noB+sm("later","Przypomnij później","g")+'</div>';
   else btns=joined?big("read","OK 👍")+'<div class="pbtns">'+sm("leave","Rezygnuję","w")+'</div>'
     :big("join",AV.verb+"! · "+hhmm(d))+'<div class="pbtns">'+sm("read","OK","w")+'</div>';
-  p.innerHTML='<div class="sheetbox popbox'+grCls(w)+'" role="dialog" aria-modal="true"><button class="sclose" data-q="later" aria-label="Później">✕</button><div class="pcard'+(dir?(dir>0?' inr':' inl'):'')+'">'
-   +(isTest(w)?'<span class="ttag" style="margin-right:6px">🧪 TEST</span>':'')+'<span class="ptag">'+(set?'✅ GODZINA USTALONA':time?'🕖 ZMIANA GODZINY':'📩 NOWE ZAPROSZENIE'+(priv&&!wGr(w)?' · 🔒 PRYWATNE':''))+'</span>'+(wGr(w)?' '+grTagHtml(w):'')
+  p.innerHTML='<div class="sheetbox popbox'+grCls(w)+(priv?' ppriv':'')+'" role="dialog" aria-modal="true"><button class="sclose" data-q="later" aria-label="Później">✕</button><div class="pcard'+(dir?(dir>0?' inr':' inl'):'')+'">'
+   +(isTest(w)?'<span class="ttag" style="margin-right:6px">🧪 TEST</span>':'')+'<span class="ptag">'+(set?'✅ GODZINA USTALONA':time?'🕖 ZMIANA GODZINY':'📩 NOWE ZAPROSZENIE'+(priv&&!wGr(w)?' · 🔒 PRYWATNE':''))+'</span>'+(wGr(w)?' '+grTagHtml(w)+(priv?'<span class="sgpriv pp">'+uiIcon("lock")+' prywatne</span>':''):'')
    +'<div class="ph">'+nk(actor,"Ktoś")+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w,actor):'')+(set?' '+(genders[actor]==="K"?"ustaliła":"ustalił")+' godzinę':time?' '+(genders[actor]==="K"?"zmieniła":"zmienił")+' godzinę':' zaprasza Cię '+(actOf(w.activity).invite_txt||'na rower'))+'</div>'
    +'<div class="pwhen">'+esc(day+" "+wTime(w))+(dd>=0&&dd<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
    +(wLate(w)&&!joined?lateNote():'')
@@ -511,10 +511,11 @@ const sigNotifUn=()=>sigReactUn().concat(sigCancelUn(),sigEkipaUn(),sigLateUn())
 function sigEkipaRide(x){
   if(!x||typeof wants==="undefined")return null;
   const E=new Set(sigEkipa(x));if(E.size<2)return null;
-  return wants.find(w=>E.has(w.user_id)&&dayDiff(new Date(w.range_from||w.starts_at))===0&&!wDone(w)
-    &&(w.activity||"bike")===(x.activity||"bike")   // KROK 94: wspólne zaproszenie tylko z tą samą aktywnością co sygnał (jak sig_ekipa_ride_id w bazie)
-    &&sigWPeople(w).has(uid)   // tylko gdy ja jestem w zaproszeniu (👑 widzi cudze prywatne — to nie znaczy, że jedzie)
-    &&invIds(w).concat(joins[w.id]||[]).some(id=>id!==w.user_id&&E.has(id)))||null;
+  // KROK 99: organizator może być spoza ekipy (np. z innego sygnału) — wystarczą 2 osoby z ekipy w zaproszeniu (jak sig_ekipa_ride_id w bazie)
+  return wants.find(w=>dayDiff(new Date(w.range_from||w.starts_at))===0&&!wDone(w)
+    &&(w.activity||"bike")===(x.activity||"bike")   // KROK 94: wspólne zaproszenie tylko z tą samą aktywnością co sygnał
+    &&(()=>{const P=sigWPeople(w);return P.has(uid)   // tylko gdy ja jestem w zaproszeniu (👑 widzi cudze prywatne — to nie znaczy, że jedzie)
+      &&[...P].filter(id=>E.has(id)).length>=2})())||null;
 }
 const sigEkipaRow=n=>{const x=sigs.find(s=>s.user_id===n.actor),E=x?sigEkipaOthers(x):[];
   return '<div class="nit stn sgrow new"><div class="ic">'+uiIcon("users")+'</div><div class="tx"><b>'+esc(actOf(x&&x.activity).with_txt||"Masz z kim jechać!")+'</b>'
