@@ -33,9 +33,15 @@ document.addEventListener("visibilitychange",()=>{
   if(document.hidden||!session)return;
   if(presDead()||!presOk)startPresence(true);else applyPresence();
 });
-// liczby administracyjne przy kropce: konta (admin i 👑) oraz aktywni 24 h (tylko 👑). KROK 89 (live_counts) uzupełni oba pola z bazy;
-// do tego czasu konta liczymy z listy w aplikacji, a „24 h” się nie pokazuje
-let liveCnt={acc:null,a24:null};
+// liczby administracyjne przy kropce: konta (admin i 👑) oraz aktywni 24 h (tylko 👑). KROK 89 (live_counts) daje oba pola z bazy;
+// zanim przyjdą (albo gdy baza odmówi) konta liczymy z listy w aplikacji, a „24 h” się nie pokazuje
+let liveCnt={acc:null,a24:null},liveAt=0,liveFor="",liveBusy=false;
+// pobranie z bazy (KROK 89): tylko admin/👑, najwyżej raz na 5 min; baza sama odmawia innym, „24 h” zwraca tylko 👑
+async function loadLive(){
+  if(liveBusy||!session||!isAdmin||!sb||typeof sb.rpc!=="function"||Date.now()-liveAt<3e5)return;
+  liveBusy=true;liveAt=Date.now();const u=uid;
+  try{const r=await sb.rpc("live_counts");if(!r.error&&r.data&&u===uid){liveCnt={acc:r.data.acc,a24:r.data.a24};liveFor=u}}catch(e){}
+  liveBusy=false;if(u===uid)renderOnline()}
 const liveAcc=()=>liveCnt.acc!=null?liveCnt.acc:Object.keys(nicks).filter(id=>!modBanned.has(id)&&!(typeof demoIds!=="undefined"&&demoIds.has(id))).length;
 function onlHtml(n,ok,full){
   const x=full&&isAdmin&&ok?(isKingReal()&&liveCnt.a24!=null?'<span class="onx">'+uiIcon("clock")+liveCnt.a24+'</span>':'')+'<span class="onx">'+uiIcon("users")+liveAcc()+'</span>':'';
@@ -44,6 +50,8 @@ function renderOnline(){
   const b=$("onlbtn");if(!b)return;
   const show=!!session;
   b.classList.toggle("hide",!show);
+  if(liveFor&&liveFor!==uid){liveCnt={acc:null,a24:null};liveFor="";liveAt=0}   // zmiana konta: nie pokazuj cudzych liczb
+  if(show&&isAdmin)loadLive();
   // przy ukrytej obecności (👻) liczysz się tylko na swoim ekranie
   const n=onlineIds.filter(id=>isAdmin||!modGone(id)).length+(stealthOn()&&!onlineIds.includes(uid)?1:0);
   const tip=!presOk?"Brak połączenia z listą online — łączę ponownie…":isAdmin?"Aktywni teraz: "+n+(isKingReal()&&liveCnt.a24!=null?" · w ciągu 24 h: "+liveCnt.a24:"")+" · konta: "+liveAcc():"Aktywni teraz: "+n;
