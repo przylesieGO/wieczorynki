@@ -65,18 +65,24 @@ function openReport(id){
       if(d&&rs&&rs.id===sid&&rs.rv&&!rs.rvTouched){const v=rvFrom(d);v.comment=rs.rv.comment||v.comment;rs.rv=v;if(!rs.rrating&&d.rating)rs.rrating=d.rating;renderRep()}},()=>{})}
   if(w.user_id===uid)(joins[w.id]||[]).filter(x=>x!==uid).forEach(x=>{const r=(reports[w.id]||[]).find(y=>y.user_id===x);rs.who[x]=r?r.went:true});
   renderRep();
+  if(w.route_base_id&&!rbList&&typeof rbLoad==='function')rbLoad().then(()=>{if(rs&&rs.id===id)renderRep()},()=>{});
 }
-function closeRep(){const p=$("repsheet");p.classList.add("hide");p.innerHTML="";rs=null}
+function closeRep(){if(rs&&rs.offchk){try{localStorage.setItem("repOff","1")}catch(err){}setTimeout(()=>say("Nie będę pytać po jazdach. Włączysz w ⚙️ → Jazdy i zaproszenia."),0)}const p=$("repsheet");p.classList.add("hide");p.innerHTML="";rs=null}
 const starsRow=(k,v)=>'<div class="rstars">'+[1,2,3,4,5].map(n=>'<button type="button" class="rst'+(n<=v?' on':'')+'" data-rs="'+k+'" data-v="'+n+'" aria-label="'+n+' na 5">★</button>').join("")+'</div>';
+const REP_DEMO_ROUTE='[[52.7035,21.083],[52.706,21.095],[52.712,21.102],[52.718,21.098],[52.723,21.085],[52.719,21.07],[52.711,21.064],[52.7035,21.083]]';
+const repRouteHtml=w=>{const x=w.route_base_id&&rbList&&rbList.find(r=>r.id===w.route_base_id);
+  return x&&x.preview?'<div class="rrmini">'+rbSvg(x.preview,320,120)+'<span>'+String(Math.round(+x.km||0))+' km</span></div>'
+    :'<div class="rrmini ph" aria-hidden="true">'+rbSvg(REP_DEMO_ROUTE,320,120)+'<span>brak trasy</span></div>'};
 function renderRep(){
   const w=rs&&wants.find(x=>x.id===rs.id);if(!w){closeRep();return}
   const plan=kmOf(w),p=$("repsheet"),pend=repPending(),idx=pend.findIndex(x=>x.id===w.id),own=w.user_id===uid;
   const others=Object.keys(rs.who),RR=reports[w.id]||[];
   p.classList.remove("hide");
-  p.innerHTML='<div class="bsbox repbox" role="dialog" aria-modal="true" aria-label="Jak poszło?"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-rs="later">Później</button><b>🚴 Jak poszło?</b><span style="min-width:64px;text-align:right" class="note">'+(pend.length>1&&idx>=0?(idx+1)+' z '+pend.length:'')+'</span></div>'
+  p.innerHTML='<div class="bsbox bsauto repbox" role="dialog" aria-modal="true" aria-label="Jak poszło?"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-rs="later">Później</button><b>🚴 Jak poszło?</b><span style="min-width:64px;text-align:right" class="note">'+(pend.length>1&&idx>=0?(idx+1)+' z '+pend.length:'')+'</span></div>'
    +'<div class="bslist">'
    +(isTest(w)?'<div class="rtest"><span class="ttag">'+uiIcon("flask")+' TEST</span> Testowa jazda — odpowiedź na próbę, nie liczy się do statystyk.</div>':'')
-   +wTitleHtml(w)+'<div class="rsub">'+esc(relDayPast(new Date(w.starts_at))+" · "+hhmm(new Date(w.starts_at)))+(w.place?' · 📍 '+esc(w.place):'')+'<br>'+nk(w.user_id)+(own?' <span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
+   +(wTitleHtml(w)||(w.note?'<div class="rnote">'+esc(w.note)+'</div>':''))+'<div class="rsub"><div class="rdate">'+esc(relDayPast(new Date(w.starts_at))+" · "+hhmm(new Date(w.starts_at)))+'</div>'+(w.place?'<div>📍 '+esc(w.place)+'</div>':'')+'<div class="rauth">'+nk(w.user_id)+(own?'<span class="wme">Ty</span>':'')+'</div></div>'
+   +repRouteHtml(w)
    +(myRep(w)?'<div class="myrep" style="margin-top:10px">✏️ '+(genders[uid]==="K"?'Odpowiedziałaś':'Odpowiedziałeś')+(myRep(w).updated_at?' '+esc(new Date(myRep(w).updated_at).toLocaleDateString("pl-PL",{day:"numeric",month:"numeric"})):'')+' — możesz zmienić i zapisać ponownie.</div>':'')
    +'<div class="bsgrp">'+(genders[uid]==="K"?'Pojechałaś?':'Pojechałeś?')+'</div><div class="seg rseg"><button type="button" data-rs="went" data-v="1" class="'+(rs.went===true?'on':'')+'">✅ Tak</button><button type="button" data-rs="went" data-v="0" class="'+(rs.went===false?'on':'')+'">❌ '+(genders[uid]==="K"?'Nie dałam rady':'Nie dałem rady')+'</button></div>'
    +(rs.went?'<div class="bsgrp">Ile km?</div><div class="fchips">'+(plan?[["plan","Jak w planie · "+String(plan).replace(".",",")+" km"],["less","Mniej"],["more","Więcej"]]:[]).map(([v,t])=>'<button type="button" class="fch'+(rs.kmMode===v?' on':'')+'" data-rs="km" data-v="'+v+'">'+esc(t)+'</button>').join("")+'</div>'
@@ -90,9 +96,11 @@ function renderRep(){
    +(own&&others.length?'<div class="bsgrp">Kto był? <span class="note">(potwierdzasz za innych)</span></div>'+others.map(id=>{const r=RR.find(y=>y.user_id===id&&y.self);
       return r?'<div class="prow rwho"><span class="pnm">'+nk(id)+'</span><span class="note">'+(r.went?'✅ sam(a) potwierdził(a)':'❌ nie pojechał(a)')+'</span></div>'
         :'<button type="button" class="prow rwho'+(rs.who[id]?' on':'')+'" data-rs="who" data-v="'+esc(id)+'"><span class="cbx">'+CHECK+'</span><span class="pnm">'+nk(id)+'</span><span class="note">'+(rs.who[id]?'był(a)':'nie był(a)')+'</span></button>'}).join(""):'')
-   +'<button type="button" class="lnk rskip" data-rs="skip">Nie pytaj o tę jazdę</button>'
-   +'<button type="button" class="lnk rskip rskip2" data-rs="off">Nie pytaj mnie po jazdach</button></div>'
-   +'<button type="button" class="b big" data-rs="save"'+(rs.went==null?' disabled':'')+'>Zapisz</button></div>';
+   +(rs.went===true?'':'<button type="button" class="lnk rskip" data-rs="skip">Nie pytaj o tę jazdę</button>')
+   +'</div>'
+   +'<button type="button" class="b big" data-rs="save"'+(rs.went==null?' disabled':'')+'>Zapisz</button>'
+   +'<button type="button" class="rchk'+(rs.offchk?' on':'')+'" data-rs="offchk" role="checkbox" aria-checked="'+!!rs.offchk+'"><span class="cbx">'+CHECK+'</span><span>Nie pytaj mnie więcej po jazdach</span></button>'
+   +(rs.offchk?'<div class="rchkn">Zaznaczenie = brak danych do Twoich statystyk (km, średnia, oceny).</div>':'')+'</div>';
 }
 const relDayPast=d=>{const n=dayDiff(d);return n===0?"Dziś":n===-1?"Wczoraj":d.toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"})};
 async function saveReport(){
@@ -122,13 +130,13 @@ async function saveReport(){
   }catch(e){say("Nie udało się zapisać: "+(e&&e.message?e.message:"błąd"))}
 }
 $("repsheet").addEventListener("click",e=>{
-  if(e.target===$("repsheet")){repLaterAdd();closeRep();renderBell();return}
+  if(e.target===$("repsheet"))return;   // tło za oknem nieklikalne: okno zamyka tylko „Później” / „Zapisz”
   const rvb=e.target.closest("[data-rv]");
   if(rvb&&rs&&rs.rv){rs.rvTouched=true;rvClick(rs.rv,rvb);const sc=$("repsheet").querySelector(".bslist"),t=sc?sc.scrollTop:0;renderRep();const s2=$("repsheet").querySelector(".bslist");if(s2)s2.scrollTop=t;return}
   const b=e.target.closest("[data-rs]");if(!b||!rs)return;const k=b.dataset.rs,v=b.dataset.v;
   if(k==="later"){repLaterAdd();closeRep();renderBell();say("Jazda czeka w 🔔 Powiadomieniach.");return}
   if(k==="skip"){const sk=repSkip();sk.add(rs.id);try{localStorage.setItem("repSkip",JSON.stringify([...sk]))}catch(err){}closeRep();renderWants();renderBell();return}
-  if(k==="off"){try{localStorage.setItem("repOff","1")}catch(err){}closeRep();renderWants();say("Nie będę pytać po jazdach. Włączysz w ⚙️ → Jazdy i zaproszenia.");return}
+  if(k==="offchk"){rs.offchk=!rs.offchk}
   if(k==="save"){saveReport();return}
   if(k==="went")rs.went=v==="1";
   if(k==="km"){rs.kmMode=v;const w=wants.find(x=>x.id===rs.id),plan=kmOf(w);if(v!=="plan"&&!rs.km&&plan)rs.km=String(plan)}
