@@ -1082,10 +1082,10 @@ html[data-theme=dark] .want.wgrp,html[data-theme=dark] .nit.wgrp{--gcb:color-mix
 .popbox.wgrp{border-top:6px solid var(--gc,#8e8e93);background:color-mix(in srgb,var(--gc,#8e8e93) 12%,var(--card))}
 html[data-theme=dark] .popbox.wgrp{background:color-mix(in srgb,var(--gc,#8e8e93) 22%,var(--card))}
 /* 🔒 okno „Nowe zaproszenie” po wejściu do aplikacji: prywatne = fioletowe jak karta w kalendarzu (2026-11-24) */
-.popbox.ppriv:not(.wgrp){border-top:6px solid var(--priv);background:color-mix(in srgb,var(--priv) 10%,var(--card))}
-html[data-theme=dark] .popbox.ppriv:not(.wgrp){background:color-mix(in srgb,var(--priv) 20%,var(--card))}
-.popbox.ppriv .ptag:not(.wgrp){color:var(--priv);background:color-mix(in srgb,var(--priv) 16%,transparent)}
-.popbox.ppriv .pwhen{color:var(--priv)}.popbox.ppriv .pwhen span{color:var(--mut)}
+/* okienko zaproszenia: tło karty lekko przezroczyste (80%); prywatność = plakietka „prywatne” (.lockt.priv, jak na zaproszeniach), godzina bez zmian */
+.popbox:not(.wgrp){background:color-mix(in srgb,var(--card) 80%,transparent)}
+.ttag .ui-i{width:12px;height:12px;vertical-align:-2px;margin-right:3px}   /* ikona kolby w plakietce TEST (zamiast emotki) */
+.popbox .lockt{display:inline-block;font-size:12px;font-weight:800;padding:2px 10px;letter-spacing:.03em;line-height:18px;text-transform:uppercase}.popbox .ptag:has(+.lockt){margin-right:6px}.popbox .pcard>.lockt{margin-right:40px}   /* plakietki w jednym rzędzie, po kolei; 40px zapasu przy ✕ tylko za ostatnią */
 .popbox .sgpriv.pp{font-size:13px;margin-left:6px}
 /* 🎨 własny kolor w formularzu grupy (KROK 72): kółko z tęczą, wybrany — w swoim kolorze; ukryty systemowy wybierak w środku */
 .plcust{position:relative;overflow:hidden;display:inline-block;background:conic-gradient(var(--sys-red),var(--sys-orange),#ffd60a,#30d158,#40c8e0,#0a84ff,#bf5af2,var(--sys-red))}
@@ -1458,3 +1458,6 @@ html[data-theme=dark] .hgwav svg{filter:drop-shadow(0 0 1.2px rgba(255,255,255,.
 
 /* 🕘 Kolejność „od najnowszych”: dopisek „dodano …” w karcie dnia */
 .wl3 .wnew{font-style:normal;font-weight:600;color:var(--mut)}
+
+/* 🔒 otwarte okno (.sheet): strona pod spodem się nie przewija i nie reaguje na dotyk (przewija się tylko samo okno) */
+html.sheetlock,html.sheetlock body{overflow:hidden;overscroll-behavior:none}html.sheetlock .sheet{touch-action:none;overscroll-behavior:contain}

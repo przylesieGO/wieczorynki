@@ -75,7 +75,7 @@ function renderRep(){
   p.classList.remove("hide");
   p.innerHTML='<div class="bsbox repbox" role="dialog" aria-modal="true" aria-label="Jak poszło?"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-rs="later">Później</button><b>🚴 Jak poszło?</b><span style="min-width:64px;text-align:right" class="note">'+(pend.length>1&&idx>=0?(idx+1)+' z '+pend.length:'')+'</span></div>'
    +'<div class="bslist">'
-   +(isTest(w)?'<div class="rtest"><span class="ttag">🧪 TEST</span> Testowa jazda — odpowiedź na próbę, nie liczy się do statystyk.</div>':'')
+   +(isTest(w)?'<div class="rtest"><span class="ttag">'+uiIcon("flask")+' TEST</span> Testowa jazda — odpowiedź na próbę, nie liczy się do statystyk.</div>':'')
    +wTitleHtml(w)+'<div class="rsub">'+esc(relDayPast(new Date(w.starts_at))+" · "+hhmm(new Date(w.starts_at)))+(w.place?' · 📍 '+esc(w.place):'')+'<br>'+nk(w.user_id)+(own?' <span class="note">(Twoje zaproszenie)</span>':'')+'</div>'
    +(myRep(w)?'<div class="myrep" style="margin-top:10px">✏️ '+(genders[uid]==="K"?'Odpowiedziałaś':'Odpowiedziałeś')+(myRep(w).updated_at?' '+esc(new Date(myRep(w).updated_at).toLocaleDateString("pl-PL",{day:"numeric",month:"numeric"})):'')+' — możesz zmienić i zapisać ponownie.</div>':'')
    +'<div class="bsgrp">'+(genders[uid]==="K"?'Pojechałaś?':'Pojechałeś?')+'</div><div class="seg rseg"><button type="button" data-rs="went" data-v="1" class="'+(rs.went===true?'on':'')+'">✅ Tak</button><button type="button" data-rs="went" data-v="0" class="'+(rs.went===false?'on':'')+'">❌ '+(genders[uid]==="K"?'Nie dałam rady':'Nie dałem rady')+'</button></div>'
@@ -168,7 +168,7 @@ function archSum(L){
 function archItem(w){
   const d=new Date(w.starts_at),ex=wExpired(w),pp=wPeople(w),k=kmOf(w);
   const dd=dayDiff(d),dt=(dd===0?"Dziś":dd===-1?"Wczoraj":d.toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"}))+" · "+(isOpen(w)?wTime(w):hhmm(d));
-  return '<div class="ai'+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'">'+wTitleHtml(w)+'<div class="ait"><b>'+esc(dt)+'</b>'+(isTest(w)?' <span class="ttag">🧪 TEST</span>':'')+'<span class="'+(ex?'aex':'aok')+'">'+(ex?'⌛ wygasło':'zakończone')+'</span></div>'
+  return '<div class="ai'+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'">'+wTitleHtml(w)+'<div class="ait"><b>'+esc(dt)+'</b>'+(isTest(w)?' <span class="ttag">'+uiIcon("flask")+' TEST</span>':'')+'<span class="'+(ex?'aex':'aok')+'">'+(ex?'⌛ wygasło':'zakończone')+'</span></div>'
    +'<div class="ail">'+nk(w.user_id)+(w.place?' · 📍 '+esc(w.place+(w.place_city?' · '+w.place_city:'')):'')+'</div>'
    +(ex?'<div class="ail note">Godzina nieustalona, nikt nie dołączył.</div>':(()=>{const S=repSum(w);
      return (S?'<div class="ail">✅ Potwierdziło '+S.yes.length+' z '+pp.length+': '+S.yes.map(id=>nk(id)).join(" ")+'</div>'+(pp.length>S.n?'<div class="ail note">❓ bez odpowiedzi: '+(pp.length-S.n)+'</div>':'')
@@ -1525,7 +1525,7 @@ let visOk=false,invs={},notifs=[];
 let testOk=false;const isTest=w=>!!w&&!!w.is_test&&!pv&&!PV_GUEST;   // w podglądzie 👑 testowe wyglądają jak prawdziwe
 // data dodania na karcie — tylko przy włączonym 🕓 „od najnowszych”
 const wAddedTag=w=>{if(flt.sort!=="new"||!w.created_at)return "";const d=new Date(w.created_at);return '<span class="wadd">dodano '+String(d.getDate()).padStart(2,"0")+'.'+String(d.getMonth()+1).padStart(2,"0")+' '+d.toLocaleTimeString("pl-PL",{hour:"2-digit",minute:"2-digit",second:"2-digit"})+'</span>'};
-const testTag=w=>isTest(w)?'<span class="ttag">🧪 TEST</span>':'';
+const testTag=w=>isTest(w)?'<span class="ttag">'+uiIcon("flask")+' TEST</span>':'';
 const CHECK='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const plf=(n,f)=>n===1?f[0]:(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20))?f[1]:f[2];
 const osob=n=>n===1?"osoby":"osób"; // „dla 1 osoby”, „dla 5 osób”

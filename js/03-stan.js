@@ -90,3 +90,7 @@ const actIsBike=k=>!!actOf(k).uses_bike;
 // do wyboru (formularz, „Mam ochotę”): „Wszyscy” albo „Tylko testerzy” dla testerów i 👑; „off” — nigdzie do wyboru (stare wpisy dalej czytelne)
 const actAvail=()=>actList.filter(x=>x.state==="all"||(x.state==="testers"&&typeof meTester==="function"&&meTester()));
 const actOfEv=b=>{const a=actList.find(x=>(x.ev_kinds||[]).includes(b));return a?a.key:""};   // rodzaj imprezy → aktywność
+
+// 🔒 okno (.sheet) otwarte — strona pod spodem się nie przewija ani nie reaguje (klasa html.sheetlock)
+{const lock=()=>document.documentElement.classList.toggle("sheetlock",[...document.querySelectorAll(".sheet")].some(x=>!x.classList.contains("hide")));
+ const mo=new MutationObserver(lock);document.querySelectorAll(".sheet").forEach(el=>mo.observe(el,{attributes:true,attributeFilter:["class"]}));lock()}

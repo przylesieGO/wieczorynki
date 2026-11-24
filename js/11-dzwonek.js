@@ -347,7 +347,7 @@ function renderPop(dir){   // dir: -1 / 1 = karta wjeżdża z lewej / prawej (pr
   else btns=joined?big("read","OK 👍")+'<div class="pbtns">'+sm("leave","Rezygnuję","w")+'</div>'
     :big("join",AV.verb+"! · "+hhmm(d))+'<div class="pbtns">'+sm("read","OK","w")+'</div>';
   p.innerHTML='<div class="sheetbox popbox'+grCls(w)+(priv?' ppriv':'')+'" role="dialog" aria-modal="true"><button class="sclose" data-q="later" aria-label="Później">✕</button><div class="pcard'+(dir?(dir>0?' inr':' inl'):'')+'">'
-   +(isTest(w)?'<span class="ttag" style="margin-right:6px">🧪 TEST</span>':'')+'<span class="ptag">'+(set?'✅ GODZINA USTALONA':time?'🕖 ZMIANA GODZINY':'📩 NOWE ZAPROSZENIE'+(priv&&!wGr(w)?' · 🔒 PRYWATNE':''))+'</span>'+(wGr(w)?' '+grTagHtml(w)+(priv?'<span class="sgpriv pp">'+uiIcon("lock")+' prywatne</span>':''):'')
+   +(isTest(w)?'<span class="ttag" style="margin-right:6px">'+uiIcon("flask")+' TEST</span>':'')+'<span class="ptag">'+(set?'✅ GODZINA USTALONA':time?'🕖 ZMIANA GODZINY':'📩 NOWE ZAPROSZENIE')+'</span>'+(priv&&!wGr(w)?' <span class="lockt priv">🔒 prywatne</span>':'')+(wGr(w)?' '+grTagHtml(w)+(priv?'<span class="sgpriv pp">'+uiIcon("lock")+' prywatne</span>':''):'')
    +'<div class="ph">'+nk(actor,"Ktoś")+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w,actor):'')+(set?' '+(genders[actor]==="K"?"ustaliła":"ustalił")+' godzinę':time?' '+(genders[actor]==="K"?"zmieniła":"zmienił")+' godzinę':' zaprasza Cię '+(actOf(w.activity).invite_txt||'na rower'))+'</div>'
    +'<div class="pwhen">'+esc(day+" "+wTime(w))+(dd>=0&&dd<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
    +(wLate(w)&&!joined?lateNote():'')
@@ -814,7 +814,7 @@ function sigRow(x,un,supWid){
     :'<span class="sgbtns">'+rw+(!TW&&!supWid?'<button type="button" class="lnk stgo" data-sgz="'+esc(x.user_id)+'">'+sigInvLbl(x.user_id)+'</button>':'')+(ekipa?'<button type="button" class="lnk stgo" data-sgc="'+esc(x.user_id)+'">Zaproś ekipę ('+E.length+') ›</button>':'')
       +(sig2Ok?'<button type="button" class="sgre'+(mine?' on':'')+'" data-sgr="'+esc(x.user_id)+'" aria-pressed="'+mine+'" title="'+(mine?'Cofnij':'Też mam ochotę!')+'" aria-label="'+(mine?'Cofnij „Też mam ochotę”':'Też mam ochotę!')+'">'+uiIcon("hand")+(rc?'<b>'+rc+'</b>':'')+'</button>':'')+'</span>';
   return '<div class="nit stn sgrow'+(un?' new':'')+'"><div class="ic">'+uiIcon(a[0])+'</div><div class="tx">'+(me?'<b>Ty</b>':nk(x.user_id))
-    +(x.is_test?' <span class="ttag">🧪 TEST</span>':'')+(sigPriv(x)?' <span class="sgpriv">'+uiIcon("lock")+(me?' '+to+' '+plf(to,["osoba","osoby","osób"]):' do Ciebie')+'</span>':'')
+    +(x.is_test?' <span class="ttag">'+uiIcon("flask")+' TEST</span>':'')+(sigPriv(x)?' <span class="sgpriv">'+uiIcon("lock")+(me?' '+to+' '+plf(to,["osoba","osoby","osób"]):' do Ciebie')+'</span>':'')
     +'<div class="w">'+esc(a[1].toLowerCase())+' · '+esc(hhmm(d))+'</div>'
     +(sigMsgTxt(x)?'<div class="sgmsg">'+sigMsgTxt(x)+(isAdmin&&!me?' <button type="button" class="lnk sghide" data-sgh="'+esc(x.user_id)+'">Ukryj</button>':'')+'</div>':'')
     +(x.msg_hidden&&me?'<div class="note">Komunikat ukryty przez administratora.</div>':'')
