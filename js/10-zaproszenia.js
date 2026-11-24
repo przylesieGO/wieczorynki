@@ -35,13 +35,13 @@ function repBell(){
 const repTodoN=()=>{const r=repBell();return r?r.todo.length:0};
 // 🏷 tytuł zaproszenia — jeden wspólny element na kartach, w 🔔, w „Jak poszło?”, w Archiwum
 // tytuł domyślny — ta sama zasada co want_auto_title() w bazie (KROK 65): dzień + pora + rower
-function autoTitle(d,bike){if(!d)return "";
+function autoTitle(d,bike,ak){if(!d)return "";
   const dw=(d.getDay()+6)%7,h=d.getHours(),st=["Poniedziałkow","Wtorkow","Środow","Czwartkow","Piątkow","Sobotn","Niedzieln"][dw],soft=dw===5;
   const [g,pora]=h<5?["f","nocna jazda"]:h<10?["m","poranek"]:h<13?["n","przedpołudnie"]:h<17?["n","popołudnie"]:h<21?["m","wieczór"]:["f","nocna jazda"];
-  return st+(soft?{m:"i",n:"ie",f:"ia"}[g]:{m:"y",n:"e",f:"a"}[g])+" "+pora+({road:" na szosie",gravel:" na gravelu",mtb:" w terenie",trekking:" turystycznie",ebike:" na e-bike’u"}[bike]||"")}
+  return st+(soft?{m:"i",n:"ie",f:"ia"}[g]:{m:"y",n:"e",f:"a"}[g])+" "+pora+(actIsBike(ak)?({road:" na szosie",gravel:" na gravelu",mtb:" w terenie",ebike:" na e-bike’u"}[bike]||""):(actOf(ak).title_suffix||""))}   // KROK 94: „· bieg” z bazy
 // tytuł domyślny wpisany w pole; dopóki autor go nie zmieni, nadąża za dniem, godziną i rowerem
 function wfTitleHint(){const el=$("wtitlehint"),inp=$("wtitle");if(!el||!inp)return;
-  if(wf.titleAuto)inp.value=autoTitle(wfDate(),wf.bike);
+  if(wf.titleAuto)inp.value=autoTitle(wfDate(),wf.bike,wf.act);
   el.textContent="Ułożony automatycznie — możesz go zmienić.";el.classList.toggle("hide",!titleOk||!wf.titleAuto||!inp.value)}
 const wTitleHtml=w=>w.title?'<div class="wtl">'+uiIcon("tag")+'<span>'+esc(w.title)+'</span></div>':'';
 function repBellRow(w){const d=new Date(w.starts_at);
@@ -288,11 +288,10 @@ function fltWhereOk(city,area,place){if(!flt.where)return true;
   if(t==="q")return [place,city,area].some(x=>lc(x).includes(lc(v)));
   return true}
 // 🏁 impreza: aktywność i rower z dystansów, kiedy = od–do, relacja = zapisany / autor / zaproszony
-const FLT_EVACT={gravel:"bike",road:"bike",mtb:"bike",ebike:"bike",any:"bike",run:"run",walk:"walk"};
 function fltEvOk(e){
   if(!fltActiveFor("ev"))return true;
   const D=evDist[e.id]||[],P=(evPart[e.id]||[]).map(x=>x.user_id),me=P.includes(uid),own=e.created_by===uid;
-  if(flt.act&&!D.some(d=>FLT_EVACT[d.bike]===flt.act))return false;
+  if(flt.act&&!D.some(d=>actOfEv(d.bike)===flt.act))return false;   // rodzaj imprezy → aktywność (activities.ev_kinds, KROK 94)
   if(fltBikeOn()&&flt.bike&&!D.some(d=>d.bike==="any"||flt.bike!=="all"&&d.bike===flt.bike))return false;
   if(!fltWhenOk(evDays(e),Math.round((new Date(evEnd(e)+"T12:00")-new Date(todayIso()+"T12:00"))/864e5)))return false;
   if(!fltWhereOk(null,null,e.place))return false;
@@ -344,8 +343,8 @@ function fltOk(w){
 }
 const FLT_WHO=[["mine","Moje"],["going","Jadę"],["inv","Zaproszony"],["part","Biorę udział"],["fav","Ulubieni"]];   // „Biorę udział” tylko z licznika nad listą (w oknie bez bomblu)
 const FLT_VIS=[["open","Otwarte"],["priv","Prywatne"]];
-const FLT_ACT=[["bike","Rower"],["run","Bieganie"],["walk","Spacery"],["hike","Trekking"]];   // klucze jak SIG_ACT (js/11) i wants.activity
-const FLT_ICO={mine:"user",going:"check",inv:"mail",fav:"star",open:"globe",priv:"lock",bike:"bike",run:"run",walk:"walk",hike:"tree"};
+const FLT_ACT=()=>actList.filter(x=>actAvail().includes(x)||flt.act===x.key).map(x=>[x.key,x.name_many]);   // 🏃 z bazy (KROK 94), klucze jak wants.activity
+const FLT_ICO={mine:"user",going:"check",inv:"mail",fav:"star",open:"globe",priv:"lock"};   // ikony aktywności — actOf(k).icon
 const FLT_WHEN=[["today","Dziś"],["tom","Jutro"],["wknd","Weekend"],["7d","7 dni"]];
 const FLT_BIKE=()=>[["all","Dla wszystkich"]].concat(Object.entries(BIKES).map(([k,t])=>[k,t.replace(/^\S+\s/,"")]));
 const FLT_PACE=()=>Object.entries(PACES).map(([k,x])=>[k,x.e+" "+x.r.replace(" km/h","")]);
@@ -354,7 +353,7 @@ function fltLabel(k){
   const v=flt[k],f=a=>(a.find(x=>x[0]===v)||[,v])[1];
   if(k==="who")return f(FLT_WHO);
   if(k==="vis")return f(FLT_VIS);
-  if(k==="act")return f(FLT_ACT);
+  if(k==="act")return f(FLT_ACT());
   if(k==="when")return v==="date"?(flt.date?new Date(flt.date+"T12:00").toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"}):"Data"):f(FLT_WHEN);
   if(k==="where"){const t=v.slice(0,1),x=v.slice(2);return t==="a"?x.replace("|"," · "):t==="q"?"„"+x+"”":x}
   if(k==="bike")return f(FLT_BIKE());
@@ -467,7 +466,7 @@ const fltHasAct=()=>!!flt.act||wants.some(w=>w.activity&&w.activity!=="bike");  
 function fltSecs(){
   return {src:fltChip("arch","1","Filtruj też archiwum","clock")+(flt.arch?ARCH_R.map(([d,t])=>'<button type="button" class="fch'+(archDays===d?' on':'')+'" data-fk="arng" data-fv="'+d+'">'+t+'</button>').join(""):'')+(testOk?fltTg("ht","Zaproszenia testowe",hideTest):'')+(fltHasDemo()?fltTg("tgdemo","Konta demo",flt.demo==="hide"):''),
     vis:FLT_VIS.map(([v,t])=>fltChip("vis",v,t,FLT_ICO[v])).join("")+(fltHasGrp()?fltGrpChip():""),
-    act:FLT_ACT.filter(([v])=>fltScope!=="ev"||Object.values(FLT_EVACT).includes(v)).map(([v,t])=>fltChip("act",v,t,typeof SIG_ACT!=="undefined"&&SIG_ACT[v]?SIG_ACT[v][0]:FLT_ICO[v])).join(""),
+    act:FLT_ACT().filter(([v])=>fltScope!=="ev"||(actOf(v).ev_kinds||[]).length).map(([v,t])=>fltChip("act",v,t,actOf(v).icon)).join(""),
     when:FLT_WHEN.filter(x=>x[0]!=="7d").map(([v,t])=>fltChip("when",v,t)).join("")+'<label class="fch fdate'+(flt.when==="date"?' on':'')+'">'+uiIcon("cal")+'<input type="date" id="fltdate" value="'+esc(flt.when==="date"?flt.date:"")+'"></label>',
     who:FLT_WHO.filter(x=>x[0]!=="part").map(([v,t])=>fltChip("who",v,t,FLT_ICO[v])).join(""),
     bike:FLT_BIKE().map(([v,t])=>fltChip("bike",v,t)).join(""),
@@ -718,6 +717,7 @@ function myPickHtml(w,myp,joined,mine){
 }
 // top = karta w sekcji „Twoje zaproszenia” ({d: duży dzień i godzina pod tytułem, n: „1 z N”}): bez „Ty zapraszasz”, nicku i „(Twoje zaproszenie)” — tylko TEST, grupa/prywatne i status godziny
 // 👑 podgląd cudzego prywatnego zaproszenia (admin nie jest zaproszony): kółko z okiem w rogu karty + belka „Podgląd admina” przy koszu
+const wVerb=w=>actOf(w&&w.activity).verb||"Jadę";   // 🏃 „Jadę!” / „Biegnę!” / „Idę!” (KROK 94)
 const pkCorner='<span class="pkcorner" role="img" aria-label="Podgląd admina" title="Podgląd admina — nie jesteś zaproszony">'+uiIcon("eye")+'</span>';
 function wantHtml(w,top){
     const j=joins[w.id]||[],mine=w.user_id===uid,joined=j.includes(uid),others=j.filter(x=>x!==w.user_id);
@@ -739,7 +739,7 @@ function wantHtml(w,top){
         +(priv?'<button class="ib" data-my="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
         +'<button class="ib" data-my="share" data-id="'+esc(w.id)+'" title="Udostępnij" aria-label="Udostępnij">'+ICON.share+'</button>'):live&&!wLate(w)&&!joined?'<span class="note" style="flex:1">🚴 Jazda trwa — dołączyć już nie można.</span>':peek?'<span class="pkbar">'+uiIcon("shield")+'<span><b>Podgląd admina</b>Nie jesteś zaproszony — możesz podejrzeć lub usunąć.</span></span>'
        :open?'<button class="b join'+(joined?' g':'')+'" data-w="pref" data-id="'+esc(w.id)+'">'+(joined&&myp?'✓ '+esc(hhmm(new Date(myp)))+' · zmień':dec?'Jednak mogę? Wybierz godzinę':'Pasuje mi o…')+'</button>'
-       :'<button class="b join'+(joined?' g':'')+'" data-w="join" data-id="'+esc(w.id)+'">'+(joined?'Rezygnuję':dec?'Jednak jadę!':'Jadę!')+'</button>')
+       :'<button class="b join'+(joined?' g':'')+'" data-w="join" data-id="'+esc(w.id)+'">'+(joined?'Rezygnuję':dec?'Jednak '+wVerb(w).toLowerCase()+'!':wVerb(w)+'!')+'</button>')
      +(canInv&&!live?'<button class="ib" data-w="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
      +((mine||isAdmin)?'<button class="ib del'+(mine?'':' adm')+'" data-w="del" data-id="'+esc(w.id)+'" title="'+(mine?'Odwołaj zaproszenie':'Usuń (admin)')+'" aria-label="'+(mine?'Odwołaj zaproszenie':'Usuń (admin)')+'">'+ICON.del+'</button>':'')
      +(myOpen?'</div>':'')+'</div>'
@@ -876,7 +876,10 @@ function openWantForm(w,preset){
   if(needProfile()){askNick();return}
   wf.editId=w?w.id:null;
   wf.sigFor=!w&&preset&&preset.sig||null;   // 🟡 zaproszenie z „Mam ochotę” — ta osoba zostanie zaproszona
-  wf.sigRest=!w&&preset&&preset.sigRest||[];wf.sigChetni=!w&&preset&&preset.sigChetni||0;   // 🟡 „Zaproś chętnych” z własnego sygnału: pozostali odbiorcy sygnału (link „+ dopisz”)
+  wf.sigRest=!w&&preset&&preset.sigRest||[];wf.sigChetni=!w&&preset&&preset.sigChetni||0;
+  // 🏃 KROK 94: aktywność zaproszenia — edycja: jak było; z „Mam ochotę”: aktywność sygnału; inaczej rower
+  {const sg0=wf.sigFor&&typeof sigs!=="undefined"?sigs.find(x=>x.user_id===wf.sigFor):null;
+   wf.act=w?(w.activity||"bike"):(preset&&preset.act)||(sg0&&sg0.activity)||"bike"}   // 🟡 „Zaproś chętnych” z własnego sygnału: pozostali odbiorcy sygnału (link „+ dopisz”)
   wf.vis="all";wf.pick=new Set();wf.gr="";   // 👥 wf.gr: grupa zaproszenia (KROK 71)
   wf.test=!DEMO;$("wtestwrap").classList.toggle("hide",!!w||!testOk||DEMO);wfTestSync();   // 🎮 w demo bez przełącznika „testowe”
   wf.route=null;wf.routeName="";wf.routeHad=hasRoute(w);wf.routeTouched=false;$("wrfile").value="";
@@ -921,7 +924,7 @@ function openWantForm(w,preset){
   const L=lastWant();
   $("wlast").classList.toggle("hide",!L||!!w);
   if(L)$("wlast").textContent="↺ Jak ostatnio: "+pad(L.h)+":"+pad(L.m)+(L.note?" · "+L.note:"");
-  $("wfhtitle").textContent=w?"✏️ Edytuj zaproszenie":"🚲 Zaproś na rower";
+  wfActSync();   // wybór aktywności, rower / tempo tylko przy rowerze, nagłówek „Zaproś na bieg”
   $("wfask").classList.add("hide");
   $("wantform").classList.remove("hide");document.body.classList.add("wfopen");
   $("wfscroll").scrollTop=0;
@@ -978,8 +981,10 @@ function durLineHtml(w){
   return '<div class="wdur">'+(k!=null&&!hasRoute(w)?'📏 '+kmTxt(k).replace(",0","")+' km · ':'')+'⏱ '+(open?'jazda ok. '+durTxt(wantDur(w)):'ok. '+hhmm(wantStart(w))+'–'+hhmm(wantEnd(w)))+'</div>';
 }
 const paceTxt=p=>PACES[p]?PACES[p].e+' '+PACES[p].n+' · '+PACES[p].r:'⏱ '+p;
-const BIKES={road:"🛣 Szosa",gravel:"🪨 Gravel",mtb:"⛰ MTB",trekking:"🌳 Trekking",ebike:"⚡ E-bike"};
-const bikeHtml=w=>w&&w.bike&&BIKES[w.bike]?'<div class="wpcw"><span class="wpc wbk">'+BIKES[w.bike]+'</span></div>':'';
+const BIKES={road:"🛣 Szosa",gravel:"🪨 Gravel",mtb:"⛰ MTB",ebike:"⚡ E-bike"};   // „trekking” usunięty (KROK 94) — koliduje z aktywnością Trekking
+// 🏃 KROK 94: zaproszenie na bieg / spacer / wędrówkę — plakietka aktywności w miejscu plakietki roweru
+const bikeHtml=w=>w&&!actIsBike(w.activity)?'<div class="wpcw"><span class="wpc wbk wact">'+uiIcon(actOf(w.activity).icon||"bike")+esc(actOf(w.activity).name)+'</span></div>'
+  :w&&w.bike&&BIKES[w.bike]?'<div class="wpcw"><span class="wpc wbk">'+BIKES[w.bike]+'</span></div>':'';
 const paceHtml=w=>w&&w.pace?'<div class="wpcw"><span class="wpc wpc-'+(PACES[w.pace]?w.pace:'own')+'">'+esc(paceTxt(w.pace))+'</span></div>':'';
 function wfPaceSync(){
   const p=wf.pace||"",s=$("wpacesel"),own=!!p&&!PACES[p];
@@ -1150,7 +1155,7 @@ async function savePlaceToList(){
   if(places.some(x=>x.name.toLowerCase()===wf.place.toLowerCase()))return;
   try{const row={name:wf.place,lat:wf.plat,lon:wf.plon};if(bikeOk&&wf.pcity){row.city=wf.pcity;row.area=wf.parea||null}const r=await sb.from("places").insert(row).select(bikeOk?"id,name,lat,lon,created_by,city,area":"id,name,lat,lon,created_by").single();if(!r.error&&r.data)places.push(r.data)}catch(e){}
 }
-function wfSnap(){return JSON.stringify([wf.day,$("wdt").value,wf.mode,wf.h,wf.m,wf.h2,wf.m2,wf.vis,[...wf.pick].sort(),wf.gr,wf.test,wf.pace,wf.bike,wf.km,wf.dur,wf.place,wf.plat,(wf.titleAuto?"":$("wtitle").value.trim()),$("wnote").value.trim(),!!wf.route,wf.routeTouched])}
+function wfSnap(){return JSON.stringify([wf.day,$("wdt").value,wf.mode,wf.h,wf.m,wf.h2,wf.m2,wf.vis,[...wf.pick].sort(),wf.gr,wf.test,wf.act,wf.pace,wf.bike,wf.km,wf.dur,wf.place,wf.plat,(wf.titleAuto?"":$("wtitle").value.trim()),$("wnote").value.trim(),!!wf.route,wf.routeTouched])}
 function wfTryClose(){
   if($("wantform").classList.contains("hide"))return;
   if(wf.snap0&&wfSnap()!==wf.snap0){
@@ -1164,8 +1169,22 @@ $("wpacesel").addEventListener("change",()=>{const v=$("wpacesel").value;
   if(v==="*"){wf.pace=null;$("wpaceown").value="";$("wpaceown").classList.remove("hide");$("wpaceown").focus()}
   else{wf.pace=v||null;$("wpaceown").classList.add("hide")}
   wfRouteSync()});
-const WBIKE=[["","bike","Każdy"],["road","road","Szosa"],["gravel","gravel","Gravel"],["mtb","mtb","MTB"],["trekking","tree","Trekking"],["ebike","ebike","E-bike"]];
+const WBIKE=[["","bike","Każdy"],["road","road","Szosa"],["gravel","gravel","Gravel"],["mtb","mtb","MTB"],["ebike","ebike","E-bike"]];
 function wbikeRender(){const el=$("wbikesel");if(!el)return;el.innerHTML=WBIKE.map(([v,k,t])=>'<button type="button" class="wbk'+((wf.bike||"")===v?' on':'')+'" data-wbk="'+v+'" aria-pressed="'+((wf.bike||"")===v)+'">'+uiIcon(k)+'<span>'+t+'</span></button>').join("")}
+// 🏃 aktywność w formularzu (KROK 94): lista z bazy; rower i tempo tylko przy aktywności z rowerem; widać, gdy do wyboru jest więcej niż rower
+function wfActKeys(){const k=actAvail().map(x=>x.key);if(wf.act&&!k.includes(wf.act))k.push(wf.act);return k}
+function wfActSync(){
+  const el=$("wactsel"),K=wfActKeys(),A=actOf(wf.act),bk=actIsBike(wf.act);
+  if(el)el.innerHTML=K.map(k=>{const a=actOf(k);return '<button type="button" class="wbk'+(wf.act===k?' on':'')+'" data-wact="'+esc(k)+'" aria-pressed="'+(wf.act===k)+'">'+uiIcon(a.icon||"bike")+'<span>'+esc(a.name)+'</span></button>'}).join("");
+  $("wactwrap").classList.toggle("hide",!wActOk||K.length<2);
+  $("wbikewrap").classList.toggle("hide",!bikeOk||!bk);
+  $("wpacewrap").classList.toggle("hide",!paceOk||!bk);
+  const dl=$("wdurlbl");if(dl)dl.textContent="Na ile "+String(A.verb_you||"jedziesz").toLowerCase()+"?";
+  $("wfhtitle").textContent=wf.editId?"✏️ Edytuj zaproszenie":(A.emoji||"🚲")+" Zaproś "+(A.invite_txt||"na rower");
+}
+$("wactsel").addEventListener("click",e=>{const b=e.target.closest("[data-wact]");if(!b)return;wf.act=b.dataset.wact||"bike";
+  if(!actIsBike(wf.act)){wf.bike=null;wf.pace=null;wbikeRender();wfPaceSync()}
+  wfActSync();wfTitleHint();try{wfUpdate()}catch(err){}});
 $("wbikesel").addEventListener("click",e=>{const b=e.target.closest("[data-wbk]");if(!b)return;wf.bike=b.dataset.wbk||null;wbikeRender();wfTitleHint()});
 $("wpaceown").addEventListener("input",()=>{wf.pace=$("wpaceown").value.trim().slice(0,30)||null;wfRouteSync()});
 const wfJump=e=>{
@@ -1333,7 +1352,7 @@ $("wsave").onclick=async()=>{
         if(r){rbUse=r.id;if(r.isNew)rbNew=r.id}}
     }
     if(wf.editId){
-      const ow0=wants.find(x=>x.id===wf.editId),upd={starts_at:d.toISOString(),note};if(titleOk)upd.title=title;if(paceOk)upd.pace=wf.pace||null;if(placeOk){upd.place=wf.place||null;upd.place_lat=wf.place?wf.plat:null;upd.place_lon=wf.place?wf.plon:null}if(bikeOk){upd.bike=wf.bike||null;upd.place_city=wf.place&&wf.pcity||null;upd.place_area=wf.place&&wf.parea||null}if(distOk){const R=wf.route||(!wf.routeTouched&&hasRoute(ow0));upd.km=R?null:wf.km||null;upd.dur_min=R||wf.km?null:wf.dur||DUR_DEF}
+      const ow0=wants.find(x=>x.id===wf.editId),upd={starts_at:d.toISOString(),note};if(titleOk)upd.title=title;if(wActOk&&ow0&&(ow0.activity||"bike")!==wf.act)upd.activity=wf.act;if(paceOk)upd.pace=wf.pace||null;if(placeOk){upd.place=wf.place||null;upd.place_lat=wf.place?wf.plat:null;upd.place_lon=wf.place?wf.plon:null}if(bikeOk){upd.bike=wf.bike||null;upd.place_city=wf.place&&wf.pcity||null;upd.place_area=wf.place&&wf.parea||null}if(distOk){const R=wf.route||(!wf.routeTouched&&hasRoute(ow0));upd.km=R?null:wf.km||null;upd.dur_min=R||wf.km?null:wf.dur||DUR_DEF}
       if(wRouteOk&&wf.routeTouched){upd.route=wf.route?routeJson(wf.route):null;upd.route_km=wf.route?+routeKm(wf.route).toFixed(1):null;delete wRouteCache[wf.editId];if(rbOk)upd.route_base_id=wf.route?rbUse:null}
       if(rbNew)sb.from("route_base").update({src_want:wf.editId}).eq("id",rbNew).then(()=>{},()=>{});
       if(rng){upd.range_from=d.toISOString();upd.range_to=d2.toISOString();upd.settled_at=null}
@@ -1356,7 +1375,7 @@ $("wsave").onclick=async()=>{
           if(rem.length)visMsg+=" Usunięto z zaproszonych: "+rem.length+".";}
       }
     }else{
-      const row={starts_at:d.toISOString(),note};if(titleOk&&title)row.title=title;if(paceOk&&wf.pace)row.pace=wf.pace;if(placeOk&&wf.place){row.place=wf.place;if(wf.plat!=null){row.place_lat=wf.plat;row.place_lon=wf.plon}}if(bikeOk){if(wf.bike)row.bike=wf.bike;if(wf.place&&wf.pcity){row.place_city=wf.pcity;if(wf.parea)row.place_area=wf.parea}}if(distOk&&!wf.route){if(wf.km)row.km=wf.km;else row.dur_min=wf.dur||DUR_DEF}if(priv)row.visibility="private";if(priv&&wGrOk&&wf.gr)row.group_id=wf.gr;if(testOk)row.is_test=!!wf.test;if(wRouteOk&&wf.route){row.route=routeJson(wf.route);row.route_km=+routeKm(wf.route).toFixed(1)}if(rbOk&&rbUse)row.route_base_id=rbUse;
+      const row={starts_at:d.toISOString(),note};if(titleOk&&title)row.title=title;if(wActOk&&wf.act&&wf.act!=="bike")row.activity=wf.act;if(paceOk&&wf.pace)row.pace=wf.pace;if(placeOk&&wf.place){row.place=wf.place;if(wf.plat!=null){row.place_lat=wf.plat;row.place_lon=wf.plon}}if(bikeOk){if(wf.bike)row.bike=wf.bike;if(wf.place&&wf.pcity){row.place_city=wf.pcity;if(wf.parea)row.place_area=wf.parea}}if(distOk&&!wf.route){if(wf.km)row.km=wf.km;else row.dur_min=wf.dur||DUR_DEF}if(priv)row.visibility="private";if(priv&&wGrOk&&wf.gr)row.group_id=wf.gr;if(testOk)row.is_test=!!wf.test;if(wRouteOk&&wf.route){row.route=routeJson(wf.route);row.route_km=+routeKm(wf.route).toFixed(1)}if(rbOk&&rbUse)row.route_base_id=rbUse;
       if(rng){row.range_from=d.toISOString();row.range_to=d2.toISOString()}
       const res=await sb.from("wants").insert(row).select("id").single();
       if(res.error)throw res.error;
@@ -1443,8 +1462,8 @@ async function myClick(e){
   }
   if(b.dataset.my==="share"){
     const d=new Date(w.starts_at),url=location.origin+location.pathname;
-    const t="🚴 Idziemy na rower? "+(w.title?"„"+w.title+"” · ":"")+wfLabel(d)+(w.note?" · "+w.note:"")+"\nDołącz w PrzylesieGo!";
-    if(navigator.share){try{await navigator.share({title:"Idziemy na rower?",text:t,url});return}catch(err){if(err&&err.name==="AbortError")return}}
+    const A=actOf(w.activity),t=(A.emoji||"🚴")+" Idziemy "+(A.invite_txt||"na rower")+"? "+(w.title?"„"+w.title+"” · ":"")+wfLabel(d)+(w.note?" · "+w.note:"")+"\nDołącz w PrzylesieGo!";
+    if(navigator.share){try{await navigator.share({title:"Idziemy "+(A.invite_txt||"na rower")+"?",text:t,url});return}catch(err){if(err&&err.name==="AbortError")return}}
     try{await navigator.clipboard.writeText(t+"\n"+url);say("Skopiowano zaproszenie — wklej je znajomym.")}catch(err){say(t+" "+url)}
     return;
   }
@@ -1834,7 +1853,7 @@ function renderPick(){
   const settle=pk.mode==="settle",d=new Date(w.range_from),wd=d.toLocaleDateString("pl-PL",{weekday:"long"});
   p.innerHTML='<div class="sheetbox popbox" role="dialog" aria-modal="true"><button class="sclose" data-k="close" aria-label="Zamknij">✕</button>'
    +'<span class="ptag">'+(settle?'✅ USTAL GODZINĘ':'🕖 KIEDY MOŻESZ?')+'</span>'
-   +'<div class="ph">'+(settle?'Twoje zaproszenie':nk(w.user_id)+' zaprasza na rower')+'</div>'
+   +'<div class="ph">'+(settle?'Twoje zaproszenie':nk(w.user_id)+' zaprasza '+(actOf(w.activity).invite_txt||'na rower'))+'</div>'
    +wTitleHtml(w)+'<div class="pwhen">'+esc(relDay(d)+" "+wTime(w))+'<span>'+esc(wd)+'</span></div>'
    +(w.note?'<div class="pnote">💬 '+esc(w.note)+'</div>':'')
    +'<div class="pmeta">'+(settle?'Liczba = ilu osobom pasuje. Wybierz godzinę startu:':'Wybierz godzinę (liczba = ilu już ją wybrało):')+'</div>'

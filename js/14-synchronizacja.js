@@ -147,7 +147,7 @@ function snapSave(){
     const d={v:SNAP_V,uid,at:Date.now(),n:syncN,
       sorted,rsvps,watchOk,watchN,flags,
       myPriv,profExOk,genderOk,nicks,genders,joinedAt,avAt,medias,meNick:me.nick,
-      rbOk,titleOk,wGrOk,bikeOk,placeOk,distOk,paceOk,wRouteOk,testOk,rangeOk,visOk,wCols,
+      rbOk,titleOk,wGrOk,wActOk,bikeOk,placeOk,distOk,paceOk,wRouteOk,testOk,rangeOk,visOk,wCols,
       wRaw,joins,prefs,invs,decls,notifs,reportOk,reports,lib,
       adminIds,nickColors,nickBgs,favOk,favs:[...favs],plOk,plists,plMem,supers:[...supers],testerOk,testerIds:[...testerIds],
       evOk,evNewOk,evGeoOk,evExtraOk,evInvOk,evPriceOk,evLoaded,evs,evDist,evPart,evLikes,evInv,
@@ -164,7 +164,7 @@ function snapLoad(){
     if(!d||d.v!==SNAP_V||d.uid!==uid||!(Date.now()-d.at<2.5*864e5)||d.n==null)return false;
     sorted=d.sorted||[];rsvps=d.rsvps||{};watchOk=d.watchOk;watchN=d.watchN||{};flags=d.flags||{};flagsReady=true;
     myPriv=d.myPriv;profExOk=d.profExOk;genderOk=d.genderOk;nicks=d.nicks||{};genders=d.genders||{};joinedAt=d.joinedAt||{};avAt=d.avAt||{};medias=d.medias||{};me.nick=d.meNick||null;
-    rbOk=d.rbOk;titleOk=!!d.titleOk;wGrOk=!!d.wGrOk;bikeOk=d.bikeOk;placeOk=d.placeOk;distOk=d.distOk;paceOk=d.paceOk;wRouteOk=d.wRouteOk;testOk=d.testOk;rangeOk=d.rangeOk;visOk=d.visOk;wCols=d.wCols;
+    rbOk=d.rbOk;titleOk=!!d.titleOk;wGrOk=!!d.wGrOk;wActOk=!!d.wActOk;bikeOk=d.bikeOk;placeOk=d.placeOk;distOk=d.distOk;paceOk=d.paceOk;wRouteOk=d.wRouteOk;testOk=d.testOk;rangeOk=d.rangeOk;visOk=d.visOk;wCols=d.wCols;
     wRaw=d.wRaw||[];joins=d.joins||{};prefs=d.prefs||{};invs=d.invs||{};decls=d.decls||{};notifs=d.notifs||[];reportOk=d.reportOk;reports=d.reports||{};lib=d.lib||[];
     adminIds=d.adminIds||[];isAdmin=adminIds.includes(uid)&&!pv;nickColors=d.nickColors||{...DEF_COLORS};nickBgs=d.nickBgs||{...DEF_BGS};
     favOk=d.favOk;favs=new Set(d.favs||[]);plOk=!!d.plOk;plists=d.plists||[];plMem=d.plMem||{};supers=new Set(d.supers||[]);testerOk=d.testerOk;testerIds=new Set(d.testerIds||[]);
@@ -229,6 +229,8 @@ async function loadRemote(selectId){
   let ff=await sb.from("feature_flags").select("key,name,description,state,guests");   // 👤 guests — KROK 61
   if(ff.error)ff=await sb.from("feature_flags").select("key,name,description,state");
   flags={};if(!ff.error)(ff.data||[]).forEach(f=>{flags[f.key]=f});flagsReady=true;
+  // 🏃 lista aktywności (KROK 94) — czytają wszyscy; zmiana w bazie → sync „misc” → pełne wczytanie; bez tabeli zostaje zapas ACT_DEF
+  {const ac=await sb.from("activities").select("key,name,name_many,verb,verb_you,want_txt,invite_txt,with_txt,title_suffix,icon,emoji,pace,uses_bike,msgs,ev_kinds,sort,state").order("sort");if(!ac.error)actsSet(ac.data)}
   if(session){
     const ok=r=>r.error?null:r.data;
     await loadMyPriv();   // 👤 KROK 50
@@ -242,6 +244,7 @@ async function loadRemote(selectId){
     const wq=cols=>{wColsTry=cols;return sb.from("wants").select(cols).gte("starts_at",wSince).order("starts_at").limit(1000)};
     const WFULL="id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min,place,place_lat,place_lon,bike,place_city,place_area,created_at";   // created_at — „wysłane …” w 🔔
     let w=await wq(WFULL+",route_base_id,title,title_auto,group_id,activity");   // + rodzaj zaproszenia (KROK 64) — filtr „Aktywność”; bez kolumny wracamy do dotychczasowego zapytania
+    wActOk=!w.error;   // 🏃 KROK 94: zaproszenie na bieg / spacer / wędrówkę (formularz zapisuje wants.activity)
     if(w.error)w=await wq(WFULL+",route_base_id,title,title_auto,group_id");
     wGrOk=!w.error;   // 👥 zaproszenie dla grupy (KROK 71)
     if(w.error)w=await wq(WFULL+",route_base_id,title,title_auto");titleOk=!w.error;   // 🏷 tytuł zaproszenia (KROK 65)

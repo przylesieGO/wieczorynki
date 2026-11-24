@@ -327,20 +327,20 @@ function renderPop(dir){   // dir: -1 / 1 = karta wjeżdża z lewej / prawej (pr
   const inv=priv?invIds(w).filter(x=>x!==uid):[],going=(joins[w.id]||[]).filter(x=>x!==uid&&x!==w.user_id);
   const big=(q,t)=>'<button type="button" class="b big" data-q="'+q+'">'+t+'</button>';
   const sm=(q,t,c)=>'<button type="button" class="b '+c+'" data-q="'+q+'">'+t+'</button>';
-  let btns;const noB=wDeclOk(w)?sm("no","Nie dam rady","w"):'';   // po starcie baza nie przyjmie „Nie dam rady”
+  let btns;const noB=wDeclOk(w)?sm("no","Nie dam rady","w"):'',AV=actOf(w.activity);   // 🏃 KROK 94: „Biegnę!” / „Biegniesz” przy biegu   // po starcie baza nie przyjmie „Nie dam rady”
   // otwarty zakres: wybór godziny w okienku („Pasuje mi o…”)
   if(open)btns='<div class="pmeta"><b style="color:var(--ink)">Kiedy możesz?</b> (liczba = ilu już wybrało)</div>'+slotsHtml(w,popSel,popOther)
     +'<button type="button" class="b big" data-q="pref"'+(popSel?'':' disabled')+'>Pasuje mi o '+(popSel?hhmm(new Date(popSel)):'…')+'</button>'
     +'<div class="pbtns">'+noB+sm("later","Przypomnij później","g")+'</div>';
-  else if(set)btns=joined?big("read","OK 👍 Jedziesz o "+hhmm(d))+'<div class="pbtns">'+noB+'</div>'
-    :big("join","Jadę! · "+hhmm(d))+'<div class="pbtns">'+noB+sm("later","Przypomnij później","g")+'</div>';
-  else if(!time)btns=joined?big("read","OK 👍 Już jedziesz")+'<div class="pbtns">'+sm("later","Przypomnij później","g")+'</div>'
-    :big("join","Jadę! · "+hhmm(d))+'<div class="pbtns">'+noB+sm("later","Przypomnij później","g")+'</div>';
+  else if(set)btns=joined?big("read","OK 👍 "+AV.verb_you+" o "+hhmm(d))+'<div class="pbtns">'+noB+'</div>'
+    :big("join",AV.verb+"! · "+hhmm(d))+'<div class="pbtns">'+noB+sm("later","Przypomnij później","g")+'</div>';
+  else if(!time)btns=joined?big("read","OK 👍 Już "+String(AV.verb_you).toLowerCase())+'<div class="pbtns">'+sm("later","Przypomnij później","g")+'</div>'
+    :big("join",AV.verb+"! · "+hhmm(d))+'<div class="pbtns">'+noB+sm("later","Przypomnij później","g")+'</div>';
   else btns=joined?big("read","OK 👍")+'<div class="pbtns">'+sm("leave","Rezygnuję","w")+'</div>'
-    :big("join","Jadę! · "+hhmm(d))+'<div class="pbtns">'+sm("read","OK","w")+'</div>';
+    :big("join",AV.verb+"! · "+hhmm(d))+'<div class="pbtns">'+sm("read","OK","w")+'</div>';
   p.innerHTML='<div class="sheetbox popbox'+grCls(w)+'" role="dialog" aria-modal="true"><button class="sclose" data-q="later" aria-label="Później">✕</button><div class="pcard'+(dir?(dir>0?' inr':' inl'):'')+'">'
    +(isTest(w)?'<span class="ttag" style="margin-right:6px">🧪 TEST</span>':'')+'<span class="ptag">'+(set?'✅ GODZINA USTALONA':time?'🕖 ZMIANA GODZINY':'📩 NOWE ZAPROSZENIE'+(priv&&!wGr(w)?' · 🔒 PRYWATNE':''))+'</span>'+(wGr(w)?' '+grTagHtml(w):'')
-   +'<div class="ph">'+nk(actor,"Ktoś")+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w,actor):'')+(set?' '+(genders[actor]==="K"?"ustaliła":"ustalił")+' godzinę':time?' '+(genders[actor]==="K"?"zmieniła":"zmienił")+' godzinę':' zaprasza Cię na rower')+'</div>'
+   +'<div class="ph">'+nk(actor,"Ktoś")+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w,actor):'')+(set?' '+(genders[actor]==="K"?"ustaliła":"ustalił")+' godzinę':time?' '+(genders[actor]==="K"?"zmieniła":"zmienił")+' godzinę':' zaprasza Cię '+(actOf(w.activity).invite_txt||'na rower'))+'</div>'
    +'<div class="pwhen">'+esc(day+" "+wTime(w))+(dd>=0&&dd<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
    +(wLate(w)&&!joined?lateNote():'')
    +(open?'<div class="pmeta">🕖 Zakres godzin — wybierz, kiedy możesz; godzinę ustali '+esc(nickOf(w.user_id))+'.</div>':'')
@@ -420,14 +420,13 @@ $("popsheet").addEventListener("click",async e=>{
 /* ---------- 🟡 „Mam ochotę” (KROK 64, 2.0 — KROK 90): sygnał „mam dziś ochotę pojeździć / pobiegać / na spacer / na wędrówkę” ----------
    Okrągły przycisk z machającą dłonią 👋 nad ➕ — tylko gdy na dziś nie ma zaproszeń i nie dałeś jeszcze znać.
    Okienko: aktywność → komunikat (4 gotowe + „Inne…”, do 40 znaków) → „Kto zobaczy?” (Wszyscy albo wybrane osoby — ten sam wybór co w zaproszeniach).
-   Pod 🔔 sekcja „Ekipa na dziś” (dawniej „Mają ochotę dziś”): komunikat, „Zaproś ›” (rower), „👋 Też mam ochotę” (reakcje się sumują), u autora „Zmień” / „Wycofaj”.
+   Pod 🔔 sekcja „Ekipa na dziś” (dawniej „Mają ochotę dziś”): komunikat, „Zaproś ›” (każda aktywność, KROK 94), „👋 Też mam ochotę” (reakcje się sumują), u autora „Zmień” / „Wycofaj”.
    Pop-up „X ma ochotę” (raz na sygnał, kilka naraz — przewijane w bok); wyłącznik: ⚙️ → Jazdy i zaproszenia.
    Pop-up z zachętą przy pierwszych 3 wejściach. Przełącznik w 🚦 Funkcje testowe: „mam_ochote”. Kanał Telegram wysyła baza (tylko „Wszyscy”). */
-const SIG_ACT={bike:["bike","Rower","pojeździć na rowerze"],run:["run","Bieg","pobiegać"],walk:["walk","Spacer","na spacer"],hike:["tree","Trekking","na wędrówkę"]};
-const SIG_MSG={bike:["Nogi same kręcą","Kto mnie dogoni?","Szukam koła do siedzenia","Bez kawy nie ruszam ☕"],
-  run:["Buty już zawiązane","Uciekam przed kanapą","Tempo rozmowne, obiecuję","Kto ze mną do lasu?"],
-  walk:["Spacer i plotki","Pies też chce","Bez pośpiechu, z kawą","Zbieram kroki"],
-  hike:["Plecak spakowany","Byle pod górę","Szukam szlaku i ekipy","Kanapki biorę ja"]};
+// 🏃 KROK 94: aktywności z bazy (actOf / actAvail w js/03) — [ikona, nazwa, „ma ochotę …”]
+const sigA=k=>{const a=actOf(k);return [a.icon||"bike",a.name,a.want_txt]};
+const sigMsgs=k=>actOf(k).msgs||[];
+const sigActKeys=()=>{const k=actAvail().map(x=>x.key);return k.length?k:["bike"]};   // do wyboru w okienku: „Wszyscy” (+ „Tylko testerzy” dla testerów)
 let sigs=[],sigOk=false,sig2Ok=false,sigDirty=true,sigDay="",sigBusy=false,sigPick="bike",sigView="",sigDoneT=0;
 let sigReacts={},sigTo={},sigSeenDb=new Map(),sigSeenOk=false,sigBusyO=new Set();   // KROK 92: sigSeenDb {autor|czas sygnału → OK}   // KROK 90: reakcje {autor:[kto]} i odbiorcy prywatnych {autor:[kto]} (widoczne wg reguł bazy)
 const sg={msg:"",own:false,vis:"all",pick:new Set(),gr:""};   // okienko: komunikat (own = „Inne…”), „Kto zobaczy?”
@@ -483,11 +482,14 @@ const sigCancelRow=n=>'<div class="nit stn sgrow new"><div class="ic">'+uiIcon("
 const sigEkipaUn=()=>{if(!sigOn())return [];const t=sigToday();
   return notifs.filter(n=>n.kind==="sig_ekipa"&&!n.read_at&&localIso(new Date(n.created_at)).slice(0,10)===t).filter(n=>{const x=sigs.find(s=>s.user_id===n.actor&&!s.cancelled_at);return x&&!sigEkipaRide(x)})};
 // 👋 „X też ma ochotę — ekipa już jedzie” (KROK 92b): do organizatora wspólnego zaproszenia, dopóki X nie jest w zaproszeniu
+// KROK 94: przy biegu / spacerze nie „jedziemy” — teksty ekipy wg aktywności
+const sigTogether=k=>actIsBike(k)?"Jedziecie razem ›":"Jesteście umówieni ›";
+const sigAlready=k=>actIsBike(k)?"już jedzie":"już się umówiła";
 const sigWPeople=w=>new Set([w.user_id,...invIds(w),...(joins[w.id]||[])]);
 const sigLateUn=()=>{if(!sigOn())return [];const t=sigToday();
   return notifs.filter(n=>n.kind==="sig_late"&&!n.read_at&&localIso(new Date(n.created_at)).slice(0,10)===t).filter(n=>{const w=wants.find(x=>x.id===n.want_id);return w&&!wDone(w)&&!sigWPeople(w).has(n.actor)})};
 const sigLateRow=n=>'<div class="nit stn sgrow new"><div class="ic">'+uiIcon("hand")+'</div><div class="tx">'+nk(n.actor)
-  +'<div class="w">też ma ochotę — Wasza ekipa już jedzie · '+esc(hhmm(new Date(n.created_at)))+'</div></div>'
+  +'<div class="w">też ma ochotę — Wasza ekipa '+sigAlready((wants.find(x=>x.id===n.want_id)||{}).activity)+' · '+esc(hhmm(new Date(n.created_at)))+'</div></div>'
   +'<span class="sgbtns"><button type="button" class="lnk stgo" data-sgadd="'+esc(n.want_id+'|'+n.actor)+'">'+sigAddLbl([n.actor])+'</button></span>'
   +'<button type="button" class="nmk" data-sgcx="'+esc(n.id)+'" aria-label="Oznacz jako przeczytane" title="Oznacz jako przeczytane">'+uiIcon("check")+'</button></div>';
 // „Dopisz Nick ›” / „Dopisz (n) ›” — dopraszanie do zaproszenia z zaznaczonymi osobami
@@ -502,11 +504,12 @@ function sigEkipaRide(x){
   if(!x||typeof wants==="undefined")return null;
   const E=new Set(sigEkipa(x));if(E.size<2)return null;
   return wants.find(w=>E.has(w.user_id)&&dayDiff(new Date(w.range_from||w.starts_at))===0&&!wDone(w)
+    &&(w.activity||"bike")===(x.activity||"bike")   // KROK 94: wspólne zaproszenie tylko z tą samą aktywnością co sygnał (jak sig_ekipa_ride_id w bazie)
     &&sigWPeople(w).has(uid)   // tylko gdy ja jestem w zaproszeniu (👑 widzi cudze prywatne — to nie znaczy, że jedzie)
     &&invIds(w).concat(joins[w.id]||[]).some(id=>id!==w.user_id&&E.has(id)))||null;
 }
 const sigEkipaRow=n=>{const x=sigs.find(s=>s.user_id===n.actor),E=x?sigEkipaOthers(x):[];
-  return '<div class="nit stn sgrow new"><div class="ic">'+uiIcon("users")+'</div><div class="tx"><b>Masz z kim jechać!</b>'
+  return '<div class="nit stn sgrow new"><div class="ic">'+uiIcon("users")+'</div><div class="tx"><b>'+esc(actOf(x&&x.activity).with_txt||"Masz z kim jechać!")+'</b>'
   +'<div class="w">Ekipa '+(n.actor===uid?'z Twojego sygnału':'sygnału '+esc(nickOf(n.actor)))+' · '+(E.length+1)+' '+plf(E.length+1,["osoba","osoby","osób"])+' · '+esc(hhmm(new Date(n.created_at)))+'</div></div>'
   +'<span class="sgbtns">'+(E.length?'<button type="button" class="lnk stgo" data-sgc="'+esc(n.actor)+'">Zaproś ekipę ('+E.length+') ›</button>':'')+'</span>'
   +'<button type="button" class="nmk" data-sgcx="'+esc(n.id)+'" aria-label="Oznacz jako przeczytane" title="Oznacz jako przeczytane">'+uiIcon("check")+'</button></div>'};
@@ -535,9 +538,9 @@ function sigFabHtml(){
 function closeSig(){$("sigsheet").classList.add("hide");$("sigsheet").innerHTML="";sigView=""}
 function openSig(view){
   if(!session)return;sigView=view||"pick";const m=sigMine();
-  if(m&&SIG_ACT[m.activity])sigPick=m.activity;
+  if(m&&actList.some(x=>x.key===m.activity))sigPick=m.activity;
   // „Zmień” / ponowny sygnał: komunikat i „Kto zobaczy?” jak ostatnio dziś
-  sg.msg=m&&m.msg||"";sg.own=!!sg.msg&&!(SIG_MSG[sigPick]||[]).includes(sg.msg);
+  sg.msg=m&&m.msg||"";sg.own=!!sg.msg&&!sigMsgs(sigPick).includes(sg.msg);
   sg.vis=m&&sigPriv(m)?"pick":"all";sg.pick=new Set(m&&sigPriv(m)?(sigTo[uid]||[]):[]);sg.gr="";
   renderSig();
 }
@@ -553,7 +556,7 @@ function sigWhoHtml(){
 }
 function sigMsgHtml(){
   if(!sig2Ok)return "";
-  const P=SIG_MSG[sigPick]||[];
+  const P=sigMsgs(sigPick);
   return '<div class="sglbl">Komunikat <span class="note">(opcjonalnie)</span></div><div class="sgmsgs">'
    +P.map(t=>'<button type="button" class="chip'+(!sg.own&&sg.msg===t?' on':'')+'" data-sgm="'+esc(t)+'" aria-pressed="'+(!sg.own&&sg.msg===t)+'">'+esc(t)+'</button>').join("")
    +'<button type="button" class="chip'+(sg.own?' on':'')+'" data-sgm="" aria-pressed="'+sg.own+'">Inne…</button></div>'
@@ -563,7 +566,7 @@ function sigMsgHtml(){
 function renderSigMine(){
   const p=$("sigsheet"),m=sigMine();
   if(!m||m.cancelled_at){closeSig();return}
-  const a=SIG_ACT[m.activity]||SIG_ACT.bike,R=sigReactIds(m).filter(id=>id!==uid&&nicks[id]),n=R.length,to=sigPriv(m)?(sigTo[uid]||[]).length:0;
+  const a=sigA(m.activity),R=sigReactIds(m).filter(id=>id!==uid&&nicks[id]),n=R.length,to=sigPriv(m)?(sigTo[uid]||[]).length:0;
   const tg=flags.mam_ochote&&flags.mam_ochote.state==="all"&&!sigPriv(m);
   p.innerHTML='<div class="sheetbox popbox sigbox sgmine" role="dialog" aria-modal="true"><button class="sclose" data-sg="later" aria-label="Zamknij">✕</button>'
    +'<span class="ptag">TWÓJ SYGNAŁ</span>'
@@ -573,7 +576,7 @@ function renderSigMine(){
    +(sig2Ok?'<div class="sglbl">Też mają ochotę'+(n?' ('+n+')':'')+'</div>'
      +(n?'<div class="sgrl">'+R.map(id=>'<span class="sgrc">'+uiIcon("hand")+nk(id)+'</span>').join("")+'</div>'
         :'<div class="note">Na razie nikt. Gdy ktoś da „Też mam ochotę!”, zobaczysz to tutaj i dostaniesz powiadomienie.</div>'):'')
-   +(sig2Ok&&m.activity==="bike"&&n?'<button type="button" class="b big sgmkeen" data-sg="keen">Zaproś ekipę ('+n+') ›</button>':'')
+   +(sig2Ok&&n?'<button type="button" class="b big sgmkeen" data-sg="keen">Zaproś ekipę ('+n+') ›</button>':'')
    +(sig2Ok?'<button type="button" class="lnk sgmbell" data-sg="bell">Cała ekipa pod 🔔 ›</button>':'')
    +'<div class="pbtns"><button type="button" class="b w" data-sg="edit">Zmień</button><button type="button" class="b w" data-sg="cancel">Wycofaj</button></div>'
    +'</div>';
@@ -591,7 +594,7 @@ function renderSig(){
    +'<div class="ph">'+(intro?'Nie masz pomysłu na jazdę, ale masz ochotę pojeździć?':edit?'Zmień swój sygnał':'Na co masz dziś ochotę?')+'</div>'
    +'<div class="pmeta">'+(intro?'Daj znać innym — bez godziny i trasy. Zobaczą to pod 🔔'+(tg?' i na kanale Telegram':'')+' i mogą Cię zaprosić.'
       :'Bez godziny i trasy. '+(sg.vis==="pick"?'Zobaczą tylko wybrane osoby (pod 🔔).':'Inni zobaczą to pod 🔔'+(tg?' i na kanale Telegram':'')+'.'))+'</div>'
-   +'<div class="wbike sigacts">'+Object.keys(SIG_ACT).map(k=>'<button type="button" class="wbk'+(sigPick===k?' on':'')+'" data-sga="'+k+'" aria-pressed="'+(sigPick===k)+'">'+uiIcon(SIG_ACT[k][0])+'<span>'+SIG_ACT[k][1]+'</span></button>').join("")+'</div>'
+   +'<div class="wbike sigacts">'+sigActKeys().map(k=>'<button type="button" class="wbk'+(sigPick===k?' on':'')+'" data-sga="'+esc(k)+'" aria-pressed="'+(sigPick===k)+'">'+uiIcon(sigA(k)[0])+'<span>'+esc(sigA(k)[1])+'</span></button>').join("")+'</div>'
    +sigMsgHtml()+sigWhoHtml()
    +'<button type="button" class="b big" data-sg="send"'+(sigBusy?' disabled':'')+'>'+(edit?'Zapisz':'Daj znać')+'</button>'
    +'<div class="pbtns"><button type="button" class="b w" data-sg="later">'+(intro?'Później':'Nie teraz')+'</button></div>'
@@ -626,8 +629,8 @@ async function sigSend(){
     sigBusy=false;closeSig();
     try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}
     if(!edit){sigDoneT=Date.now()+2600;sigFabHtml();sigFabSync();setTimeout(()=>{sigFabHtml();sigFabSync()},2700)}
-    say(edit?"Zapisano ✔ "+SIG_ACT[sigPick][1]+(priv?" · widzi "+ids.length+" "+plf(ids.length,["osoba","osoby","osób"]):""):
-      (genders[uid]==="K"?"Dałaś":"Dałeś")+" znać ✔ "+SIG_ACT[sigPick][1]+", dziś — "+(priv?ids.length+" "+plf(ids.length,["osoba zobaczy","osoby zobaczą","osób zobaczy"]):"inni zobaczą")+" pod 🔔.");
+    say(edit?"Zapisano ✔ "+sigA(sigPick)[1]+(priv?" · widzi "+ids.length+" "+plf(ids.length,["osoba","osoby","osób"]):""):
+      (genders[uid]==="K"?"Dałaś":"Dałeś")+" znać ✔ "+sigA(sigPick)[1]+", dziś — "+(priv?ids.length+" "+plf(ids.length,["osoba zobaczy","osoby zobaczą","osób zobaczy"]):"inni zobaczą")+" pod 🔔.");
     sigDirty=true;await syncNow();sigFabSync();
   }catch(e){sigBusy=false;renderSig();say(sigErr(e))}
 }
@@ -677,13 +680,15 @@ function sigInviteEkipa(owner){
   if(!sigIReact(x)||E.length<2){say("Zaproś ekipę może osoba, która dała „Też mam ochotę!” — gdy w ekipie są co najmniej 2 osoby poza Tobą.");return}
   show(0);openWantForm(null,Object.assign({sig:owner,pick:E,sigChetni:E.length},sigPreset(x)));
 }
-// 🚲 „Super ekipa” (klamra pod 🔔): suma ekip z dzisiejszych sygnałów rowerowych, w których jestem (autor albo dłoń) — min. 2 sygnały i 3 osoby poza mną.
+// 🚲 „Super ekipa” (klamra pod 🔔): suma ekip z dzisiejszych sygnałów tej samej aktywności, w których jestem (autor albo dłoń) — min. 2 sygnały i 3 osoby poza mną.
 // Organizatorem zaproszenia jest ten, kto kliknie; tytuł to „SUPER EKIPA”, a w notatce jest jego komunikat „Mam ochotę”; autorzy pozostałych sygnałów wchodzą jako zaproszeni. Bez pytania o zgodę.
-const sigSuperSigs=()=>sig2Ok?sigList().filter(x=>x.activity==="bike"&&(x.user_id===uid||sigIReact(x))):[];
+// KROK 94: Super ekipa łączy sygnały tej samej aktywności — mojego sygnału (albo pierwszego, w którym jestem)
+const sigSuperSigs=()=>{if(!sig2Ok)return [];const L=sigList().filter(x=>x.user_id===uid||sigIReact(x)),m=L.find(x=>x.user_id===uid)||L[0];
+  return m?L.filter(x=>(x.activity||"bike")===(m.activity||"bike")):[]};
 const sigSuperIds=S=>[...new Set(S.flatMap(sigEkipaOthers))];
 const sigSuperOn=S=>S.length>=2&&sigSuperIds(S).length>=3;
 function sigInviteSuper(){
-  const S=sigSuperSigs();if(!sigSuperOn(S)){say("Super ekipa pojawia się, gdy jesteś w co najmniej 2 sygnałach rowerowych i w sumie jest 3 osoby poza Tobą.");return}
+  const S=sigSuperSigs();if(!sigSuperOn(S)){say("Super ekipa pojawia się, gdy jesteś w co najmniej 2 sygnałach tej samej aktywności i w sumie jest 3 osoby poza Tobą.");return}
   const ids=sigSuperIds(S),mine=S.find(x=>x.user_id===uid),src=mine||S[0];
   // tytuł „SUPER EKIPA”; w notatce komunikat „Mam ochotę” osoby, która kliknęła (o ile ma własny sygnał z komunikatem)
   const note=mine&&mine.msg&&!mine.msg_hidden?String(mine.msg).trim():"";
@@ -693,13 +698,14 @@ const sigMiniAv=id=>{const a=avData[id]&&avData[id].d;return '<span class="sgmav
 // wspólne zaproszenie na dziś, w którym są już wszyscy z klamry (i ja) → „Jedziecie razem ›” zamiast „Super ekipa ›”
 function sigSuperRide(S){
   const ids=sigSuperIds(S);if(!ids.length||typeof wants==="undefined")return null;
-  return wants.find(w=>dayDiff(new Date(w.range_from||w.starts_at))===0&&!wDone(w)&&(()=>{const P=new Set([w.user_id,...invIds(w),...(joins[w.id]||[])]);return P.has(uid)&&ids.every(id=>P.has(id))})())||null;
+  const sa=(S[0]&&S[0].activity)||"bike";
+  return wants.find(w=>dayDiff(new Date(w.range_from||w.starts_at))===0&&!wDone(w)&&(w.activity||"bike")===sa&&(()=>{const P=new Set([w.user_id,...invIds(w),...(joins[w.id]||[])]);return P.has(uid)&&ids.every(id=>P.has(id))})())||null;
 }
 // wspólne zaproszenie na dziś, w którym jestem i są już niektórzy z klamry, ale nie wszyscy → „Dopisz (n) ›” zamiast „Super ekipa ›” (2026-11-24)
 function sigSuperPart(S){
   const ids=sigSuperIds(S);if(!ids.length||typeof wants==="undefined")return null;
   for(const w of wants){
-    if(dayDiff(new Date(w.range_from||w.starts_at))!==0||wDone(w)||!wantCanInvite(w))continue;
+    if(dayDiff(new Date(w.range_from||w.starts_at))!==0||wDone(w)||!wantCanInvite(w)||(w.activity||"bike")!==((S[0]&&S[0].activity)||"bike"))continue;
     const P=sigWPeople(w);if(!P.has(uid))continue;
     const miss=ids.filter(id=>!P.has(id));
     if(miss.length&&miss.length<ids.length)return {w,miss};
@@ -709,7 +715,7 @@ function sigSuperPart(S){
 function sigSuperHtml(S,rows){
   const ids=sigSuperIds(S),show4=ids.slice(0,4),more=ids.length-show4.length,RW=sigSuperRide(S),PT=RW?null:sigSuperPart(S);
   return '<div class="sgsup"><div class="sgsupbar"><span class="sgstack">'+show4.map(sigMiniAv).join("")+(more>0?'<span class="sgmav more">+'+more+'</span>':'')+'</span>'
-    +(RW?'<button type="button" class="b sgsupbtn" data-sgw="'+esc(RW.id)+'">'+uiIcon("users")+' Jedziecie razem ›</button></div>'
+    +(RW?'<button type="button" class="b sgsupbtn" data-sgw="'+esc(RW.id)+'">'+uiIcon("users")+' '+sigTogether(RW.activity)+'</button></div>'
        :PT?'<button type="button" class="b sgsupbtn" data-sgadd="'+esc(PT.w.id+'|'+PT.miss.join(","))+'">'+uiIcon("users")+' '+sigAddLbl(PT.miss)+'</button></div>'
        :'<button type="button" class="b sgsupbtn" data-sgsup="1">'+uiIcon("users")+' Super ekipa ('+ids.length+') ›</button></div>')
     +'<div class="sgsupbody">'+rows+'</div></div>';
@@ -771,16 +777,16 @@ const sigReactTxt=x=>{const L=sigReactIds(x);if(!L.length)return '';
     +' '+(L.length>1?'też mają':'też '+(me?'masz':'ma'))+' ochotę</span>';};
 // 🔔 sekcja „Mają ochotę dziś”
 function sigRow(x,un){
-  const a=SIG_ACT[x.activity]||SIG_ACT.bike,me=x.user_id===uid,d=new Date(x.created_at),rc=sigReactIds(x).length,mine=sigIReact(x);
+  const a=sigA(x.activity),me=x.user_id===uid,d=new Date(x.created_at),rc=sigReactIds(x).length,mine=sigIReact(x);
   const to=me&&sigPriv(x)?(sigTo[uid]||[]).length:0;
-  const RW=sig2Ok&&x.activity==="bike"&&(me||mine)?sigEkipaRide(x):null;   // 🚲 KROK 92: ekipa ma już wspólne zaproszenie na dziś
+  const RW=sig2Ok&&(me||mine)?sigEkipaRide(x):null;   // 🚲 KROK 92: ekipa ma już wspólne zaproszenie na dziś
   const busy=!RW&&(me||mine)&&sigBusyO.has(x.user_id);   // ekipa już jedzie (prywatne zaproszenie, mnie w nim nie ma)
-  const E=sig2Ok&&x.activity==="bike"&&!RW&&!busy?sigEkipaOthers(x):[],chetni=me&&E.length,ekipa=!me&&mine&&E.length>=2;   // 🚲 „Zaproś ekipę ›” — autor (są chętni) lub osoba z reakcją (w ekipie min. 2 inne osoby)
+  const E=sig2Ok&&!RW&&!busy?sigEkipaOthers(x):[],chetni=me&&E.length,ekipa=!me&&mine&&E.length>=2;   // 🚲 „Zaproś ekipę ›” — autor (są chętni) lub osoba z reakcją (w ekipie min. 2 inne osoby)
   const late=RW&&wantCanInvite(RW)?sigEkipa(x).filter(id=>!sigWPeople(RW).has(id)):[];   // 🚲 KROK 92b: ktoś z ekipy jeszcze nie w zaproszeniu
-  const rw=(RW?'<button type="button" class="lnk stgo" data-sgw="'+esc(RW.id)+'">Jedziecie razem ›</button>':'')
+  const rw=(RW?'<button type="button" class="lnk stgo" data-sgw="'+esc(RW.id)+'">'+sigTogether(RW.activity)+'</button>':'')
     +(late.length?'<button type="button" class="lnk stgo" data-sgadd="'+esc(RW.id+'|'+late.join(","))+'">'+sigAddLbl(late)+'</button>':'');
   const btn=me?'<span class="sgbtns">'+rw+(chetni?'<button type="button" class="lnk stgo" data-sgc="'+esc(x.user_id)+'">Zaproś ekipę ('+E.length+') ›</button>':'')+'<button type="button" class="lnk stgo" data-sge="1">Zmień</button><button type="button" class="lnk stgo" data-sgx="1">Wycofaj</button></span>'
-    :'<span class="sgbtns">'+rw+(x.activity==="bike"&&!RW?'<button type="button" class="lnk stgo" data-sgz="'+esc(x.user_id)+'">'+sigInvLbl(x.user_id)+'</button>':'')+(ekipa?'<button type="button" class="lnk stgo" data-sgc="'+esc(x.user_id)+'">Zaproś ekipę ('+E.length+') ›</button>':'')
+    :'<span class="sgbtns">'+rw+(!RW?'<button type="button" class="lnk stgo" data-sgz="'+esc(x.user_id)+'">'+sigInvLbl(x.user_id)+'</button>':'')+(ekipa?'<button type="button" class="lnk stgo" data-sgc="'+esc(x.user_id)+'">Zaproś ekipę ('+E.length+') ›</button>':'')
       +(sig2Ok?'<button type="button" class="sgre'+(mine?' on':'')+'" data-sgr="'+esc(x.user_id)+'" aria-pressed="'+mine+'" title="'+(mine?'Cofnij':'Też mam ochotę!')+'" aria-label="'+(mine?'Cofnij „Też mam ochotę”':'Też mam ochotę!')+'">'+uiIcon("hand")+(rc?'<b>'+rc+'</b>':'')+'</button>':'')+'</span>';
   return '<div class="nit stn sgrow'+(un?' new':'')+'"><div class="ic">'+uiIcon(a[0])+'</div><div class="tx">'+(me?'<b>Ty</b>':nk(x.user_id))
     +(x.is_test?' <span class="ttag">🧪 TEST</span>':'')+(sigPriv(x)?' <span class="sgpriv">'+uiIcon("lock")+(me?' '+to+' '+plf(to,["osoba","osoby","osób"]):' do Ciebie')+'</span>':'')
@@ -788,7 +794,7 @@ function sigRow(x,un){
     +(sigMsgTxt(x)?'<div class="sgmsg">'+sigMsgTxt(x)+(isAdmin&&!me?' <button type="button" class="lnk sghide" data-sgh="'+esc(x.user_id)+'">Ukryj</button>':'')+'</div>':'')
     +(x.msg_hidden&&me?'<div class="note">Komunikat ukryty przez administratora.</div>':'')
     +(rc&&(me||rc>1||!mine)?'<div class="sgrt">'+sigReactTxt(x)+'</div>':'')
-    +(busy?'<div class="note">Ekipa już jedzie — organizator dostał znać i może Cię dopisać.</div>':'')
+    +(busy?'<div class="note">Ekipa '+sigAlready(x.activity)+' — organizator dostał znać i może Cię dopisać.</div>':'')
     +'</div>'+btn+(un?bsMk(sigKey(x)):'')+'</div>';
 }
 function sigBellHtml(){
@@ -824,14 +830,14 @@ function renderSigPop(){
   if(!L.length){closeSig();return}
   if(sigPopI>=L.length)sigPopI=L.length-1;
   const n=L.length,first=L[0],K=genders[first.user_id]==="K";
-  const card=x=>{const a=SIG_ACT[x.activity]||SIG_ACT.bike,mine=sigIReact(x),rc=sigReactIds(x).length;
+  const card=x=>{const a=sigA(x.activity),mine=sigIReact(x),rc=sigReactIds(x).length;
     return '<div class="sgpcard">'
      +'<div class="sgpava">'+sigAvHtml(x.user_id)+'<span class="sgpact" data-a="'+esc(x.activity)+'">'+uiIcon(a[0])+'</span></div>'
      +'<div class="sgpnick">'+nk(x.user_id)+(sigPriv(x)?' <span class="sgpriv">'+uiIcon("lock")+' do Ciebie</span>':'')+'</div>'
      +'<div class="sgpbub">'+(sigMsgTxt(x)||'Mam dziś ochotę '+esc(a[2])+'!')+'<small>'+esc(a[1].toLowerCase())+' · '+esc(hhmm(new Date(x.created_at)))+'</small></div>'
      +(rc?'<div class="sgrt">'+sigReactTxt(x)+'</div>':'')
      +'<div class="sgwx">'+sigWxHtml()+'</div>'
-     +'<div class="pbtns">'+(x.activity==="bike"?'<button type="button" class="b" data-sgz="'+esc(x.user_id)+'">'+sigInvLbl(x.user_id)+'</button>':'')
+     +'<div class="pbtns">'+'<button type="button" class="b" data-sgz="'+esc(x.user_id)+'">'+sigInvLbl(x.user_id)+'</button>'
        +(sig2Ok?'<button type="button" class="b w sgre2'+(mine?' on':'')+'" data-sgr="'+esc(x.user_id)+'" aria-pressed="'+mine+'">'+uiIcon("hand")+' '+(mine?'Też masz ochotę ✔':'Też mam ochotę!')+'</button>':'')+'</div>'
      +'</div>'};
   p.innerHTML='<div class="sheetbox popbox sigbox sgpop" role="dialog" aria-modal="true"><button class="sclose" data-sg="popx" aria-label="Zamknij">✕</button>'

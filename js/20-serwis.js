@@ -5,7 +5,7 @@
    pobierane przy wejściu na ekran (najwyżej co minutę). Przypomnienia: Cron bike_remind → 🔔 bike_svc / bike_pick + Telegram.
    Lokalnie (localStorage „svBikes:<uid>”) zostają tylko: przykładowy rower, „Pytaj o rower” i znacznik przeniesienia z etapu 1.
    Plik wczytywany po js/18: przy wczytaniu tylko rejestruje obsługę zdarzeń; js/05, js/11 wołają svRow() / svHtml() / svBell*() przez typeof. */
-const SV_TYPES=[["gravel","gravel","Gravel"],["mtb","mtb","MTB"],["road","road","Szosa"],["trek","bike","Trekking"],["ebike","ebike","E-bike"],["city","bike","Miejski"],["other","bike","Inny"]];
+const SV_TYPES=[["gravel","gravel","Gravel"],["mtb","mtb","MTB"],["road","road","Szosa"],["ebike","ebike","E-bike"],["city","bike","Miejski"],["other","bike","Inny"]];
 // części eksploatacyjne: [klucz, nazwa, km do wymiany (0 = bez paska)]
 const SV_PARTS=[["chain","Łańcuch",2000],["cass","Kaseta",6000],["pads","Klocki hamulcowe",3000],["tyre","Opona",5000],["tube","Dętka",0],["cable","Linki / pancerze",5000],["other","Inna część",0]];
 const SV_BEFORE=[["1","1 dzień"],["3","3 dni"],["7","Tydzień"]];

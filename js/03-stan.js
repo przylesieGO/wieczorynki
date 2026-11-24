@@ -65,3 +65,22 @@ function onScroll(){
 window.addEventListener("scroll",onScroll,{passive:true});
 onScroll();
 
+/* 🏃 Aktywności (KROK 94): jedna lista z bazy (tabela `activities`) — rower, bieg, spacer, trekking; nowa aktywność = wiersz w bazie.
+   Zapas (ACT_DEF) = te same 4, gdy baza nie odpowie; ostatnia lista z bazy zostaje w pamięci telefonu (localStorage „acts”).
+   Pola: name (karta), name_many (Filtry), verb „Jadę/Biegnę”, verb_you, want_txt „… ma ochotę …”, icon (uiIcon), uses_bike, msgs, ev_kinds, state off/testers/all. */
+const ACT_DEF=[
+  {key:"bike",invite_txt:"na rower",title_suffix:"",name:"Rower",name_many:"Rower",verb:"Jadę",verb_you:"Jedziesz",want_txt:"pojeździć na rowerze",with_txt:"Masz z kim jechać!",icon:"bike",emoji:"🚲",pace:"kmh",uses_bike:true,
+   msgs:["Nogi same kręcą","Kto mnie dogoni?","Szukam koła do siedzenia","Bez kawy nie ruszam ☕"],ev_kinds:["gravel","road","mtb","ebike","any"],sort:1,state:"all"},
+  {key:"run",invite_txt:"na bieg",title_suffix:" · bieg",name:"Bieg",name_many:"Bieganie",verb:"Biegnę",verb_you:"Biegniesz",want_txt:"pobiegać",with_txt:"Masz z kim pobiegać!",icon:"run",emoji:"🏃",pace:"minkm",uses_bike:false,
+   msgs:["Buty już zawiązane","Uciekam przed kanapą","Tempo rozmowne, obiecuję","Kto ze mną do lasu?"],ev_kinds:["run","tri"],sort:2,state:"all"},
+  {key:"walk",invite_txt:"na spacer",title_suffix:" · spacer",name:"Spacer",name_many:"Spacery",verb:"Idę",verb_you:"Idziesz",want_txt:"na spacer",with_txt:"Masz z kim iść na spacer!",icon:"walk",emoji:"🚶",pace:"none",uses_bike:false,
+   msgs:["Spacer i plotki","Pies też chce","Bez pośpiechu, z kawą","Zbieram kroki"],ev_kinds:["walk"],sort:3,state:"all"},
+  {key:"hike",invite_txt:"na wędrówkę",title_suffix:" · wędrówka",name:"Trekking",name_many:"Trekking",verb:"Idę",verb_you:"Idziesz",want_txt:"na wędrówkę",with_txt:"Masz z kim iść na wędrówkę!",icon:"tree",emoji:"🥾",pace:"none",uses_bike:false,
+   msgs:["Plecak spakowany","Byle pod górę","Szukam szlaku i ekipy","Kanapki biorę ja"],ev_kinds:[],sort:4,state:"all"}];
+let actList=(()=>{try{const a=JSON.parse(localStorage.getItem("acts")||"null");if(Array.isArray(a)&&a.length&&a.every(x=>x&&x.key&&x.name))return a}catch(e){}return ACT_DEF})();
+function actsSet(a){if(!Array.isArray(a)||!a.length)return;actList=a.slice().sort((p,q)=>(p.sort||0)-(q.sort||0));try{localStorage.setItem("acts",JSON.stringify(actList))}catch(e){}}
+const actOf=k=>actList.find(x=>x.key===(k||"bike"))||actList.find(x=>x.key==="bike")||ACT_DEF[0];   // nieznany klucz → rower (jak act_row w bazie)
+const actIsBike=k=>!!actOf(k).uses_bike;
+// do wyboru (formularz, „Mam ochotę”): „Wszyscy” albo „Tylko testerzy” dla testerów i 👑; „off” — nigdzie do wyboru (stare wpisy dalej czytelne)
+const actAvail=()=>actList.filter(x=>x.state==="all"||(x.state==="testers"&&typeof meTester==="function"&&meTester()));
+const actOfEv=b=>{const a=actList.find(x=>(x.ev_kinds||[]).includes(b));return a?a.key:""};   // rodzaj imprezy → aktywność

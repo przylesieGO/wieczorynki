@@ -15,7 +15,7 @@ const demoVolTxt=()=>demoF.vol?demoF.vol+" "+plf(demoF.vol,["ochotnik","ochotnic
 const demoF={n:25,days:14,priv:30,vol:3,grp:30,routes:true,ranges:true,answers:true,chan:false,
   hw:12,hpw:0,hgrp:35,hposts:true};   // historia: tygodnie wstecz, jazd w tygodniu (0 = auto), % dla grup, wpisy na tablicach
 let demoLCol={acc:true,grp:true};   // zwinięte listy „Konta” i „Grupy” w panelu
-const DEMO_BIKE={mtb:"MTB",gravel:"Gravel",road:"Szosa",trekking:"Trekking",ebike:"E-bike"};
+const DEMO_BIKE={mtb:"MTB",gravel:"Gravel",road:"Szosa",ebike:"E-bike",any:"Zwykły"};   // „any” = konto bez rodzaju roweru (dawny trekking, KROK 94)
 const DEMO_DAYS=[[3,"3 dni"],[7,"7 dni"],[14,"14 dni"],[28,"4 tyg."]];
 const demoTag=id=>demoIds.has(id)?'<span class="nkdemo" title="konto demo — nie prawdziwa osoba">DEMO</span>':'';
 const demoErr=e=>say((e&&e.message)||"Nie udało się — spróbuj jeszcze raz.");
@@ -105,7 +105,7 @@ function demoHtml(){
   const made=(s&&s.pool||[]).filter(p=>p.user_id),act=s&&+s.demo_active||0,dis=demoBusy?' disabled':'';
   const grs=(s&&s.groups)||[],auto=!s||s.auto!==false,pd=(s&&s.pending)||{},tl=s&&s.tick_last;
   const nAct=made.filter(p=>p.slot<=act).length,nPd=(pd.g_invites||0)+(pd.g_requests||0)+(pd.rides||0);
-  const bikes=Object.keys(DEMO_BIKE).map(b=>[b,made.filter(p=>p.bike===b&&p.slot<=act).length]).filter(x=>x[1]);
+  const bikes=Object.keys(DEMO_BIKE).map(b=>[b,made.filter(p=>(p.bike||"any")===b&&p.slot<=act).length]).filter(x=>x[1]);
   const nVol=demoPeople().filter(id=>demoVol.has(id)).length,hs=(s&&s.hist)||{};
   return '<button class="sback" data-c="backadmin">‹ Administracja</button><div class="sname" style="margin-top:26px">🧪 Zaproszenia testowe</div>'
    +'<div class="smail">Konta demo i zaproszenia do testów. Widzisz to tylko Ty (👑). Konta demo mają plakietkę <span class="nkdemo">DEMO</span> i nie da się na nie zalogować.</div>'
@@ -117,9 +117,9 @@ function demoHtml(){
      +demoStep("acc",demoAcc,1,30,"Liczba kont",made.length?"Utworzone: "+made.length+" · zaproszenia losują z "+nAct:"Nicki z puli 30, rowery na zmianę")
      +'<button type="button" class="ios-it ios-row dmact" data-dx="acc"'+dis+'><span class="ios-t">'+(demoAcc>made.length?'Utwórz brakujące ('+(demoAcc-made.length)+')':'Ustaw liczbę kont')+'</span></button></div>'
      +'<p class="note">Mniejsza liczba niczego nie usuwa — generator i grupy biorą wtedy tylko pierwsze konta, reszta czeka.</p>'
-     +(bikes.length?'<div class="dmbikes">'+bikes.map(([b,n])=>'<span class="dmbk dm-'+b+'">'+uiIcon(b==="road"?"road":b==="trekking"?"bike":b)+' '+DEMO_BIKE[b]+' '+n+'</span>').join("")+'</div>':'')
-     +(made.length?demoList("acc","users","Konta",made.length,'<div class="ios-grp">'+made.map(p=>p.user_id&&nicks[p.user_id]?gRow(p.slot<=act?"#ff9f0a":"#8e8e93",p.bike==="road"?"road":p.bike==="trekking"?"bike":p.bike,nk(p.user_id),
-        DEMO_BIKE[p.bike]+(p.slot<=act?'':' · nie losuje (poza liczbą kont)'),'','data-dx="user" data-du="'+esc(p.user_id)+'"'):'').join("")+'</div>'):''))
+     +(bikes.length?'<div class="dmbikes">'+bikes.map(([b,n])=>'<span class="dmbk dm-'+b+'">'+uiIcon(b==="road"?"road":b==="any"?"bike":b)+' '+DEMO_BIKE[b]+' '+n+'</span>').join("")+'</div>':'')
+     +(made.length?demoList("acc","users","Konta",made.length,'<div class="ios-grp">'+made.map(p=>p.user_id&&nicks[p.user_id]?gRow(p.slot<=act?"#ff9f0a":"#8e8e93",p.bike==="road"?"road":p.bike||"bike",nk(p.user_id),
+        DEMO_BIKE[p.bike||"any"]+(p.slot<=act?'':' · nie losuje (poza liczbą kont)'),'','data-dx="user" data-du="'+esc(p.user_id)+'"'):'').join("")+'</div>'):''))
    // 2. 🎲 zaproszenia: generator
    +demoSec("gen","Zaproszenia",ld?"…":(s&&s.test_wants||0)+" testowych",
      '<div class="ios-grp">'

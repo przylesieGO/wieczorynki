@@ -28,13 +28,13 @@ function demoSeed(){
   const w1=W({user_id:u(1),starts_at:iso(at(d0,18)),title:"Zachód słońca nad Wisłą",note:"Spokojnie, z postojem na kawę na Młocinach.",pace:"tour",bike:"gravel",km:40,
       place:"Las Bielański, parking przy Kamedułach",place_city:"Warszawa",place_lat:52.2945,place_lon:20.9585});
   const w2=W({user_id:u(2),starts_at:iso(at(d0+1,17)),range_from:iso(at(d0+1,17)),range_to:iso(at(d0+1,19)),title:"Kawa w Łomiankach",note:"Wybierz godzinę, która Ci pasuje — ustalę start wg większości.",
-      pace:"senior",bike:"trekking",km:25,dur_min:120,place:"Rondo przy Hucie",place_city:"Warszawa",place_lat:52.2935,place_lon:20.9312});
+      pace:"senior",bike:null,km:25,dur_min:120,place:"Rondo przy Hucie",place_city:"Warszawa",place_lat:52.2935,place_lon:20.9312});
   const w3=W({user_id:u(4),starts_at:iso(at(d0+2,9)),visibility:"private",title:"Kampinos dookoła",note:"Zapraszam tylko kilka osób — tempo równe, bez czekania.",pace:"speed",bike:"road",
       route:JSON.stringify(route),route_km:Math.round(rkm*10)/10,place:"Stacja PKP Łomianki",place_city:"Łomianki",place_lat:52.3335,place_lon:20.8862});
   const w4=W({user_id:u(6),starts_at:iso(at(d0+3,10)),title:"Single tracki w Kampinosie",note:"Kask obowiązkowy, będzie trochę piachu.",pace:"tour",bike:"mtb",km:35,
       place:"Truskaw, parking leśny",place_city:"Truskaw",place_lat:52.3075,place_lon:20.7735});
   const lv=Math.floor((now-25*60000)/(5*60000))*5*60000;
-  const w5=W({user_id:u(5),starts_at:iso(lv),title:"Wieczorynka po Bielanach",note:"Jedziemy, dołącz na trasie!",pace:"senior",bike:"trekking",dur_min:120,km:22,
+  const w5=W({user_id:u(5),starts_at:iso(lv),title:"Wieczorynka po Bielanach",note:"Jedziemy, dołącz na trasie!",pace:"senior",bike:null,dur_min:120,km:22,
       place:"Plac Wilsona",place_city:"Warszawa",place_lat:52.2690,place_lon:20.9840});
   const w6=W({user_id:u(8),starts_at:iso(at(d0+5,7,30)),title:"Setka przed śniadaniem",note:"100 km, start punktualnie, powrót ok. 11:30.",pace:"speed",bike:"road",km:100,
       place:"Stacja Orlen, Marki",place_city:"Marki",place_lat:52.3260,place_lon:21.1050});

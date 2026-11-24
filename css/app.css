@@ -1350,3 +1350,5 @@ mark.srmk.out{background:transparent;color:inherit;box-shadow:none}
 .sgfnote{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.sgfnote .ui-i{width:15px;height:15px}
 .srbox .fulwrap{flex:0 1 auto;min-height:0}.srbox .fulwrap .fulist{flex:0 1 auto;min-height:0;max-height:none}   /* A–Z w wyszukiwaniu: pasek liter zostaje widoczny nad przewijaną listą */
 .srbox .fulwrap .faz{flex:none}
+/* 🏃 KROK 94: plakietka aktywności na karcie zaproszenia (bieg / spacer / wędrówka) — w miejscu plakietki roweru */
+.wpc.wbk.wact{background:#dcf1e3;color:#1d6a3a}html[data-theme=dark] .wpc.wbk.wact{background:#1f3a29;color:#9fdcb4}.wpc.wact .ui-i{width:15px;height:15px}

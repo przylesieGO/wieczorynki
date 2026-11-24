@@ -38,7 +38,7 @@ const srDay=d=>{const dd=dayDiff(d),wd=d.toLocaleDateString("pl-PL",{weekday:"lo
   return [dd===0?"dziś":dd===1?"jutro":dd===-1?"wczoraj":"",wd,d.toLocaleDateString("pl-PL",{day:"numeric",month:"long"}),d.getDate()+"."+String(d.getMonth()+1).padStart(2,"0")].join(" ")};
 // rodzaj roweru, tempo i aktywność jako słowa do szukania („gravel”, „turystycznie”, „bieg”…)
 const srWantTags=w=>[w.bike&&BIKES[w.bike]?BIKES[w.bike].replace(/^\S+\s/,""):"",w.bike==="ebike"?"elektryk elektryczny":"",
-  w.pace&&PACES[w.pace]?PACES[w.pace].n+" "+PACES[w.pace].d:"",w.activity&&SIG_ACT[w.activity]?SIG_ACT[w.activity][1]+" "+SIG_ACT[w.activity][2]:"",
+  w.pace&&PACES[w.pace]?PACES[w.pace].n+" "+PACES[w.pace].d:"",w.activity?actOf(w.activity).name+" "+actOf(w.activity).name_many+" "+actOf(w.activity).want_txt:"",
   w.route_km!=null||w.km?Math.round(+(w.route_km||w.km))+" km":""].join(" ");
 const srWhen=d=>{const dd=dayDiff(d);return dd===0?"Dziś":dd===1?"Jutro":dd===-1?"Wczoraj":d.toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"})};
 function srItems(q){
@@ -58,7 +58,7 @@ function srItems(q){
     add("done",w.id,t,srWhen(d)+" · "+d.getFullYear()+(w.place?" · "+w.place:"")+(w.visibility==="private"?" · prywatne":"")+" · starsze",w.visibility==="private"?"lock":"archive",
       [nickOf(w.user_id),J.map(nickOf).join(" "),srWantTags(w),w.place,w.place_city,w.place_area,w.note,srDay(d),"odbyte archiwum starsze"].join(" "),()=>srGoArch(w),d.getTime())})}
   // 🙋 „Mam ochotę” — dzisiejsze sygnały (to, co widać pod 🔔)
-  if(typeof sigOn==="function"&&sigOn())sigList().forEach(x=>{const a=SIG_ACT[x.activity]||SIG_ACT.bike,me=x.user_id===uid,R=sigReactIds(x);
+  if(typeof sigOn==="function"&&sigOn())sigList().forEach(x=>{const a=sigA(x.activity),me=x.user_id===uid,R=sigReactIds(x);
     add("sig",x.user_id,(me?"Ty":nickOf(x.user_id))+" — ma ochotę "+a[2],"dziś · "+hhmm(new Date(x.created_at))+(x.msg&&!x.msg_hidden?" · „"+x.msg+"”":"")+(R.length?" · też: "+R.length:"")+(sigPriv(x)?" · prywatny":""),"hand",
       [nickOf(x.user_id),a[1],x.msg_hidden?"":x.msg,R.map(nickOf).join(" "),"mam ochotę sygnał dziś ekipa"].join(" "),()=>srGoSig(x.user_id),-new Date(x.created_at).getTime())});
   // 📣 tablice moich grup (najnowsze wpisy)
@@ -142,8 +142,9 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Zakres archiwum (starsze jazdy)",s:"archiwum starsze 3 miesiące rok wszystko historia stare jazdy zakres",p:"Zaproszenia → Archiwum (na dole) → 3 mies. / Rok / Wszystko",i:"archive",fn:()=>{show(0);archOpen=true;renderWants();setTimeout(()=>srPulse(document.querySelector("#wantarch .arng")||$("wantarch")),120)},ok:S},
   {t:"Szukaj starszych",s:"szukaj starszych stare jazdy archiwum ostatnio szukane historia wyszukiwania",p:"Lupa → wpisz tekst → Szukaj starszych",i:"search",fn:()=>openSrch(),ok:S},
   {t:"Zaproś na rower",s:"zaproś nowe zaproszenie utwórz jazda",p:"Zaproszenia → ➕",i:"plus",fn:()=>{show(0);openWantForm(null)},ok:S&&!pv},
+  {t:"Zaproś na bieg, spacer albo trekking",s:"aktywność bieg bieganie biegnę spacer spacery idę trekking wędrówka piesza las zaproszenie na bieg rodzaj aktywności",p:"Zaproszenia → ➕ → Aktywność (na górze formularza)",i:"run",fn:()=>{show(0);openWantForm(null)},ok:S&&!pv&&wActOk},
   {t:"Powiadomienia",s:"powiadomienia dzwonek",p:"Dzwonek w nagłówku",i:"alarm",fn:()=>$("bellbtn").click(),ok:S},
-  {t:"Mam ochotę",s:"mam ochotę sygnał chęć jazdy dłoń machanie bez godziny bieg spacer trekking też mam ochotę zaproś chętnych zaproś ekipę ekipa na dziś super ekipa wspólna jazda konfetti pogoda twój sygnał zmień wycofaj",p:"Zielone kółko z dłonią nad ➕ (zostaje po wysłaniu — dotknij, by zmienić lub wycofać); „Ekipa na dziś” pod 🔔",i:"hand",fn:()=>{show(0);openSig(typeof sigActive==="function"&&sigActive()?"mine":"pick")},ok:S&&typeof sigOn==="function"&&sigOn()},
+  {t:"Mam ochotę",s:"mam ochotę sygnał chęć jazdy dłoń machanie bez godziny bieg spacer trekking też mam ochotę zaproś chętnych zaproś ekipę ekipa na dziś super ekipa wspólna jazda jesteście umówieni ekipa już się umówiła masz z kim pobiegać konfetti pogoda twój sygnał zmień wycofaj",p:"Zielone kółko z dłonią nad ➕ (zostaje po wysłaniu — dotknij, by zmienić lub wycofać); „Ekipa na dziś” pod 🔔",i:"hand",fn:()=>{show(0);openSig(typeof sigActive==="function"&&sigActive()?"mine":"pick")},ok:S&&typeof sigOn==="function"&&sigOn()},
   {t:"Masz z kim jechać",s:"masz z kim jechać ekipa na dziś powiadomienie jedziecie razem zaproś ekipę wspólne zaproszenie ekipa już jedzie dopisz doproś spóźniony",p:"🔔 → Ekipa na dziś",i:"users",fn:()=>{const b=$("bellbtn");if(b)b.click()},ok:S&&typeof sigOn==="function"&&sigOn()},
   {t:"Kto jest online",s:"online zielona kropka teraz w aplikacji aktywni",p:"Zielona kropka przy liczniku zaproszeń",i:"users",fn:()=>{show(0);const o=$("onlbtn");if(o)srPulse(o)},ok:S},
   {t:"Archiwum zaproszeń",s:"archiwum odbyte zakończone historia",p:"Zaproszenia → Archiwum (na dole)",i:"archive",fn:()=>{show(0);archOpen=true;renderWants();setTimeout(()=>srPulse($("wantarch")),120)},ok:S},
