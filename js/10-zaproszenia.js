@@ -1414,8 +1414,11 @@ const myOn=()=>{try{return localStorage.getItem("myOff")!=="1"}catch(e){return t
 let myCnt=0;
 function wsecSync(){const hasMy=myCnt>0,hasCal=!!$("wantlist").querySelector(".wday"),on=myOn();
   $("wsecmy").classList.toggle("hide",!hasMy);$("wseccal").classList.toggle("hide",!(hasMy&&hasCal));
-  const sw=$("mysw");sw.classList.toggle("on",on);sw.setAttribute("aria-checked",String(on));
+  const sw=$("mysw"),so=$("mysort");sw.classList.toggle("on",on);sw.setAttribute("aria-pressed",String(on));
+  if(!sw.firstChild){sw.innerHTML=uiIcon("user");so.innerHTML=uiIcon("clock")}   // dwie ikony: 🕓 od najnowszych (wg daty dodania) | 👤 moje osobno na górze
+  const sn=flt.sort==="new";so.classList.toggle("on",sn);so.setAttribute("aria-pressed",String(sn));
   $("wsecmyn").textContent=hasMy?' · '+myCnt+(on?'':' · w kalendarzu'):''}
+$("mysort").addEventListener("click",()=>{flt.sort=flt.sort==="new"?"":"new";fltSave();fltRefresh();say(flt.sort==="new"?"Od najnowszych — wg daty dodania.":"Kolejność wg godziny jazdy.")});   // to samo co filtr „Kolejność”
 $("mysw").addEventListener("click",()=>{const on=!myOn();try{localStorage.setItem("myOff",on?"0":"1")}catch(e){}renderWants();say(on?"Twoje zaproszenia — osobno na górze.":"Twoje zaproszenia — w kalendarzu, na swoich godzinach.")});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-wmup]");if(!b)return;const w=wants.find(x=>x.id===b.dataset.wmup);if(w)goToWant(w)});
 function renderMyWant(){
