@@ -6,6 +6,7 @@ const fbf={kind:"bug",rating:0,text:"",dev:true};let fbReplyTxt="",fbMsgTxt="";
 const APP_REL=[
   {v:"0.10",d:"24.11.2026",items:[
     ["hand","<b>Mam ochotę</b> — zielone kółko z dłonią nad ➕: daj znać, że chcesz dziś jechać, biegać albo iść na spacer. Komunikat („Nogi same kręcą”), wybór, kto zobaczy, i dłoń „Też mam ochotę!”."],
+    ["users","<b>Masz z kim jechać!</b> — gdy ekipa z sygnału rośnie, wszyscy w niej dostają znać (🔔 i bot); po wspólnym zaproszeniu „Jedziecie razem ›”."],
     ["search","<b>Lupa</b> w nagłówku — jedno okno szuka zaproszeń, imprez, osób, grup, list, tras, serwisu i opcji aplikacji."],
     ["sliders","<b>Filtry</b> od nowa: źródło (testowe, demo), widoczność, zaproszony, aktywność, kilka osób naraz, pasek liter A–Z."],
     ["paste","<b>Listy osób</b> (⚙️ → Edytuj profil → Ulubieni i listy) — całą listę zaprosisz jednym dotknięciem."],
