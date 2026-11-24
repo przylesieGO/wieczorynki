@@ -503,4 +503,4 @@ $("rbsheet").addEventListener("click",async e=>{
     const r=await sb.from("route_base").delete().eq("id",x.id).select("id");if(r.error||!r.data||!r.data.length){say("Nie udało się usunąć.");return}
     rbList=rbList.filter(y=>y.id!==x.id);rb.open=null;renderRb();say("Usunięto z bazy tras.");return}
 });
-
+renderRbRate=shWrap(renderRbRate,"rbsheet");   // 📱 bez skoku na górę przy ocenie trasy

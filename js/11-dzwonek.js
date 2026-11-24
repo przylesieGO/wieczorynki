@@ -691,3 +691,4 @@ $("sigsheet").addEventListener("click",e=>{
 $("sigsheet").addEventListener("input",e=>{if(e.target.id==="sgown"){sg.msg=e.target.value.slice(0,40);const c=$("sgcnt");if(c)c.textContent=sg.msg.length+"/40"}});
 // wybór z okna „Kogo zapraszasz?” (js/10, tryb „sig”) wraca tutaj
 function sigPicked(vis,ids,gr){sg.vis=vis;sg.pick=new Set(ids);sg.gr=gr||"";if(sigView&&sigView!=="pop")renderSig()}
+renderSig=shWrap(renderSig,"sigsheet");renderPop=shWrap(renderPop,"popsheet",dir=>!dir);   // 📱 bez skoku na górę („Mam ochotę”, okienko zaproszenia — poza przejściem do kolejnej karty)

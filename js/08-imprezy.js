@@ -494,3 +494,4 @@ async function saveEvent(){
     closeEvForm();say("🏁 Zapisano imprezę."+(invN?" Zaproszono "+invN+" "+plf(invN,["osobę","osoby","osób"])+" ✔":""));evOpen=id;await syncNow();show(3);
   }catch(err){say("Nie udało się zapisać: "+(err&&err.message?err.message:"błąd"))}
 }
+renderEvForm=shWrap(renderEvForm,"evsheet");   // 📱 bez skoku na górę (dystanse, zapisy, rodzaj imprezy)

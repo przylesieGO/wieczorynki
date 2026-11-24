@@ -18,6 +18,15 @@ function slug(s){return String(s||"trasa").toLowerCase().normalize("NFD").replac
 // odpowiedź na zaproszenie, które w międzyczasie odwołano / zaczęło się / zmieniło (lista jeszcze się nie odświeżyła):
 // baza odrzuca zapis (reguły dostępu albo brak zaproszenia) — zamiast technicznego komunikatu ludzki tekst i od razu odświeżenie
 const SAY_GONE=/row-level security policy for table "(want_joins|want_declines|want_invitees)"|violates foreign key constraint "want_(joins|declines|invitees)_want_id/;
+// 📱 okienko przerysowane po kliknięciu opcji nie skacze na górę (2026-11-24): zapamiętaj przewinięcie przewijanych części
+// (lista, okienko) i przywróć po przerysowaniu — tylko gdy okienko było już otwarte (świeże otwarcie startuje od góry)
+function shKeep(p){
+  if(!p||p.classList.contains("hide"))return ()=>{};
+  const S=[".bslist",".sheetbox",".bsbox",".sgpc"].map(c=>{const e=p.querySelector(c);return e?[c,e.scrollTop,e.scrollLeft]:null}).filter(x=>x&&(x[1]||x[2]));
+  return ()=>S.forEach(([c,t,l])=>{const e=p.querySelector(c);if(e){if(t)e.scrollTop=t;if(l)e.scrollLeft=l}});
+}
+// opakowanie funkcji rysującej okienko: function renderX(){…} → renderX=shWrap(renderX,"xsheet") na końcu pliku
+const shWrap=(fn,id,cond)=>function(...a){const r=(!cond||cond(...a))?shKeep(document.getElementById(id)):()=>{};const x=fn.apply(this,a);r();return x};
 function say(t){if(SAY_GONE.test(String(t))){t="To zaproszenie zostało odwołane albo już się zaczęło — odświeżam listę.";setTimeout(()=>{try{if(typeof syncNow==="function")syncNow()}catch(e){}},50)}
   const m=$("toast");if(document.body.classList.contains("wfopen")){const f=document.querySelector(".wffoot");if(f)document.body.style.setProperty("--wffh",f.offsetHeight+"px")}m.textContent=t;m.classList.remove("hide");clearTimeout(say.t);say.t=setTimeout(()=>m.classList.add("hide"),6000)}
 function routeKm(p){let s=0;for(let i=1;i<p.length;i++)s+=dist(p[i-1],p[i]);return s}

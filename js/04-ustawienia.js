@@ -1047,3 +1047,4 @@ document.addEventListener("click",e=>{
   userBack=inPanel?gearView:"";tkFrom=false;userId=p.dataset.u;gearOpen=true;gearView="user";renderGear();
   if(isAdmin){delete admInfo[userId];loadAdmInfo(userId)}
 });
+renderPl=shWrap(renderPl,"plsheet");   // 📱 bez skoku na górę przy kliknięciu w oknie list

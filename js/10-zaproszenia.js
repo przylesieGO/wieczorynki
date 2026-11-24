@@ -1770,4 +1770,4 @@ $("picksheet").addEventListener("click",async e=>{
     closePick();await syncNow();
   }catch(err){k.disabled=false;say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
 });
-
+renderRep=shWrap(renderRep,"repsheet");renderPick=shWrap(renderPick,"picksheet");   // 📱 bez skoku na górę („Jak poszło?”, „Kiedy możesz?” / „Ustal godzinę”)
