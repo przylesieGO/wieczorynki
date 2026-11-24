@@ -303,9 +303,9 @@ $("gearpanel").addEventListener("click",async e=>{
     await demoRun("admin_demo_generate",{p_count:demoF.n,p_days:demoF.days,p_private_pct:demoF.priv,p_routes:demoF.routes,p_ranges:demoF.ranges,p_answers:demoF.answers,p_channel:demoF.chan,p_group_pct:demoGrpOn()?demoF.grp:0,p_vol_per:demoF.vol},
       d=>"🧪 Dodano "+(d&&d.created||0)+" zaproszeń testowych (prywatnych: "+(d&&d.private||0)+(d&&d.group?", dla grup: "+d.group:"")+")"+(d&&d.skipped?" · pominięte (nachodzące jazdy): "+d.skipped:""));return}
   if(a==="testdel"){   // ten sam ekran co dawniej (licznik + wpisz USUŃ), powrót do panelu
-    demoRet=true;testDelN=null;gearView="testdel";renderGear();
+    demoRet=true;testDelN=null;testDelS=null;gearView="testdel";renderGear();
     try{const r=await sb.rpc("admin_test_wants",{do_delete:false});if(r.error)throw r.error;testDelN=+r.data||0}catch(err){testDelN=0;demoErr(err)}
-    if(gearView==="testdel")renderGear();return}
+    if(gearView==="testdel")renderGear();if(testDelN)testDelSplit();return}
   if(a==="wipe"){const n=(demoSt&&demoSt.demo_accounts)||demoIds.size;
     if(!await askOk("Usunąć "+n+" kont demo?\n\nZnikną na zawsze razem z ich zaproszeniami, dołączeniami, listami i ulubionymi. Grupy demo trafią do archiwum. Pula nicków i ochotnicy zostają — konta możesz utworzyć od nowa.","Usuń konta demo",true))return;
     await demoRun("admin_demo_wipe",{do_delete:true},d=>"🧹 Usunięto kont demo: "+(+d||0));return}

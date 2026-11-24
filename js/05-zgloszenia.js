@@ -573,7 +573,7 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="accall"){statsAllAcc=!statsAllAcc;renderGear();return}
   if(c==="online"){if(!session)return;onlBack="";gearOpen=true;gearView="online";renderGear();return}
   if(c==="flags"){gearView="flags";renderGear();return}
-  if(c==="testdel"){testDelN=null;gearView="testdel";renderGear();try{const r=await sb.rpc("admin_test_wants",{do_delete:false});if(r.error)throw r.error;testDelN=+r.data||0}catch(err){testDelN=0;say("Nie udało się policzyć: "+(err&&err.message?err.message:"błąd"))}if(gearView==="testdel")renderGear();return}
+  if(c==="testdel"){testDelN=null;testDelS=null;gearView="testdel";renderGear();try{const r=await sb.rpc("admin_test_wants",{do_delete:false});if(r.error)throw r.error;testDelN=+r.data||0}catch(err){testDelN=0;say("Nie udało się policzyć: "+(err&&err.message?err.message:"błąd"))}if(gearView==="testdel")renderGear();if(testDelN)testDelSplit();return}
   if(c==="testdelgo"){
     const i=$("gtdel");if(!i)return;
     if(i.value.trim().toUpperCase()!=="USUŃ"){$("gtdelinfo").textContent="Wpisz słowo USUŃ, aby potwierdzić.";return}

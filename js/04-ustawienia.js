@@ -125,11 +125,21 @@ function fGuestHtml(f){
    +'<button type="button" class="ios-sw'+(on?' on':'')+'" role="switch" aria-checked="'+on+'" aria-label="Goście widzą zakładkę" data-fg="'+esc(f.key)+'" data-fgv="'+(on?0:1)+'"'+(all?'':' disabled')+'></button></div>';
 }
 const evGuest=()=>{const f=flags.tab_events;return !!f&&f.state==="all"&&!!f.guests};
-let testDelN=null;
+let testDelN=null,testDelS=null;
+// rozbicie licznika (2026-11-24): przyszłe / przeszłe (głównie historia demo) / od prawdziwych osób — liczone w aplikacji (👑 widzi wszystkie zaproszenia)
+async function testDelSplit(){testDelS=null;
+  try{const now=new Date().toISOString(),c=q=>q.then(r=>{if(r.error)throw r.error;return r.count||0});
+    const base=()=>sb.from("wants").select("id",{count:"exact",head:true}).eq("is_test",true);
+    const ids=typeof demoIds!=="undefined"?[...demoIds]:[];
+    const [f,r]=await Promise.all([c(base().or("starts_at.gte."+now+",and(starts_at.is.null,range_from.gte."+now+")")),
+      c(ids.length?base().not("user_id","in","("+ids.join(",")+")"):base())]);
+    testDelS={future:f,past:Math.max(0,(testDelN||0)-f),real:r}}catch(e){testDelS=null}
+  if(gearView==="testdel")renderGear()}
 function testDelHtml(){
   const dr=typeof demoRet!=="undefined"&&demoRet;   // 🧪 przyszedł z panelu „Zaproszenia testowe” (js/18)
   return (dr?'<button class="sback" data-dx="open">‹ Zaproszenia testowe</button>':'<button class="sback" data-c="backadmin">‹ Administracja</button>')+'<div class="sname" style="margin-top:26px">🧹 Usuń testowe zaproszenia</div>'
    +'<div class="sleft"><div class="arow" style="flex-direction:column;align-items:flex-start;gap:4px"><b>'+(testDelN==null?'Liczę…':'Testowych zaproszeń: '+testDelN)+'</b>'
+   +(testDelS&&testDelN?'<span class="note" style="margin:0">'+testDelS.future+' przyszłych · '+testDelS.past+' przeszłych (głównie historia demo) · '+testDelS.real+' od prawdziwych osób</span>':'')
    +'<span class="note"><b>Także przeszłe jazdy z historii demo i ich raporty „Jak poszło?”.</b> Znikną na zawsze razem z dołączeniami, zaproszonymi, odpowiedziami i powiadomieniami. Prawdziwe zaproszenia (bez 🧪) zostają. Dziennik aktywności zostaje.</span></div>'
    +'<label for="gtdel" style="font-size:15px;margin-top:16px">Aby potwierdzić, wpisz <b>USUŃ</b></label><input id="gtdel" maxlength="10" autocomplete="off" autocapitalize="characters">'
    +'<div class="note" id="gtdelinfo" style="color:var(--bad)"></div>'
