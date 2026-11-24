@@ -56,11 +56,17 @@ async function getLibRoute(id){
 }
 
 /* ---------- nagłówek: zwijanie przy przewijaniu ---------- */
-let hdrCompact=false;
+// bez drżenia przy górze (2026-11-24): zwinięty nagłówek jest niższy (~96 px) — brakującą wysokość dostaje jako margines,
+// a przeglądarka na czas zmiany nie „poprawia” położenia strony (overflow-anchor); dawniej skok wracał stronę na górę i nagłówek migał
+let hdrCompact=false,hdrGap=96;
 function onScroll(){
   const y=window.scrollY||document.documentElement.scrollTop||0;
-  const c=hdrCompact?y>4:y>56;
-  if(c!==hdrCompact){hdrCompact=c;$("hdr").classList.toggle("compact",c)}
+  const c=hdrCompact?y>hdrGap-6:y>hdrGap+4;   // zwija się, gdy pusty margines jest już poza ekranem
+  if(c===hdrCompact)return;
+  hdrCompact=c;const h=$("hdr"),de=document.documentElement;de.style.overflowAnchor="none";
+  if(c){const a=h.offsetHeight;h.classList.add("compact");hdrGap=Math.max(0,a-h.offsetHeight);h.style.marginBottom=hdrGap+"px"}
+  else{const b=h.offsetHeight;h.classList.remove("compact");h.style.marginBottom="";hdrGap=Math.max(0,h.offsetHeight-b)}
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{de.style.overflowAnchor=""}));
 }
 window.addEventListener("scroll",onScroll,{passive:true});
 onScroll();
