@@ -99,7 +99,7 @@ function helpFullHtml(){
    +sec("🚲 Zapraszanie",[
      "<b>➕ Zaproś na rower</b> (prawy dolny róg) otwiera formularz. Na dole zawsze są „Wyślij” i „Anuluj”; ✕ albo „Anuluj” po zmianach pytają, czy odrzucić.",
      "<b>Dzień i godzina:</b> Dziś / Jutro / Inny dzień, godzina na kartkach zegara (przeciągnij palcem albo ▲▼) i skróty „Za 30 min”, 17:30, 18:00, 19:00.",
-     "<b>↔ Zakres godzin</b> (np. 17:30–19:30): każdy wybiera „Pasuje mi o…”, Ty ustalasz start („✅ Ustal 18:00”). Jeśli nie ustalisz — ustali się sam 1 h przed początkiem zakresu (najwięcej chętnych).",
+     "<b>↔ Zakres godzin</b> (np. 17:30–19:30): każdy wybiera „Pasuje mi o…”, Ty ustalasz start. Dopóki nikt nie wybrał godziny, na Twojej karcie jest <b>„Wybierz godzinę ›”</b> (okienko z zakresem); gdy są głosy — <b>„✅ Ustal 18:00 (3 osoby)”</b> (najczęściej wybierana), a pod spodem „Inna godzina ›”. Po ustaleniu: „✓ 18:00 · zmień”. Jeśli nie ustalisz — ustali się sam 1 h przed początkiem zakresu (najwięcej chętnych).",
      "<b>🗺️ Trasa GPX</b> (opcjonalnie): inni zobaczą długość, mapę z wiatrem na odcinkach i pobiorą plik. Kosz obok usuwa trasę.",
      "<b>Tempo:</b> Senior Adventure 15–18, Turystycznie 18–24, SPEEDAY 26+ km/h albo ✏️ własne. Bez wyboru — tempo dowolne.",
      "<b>Dystans</b> albo <b>„Na ile jedziesz?”</b> (domyślnie 2 h). Pod zegarem widać „⏱ Jazda ok. 18:00–20:40”.",

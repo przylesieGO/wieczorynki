@@ -731,11 +731,11 @@ function wantHtml(w,top){
      +paceHtml(w)+bikeHtml(w)+(live?'':durLineHtml(w))+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+(live?'':wxHtml(w))+routeBoxHtml(w)
      +invitedHtml(w)
      +(mine&&open&&new Date(w.range_from).getTime()>Date.now()+36e5?'<div class="meta">🕖 Ustali się sama o '+esc(hhmm(new Date(new Date(w.range_from).getTime()-36e5)))+', jeśli jej nie wybierzesz</div>':'')
-     +(open?tallyHtml(w)+(mine&&wTally(w).length?'<div class="prop">✨ Propozycja: <b>'+esc(hhmm(new Date(wBest(w))))+'</b> — pasuje '+wTally(w)[0].ids.length+' '+plf(wTally(w)[0].ids.length,["osobie","osobom","osobom"])+'</div>':''):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w)+(live?'':myPickHtml(w,myp,joined,mine)))
+     +(open?tallyHtml(w):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w)+(live?'':myPickHtml(w,myp,joined,mine)))
      +(wLate(w)&&!mine&&!peek&&!joined?lateNote():'')
      +(mine&&live?'<div class="linfo">🔒 Jazda trwa — nie można już edytować, dołączać ani doprosić. Po zakończeniu trafi do archiwum.</div>':'')
      +'<div class="acts">'
-     +(mine?(live?'':(open?'<button class="b join" data-my="settle" data-id="'+esc(w.id)+'" title="Ustal godzinę">✅ Ustal '+esc(hhmm(new Date(wBest(w))))+'</button><div class="agrp ed"><button class="ib" data-my="settlepick" data-id="'+esc(w.id)+'" title="Zmień ustaloną godzinę" aria-label="Zmień ustaloną godzinę">'+SVG(UI_P.clock)+'</button><button class="ib" data-my="edit" data-id="'+esc(w.id)+'" title="Edytuj zaproszenie" aria-label="Edytuj zaproszenie">'+ICON.edit+'</button></div><div class="agrp tools">':(fromRange(w)?'<button class="b join" data-my="settlepick" data-id="'+esc(w.id)+'" title="Zmień ustaloną godzinę" aria-label="Zmień ustaloną godzinę '+esc(hhmm(new Date(w.starts_at)))+'">'+uiIcon("tick")+' '+esc(hhmm(new Date(w.starts_at)))+' · zmień</button><button class="ib" data-my="edit" data-id="'+esc(w.id)+'" title="Edytuj zaproszenie" aria-label="Edytuj zaproszenie">'+ICON.edit+'</button>':'<button class="b g join" data-my="edit" data-id="'+esc(w.id)+'">✏️ Edytuj</button>'))
+     +(mine?(live?'':(open?wSettleBtn(w)+'<div class="agrp ed"><button class="ib" data-my="edit" data-id="'+esc(w.id)+'" title="Edytuj zaproszenie" aria-label="Edytuj zaproszenie">'+ICON.edit+'</button></div><div class="agrp tools">':(fromRange(w)?'<button class="b join" data-my="settlepick" data-id="'+esc(w.id)+'" title="Zmień ustaloną godzinę" aria-label="Zmień ustaloną godzinę '+esc(hhmm(new Date(w.starts_at)))+'">'+uiIcon("tick")+' '+esc(hhmm(new Date(w.starts_at)))+' · zmień</button><button class="ib" data-my="edit" data-id="'+esc(w.id)+'" title="Edytuj zaproszenie" aria-label="Edytuj zaproszenie">'+ICON.edit+'</button>':'<button class="b g join" data-my="edit" data-id="'+esc(w.id)+'">✏️ Edytuj</button>'))
         +(priv?'<button class="ib" data-my="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
         +'<button class="ib" data-my="share" data-id="'+esc(w.id)+'" title="Udostępnij" aria-label="Udostępnij">'+ICON.share+'</button>'):live&&!wLate(w)&&!joined?'<span class="note" style="flex:1">🚴 Jazda trwa — dołączyć już nie można.</span>':peek?'<span class="pkbar">'+uiIcon("shield")+'<span><b>Podgląd admina</b>Nie jesteś zaproszony — możesz podejrzeć lub usunąć.</span></span>'
        :open?'<button class="b join'+(joined?' g':'')+'" data-w="pref" data-id="'+esc(w.id)+'">'+(joined&&myp?'✓ '+esc(hhmm(new Date(myp)))+' · zmień':dec?'Jednak mogę? Wybierz godzinę':'Pasuje mi o…')+'</button>'
@@ -743,7 +743,8 @@ function wantHtml(w,top){
      +(canInv&&!live?'<button class="ib" data-w="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
      +((mine||isAdmin)?'<button class="ib del'+(mine?'':' adm')+'" data-w="del" data-id="'+esc(w.id)+'" title="'+(mine?'Odwołaj zaproszenie':'Usuń (admin)')+'" aria-label="'+(mine?'Odwołaj zaproszenie':'Usuń (admin)')+'">'+ICON.del+'</button>':'')
      +(myOpen?'</div>':'')+'</div>'
-     +(mine&&open?'<div class="myl"><button class="lnk" data-my="settlepick" data-id="'+esc(w.id)+'">Zmień ustaloną ›</button><button class="lnk" data-my="edit" data-id="'+esc(w.id)+'">Edytuj ›</button></div>':'')
+     +(mine&&open&&!live&&wTally(w).length?'<div class="myl myla"><button class="lnk" data-my="settlepick" data-id="'+esc(w.id)+'">Inna godzina ›</button></div>':'')
+     +(mine&&open&&!live?'<div class="myl"><button class="lnk" data-my="edit" data-id="'+esc(w.id)+'">Edytuj ›</button></div>':'')
      +'</div>';
 }
 /* ---------- formularz zaproszenia: dzień + zegar klapkowy + notatka ---------- */
@@ -1777,6 +1778,12 @@ function wTally(w){
   (joins[w.id]||[]).forEach(u=>{if(u===w.user_id)return;const t=p[u]?tkey(p[u]):tkey(w.starts_at);if(!m.has(t))m.set(t,[]);m.get(t).push(u)});
   return [...m.entries()].map(([t,ids])=>({t,ids})).sort((a,b)=>b.ids.length-a.ids.length||a.t-b.t);
 }
+/* własne zaproszenie z zakresem (2026-11-24, wariant A): bez głosów — „Wybierz godzinę ›” (okienko z zakresem);
+   gdy ktoś wybrał godzinę — „✅ Ustal 19:30 (3 osoby)” (najczęściej wybierana), inna godzina: link „Inna godzina ›” pod przyciskami */
+function wSettleBtn(w){const T=wTally(w);
+  if(!T.length)return '<button class="b join" data-my="settlepick" data-id="'+esc(w.id)+'" title="Wybierz godzinę startu">'+uiIcon("clock")+' Wybierz godzinę ›</button>';
+  const n=T[0].ids.length;
+  return '<button class="b join" data-my="settle" data-id="'+esc(w.id)+'" title="Ustal godzinę">✅ Ustal '+esc(hhmm(new Date(T[0].t)))+' ('+n+' '+plf(n,["osoba","osoby","osób"])+')</button>'}
 const wBest=w=>{const t=wTally(w);return t.length?t[0].t:tkey(w.range_from||w.starts_at)};
 function declHtml(w){const d=(decls[w.id]||[]).filter(x=>x!==w.user_id);return d.length?'<div class="decl">Nie dam rady: '+favFirst(d).map(id=>nk(id)).join(" ")+'</div>':''}
 // zestawienie odpowiedzi — zwinięte do jednego wiersza (wariant B)

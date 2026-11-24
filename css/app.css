@@ -369,7 +369,7 @@ details.chg[open]>summary::after{transform:rotate(90deg)}
 .acts .b.join{flex:1 1 auto;min-width:0;padding:12px 10px;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .acts:not(.evacts):has(>.ib+.ib+.ib){flex-wrap:wrap}.acts:not(.evacts):has(>.ib+.ib+.ib)>.b.join{flex:1 1 100%}.acts:not(.evacts):has(>.ib+.ib+.ib)>.ib{flex:1 1 0;width:auto;min-width:0}
 .acts .agrp{display:flex;gap:6px;align-items:center;flex:none}.acts .agrp.ed{display:none}
-@media (min-width:600px){.acts .agrp.ed{display:flex;margin-left:2px}.acts .agrp.tools{padding-left:8px;border-left:1px solid var(--line)}.want .myl{display:none}}
+@media (min-width:600px){.acts .agrp.ed{display:flex;margin-left:2px}.acts .agrp.tools{padding-left:8px;border-left:1px solid var(--line)}.want .myl:not(.myla){display:none}}
 .ib{flex:none;width:42px;height:44px;border-radius:14px;border:0;background:var(--acc2);color:var(--acc);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;transition:transform .1s}
 .ib:active{transform:scale(.94)}
 .ib.del{background:rgba(214,69,69,.12);color:var(--bad)}
