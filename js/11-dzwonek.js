@@ -695,8 +695,12 @@ function sigInviteEkipa(owner){
 // 🚲 „Super ekipa” (klamra pod 🔔): suma ekip z dzisiejszych sygnałów tej samej aktywności, w których jestem (autor albo dłoń) — min. 2 sygnały i 3 osoby poza mną.
 // Organizatorem zaproszenia jest ten, kto kliknie; tytuł to „SUPER EKIPA”, a w notatce jest jego komunikat „Mam ochotę”; autorzy pozostałych sygnałów wchodzą jako zaproszeni. Bez pytania o zgodę.
 // KROK 94: Super ekipa łączy sygnały tej samej aktywności — mojego sygnału (albo pierwszego, w którym jestem)
-const sigSuperSigs=()=>{if(!sig2Ok)return [];const L=sigList().filter(x=>x.user_id===uid||sigIReact(x)),m=L.find(x=>x.user_id===uid)||L[0];
-  return m?L.filter(x=>(x.activity||"bike")===(m.activity||"bike")):[]};
+// sygnały do klamry: jedna aktywność — ta, w której klamra ma sens (≥ 2 sygnały, ≥ 3 osoby); najpierw z moim sygnałem, potem najwięcej sygnałów.
+// (2026-11-24: wcześniej brana aktywność PIERWSZEGO sygnału — Reakcja na bieg chowała klamrę rowerową)
+const sigSuperSigs=()=>{if(!sig2Ok)return [];const L=sigList().filter(x=>x.user_id===uid||sigIReact(x)),by={};
+  L.forEach(x=>{const k=x.activity||"bike";(by[k]=by[k]||[]).push(x)});
+  const G=Object.values(by),ok=G.filter(S=>sigSuperOn(S)),own=S=>S.some(x=>x.user_id===uid)?1:0;
+  return (ok.length?ok:G).sort((a,b)=>own(b)-own(a)||b.length-a.length)[0]||[]};
 const sigSuperIds=S=>[...new Set(S.flatMap(sigEkipaOthers))];
 const sigSuperOn=S=>S.length>=2&&sigSuperIds(S).length>=3;
 function sigInviteSuper(){
