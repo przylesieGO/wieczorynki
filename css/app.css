@@ -464,6 +464,7 @@ html[data-theme=dark] .sigfab{box-shadow:0 6px 16px rgba(0,0,0,.5)}
 @keyframes sghike{0%,30%,100%{transform:rotate(0)}8%{transform:rotate(7deg)}16%{transform:rotate(-5deg)}24%{transform:rotate(2deg)}}
 @media (prefers-reduced-motion:reduce){.sigacts .wbk.on .ui-i{animation:none}}
 .sgrow .ic .ui-i{width:21px;height:21px;color:var(--acc)}
+.wsigday{display:flex;gap:6px;align-items:flex-start;margin:6px 0;font-size:13px}.wsigday .ui-i{width:16px;height:16px;flex:none;margin-top:1px;color:#b35900}html[data-theme=dark] .wsigday .ui-i{color:var(--sys-orange)}
 .wsigrest{margin-top:6px}.wsigrest .lnk{font-size:14px;padding:4px 0}.wsigrest .note{font-size:13px}
 /* 🟡 „Mam ochotę” 2.0 (KROK 90): komunikat, „Kto zobaczy?”, reakcje, pop-up „X ma ochotę” */
 .sglbl{font-size:13px;font-weight:700;color:var(--mut);margin:14px 0 6px}.sglbl .note{font-weight:400}
@@ -1358,6 +1359,11 @@ mark.srmk.out{background:transparent;color:inherit;box-shadow:none}
 /* 🚲 „Super ekipa”: klamra łącząca sygnały, w których jestem + kapsuła ze stosem awatarów */
 .sgsup{margin:6px 0 10px}
 .sgsupbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 2px 8px}
+/* ⏳ do końca dnia (sygnały „Mam ochotę” — tylko dziś): od 21:00, w ostatniej godzinie pomarańczowe */
+.sgleft{display:inline-flex;align-items:center;gap:3px;white-space:nowrap;font-size:12px;font-weight:600;color:var(--mut)}
+.sgleft .ui-i{width:13px;height:13px}
+.sgleft.hot{color:#b35900}html[data-theme=dark] .sgleft.hot{color:var(--sys-orange)}
+.sgsupleft{padding:0 2px 8px}
 .sgstack{display:inline-flex;align-items:center;padding-left:8px;min-width:0}
 .sgmav{width:30px;height:30px;margin-left:-8px;border-radius:50%;border:2px solid var(--card);background:linear-gradient(135deg,var(--sys-green),#1f9d55);color:var(--white);font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;flex:none;box-sizing:border-box}
 .sgmav.ph{background:var(--fill)}.sgmav .gavi{width:100%;height:100%;object-fit:cover;display:block}.sgmav.more{background:var(--fill);color:var(--ink);font-size:11px}

@@ -879,6 +879,7 @@ function wfUpdate(){
   clearTimeout(wxTimer);
   const box=$("wwx");
   try{wfDurSync()}catch(e){}
+  wfSigDaySync(d);
   if(!d){box.classList.add("hide");return}
   wxTimer=setTimeout(async()=>{
     try{
@@ -890,6 +891,16 @@ function wfUpdate(){
       if(e.code==="range"){box.textContent="🌬 "+e.message;box.classList.remove("hide")}else box.classList.add("hide");
     }
   },350);
+}
+// 🌙 zaproszenie z sygnału „Mam ochotę” na inny dzień niż dziś nie połączy się z ekipą sygnału (sygnały obowiązują tylko w dniu wysłania)
+function wfSigDaySync(d){
+  let el=$("wsigday");const b=$("wwx");if(!b)return;
+  if(!el){el=document.createElement("div");el.id="wsigday";el.className="note wsigday";b.before(el)}
+  const live=typeof sigs!=="undefined"&&!(typeof sigStale==="function"&&sigStale())&&sigs.some(x=>x.user_id===wf.sigFor&&!x.cancelled_at);
+  const on=!wf.editId&&!!wf.sigFor&&!!d&&(dayDiff(d)!==0||!live);
+  el.innerHTML=on?uiIcon("alert")+'<span>'+(live?'Sygnał „Mam ochotę” obowiązuje tylko dziś — zaproszenie na inny dzień nie połączy się z ekipą sygnału (będzie zwykłym zaproszeniem).'
+    :'Ten sygnał „Mam ochotę” już wygasł — zaproszenie będzie zwykłym zaproszeniem.')+'</span>':'';
+  el.classList.toggle("hide",!on);
 }
 // notatka: lista gotowych + „Własna…” (pole tekstowe)
 function wfNoteSync(){
@@ -932,7 +943,9 @@ function openWantForm(w,preset){
     // z „Przed jazdą” w bazie tras: dzień i godzina sprawdzone przy pogodzie (jeśli jeszcze nie minęły)
     if(preset&&preset.at&&preset.at.getTime()>Date.now())d=new Date(preset.at);
     // z „Mam ochotę”: zakres zaczyna się najwcześniej za ok. 1,5 h — wcześniejszy zakres ustala się sam (bez „Pasuje mi o…”)
-    if(wf.sigFor&&!(preset&&preset.at)){d=new Date(Date.now()+90*60000);d.setSeconds(0,0);d.setMinutes(Math.ceil(d.getMinutes()/15)*15)}
+    if(wf.sigFor&&!(preset&&preset.at)){d=new Date(Date.now()+90*60000);d.setSeconds(0,0);d.setMinutes(Math.ceil(d.getMinutes()/15)*15)
+      // 🌙 sygnał liczy się tylko dziś (2026-11-25): wieczorem zamiast jutra — najbliższy kwadrans dziś (po 23:45 zostaje jutro + ostrzeżenie w wfUpdate)
+      if(dayDiff(d)!==0){const q=new Date();q.setSeconds(0,0);q.setMinutes(Math.ceil((q.getMinutes()+1)/15)*15);if(dayDiff(q)===0)d=q}}
   }
   const n=dayDiff(d);
   if(n>=0&&n<=1)wfSetDay(String(n));else{$("wdt").value=localIso(d).slice(0,10);wfSetDay("x",true)}

@@ -444,6 +444,7 @@ const sigOn=()=>!!session&&visOk&&feat("mam_ochote");
 async function sigLoad(){
   if(!sigOn()){sigs=[];return}
   const t=sigToday();if(!sigDirty&&sigDay===t)return;
+  const dayCh=!!sigDay&&sigDay!==t;   // 🌙 minęła północ — wczorajsze sygnały wygasły (otwarte okienko zamyka się w sigDayOver)
   let r=await sb.from("ride_signals").select("user_id,activity,is_test,created_at,cancelled_at,msg,vis,msg_hidden").eq("day",t).limit(500);
   sig2Ok=!r.error;
   if(r.error)r=await sb.from("ride_signals").select("user_id,activity,is_test,created_at,cancelled_at").eq("day",t).limit(500);   // baza bez KROKU 90
@@ -460,7 +461,28 @@ async function sigLoad(){
     // 🚲 KROK 92b: sygnały, których ekipa już jedzie (zaproszenie prywatne, mnie w nim nie ma) — tylko tak/nie
     const bz=await sb.rpc("sig_busy_list");sigBusyO=new Set(bz.error?[]:(bz.data||[]).map(x=>typeof x==="string"?x:x.sig_busy_list||Object.values(x)[0]));
   }
+  if(dayCh)sigDayOver();
 }
+// 🌙 sygnał „Mam ochotę” obowiązuje tylko w dniu wysłania (2026-11-25): po północy otwarte okienko sygnału zamyka się z komunikatem,
+// a „Też mam ochotę!” / „Zaproś …” z okienka otwartego przed północą nie milczą (wcześniej klik po cichu nic nie robił)
+const sigStale=()=>!!sigDay&&sigDay!==sigToday();
+const SIG_GONE="Ten sygnał wygasł o północy — „Mam ochotę” obowiązuje tylko w dniu wysłania.";
+function sigDayOver(){
+  if((sigView==="pop"||sigView==="mine")&&!$("sigsheet").classList.contains("hide")){closeSig();say(SIG_GONE)}   // „Daj znać” (pick) zostaje — wyśle dzisiejszy sygnał
+  try{if(!$("wantform").classList.contains("hide")&&wf.sigFor)wfUpdate()}catch(e){}   // formularz z sygnału: ostrzeżenie o innym dniu
+}
+// sprawdzenie przed akcją: wygasły (po północy) albo zniknął → komunikat, zamknięcie okienka i odświeżenie
+function sigGoneCheck(x){
+  if(!sigStale()&&x&&!x.cancelled_at)return false;
+  if(sigView)closeSig();say(sigStale()?SIG_GONE:"Ten sygnał nie jest już aktywny.");
+  sigDirty=true;Promise.resolve(syncNow()).catch(()=>{});return true;
+}
+// ⏳ ile zostało do północy — sygnał i wspólne zaproszenie ekipy liczą się tylko dziś; widać od 21:00, w ostatniej godzinie pomarańczowe (2026-11-25)
+const sigLeftMin=()=>{const n=new Date(),m=new Date(n);m.setHours(24,0,0,0);return Math.max(0,Math.ceil((m-n)/6e4))};
+const sigLeftHtml=()=>{const m=sigLeftMin();if(m>180)return "";
+  return '<span class="sgleft'+(m<=60?' hot':'')+'">'+uiIcon("hourglass")+'do końca dnia '+(m>=60?Math.floor(m/60)+' h'+(m%60?' '+m%60+' min':''):m+' min')+'</span>'};
+// odświeżenie tuż po północy (bez czekania na minutowy cykl)
+(function sigMidnight(){const n=new Date(),m=new Date(n);m.setHours(24,0,5,0);setTimeout(()=>{if(sigOn()){sigDirty=true;Promise.resolve(syncNow()).catch(()=>{})}sigMidnight()},m-n)})();
 const sigMine=()=>sigs.find(x=>x.user_id===uid);
 const sigPriv=x=>x.vis==="pick";
 const sigReactIds=x=>(sigReacts[x.user_id]||[]).filter(id=>id===uid||!modGone(id));
@@ -619,6 +641,7 @@ const sigErr=e=>{const m=e&&e.message||"";
     :"Nie udało się: "+(m||"błąd")};
 async function sigSend(){
   if(sigBusy)return;
+  if(sigStale()){sigDirty=true;try{await syncNow()}catch(e){}}   // 🌙 po północy: najpierw dzisiejszy stan (nowy sygnał zamiast zmiany wczorajszego)
   const priv=sig2Ok&&sg.vis==="pick",ids=[...sg.pick].filter(id=>id!==uid&&nicks[id]),msg=sig2Ok?String(sg.msg||"").replace(/\s+/g," ").trim().slice(0,40):"";
   if(priv&&!ids.length){say("Wybierz co najmniej jedną osobę w „Kto zobaczy?”.");return}
   sigBusy=true;renderSig();
@@ -644,6 +667,7 @@ async function sigSend(){
   }catch(e){sigBusy=false;renderSig();say(sigErr(e))}
 }
 async function sigCancel(){
+  if(sigGoneCheck(sigMine()))return;
   try{const r=await sb.from("ride_signals").update({cancelled_at:new Date().toISOString()}).eq("user_id",uid).eq("day",sigDay||sigToday()).select("user_id");
     if(r.error)throw r.error;const n=sig2Ok&&sigMine()?sigReactIds(sigMine()).filter(id=>id!==uid).length:0;sigDirty=true;await syncNow();
     say("Wycofane — przycisk z dłonią wrócił nad ➕."+(n?" "+n+" "+plf(n,["osoba z „Też mam ochotę” dostanie","osoby z „Też mam ochotę” dostaną","osób z „Też mam ochotę” dostanie"])+" znać.":""))}
@@ -652,7 +676,8 @@ async function sigCancel(){
 // 👋 „Też mam ochotę!” — reakcja (nie własny sygnał); drugie kliknięcie cofa
 const sigReactBusy={};   // blokada podwójnego kliknięcia w czasie zapisu
 async function sigReact(owner){
-  const x=sigs.find(s=>s.user_id===owner);if(!x||owner===uid||!sig2Ok)return;
+  const x=sigs.find(s=>s.user_id===owner);if(owner===uid||!sig2Ok)return;
+  if(sigGoneCheck(x))return;
   const on=sigIReact(x),day=sigDay||sigToday(),prev=(sigReacts[owner]||[]).slice();
   if(sigReactBusy[owner])return;sigReactBusy[owner]=true;
   // od razu na ekranie (jedno przerysowanie), zapis w tle; przy błędzie wraca poprzedni stan
@@ -673,11 +698,11 @@ async function sigReact(owner){
 // „Zaproś Ania ›” — nick bez odmiany (nicki nie są imionami), skrócony do 14 znaków
 const sigInvLbl=id=>{const n=String(nicks[id]||"").trim();return n?"Zaproś "+esc(n.length>14?n.slice(0,13)+"…":n)+" ›":"Zaproś ›"};
 const sigPreset=x=>{const t=x&&x.msg&&!x.msg_hidden?String(x.msg).trim():"";return t.length>=6?{title:t}:t?{note:t}:{}};
-const sigInviteFor=id=>{const x=sigs.find(s=>s.user_id===id);show(0);openWantForm(null,Object.assign({sig:id},sigPreset(x)))};
+const sigInviteFor=id=>{const x=sigs.find(s=>s.user_id===id);if(sigGoneCheck(x))return;show(0);openWantForm(null,Object.assign({sig:id},sigPreset(x)))};
 // 🟡 „Zaproś chętnych ›” (decyzja 2026-11-24 03:07, wariant A + link): prywatne zaproszenie na dziś z zakresem godzin do osób,
 // które dały „Też mam ochotę!”; przy prywatnym sygnale w formularzu link „+ dopisz pozostałych odbiorców sygnału”
 function sigInviteKeen(){
-  const m=sigMine();if(!m||m.cancelled_at)return;
+  const m=sigMine();if(sigGoneCheck(m))return;
   const keen=sigReactIds(m).filter(id=>id!==uid&&nicks[id]);
   if(!keen.length){say("Nikt jeszcze nie dał znać, że też ma ochotę.");return}
   const rest=sigPriv(m)?(sigTo[uid]||[]).filter(id=>!keen.includes(id)):[];
@@ -687,7 +712,7 @@ function sigInviteKeen(){
 const sigEkipa=x=>{const R=sigReactIds(x).filter(id=>nicks[id]);return [...new Set([x.user_id,...R])].filter(id=>nicks[id])};
 const sigEkipaOthers=x=>sigEkipa(x).filter(id=>id!==uid);
 function sigInviteEkipa(owner){
-  const x=sigs.find(s=>s.user_id===owner);if(!x||x.cancelled_at)return;
+  const x=sigs.find(s=>s.user_id===owner);if(sigGoneCheck(x))return;
   if(owner===uid){sigInviteKeen();return}
   const E=sigEkipaOthers(x);
   if(!sigIReact(x)||E.length<2){say("Zaproś ekipę może osoba, która dała „Też mam ochotę!” — gdy w ekipie są co najmniej 2 osoby poza Tobą.");return}
@@ -705,6 +730,7 @@ const sigSuperSigs=()=>{if(!sig2Ok)return [];const L=sigList().filter(x=>x.user_
 const sigSuperIds=S=>[...new Set(S.flatMap(sigEkipaOthers))];
 const sigSuperOn=S=>S.length>=2&&sigSuperIds(S).length>=3;
 function sigInviteSuper(){
+  if(sigStale()){sigGoneCheck(null);return}
   const S=sigSuperSigs();if(!sigSuperOn(S)){say("Super ekipa pojawia się, gdy jesteś w co najmniej 2 sygnałach tej samej aktywności i w sumie jest 3 osoby poza Tobą.");return}
   const ids=sigSuperIds(S),mine=S.find(x=>x.user_id===uid),src=mine||S[0];
   // tytuł „SUPER EKIPA”; w notatce komunikat „Mam ochotę” osoby, która kliknęła (o ile ma własny sygnał z komunikatem)
@@ -735,6 +761,7 @@ function sigSuperHtml(S,rows){
     +(RW?'<button type="button" class="b sgsupbtn" data-sgw="'+esc(RW.id)+'">'+uiIcon("users")+' '+sigTogether(RW.activity)+'</button></div>'
        :PT?'<button type="button" class="b sgsupbtn" data-sgadd="'+esc(PT.w.id+'|'+PT.miss.join(","))+'">'+uiIcon("users")+' '+sigAddLbl(PT.miss)+'</button></div>'
        :'<button type="button" class="b sgsupbtn" data-sgsup="1">'+uiIcon("users")+' Super ekipa ('+ids.length+') ›</button></div>')
+    +(!RW&&sigLeftHtml()?'<div class="sgsupleft">'+sigLeftHtml()+'</div>':'')
     +'<div class="sgsupbody">'+rows+'</div></div>';
 }
 // ✨ „z jajem” (2026-11-24): wtrącenie pogody przy ekstremach (burza, ulewa, śnieg, upał, mróz, silne porywy) pod komunikatem w okienkach sygnału
@@ -815,7 +842,7 @@ function sigRow(x,un,supWid){
       +(sig2Ok?'<button type="button" class="sgre'+(mine?' on':'')+'" data-sgr="'+esc(x.user_id)+'" aria-pressed="'+mine+'" title="'+(mine?'Cofnij':'Też mam ochotę!')+'" aria-label="'+(mine?'Cofnij „Też mam ochotę”':'Też mam ochotę!')+'">'+uiIcon("hand")+(rc?'<b>'+rc+'</b>':'')+'</button>':'')+'</span>';
   return '<div class="nit stn sgrow'+(un?' new':'')+'"><div class="ic">'+uiIcon(a[0])+'</div><div class="tx">'+(me?'<b>Ty</b>':nk(x.user_id))
     +(x.is_test?' <span class="ttag">'+uiIcon("flask")+' TEST</span>':'')+(sigPriv(x)?' <span class="sgpriv">'+uiIcon("lock")+(me?' '+to+' '+plf(to,["osoba","osoby","osób"]):' do Ciebie')+'</span>':'')
-    +'<div class="w">'+esc(a[1].toLowerCase())+' · '+esc(hhmm(d))+'</div>'
+    +'<div class="w">'+esc(a[1].toLowerCase())+' · '+esc(hhmm(d))+(!TW&&!busy&&!supWid?' '+sigLeftHtml():'')+'</div>'
     +(sigMsgTxt(x)?'<div class="sgmsg">'+sigMsgTxt(x)+(isAdmin&&!me?' <button type="button" class="lnk sghide" data-sgh="'+esc(x.user_id)+'">Ukryj</button>':'')+'</div>':'')
     +(x.msg_hidden&&me?'<div class="note">Komunikat ukryty przez administratora.</div>':'')
     +(rc&&(me||rc>1||!mine)?'<div class="sgrt">'+sigReactTxt(x)+'</div>':'')
@@ -861,7 +888,7 @@ function renderSigPop(){
     return '<div class="sgpcard">'
      +'<div class="sgpava">'+sigAvHtml(x.user_id)+'<span class="sgpact" data-a="'+esc(x.activity)+'">'+uiIcon(a[0])+'</span></div>'
      +'<div class="sgpnick">'+nk(x.user_id)+(sigPriv(x)?' <span class="sgpriv">'+uiIcon("lock")+' do Ciebie</span>':'')+'</div>'
-     +'<div class="sgpbub">'+(sigMsgTxt(x)||'Mam dziś ochotę '+esc(a[2])+'!')+'<small>'+esc(a[1].toLowerCase())+' · '+esc(hhmm(new Date(x.created_at)))+'</small></div>'
+     +'<div class="sgpbub">'+(sigMsgTxt(x)||'Mam dziś ochotę '+esc(a[2])+'!')+'<small>'+esc(a[1].toLowerCase())+' · '+esc(hhmm(new Date(x.created_at)))+(sigLeftHtml()?' '+sigLeftHtml():'')+'</small></div>'
      +(rc?'<div class="sgrt">'+sigReactTxt(x)+'</div>':'')
      +'<div class="sgwx">'+sigWxHtml()+'</div>'
      +'<div class="pbtns">'+'<button type="button" class="b" data-sgz="'+esc(x.user_id)+'">'+sigInvLbl(x.user_id)+'</button>'
