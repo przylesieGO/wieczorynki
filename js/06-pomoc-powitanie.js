@@ -40,7 +40,8 @@ function setLookHtml(guest){
 }
 // Jazdy i zaproszenia: „Jak poszło?” (karta Baza tras stoi nad tą grupą)
 function setRidesHtml(){
-  return gGrp("Jazdy i zaproszenia",[reportOk?iosIt("#34c759","bike","Pytaj „Jak poszło?” po jeździe",repOff()?"Wyłączone — możesz ocenić jazdę z karty w 🗄 Archiwum":"Raz po jeździe: km, średnia, ocena (bez testowych)",iosSw(!repOff(),"data-ro",repOff()?"0":"1")):""]);
+  return gGrp("Jazdy i zaproszenia",[reportOk?iosIt("#34c759","bike","Pytaj „Jak poszło?” po jeździe",repOff()?"Wyłączone — możesz ocenić jazdę z karty w 🗄 Archiwum":"Raz po jeździe: km, średnia, ocena (bez testowych)",iosSw(!repOff(),"data-ro",repOff()?"0":"1")):"",
+    sigOn()?iosIt("#248a3d","hand","Okienka „Mam ochotę”",sigPopOff()?"Wyłączone — sygnały znajdziesz pod 🔔":"Pokaż od razu, gdy ktoś ma ochotę na jazdę, bieg albo spacer",iosSw(!sigPopOff(),"data-sgp",sigPopOff()?"0":"1")):""]);
 }
 // Testy: Testowe zaproszenia (każdy z włączoną funkcją) + Funkcje testowe (tylko testerzy)
 function setTestHtml(){
@@ -116,13 +117,21 @@ function helpFullHtml(){
      "<b>🚴 Jak poszło?</b> — po jeździe aplikacja (i bot na Telegramie) pyta: pojechałeś?, ile km, średnia prędkość, ocena jazdy i trasy GPX, jak było. Przy trasie z bazy od razu ocenisz ją (malownicza, trudność, ruch aut, plakietki, komentarz). Wyłączysz w ⚙️. Autor potwierdza, kto był. Odpowiedzi widać w archiwum i w statystykach (karta osoby: potwierdzone jazdy i km).",
      "<b>🚴 TRWA</b> — od startu do końca jazdy: bez edycji, dołączania i dopraszania. Potem zaproszenie trafia do <b>🗄 Archiwum</b> na dole listy (30 dni) z podsumowaniem: kto pojechał, ile km (plan).",
      "<b>🔍 Szukaj</b> (lupa w nagłówku): jedno okno przeszukuje wszystko — zaproszenia, imprezy, wieczorynki, osoby, grupy, listy, trasy i serwis (też po rodzaju roweru, tempie i nickach zaproszonych); odbyte jazdy na górze listy. Filtry nie zawężają wyników. Po kliknięciu wyniku karta pulsuje, a szukane słowa są przez chwilę podświetlone na żółto. Na komputerze: „/” albo Ctrl+K otwiera okno, strzałki wybierają, Enter otwiera. Włącz „Szukaj też w opcjach aplikacji”, a wynik pokaże, gdzie jest ustawienie, i od razu je otworzy.",
-     "<b>🔍 Filtry</b> (przycisk obok „online”): czyje, kiedy, gdzie (miasto, dzielnica, miejsce), rower / teren, tempo, osoba. Włączone filtry widać w pasku pod nagłówkiem — ✕ usuwa jeden, „Wyczyść” wszystkie. Z karty osoby: „🔍 Pokaż zaproszenia z …”."])
+     "<b>🔍 Filtry</b> (przycisk obok licznika zaproszeń i zielonej kropki online): na górze <b>Źródło</b> — przełączniki „Zaproszenia testowe” i „Konta demo” (zielone ✓ = pokazuj, czerwone ✕ = ukryj), dalej widoczność (otwarte, prywatne, grupy), relacja (ulubieni, zaproszony), aktywność, kiedy, gdzie (miasto, dzielnica, miejsce), rower / teren, tempo i osoby — kilka naraz, z liczbą zaproszeń przy nicku i paskiem liter A–Z. Włączone filtry widać w pasku pod nagłówkiem — ✕ usuwa jeden, „Wyczyść” wszystkie. Po ponownym wejściu do aplikacji filtry same się czyszczą. Z karty osoby: „🔍 Pokaż zaproszenia z …”.",
+     "<b>Licznik nad listą</b> — ile zaproszeń widzisz i w ilu bierzesz udział. <b>Twoje zaproszenia</b> są na górze (przełącznik je zwija; wtedy wracają do kalendarza)."])
    +sec("🔔 Powiadomienia",[
      "<b>🔔 w nagłówku</b> — wszystko w jednym miejscu: <b>📩 Do Ciebie</b> (od innych, prywatne i dla wszystkich), <b>🙋 Twoje zaproszenia</b> (kto dołączył, zmiany), odpowiedzi na Twoje zgłoszenia i — przez pierwsze dni — <b>✨ Dokończ start</b>. Sekcje zwijasz i rozwijasz dotknięciem nagłówka; czerwone kółko = nieprzeczytane (liczba także na ikonie aplikacji).",
      "Po wejściu wyskakuje okienko, gdy ktoś zaprosił Cię prywatnie. Dowiesz się też, gdy ktoś zrezygnuje i <b>🔁 wróci</b> do Twojej jazdy.",
      "<b>Czerwona liczba na ➕</b> — ile zaproszeń <b>innych osób</b> jest na dziś (Twoich nie liczy). Po przewinięciu w dół przycisk zwija się do samego ➕.",
      tg?"<b>Bot Telegram</b> napisze prywatnie: zaproszenie, zmiana godziny i szczegółów, ustalenie startu, kto dołączył, przypomnienie ~1 h przed jazdą. Włączysz: ⚙️ → Edytuj profil → Telegram → Połącz z Telegramem → w Telegramie START. Wyłączysz tam samo (Rozłącz).":"",
      session?"<b>Kanał @PrzylesieGo</b> na Telegramie — ogłoszenia nowych jazd dla wszystkich.":""].filter(Boolean))
+   +(typeof sigOn==="function"&&sigOn()?sec("🟡 Mam ochotę",[
+     "Masz ochotę na jazdę, ale bez pomysłu na godzinę i trasę? Dotknij <b>zielonego kółka z dłonią</b> nad ➕ (widać je, gdy na dziś nie ma zaproszeń). Wybierz: rower, bieg, spacer albo trekking.",
+     "<b>Komunikat</b> (opcjonalnie): jeden z gotowych, np. „Nogi same kręcą”, albo „Inne…” — własny, do 40 znaków (bez wulgaryzmów i linków; administrator może go ukryć).",
+     "<b>Kto zobaczy?</b> Wszyscy (także kanał Telegram) albo tylko wybrane osoby — wybór jak przy zaproszeniach: ulubieni, listy, grupy, pojedyncze osoby. Prywatny sygnał nie trafia na kanał.",
+     "Inni dostają <b>okienko „X ma ochotę”</b> ze zdjęciem i komunikatem (kilka osób — przewijasz w bok), a pod 🔔 sekcję <b>„Mają ochotę dziś”</b>. „Zaproś ›” otwiera zaproszenie na dziś z zakresem godzin.",
+     "<b>Dłoń „Też mam ochotę!”</b> — dajesz znać, że też chcesz jechać; reakcje się sumują, a autor dostaje powiadomienie (i wiadomość od bota, jeśli go połączył).",
+     "Swój sygnał zmienisz albo wycofasz pod 🔔. Sygnał wygasa z końcem dnia. Okienka wyłączysz w ⚙️ → Jazdy i zaproszenia."]):'')
    +(tabOk(3)?sec("🏁 Imprezy",[
      "Rajdy, gravele, maratony, biegi i marsze. Na karcie: data, miejsce, dystanse (z przewyższeniem i limitem czasu), „🏁 start za 12 dni”, zapisy trwają / zakończone, kto z nas jedzie.",
      "<b>Rozwiń kartę</b>, wybierz dystans i kliknij „Jadę!” (przy biegu „Biegnę”, przy marszu „Idę”). ❤ Lubię, 📅 do Google Kalendarza, udostępnij.",
@@ -138,12 +147,30 @@ function helpFullHtml(){
      "Trasy dodaje się z zaproszenia z plikiem GPX (przełącznik w formularzu albo „📚 Do bazy tras” na karcie). Autor i admin zmieniają nazwę, ukrywają i usuwają."]):'')
    +sec("⭐ Ludzie",[
      "Dotknij nicku: karta osoby — zdjęcie, „Z nami od…”, media, a jeśli ktoś pozwolił: miejscowość i „Zadzwoń / SMS”; „🚴 Zaproś na rower”, ☆ dodaj do ulubionych. ⭐ ulubieni są zawsze na górze list.",
-     "🟢 zielona kropka przy nicku = osoba ma teraz otwartą aplikację. Przy nickach: ⭐ ulubiony, 💉 tester, 💡 3 zrealizowane pomysły/zgłoszenia, 👑 główny admin."])
+     "🟢 zielona kropka przy nicku = osoba ma teraz otwartą aplikację. Przy nickach: ⭐ ulubiony, 💉 tester, 💡 3 zrealizowane pomysły/zgłoszenia, 👑 główny admin. Administratorów pokaże filtr „Administratorzy” w oknach wyboru osób — do nich piszesz, gdy coś nie działa."])
+   +(session&&typeof plOk!=="undefined"&&plOk?sec("📋 Listy",[
+     "<b>⚙️ → Edytuj profil → Ulubieni i listy</b>: własne listy osób, np. „Gravelowcy”, „Szybcy”. Osobę dodasz też z jej karty (dotknij nicku).",
+     "Przy zaproszeniu, w „Kto zobaczy?” zaznaczysz całą listę jednym dotknięciem (sekcja „Twoje listy”). Lista rozwija się do osób w chwili wysłania.",
+     "Tylko Ty widzisz swoje listy — nikt nie wie, że jest na Twojej liście. Wybór kilku osób zapiszesz jako listę („📋 Zapisz wybór jako listę”). Listę można przekształcić w grupę."]):'')
+   +(typeof grOn==="function"&&grOn()?sec("👥 Grupy",[
+     "<b>⚙️ → Edytuj profil → Grupy</b>: załóż własną grupę (nazwa, kolor, ikona) albo dołącz do istniejącej. Grupa może być <b>jawna</b> (widać ją w wyszukiwaniu) albo <b>ukryta</b>; dołączanie wolne albo na prośbę / zaproszenie (kłódka).",
+     "Założyciel jest właścicielem, może wyznaczyć moderatorów. Grupę założysz też z jednej albo kilku list. Limit członków zwiększa na prośbę 👑.",
+     "W grupie: <b>Tablica</b> (ogłoszenia do 500 znaków; nowe wpisy z plakietką), <b>Ludzie</b>, <b>Staty</b> (wspólne jazdy, najaktywniejsi) i <b>O grupie</b>.",
+     "Zaproszenie dla grupy wybierzesz w „Kto zobaczy?” — zobaczą je wszyscy członkowie, także ci, którzy dołączą później. Karta ma kolor i etykietę grupy; dotknięcie etykiety otwiera grupę."]):'')
+   +(reportOk&&session?sec("🚴 Moje jazdy",[
+     "<b>⚙️ → Edytuj profil → Moje jazdy</b>: kalendarz jazd (odbyte, planowane, imprezy), rekordy, serie, km w sezonie, ulubiony dzień i pora.",
+     "W <b>Prywatności</b> zdecydujesz, czy inni widzą Twoje rekordy i serie oraz kalendarz i kilometry (domyślnie wyłączone)."]):'')
+   +(typeof svOn==="function"&&svOn()?sec("🔧 Serwis rowerowy",[
+     "<b>⚙️ → Edytuj profil → Serwis rowerowy</b>: Twoje rowery (rodzaj, marka, model, data zakupu, przebieg — także km z jazd w aplikacji).",
+     "<b>Historia serwisu</b>: wymiany części z ceną, datą i marką, zdjęcia paragonów i dokumentów.",
+     "<b>Zaplanowany serwis</b> z przypomnieniem (ile dni wcześniej i jak często) oraz „rower do odbioru” — przypomnienie przyjdzie pod 🔔 i od bota na Telegramie. Numer do serwisu zapiszesz przy rowerze.",
+     "Na start jest rower <b>PRZYKŁAD</b> z danymi do obejrzenia — usuniesz go jednym dotknięciem (i przywrócisz, gdy zechcesz)."]):'')
    +sec("⚙️ Ustawienia",[
-     "Na górze karta profilu → <b>Edytuj profil</b>: zdjęcie, nick i płeć, miejscowość (domyślnie ukryta), Moje media (Strava, Instagram, YouTube, Facebook, www) i telefon z wyborem, kto go widzi (tylko ulubieni albo wszyscy zalogowani). Pod nią <b>🗺️ Baza tras</b>. Dalej grupy: Ludzie i okolica (⭐ ulubieni, Moja miejscowość), Powiadomienia (Telegram, kanał), Pomoc i opinie (💬 oceń aplikację / zgłoś błąd lub pomysł — odpowiedź pod 🔔, instalacja), wygląd ☀️ / 🌙 / Auto, zaproszenia (testowe, „Jak poszło?”), wyloguj, usuń konto.",
+     "Na górze karta profilu → <b>Edytuj profil</b>: zdjęcie, nick i płeć, miejscowość (domyślnie ukryta), Moje media (Strava, Instagram, YouTube, Facebook, www) i telefon z wyborem, kto go widzi (tylko ulubieni albo wszyscy zalogowani). Tam też: Moje jazdy, Serwis rowerowy, Ulubieni i listy, Grupy, Moja miejscowość, Prywatność oraz Powiadomienia (Telegram, kanał).",
+     "Dalej w ⚙️: <b>🗺️ Baza tras</b>, wygląd ☀️ / 🌙 / Auto, <b>Jazdy i zaproszenia</b> („Jak poszło?”, okienka „Mam ochotę”), Testy (testowe zaproszenia, spokojny wygląd), Pomoc i opinie (💬 oceń aplikację / zgłoś błąd lub pomysł — odpowiedź pod 🔔, instalacja), wyloguj, usuń konto.",
      "<b>⬆</b> w lewym dolnym rogu wraca na górę strony."])
    +sec("🔒 Prywatność",[
-     "Prywatne zaproszenia widzą tylko autor i zaproszeni — oraz administratorzy, wyłącznie do moderacji (np. usunięcia spamu). Administrator nie może dołączyć ani doprosić się do cudzego prywatnego zaproszenia.",
+     "Prywatne zaproszenia i prywatne sygnały „Mam ochotę” widzą tylko autor i wybrane osoby — oraz administratorzy, wyłącznie do moderacji (np. usunięcia spamu). Administrator nie może dołączyć ani doprosić się do cudzego prywatnego zaproszenia.",
      "Nie zapisujemy Twojej lokalizacji — „Moja lokalizacja” na mapie i „📡 moja lokalizacja” w Imprezach działają tylko w telefonie, gdy sam je włączysz. <b>Moja miejscowość</b> jest zapamiętana tylko w Twoim telefonie — nikt jej nie widzi."])
    +(rides?sec("🗺️ Wieczorynki",["Zaplanowane jazdy z trasą, mapą, wiatrem i odliczaniem — zakładka Wieczorynki."]):'')
    +'</div>';
@@ -172,7 +199,9 @@ function helpHtml(){
    +st(3,"Sprawdzaj 🔔","Kto Cię zaprasza, kto dołączył do Twojej jazdy, zmiany godzin. Sekcje zwiniesz i rozwiniesz dotknięciem nagłówka.")
    +(ev?st(4,"Imprezy — rajdy, gravele, maratony, biegi.","Kliknij dystans i „Jadę!”, a zobaczysz, kto z nas jedzie. „📍 W okolicy” pokaże imprezy blisko Ciebie."):'')
    +'</ol>'
-   +'<div class="htips"><div>⭐ Dotknij nicku — karta osoby, ulubieni, „Zaproś na rower”.</div>'
+   +'<div class="htips"><div>⭐ Dotknij nicku — karta osoby, ulubieni, listy, „Zaproś na rower”.</div>'
+   +'<div>🔍 <b>Lupa</b> w nagłówku szuka wszystkiego: zaproszeń, imprez, osób, grup, tras — i opcji aplikacji.</div>'
+   +(typeof sigOn==="function"&&sigOn()?'<div>🟡 <b>Mam ochotę</b> — zielone kółko z dłonią nad ➕: daj znać, że chcesz dziś jechać, bez godziny i trasy.</div>':'')
    +(rbOk?'<div>🗺️ <b>Baza tras</b> w ⚙️ — oceny, pogoda na jazdę i lista „co zabrać”.</div>':'')
    +'<div>🚴 Po jeździe aplikacja zapyta <b>„Jak poszło?”</b> — km, średnia, ocena trasy.</div>'
    +'<div>🧪 Zaproszenia z czerwoną plakietką <b>TEST</b> są na próbę — śmiało klikaj. Ukryjesz je w ⚙️.</div>'

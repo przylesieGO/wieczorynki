@@ -4,6 +4,15 @@ const fbf={kind:"bug",rating:0,text:"",dev:true};let fbReplyTxt="",fbMsgTxt="";
 // 🔢 numeracja wydań: 0.x.y w czasie BETY (1.0 = publiczne wydanie); x — paczka nowości, y — poprawki.
 // Nowe wydanie: dopisz pozycję na początku APP_REL (wersja, data, nowości) — w ❓ Pomocy pokaże się „Co nowego” i kropka przy ❓.
 const APP_REL=[
+  {v:"0.10",d:"24.11.2026",items:[
+    ["hand","<b>Mam ochotę</b> — zielone kółko z dłonią nad ➕: daj znać, że chcesz dziś jechać, biegać albo iść na spacer. Komunikat („Nogi same kręcą”), wybór, kto zobaczy, i dłoń „Też mam ochotę!”."],
+    ["search","<b>Lupa</b> w nagłówku — jedno okno szuka zaproszeń, imprez, osób, grup, list, tras, serwisu i opcji aplikacji."],
+    ["sliders","<b>Filtry</b> od nowa: źródło (testowe, demo), widoczność, zaproszony, aktywność, kilka osób naraz, pasek liter A–Z."],
+    ["paste","<b>Listy osób</b> (⚙️ → Edytuj profil → Ulubieni i listy) — całą listę zaprosisz jednym dotknięciem."],
+    ["users","<b>Grupy</b> z tablicą ogłoszeń i statystykami — w testach (dla testerów)."],
+    ["wrench","<b>Serwis rowerowy</b>: rowery, historia napraw, paragony, przypomnienia — w testach (dla testerów)."],
+    ["bike","<b>Moje jazdy</b>: kalendarz, rekordy, serie i km w sezonie; e-bike wszędzie, gdzie wybierasz rower."],
+    ["cloudsun","Pogoda na kafelku dnia, fioletowa godzina przy prywatnych zaproszeniach, „Zobacz demo” bez konta."]]},
   {v:"0.9",d:"16.11.2026",items:[
     ["book","<b>Baza tras</b> (⚙️ → Baza tras): trasy z zaproszeń, sortowanie (najczęściej, najlepsze, malownicze, najtrudniejsze, najbliżej…), mapa z wiatrem."],
     ["star","<b>Oceny tras</b>: gwiazdki, malownicza, trudność, ruch aut, plakietki (las, kawa, błoto…) i komentarze — też w „Jak poszło?”."],
@@ -387,6 +396,8 @@ $("gearpanel").addEventListener("click",async e=>{
   const ns=e.target.closest("button[data-ns]");
   if(ns){const i=$("gnick");if(i){i.value=ns.dataset.ns;i.focus()}return}
   const sn=e.target.closest("button[data-sn]");
+  const sgp=e.target.closest("button[data-sgp]");   // 💬 okienka „Mam ochotę” (KROK 90)
+  if(sgp){lsSet("sigPopOff",sgp.dataset.sgp==="1"?"1":"0");renderGear();say(sgp.dataset.sgp==="1"?"Bez okienek — sygnały zobaczysz pod 🔔.":"Pokażę okienko, gdy ktoś będzie miał ochotę.");return}
   const ro=e.target.closest("button[data-ro]");
   if(ro){try{localStorage.setItem("repOff",ro.dataset.ro==="1"?"1":"0")}catch(err){}renderGear();say(ro.dataset.ro==="1"?"Nie będę pytać „Jak poszło?”.":"Zapytam „Jak poszło?” po jeździe.");return}
   const ht=e.target.closest("button[data-ht]");

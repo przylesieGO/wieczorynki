@@ -110,6 +110,7 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Zmień hasło",s:"hasło password",p:"Ustawienia → Edytuj profil → Konto → Zmień hasło",i:"key",go:[SR_PROF,'[data-c="pwd"]'],ok:S},
   {t:"Baza tras",s:"trasy gpx mapa odkryj",p:"Ustawienia → Baza tras",i:"map",fn:()=>openRb(),ok:!!rbOk},
   {t:"Pytaj „Jak poszło?”",s:"jak poszło ankieta ocena po jeździe km",p:"Ustawienia → Jazdy i zaproszenia",i:"bike",hl:"[data-ro]",ok:S&&reportOk},
+  {t:"Okienka „Mam ochotę”",s:"mam ochotę okienko pop-up sygnał wyłącz",p:"Ustawienia → Jazdy i zaproszenia",i:"hand",hl:"[data-sgp]",ok:S&&typeof sigOn==="function"&&sigOn()},
   {t:"Motyw: jasny / ciemny",s:"motyw ciemny jasny tryb nocny dark wygląd kolory",p:"Ustawienia → Wygląd i ekran → Motyw",i:"moon",hl:"[data-t]"},
   {t:"Nick na górze ekranu",s:"nick nagłówek pokaż ukryj",p:"Ustawienia → Wygląd i ekran",i:"user",hl:"[data-sn]",ok:S},
   {t:"Pomoc przy starcie",s:"pomoc start powitanie",p:"Ustawienia → Wygląd i ekran",i:"help",hl:"[data-hs]"},
@@ -126,6 +127,8 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Filtry zaproszeń",s:"filtry filtruj kiedy gdzie osoba rower tempo",p:"Zaproszenia → Filtry",i:"sliders",fn:()=>{show(0);openFlt()},ok:S},
   {t:"Zaproś na rower",s:"zaproś nowe zaproszenie utwórz jazda",p:"Zaproszenia → ➕",i:"plus",fn:()=>{show(0);openWantForm(null)},ok:S&&!pv},
   {t:"Powiadomienia",s:"powiadomienia dzwonek",p:"Dzwonek w nagłówku",i:"alarm",fn:()=>$("bellbtn").click(),ok:S},
+  {t:"Mam ochotę",s:"mam ochotę sygnał chęć jazdy dłoń machanie bez godziny bieg spacer trekking też mam ochotę",p:"Zielone kółko z dłonią nad ➕ (gdy na dziś nie ma zaproszeń); sygnały pod 🔔",i:"hand",fn:()=>{show(0);if(typeof sigMine==="function"&&sigMine()&&!sigMine().cancelled_at){$("bellbtn").click()}else openSig("pick")},ok:S&&typeof sigOn==="function"&&sigOn()},
+  {t:"Kto jest online",s:"online zielona kropka teraz w aplikacji aktywni",p:"Zielona kropka przy liczniku zaproszeń",i:"users",fn:()=>{show(0);const o=$("onlbtn");if(o)srPulse(o)},ok:S},
   {t:"Archiwum zaproszeń",s:"archiwum odbyte zakończone historia",p:"Zaproszenia → Archiwum (na dole)",i:"archive",fn:()=>{show(0);archOpen=true;renderWants();setTimeout(()=>srPulse($("wantarch")),120)},ok:S},
   {t:"Imprezy",s:"imprezy zawody maraton wyścig",p:"Zakładka Imprezy",i:"medal",fn:()=>show(3),ok:typeof tabOk==="function"&&tabOk(3)},
   // 🛡️ Administracja

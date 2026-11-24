@@ -459,6 +459,41 @@ html[data-theme=dark] .sigfab{box-shadow:0 6px 16px rgba(0,0,0,.5)}
 @keyframes sghike{0%,30%,100%{transform:rotate(0)}8%{transform:rotate(7deg)}16%{transform:rotate(-5deg)}24%{transform:rotate(2deg)}}
 @media (prefers-reduced-motion:reduce){.sigacts .wbk.on .ui-i{animation:none}}
 .sgrow .ic .ui-i{width:21px;height:21px;color:var(--acc)}
+/* 🟡 „Mam ochotę” 2.0 (KROK 90): komunikat, „Kto zobaczy?”, reakcje, pop-up „X ma ochotę” */
+.sglbl{font-size:13px;font-weight:700;color:var(--mut);margin:14px 0 6px}.sglbl .note{font-weight:400}
+.sgmsgs{display:flex;flex-wrap:wrap;gap:6px}.sgmsgs .chip{padding:7px 12px;font-size:14px;font-weight:600}
+.sgown{width:100%;margin-top:8px;border:0;border-radius:12px;background:var(--fill);color:var(--ink);font:inherit;font-size:16px;padding:10px 12px}
+.sgcnt{text-align:right;font-size:12px;margin-top:2px}
+.sigbox .who{margin-bottom:12px}.sigbox .who .wtx span{display:block;font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sgmsg{font-size:14px;margin-top:3px;color:var(--ink);font-style:italic}.sgmsg .sghide{font-style:normal;font-size:13px;margin-left:6px}
+.sgpriv{display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:700;color:var(--priv);vertical-align:1px}.sgpriv .ui-i{width:12px;height:12px}
+.sgrt{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--mut);margin-top:3px}.sgrt .ui-i{color:#c98a0b;flex:none}html[data-theme=dark] .sgrt .ui-i{color:#f5c94e}
+.sgbtns{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}
+.sgre{display:inline-flex;align-items:center;gap:4px;min-height:32px;padding:4px 10px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:14px;cursor:pointer}
+.sgre .ui-i{width:17px;height:17px;color:#c98a0b}.sgre b{font-size:13px}
+.sgre.on{border-color:var(--acc);background:var(--acc2)}html[data-theme=dark] .sgre .ui-i{color:#f5c94e}
+.sgre:active,.sgre2:active{transform:scale(.94)}
+.sgre2{display:inline-flex;align-items:center;justify-content:center;gap:6px}.sgre2 .ui-i{color:#c98a0b}html[data-theme=dark] .sgre2 .ui-i{color:#f5c94e}
+.sgre2.on{background:var(--acc2);color:var(--acc)}
+.popbox.sgpop{text-align:center}.sgpop .ptag{margin-right:0}.sgpop .ph{margin-top:8px}
+.sgpc{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;margin:10px -18px 0;overscroll-behavior-x:contain}.sgpc::-webkit-scrollbar{display:none}
+.sgpcard{flex:0 0 100%;scroll-snap-align:center;padding:4px 18px 2px;box-sizing:border-box}
+.sgpava{position:relative;width:104px;height:104px;margin:4px auto 8px}
+.sgpav{width:104px;height:104px;border-radius:50%;background:linear-gradient(135deg,var(--sys-green),#1f9d55);color:var(--white);font-size:44px;font-weight:800;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 6px 18px rgba(31,157,85,.35)}
+.sgpav.ph{background:var(--fill)}.sgpav .gavi{width:100%;height:100%;object-fit:cover;display:block}
+.sgpact{position:absolute;right:-4px;bottom:-2px;width:40px;height:40px;border-radius:50%;background:var(--card);border:2.5px solid #c98a0b;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+html[data-theme=dark] .sgpact{border-color:#f5c94e}
+.sgpact .ui-i{width:22px;height:22px;color:#c98a0b;transform-box:fill-box;transform-origin:50% 100%;animation:6s ease-in-out infinite}html[data-theme=dark] .sgpact .ui-i{color:#f5c94e}
+.sgpact[data-a=bike] .ui-i{animation-name:sgbike}.sgpact[data-a=run] .ui-i{animation-name:sgrun}.sgpact[data-a=walk] .ui-i{animation-name:sgwalk}.sgpact[data-a=hike] .ui-i{animation-name:sghike}
+.sgpnick{font-size:17px;font-weight:700}
+.sgpbub{position:relative;display:inline-block;max-width:100%;margin:12px auto 4px;padding:10px 14px;border-radius:16px;background:var(--acc2);color:var(--ink);font-size:16px;font-weight:600;line-height:1.35}
+.sgpbub::before{content:"";position:absolute;left:50%;top:-6px;margin-left:-6px;width:12px;height:12px;background:inherit;transform:rotate(45deg);border-radius:2px}
+.sgpbub small{display:block;font-size:12px;font-weight:400;color:var(--mut);margin-top:3px}
+.sgpcard .sgrt{justify-content:center}.sgpcard .pbtns{margin-top:12px}
+.sgpdots{display:flex;justify-content:center;gap:4px;margin-top:8px}.sgpdots button{width:28px;height:28px;border:0;background:none;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.sgpdots button::after{content:"";width:9px;height:9px;border-radius:50%;background:var(--line)}.sgpdots button.on::after{background:var(--acc)}
+.sgpnote{font-size:12px;margin-top:8px}
+@media (prefers-reduced-motion:reduce){.sgpact .ui-i{animation:none}}
 @media (prefers-reduced-motion:reduce){.sigfab svg .wvh{animation:none}}
 /* ikony konturowe (styl App Store / SF Symbols) */
 .ui-i{width:1.05em;height:1.05em;vertical-align:-.17em;display:inline-block;flex:none}

@@ -112,6 +112,7 @@ async function afterData(){
   maybeFb();
   maybeReport();
   maybeSigIntro();
+  maybeSigPop();   // 💬 „X ma ochotę” (KROK 90)
   if(curTab===3)renderEvents();
   if(session&&(seenFor!==uid||Date.now()-seenAt>15*60000)){seenFor=uid;seenAt=Date.now();Promise.resolve(sb.rpc("touch_seen")).catch(()=>{})}
   // 1 h przed początkiem zakresu godzina ustala się sama (KROK 15) — robi to baza, wywołuje pierwszy, kto odświeży
