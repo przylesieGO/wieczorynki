@@ -1471,7 +1471,7 @@ function whoPlHtml(){
 function openWho(mode,wantId){
   if(!session)return;
   if(needProfile()){askNick();return}
-  ws.mode=mode;ws.want=wantId||null;ws.q="";
+  ws.mode=mode;ws.want=wantId||null;ws.q="";ws.topK=null;   // ⬆ zaznaczeni na górze listy (ustalane przy otwarciu, szukaniu i filtrze)
   ws.gr=mode==="form"&&wGrList().some(x=>x.id===wf.gr)?wf.gr:mode==="sig"&&typeof sg!=="undefined"&&wGrList().some(x=>x.id===sg.gr)?sg.gr:"";   // 👥 grupa (KROK 71); 🟡 „Mam ochotę” (KROK 90)
   ws.msg="";pf.who=null;   // 🔎 filtry od nowa przy każdym otwarciu
   if(mode==="pl"){ws.vis="pick";ws.pick=new Set(plIds(wantId))}   // 📋 osoby na liście (KROK 68)
@@ -1537,7 +1537,12 @@ function whoListHtml(){
     return '<div class="bsgrp">⭐ Ulubieni — zaproszeni wszyscy</div>'+all.filter(isFav).map(id=>whoRow(id,true)).join("");
   }
   if(!all.length)return '<div class="bsempty">'+(q?'Nie znaleziono takiego nicku.':pfOn("who")?'Nikt nie pasuje do filtra.':ws.mode==="add"?'Wszyscy są już zaproszeni.':whoEv()?'Nikt inny nie widzi jeszcze zakładki Imprezy (BETA — testerzy).':'Brak innych osób z nickiem.')+'</div>';
-  const f=all.filter(isFav),o=all.filter(id=>!isFav(id));
+  // ⬆ zaznaczeni (i dołączeni) na górze sekcji — kolejność ustalana przy otwarciu, zmianie szukania / filtra i po „Wyczyść”;
+  // klik w osobę nie przestawia listy od razu (wiersz nie ucieka spod palca)
+  const tk=ws.vis+"|"+ws.q+"|"+JSON.stringify(pf.who||null)+"|"+(ws.pick.size?1:0);
+  if(ws.topK!==tk){ws.topK=tk;ws.top=new Set([...ws.pick,...whoLocked()])}
+  const up=L=>L.filter(id=>ws.top.has(id)).concat(L.filter(id=>!ws.top.has(id)));
+  const f=up(all.filter(isFav)),o=up(all.filter(id=>!isFav(id)));
   const two=!!(f.length&&o.length);   // jedna sekcja — bez zwijania
   const blk=(t,L,g)=>{if(!L.length)return '';const h=whoGrp(t,L,g,two),op=h.includes('class="secb');   // op = otwarty kontener sekcji do zamknięcia
     return h+(op&&whoColl(g)?'':L.map(id=>whoRow(id,ws.pick.has(id))).join(""))+(op?'</div>':'')};
