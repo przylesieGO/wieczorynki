@@ -167,6 +167,8 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Miejsca zbiórki",s:"miejsca zbiórki punkty",p:"Ustawienia → Administracja → Narzędzia",i:"pin",go:[ADM,'[data-c="places"]'],ok:A&&placeOk},
   {t:"Grupy — wszystkie (👑)",s:"grupy statystyki grup limit prośby",p:"Ustawienia → Administracja → Narzędzia",i:"users",go:[ADM,'[data-gx="adm"]'],ok:KR},
   {t:"Zaproszenia testowe / Ekipa demo",s:"generator demo ekipa ochotnicy testowe kroki konta grupy historia sprzątanie",p:"Ustawienia → Administracja → Zaproszenia testowe",i:"flask",go:[ADM,'[data-dx="open"]'],ok:KR},
+  {t:"Żywa Ekipa demo",s:"żywa ekipa demo ruch żyje sama konta demo same zaproszenia na dobę liczniki dziś ostatnia tura aktywności",p:"Ustawienia → Administracja → Zaproszenia testowe → Żywa Ekipa demo 👑",i:"users",go:['[data-c="admin"]','[data-dx="open"]','[data-j="dm_live"] summary'],ok:KR},
+  {t:"Aktywności kont demo",s:"aktywności konta demo bieg spacer trekking rower generator bieg + spacer",p:"Ustawienia → Administracja → Zaproszenia testowe → krok 1 / krok 3 👑",i:"run",go:['[data-c="admin"]','[data-dx="open"]'],ok:KR},
   {t:"Wszystkie zaproszenia (👑)",s:"wszystkie prywatne zaproszenia",p:"Ustawienia → Administracja → Zaproszenia",i:"eye",go:[ADM,'[data-c="allw"]'],ok:K},
   {t:"Archiwum zaproszeń (👑)",s:"archiwum zakończone jazdy wszystkie",p:"Ustawienia → Administracja → Zaproszenia",i:"archive",go:[ADM,'[data-c="karch"]'],ok:K},
   {t:"Widoczny online",s:"niewidoczny online ukryj obecność",p:"Ustawienia → Administracja → Moja widoczność",i:"eye",go:[ADM],hl:"[data-ho]",ok:typeof canStealth==="function"&&canStealth()},

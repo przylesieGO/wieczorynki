@@ -19,6 +19,15 @@ const DEMO_BIKE={mtb:"MTB",gravel:"Gravel",road:"Szosa",ebike:"E-bike",any:"Zwyk
 const DEMO_DAYS=[[3,"3 dni"],[7,"7 dni"],[14,"14 dni"],[28,"4 tyg."]];
 const demoTag=id=>demoIds.has(id)?'<span class="nkdemo" title="konto demo — nie prawdziwa osoba">DEMO</span>':'';
 const demoErr=e=>say((e&&e.message)||"Nie udało się — spróbuj jeszcze raz.");
+/* 🏃 aktywności (KROK 98): przy koncie demo, w ręcznym generatorze (krok 3) i dla żywej Ekipy */
+const demoActs=()=>actList.filter(x=>x.state!=="off");
+let demoGA=null,demoLR=null;   // demoGA: aktywności generatora (Set, null = wszystkie); demoLR: suwak Ruchu w trakcie przesuwania
+const demoGAs=()=>demoGA||new Set(demoActs().map(x=>x.key));
+const demoActChip=(k,on,attrs,n,dis)=>'<button type="button" class="fch'+(on?' on':'')+'" aria-pressed="'+on+'" '+attrs+(dis?' disabled':'')+'>'
+  +uiIcon(actOf(k).icon||"bike")+' '+esc(actOf(k).name)+(n!=null?' <span class="fcn">'+n+'</span>':'')+'</button>';
+const demoActN=(k,pool)=>pool.filter(p=>(p.acts||[]).includes(k)).length;   // ile grających kont ma aktywność
+const demoLiveTx=r=>{const g=r<=2?1:Math.round(r*.75);return r+" "+plf(r,["zaproszenie","zaproszenia","zaproszeń"])+" i ok. "+g+" "+plf(g,["sygnał","sygnały","sygnałów"])+" „Mam ochotę” na dobę"};
+const demoTgTxt=t=>String(t||"").replace(/<[^>]+>/g,"").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&quot;/g,'"').replace(/&amp;/g,"&");
 
 /* ⚙️ → Jazdy i zaproszenia → „Ekipa demo” (KROK 95): ustawienie na koncie (tabela user_opts), kopia w telefonie per konto.
    show = pokazuj zaproszenia i sygnały kont demo (Twoje i te, na które jedziesz / którym dałeś dłoń, zostają);
@@ -136,6 +145,7 @@ const demoUse=(k,def)=>demoF[k]==null?def:demoF[k];   // Tak/Nie: null = jak w b
 const demoGrpOn=()=>demoUse("useGrp",!!(demoSt&&demoSt.groups&&demoSt.groups.length));
 const demoTx={
   n:()=>"Np. 25 — dopisze do istniejących",
+  acts:()=>{const A=demoActs(),S=demoGAs(),L=A.filter(a=>S.has(a.key));return L.length===A.length?"Wszystkie — każde konto w swojej aktywności":"Tylko "+L.map(a=>a.name.toLowerCase()).join(" + ")+" — zrobią je konta, które to uprawiają"},
   days:()=>demoF.days+" dni — zaproszenia od jutra ("+demoD(1)+") do "+demoD(demoF.days),
   priv:()=>"jawne "+(100-demoF.priv)+" % — z 10 zaproszeń "+(10-demoF.priv/10)+" widzi każdy, "+demoF.priv/10+" tylko zaproszeni",
   vol:()=>demoF.vol?demoF.vol+" — do każdego prywatnego dopisze "+demoF.vol+" "+plf(demoF.vol,["ochotnika","ochotników","ochotników"])+" (masz "+demoVol.size+")":"0 — prywatne dostają tylko konta demo",
@@ -152,6 +162,28 @@ const demoK=(k,no,t,st,ok,desc,body)=>'<details class="stsec dmsec dmk" data-j="
   +'<span class="dmkn'+(ok?' ok':'')+'" aria-hidden="true">'+no+'</span><span class="dmkt">'+t+'</span><span class="stsum">'+st+'</span></summary>'
   +'<div class="stbody"><p class="note dmkd">'+desc+'</p>'+body+'</div></details>';
 
+/* 🎭 Żywa Ekipa demo (KROK 96–98): przełącznik, Ruch (zaproszeń na dobę), aktywności, liczniki dnia, ostatnia tura */
+function demoLiveSec(s,ld,pool){
+  const lv=(s&&s.live)||{},on=!!lv.on,rate=demoLR||lv.rate||4,LA=new Set(lv.acts||[]),td=lv.today||{},last=lv.last;
+  const st=(v,l)=>'<div class="st"><b>'+(ld?'…':v)+'</b><span>'+l+'</span></div>',dis=demoBusy?' disabled':'';
+  const lines=last&&last.lines||[];
+  return demoSec("live","Żywa Ekipa demo",ld?"…":on?"żyje · dziś "+(td.n||0)+" z "+(lv.rate||4):"wyłączona",
+    '<p class="note dmkd">Konta demo same, co 15 min w godz. 6–22: zakładają zaproszenia (rower z trasą dopasowaną do roweru), dają znać „Mam ochotę” i Reakcje, zapisują się i rezygnują, zmieniają godziny, piszą na tablicach grup demo i wypełniają „Jak poszło?”. Każde konto tylko w swoich aktywnościach (krok 1). Widzą to wszyscy z włączoną Ekipą demo w ⚙️.</p>'
+    +'<div class="ios-grp">'
+    +'<div class="ios-it"><span class="ios-t">Żyje sama<small>'+(on?'Włączona — tury co 15 min':'Wyłączona — konta demo stoją w miejscu')+'</small></span>'
+      +'<button type="button" class="ios-sw'+(on?' on':'')+'" role="switch" aria-checked="'+on+'" aria-label="Żywa Ekipa demo" data-dx="live"'+dis+'></button></div>'
+    +'<div class="ios-it dmcol"><label class="ios-t" for="dmlive">Ruch<small id="dmlivet">'+demoLiveTx(rate)+'</small></label>'
+      +'<input id="dmlive" type="range" min="1" max="20" step="1" value="'+rate+'"'+(demoBusy?' disabled':'')+'></div>'
+    +'<div class="ios-it dmcol"><span class="ios-t">Aktywności<small>Co wolno zakładać (zaproszenia i „Mam ochotę”) — liczba = konta z tą aktywnością</small></span><div class="pfrow dmgacts">'
+      +demoActs().map(a=>demoActChip(a.key,LA.has(a.key),'data-dx="lact" data-da="'+a.key+'"',demoActN(a.key,pool),demoBusy||(LA.has(a.key)&&LA.size<=1))).join("")+'</div></div>'
+    +'</div>'
+    +'<div class="bsgrp gl"><span>Dziś</span></div>'
+    +'<div class="stats admbar dmst">'+st((td.n||0)+' / '+(lv.rate||4),"zaproszeń")+st(td.sig||0,"sygnałów „Mam ochotę”")+st(td.rj||0,"zapisów u prawdziwych")+'</div>'
+    +'<div class="bsgrp gl"><span>Ostatnia tura z wydarzeniami</span></div>'
+    +(lines.length?'<div class="ios-grp"><div class="ios-it dmcol"><span class="ios-t">'+demoWhen(last.at)+'<small class="dmlast">'+lines.map(l=>esc(demoTgTxt(l))).join("<br>")+(last.more?'<br>… i jeszcze '+last.more:'')+'</small></span></div></div>'
+      :'<p class="note">'+(on?'Jeszcze nic — pierwsza tura z wydarzeniem pojawi się tutaj.':'Brak — włącz „Żyje sama”.')+'</p>')
+    +'<p class="note">Po każdej turze z wydarzeniami — jedna wiadomość do Ciebie na Telegram.</p>');
+}
 function demoHtml(){
   const s=demoSt,ld=s===null,er=s&&s.err;
   if(!demoOpen0){demoOpen0=true;joinOpen.add("dm_acc");joinOpen.add("dm_gen")}
@@ -174,8 +206,10 @@ function demoHtml(){
      +demoStep("acc",demoAcc,1,30,"Ile kont gra",made.length?"Np. 10 — gra pierwsze 10, reszta czeka":"Np. 10 — nicki z puli 30")
      +'<button type="button" class="ios-it ios-row dmact" data-dx="acc"'+dis+'><span class="ios-t">'+(demoAcc>made.length?'Utwórz brakujące ('+(demoAcc-made.length)+')':'Ustaw: gra '+demoAcc)+'</span></button></div>'
      +(bikes.length?'<div class="dmbikes">'+bikes.map(([b,n])=>'<span class="dmbk dm-'+b+'">'+uiIcon(b==="road"?"road":b==="any"?"bike":b)+' '+DEMO_BIKE[b]+' '+n+'</span>').join("")+'</div>':'')
-     +(made.length?demoList("acc","users","Konta",made.length,'<div class="ios-grp">'+made.map(p=>p.user_id&&nicks[p.user_id]?gRow(p.slot<=act?"#ff9f0a":"#8e8e93",p.bike==="road"?"road":p.bike||"bike",nk(p.user_id),
-        DEMO_BIKE[p.bike||"any"]+(p.slot<=act?'':' · nie losuje (poza liczbą kont)'),'','data-dx="user" data-du="'+esc(p.user_id)+'"'):'').join("")+'</div>'):''))
+     +(made.length?'<div class="dmbikes">'+demoActs().map(a=>[a,demoActN(a.key,made.filter(p=>p.slot<=act))]).filter(x=>x[1]).map(([a,n])=>'<span class="dmbk dm-act">'+uiIcon(a.icon||"bike")+' '+esc(a.name)+' '+n+'</span>').join("")+'</div>':'')
+     +(made.length?demoList("acc","users","Konta",made.length,'<p class="note dmkd">Pod każdym kontem jego aktywności — dotknij, aby dodać albo zabrać (co najmniej jedna). Konto zaprasza i reaguje tylko w swoich. Wiersz otwiera kartę konta (historia, statystyki, teczka).</p><div class="ios-grp">'+made.map(p=>p.user_id&&nicks[p.user_id]?'<div class="dmacc">'+gRow(p.slot<=act?"#ff9f0a":"#8e8e93",p.bike==="road"?"road":p.bike||"bike",nk(p.user_id),
+        DEMO_BIKE[p.bike||"any"]+(p.slot<=act?'':' · nie losuje (poza liczbą kont)')+' · karta i teczka ›','','data-dx="user" data-du="'+esc(p.user_id)+'"')
+        +'<div class="pfrow dmacts">'+demoActs().map(a=>{const A=p.acts||[],on=A.includes(a.key);return demoActChip(a.key,on,'data-dx="dacts" data-du="'+esc(p.user_id)+'" data-da="'+a.key+'"',null,demoBusy||(on&&A.length<=1))}).join("")+'</div></div>':'').join("")+'</div>'):''))
    // 2. grupy demo (Tak/Nie)
    +demoK("grp",2,"Grupy demo",ld?"…":!uG?"pominięte":grs.length?"✓ "+grs.length+" "+plf(grs.length,["grupa","grupy","grup"]):made.length<2?c1:"do zrobienia",uG&&grs.length>0,
      'Konta demo zakładają grupy i zapraszają do nich ochotników. Potrzebne 2 konta z kroku 1. Grupy dają zaproszenia i jazdy „dla grupy” w krokach 3 i 4.',
@@ -190,17 +224,19 @@ function demoHtml(){
    +demoK("gen",3,"Zaproszenia",ld?"…":tw?"✓ "+tw+" testowych":made.length?"do zrobienia":c1,tw>0,
      'Przyszłe jazdy kont demo z plakietką 🧪 TEST. Prywatne trafiają do kont demo i ochotników (sekcja niżej)'+(uG?', część do grup z kroku 2':'')+'. Każde kliknięcie dopisuje kolejne.',
      '<div class="ios-grp">'
+     +'<div class="ios-it dmcol"><span class="ios-t">Aktywności<small id="dmactst">'+demoTx.acts()+'</small></span><div class="pfrow dmgacts">'
+       +demoActs().map(a=>demoActChip(a.key,demoGAs().has(a.key),'data-dx="gact" data-da="'+a.key+'"',demoActN(a.key,made.filter(p=>p.slot<=act)))).join("")+'</div></div>'
      +demoStep("n",demoF.n,1,60,"Ile zaproszeń",demoTx.n())
      +'<div class="ios-it dmcol"><span class="ios-t">Na ile dni do przodu<small id="dmdayst">'+demoTx.days()+'</small></span><div class="seg" role="group" aria-label="Na ile dni">'
        +DEMO_DAYS.map(([d,l])=>'<button type="button" class="'+(demoF.days===d?'on':'')+'" aria-pressed="'+(demoF.days===d)+'" data-dx="days" data-dd="'+d+'">'+l+'</button>').join("")+'</div></div>'
      +demoRange("dmpriv","priv",0,100,10,"Jawne i prywatne")
      +demoRange("dmvol","vol",0,5,1,"Ochotników na prywatne")
      +(uG?demoRange("dmgrp","grp",0,100,10,"Prywatne dla grupy",!grs.length)+(grs.length?'':'<p class="note dmin">Najpierw załóż grupy w kroku 2.</p>'):'')
-     +demoSw("routes","Trasy z biblioteki tras","Np. co trzecie z mapą i GPX")
+     +demoSw("routes","Trasy z biblioteki tras","Tylko rower: np. co trzecie z mapą i GPX, trasa pasuje do roweru konta, zbiórka na starcie trasy")
      +demoSw("ranges","Zakresy godzin","Część „do ustalenia”, np. 17–20")
      +demoSw("answers","Konta demo od razu dołączają","Żeby karty nie były puste — część „Jadę!”, część odmów")
      +demoSw("chan","Podsumowanie także na kanale","Wyłączone = tylko do Ciebie na Telegram")
-     +'</div><button type="button" class="b sbtn" data-dx="gen"'+(made.length&&!demoBusy?'':' disabled')+'>'+(demoBusy?'Pracuję…':'Wygeneruj '+demoF.n+' '+plf(demoF.n,["zaproszenie","zaproszenia","zaproszeń"]))+'</button>'
+     +'</div><button type="button" class="b sbtn" data-dx="gen"'+(made.length&&!demoBusy&&[...demoGAs()].some(k=>demoActN(k,made.filter(p=>p.slot<=act)))?'':' disabled')+'>'+(demoBusy?'Pracuję…':'Wygeneruj '+demoF.n+' '+plf(demoF.n,["zaproszenie","zaproszenia","zaproszeń"]))+'</button>'
      +'<p class="note">Autor i dołączający nie mają innej jazdy ±3 h. Usuniesz je jednym ruchem w Sprzątaniu.</p>')
    // 4. historia (Tak/Nie)
    +demoK("hist",4,"Historia",ld?"…":!uH?"pominięte":hs.rides?"✓ "+hs.rides+" jazd":nAct<2?c1:"do zrobienia",uH&&hs.rides>0,
@@ -217,6 +253,7 @@ function demoHtml(){
        :'<p class="note">Pominięte.'+(hs.rides?' Istniejąca historia ('+hs.rides+' jazd) zostaje; usuniesz ją w Sprzątaniu.':'')+'</p>'))
    // na stałe: ochotnicy, odpowiedzi, sprzątanie
    +'<div class="bsgrp gl dmkgap"><span>Na stałe</span></div>'
+   +demoLiveSec(s,ld,made.filter(p=>p.slot<=act))
    +demoSec("vol","Ochotnicy",nVol||"brak",demoVolHtml())
    +demoSec("tick","Odpowiedzi kont demo",ld?"…":(auto?"same":"wyłączone")+(nPd?" · czeka "+nPd:""),
      '<p class="note dmkd">Gdy zaprosisz konto demo albo poprosisz o wejście do grupy demo — konto odpowie samo po kilku minutach (do ok. 4 h).</p>'
@@ -278,6 +315,20 @@ $("gearpanel").addEventListener("click",async e=>{
   if(a==="auto"){const on=!(demoSt&&demoSt.auto!==false);await demoRun("admin_demo_auto",{p_on:on},()=>on?"🤖 Konta demo odpowiadają same":"Konta demo nie odpowiadają same");return}
   if(a==="tick"){await demoRun("admin_demo_tick",{p_force:true},d=>{d=d||{};const ok=(d.g_ok||0)+(d.rq_ok||0)+(d.ride_ok||0),no=(d.g_no||0)+(d.rq_no||0)+(d.ride_no||0);return ok+no?"🤖 Odpowiedzi: przyjęte "+ok+", odmowy "+no:"Nic nie czekało na odpowiedź"});
     if(typeof grReload==="function")grReload();return}
+  // 🎭 żywa Ekipa (KROK 98)
+  if(a==="live"){const on=!(demoSt&&demoSt.live&&demoSt.live.on);await demoRun("admin_demo_live",{p_on:on},()=>on?"🎭 Żywa Ekipa demo włączona":"Żywa Ekipa demo wyłączona");return}
+  if(a==="lact"){const L=new Set((demoSt&&demoSt.live&&demoSt.live.acts)||[]),k=b.dataset.da;L.has(k)?L.delete(k):L.add(k);
+    if(!L.size){say("Zostaw co najmniej jedną aktywność.");return}
+    await demoRun("admin_demo_live",{p_acts:[...L]},d=>"🎭 Żywa Ekipa: "+((d&&d.acts)||[]).map(x=>actOf(x).name.toLowerCase()).join(", "));return}
+  if(a==="gact"){const G=new Set(demoGAs()),k=b.dataset.da;G.has(k)?G.delete(k):G.add(k);
+    if(!G.size){say("Zostaw co najmniej jedną aktywność.");return}
+    demoGA=G.size===demoActs().length?null:G;demoRender();return}
+  if(a==="dacts"){const id=b.dataset.du,k=b.dataset.da,P=(demoSt&&demoSt.pool||[]).find(x=>x.user_id===id);if(!P)return;
+    const A=new Set(P.acts||[]);A.has(k)?A.delete(k):A.add(k);if(!A.size){say("Konto demo musi mieć co najmniej jedną aktywność.");return}
+    demoBusy=true;demoRender();
+    try{const r=await sb.rpc("admin_demo_acts",{p_u:id,p_acts:[...A]});if(r.error)throw r.error;P.acts=r.data||[...A];
+      say((nicks[id]||"Konto")+": "+P.acts.map(x=>actOf(x).name.toLowerCase()).join(", "))}catch(err){demoErr(err)}
+    demoBusy=false;demoRender();return}
   if(a==="ltog"){const k=b.dataset.dl;demoLCol[k]=!demoLCol[k];demoRender();return}
   if(a==="hw-"||a==="hw+"){demoF.hw=Math.max(1,Math.min(26,demoF.hw+(a==="hw+"?1:-1)));demoRender();return}
   if(a==="hpw-"||a==="hpw+"){const act=(demoSt&&demoSt.pool||[]).filter(p=>p.user_id&&p.slot<=(+demoSt.demo_active||0)).length;
@@ -300,8 +351,10 @@ $("gearpanel").addEventListener("click",async e=>{
     demoAccSet=false;await demoRun("admin_demo_accounts",{p_count:n,p_channel:false},d=>d&&d.created?"🧪 Utworzono "+d.created+" · generator losuje z "+n:"Generator losuje teraz z "+n+(n<made?" (pozostałe konta zostają)":""));return}
   if(a==="gen"){
     if(demoF.chan&&!await askOk("Wysłać podsumowanie także na kanał @PrzylesieGo?\n\nZobaczą je wszyscy na kanale, z dopiskiem, że to nie są prawdziwe jazdy.","Wyślij też na kanał"))return;
-    await demoRun("admin_demo_generate",{p_count:demoF.n,p_days:demoF.days,p_private_pct:demoF.priv,p_routes:demoF.routes,p_ranges:demoF.ranges,p_answers:demoF.answers,p_channel:demoF.chan,p_group_pct:demoGrpOn()?demoF.grp:0,p_vol_per:demoF.vol},
-      d=>"🧪 Dodano "+(d&&d.created||0)+" zaproszeń testowych (prywatnych: "+(d&&d.private||0)+(d&&d.group?", dla grup: "+d.group:"")+")"+(d&&d.skipped?" · pominięte (nachodzące jazdy): "+d.skipped:""));return}
+    await demoRun("admin_demo_generate",{p_count:demoF.n,p_days:demoF.days,p_private_pct:demoF.priv,p_routes:demoF.routes,p_ranges:demoF.ranges,p_answers:demoF.answers,p_channel:demoF.chan,p_group_pct:demoGrpOn()?demoF.grp:0,p_vol_per:demoF.vol,
+      p_acts:demoGA&&demoGA.size<demoActs().length?[...demoGA]:null},
+      d=>{d=d||{};const ba=d.by_act||{},bt=Object.keys(ba).map(k=>actOf(k).name.toLowerCase()+" "+ba[k]).join(", ");
+        return "🧪 Dodano "+(d.created||0)+" zaproszeń testowych"+(bt?" ("+bt+")":"")+" · prywatnych: "+(d.private||0)+(d.group?", dla grup: "+d.group:"")+(d.routes?", z trasą: "+d.routes:"")+(d.skipped?" · pominięte (nachodzące jazdy): "+d.skipped:"")});return}
   if(a==="testdel"){   // ten sam ekran co dawniej (licznik + wpisz USUŃ), powrót do panelu
     demoRet=true;testDelN=null;testDelS=null;gearView="testdel";renderGear();
     try{const r=await sb.rpc("admin_test_wants",{do_delete:false});if(r.error)throw r.error;testDelN=+r.data||0}catch(err){testDelN=0;demoErr(err)}
@@ -312,10 +365,14 @@ $("gearpanel").addEventListener("click",async e=>{
 });
 $("gearpanel").addEventListener("input",e=>{
   // suwaki: opis z przykładem liczy się na żywo (demoTx)
+  if(e.target.id==="dmlive"){demoLR=+e.target.value;const t=$("dmlivet");if(t)t.textContent=demoLiveTx(demoLR);return}
   const k={dmhgrp:"hgrp",dmvol:"vol",dmgrp:"grp",dmpriv:"priv"}[e.target.id];
   if(k){demoF[k]=+e.target.value;const t=$(e.target.id+"t");if(t)t.textContent=demoTx[k]();return}
   if(e.target.dataset&&e.target.dataset.pfq==="dvol"&&$("dmvact"))setTimeout(()=>{$("dmvact").innerHTML=demoVolAct()});   // „Zaznacz widocznych” po szukaniu
 });
+// Ruch żywej Ekipy: zapis po puszczeniu suwaka
+$("gearpanel").addEventListener("change",async e=>{if(e.target.id!=="dmlive"||!isKingReal())return;const r=+e.target.value;
+  await demoRun("admin_demo_live",{p_rate:r},()=>"🎭 Ruch: "+demoLiveTx(r));demoLR=null;demoRender()});
 // filtry osób w Ochotnikach (obsługa w js/04) — po kliknięciu odśwież pasek akcji
 document.addEventListener("click",e=>{const b=e.target.closest('[data-pfk="dvol"]');if(b&&$("dmvact"))setTimeout(()=>{$("dmvact").innerHTML=demoVolAct()})});
 // start: aplikacja mogła już wystartować ze stanu telefonu, zanim ten plik się wczytał → doczytaj konta demo od razu
