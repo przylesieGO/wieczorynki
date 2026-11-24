@@ -788,17 +788,25 @@ const sigReactTxt=x=>{const L=sigReactIds(x);if(!L.length)return '';
   return uiIcon("hand")+'<b class="sgrn">'+L.length+'</b><span>'+(nm.length>1?nm.slice(0,-1).join(", ")+' i '+nm[nm.length-1]:nm[0])
     +' '+(L.length>1?'też mają':'też '+(me?'masz':'ma'))+' ochotę</span>';};
 // 🔔 sekcja „Mają ochotę dziś”
+// wspólne zaproszenie na dziś, w którym jestem ja i autor sygnału (np. z „Super ekipy”) — także gdy cofnąłem Reakcję (2026-11-24)
+function sigWithRide(x){
+  if(!x||x.user_id===uid||typeof wants==="undefined")return null;
+  return wants.find(w=>dayDiff(new Date(w.range_from||w.starts_at))===0&&!wDone(w)&&(w.activity||"bike")===(x.activity||"bike")
+    &&(()=>{const P=sigWPeople(w);return P.has(uid)&&P.has(x.user_id)})())||null;
+}
+// supWid: wiersz w klamrze Super ekipy, której pasek prowadzi do zaproszenia supWid — wtedy wiersz nie zaprasza osobno (2026-11-24)
 function sigRow(x,un,supWid){
   const a=sigA(x.activity),me=x.user_id===uid,d=new Date(x.created_at),rc=sigReactIds(x).length,mine=sigIReact(x);
   const to=me&&sigPriv(x)?(sigTo[uid]||[]).length:0;
   const RW=sig2Ok&&(me||mine)?sigEkipaRide(x):null;   // 🚲 KROK 92: ekipa ma już wspólne zaproszenie na dziś
-  const busy=!RW&&(me||mine)&&sigBusyO.has(x.user_id);   // ekipa już jedzie (prywatne zaproszenie, mnie w nim nie ma)
-  const E=sig2Ok&&!RW&&!busy?sigEkipaOthers(x):[],chetni=me&&E.length,ekipa=!me&&mine&&E.length>=2;   // 🚲 „Zaproś ekipę ›” — autor (są chętni) lub osoba z reakcją (w ekipie min. 2 inne osoby)
+  const TW=RW||(me?null:sigWithRide(x));   // jedziemy już razem (wspólne zaproszenie z autorem sygnału) — zamiast „Zaproś …”
+  const busy=!TW&&(me||mine)&&sigBusyO.has(x.user_id);   // ekipa już jedzie (prywatne zaproszenie, mnie w nim nie ma)
+  const E=sig2Ok&&!TW&&!busy&&!supWid?sigEkipaOthers(x):[],chetni=me&&E.length,ekipa=!me&&mine&&E.length>=2;   // 🚲 „Zaproś ekipę ›” — autor (są chętni) lub osoba z reakcją (w ekipie min. 2 inne osoby)
   const late=RW&&wantCanInvite(RW)?sigEkipa(x).filter(id=>!sigWPeople(RW).has(id)):[];   // 🚲 KROK 92b: ktoś z ekipy jeszcze nie w zaproszeniu
-  const rw=RW&&supWid&&RW.id===supWid?'':(RW?'<button type="button" class="lnk stgo" data-sgw="'+esc(RW.id)+'">'+sigTogether(RW.activity)+'</button>':'')
+  const rw=TW&&supWid&&TW.id===supWid?'':(TW?'<button type="button" class="lnk stgo" data-sgw="'+esc(TW.id)+'">'+sigTogether(TW.activity)+'</button>':'')
     +(late.length?'<button type="button" class="lnk stgo" data-sgadd="'+esc(RW.id+'|'+late.join(","))+'">'+sigAddLbl(late)+'</button>':'');
   const btn=me?'<span class="sgbtns">'+rw+(chetni?'<button type="button" class="lnk stgo" data-sgc="'+esc(x.user_id)+'">Zaproś ekipę ('+E.length+') ›</button>':'')+'<button type="button" class="lnk stgo" data-sge="1">Zmień</button><button type="button" class="lnk stgo" data-sgx="1">Wycofaj</button></span>'
-    :'<span class="sgbtns">'+rw+(!RW?'<button type="button" class="lnk stgo" data-sgz="'+esc(x.user_id)+'">'+sigInvLbl(x.user_id)+'</button>':'')+(ekipa?'<button type="button" class="lnk stgo" data-sgc="'+esc(x.user_id)+'">Zaproś ekipę ('+E.length+') ›</button>':'')
+    :'<span class="sgbtns">'+rw+(!TW&&!supWid?'<button type="button" class="lnk stgo" data-sgz="'+esc(x.user_id)+'">'+sigInvLbl(x.user_id)+'</button>':'')+(ekipa?'<button type="button" class="lnk stgo" data-sgc="'+esc(x.user_id)+'">Zaproś ekipę ('+E.length+') ›</button>':'')
       +(sig2Ok?'<button type="button" class="sgre'+(mine?' on':'')+'" data-sgr="'+esc(x.user_id)+'" aria-pressed="'+mine+'" title="'+(mine?'Cofnij':'Też mam ochotę!')+'" aria-label="'+(mine?'Cofnij „Też mam ochotę”':'Też mam ochotę!')+'">'+uiIcon("hand")+(rc?'<b>'+rc+'</b>':'')+'</button>':'')+'</span>';
   return '<div class="nit stn sgrow'+(un?' new':'')+'"><div class="ic">'+uiIcon(a[0])+'</div><div class="tx">'+(me?'<b>Ty</b>':nk(x.user_id))
     +(x.is_test?' <span class="ttag">🧪 TEST</span>':'')+(sigPriv(x)?' <span class="sgpriv">'+uiIcon("lock")+(me?' '+to+' '+plf(to,["osoba","osoby","osób"]):' do Ciebie')+'</span>':'')
