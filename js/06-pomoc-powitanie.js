@@ -152,7 +152,7 @@ function helpFullHtml(){
    +(session&&typeof plOk!=="undefined"&&plOk?sec("📋 Listy",[
      "<b>⚙️ → Edytuj profil → Ulubieni i listy</b>: własne listy osób, np. „Gravelowcy”, „Szybcy”. Osobę dodasz też z jej karty (dotknij nicku).",
      "Przy zaproszeniu, w „Kto zobaczy?” zaznaczysz całą listę jednym dotknięciem (sekcja „Twoje listy”). Lista rozwija się do osób w chwili wysłania.",
-     "Tylko Ty widzisz swoje listy — nikt nie wie, że jest na Twojej liście. Wybór kilku osób zapiszesz jako listę („📋 Zapisz wybór jako listę”). Listę można przekształcić w grupę."]):'')
+     "Tylko Ty widzisz swoje listy — nikt nie wie, że jest na Twojej liście. Wybór kilku osób zapiszesz jako listę w oknach wyboru osób — link <b>„Jako lista”</b> obok „Wyczyść” (od 2 zaznaczonych osób). Listę można przekształcić w grupę."]):'')
    +(typeof grOn==="function"&&grOn()?sec("👥 Grupy",[
      "<b>⚙️ → Edytuj profil → Grupy</b>: załóż własną grupę (nazwa, kolor, ikona) albo dołącz do istniejącej. Grupa może być <b>jawna</b> (widać ją w wyszukiwaniu) albo <b>ukryta</b>; dołączanie wolne albo na prośbę / zaproszenie (kłódka).",
      "Założyciel jest właścicielem, może wyznaczyć moderatorów. Grupę założysz też z jednej albo kilku list. Limit członków zwiększa na prośbę 👑.",

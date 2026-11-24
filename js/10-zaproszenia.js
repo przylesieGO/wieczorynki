@@ -1554,7 +1554,7 @@ function renderWho(first){
      +(ev?'<div class="note" style="margin-top:6px;text-align:center;font-size:14px">🏁 '+esc(ev.name)+' · '+esc(evDates(ev))+'</div>':'')
      +(whoFormLike()?'<div class="seg" id="wsseg">'+[["all","🌍 Wszyscy"],["fav","⭐ Ulubieni"],["pick","👥 Wybieram"]].map(([k,t])=>'<button type="button" data-v="'+k+'">'+t+'</button>').join("")+'</div>'
        :(w?'<div class="note" style="margin-top:6px;text-align:center;font-size:14px">Zaproszenie: '+esc(wfLabel(new Date(w.starts_at)))+(w.user_id!==uid&&nicks[w.user_id]?' · od '+esc(nicks[w.user_id]):'')+'</div>':''))
-     +'<div class="wsqrow" id="wsqrow"><input class="bsq srch" id="wsq" type="search" placeholder="Szukaj nicku…" autocomplete="off"><button type="button" class="lnk hide" data-k="clr" id="wsclr"></button></div>'
+     +'<div class="wsqrow" id="wsqrow"><input class="bsq srch" id="wsq" type="search" placeholder="Szukaj nicku…" autocomplete="off"><button type="button" class="lnk wsplsv hide" data-k="plsave" id="wsplsv">'+uiIcon("list")+' Jako lista</button><button type="button" class="lnk hide" data-k="clr" id="wsclr"></button></div>'
      +'<div id="wspf"></div>'   // 🔎 filtry osób (KROK 68); 📋 listy — zwijana sekcja na górze listy osób
      +'<div class="bslist" id="wslist"></div><div id="wsplsave"></div>'
      +(whoEv()?'<textarea class="bsmsg" id="wsmsg" maxlength="120" rows="2" placeholder="Wiadomość (opcjonalnie), np. jedziemy razem 260?">'+esc(ws.msg||"")+'</textarea>':'')
@@ -1565,12 +1565,14 @@ function renderWho(first){
   $("wsqrow").classList.toggle("hide",ws.vis!=="pick");
   const nUn=[...ws.pick].filter(id=>!whoLocked().has(id)).length,cb=$("wsclr");
   cb.textContent="Wyczyść ("+nUn+")";cb.classList.toggle("hide",ws.vis!=="pick"||!nUn);
+  const pm0=ws.vis==="pick"&&ws.mode!=="pl"&&plOk&&ws.pick.size?plMatch([...ws.pick]):null;   // 📋 „Jako lista” przy „Wyczyść”: nowa lista z zaznaczonych (min. 2 osoby, bez duplikatu istniejącej listy)
+  $("wsplsv").classList.toggle("hide",!(ws.vis==="pick"&&ws.mode!=="pl"&&plOk&&!pm0&&ws.pick.size>=2&&plists.length<20));
   $("wslist").innerHTML=whoGrHtml()+whoPlHtml()+whoListHtml();
   const pn=$("wspln"),pl=ws.mode==="pl"&&plById(ws.want);if(pn&&pl)pn.innerHTML=plDot(pl)+esc(pl.name)+plEd(pl);   // nazwa listy (odświeża się po zmianie)
   $("wspf").innerHTML=ws.vis==="pick"&&whoPeople().length>8?pfChips("who"):"";
   const pm=ws.vis==="pick"&&ws.mode!=="pl"&&plOk&&ws.pick.size?plMatch([...ws.pick]):null;
   $("wsplsave").innerHTML=ws.vis==="pick"&&ws.mode!=="pl"&&plOk?(pm?'<div class="note wsplm">'+plDot(pm)+'To Twoja lista „'+esc(pm.name)+'”</div>'
-    :ws.pick.size>=2&&plists.length<20?'<button type="button" class="lnk wsplm" data-k="plsave">📋 Zapisz wybór jako listę</button>':''):'';
+    :''):'';
   const jn=ws.mode==="form"&&wf.editId?(joins[wf.editId]||[]).filter(x=>x!==uid).length:0;
   const gSel=whoFormLike()&&ws.vis!=="all"&&ws.gr?grNm(ws.gr):"";
   $("wshint").textContent=ws.mode==="sig"?(ws.vis==="all"?"Twój sygnał zobaczą wszyscy zalogowani"+(flags.mam_ochote&&flags.mam_ochote.state==="all"?" i kanał Telegram.":"."):"🔒 Sygnał zobaczą tylko wybrane osoby"+(gSel?" i członkowie grupy „"+gSel+"” (stan na teraz)":"")+" — pod 🔔 i w okienku. Nie trafi na kanał Telegram."):gSel?"👥 Zobaczą wszyscy członkowie grupy „"+gSel+"” — także ci, którzy dołączą później"+(ws.vis==="fav"?" — i Twoi ulubieni":" — i osoby wybrane niżej")+". Nie trafi na publiczny kanał Telegram."+(jn?" Osoby, które już dołączyły ("+jn+"), zostaną zaproszone.":""):ws.mode==="grn"?(typeof grFree==="function"&&whoCount()>grFree()?"⚠️ Za dużo o "+(whoCount()-grFree())+" — wolnych miejsc w nowej grupie: "+grFree()+".":"👥 Zaproszenie dostaną po założeniu grupy. Wolnych miejsc: "+(typeof grFree==="function"?grFree():"")+"."):ws.mode==="gr"?"👥 Dostaną zaproszenie do grupy w aplikacji (⚙️ → Grupy). Członkiem zostanie ten, kto je przyjmie. Wyszarzeni już są w grupie albo mają zaproszenie.":ws.mode==="pl"?"📋 Tylko Ty widzisz tę listę. Osoby nie dostaną żadnego powiadomienia.":whoEv()?"Dostaną powiadomienie w aplikacji i od bota na Telegramie (jeśli go połączyli). Zaprosić można osoby, które widzą zakładkę Imprezy.":ws.vis==="all"?"":ws.mode==="add"?"Dostaną powiadomienie i zobaczą to zaproszenie.":"🔒 Zaproszenie zobaczą tylko wybrane osoby (i kogo one doproszą). Nie trafi na publiczny kanał Telegram."+(jn?" Osoby, które już dołączyły ("+jn+"), zostaną zaproszone.":"");

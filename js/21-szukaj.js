@@ -102,7 +102,7 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Moja teczka",s:"teczka konto wszystko",p:"Ustawienia → Edytuj profil → Moja teczka 👑",i:"folder",go:[SR_PROF],hl:'[data-a="tk"]',ok:KR},
   {t:"Serwis rowerowy",s:"serwis rower przebieg łańcuch części paragon gwarancja",p:"Ustawienia → Edytuj profil → Serwis rowerowy",i:"wrench",go:[SR_PROF,'[data-sv="open"]'],ok:typeof svOn==="function"&&svOn()},
   {t:"Ulubieni i listy",s:"ulubieni gwiazdka listy znajomi",p:"Ustawienia → Edytuj profil → Ulubieni i listy",i:"starf",go:[SR_PROF,'[data-c="favs"]'],ok:S&&favOk},
-  {t:"Nowa lista osób",s:"lista utwórz dodaj listę",p:"Ustawienia → Edytuj profil → Ulubieni i listy → Nowa lista",i:"list",go:[SR_PROF,'[data-c="favs"]'],hl:'[data-c="plnew"]',ok:S&&typeof plOk!=="undefined"&&plOk},
+  {t:"Nowa lista osób",s:"lista utwórz dodaj listę jako lista zapisz wybór z zaznaczonych",p:"Ustawienia → Edytuj profil → Ulubieni i listy → Nowa lista (albo „Jako lista” w oknach wyboru osób)",i:"list",go:[SR_PROF,'[data-c="favs"]'],hl:'[data-c="plnew"]',ok:S&&typeof plOk!=="undefined"&&plOk},
   {t:"Grupy",s:"grupy klub drużyna paczka załóż grupę",p:"Ustawienia → Ludzie → Grupy",i:"users",go:['[data-gx="hub"]'],ok:S&&typeof grOn==="function"&&grOn()},
   {t:"Prywatność",s:"prywatność kto widzi ukryj rekordy kalendarz",p:"Ustawienia → Edytuj profil → Prywatność",i:"lock",go:[SR_PROF,'[data-c="priv"]'],ok:S&&reportOk},
   {t:"Telegram",s:"telegram powiadomienia bot wiadomości",p:"Ustawienia → Edytuj profil → Powiadomienia → Telegram",i:"send",go:[SR_PROF,'[data-c="tg"]'],ok:typeof tgOn==="function"&&tgOn()},
