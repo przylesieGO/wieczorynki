@@ -483,9 +483,9 @@ const sigCancelRow=n=>'<div class="nit stn sgrow new"><div class="ic">'+uiIcon("
 const sigEkipaUn=()=>{if(!sigOn())return [];const t=sigToday();
   return notifs.filter(n=>n.kind==="sig_ekipa"&&!n.read_at&&localIso(new Date(n.created_at)).slice(0,10)===t).filter(n=>{const x=sigs.find(s=>s.user_id===n.actor&&!s.cancelled_at);return x&&!sigEkipaRide(x)})};
 // 👋 „X też ma ochotę — ekipa już jedzie” (KROK 92b): do organizatora wspólnego zaproszenia, dopóki X nie jest w zaproszeniu
-const wPeople=w=>new Set([w.user_id,...invIds(w),...(joins[w.id]||[])]);
+const sigWPeople=w=>new Set([w.user_id,...invIds(w),...(joins[w.id]||[])]);
 const sigLateUn=()=>{if(!sigOn())return [];const t=sigToday();
-  return notifs.filter(n=>n.kind==="sig_late"&&!n.read_at&&localIso(new Date(n.created_at)).slice(0,10)===t).filter(n=>{const w=wants.find(x=>x.id===n.want_id);return w&&!wDone(w)&&!wPeople(w).has(n.actor)})};
+  return notifs.filter(n=>n.kind==="sig_late"&&!n.read_at&&localIso(new Date(n.created_at)).slice(0,10)===t).filter(n=>{const w=wants.find(x=>x.id===n.want_id);return w&&!wDone(w)&&!sigWPeople(w).has(n.actor)})};
 const sigLateRow=n=>'<div class="nit stn sgrow new"><div class="ic">'+uiIcon("hand")+'</div><div class="tx">'+nk(n.actor)
   +'<div class="w">też ma ochotę — Wasza ekipa już jedzie · '+esc(hhmm(new Date(n.created_at)))+'</div></div>'
   +'<span class="sgbtns"><button type="button" class="lnk stgo" data-sgadd="'+esc(n.want_id+'|'+n.actor)+'">'+sigAddLbl([n.actor])+'</button></span>'
@@ -494,7 +494,7 @@ const sigLateRow=n=>'<div class="nit stn sgrow new"><div class="ic">'+uiIcon("ha
 const sigAddLbl=ids=>{if(ids.length>1)return "Dopisz ("+ids.length+") ›";const n=String(nicks[ids[0]]||"").trim();return "Dopisz "+esc(n.length>14?n.slice(0,13)+"…":n)+" ›"};
 function sigAddTo(wid,ids){
   const w=wants.find(x=>x.id===wid);if(!w){say("Tego zaproszenia nie da się teraz otworzyć.");return}
-  openWho("add",wid);ws.pick=new Set(ids.filter(id=>!wPeople(w).has(id)));ws.topK=null;renderWho();
+  openWho("add",wid);ws.pick=new Set(ids.filter(id=>!sigWPeople(w).has(id)));ws.topK=null;renderWho();
 }
 const sigNotifUn=()=>sigReactUn().concat(sigCancelUn(),sigEkipaUn(),sigLateUn());   // powiadomienia sygnałów do licznika 🔔 i „przeczytane”
 // wspólne zaproszenie ekipy na dziś (widoczne dla mnie): autor z ekipy + ktoś inny z ekipy zaproszony albo dołączony
@@ -762,7 +762,7 @@ function sigRow(x,un){
   const to=me&&sigPriv(x)?(sigTo[uid]||[]).length:0;
   const RW=sig2Ok&&x.activity==="bike"&&(me||mine)?sigEkipaRide(x):null;   // 🚲 KROK 92: ekipa ma już wspólne zaproszenie na dziś
   const E=sig2Ok&&x.activity==="bike"&&!RW&&!busy?sigEkipaOthers(x):[],chetni=me&&E.length,ekipa=!me&&mine&&E.length>=2;   // 🚲 „Zaproś ekipę ›” — autor (są chętni) lub osoba z reakcją (w ekipie min. 2 inne osoby)
-  const late=RW&&wantCanInvite(RW)?sigEkipa(x).filter(id=>!wPeople(RW).has(id)):[];   // 🚲 KROK 92b: ktoś z ekipy jeszcze nie w zaproszeniu
+  const late=RW&&wantCanInvite(RW)?sigEkipa(x).filter(id=>!sigWPeople(RW).has(id)):[];   // 🚲 KROK 92b: ktoś z ekipy jeszcze nie w zaproszeniu
   const busy=!RW&&(me||mine)&&sigBusyO.has(x.user_id);   // ekipa już jedzie (prywatne zaproszenie, mnie w nim nie ma)
   const rw=(RW?'<button type="button" class="lnk stgo" data-sgw="'+esc(RW.id)+'">Jedziecie razem ›</button>':'')
     +(late.length?'<button type="button" class="lnk stgo" data-sgadd="'+esc(RW.id+'|'+late.join(","))+'">'+sigAddLbl(late)+'</button>':'');
