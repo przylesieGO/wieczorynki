@@ -695,10 +695,22 @@ function sigSuperRide(S){
   const ids=sigSuperIds(S);if(!ids.length||typeof wants==="undefined")return null;
   return wants.find(w=>dayDiff(new Date(w.range_from||w.starts_at))===0&&!wDone(w)&&(()=>{const P=new Set([w.user_id,...invIds(w),...(joins[w.id]||[])]);return P.has(uid)&&ids.every(id=>P.has(id))})())||null;
 }
+// wspólne zaproszenie na dziś, w którym jestem i są już niektórzy z klamry, ale nie wszyscy → „Dopisz (n) ›” zamiast „Super ekipa ›” (2026-11-24)
+function sigSuperPart(S){
+  const ids=sigSuperIds(S);if(!ids.length||typeof wants==="undefined")return null;
+  for(const w of wants){
+    if(dayDiff(new Date(w.range_from||w.starts_at))!==0||wDone(w)||!wantCanInvite(w))continue;
+    const P=sigWPeople(w);if(!P.has(uid))continue;
+    const miss=ids.filter(id=>!P.has(id));
+    if(miss.length&&miss.length<ids.length)return {w,miss};
+  }
+  return null;
+}
 function sigSuperHtml(S,rows){
-  const ids=sigSuperIds(S),show4=ids.slice(0,4),more=ids.length-show4.length,RW=sigSuperRide(S);
+  const ids=sigSuperIds(S),show4=ids.slice(0,4),more=ids.length-show4.length,RW=sigSuperRide(S),PT=RW?null:sigSuperPart(S);
   return '<div class="sgsup"><div class="sgsupbar"><span class="sgstack">'+show4.map(sigMiniAv).join("")+(more>0?'<span class="sgmav more">+'+more+'</span>':'')+'</span>'
     +(RW?'<button type="button" class="b sgsupbtn" data-sgw="'+esc(RW.id)+'">'+uiIcon("users")+' Jedziecie razem ›</button></div>'
+       :PT?'<button type="button" class="b sgsupbtn" data-sgadd="'+esc(PT.w.id+'|'+PT.miss.join(","))+'">'+uiIcon("users")+' '+sigAddLbl(PT.miss)+'</button></div>'
        :'<button type="button" class="b sgsupbtn" data-sgsup="1">'+uiIcon("users")+' Super ekipa ('+ids.length+') ›</button></div>')
     +'<div class="sgsupbody">'+rows+'</div></div>';
 }
