@@ -33,15 +33,23 @@ document.addEventListener("visibilitychange",()=>{
   if(document.hidden||!session)return;
   if(presDead()||!presOk)startPresence(true);else applyPresence();
 });
+// liczby administracyjne przy kropce: konta (admin i 👑) oraz aktywni 24 h (tylko 👑). KROK 89 (live_counts) uzupełni oba pola z bazy;
+// do tego czasu konta liczymy z listy w aplikacji, a „24 h” się nie pokazuje
+let liveCnt={acc:null,a24:null};
+const liveAcc=()=>liveCnt.acc!=null?liveCnt.acc:Object.keys(nicks).filter(id=>!modBanned.has(id)&&!(typeof demoIds!=="undefined"&&demoIds.has(id))).length;
+function onlHtml(n,ok,full){
+  const x=full&&isAdmin&&ok?(isKingReal()&&liveCnt.a24!=null?'<span class="onx">'+uiIcon("clock")+liveCnt.a24+'</span>':'')+'<span class="onx">'+uiIcon("users")+liveAcc()+'</span>':'';
+  return '<span class="pdot" aria-hidden="true"></span><b>'+(ok?n:"—")+'</b>'+x}
 function renderOnline(){
   const b=$("onlbtn");if(!b)return;
   const show=!!session;
   b.classList.toggle("hide",!show);
   // przy ukrytej obecności (👻) liczysz się tylko na swoim ekranie
   const n=onlineIds.filter(id=>isAdmin||!modGone(id)).length+(stealthOn()&&!onlineIds.includes(uid)?1:0);
-  b.classList.toggle("off",!presOk);b.title=presOk?"Kto jest teraz w aplikacji":"Brak połączenia z listą online — łączę ponownie…";
-  if(show)b.textContent=presOk?"🟢 "+n+" online ›":"🟢 online —";
-  const h=$("honl");if(h){h.classList.toggle("hide",!show||!presOk);if(show)h.textContent="🟢 "+n}
+  const tip=!presOk?"Brak połączenia z listą online — łączę ponownie…":isAdmin?"Aktywni teraz: "+n+(isKingReal()&&liveCnt.a24!=null?" · w ciągu 24 h: "+liveCnt.a24:"")+" · konta: "+liveAcc():"Aktywni teraz: "+n;
+  b.classList.toggle("off",!presOk);b.title=tip;b.setAttribute("aria-label",tip);
+  if(show)b.innerHTML=onlHtml(n,presOk,true);
+  const h=$("honl");if(h){h.classList.toggle("hide",!show||!presOk);h.setAttribute("aria-label",tip);if(show)h.innerHTML=onlHtml(n,presOk,false)}
   if(gearOpen&&gearView==="online")renderGear();
 }
 
