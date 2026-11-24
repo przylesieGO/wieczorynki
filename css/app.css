@@ -1284,6 +1284,11 @@ details.wday[open] .whrs:has(.hon) .whb:not(.hon){opacity:.4}details.wday .whb{t
 /* rozwinięty dzień: zwykłe godziny w kontrze (jasny motyw — ciemne, ciemny — jasne); zwinięty bez zmian */
 details.wday[open] .whb:not(.hpriv):not(.hlive){background:#3a3a3c;color:#f2f2f7}html[data-theme=dark] details.wday[open] .whb:not(.hpriv):not(.hlive){background:#d1d1d6;color:#1c1c1e}
 details.wday[open].wpv{border-color:var(--priv)}
+/* godziny Twoich zaproszeń: styl plakietki „Ty” (zielony tekst na jasnozielonym, neonowa obwódka); prywatne — gradient od fioletu do zieleni */
+details.wday .whb.hme:not(.hlive){color:var(--acc);background:var(--acc2);box-shadow:inset 0 0 0 1.5px var(--acc);opacity:1}
+details.wday .whb.hme.hpriv:not(.hlive){color:color-mix(in srgb,var(--priv) 55%,var(--acc));background:linear-gradient(100deg,color-mix(in srgb,var(--priv) 26%,var(--card)),var(--acc2));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--priv) 55%,var(--acc))}
+details.wday[open] .whrs:has(.hon) .whb.hme:not(.hon){opacity:.4}
+
 .slot.clash{background:#fff3c4;color:#6b4a00}html[data-theme=dark] .slot.clash{background:#4a3f12;color:#ffe08a}
 .slot.clash.on{background:var(--accbtn);color:#fff;box-shadow:0 0 0 2px #e0a800}
 .pkclash{margin-top:10px;padding:9px 12px;border-radius:12px;background:#fff3c4;color:#6b4a00;font-size:14px;font-weight:600;line-height:1.35}html[data-theme=dark] .pkclash{background:#4a3f12;color:#ffe08a}

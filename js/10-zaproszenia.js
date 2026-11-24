@@ -620,8 +620,12 @@ function renderWants0(){
 /* godziny w nagłówku karty dnia: zwinięta karta — 4 + „+N” (etykieta); rozwinięta — wszystkie, klikalne (przewijają/otwierają właściwe zaproszenie w karuzeli) */
 function wHrsHtml(ws,open,cur){   // cur = zaproszenie widoczne w rozwiniętym dniu (.hon) — pozostałe godziny przygaszone, tylko gdy dzień otwarty
   const hw=ws.filter(wLive).concat(ws.filter(w=>!wLive(w)));
-  const mk=w=>'<button type="button" class="whb'+(wLive(w)?' hlive':'')+(isPriv(w)?' hpriv':'')+(w.id===cur?' hon':'')+'" data-whr="'+esc(w.id)+'"'+(wLive(w)?' title="Trwa"':'')+'>'+wTime(w)+'</button>';
-  return open?hw.map(mk).join(""):hw.slice(0,4).map(mk).join("")+(hw.length>4?'<b class="whmore">+'+(hw.length-4)+'</b>':'');
+  // .hme = Twoje zaproszenie: godzina w stylu plakietki „Ty” (zielona); prywatne — gradient fiolet → zielony
+  const mk=w=>'<button type="button" class="whb'+(wLive(w)?' hlive':'')+(isPriv(w)?' hpriv':'')+(w.user_id===uid?' hme':'')+(w.id===cur?' hon':'')+'" data-whr="'+esc(w.id)+'"'+(wLive(w)?' title="Trwa"':w.user_id===uid?' title="Twoje zaproszenie"':'')+'>'+wTime(w)+'</button>';
+  if(open||hw.length<=4)return hw.map(mk).join("");
+  // zwinięta karta: 4 godziny — trwające i Twoje mają pierwszeństwo przed resztą
+  const pick=new Set(hw.filter(w=>wLive(w)||w.user_id===uid).slice(0,4));hw.forEach(w=>{if(pick.size<4)pick.add(w)});
+  return hw.filter(w=>pick.has(w)).map(mk).join("")+'<b class="whmore">+'+(hw.length-pick.size)+'</b>';
 }
 /* karuzela zaproszeń w karcie dnia */
 const dayIdx={};
@@ -1417,7 +1421,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-wmup]");if
 function renderMyWant(){
   const box=$("mywant");if(!box)return;
   const act=w=>!wDone(w);
-  const mine=wants.filter(w=>w.user_id===uid&&act(w)).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
+  const mine=wants.filter(w=>w.user_id===uid&&act(w)).sort(flt.sort==="new"?(a,b)=>new Date(b.created_at||b.starts_at)-new Date(a.created_at||a.starts_at):(a,b)=>new Date(a.starts_at)-new Date(b.starts_at));   // „od najnowszych” działa też w karuzeli Moich
   const others=wants.filter(w=>w.user_id!==uid&&act(w)&&dayDiff(new Date(w.starts_at))===0).length;
   const bd=$("wbadge");bd.innerHTML='<span class="fbn">'+others+'</span><span class="fbd"> dziś</span>';bd.classList.toggle("hide",!others);
   myCnt=mine.length;
