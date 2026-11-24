@@ -451,7 +451,8 @@ html[data-theme=dark] .sigfab{box-shadow:0 6px 16px rgba(0,0,0,.5)}
 .signote{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--mut);line-height:1.35}.sigmini{flex:none;width:26px;height:26px;border-radius:50%;background:#248a3d;color:#248a3d;box-shadow:0 1px 4px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center}.sigmini svg{width:19px;height:19px}
 .sigacts{grid-template-columns:repeat(4,1fr);margin-top:12px}
 /* 🚲🏃🚶🌲 „Mam ochotę”: wybrana aktywność rusza się jak dłoń na przycisku — krótki ruch (od razu po wyborze), potem spokój; cykl 6 s */
-.sigacts .wbk.on .ui-i{transform-box:fill-box;transform-origin:50% 100%;animation:6s ease-in-out infinite}.sigacts .wbk.on[data-sga=bike] .ui-i{animation-name:sgbike}.sigacts .wbk.on[data-sga=run] .ui-i{animation-name:sgrun}.sigacts .wbk.on[data-sga=walk] .ui-i{animation-name:sgwalk}.sigacts .wbk.on[data-sga=hike] .ui-i{animation-name:sghike}
+.sigacts .wbk.on .ui-i{transform-box:fill-box;transform-origin:50% 100%;animation:6s ease-in-out infinite}
+.sigacts .wbk.on .ui-i{color:#c98a0b}html[data-theme=dark] .sigacts .wbk.on .ui-i{color:#f5c94e}   /* złota ikona jak dłoń 👋, zielona ramka jak każdy wybór */.sigacts .wbk.on[data-sga=bike] .ui-i{animation-name:sgbike}.sigacts .wbk.on[data-sga=run] .ui-i{animation-name:sgrun}.sigacts .wbk.on[data-sga=walk] .ui-i{animation-name:sgwalk}.sigacts .wbk.on[data-sga=hike] .ui-i{animation-name:sghike}
 @keyframes sgbike{0%,30%,100%{transform:translateX(0)}8%{transform:translateX(4px) rotate(-4deg)}16%{transform:translateX(-3px)}23%{transform:translateX(1px)}}
 @keyframes sgrun{0%,30%,100%{transform:translateY(0)}6%,18%{transform:translateY(-4px)}12%,24%{transform:translateY(0)}}
 @keyframes sgwalk{0%,30%,100%{transform:rotate(0)}7%{transform:rotate(-9deg)}15%{transform:rotate(8deg)}23%{transform:rotate(-4deg)}}
