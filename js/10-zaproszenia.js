@@ -729,6 +729,8 @@ function myPickHtml(w,myp,joined,mine){
 const wVerb=w=>actOf(w&&w.activity).verb||"Jadę";   // 🏃 „Jadę!” / „Biegnę!” / „Idę!” (KROK 94)
 const pkCorner='<span class="pkcorner" role="img" aria-label="Podgląd admina" title="Podgląd admina — nie jesteś zaproszony">'+uiIcon("eye")+'</span>';
 function wantHtml(w,top){
+  // ⛔ „Jadę!” koliduje z jazdą, którą SAM prowadzisz (blokada z joinClashOk) — widać to od razu na karcie (2026-11-25, prośba właściciela)
+  const ownCl=w.user_id!==uid&&!isOpen(w)&&!(joins[w.id]||[]).includes(uid)&&wantStart(w).getTime()>Date.now()-15*6e4?(c=>c&&c.user_id===uid?c:null)(joinClash(w)):null;
     const j=joins[w.id]||[],mine=w.user_id===uid,joined=j.includes(uid),others=j.filter(x=>x!==w.user_id);
     const priv=isPriv(w),canInv=priv&&!mine&&wantCanInvite(w);
     // admin widzi cudze prywatne zaproszenie tylko podglądowo (bez „Jadę!”), chyba że jest zaproszony
@@ -743,12 +745,13 @@ function wantHtml(w,top){
      +(open?tallyHtml(w):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w)+(live?'':myPickHtml(w,myp,joined,mine)))
      +(wLate(w)&&!mine&&!peek&&!joined?lateNote():'')
      +(mine&&live?'<div class="linfo">🔒 Jazda trwa — nie można już edytować, dołączać ani doprosić. Po zakończeniu trafi do archiwum.</div>':'')
+     +(ownCl?wClashHtml(ownCl):'')
      +'<div class="acts">'
      +(mine?(live?'':(open?wSettleBtn(w)+'<div class="agrp ed"><button class="ib" data-my="edit" data-id="'+esc(w.id)+'" title="Edytuj zaproszenie" aria-label="Edytuj zaproszenie">'+ICON.edit+'</button></div><div class="agrp tools">':(fromRange(w)?'<button class="b join" data-my="settlepick" data-id="'+esc(w.id)+'" title="Zmień ustaloną godzinę" aria-label="Zmień ustaloną godzinę '+esc(hhmm(new Date(w.starts_at)))+'">'+uiIcon("tick")+' '+esc(hhmm(new Date(w.starts_at)))+' · zmień</button><button class="ib" data-my="edit" data-id="'+esc(w.id)+'" title="Edytuj zaproszenie" aria-label="Edytuj zaproszenie">'+ICON.edit+'</button>':'<button class="b g join" data-my="edit" data-id="'+esc(w.id)+'">✏️ Edytuj</button>'))
         +(priv?'<button class="ib" data-my="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
         +'<button class="ib" data-my="share" data-id="'+esc(w.id)+'" title="Udostępnij" aria-label="Udostępnij">'+ICON.share+'</button>'):live&&!wLate(w)&&!joined?'<span class="note" style="flex:1">🚴 Jazda trwa — dołączyć już nie można.</span>':peek?'<span class="pkbar">'+uiIcon("shield")+'<span><b>Podgląd admina</b>Nie jesteś zaproszony — możesz podejrzeć lub usunąć.</span></span>'
        :open?'<button class="b join'+(joined?' g':'')+'" data-w="pref" data-id="'+esc(w.id)+'">'+(joined&&myp?'✓ '+esc(hhmm(new Date(myp)))+' · zmień':dec?'Jednak mogę? Wybierz godzinę':'Pasuje mi o…')+'</button>'
-       :'<button class="b join'+(joined?' g':'')+'" data-w="join" data-id="'+esc(w.id)+'">'+(joined?'Rezygnuję':dec?'Jednak '+wVerb(w).toLowerCase()+'!':wVerb(w)+'!')+'</button>')
+       :'<button class="b join'+(joined?' g':ownCl?' off':'')+'" data-w="join" data-id="'+esc(w.id)+'"'+(ownCl?' aria-disabled="true"':'')+'>'+(joined?'Rezygnuję':dec?'Jednak '+wVerb(w).toLowerCase()+'!':wVerb(w)+'!')+'</button>')
      +(canInv&&!live?'<button class="ib" data-w="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
      +((mine||isAdmin)?'<button class="ib del'+(mine?'':' adm')+'" data-w="del" data-id="'+esc(w.id)+'" title="'+(mine?'Odwołaj zaproszenie':'Usuń (admin)')+'" aria-label="'+(mine?'Odwołaj zaproszenie':'Usuń (admin)')+'">'+ICON.del+'</button>':'')
      +(myOpen?'</div>':'')+'</div>'
@@ -1063,6 +1066,10 @@ function wfJoinedClash(st,en){
   return wants.filter(w=>w.user_id!==uid&&w.id!==wf.editId&&rideMine(w)&&rideSpan(w)[1].getTime()>Date.now())   // także otwarte zaproszenie, w którym wybrałem godzinę
     .find(w=>st.getTime()<rideSpan(w)[1].getTime()+g&&rideSpan(w)[0].getTime()<en.getTime()+g)||null;
 }
+// ⛔ pasek kolizji z własną jazdą: „Przejdź do niej ›” (przewija do karty) i „Edytuj ją ›” (formularz Twojego zaproszenia)
+function wClashHtml(c){const sp=rideSpan(c);
+  return '<div class="wclash">'+uiIcon("alert")+'<div><span>Koliduje z Twoją jazdą'+(c.title?' <b>„'+esc(c.title)+'”</b>':'')+' '+esc(relDay(sp[0]).toLowerCase()+' '+hhmm(sp[0])+'–'+hhmm(sp[1]))+' — żeby dołączyć, zmień godzinę albo odwołaj swoją.</span>'
+   +'<span class="wclb"><button type="button" class="lnk" data-w="goto" data-id="'+esc(c.id)+'">Przejdź do niej ›</button>'+(wantStart(c).getTime()>Date.now()?'<button type="button" class="lnk" data-my="edit" data-id="'+esc(c.id)+'">Edytuj ją ›</button>':'')+'</span></div></div>'}
 // czy nowe zaproszenie nachodzi na inne moje (z zapasem 15 min)
 function wfClash(st,en){
   const g=RIDE_GAP*60000;
@@ -1513,6 +1520,7 @@ $("wantlist").addEventListener("click",async e=>{
   const id=b.dataset.id;
   if(b.dataset.w==="inv"){openWho("add",id);return}
   if(b.dataset.w==="pref"){openPick("pref",id);return}
+  if(b.dataset.w==="goto"){const c=wants.find(x=>x.id===id);if(c&&typeof goToWant==="function")goToWant(c);return}
   try{
     if(b.dataset.w==="join"){
       if(needProfile()){askNick();return}
