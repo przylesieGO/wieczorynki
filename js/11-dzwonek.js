@@ -902,12 +902,14 @@ function sigRow(x,un,supWid){
   const late=RW&&wantCanInvite(RW)?sigEkipa(x).filter(id=>!sigWPeople(RW).has(id)):[];   // 🚲 KROK 92b: ktoś z ekipy jeszcze nie w zaproszeniu
   const rw=TW&&supWid&&TW.id===supWid?'':(TW?'<button type="button" class="lnk stgo" data-sgw="'+esc(TW.id)+'">'+sigTogether(TW.activity)+'</button>':'')
     +(late.length?'<button type="button" class="lnk stgo" data-sgadd="'+esc(RW.id+'|'+late.join(","))+'">'+sigAddLbl(late)+'</button>':'');
-  const btn=me?'<span class="sgbtns">'+rw+(chetni?'<button type="button" class="lnk stgo" data-sgc="'+esc(x.user_id)+'">Zaproś ekipę ('+E.length+') ›</button>':'')+'<button type="button" class="lnk stgo" data-sge="1">Zmień</button><button type="button" class="lnk stgo" data-sgx="1">Wycofaj</button></span>'
-    :'<span class="sgbtns">'+rw
+  // 🔗 „Jedziecie razem ›” / „Dopisz … ›” — w jednym rzędzie pod licznikiem (2026-11-25, prośba właściciela: z prawej robił się gęsty blok)
+  const rwRow=rw?'<div class="sgln">'+rw+'</div>':'';
+  const btn=me?'<span class="sgbtns">'+(chetni?'<button type="button" class="lnk stgo" data-sgc="'+esc(x.user_id)+'">Zaproś ekipę ('+E.length+') ›</button>':'')+'<button type="button" class="lnk stgo" data-sge="1">Zmień</button><button type="button" class="lnk stgo" data-sgx="1">Wycofaj</button></span>'
+    :'<span class="sgbtns">'
       +(sig2Ok?'<button type="button" class="sgre'+(mine?' on':'')+'" data-sgr="'+esc(x.user_id)+'" aria-pressed="'+mine+'" title="'+(mine?'Cofnij':'Też mam ochotę!')+'" aria-label="'+(mine?'Cofnij „Też mam ochotę”':'Też mam ochotę!')+'">'+uiIcon("hand")+(rc?'<b>'+rc+'</b>':'')+'</button>':'')+'</span>';
   return '<div class="nit stn sgrow'+(un?' new':'')+'"><div class="ic">'+uiIcon(a[0])+'</div><div class="tx">'+(me?'<b>Ty</b>':nk(x.user_id))
     +(x.is_test?' <span class="ttag">'+uiIcon("flask")+' TEST</span>':'')
-    +'<div class="w">'+esc(a[1].toLowerCase())+' · '+esc(hhmm(d))+(sigSoonHtml(x.user_id)?' '+sigSoonHtml(x.user_id):!TW&&!busy&&!supWid?' '+sigLeftHtml():'')+'</div>'
+    +'<div class="w">'+esc(a[1].toLowerCase())+' · '+esc(hhmm(d))+(sigSoonHtml(x.user_id)?' '+sigSoonHtml(x.user_id):!TW&&!busy&&!supWid?' '+sigLeftHtml():'')+'</div>'+rwRow
     +(sigMsgTxt(x)?'<div class="sgmsg">'+sigMsgTxt(x)+(isAdmin&&!me?' <button type="button" class="lnk sghide" data-sgh="'+esc(x.user_id)+'">Ukryj</button>':'')+'</div>':'')
     +(x.msg_hidden&&me?'<div class="note">Komunikat ukryty przez administratora.</div>':'')
     +(rc&&(me||rc>1||!mine)?'<div class="sgrt">'+sigReactTxt(x)+'</div>':'')
