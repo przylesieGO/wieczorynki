@@ -1415,6 +1415,7 @@ $("wsave").onclick=async()=>{
     }else{
       const row={starts_at:d.toISOString(),note};if(titleOk&&title)row.title=title;if(wActOk&&wf.act&&wf.act!=="bike")row.activity=wf.act;if(paceOk&&wf.pace)row.pace=wf.pace;if(placeOk&&wf.place){row.place=wf.place;if(wf.plat!=null){row.place_lat=wf.plat;row.place_lon=wf.plon}}if(bikeOk){if(wf.bike)row.bike=wf.bike;if(wf.place&&wf.pcity){row.place_city=wf.pcity;if(wf.parea)row.place_area=wf.parea}}if(distOk&&!wf.route){if(wf.km)row.km=wf.km;else row.dur_min=wf.dur||DUR_DEF}if(priv)row.visibility="private";if(priv&&wGrOk&&wf.gr)row.group_id=wf.gr;if(testOk)row.is_test=!!wf.test;if(wRouteOk&&wf.route){row.route=routeJson(wf.route);row.route_km=+routeKm(wf.route).toFixed(1)}if(rbOk&&rbUse)row.route_base_id=rbUse;
       if(rng){row.range_from=d.toISOString();row.range_to=d2.toISOString()}
+      if(wSigOk()&&wf.sigFor===uid&&dayDiff(d)===0)row.from_sig=true;   // 🤝 KROK 101: zaproszenie z własnego sygnału (baza sprawdza, czy sygnał jest dziś aktywny)
       const res=await sb.from("wants").insert(row).select("id").single();
       if(res.error)throw res.error;
       if(rbNew)sb.from("route_base").update({src_want:res.data.id}).eq("id",rbNew).then(()=>{},()=>{});
@@ -1636,9 +1637,21 @@ function openWho(mode,wantId){
   renderWho(true);
 }
 function closeWho(){const p=$("whosheet");p.classList.add("hide");p.innerHTML=""}
+// 🤝 KROK 101: zaproszenie z sygnału — dopisuje autor (dowolnie) albo uczestnik: tylko osoby z Reakcją (w dowolną stronę) z kimś z zaproszenia
+const wSigOk=()=>/(^|,)from_sig(,|$)/.test(String(typeof wCols!=="undefined"&&wCols||""));
+const wSigAddOnly=w=>!!w&&!!w.from_sig&&w.user_id!==uid;
+function wSigAddable(w){
+  if(typeof sigs==="undefined")return new Set();
+  const P=new Set([w.user_id,...invIds(w),...(joins[w.id]||[])]),act=w.activity||"bike",S=new Set();
+  sigs.filter(x=>!x.cancelled_at&&(x.activity||"bike")===act).forEach(x=>{const R=sigReacts[x.user_id]||[];
+    if(P.has(x.user_id))R.forEach(id=>S.add(id));   // dłoń na sygnał kogoś z zaproszenia
+    if(R.some(id=>P.has(id)))S.add(x.user_id)});    // ktoś z zaproszenia dał dłoń na sygnał tej osoby
+  P.forEach(id=>S.delete(id));return S;
+}
 function whoPeople(){
   let ids=Object.keys(nicks).filter(id=>id!==uid&&!modGone(id));
-  if(ws.mode==="add"){const w=wants.find(x=>x.id===ws.want),ex=new Set(w?[w.user_id,...invIds(w)]:[]);ids=ids.filter(id=>!ex.has(id))}
+  if(ws.mode==="add"){const w=wants.find(x=>x.id===ws.want),ex=new Set(w?[w.user_id,...invIds(w)]:[]);ids=ids.filter(id=>!ex.has(id));
+    if(wSigAddOnly(w)){const A=wSigAddable(w);ids=ids.filter(id=>A.has(id))}}
   if(whoEv())ids=ids.filter(evAccess);
   return ids.sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl"));
 }
@@ -1683,7 +1696,8 @@ function whoListHtml(){
     if(!favIds().length)return '<div class="bsempty">Nie masz jeszcze ulubionych. Dodasz ich, klikając czyjś nick → „☆ Dodaj do ulubionych”. Możesz też wybrać osoby ręcznie (👥 Wybieram).</div>';
     return '<div class="bsgrp">⭐ Ulubieni — zaproszeni wszyscy</div>'+all.filter(isFav).map(id=>whoRow(id,true)).join("");
   }
-  if(!all.length)return '<div class="bsempty">'+(q?'Nie znaleziono takiego nicku.':pfOn("who")?'Nikt nie pasuje do filtra.':ws.mode==="add"?'Wszyscy są już zaproszeni.':whoEv()?'Nikt inny nie widzi jeszcze zakładki Imprezy (BETA — testerzy).':'Brak innych osób z nickiem.')+'</div>';
+  const sgOnly=ws.mode==="add"&&wSigAddOnly(wants.find(x=>x.id===ws.want)),sgNote=sgOnly?'<div class="bsempty">'+uiIcon("hand")+' Zaproszenie z sygnału „Mam ochotę”: dopiszesz osoby, które dały Reakcję przy sygnale kogoś z zaproszenia (albo dostały ją od kogoś z zaproszenia).</div>':'';
+  if(!all.length)return sgNote&&!q&&!pfOn("who")?'<div class="bsempty">'+uiIcon("hand")+' Nikt więcej nie dał Reakcji przy sygnałach tej ekipy — dopisać możesz tylko osoby z „Też mam ochotę!”.</div>':'<div class="bsempty">'+(q?'Nie znaleziono takiego nicku.':pfOn("who")?'Nikt nie pasuje do filtra.':ws.mode==="add"?'Wszyscy są już zaproszeni.':whoEv()?'Nikt inny nie widzi jeszcze zakładki Imprezy (BETA — testerzy).':'Brak innych osób z nickiem.')+'</div>';
   // ⬆ zaznaczeni (i dołączeni) na górze sekcji — kolejność ustalana przy otwarciu, zmianie szukania / filtra i po „Wyczyść”;
   // klik w osobę nie przestawia listy od razu (wiersz nie ucieka spod palca)
   const tk=ws.vis+"|"+ws.q+"|"+JSON.stringify(pf.who||null)+"|"+(ws.pick.size?1:0);
@@ -1693,7 +1707,7 @@ function whoListHtml(){
   const two=!!(f.length&&o.length);   // jedna sekcja — bez zwijania
   const blk=(t,L,g)=>{if(!L.length)return '';const h=whoGrp(t,L,g,two),op=h.includes('class="secb');   // op = otwarty kontener sekcji do zamknięcia
     return h+(op&&whoColl(g)?'':L.map(id=>whoRow(id,ws.pick.has(id))).join(""))+(op?'</div>':'')};
-  return blk('⭐ Ulubieni',f,'f')+blk(f.length?'Pozostali':'Osoby',o,'o');
+  return sgNote+blk('⭐ Ulubieni',f,'f')+blk(f.length?'Pozostali':'Osoby',o,'o');
 }
 const whoCount=()=>ws.vis==="all"?0:ws.vis==="fav"?favIds().length:ws.pick.size;
 function renderWho(first){

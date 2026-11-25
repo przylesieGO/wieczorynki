@@ -1,6 +1,6 @@
 /* ---------- 🔔 dzwonek: lista powiadomień (do Ciebie / Twoje zaproszenia) ---------- */
-const ME_KINDS=["invite","time","set","info"],OWN_KINDS=["join","pref","leave","decline","rejoin"];   // rejoin — KROK 46
-const N_ICON={invite:"📩",time:"🕖",set:"✅",info:"✏️",join:"🙋",pref:"🕖",leave:"👋",decline:"🙅",rejoin:"🔁"};
+const ME_KINDS=["invite","time","set","info","added"],OWN_KINDS=["join","pref","leave","decline","rejoin","added"];   // rejoin — KROK 46; added — KROK 101 (dopisany do zaproszenia z sygnału)
+const N_ICON={invite:"📩",time:"🕖",set:"✅",info:"✏️",join:"🙋",pref:"🕖",leave:"👋",decline:"🙅",rejoin:"🔁",added:"➕"};
 const nWant=n=>wants.find(w=>w.id===n.want_id);
 // 🔔 „przeczytane” pojedynczych pozycji bez własnego stanu w bazie (logowania, nowi, usunięte, imprezy, chęci) — pamięć tego urządzenia
 const bsDone=()=>{try{return new Set(JSON.parse(localStorage.getItem("bellDone")||"[]"))}catch(e){return new Set()}};
@@ -32,6 +32,7 @@ function newsTxt(n,w){
     case "join":return who+' '+v("dołączył","dołączyła")+(pf&&isOpen(w)?' · pasuje <b>'+esc(hhmm(new Date(pf)))+'</b>':'');
     case "pref":return who+' '+v("zmienił","zmieniła")+' godzinę'+(pf?' · pasuje <b>'+esc(hhmm(new Date(pf)))+'</b>':'');
     case "leave":return who+' '+v("zrezygnował","zrezygnowała");
+    case "added":return who+' '+v("dopisany","dopisana")+' do ekipy';   // 🤝 KROK 101: actor = dopisana osoba
     case "rejoin":return who+' '+v("wrócił","wróciła")+' — jednak jedzie 🚴'+(pf&&isOpen(w)?' · pasuje <b>'+esc(hhmm(new Date(pf)))+'</b>':'');
     default:return who+' nie da rady';
   }
@@ -459,6 +460,9 @@ async function sigLoad(){
     sigSeenOk=!c.error;sigSeenDb=new Map();if(sigSeenOk)(c.data||[]).forEach(x=>sigSeenDb.set(sigSk(x.owner,x.sig_at),!!x.ok));
     // 🚲 KROK 92b: sygnały, których ekipa już jedzie (zaproszenie prywatne, mnie w nim nie ma) — tylko tak/nie
     const bz=await sb.rpc("sig_busy_list");sigBusyO=new Set(bz.error?[]:(bz.data||[]).map(x=>typeof x==="string"?x:x.sig_busy_list||Object.values(x)[0]));
+    // 🔒 KROK 101: ekipy zamknięte 15 min po starcie wspólnego zaproszenia — sygnał znika z listy, bez Reakcji i powiadomień
+    const cl=await sb.rpc("sig_closed_list");const CL=new Set(cl.error?[]:(cl.data||[]).map(x=>typeof x==="string"?x:x.sig_closed_list||Object.values(x)[0]));
+    sigs.forEach(x=>{x.closed=CL.has(x.user_id)});
   }
   if(dayCh)sigDayOver();
 }
@@ -487,7 +491,7 @@ const sigPriv=x=>x.vis==="pick";
 const sigReactIds=x=>(sigReacts[x.user_id]||[]).filter(id=>id===uid||!modGone(id));
 const sigIReact=x=>(sigReacts[x.user_id]||[]).includes(uid);
 // widoczne sygnały: bez wycofanych, ukrytych / zablokowanych i (przy „ukryj testowe”) cudzych testowych
-const sigList=()=>sigs.filter(x=>!x.cancelled_at&&(x.user_id===uid||!modGone(x.user_id))&&!(hideTest&&x.is_test&&x.user_id!==uid)&&!(typeof demoHidU==="function"&&demoHidU(x.user_id)&&!sigIReact(x)))   // ⚙️ Ekipa demo ukryta (KROK 95): zostaje sygnał, któremu dałeś dłoń
+const sigList=()=>sigs.filter(x=>!x.cancelled_at&&!x.closed&&(x.user_id===uid||!modGone(x.user_id))&&!(hideTest&&x.is_test&&x.user_id!==uid)&&!(typeof demoHidU==="function"&&demoHidU(x.user_id)&&!sigIReact(x)))   // ⚙️ Ekipa demo ukryta (KROK 95): zostaje sygnał, któremu dałeś dłoń
   .sort((a,b)=>(a.user_id===uid?-1:b.user_id===uid?1:0)||String(b.created_at).localeCompare(String(a.created_at)));
 const sigKey=x=>"sg:"+x.user_id+"|"+x.created_at;
 const sigSk=(o,t)=>o+"|"+new Date(t).getTime();   // klucz pamięci okienek w bazie (KROK 92)
@@ -500,7 +504,7 @@ function sigSeenSave(L,ok){
 }
 const sigUnread=()=>{if(!sigOn())return [];const s=lsGet("sigSeen")||"",D=bsDone();return sigList().filter(x=>x.user_id!==uid&&x.created_at>s&&!D.has(sigKey(x))&&!sigDbOk(x)&&!sigEkipaRide(x))};
 // 👋 „X też ma ochotę” (KROK 90) — nieprzeczytane powiadomienia z dziś, gdy mój sygnał jest aktywny
-const sigReactUn=()=>{const m=sigMine();if(!sigOn()||!m||m.cancelled_at||sigEkipaRide(m))return [];const t=sigToday();
+const sigReactUn=()=>{const m=sigMine();if(!sigOn()||!m||m.cancelled_at||m.closed||sigEkipaRide(m))return [];const t=sigToday();
   return notifs.filter(n=>n.kind==="sig_react"&&!n.read_at&&localIso(new Date(n.created_at)).slice(0,10)===t)};
 // ✋ „X wycofał(a) sygnał” (KROK 91) — do osób, które dały „Też mam ochotę!”; nieprzeczytane z ostatnich 20 h
 const sigCancelUn=()=>sigOn()?notifs.filter(n=>n.kind==="sig_cancel"&&!n.read_at&&Date.now()-new Date(n.created_at).getTime()<72e6&&!sigs.some(x=>x.user_id===n.actor&&!x.cancelled_at)):[];   // znika, gdy ta osoba dała dziś znać ponownie
@@ -509,14 +513,14 @@ const sigCancelRow=n=>'<div class="nit stn sgrow new"><div class="ic">'+uiIcon("
   +'<button type="button" class="nmk" data-sgcx="'+esc(n.id)+'" aria-label="Oznacz jako przeczytane" title="Oznacz jako przeczytane">'+uiIcon("check")+'</button></div>';
 // 🚲 „Masz z kim jechać” (KROK 92): nieprzeczytane z dziś, gdy sygnał autora (actor) jest aktywny i ekipa nie ma jeszcze wspólnego zaproszenia
 const sigEkipaUn=()=>{if(!sigOn())return [];const t=sigToday();
-  return notifs.filter(n=>n.kind==="sig_ekipa"&&!n.read_at&&localIso(new Date(n.created_at)).slice(0,10)===t).filter(n=>{const x=sigs.find(s=>s.user_id===n.actor&&!s.cancelled_at);return x&&!sigEkipaRide(x)})};
+  return notifs.filter(n=>n.kind==="sig_ekipa"&&!n.read_at&&localIso(new Date(n.created_at)).slice(0,10)===t).filter(n=>{const x=sigs.find(s=>s.user_id===n.actor&&!s.cancelled_at&&!s.closed);return x&&!sigEkipaRide(x)})};
 // 👋 „X też ma ochotę — ekipa już jedzie” (KROK 92b): do organizatora wspólnego zaproszenia, dopóki X nie jest w zaproszeniu
 // KROK 94: przy biegu / spacerze nie „jedziemy” — teksty ekipy wg aktywności
 const sigTogether=k=>actIsBike(k)?"Jedziecie razem ›":"Jesteście umówieni ›";
 const sigAlready=k=>actIsBike(k)?"już jedzie":"już się umówiła";
 const sigWPeople=w=>new Set([w.user_id,...invIds(w),...(joins[w.id]||[])]);
 const sigLateUn=()=>{if(!sigOn())return [];const t=sigToday();
-  return notifs.filter(n=>n.kind==="sig_late"&&!n.read_at&&localIso(new Date(n.created_at)).slice(0,10)===t).filter(n=>{const w=wants.find(x=>x.id===n.want_id);return w&&!wDone(w)&&!sigWPeople(w).has(n.actor)})};
+  return notifs.filter(n=>n.kind==="sig_late"&&!n.read_at&&localIso(new Date(n.created_at)).slice(0,10)===t).filter(n=>{const w=wants.find(x=>x.id===n.want_id);return w&&!wDone(w)&&new Date(w.starts_at).getTime()>Date.now()-15*6e4&&!sigWPeople(w).has(n.actor)})};   // KROK 101: 15 min po starcie — znika
 const sigLateRow=n=>'<div class="nit stn sgrow new"><div class="ic">'+uiIcon("hand")+'</div><div class="tx">'+nk(n.actor)
   +'<div class="w">też ma ochotę — Wasza ekipa '+sigAlready((wants.find(x=>x.id===n.want_id)||{}).activity)+' · '+esc(hhmm(new Date(n.created_at)))+'</div></div>'
   +'<span class="sgbtns"><button type="button" class="lnk stgo" data-sgadd="'+esc(n.want_id+'|'+n.actor)+'">'+sigAddLbl([n.actor])+'</button></span>'
