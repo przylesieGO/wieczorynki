@@ -1429,13 +1429,16 @@ const myOn=()=>{try{return localStorage.getItem("myOff")!=="1"}catch(e){return t
 let myCnt=0;
 function wsecSync(){const hasMy=myCnt>0,hasCal=!!$("wantlist").querySelector(".wday"),on=myOn()&&hasMy;
   $("wsecmy").classList.remove("hide");$("wseccal").classList.toggle("hide",!(hasMy&&hasCal));   // pasek z 🕓 i 👤 jest zawsze (prośba właściciela 2026-11-25): bez własnych zaproszeń 👤 jest wyszarzone
-  const sw=$("mysw");sw.classList.toggle("on",on);sw.setAttribute("aria-pressed",String(on));
+  const sw=$("mysw"),so=$("mysort");sw.classList.toggle("on",on);sw.setAttribute("aria-pressed",String(on));
   sw.classList.toggle("dis",!hasMy);sw.setAttribute("aria-disabled",String(!hasMy));sw.title=hasMy?"Twoje zaproszenia osobno na górze":"Nie masz żadnych zaproszeń";
-  if(!sw.firstChild)sw.innerHTML=uiIcon("user");   // dwie ikony: 🕓 od najnowszych (wg daty dodania) | 👤 moje osobno na górze
+  if(!sw.firstChild){sw.innerHTML=uiIcon("user");so.innerHTML=uiIcon("clock")}
+  const sn=flt.sort==="new";so.classList.toggle("on",sn);so.setAttribute("aria-pressed",String(sn));   // dwie ikony: 🕓 od najnowszych (wg daty dodania) | 👤 moje osobno na górze
   if(typeof sigWinSync==="function")sigWinSync();
   mysfSync()}
 function mysfSync(){const fb=$("fltbtn"),fn=fltKeys().length,fh='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 5h11l-4 5v5l-3 2v-7z"/><path d="M19 7v10m0 0-2.5-2.5M19 17l2.5-2.5"/></svg>'+(fn?'<b class="sfn">'+fn+'</b>':'');
   if(fb.dataset.h!==fh){fb.dataset.h=fh;fb.innerHTML=fh}fb.classList.toggle("on",fn>0)}
+$("mysort").addEventListener("click",()=>{flt.sort=flt.sort==="new"?"":"new";if(flt.sort==="new"&&myCnt)try{localStorage.setItem("myOff","1")}catch(e){}   // toggle: 🕓 i 👤 nie świecą naraz — włączenie sortowania zwija „Moje” do kalendarza
+  fltSave();fltRefresh();say(flt.sort==="new"?"Od najnowszych — wg daty dodania (Moje w kalendarzu).":"Kolejność wg godziny jazdy.")});
 $("mysw").addEventListener("click",()=>{if(!myCnt){say("Nie masz żadnych zaproszeń.");return}
   const on=!myOn();try{localStorage.setItem("myOff",on?"0":"1")}catch(e){}if(on&&flt.sort==="new"){flt.sort="";fltSave()}   // toggle: włączenie „Moje” wyłącza sortowanie
   renderWants();say(on?"Twoje zaproszenia — osobno na górze.":"Twoje zaproszenia — w kalendarzu, na swoich godzinach.")});
