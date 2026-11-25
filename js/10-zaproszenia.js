@@ -629,14 +629,12 @@ function renderWants0(){
 }
 /* godziny w nagłówku karty dnia: zwinięta karta — 4 + „+N” (etykieta); rozwinięta — wszystkie, klikalne (przewijają/otwierają właściwe zaproszenie w karuzeli) */
 // Twoje zaproszenia z tego dnia pokazane osobno na górze (👤 włączone) — ich godziny są też w nagłówku karty dnia (zielone / gradient)
-// pod godziną w nagłówku karty dnia: kiedy zaproszenie dodano (dd.mm hh:mm) — tylko przy włączonym 🕓
-const wHrsDate=w=>{if(flt.sort!=="new"||!w.created_at)return "";const d=new Date(w.created_at);return '<span class="whd">'+String(d.getDate()).padStart(2,"0")+'.'+String(d.getMonth()+1).padStart(2,"0")+' '+d.toLocaleTimeString("pl-PL",{hour:"2-digit",minute:"2-digit"})+'</span>'};
 const wMyDay=k=>myOn()?(wantsNoFlt||wants).filter(w=>w.user_id===uid&&!wDone(w)&&localIso(new Date(w.starts_at)).slice(0,10)===k):[];
 function wHrsHtml(ws0,open,cur,k){
   const ex=k?wMyDay(k).filter(w=>!ws0.includes(w)):[],ws=ex.length?ws0.concat(ex).sort(flt.sort==="new"?(a,b)=>new Date(b.created_at||b.starts_at)-new Date(a.created_at||a.starts_at):(a,b)=>new Date(a.starts_at)-new Date(b.starts_at)):ws0;   // cur = zaproszenie widoczne w rozwiniętym dniu (.hon) — pozostałe godziny przygaszone, tylko gdy dzień otwarty
   const hw=ws.filter(wLive).concat(ws.filter(w=>!wLive(w)));
   // .hme = Twoje zaproszenie: godzina w stylu plakietki „Ty” (zielona); prywatne — gradient fiolet → zielony
-  const mk=w=>'<button type="button" class="whb'+(wLive(w)?' hlive':'')+(isPriv(w)?' hpriv':'')+(w.user_id===uid?' hme':'')+(w.id===cur?' hon':'')+'" data-whr="'+esc(w.id)+'"'+(wLive(w)?' title="Trwa"':w.user_id===uid?' title="Twoje zaproszenie"':'')+'>'+wTime(w)+wHrsDate(w)+'</button>';
+  const mk=w=>'<button type="button" class="whb'+(wLive(w)?' hlive':'')+(isPriv(w)?' hpriv':'')+(w.user_id===uid?' hme':'')+(w.id===cur?' hon':'')+'" data-whr="'+esc(w.id)+'"'+(wLive(w)?' title="Trwa"':w.user_id===uid?' title="Twoje zaproszenie"':'')+'>'+wTime(w)+'</button>';
   if(open||hw.length<=4)return hw.map(mk).join("");
   // zwinięta karta: 4 godziny — trwające i Twoje mają pierwszeństwo przed resztą
   const pick=new Set(hw.filter(w=>wLive(w)||w.user_id===uid).slice(0,4));hw.forEach(w=>{if(pick.size<4)pick.add(w)});
