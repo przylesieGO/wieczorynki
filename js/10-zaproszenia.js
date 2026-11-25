@@ -1612,7 +1612,7 @@ function whoPlHtml(){
   const on=([l,A])=>ws.vis==="pick"&&A.every(id=>ws.pick.has(id)),sel=L.filter(on).map(x=>x[0].name),col=!ws.plOpen;
   // wygląd jak zwijane sekcje pod 🔔 (pasek + drabinka), większy; zielone tło, gdy wybrano listę
   return secBar(uiIcon("list"),"Twoje listy",L.length,col,esc(sel.join(", ")),'data-k="plt"',sel.length)
-   +'<div class="secb'+(col?' hide':'')+'">'+(col?'':L.map(x=>'<button type="button" class="prow'+(on(x)?' on':'')+'" data-wpl="'+esc(x[0].id)+'"><span class="cbx">'+CHECK+'</span><span class="pnm">'+plDot(x[0])+esc(x[0].name)+plEd(x[0])+'</span><span class="pon">'+x[1].length+' '+plf(x[1].length,["osoba","osoby","osób"])+'</span></button>').join(""))+'</div>';
+   +'<div class="secb'+(col?' hide':'')+'">'+(col?'':L.map(x=>whoExpWrap('<button type="button" class="prow'+(on(x)?' on':'')+'" data-wpl="'+esc(x[0].id)+'"><span class="cbx">'+CHECK+'</span><span class="pnm">'+plDot(x[0])+esc(x[0].name)+plEd(x[0])+'</span><span class="pon">'+x[1].length+' '+plf(x[1].length,["osoba","osoby","osób"])+'</span></button>',"l:"+x[0].id,plIds(x[0].id).filter(id=>nicks[id]),"listy „"+x[0].name+"”")).join(""))+'</div>';
 }
 function openWho(mode,wantId){
   if(!session)return;
@@ -1627,7 +1627,7 @@ function openWho(mode,wantId){
   else if(mode==="grn"){ws.vis="pick";ws.pick=new Set(wantId||[]);ws.want=null}   // 👥 nowa grupa (js/17): wybór wraca do formularza grupy
   else{ws.vis="pick";ws.pick=new Set()}
   // domyślnie: Listy zwinięte, ⭐ Ulubieni rozwinięci, Pozostali zwinięci; przy ≤10 osobach wszystko rozwinięte
-  const few=whoPeople().length<=10;ws.col={f:false,o:!few};ws.fq=null;   // 🔤 „zapraszano N×” liczone od nowa przy każdym otwarciu okna
+  const few=whoPeople().length<=10;ws.col={f:false,o:!few};ws.fq=null;ws.exp=new Set();   // 🔤 „zapraszano N×” liczone od nowa przy każdym otwarciu okna
   // 📋 wybrana już lista (np. przy edycji zaproszenia) → sekcja „Twoje listy” od razu rozwinięta
   const plSel=ws.vis==="pick"&&plOk&&plists.some(l=>{const A=whoPlAvail(l.id);return A.length&&A.every(id=>ws.pick.has(id))});
   ws.plOpen=few||plSel||mode==="grn";ws.grOpen=!!ws.gr||wGrList().length<=3;
@@ -1712,7 +1712,13 @@ function whoGrHtml(){
   const sel=ws.vis!=="all"&&ws.gr?L.find(x=>x.id===ws.gr):null,col=!ws.grOpen;
   return secBar(uiIcon("users"),"Twoje grupy",L.length,col,sel?esc(sel.name):"",'data-k="grt"',!!sel)
    +'<div class="secb'+(col?' hide':'')+'">'+(col?'':L.map(x=>{const on=!!sel&&sel.id===x.id,n=grMemIds(x.id).length+1;
-     return '<button type="button" class="prow wgr'+(on?' on':'')+'" data-wgr="'+esc(x.id)+'"><span class="cbx">'+CHECK+'</span><span class="pnm">'+grIco(x)+(typeof grNmTag==="function"?grNmTag(x):'<span>'+esc(x.name)+'</span>')+'</span></button>'}).join(""))+'</div>';
+     return whoExpWrap('<button type="button" class="prow wgr'+(on?' on':'')+'" data-wgr="'+esc(x.id)+'"><span class="cbx">'+CHECK+'</span><span class="pnm">'+grIco(x)+(typeof grNmTag==="function"?grNmTag(x):'<span>'+esc(x.name)+'</span>')+'</span></button>',"g:"+x.id,[uid].concat(grMemIds(x.id)).filter(id=>nicks[id]),"grupy „"+x.name+"”")}).join(""))+'</div>';
+}
+// 👥📋 skład grupy / listy (2026-11-25, prośba właściciela): przycisk obok wiersza rozwija nicki pod spodem (telefon), a na komputerze podpowiedź po najechaniu
+function whoExpWrap(row,k,ids,what){
+  const op=!!(ws.exp&&ws.exp.has(k)),nm=favFirst(ids).map(id=>id===uid?"Ty":nickOf(id));
+  return '<div class="pexw">'+row+'<button type="button" class="pexb'+(op?' on':'')+'" data-wsx="'+esc(k)+'" aria-expanded="'+op+'" aria-label="Pokaż skład '+esc(what)+'" title="'+esc(nm.join(", "))+'">'+uiIcon("users")+'<svg class="bschev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>'
+   +(op?'<div class="pexl">'+(nm.length?nm.map(t=>'<span>'+esc(t)+'</span>').join(""):'<span class="note">Nikogo</span>')+'</div>':'')
 }
 function whoListHtml(){
   if(ws.vis==="all")return '<div class="bsempty">🌍 Zaproszenie zobaczą wszyscy zalogowani, a wiadomość trafi na kanał Telegram.</div>';
@@ -1784,6 +1790,8 @@ $("whosheet").addEventListener("click",async e=>{
     if(ws.vis!=="pick"){ws.pick=new Set(ws.vis==="fav"?favIds():[]);whoLocked().forEach(id=>ws.pick.add(id));ws.vis="pick"}
     const all=A.every(id=>ws.pick.has(id));A.forEach(id=>{if(all){if(!L.has(id))ws.pick.delete(id)}else ws.pick.add(id)});
     renderWho();return}
+  const ex=e.target.closest("[data-wsx]");   // 👥📋 skład grupy / listy — tylko pokazuje, nie zaznacza
+  if(ex){const k=ex.dataset.wsx;ws.exp=ws.exp||new Set();ws.exp.has(k)?ws.exp.delete(k):ws.exp.add(k);const l=$("wslist"),y=l.scrollTop;renderWho();$("wslist").scrollTop=y;return}
   const fq=e.target.closest("[data-wsfq]");   // 🔤 „Często zapraszasz” — zaznacz / odznacz jednym dotknięciem
   if(fq){const id=fq.dataset.wsfq;if(whoLocked().has(id))return;ws.pick.has(id)?ws.pick.delete(id):ws.pick.add(id);renderWho();return}
   const r=e.target.closest(".prow");
