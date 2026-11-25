@@ -275,7 +275,7 @@ function fltWknd(){const d=new Date().getDay();return d===6?[0,1]:d===0?[0,6,7]:
 /* 🧩 wspólny silnik filtrów (etap C, 2026-11-24): JEDEN stan `flt` dla zaproszeń, imprez (js/08) i „Mam ochotę” (🔔, js/11).
    Wspólne wymiary: Aktywność, Rodzaj roweru, Kiedy, Gdzie, Relacja, Osoba. Każdy rodzaj sprawdza tylko wymiary, które ma —
    pozostałe go nie zawężają (np. tempo nie ukrywa imprez). FLT_KINDS = które wymiary liczą się przy danym rodzaju. */
-const FLT_KINDS={ev:["act","bike","when","where","who","user"],sig:["act","when","vis","who","user","demo"]};
+const FLT_KINDS={ev:["act","bike","when","where","who","user"],sig:["act","when","who","user","demo"]};   // 3.0: sygnały zawsze dla wszystkich — bez „Widoczności”
 const fltKeysFor=k=>FLT_KINDS[k]?fltKeys().filter(x=>FLT_KINDS[k].includes(x)):fltKeys();
 const fltActiveFor=k=>fltKeysFor(k).length>0;
 // Kiedy: d0…d1 = zakres dni od dziś (zaproszenie: jeden dzień, impreza wielodniowa: od–do)
@@ -316,7 +316,6 @@ function fltSigOk(x){
   const R=sigReacts[x.user_id]||[],ppl=[x.user_id].concat(R);
   if(flt.act&&(x.activity||"bike")!==flt.act)return false;
   if(!fltWhenOk(0,0))return false;
-  if(flt.vis==="priv"&&!sigPriv(x)||flt.vis==="open"&&sigPriv(x))return false;
   if(flt.who==="mine"&&x.user_id!==uid)return false;
   if((flt.who==="going"||flt.who==="part")&&x.user_id!==uid&&!R.includes(uid))return false;
   if(flt.who==="inv"&&!(sigPriv(x)&&(sigTo[x.user_id]||[]).includes(uid)))return false;
@@ -915,10 +914,10 @@ function openWantForm(w,preset){
   if(needProfile()){askNick();return}
   wf.editId=w?w.id:null;
   wf.sigFor=!w&&preset&&preset.sig||null;   // 🟡 zaproszenie z „Mam ochotę” — ta osoba zostanie zaproszona
-  wf.sigRest=!w&&preset&&preset.sigRest||[];wf.sigChetni=!w&&preset&&preset.sigChetni||0;
+  wf.sigChetni=!w&&preset&&preset.sigChetni||0;
   // 🏃 KROK 94: aktywność zaproszenia — edycja: jak było; z „Mam ochotę”: aktywność sygnału; inaczej rower
   {const sg0=wf.sigFor&&typeof sigs!=="undefined"?sigs.find(x=>x.user_id===wf.sigFor):null;
-   wf.act=w?(w.activity||"bike"):(preset&&preset.act)||(sg0&&sg0.activity)||"bike"}   // 🟡 „Zaproś chętnych” z własnego sygnału: pozostali odbiorcy sygnału (link „+ dopisz”)
+   wf.act=w?(w.activity||"bike"):(preset&&preset.act)||(sg0&&sg0.activity)||"bike"}
   wf.vis="all";wf.pick=new Set();wf.gr="";   // 👥 wf.gr: grupa zaproszenia (KROK 71)
   wf.test=!DEMO;$("wtestwrap").classList.toggle("hide",!!w||!testOk||DEMO);wfTestSync();   // 🎮 w demo bez przełącznika „testowe”
   wf.route=null;wf.routeName="";wf.routeHad=hasRoute(w);wf.routeTouched=false;$("wrfile").value="";
@@ -1594,20 +1593,14 @@ function renderWhoBtn(){
   b.innerHTML='<span class="wic">'+ic+'</span><span class="wtx"><b>'+esc(t)+'</b><span>'+esc(s)+'</span></span><span class="war">›</span>';
   wfSigRestSync();
 }
-// 🟡 „Zaproś chętnych” (z własnego sygnału „Mam ochotę”): link „+ dopisz pozostałych odbiorców sygnału (N)”
-// i ostrzeżenie, że przy „Wszyscy” chętni nie dostaną imiennego zaproszenia
+// 🟡 zaproszenie ekipy z sygnału „Mam ochotę”: ostrzeżenie, że przy „Wszyscy” chętni nie dostaną imiennego zaproszenia
 function wfSigRestSync(){
   const b=$("wwho");if(!b)return;let el=$("wsigrest");
   if(!el){el=document.createElement("div");el.id="wsigrest";el.className="wsigrest";b.after(el)}
-  const rest=(wf.sigRest||[]).filter(id=>nicks[id]&&id!==uid&&!(wf.vis==="pick"&&wf.pick.has(id)));
   const all=wf.vis==="all"&&!wf.gr;
-  el.innerHTML=(wf.sigChetni&&all?'<div class="note">⚠️ Przy „Wszyscy” chętni nie dostaną imiennego zaproszenia — zobaczą je tylko na liście.</div>':'')
-    +(rest.length&&!all?'<button type="button" class="lnk" data-k="sigrest">+ dopisz pozostałych odbiorców sygnału ('+rest.length+')</button>':'');
+  el.innerHTML=wf.sigChetni&&all?'<div class="note">⚠️ Przy „Wszyscy” chętni nie dostaną imiennego zaproszenia — zobaczą je tylko na liście.</div>':'';
   el.classList.toggle("hide",!el.innerHTML);
 }
-document.addEventListener("click",e=>{if(!e.target.closest('#wsigrest [data-k="sigrest"]'))return;
-  if(wf.vis!=="pick"){wf.pick=new Set(wf.vis==="fav"?favIds():[]);wf.vis="pick"}
-  (wf.sigRest||[]).forEach(id=>{if(nicks[id]&&id!==uid)wf.pick.add(id)});renderWhoBtn();try{wfUpdate()}catch(err){}});
 $("wwho").onclick=()=>openWho("form");
 /* okno „Kogo zapraszasz?” (wysuwane od dołu): wybór do formularza albo dopraszanie do zaproszenia */
 const ws={mode:"form",vis:"all",pick:new Set(),want:null,q:""};

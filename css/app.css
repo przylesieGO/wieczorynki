@@ -1368,6 +1368,7 @@ mark.srmk.out{background:transparent;color:inherit;box-shadow:none}
 .sgmav{width:30px;height:30px;margin-left:-8px;border-radius:50%;border:2px solid var(--card);background:linear-gradient(135deg,var(--sys-green),#1f9d55);color:var(--white);font-size:13px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;overflow:hidden;flex:none;box-sizing:border-box}
 .sgmav.ph{background:var(--fill)}.sgmav .gavi{width:100%;height:100%;object-fit:cover;display:block}.sgmav.more{background:var(--fill);color:var(--ink);font-size:11px}
 .sgsupbtn{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:6px 14px;font-size:15px}.sgsupbtn .ui-i{width:18px;height:18px}
+.sgsupnote{flex:1;display:inline-flex;align-items:center;justify-content:flex-end;gap:6px;font-size:13px;color:var(--mut);text-align:right}.sgsupnote .ui-i{width:16px;height:16px;flex:none}
 .sgsupbody{border-left:3px solid var(--acc);border-radius:14px 0 0 14px;padding-left:6px;margin-left:4px}
 /* ✨ pogoda przy ekstremach w okienkach sygnału + konfetti u autora */
 .sgwx{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;font-size:13px;font-weight:600;color:var(--mut)}.sgwx:empty{display:none}.sgwx .ui-i{width:16px;height:16px;color:#c98a0b;flex:none}html[data-theme=dark] .sgwx .ui-i{color:#f5c94e}

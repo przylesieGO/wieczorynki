@@ -31,10 +31,8 @@ const GW_TOURS={
    text:"Rower, bieg, spacer albo trekking (wędrówka piesza). Dotknij tej, na którą masz dziś ochotę."},
   {sel:".sgmsgs",opt:true,tap:true,wait:600,title:"Komunikat (opcjonalnie)",
    text:"Krótkie hasło dla innych, np. dokąd albo jak szybko. „Inne…” pozwala wpisać własne (do 40 znaków). Możesz to pominąć."},
-  {sel:'[data-sg="who"]',opt:true,wait:600,title:"Kto zobaczy?",
-   text:"Domyślnie wszyscy zalogowani. Możesz wybrać same osoby, listę albo grupę — wtedy sygnał widzą tylko one. Ustawisz to po przewodniku."},
   {sel:'[data-sg="send"]',tap:true,wait:600,title:"Daj znać",last:true,
-   text:"Kliknij, a inni zobaczą Twój sygnał pod 🔔 i będą mogli Cię zaprosić. Sygnał wygasa z końcem dnia, a wycofasz go w okienku „Twój sygnał”.<span class=\"gwm\">Ja niczego za Ciebie nie wyślę — to Twoja decyzja.</span>"}
+   text:"Kliknij, a wszyscy zobaczą Twój sygnał pod 🔔 i dadzą Reakcję — zaproszenie założysz Ty. Sygnał wygasa z końcem dnia, a wycofasz go w okienku „Twój sygnał”.<span class=\"gwm\">Ja niczego za Ciebie nie wyślę — to Twoja decyzja.</span>"}
  ]}
 };
 
@@ -58,12 +56,12 @@ const GW_D={
  fab:()=>gwD(gwFab(0)+'<div class="gwm">Reakcja z zielonym ptaszkiem = sygnał wysłany.</div>'),
  pop:()=>gwD('<div class="gwpop"><span class="sgpav" style="width:64px;height:64px;font-size:28px;margin:0 auto 6px">A</span>'
    +'<b>Asia ma ochotę</b><div class="gwq">„Nogi same kręcą”</div><div class="gwm">rower · 07:45</div>'
-   +'<div class="gwpb">'+gwBtn("Zaproś Asię ›","b")+gwBtn(gwI("hand")+" Też mam ochotę!","b w sgre2")+'</div></div>'),
- row:()=>gwD(gwRow({nick:"Asia",w:"rower · 07:45",msg:"Nogi same kręcą",nw:1,b:[gwBtn("Zaproś Asię ›"),gwHand(0)]})),
+   +'<div class="gwpb">'+gwBtn(gwI("hand")+" Też mam ochotę!","b sgre2")+'</div></div>'),
+ row:()=>gwD(gwRow({nick:"Asia",w:"rower · 07:45",msg:"Nogi same kręcą",nw:1,b:[gwHand(0)]})),
  mine1:()=>gwD(gwFab(1)+gwRow({nick:"Ty",w:"rower · 07:45",nw:1,rt:[1,"Kasia też ma ochotę"],b:[gwBtn("Zaproś ekipę (1) ›"),gwBtn("Zmień"),gwBtn("Wycofaj")]})),
  mine:()=>gwD('<div class="sglbl">Też mają ochotę (2)</div><div class="sgrl"><span class="sgrc">'+gwI("hand")+'Kasia</span><span class="sgrc">'+gwI("hand")+'Tomek</span></div>'
    +'<button type="button" tabindex="-1" class="b big sgmkeen">Zaproś ekipę (2) ›</button>'),
- withme:()=>gwD(gwRow({nick:"Masz z kim jechać!",ic:"users",w:"Ekipa z Twojego sygnału · 3 osoby · 07:52",nw:1,b:[gwBtn("Zaproś ekipę (2) ›")]})),
+ withme:()=>gwD(gwRow({nick:"Masz z kim jechać!",ic:"users",w:"Ekipa z Twojego sygnału · 3 osoby · 07:52",nw:1,b:[]})),
  sup:()=>{const av=["A","K","T","+1"].map((c,i)=>'<span class="sgmav'+(i==3?' more':'')+'">'+c+'</span>').join("");
    return gwD('<div class="sgsup"><div class="sgsupbar"><span class="sgstack">'+av+'</span>'+gwBtn(gwI("users")+" Super ekipa (4) ›","b sgsupbtn")+'</div>'
    +'<div class="sgsupbody">'+gwRow({nick:"Ty",w:"rower · 07:45",b:[]})+gwRow({nick:"Ola",w:"rower · 07:58",msg:"Kto mnie dogoni?",b:[]})+'</div></div>')},
@@ -85,30 +83,28 @@ GW_TOURS.mam_ochote_pelny={name:"Mam ochotę — cała historia (rower)",steps:[
    text:"Dotknij „Rower”. Bieg, spacer i trekking działają tak samo — zmieniają się tylko słowa w powiadomieniach."},
   {ch:"Dajesz znać",sel:".sgmsgs",opt:true,tap:true,wait:600,title:"Komunikat (opcjonalnie)",
    text:"Krótkie hasło, np. „Nogi same kręcą”. „Inne…” pozwala wpisać własne (do 40 znaków). To hasło zobaczą inni i może zostać tytułem wspólnego zaproszenia."},
-  {ch:"Dajesz znać",sel:'[data-sg="who"]',opt:true,wait:600,title:"Kto zobaczy?",
-   text:"Domyślnie wszyscy zalogowani (i kanał Telegram @PrzylesieGo). Możesz wybrać osoby, listę albo grupę — wtedy sygnał jest prywatny i na kanał nie idzie. Ustawisz to po przewodniku."},
   {ch:"Dajesz znać",sel:'[data-sg="send"]',wait:600,title:"Daj znać",
    text:"To ten przycisk wysyła sygnał. Ja go nie kliknę za Ciebie. Kliknij „Dalej” w moim dymku, a pokażę, co dzieje się potem."},
   {ch:"Po wysłaniu",pre:GW_CL,title:"Co się dzieje po „Daj znać”",demo:GW_D.fab,
    text:"Okienko się zamyka, a Reakcja zostaje na ekranie — z zielonym ptaszkiem. Dotkniesz jej w każdej chwili, żeby zobaczyć „Twój sygnał”: kto ma też ochotę, „Zmień” i „Wycofaj”. Sygnał wygasa z końcem dnia."},
   {ch:"Po wysłaniu",title:"Co widzą inni",demo:GW_D.pop,
-   text:"Znajomi dostają takie okienko: zdjęcie, Twój komunikat i dwa przyciski. Gdy kilka osób da znać naraz, przewijają je w bok. „OK” zamyka i oznacza wiersz pod 🔔 jako przeczytany."},
+   text:"Wszyscy dostają takie okienko: zdjęcie, Twój komunikat i Reakcję „Też mam ochotę!”. Gdy kilka osób da znać naraz, przewijają je w bok. „OK” zamyka i oznacza wiersz pod 🔔 jako przeczytany."},
   {ch:"Po wysłaniu",sel:"#bellbtn",soft:true,title:"Gdzie to leży pod 🔔",demo:GW_D.row,
-   text:"Pod dzwonkiem jest sekcja „Ekipa na dziś”: wiersz każdego sygnału, nieprzeczytane na górze. Reakcja przy wierszu to „Też mam ochotę!”, a „Zaproś …” zakłada zaproszenie na dziś z zakresem godzin."},
+   text:"Pod dzwonkiem jest sekcja „Ekipa na dziś”: wiersz każdego sygnału, nieprzeczytane na górze. Reakcja przy wierszu to „Też mam ochotę!” — zaproszenie zakłada autor sygnału."},
   {ch:"Ktoś odpowiada",title:"Ktoś klika „Też mam ochotę!”",demo:GW_D.mine1,
    text:"Kasia dotyka Reakcji przy Twoim sygnale. Dostajesz powiadomienie pod 🔔 (i wiadomość od bota, jeśli go połączysz), na ekranie leci konfetti, a na Reakcji pojawia się licznik. Reakcje się sumują."},
   {ch:"Ktoś odpowiada",sel:"#sigfab",soft:true,title:"Gdzie widzisz odpowiedź",demo:GW_D.mine,
    text:"Dotknij Reakcji: „Twój sygnał” pokazuje listę osób z „Też mam ochotę” i przycisk „Zaproś ekipę”. Ta sama lista jest pod 🔔 przy Twoim sygnale."},
   {ch:"Kilka osób",title:"Rośnie ekipa",demo:GW_D.withme,
-   text:"Jeden sygnał to jedna ekipa: autor plus osoby z Reakcją. Gdy dochodzi kolejna osoba, wszyscy z ekipy dostają „Masz z kim jechać!” z przyciskiem „Zaproś ekipę ›”. Otworzy je każdy z ekipy, bez pytania o zgodę."},
-  {ch:"Kilka osób",title:"Kilka sygnałów naraz: Super ekipa",demo:GW_D.sup,
-   text:"Gdy jesteś w co najmniej 2 sygnałach rowerowych (jako autor albo z Reakcją), a łącznie jest 3 osoby poza Tobą, pod 🔔 klamra łączy te sygnały. „Super ekipa (N) ›” otwiera jedno zaproszenie do wszystkich naraz."},
+   text:"Jeden sygnał to jedna ekipa: autor plus osoby z Reakcją. Gdy dochodzi kolejna osoba, wszyscy z ekipy dostają „Masz z kim jechać!”. Zaproszenie ekipy zakłada autor sygnału („Zaproś ekipę ›”), bez pytania o zgodę."},
+  {ch:"Kilka osób",title:"Ekipy podają sobie dłonie: Super ekipa",demo:GW_D.sup,
+   text:"Masz własny sygnał i dajesz Reakcję Oli, a ktoś z ekipy Oli daje Reakcję Tobie — Wasze ekipy podały sobie dłonie. Pod 🔔 klamra łączy te sygnały (także łańcuchem: Ola z kolejną osobą). „Super ekipa (N) ›” — tylko u autorów połączonych sygnałów — otwiera jedno zaproszenie do wszystkich naraz."},
   {ch:"Wspólna jazda",title:"Zakładasz zaproszenie na Przylesie",demo:GW_D.form,
-   text:"Formularz otwiera się z gotowymi osobami: prywatne zaproszenie tylko do chętnych, tytuł „SUPER EKIPA” (albo komunikat sygnału), a w notatce Twoje hasło. Ty wybierasz zakres godzin i Punkt zbiórki — np. Przylesie — i klikasz „Zaproś”.<span class=\"gwm\">Organizatorem jest ten, kto kliknął.</span>"},
+   text:"Formularz otwiera się z gotowymi osobami: prywatne zaproszenie tylko do chętnych, tytuł „SUPER EKIPA” (albo komunikat sygnału), a w notatce Twoje hasło. Ty wybierasz zakres godzin i Punkt zbiórki — np. Przylesie — i klikasz „Zaproś”.<span class=\"gwm\">Organizatorem jest autor sygnału.</span>"},
   {ch:"Wspólna jazda",title:"Po założeniu zaproszenia",demo:GW_D.together,
    text:"Powiadomienia „Masz z kim jechać” znikają, a przy sygnale pojawia się „Jedziecie razem ›” — przenosi do zaproszenia. Gdy ktoś da Reakcję później, organizator dostaje „Dopisz Nick ›”, a nowa osoba widzi „Ekipa już jedzie” i nie zakłada drugiego zaproszenia."},
   {ch:"Gotowe",last:true,title:"Cała droga w skrócie",
-   text:"1. Dajesz znać (Reakcja → Rower → Daj znać).<br>2. Inni widzą okienko i wiersz pod 🔔.<br>3. Ktoś odpowiada „Też mam ochotę!” — licznik na Reakcji.<br>4. Ekipa rośnie — „Zaproś ekipę ›” albo „Super ekipa ›”.<br>5. Zaproszenie na Przylesie, potem „Jedziecie razem ›”.<span class=\"gwm\">Wygasa z końcem dnia. Wycofasz sygnał w „Twój sygnał”.</span>"}
+   text:"1. Dajesz znać (Reakcja → Rower → Daj znać).<br>2. Inni widzą okienko i wiersz pod 🔔.<br>3. Ktoś odpowiada „Też mam ochotę!” — licznik na Reakcji.<br>4. Ekipa rośnie — autor klika „Zaproś ekipę ›” albo (gdy ekipy podały sobie dłonie) „Super ekipa ›”.<br>5. Zaproszenie na Przylesie, potem „Jedziecie razem ›”.<span class=\"gwm\">Wygasa z końcem dnia. Wycofasz sygnał w „Twój sygnał”.</span>"}
 ]};
 
 const GW={cur:null,i:0,tk:0,root:null,spot:null,bub:null,timer:0,off:null};
