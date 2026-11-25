@@ -1050,6 +1050,7 @@ $("plsheet").addEventListener("click",async e=>{
 // kliknięcie pigułki z nickiem (poza panelem) otwiera kartę osoby
 document.addEventListener("click",e=>{
   const p=e.target.closest(".nk[data-u]");if(!p||!session||!favOk)return;
+  const shw=p.closest(".sheet");if(shw&&shw.id!=="gearpanel")return;   // nick w otwartym oknie: profil otwierałby się pod nim (z-index panelu niższy) — nie otwieraj
   const inPanel=!!p.closest("#gearpanel");
   if(inPanel&&!["favs","plist","group","online","admin","perms","stats"].includes(gearView))return;
   if(inPanel&&gearView==="stats"&&isKingReal()){tkOpen(p.dataset.u,"stats");return}

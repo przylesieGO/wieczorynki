@@ -93,4 +93,6 @@ const actOfEv=b=>{const a=actList.find(x=>(x.ev_kinds||[]).includes(b));return a
 
 // 🔒 okno (.sheet) otwarte — strona pod spodem się nie przewija ani nie reaguje (klasa html.sheetlock)
 {const lock=()=>document.documentElement.classList.toggle("sheetlock",[...document.querySelectorAll(".sheet")].some(x=>!x.classList.contains("hide")));
- const mo=new MutationObserver(lock);document.querySelectorAll(".sheet").forEach(el=>mo.observe(el,{attributes:true,attributeFilter:["class"]}));lock()}
+ const mo=new MutationObserver(lock),ob=el=>mo.observe(el,{attributes:true,attributeFilter:["class"]});document.querySelectorAll(".sheet").forEach(ob);
+ new MutationObserver(m=>{m.forEach(r=>r.addedNodes.forEach(n=>{if(n.classList&&n.classList.contains("sheet"))ob(n)}));lock()}).observe(document.body,{childList:true});   // też okna tworzone w locie (np. askOk — #cfm)
+ lock()}
