@@ -1085,13 +1085,19 @@ function joinClash(w){
 async function joinClashOk(w){
   if(isOpen(w))return true;
   const c=joinClash(w);if(!c)return true;
-  if(c.user_id===uid){const cs=wantStart(c);say("Prowadzisz jazdę "+relDay(cs).toLowerCase()+" "+hhmm(cs)+"–"+hhmm(wantEnd(c))+" — najpierw ją usuń albo zmień godzinę.");return false}
-  return leaveForClash(c,wantStart(w));
+  if(c.user_id===uid){   // własna jazda — okno jak „Przenieść się?” (askOk), nie pasek; „Pokaż moją jazdę” przenosi do jej karty
+    const cs=wantStart(c);
+    if(await askOk("Prowadzisz już jazdę "+rideLbl(c)+relDay(cs).toLowerCase()+" "+hhmm(cs)+"–"+hhmm(wantEnd(c))+" (ok. "+durTxt(wantDur(c))+").\n\nŻeby jechać "+rideLbl(w)+relDay(wantStart(w)).toLowerCase()+" "+hhmm(wantStart(w))+", najpierw usuń swoją jazdę albo zmień jej godzinę.","Pokaż moją jazdę",false,"Zamknij")){
+      if(typeof closeBell==="function")closeBell();if(typeof closePop==="function")closePop();if(typeof goToWant==="function")goToWant(c)}
+    return false}
+  return leaveForClash(c,wantStart(w),w);
 }
+// nazwa jazdy do okien: „«Środowy wieczór» (CEZAR_T_) ” (tytuł, jeśli jest, i autor)
+const rideLbl=x=>(x.title?"«"+x.title+"» ":"")+"("+nickOf(x.user_id)+") ";
 // „Przenieś się”: pytanie i wypisanie z jazdy c (wspólne dla „Jadę!” i zakładania zaproszenia)
-async function leaveForClash(c,to){
+async function leaveForClash(c,to,w){   // w — jazda docelowa (gdy znana): pytanie podaje jej nazwę i autora
   const sp=rideSpan(c),cs=sp[0],when=relDay(cs).toLowerCase()+" "+hhmm(cs)+"–"+hhmm(sp[1])+" (ok. "+durTxt(wantDur(c))+")";
-  if(!await askOk("Jedziesz już "+when+". Przenieść się na "+(dayDiff(to)===dayDiff(cs)?"":relDay(to).toLowerCase()+" ")+hhmm(to)+"?\n\nZrezygnujesz z tamtej jazdy ("+nickOf(c.user_id)+" dostanie powiadomienie).","Przenieś się"))return false;
+  if(!await askOk("Przenieść się na "+(w?rideLbl(w):"")+(dayDiff(to)===dayDiff(cs)?"":relDay(to).toLowerCase()+" ")+hhmm(to)+"?\n\nTeraz jedziesz "+rideLbl(c)+when+". Z tamtej jazdy zrezygnujesz, a "+nickOf(c.user_id)+" dostanie powiadomienie.","Przenieś się"))return false;
   const r=await sb.from("want_joins").delete().eq("want_id",c.id).eq("user_id",uid);
   if(r.error){say("Nie udało się zrezygnować z tamtej jazdy: "+r.error.message);return false}
   joins[c.id]=(joins[c.id]||[]).filter(x=>x!==uid);return true;
