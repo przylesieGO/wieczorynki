@@ -257,7 +257,7 @@ $("bellsheet").addEventListener("click",async e=>{
     renderBell();return}
   const rpb=e.target.closest("[data-rep]");if(rpb){const id=rpb.dataset.rep;closeBell();repAskedAdd(id);openReport(id);return}
   const sc=e.target.closest("[data-bsec]");
-  if(sc){const k=sc.dataset.bsec,st=bsColGet(),col=!sc.classList.contains("col");st[k]=col;try{localStorage.setItem("bellCol",JSON.stringify(st))}catch(err){}
+  if(sc){const k=sc.dataset.bsec,st=bsColGet(),col=!sc.classList.contains("col");st[k]=col;if(k==="sig"&&!col)sigEkipaAutoRead();try{localStorage.setItem("bellCol",JSON.stringify(st))}catch(err){}
     renderBellSheet();return}
   if(fr){const f=fbList.find(x=>x.id===fr.dataset.fb);closeBell();fbOpen(fr.dataset.fb,f&&f.user_id!==uid&&isAdmin?"fbadmin":"bell");return}
   if(e.target===p){closeBell();return}
@@ -619,7 +619,9 @@ function sigWinRender(){
   const B=sigEkipaBody(sigWinOk,false),box=p.querySelector(".bslist"),y=box.scrollTop;   // te same wiersze co pod 🔔: klamra Super ekipy i powiadomienia ekipy (2026-11-25)
   $("sgwl").innerHTML=(B.L.length||B.notes?B.html:'')+(B.L.length?'':'<div class="note sgwempty">'+(sigList().length?'Brak sygnałów dla tych filtrów.':'Dziś nikt jeszcze nie dał znać.')+'</div>')+(sigList().length?sigHintHtml():'');
   box.scrollTop=y}
-function openSigWin(){if(!sigOn())return;sgwOpen=true;const p=$("sigwin");p.classList.remove("hide");p.innerHTML="";sigWinRender()}
+// „Masz z kim …” (nie u autora — on ma tam „Zaproś ekipę”) samo jako przeczytane po otwarciu okna „Ekipa” albo rozwinięciu sekcji pod 🔔
+const sigEkipaAutoRead=()=>markRead(sigEkipaUn().filter(n=>n.actor!==uid).map(n=>n.id));
+function openSigWin(){if(!sigOn())return;sigEkipaAutoRead();sgwOpen=true;const p=$("sigwin");p.classList.remove("hide");p.innerHTML="";sigWinRender()}
 function closeSigWin(){sgwOpen=false;const p=$("sigwin");p.classList.add("hide");p.innerHTML=""}
 function sigWinSync(){
   const b=$("mysigs");
@@ -923,8 +925,10 @@ function sigEkipaBody(keep,bell){
   // w klamrze: zaproszenie z paska („Jedziecie razem ›” / „Dopisz ›”) nie powtarza się przy każdym sygnale (2026-11-24)
   const supW=sup?(sigSuperRide(SS)||(sigSuperPart(SS)||{}).w||null):null,rowfS=x=>sigRow(x,un(x),supW&&supW.id);
   const rowsAll=sup?sigSuperHtml(SS,sorted.filter(x=>SS.includes(x)).map(rowfS).join(""))+sorted.filter(x=>!SS.includes(x)).map(rowf).join(""):sorted.map(rowf).join("");
-  const notes=RM.length+SO.length+LT.length+EK.length+C.length;
-  return {L,U,RU,C,EK,LT,SO,RM,notes,html:RM.map(sigRemindRow).join("")+SO.map(sigSoonRow).join("")+LT.map(sigLateRow).join("")+EK.map(sigEkipaRow).join("")+rowsAll+C.map(sigCancelRow).join("")};
+  // „Masz z kim …” w oknie „Ekipa na dziś”: bez dublowania — gdy sygnał tej ekipy jest na liście / w klamrze, a ja nie jestem autorem (2026-11-25)
+  const EKs=bell?EK:EK.filter(n=>n.actor===uid||!L.some(x=>x.user_id===n.actor));
+  const notes=RM.length+SO.length+LT.length+EKs.length+C.length;
+  return {L,U,RU,C,EK,LT,SO,RM,notes,html:RM.map(sigRemindRow).join("")+SO.map(sigSoonRow).join("")+LT.map(sigLateRow).join("")+EKs.map(sigEkipaRow).join("")+rowsAll+C.map(sigCancelRow).join("")};
 }
 const sigHintHtml=()=>'<div class="bsempty">Bez godziny i trasy.'+(sig2Ok?' Dłoń = „też mam ochotę” — autor dostanie znać i zaprosi ekipę (zaproszenie na dziś z zakresem godzin). Gdy dajesz Reakcję na cudzy sygnał, a ktoś z tamtej ekipy na Twój — ekipy łączą się w Super ekipę.':'')+'</div>';
 function sigBellHtml(){
