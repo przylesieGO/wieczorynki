@@ -111,6 +111,7 @@ function helpFullHtml(){
      "<b>🚲 Rower / teren</b> (przy rowerze): dla wszystkich (domyślnie), szosa, gravel, MTB, e-bike.",
      "<b>📍 Punkt zbiórki</b> (opcjonalnie): wybierz z listy, „✏️ Inne miejsce…” albo „🗺️ Wskaż na mapie…”. Przełącznik „Dodaj do listy miejsc” zapisze miejsce dla wszystkich. Na karcie „Mapa ›” otwiera nawigację.",
      "<b>Notatka:</b> gotowe (Kebab RIDE, Coffee Ride ☕, SPEEDAY…) albo własna. „↺ Jak ostatnio” ustawia godzinę z poprzedniego razu.",
+     "<b>🏷️ Etykieta notatki:</b> gdy w notatce jest słowo ze słownika (np. „Wataha” → wilk, „Kawa” → kubek, „Nocna” → księżyc, „Kebab”, „SPEEDAY”), notatka pokaże się jako kolorowa plakietka z ikoną — na karcie, w oknach zaproszeń, pod 🔔 i w „Jak poszło?”. Słownik prowadzi 👑; tytuł i Telegram bez zmian.",
      "<b>📚 Wybierz z bazy tras</b> — gotowa trasa jednym dotknięciem. Przełącznik „📚 Dodaj trasę do bazy tras” zapisze Twój plik GPX dla wszystkich (z nazwą).",
      "<b>✏️ Edytuj</b> na swoim zaproszeniu (to z zielonym kółkiem „Ty”) — zmienisz godzinę, tempo, dystans, trasę i punkt zbiórki; zaproszeni dostaną powiadomienie."])
    +sec("🙋 Odpowiadanie",[
@@ -167,6 +168,10 @@ function helpFullHtml(){
      "<b>Aktywności kont demo</b> (krok 1, lista „Konta”): pod każdym kontem bomble Rower / Bieg / Spacer / Trekking — dotknij, aby dodać albo zabrać (co najmniej jedna). Konto zaprasza, daje znać i dołącza tylko w swoich aktywnościach. Wiersz konta otwiera jego kartę (historia, statystyki, teczka).",
      "<b>Krok 3 — Aktywności</b>: wybierz, co generować (np. sam bieg albo bieg + spacer); liczba przy bomblu = ile grających kont ją ma. Rower dostaje trasę dopasowaną do roweru konta (zbiórka na starcie trasy, w notatce km i przewyższenie), bieg / spacer / trekking — bez roweru i tempa, tytuł automatyczny.",
      "Niżej, <b>Na stałe</b>: <b>Żywa Ekipa demo</b> — przełącznik „Żyje sama” (konta demo co 15 min, 6–22: zaproszenia, „Mam ochotę” i Reakcje, zapisy, tablice grup, „Jak poszło?”), suwak <b>Ruch</b> (zaproszeń na dobę, np. 4 → ok. 3 sygnały), aktywności, które wolno zakładać, liczniki <b>Dziś</b> i <b>ostatnia tura</b>; dalej <b>Ochotnicy</b> (prawdziwe osoby za ich zgodą — filtry, lista, Dodaj / Wypisz nad listą), <b>Odpowiedzi kont demo</b> i <b>Sprzątanie</b>."]):'')
+   +(session&&isSuper(uid)?sec("🏷️ Etykiety notatek (tylko 👑)",[   // KROK 103 — słownik note_tags
+     "<b>⚙️ → Administracja → Narzędzia → Etykiety notatek</b>: słowo → ikona i kolor. Dodaj słowo, wybierz ikonę i kolor (paleta albo własny), sprawdź na przykładowej notatce i zapisz.",
+     "Słowo działa od początku wyrazu, bez wielkości liter i polskich znaków („wilk” łapie „Wilki”). Pierwsze pasujące od góry wygrywa — kolejność zmienisz ▲ ▼.",
+     "Przełącznik wyłącza słowo bez usuwania; ✏️ edytuje, 🗑 usuwa. Zmianę widać u wszystkich po odświeżeniu (do minuty)."]):'')
    +sec("⭐ Ludzie",[
      "Dotknij nicku: karta osoby — zdjęcie, „Z nami od…”, media, a jeśli ktoś pozwolił: miejscowość i „Zadzwoń / SMS”; „🚴 Zaproś na rower”, ☆ dodaj do ulubionych. ⭐ ulubieni są zawsze na górze list.",
      "🟢 zielona kropka przy nicku = osoba ma teraz otwartą aplikację. Przy nickach: ⭐ ulubiony, 💉 tester, 💡 3 zrealizowane pomysły/zgłoszenia, 👑 główny admin. Administratorów pokaże filtr „Administratorzy” w oknach wyboru osób — do nich piszesz, gdy coś nie działa."])

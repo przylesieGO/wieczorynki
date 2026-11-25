@@ -46,7 +46,7 @@ function wfTitleHint(){const el=$("wtitlehint"),inp=$("wtitle");if(!el||!inp)ret
 const wTitleHtml=w=>w.title?'<div class="wtl">'+uiIcon("tag")+'<span>'+esc(w.title)+'</span></div>':'';
 function repBellRow(w){const d=new Date(w.starts_at);
   return '<div class="nit stn"><div class="ic">🚴</div><div class="tx">'+wTitleHtml(w)+'<b>'+esc(relDayPast(d)+' · '+hhmm(d))+'</b>'
-   +'<div class="w">'+(w.user_id===uid?'Twoje zaproszenie':'z '+esc(nickOf(w.user_id)))+(w.place?' · '+esc(w.place):w.note?' · '+esc(w.note.slice(0,40)):'')+(isTest(w)?' · test':'')+'</div></div>'
+   +'<div class="w">'+(w.user_id===uid?'Twoje zaproszenie':'z '+esc(nickOf(w.user_id)))+(w.place?' · '+esc(w.place):w.note?' · '+noteInl(w.note.slice(0,40)):'')+(isTest(w)?' · test':'')+'</div></div>'
    +'<button type="button" class="lnk stgo" data-rep="'+esc(w.id)+'">Oceń ›</button></div>'}
 function repBellHtml(){
   const r=repBell();if(!r||!r.n)return "";const K=genders[uid]==="K";
@@ -81,7 +81,7 @@ function renderRep(){
   p.innerHTML='<div class="bsbox bsauto repbox" role="dialog" aria-modal="true" aria-label="Jak poszło?"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-rs="later">Później</button><b>🚴 Jak poszło?</b><span style="min-width:64px;text-align:right" class="note">'+(pend.length>1&&idx>=0?(idx+1)+' z '+pend.length:'')+'</span></div>'
    +'<div class="bslist">'
    +(isTest(w)?'<div class="rtest"><span class="ttag">'+uiIcon("flask")+' TEST</span> Testowa jazda — odpowiedź na próbę, nie liczy się do statystyk.</div>':'')
-   +(wTitleHtml(w)||(w.note?'<div class="rnote">'+esc(w.note)+'</div>':''))+'<div class="rsub"><div class="rdate">'+esc(relDayPast(new Date(w.starts_at))+" · "+hhmm(new Date(w.starts_at)))+'</div>'+(w.place?'<div>📍 '+esc(w.place)+'</div>':'')+'<div class="rauth">'+nk(w.user_id)+(own?'<span class="wme">Ty</span>':'')+'</div></div>'
+   +(wTitleHtml(w)||noteHtml(w.note,"rnote",""))+'<div class="rsub"><div class="rdate">'+esc(relDayPast(new Date(w.starts_at))+" · "+hhmm(new Date(w.starts_at)))+'</div>'+(w.place?'<div>📍 '+esc(w.place)+'</div>':'')+'<div class="rauth">'+nk(w.user_id)+(own?'<span class="wme">Ty</span>':'')+'</div></div>'
    +repRouteHtml(w)
    +(myRep(w)?'<div class="myrep" style="margin-top:10px">✏️ '+(genders[uid]==="K"?'Odpowiedziałaś':'Odpowiedziałeś')+(myRep(w).updated_at?' '+esc(new Date(myRep(w).updated_at).toLocaleDateString("pl-PL",{day:"numeric",month:"numeric"})):'')+' — możesz zmienić i zapisać ponownie.</div>':'')
    +'<div class="bsgrp">'+(genders[uid]==="K"?'Pojechałaś?':'Pojechałeś?')+'</div><div class="seg rseg"><button type="button" data-rs="went" data-v="1" class="'+(rs.went===true?'on':'')+'">✅ Tak</button><button type="button" data-rs="went" data-v="0" class="'+(rs.went===false?'on':'')+'">❌ '+(genders[uid]==="K"?'Nie dałam rady':'Nie dałem rady')+'</button></div>'
@@ -739,7 +739,7 @@ function wantHtml(w,top){
     const myOpen=mine&&open&&!live;   // własne zaproszenie z godziną do ustalenia: na wąskim ekranie linki pod „Ustal”, na szerokim ikony Zmień ustaloną / Edytuj obok „Ustal” jako osobna grupa od Zaproś / Udostępnij / Kosz
     return '<div class="want'+(mine?' mine':'')+(peek?' peek':'')+(isTest(w)?' test':'')+grCls(w)+'" data-wid="'+esc(w.id)+'"'+(priv?' data-priv="1"':'')+'>'+(peek?pkCorner:'')+(top?'<div class="wtop wtopm">'+testTag(w)+(priv?(wGr(w)?grTagHtml(w):'<span class="lockt priv">🔒 prywatne</span>'):'')+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(top.n?'<i class="wcnt">'+top.n+'</i>':'')+'</div>'+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+top.d:(peek?testTag(w):wIcons(w,mine,priv)+testTag(w))+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+'<div class="wtop">'+nk(w.user_id)+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w):'')+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv&&wGr(w)?grTagHtml(w):'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>')
      +(live?liveHtml(w):'')
-     +paceHtml(w)+bikeHtml(w)+(live?'':durLineHtml(w))+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+(live?'':wxHtml(w))+routeBoxHtml(w)
+     +paceHtml(w)+bikeHtml(w)+(live?'':durLineHtml(w))+placeHtml(w)+noteHtml(w.note,"wnt")+(live?'':wxHtml(w))+routeBoxHtml(w)
      +invitedHtml(w)
      +(mine&&open&&new Date(w.range_from).getTime()>Date.now()+36e5?'<div class="meta">🕖 Ustali się sama o '+esc(hhmm(new Date(new Date(w.range_from).getTime()-36e5)))+', jeśli jej nie wybierzesz</div>':'')
      +(open?tallyHtml(w):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w)+(live?'':myPickHtml(w,myp,joined,mine)))
@@ -1957,7 +1957,7 @@ function renderPick(){
    +'<span class="ptag">'+(settle?'✅ USTAL GODZINĘ':'🕖 KIEDY MOŻESZ?')+'</span>'
    +'<div class="ph">'+(settle?'Twoje zaproszenie':nk(w.user_id)+' zaprasza '+(actOf(w.activity).invite_txt||'na rower'))+'</div>'
    +wTitleHtml(w)+'<div class="pwhen">'+esc(relDay(d)+" "+wTime(w))+'<span>'+esc(wd)+'</span></div>'
-   +(w.note?'<div class="pnote">💬 '+esc(w.note)+'</div>':'')
+   +noteHtml(w.note,"pnote")
    +'<div class="pmeta">'+(settle?'Liczba = ilu osobom pasuje. Wybierz godzinę startu:':'Wybierz godzinę (liczba = ilu już ją wybrało):')+'</div>'
    +slotsHtml(w,pk.sel,pk.other)+pickClashHtml(w)
    +'<button type="button" class="b big" data-k="ok"'+(pk.sel?'':' disabled')+'>'+(settle?'✅ Ustal: ':'Pasuje mi o ')+(pk.sel?hhmm(new Date(pk.sel)):'…')+'</button>'

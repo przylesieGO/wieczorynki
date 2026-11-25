@@ -172,6 +172,8 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Uprawnienia",s:"administratorzy testerzy uprawnienia",p:"Ustawienia → Administracja → Narzędzia",i:"shield",go:[ADM,'[data-c="perms"]'],ok:A},
   {t:"Funkcje testowe (flagi)",s:"flagi funkcje testowe wszyscy testerzy",p:"Ustawienia → Administracja → Narzędzia",i:"flask",go:[ADM,'[data-c="flags"]'],ok:K&&testerOk},
   {t:"Kolory nicków",s:"kolory nicków płeć",p:"Ustawienia → Administracja → Narzędzia",i:"palette",go:[ADM,'[data-c="colors"]'],ok:A&&genderOk},
+  {t:"Etykiety notatek (👑)",s:"etykiety notatek słownik słowo ikona kolor plakietka wilk wataha kawa kebab nocna speeday",p:"Ustawienia → Administracja → Narzędzia",i:"tag",go:[ADM,'[data-nt="open"]'],ok:K},
+  {t:"Etykieta przy notatce",s:"etykieta notatki plakietka ikona kolor wataha wilk kawa kebab nocna speeday notatka",p:"Zaproszenia → ➕ → Notatka (słowo ze słownika)",i:"tag",fn:()=>{show(0);openWantForm(null)},ok:S&&!pv},
   {t:"Zakazane nicki",s:"zakazane słowa nicki blokada",p:"Ustawienia → Administracja → Narzędzia",i:"hand",go:[ADM,'[data-c="nickbans"]'],ok:A},
   {t:"Miejsca zbiórki",s:"miejsca zbiórki punkty",p:"Ustawienia → Administracja → Narzędzia",i:"pin",go:[ADM,'[data-c="places"]'],ok:A&&placeOk},
   {t:"Grupy — wszystkie (👑)",s:"grupy statystyki grup limit prośby",p:"Ustawienia → Administracja → Narzędzia",i:"users",go:[ADM,'[data-gx="adm"]'],ok:KR},

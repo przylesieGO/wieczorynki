@@ -91,6 +91,26 @@ const actIsBike=k=>!!actOf(k).uses_bike;
 const actAvail=()=>actList.filter(x=>x.state==="all"||(x.state==="testers"&&typeof meTester==="function"&&meTester()));
 const actOfEv=b=>{const a=actList.find(x=>(x.ev_kinds||[]).includes(b));return a?a.key:""};   // rodzaj imprezy → aktywność
 
+/* 🏷️ Etykiety notatek (KROK 103): słownik z bazy (tabela `note_tags`) — słowo → ikona konturowa + kolor; edytuje tylko 👑 (Administracja).
+   Notatka zaproszenia z pasującym słowem (początek wyrazu, bez wielkości liter i polskich znaków; „wilk” łapie „Wilki”) = kolorowa plakietka z ikoną
+   jak tempo / rodzaj roweru; pierwsze pasujące słowo wg `sort` wygrywa. Tytuły i Telegram — bez etykiet (decyzja 2026-11-25 21:57).
+   Ostatni słownik zostaje w pamięci telefonu (localStorage „ntags”); ntOk = tabela w bazie jest (false — brak KROKU 103). */
+let ntList=(()=>{try{const a=JSON.parse(localStorage.getItem("ntags")||"null");if(Array.isArray(a)&&a.every(x=>x&&x.key))return a}catch(e){}return []})(),ntOk=false;
+function ntSet(a){if(!Array.isArray(a))return;ntOk=true;ntList=a.slice().sort((p,q)=>(p.sort-q.sort)||p.key.localeCompare(q.key));try{localStorage.setItem("ntags",JSON.stringify(ntList))}catch(e){}}
+const ntWords=s=>String(s||"").toLowerCase().replace(/[ąćęłńóśźż]/g,c=>"acelnoszz"["ąćęłńóśźż".indexOf(c)]).split(/[^a-z]+/).filter(Boolean);
+// słowo pasuje od początku wyrazu; słowo ze spacją („Nocna Wataha” → nocnawataha) — przez kolejne wyrazy
+const ntHit=(W,k)=>W.some((_,i)=>{let c="";for(let j=i;j<W.length&&c.length<k.length;j++)c+=W[j];return c.startsWith(k)});
+const ntFind=(s,L)=>{if(!s)return null;const W=ntWords(s);return (L||ntList).find(t=>t.on!==false&&ntHit(W,t.key))||null};
+const ntRaw=t=>/^#[0-9a-f]{6}$/.test(t.color)?t.color:(typeof PL_COL==="object"&&PL_COL[t.color])||"#0a84ff";
+const ntCol=t=>typeof grInk==="function"?grInk(ntRaw(t)):ntRaw(t);   // tło pod biały napis — kontrast jak etykiety grup
+const ntIc=t=>UI_P[t.icon]?t.icon:"tag";
+// blok notatki: z etykietą (plakietka z ikoną i treścią) albo jak dotąd (pre = „💬 ”)
+function noteHtml(n,cls,pre){if(!n)return "";const t=ntFind(n);
+  return t?'<div class="wpcw ntagw"><span class="wpc wbk ntag" style="background:'+ntCol(t)+'">'+uiIcon(ntIc(t))+'<span>'+esc(n)+'</span></span></div>'
+   :'<div class="'+cls+'">'+(pre==null?'💬 ':pre)+esc(n)+'</div>'}
+// w jednym wierszu (🔔, listy): kolorowa ikona przed treścią; bez etykiety — pre + treść
+function noteInl(n,pre){if(!n)return "";const t=ntFind(n);return t?'<span class="ntagi" style="color:'+ntRaw(t)+'">'+uiIcon(ntIc(t))+'</span>'+esc(n):(pre||"")+esc(n)}
+
 // 🔒 okno (.sheet) otwarte — strona pod spodem się nie przewija ani nie reaguje (klasa html.sheetlock)
 {const lock=()=>document.documentElement.classList.toggle("sheetlock",[...document.querySelectorAll(".sheet")].some(x=>!x.classList.contains("hide")));
  const mo=new MutationObserver(lock),ob=el=>mo.observe(el,{attributes:true,attributeFilter:["class"]});document.querySelectorAll(".sheet").forEach(ob);

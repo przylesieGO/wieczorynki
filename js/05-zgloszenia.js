@@ -4,6 +4,8 @@ const fbf={kind:"bug",rating:0,text:"",dev:true};let fbReplyTxt="",fbMsgTxt="";
 // 🔢 numeracja wydań: 0.x.y w czasie BETY (1.0 = publiczne wydanie); x — paczka nowości, y — poprawki.
 // Nowe wydanie: dopisz pozycję na początku APP_REL (wersja, data, nowości) — w ❓ Pomocy pokaże się „Co nowego” i kropka przy ❓.
 const APP_REL=[
+  {v:"0.11",d:"25.11.2026",items:[
+    ["tag","<b>Etykiety notatek</b> — notatka ze znanym słowem („Nocna Wataha”, „Kawa”, „Kebab”, „SPEEDAY”) świeci kolorową plakietką z ikoną (wilk, kubek, księżyc…)."]]},
   {v:"0.10",d:"24.11.2026",items:[
     ["bike","<b>Gawron pokaże Ci drogę</b> — animowany przewodnik (Gawron na rowerze) krok po kroku przez „Mam ochotę”. Startuje sam przy pierwszym wejściu; ponownie — na górze Pomocy."],
     ["hand","<b>Mam ochotę</b> — zielone kółko z dłonią nad ➕: daj znać, że chcesz dziś jechać, biegać albo iść na spacer. Komunikat („Nogi same kręcą”), wybór, kto zobaczy, i dłoń „Też mam ochotę!”."],
@@ -250,6 +252,7 @@ function renderGear(){
   if(gearView==="plist"&&!(session&&plById(plId)))gearView="favs";   // 📋 lista usunięta (np. na innym urządzeniu)
   if((gearView==="admin"||gearView==="users"||gearView==="perms"||gearView==="unick"||gearView==="colors"||gearView==="stats"||gearView==="flags"||gearView==="testdel"||gearView==="privadm"||gearView==="nickbans")&&!(session&&isAdmin))gearView="main";
   if(gearView==="flags"&&!isSuper(uid))gearView="admin";
+  if(gearView==="ntags"&&!(session&&isSuper(uid)))gearView="main";   // 🏷️ etykiety notatek — tylko 👑 (KROK 103)
   if(gearView==="unick"&&!nicks[unickId])gearView="admin";
   const keepSel=$("adminsel")?$("adminsel").value:"";
   const keepCol=gearView==="colors"&&$("colK")?colVals():null;
@@ -258,6 +261,7 @@ function renderGear(){
   const keepUnick=gearView==="unick"&&$("gunick")?{v:$("gunick").value,i:$("gunickinfo").textContent}:null;
   const keepConf=gearView==="confdel"&&$("gconf")?$("gconf").value:null;
   const keepDel=gearView==="del"&&$("gdel")?{v:$("gdel").value,i:$("gdelinfo").textContent}:null;
+  const keepNt=gearView==="ntags"&&document.activeElement&&/^nt(word|sample)$/.test(document.activeElement.id)?{id:document.activeElement.id,p:document.activeElement.selectionStart}:null;   // 🏷️ odświeżanie co minutę nie zabiera kursora z pola
   const keepNb=gearView==="nickbans"&&$("nbword")?{v:$("nbword").value,q:$("nbq")?$("nbq").value:""}:null;
   if(gearView==="nick"&&$("gnick"))nickDraft=$("gnick").value;   // zapamiętaj wpisany nick, gdy pole się zwija / ekran się odświeża
   const keepNick=gearView==="nick"&&$("gnick")?{v:$("gnick").value,i:$("gnickinfo").textContent}:null;
@@ -269,6 +273,7 @@ function renderGear(){
   else if(gearView==="unick")body=unickHtml();
   else if(gearView==="colors")body=colorsHtml();
   else if(gearView==="nickbans")body=nickBansHtml();
+  else if(gearView==="ntags")body=ntAdmHtml();
   else if(gearView==="stats")body=adminStatsHtml();
   else if(gearView==="flags")body=flagsHtml();
   else if(gearView==="privadm")body=privAdmHtml();
@@ -333,6 +338,7 @@ function renderGear(){
   if(keepUnick&&$("gunick")){$("gunick").value=keepUnick.v;$("gunickinfo").textContent=keepUnick.i}
   if(keepConf!=null&&$("gconf"))$("gconf").value=keepConf;
   if(keepDel&&$("gdel")){$("gdel").value=keepDel.v;$("gdelinfo").textContent=keepDel.i}
+  if(keepNt&&$(keepNt.id)){const x=$(keepNt.id);x.focus();try{x.setSelectionRange(keepNt.p,keepNt.p)}catch(e){}}
   if(keepNb&&$("nbword")){$("nbword").value=keepNb.v;nbPreview();if($("nbq")){$("nbq").value=keepNb.q;nbFilter()}}
   if(keepNick&&$("gnick")){$("gnick").value=keepNick.v;$("gnickinfo").textContent=keepNick.i}
   if(keepPw&&$("gpw0")){["gpw0","gpw1","gpw2"].forEach((i,k)=>{$(i).value=keepPw.v[k][0];$(i).type=keepPw.v[k][1];const eb=document.querySelector('[data-eye="'+i+'"]');if(eb)eb.innerHTML=uiIcon(keepPw.v[k][1]==="text"?"eyeoff":"eye")});$("gpwinfo").textContent=keepPw.i;if(keepPw.f&&$(keepPw.f))$(keepPw.f).focus()}

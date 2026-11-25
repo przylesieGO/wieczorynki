@@ -61,7 +61,7 @@ async function openRouteSheet(w){
   const tok=++rsTok,p=$("routesheet"),d=new Date(w.starts_at);
   p.innerHTML='<div class="sheetbox rsbox" role="dialog" aria-modal="true"><button class="sclose" data-rk="close" aria-label="Zamknij">✕</button>'
    +'<div class="ph" style="margin-top:0">🗺️ Proponowana trasa</div>'
-   +'<div class="pmeta" style="margin-top:4px">'+nk(w.user_id)+' · '+esc(relDay(d)+" "+wTime(w))+(w.note?' · 💬 '+esc(w.note):'')+'</div>'
+   +'<div class="pmeta" style="margin-top:4px">'+nk(w.user_id)+' · '+esc(relDay(d)+" "+wTime(w))+(w.note?' · '+noteInl(w.note,'💬 '):'')+'</div>'
    +'<div class="mapwrap"><div class="map rsmap" id="map3"></div><div class="warrow hide" id="warrow3"></div></div>'
    +'<div class="legend"><span><i class="dot" style="background:#d64545"></i>pod wiatr</span><span><i class="dot" style="background:#e0b83a"></i>bocznie</span><span><i class="dot" style="background:#2a9d5c"></i>z wiatrem</span></div>'
    +'<div class="stats" id="stats3"></div><div class="note" id="windinfo3" style="margin-top:8px">Ładuję trasę…</div><div class="tip hide" id="tip3"></div><div class="routeinfo hide" id="placesbox3"></div>'

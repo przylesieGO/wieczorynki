@@ -89,6 +89,7 @@ medal:'<circle cx="12" cy="15" r="5"/><path d="M8.5 10.5 6 3h4l2 4 2-4h4l-2.5 7.
 clip:'<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6"/><path d="M9 16h4"/>',
 heart:'<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
 archive:'<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>',
+wolf:'<path d="M4 3l4 5h8l4-5 1 8-5 6-4 4-4-4-5-6z"/><path d="M9.5 12h.01"/><path d="M14.5 12h.01"/><path d="M11 17.5l1 1 1-1"/>',   // 🏷️ wilk — etykiety notatek (KROK 103)
 tree:'<path d="M12 22v-5"/><path d="M7 17h10l-3-4h2l-4-6-4 6h2z"/><path d="M10 7l2-4 2 4"/>',
 sunrise:'<path d="M12 2v6"/><path d="m4.9 10.9 1.4 1.4"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.1 10.9-1.4 1.4"/><path d="M22 22H2"/><path d="m8 6 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/>',
 coffee:'<path d="M10 2v2"/><path d="M14 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/><path d="M6 2v2"/>',

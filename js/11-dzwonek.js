@@ -44,8 +44,8 @@ function bellRowHtml(w){
   const jn=(joins[w.id]||[]).filter(x=>x!==w.user_id).length,dn=(decls[w.id]||[]).filter(x=>x!==w.user_id).length,act=wNeedsAct(w);
   const title=(mine?'<b>'+when+'</b>'+(isPriv(w)&&!wGr(w)?' 🔒':'')
     :nk(w.user_id)+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w):'')+' '+(isPriv(w)?'zaprasza Cię'+(wGr(w)?'':' 🔒'):'zaprasza wszystkich'))+(wGr(w)?' '+grTagHtml(w):'');   // 👥 KROK 71
-  const sub=mine?[w.note?esc(w.note):'',isOpen(w)?'🕖 do ustalenia':'','🚴 jedzie '+(jn+1),dn?'🙅 '+dn:''].filter(Boolean).join(' · ')
-    :[when,w.note?esc(w.note):'',joined?'🚴 Jedziesz':dec?'Nie dasz rady':act?(wLate(w)?'🏃 ruszyła — możesz jeszcze dogonić!':'⏳ czeka na Twoją odpowiedź'):''].filter(Boolean).join(' · ');
+  const sub=mine?[noteInl(w.note),isOpen(w)?'🕖 do ustalenia':'','🚴 jedzie '+(jn+1),dn?'🙅 '+dn:''].filter(Boolean).join(' · ')
+    :[when,noteInl(w.note),joined?'🚴 Jedziesz':dec?'Nie dasz rady':act?(wLate(w)?'🏃 ruszyła — możesz jeszcze dogonić!':'⏳ czeka na Twoją odpowiedź'):''].filter(Boolean).join(' · ');
   const sent=!mine&&!un.length&&wSentAt(w)?' · <span class="nsent">wysłane '+agoTxt(wSentAt(w))+'</span>':'';   // przeczytane: kiedy przyszło (nieprzeczytane mają to w ramce nowości)
   // 🔒 prywatne zaproszenie od kogoś: kogo jeszcze zaproszono (prośba właściciela 2026-11-25; pełna lista — na karcie zaproszenia)
   const oi=!mine&&isPriv(w)?favFirst(invIds(w).filter(x=>x!==uid&&x!==w.user_id&&nicks[x])):[];
@@ -357,7 +357,7 @@ function renderPop(dir){   // dir: -1 / 1 = karta wjeżdża z lewej / prawej (pr
    +(wLate(w)&&!joined?lateNote():'')
    +(open?'<div class="pmeta">🕖 Zakres godzin — wybierz, kiedy możesz; godzinę ustali '+esc(nickOf(w.user_id))+'.</div>':'')
    +(moved&&!open?'<div class="pmeta">'+(fromRange(w)?'✅ Godzina jest już ustalona — powyżej.':'🕖 Godzina była już zmieniana — powyżej aktualna.')+'</div>':'')
-   +paceHtml(w)+bikeHtml(w)+durLineHtml(w)+placeHtml(w)+(w.note?'<div class="pnote">💬 '+esc(w.note)+'</div>':'')
+   +paceHtml(w)+bikeHtml(w)+durLineHtml(w)+placeHtml(w)+noteHtml(w.note,"pnote")
    +(w.user_id!==actor&&!time?'<div class="pmeta">Zaproszenie od '+nk(w.user_id)+'</div>':'')
    +(inv.length?popNks("Zaproszeni też",inv,"pinv"+w.id,false):'')
    +(going.length&&!open?popNks("Jadą już",going,"pgo"+w.id,true):'')

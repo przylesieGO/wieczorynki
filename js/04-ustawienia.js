@@ -69,6 +69,7 @@ function adminHtml(){
       testerOk&&isSuper(uid)?gRow("#5e5ce6","flask","Funkcje testowe","Kto widzi nowe funkcje: nikt, testerzy, wszyscy","",'data-c="flags"'):'',
       genderOk?gRow("#ff2d55","palette","Kolory nicków","","",'data-c="colors"'):'',
       gRow("#ff3b30","hand","Zakazane nicki","Słowa, których nie można użyć w nicku","",'data-c="nickbans"'),
+      isSuper(uid)?gRow("#8e8e93","tag","Etykiety notatek","Słowo w notatce → ikona i kolor",ntOk?'<span class="ios-v">'+ntList.length+'</span>':'','data-nt="open"'):'',   // 🏷️ KROK 103, tylko 👑
       placeOk?gRow("#ff9f0a","pin","Miejsca zbiórki","",'<span class="ios-v">'+places.length+'</span>','data-c="places"'):''])
    +(isSuper(uid)?gGrp("Zaproszenia",[gRow("#30d158","eye","Wszystkie zaproszenia","Także prywatne i testowe",'<span class="ios-v">'+wantsAll.filter(w=>wantEnd(w).getTime()>Date.now()).length+'</span>','data-c="allw"'),
       gRow("#8e8e93","archive","Archiwum zaproszeń","Zakończone jazdy","",'data-c="karch"')]):'');
@@ -553,7 +554,7 @@ function awCards(L){
     const iv=(invs[w.id]||[]).map(x=>x.u),jn=(joins[w.id]||[]).filter(x=>x!==w.user_id),dc=(decls[w.id]||[]),pr=prefs[w.id]||{};
     return '<div class="aw"><div class="awtags">'+(w.visibility==="private"?tag("p","🔒 prywatne"):tag("a","🌍 wszyscy"))+(w.is_test?tag("t","🧪 test"):'')+(modHidden.has(w.user_id)?tag("h","👻 ukryty"):'')+(modBanned.has(w.user_id)?tag("b","⛔ zablokowany"):'')+'</div>'
      +'<div class="awh">'+nk(w.user_id)+' <b>'+esc(relDay(wantStart(w))+" "+wTime(w))+'</b></div>'
-     +paceHtml(w)+bikeHtml(w)+durLineHtml(w)+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')
+     +paceHtml(w)+bikeHtml(w)+durLineHtml(w)+placeHtml(w)+noteHtml(w.note,"wnt")
      +(iv.length?'<div class="awl">🔒 Zaproszeni ('+iv.length+'): '+iv.map(id=>nk(id)).join(" ")+'</div>':'')
      +'<div class="awl">🙋 Dołączyli ('+jn.length+'): '+(jn.length?jn.map(id=>nk(id)+(pr[id]?'<span class="note"> '+hhmm(new Date(pr[id]))+'</span>':'')).join(" "):'<span class="note">nikt</span>')+'</div>'
      +(dc.length?'<div class="awl">🙅 Nie da rady: '+dc.map(id=>nk(id)).join(" ")+'</div>':'')+'</div>'}).join("");
@@ -661,6 +662,85 @@ function nbPreview(){
 }
 function nbFilter(){const q=nickKey(($("nbq")||{}).value||"");document.querySelectorAll("[data-nb]").forEach(r=>{r.style.display=!q||r.dataset.nb.includes(q)?"":"none"})}
 document.addEventListener("input",e=>{if(e.target.id==="nbword")nbPreview();else if(e.target.id==="nbq")nbFilter()});
+// 🏷️ etykiety notatek (KROK 103) — słownik edytuje tylko 👑; reguły dostępu w bazie (note_tags). Lista = ntList (js/03), wczytywana z resztą danych.
+// ntf = formularz: key "" — nowe słowo, inaczej edycja; sample — przykładowa notatka do podglądu (tylko lokalnie)
+const NT_ICONS=["wolf","moon","sun","sunrise","sunset","bolt","flame","coffee","food","cookie","icecream","tree","heart","star","trophy","medal","flag","snow","umbrella","sparkles","city","map","users","tag"];
+const ntf={key:"",word:"",icon:"wolf",color:"gray",sample:"Nocna Wataha — tempo rozmowne",busy:false,msg:""};
+async function ntLoad(){try{const r=await sb.from("note_tags").select("key,word,icon,color,sort,on").order("sort");if(r.error)throw r.error;ntSet(r.data||[])}catch(e){ntOk=false}}
+const ntChip=t=>'<span class="wpc wbk ntag" style="background:'+ntCol(t)+'">'+uiIcon(ntIc(t))+'<span>'+esc(t.word)+'</span></span>';
+// podgląd: słowo z formularza (jeszcze niezapisane) na tle reszty słownika; pierwsze pasujące wygrywa — jak na karcie
+const ntPrevTag=()=>({key:nickKey(ntf.word),word:ntf.word.trim()||"słowo",icon:ntf.icon,color:ntf.color,sort:-1});
+function ntPrevHtml(){
+  const p=ntPrevTag(),L=ntList.filter(t=>t.key!==ntf.key),ok=/^[a-z]{3,20}$/.test(p.key),hit=ntFind(ntf.sample,ok?[p].concat(L):L);
+  if(!hit)return '<div class="wnt">💬 '+esc(ntf.sample)+'</div><div class="note">Żadne słowo nie pasuje — notatka bez etykiety.</div>';
+  const t=hit===p?p:hit;   // ntFind z listą tymczasową — noteHtml użyłby zapisanego słownika, więc plakietka składana tu
+  return '<div class="wpcw ntagw"><span class="wpc wbk ntag" style="background:'+ntCol(t)+'">'+uiIcon(ntIc(t))+'<span>'+esc(ntf.sample)+'</span></span></div>'
+   +(ok&&hit!==p?'<div class="note">Wygrywa „'+esc(hit.word)+'” (stoi wyżej albo Twoje słowo nie pasuje).</div>':'');
+}
+function ntAdmHtml(){
+  const head='<button class="sback" data-c="backadm">‹ Administracja</button><div class="sname" style="margin-top:26px">🏷️ Etykiety notatek</div>';
+  if(!ntOk)return head+'<div class="sleft"><div class="note">Słownik niedostępny — w bazie trzeba uruchomić KROK 103.</div></div>';
+  const L=ntList,ed=ntf.key?L.find(t=>t.key===ntf.key):null;
+  const rows=L.map((t,i)=>'<div class="arow ntrow'+(t.on===false?' off':'')+'"><span class="ntrl">'+ntChip(t)+(t.on===false?'<span class="note">wyłączone</span>':'')+'</span>'
+     +'<span class="arbtns" style="flex-direction:row;flex-wrap:nowrap;align-items:center;white-space:nowrap">'
+     +'<button type="button" class="b g small" data-nt="up" data-id="'+esc(t.key)+'"'+(i?'':' disabled')+' aria-label="Wyżej">▲</button>'
+     +'<button type="button" class="b g small" data-nt="dn" data-id="'+esc(t.key)+'"'+(i<L.length-1?'':' disabled')+' aria-label="Niżej">▼</button>'
+     +iosSw(t.on!==false,'data-nt="on" data-id',esc(t.key))
+     +'<button type="button" class="b g small" data-nt="ed" data-id="'+esc(t.key)+'" aria-label="Edytuj „'+esc(t.word)+'”">'+uiIcon("pencil")+'</button>'
+     +'<button type="button" class="b g small" data-nt="del" data-id="'+esc(t.key)+'" aria-label="Usuń „'+esc(t.word)+'”">🗑</button></span></div>').join("");
+  const prev=ntPrevTag();
+  return head+'<div class="sleft">'
+   +(rows||'<div class="note">Słownik jest pusty.</div>')
+   +'<p class="note">Kolejność: pierwsze pasujące słowo (od góry) wygrywa — „Nocna Wataha” dostanie wilka, gdy „wataha” stoi wyżej niż „nocna”.</p>'
+   +'<h3 id="ntform" style="margin-top:18px">'+(ed?'Edytuj „'+esc(ed.word)+'”':'Dodaj słowo')+'</h3>'
+   +'<input id="ntword" maxlength="20" autocomplete="off" placeholder="np. wataha" value="'+esc(ntf.word)+'">'
+   +'<label>Ikona</label><div class="gricons" role="radiogroup" aria-label="Ikona etykiety">'+NT_ICONS.map(k=>'<button type="button" class="gricb'+(ntf.icon===k?' on':'')+'" data-nt="ic" data-id="'+k+'"'+(ntf.icon===k?' style="background:'+ntCol(prev)+'"':'')+' aria-label="Ikona '+k+'">'+uiIcon(k)+'</button>').join("")+'</div>'
+   +'<label>Kolor</label><div class="plcols" role="radiogroup" aria-label="Kolor etykiety">'+Object.keys(PL_COL).map(c=>'<button type="button" class="plcol'+(ntf.color===c?' on':'')+'" data-nt="col" data-id="'+c+'" style="background:'+PL_COL[c]+'" aria-label="Kolor '+c+'"></button>').join("")
+     +'<label class="plcol plcust'+(/^#/.test(ntf.color)?' on':'')+'" title="Własny kolor"'+(/^#/.test(ntf.color)?' style="background:'+esc(ntf.color)+'"':'')+'><input type="color" id="ntcolin" value="'+esc(ntRaw(prev))+'" aria-label="Własny kolor etykiety"></label></div>'
+   +'<label>Podgląd na przykładowej notatce</label><input id="ntsample" maxlength="120" autocomplete="off" value="'+esc(ntf.sample)+'">'
+   +'<div class="ntprev">'+ntPrevHtml()+'</div>'
+   +'<div class="note" style="color:var(--bad)">'+esc(ntf.msg)+'</div>'
+   +'<button class="b sbtn" data-nt="save"'+(ntf.busy?' disabled':'')+'>'+(ed?'Zapisz zmiany':'Dodaj do słownika')+'</button>'
+   +(ed?'<button type="button" class="lnk" data-nt="new" style="display:block;margin:8px auto 0">Anuluj edycję</button>':'')
+   +'<p class="note">Słowo działa od początku wyrazu, bez wielkości liter i polskich znaków („wilk” łapie „Wilki”, „kawa” — „Kawą”). Etykieta pokazuje się przy notatce na karcie, w oknach zaproszeń, pod 🔔 i w „Jak poszło?”; tytuły i Telegram — bez zmian. Wyłączone słowo zostaje na liście.</p></div>';
+}
+document.addEventListener("input",e=>{const id=e.target.id;
+  if(id==="ntword"||id==="ntsample"){ntf[id==="ntword"?"word":"sample"]=e.target.value;ntf.msg="";const p=document.querySelector(".ntprev");if(p)p.innerHTML=ntPrevHtml()}
+  else if(id==="ntcolin"){ntf.color=e.target.value.toLowerCase();renderGear()}});
+document.addEventListener("click",async e=>{
+  const a=e.target.closest("[data-nt]");if(!a||!session)return;
+  const k=a.dataset.nt,id=a.dataset.id;
+  if(k==="open"){gearView="ntags";renderGear();await ntLoad();if(gearView==="ntags")renderGear();return}
+  if(!isSuper(uid)||gearView!=="ntags")return;
+  if(k==="ic"){ntf.icon=id;renderGear();return}
+  if(k==="col"){ntf.color=id;renderGear();return}
+  if(k==="new"){Object.assign(ntf,{key:"",word:"",icon:"wolf",color:"gray",msg:""});renderGear();return}
+  const t=ntList.find(x=>x.key===id);
+  if(k==="ed"&&t){Object.assign(ntf,{key:t.key,word:t.word,icon:ntIc(t),color:t.color,msg:"",sample:ntf.sample});renderGear();const f=$("ntform");if(f)f.scrollIntoView({block:"start",behavior:"smooth"});return}
+  const upd=async(q,ok)=>{try{const r=await q;if(r.error)throw r.error;if(r.data&&!r.data.length)throw new Error("brak uprawnień");if(ok)say(ok)}catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}await ntLoad();renderGear()};
+  if(k==="on"&&t)return upd(sb.from("note_tags").update({on:t.on===false}).eq("key",t.key).select("key"),"„"+t.word+"”: "+(t.on===false?"włączone":"wyłączone"));
+  if((k==="up"||k==="dn")&&t){
+    // nowa kolejność: co 10, zamiana z sąsiadem — zapis tylko zmienionych wierszy
+    const L=ntList.slice(),i=L.indexOf(t),j=k==="up"?i-1:i+1;if(j<0||j>=L.length)return;[L[i],L[j]]=[L[j],L[i]];
+    const ch=L.map((x,n)=>({key:x.key,sort:(n+1)*10})).filter(x=>ntList.find(y=>y.key===x.key).sort!==x.sort);
+    try{for(const x of ch){const r=await sb.from("note_tags").update({sort:x.sort}).eq("key",x.key).select("key");if(r.error)throw r.error;if(!r.data.length)throw new Error("brak uprawnień")}}
+    catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+    await ntLoad();renderGear();return}
+  if(k==="del"&&t){if(!await askOk("Usunąć „"+t.word+"” ze słownika etykiet?\n\nNotatki z tym słowem wrócą do zwykłego tekstu. Możesz też tylko wyłączyć słowo przełącznikiem.","Usuń",1))return;
+    if(ntf.key===t.key)Object.assign(ntf,{key:"",word:""});
+    return upd(sb.from("note_tags").delete().eq("key",t.key).select("key"),"Usunięto: "+t.word)}
+  if(k==="save"){
+    const w=ntf.word.trim().replace(/\s+/g," "),key=nickKey(w);ntf.msg="";
+    if(!/^[a-z]{3,20}$/.test(key)){ntf.msg="Słowo musi mieć co najmniej 3 litery.";renderGear();return}
+    if(ntList.some(x=>x.key===key&&x.key!==ntf.key)){ntf.msg="To słowo już jest w słowniku.";renderGear();return}
+    const row={word:w,icon:ntf.icon,color:ntf.color};ntf.busy=true;renderGear();
+    try{const r=ntf.key?await sb.from("note_tags").update(row).eq("key",ntf.key).select("key")
+        :await sb.from("note_tags").insert(Object.assign(row,{sort:(ntList.reduce((m,x)=>Math.max(m,x.sort||0),0)||0)+10})).select("key");
+      if(r.error)throw r.error;if(!r.data||!r.data.length)throw new Error("brak uprawnień");
+      say((ntf.key?"🏷️ Zapisano: ":"🏷️ Dodano: ")+w);Object.assign(ntf,{key:"",word:""})}
+    catch(err){ntf.msg=err&&err.code==="23505"?"To słowo już jest w słowniku.":"Nie udało się: "+(err&&err.message?err.message:"błąd")}
+    ntf.busy=false;await ntLoad();renderGear();return}
+});
 // ⏳ zmiana nicku raz na 14 dni (KROK 67): od kiedy znowu można; null = teraz albo baza bez KROKU 67
 let nickNext=null;
 const nickDay=t=>new Date(t).toLocaleString("pl-PL",{day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"});
