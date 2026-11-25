@@ -44,8 +44,8 @@ function bellRowHtml(w){
   const jn=(joins[w.id]||[]).filter(x=>x!==w.user_id).length,dn=(decls[w.id]||[]).filter(x=>x!==w.user_id).length,act=wNeedsAct(w);
   const title=(mine?'<b>'+when+'</b>'+(isPriv(w)&&!wGr(w)?' 🔒':'')
     :nk(w.user_id)+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w):'')+' '+(isPriv(w)?'zaprasza Cię'+(wGr(w)?'':' 🔒'):'zaprasza wszystkich'))+(wGr(w)?' '+grTagHtml(w):'');   // 👥 KROK 71
-  const sub=mine?[w.note?esc(w.note):'',isOpen(w)?'🕖 do ustalenia':'','🚴 jedzie '+(jn+1),dn?'🙅 '+dn:''].filter(Boolean).join(' · ')
-    :[when,w.note?esc(w.note):'',joined?'🚴 Jedziesz':dec?'Nie dasz rady':act?(wLate(w)?'🏃 ruszyła — możesz jeszcze dogonić!':'⏳ czeka na Twoją odpowiedź'):''].filter(Boolean).join(' · ');
+  const sub=mine?[wDone(w)?'zakończona':'',w.note?esc(w.note):'',isOpen(w)?'🕖 do ustalenia':'','🚴 jedzie '+(jn+1),dn?'🙅 '+dn:''].filter(Boolean).join(' · ')
+    :[when,wDone(w)?'zakończona':'',w.note?esc(w.note):'',joined?'🚴 Jedziesz':dec?'Nie dasz rady':act?(wLate(w)?'🏃 ruszyła — możesz jeszcze dogonić!':'⏳ czeka na Twoją odpowiedź'):''].filter(Boolean).join(' · ');
   const sent=!mine&&!un.length&&wSentAt(w)?' · <span class="nsent">wysłane '+agoTxt(wSentAt(w))+'</span>':'';   // przeczytane: kiedy przyszło (nieprzeczytane mają to w ramce nowości)
   // 🔒 prywatne zaproszenie od kogoś: kogo jeszcze zaproszono (prośba właściciela 2026-11-25; pełna lista — na karcie zaproszenia)
   const oi=!mine&&isPriv(w)?favFirst(invIds(w).filter(x=>x!==uid&&x!==w.user_id&&nicks[x])):[];
@@ -54,7 +54,7 @@ function bellRowHtml(w){
   const btns=act?'<div class="sb">'+(isOpen(w)?'<button type="button" class="b" data-na="pref" data-wid="'+esc(w.id)+'">Pasuje mi o…</button>'
       :'<button type="button" class="b" data-na="join" data-wid="'+esc(w.id)+'">Jadę! · '+esc(hhmm(new Date(w.starts_at)))+'</button>')
     +(wDeclOk(w)?'<button type="button" class="b w" data-na="no" data-wid="'+esc(w.id)+'">Nie dam rady</button>':'')+'</div>':'';
-  return '<div class="nit'+(mine?' mine':'')+(un.length?' new':'')+(isTest(w)?' test':'')+grCls(w)+'" data-wid="'+esc(w.id)+'"><div class="ic">'+(mine?'🙋':isPriv(w)?'📩':'🌍')+'</div>'
+  return '<div class="nit'+(mine?' mine':'')+(wDone(w)?' old':'')+(un.length?' new':'')+(isTest(w)?' test':'')+grCls(w)+'" data-wid="'+esc(w.id)+'"><div class="ic">'+(mine?'🙋':isPriv(w)?'📩':'🌍')+'</div>'
    +'<div class="tx">'+testTag(w)+wTitleHtml(w)+title+'<div class="w">'+sub+sent+'</div>'+inv+news+btns+'</div>'+(un.length?(act?'<span class="dot"></span>':bsMk("w:"+w.id)):'')+'</div>';
 }
 // 🆕 nowi użytkownicy (wszyscy zalogowani — decyzja 2026-11-20): konta z nickiem z ostatnich 14 dni,
@@ -103,7 +103,7 @@ function lsRows(){if(!lgOk)return [];
   return on.concat(lsList.filter(x=>x.user_id!==uid&&nicks[x.user_id]&&!onlineIds.includes(x.user_id)))}
 function lsRow(x){
   return '<div class="nit" data-nu="'+esc(x.user_id)+'"><div class="ic">'+(x.now?'🟢':'🕖')+'</div><div class="tx">'+nk(x.user_id)+'<div class="w">'+(x.now?'teraz w aplikacji':'w aplikacji '+esc(agoTxt(x.last_seen)))+'</div></div></div>'}
-const bellUnread=()=>notifs.filter(n=>!n.read_at&&nWant(n)&&(ME_KINDS.includes(n.kind)||OWN_KINDS.includes(n.kind)));
+const bellUnread=()=>notifs.filter(n=>!n.read_at&&nWant(n)&&!wDone(nWant(n))&&(ME_KINDS.includes(n.kind)||OWN_KINDS.includes(n.kind)));
 function renderBell(){
   const b=$("bellbtn");if(!b)return;
   const on=!!session&&visOk,n=on?bellUnread().length+fbMineUnread().length+fbAdmUnread().length+nuUnread().length+stepsBadge()+evBellUn().length+repTodoN()+sigUnread().length+sigNotifUn().length+(typeof grBellN==="function"?grBellN():0)+(typeof svBellN==="function"?svBellN():0):0,bd=$("bellbadge");
@@ -129,8 +129,9 @@ function bsSec(k,title,un,total,body){
 }
 // zaproszenia widoczne w 🔔: „Do Ciebie” i „Twoje” — nieprzeczytane i czekające na odpowiedź na górze
 function bsWants(){
-  const act=w=>new Date(w.starts_at).getTime()>=Date.now()-3*36e5;
-  const ord=(a,b)=>((wUnread(b).length?1:0)-(wUnread(a).length?1:0))||((wNeedsAct(b)?1:0)-(wNeedsAct(a)?1:0))||(new Date(a.starts_at)-new Date(b.starts_at));
+  // zakończone jazdy zostają w 🔔 wyszarzone do północy (2026-11-25), potem znikają; zakończone zawsze na końcu listy
+  const mid=new Date().setHours(0,0,0,0),act=w=>wantEnd(w).getTime()>=mid;
+  const ord=(a,b)=>((wDone(a)?1:0)-(wDone(b)?1:0))||((wUnread(b).length?1:0)-(wUnread(a).length?1:0))||((wNeedsAct(b)?1:0)-(wNeedsAct(a)?1:0))||(new Date(a.starts_at)-new Date(b.starts_at));
   return {forme:wants.filter(w=>w.user_id!==uid&&act(w)&&(w.visibility!=="private"||wInvMe(w)||(joins[w.id]||[]).includes(uid))).sort(ord),
     mine:wants.filter(w=>w.user_id===uid&&act(w)).sort(ord)};
 }
