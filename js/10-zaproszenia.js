@@ -599,9 +599,6 @@ function renderWants0(){
     const cnt=d.ws.length,zg=cnt===1?"zgłoszenie":(cnt%10>=2&&cnt%10<=4&&(cnt%100<10||cnt%100>=20))?"zgłoszenia":"zgłoszeń";
     const osFor=nn=>nn===1?"osoba":(nn%10>=2&&nn%10<=4&&(nn%100<10||nn%100>=20))?"osoby":"osób";
     const wd=dt.toLocaleDateString("pl-PL",{weekday:"long"});
-    // kto zaprasza tego dnia (zwinięta karta — bez rozwijania karuzeli): ⭐ ulubieni na początku, do 3 imion + „+N”
-    const authIds=favFirst([...new Set(d.ws.map(w=>w.user_id))]),authNames=authIds.map(id=>nicks[id]||"ktoś");
-    const authTxt=authNames.length>3?authNames.slice(0,3).join(", ")+" +"+(authNames.length-3):authNames.join(", ");
     // kto jedzie tego dnia (osobna linia pod godzinami): „Ty i N osoby jadą” (N = inni, bez Ciebie) / „N osoby jadą”
     const others=me?ppl.size-1:ppl.size;
     const ty='<span class="wme">Ty</span>';
@@ -616,7 +613,7 @@ function renderWants0(){
     return '<details class="wday'+(cnt>1?' wmulti':'')+(dPriv?' wdpk':'')+(cnt>1?' wdpn':'')+(pvNow?' wpv':'')+'" data-day="'+d.k+'"'+(open?' open':'')+'><summary>'
      +'<div class="ftile'+(n===0?' today':'')+(d.ws.some(wLive)?' live':'')+'">'+ftInner(dt)+ftWxHtml(d.ws)+'</div>'
      +'<div class="wtx"><div class="wl1">'+l1+' · <span class="whrs'+(open?' whrsall':'')+'">'+wHrsHtml(d.ws,open,ord.length?ord[Math.min(dayIdx[d.k]||0,ord.length-1)].id:'',d.k)+'</span></div>'
-     +'<div class="wl3">Od: '+esc(authTxt)+(byNew&&typeof agoTxt==="function"?' <i class="wnew">· dodano '+esc(agoTxt(cr(d.ws[0])))+'</i>':'')+'</div>'
+     +(byNew&&typeof agoTxt==="function"?'<div class="wdad">dodano '+esc(agoTxt(cr(d.ws[0])))+'</div>':'')
      +'<div class="wl2">'+pplHtml+'</div></div>'+wl4Html(d.ws)
      +(cnt>1||dPriv?'<span class="wbd">'+(dPriv?'<span class="wlk" aria-label="'+dPriv+' prywatne">'+uiIcon("lock")+dPriv+'</span>':'')+(cnt>1?'<span class="wcnt" aria-label="'+cnt+' '+zg+'">'+cnt+'</span>':'')+'</span>':'')
      +'</summary>'+mineTop.map(wantDayHtml).join("")+(ord.length>1
@@ -750,7 +747,7 @@ function wantHtml(w,top){
     const peek=priv&&!mine&&!wInvMe(w)&&!joined;
     const open=isOpen(w)&&!wLive(w),myp=(prefs[w.id]||{})[uid],dec=(decls[w.id]||[]).includes(uid),live=wLive(w);
     const myOpen=mine&&open&&!live;   // własne zaproszenie z godziną do ustalenia: na wąskim ekranie linki pod „Ustal”, na szerokim ikony Zmień ustaloną / Edytuj obok „Ustal” jako osobna grupa od Zaproś / Udostępnij / Kosz
-    return '<div class="want'+(mine?' mine':'')+(peek?' peek':'')+(isTest(w)?' test':'')+grCls(w)+'" data-wid="'+esc(w.id)+'"'+(priv?' data-priv="1"':'')+'>'+(peek?pkCorner:'')+(top?'<div class="wtop wtopm">'+testTag(w)+(priv?(wGr(w)?grTagHtml(w):'<span class="lockt priv">🔒 prywatne</span>'):'')+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(top.n?'<i class="wcnt">'+top.n+'</i>':'')+'</div>'+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+top.d:(peek?testTag(w):wAddedTag(w)+'<div class="wlab'+(mine?' me':priv?'':' all')+'">'+(mine?'🙋 TY ZAPRASZASZ':priv?'📩 ZAPRASZA CIĘ':'🌍 ZAPRASZA WSZYSTKICH')+'</div>'+testTag(w))+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+'<div class="wtop">'+nk(w.user_id)+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w):'')+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv?(wGr(w)?grTagHtml(w):'<span class="lockt priv">🔒 prywatne</span>'):'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>')
+    return '<div class="want'+(mine?' mine':'')+(peek?' peek':'')+(isTest(w)?' test':'')+grCls(w)+'" data-wid="'+esc(w.id)+'"'+(priv?' data-priv="1"':'')+'>'+(peek?pkCorner:'')+(top?'<div class="wtop wtopm">'+testTag(w)+(priv?(wGr(w)?grTagHtml(w):'<span class="lockt priv">🔒 prywatne</span>'):'')+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(top.n?'<i class="wcnt">'+top.n+'</i>':'')+'</div>'+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+top.d:(peek?testTag(w):wIcons(w,mine,priv)+testTag(w))+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+'<div class="wtop">'+nk(w.user_id)+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w):'')+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv&&wGr(w)?grTagHtml(w):'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>')
      +(live?liveHtml(w):'')
      +paceHtml(w)+bikeHtml(w)+(live?'':durLineHtml(w))+placeHtml(w)+(w.note?'<div class="wnt">💬 '+esc(w.note)+'</div>':'')+(live?'':wxHtml(w))+routeBoxHtml(w)
      +invitedHtml(w)
@@ -1543,7 +1540,7 @@ let visOk=false,invs={},notifs=[];
 /* 🧪 zaproszenia testowe (KROK 22) */
 let testOk=false;const isTest=w=>!!w&&!!w.is_test&&!pv&&!PV_GUEST;   // w podglądzie 👑 testowe wyglądają jak prawdziwe
 // data dodania na karcie — tylko przy włączonym 🕓 „od najnowszych”
-const wAddedTag=w=>{if(flt.sort!=="new"||!w.created_at)return "";const d=new Date(w.created_at);return '<span class="wadd">dodano '+String(d.getDate()).padStart(2,"0")+'.'+String(d.getMonth()+1).padStart(2,"0")+' '+d.toLocaleTimeString("pl-PL",{hour:"2-digit",minute:"2-digit",second:"2-digit"})+'</span>'};
+const wIcons=(w,mine,priv)=>{const a=(priv?'':'<span class="wic-i all" title="Dla wszystkich">'+uiIcon("globe")+'</span>')+(mine?'<span class="wic-i ty" title="Twoje zaproszenie">Ty</span>':'')+(priv&&!wGr(w)?'<span class="wic-i lk" title="Prywatne">'+uiIcon("lock")+'</span>':'');return a?'<div class="wic">'+a+'</div>':''};
 const testTag=w=>isTest(w)?'<span class="ttag">'+uiIcon("flask")+' TEST</span>':'';
 const CHECK='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
 const plf=(n,f)=>n===1?f[0]:(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20))?f[1]:f[2];
@@ -1567,11 +1564,11 @@ function invitedHtml(w){
   if(!isPriv(w))return "";
   const L=(invs[w.id]||[]).slice().sort((a,b)=>((isFav(b.u)?1:0)-(isFav(a.u)?1:0))||String(nicks[a.u]||"").localeCompare(String(nicks[b.u]||""),"pl"));
   const by=x=>x.by&&x.by!==w.user_id&&nicks[x.by]?'dopr. '+esc(nicks[x.by]):'';
-  if(!L.length)return wGr(w)?'':'<div class="meta">🔒 Zaproszeni: nikt</div>';   // 👥 grupa bez dodatkowych osób
-  if(L.length<=2)return '<div class="meta">🔒 Zaproszeni ('+L.length+'):<div class="nks">'+L.map(x=>nk(x.u)+(by(x)?'<span class="note">'+by(x)+'</span>':'')).join("")+'</div></div>';
-  const k="inv"+w.id,fn=favNames(L.map(x=>x.u));
-  return '<details class="jlist" data-j="'+esc(k)+'"'+(joinOpen.has(k)?' open':'')+'><summary><span class="jc">🔒 Zaproszeni '+L.length+'</span>'
-   +(fn.length?'<span class="jf">· ⭐ '+esc(fn.join(", "))+'</span>':'')+'</summary>'
+  if(!L.length)return wGr(w)?'':'<div class="meta">🔒 '+uiIcon("hand")+' nikt</div>';   // 👥 grupa bez dodatkowych osób
+  if(L.length<=2)return '<div class="meta">🔒 '+uiIcon("hand")+' ('+L.length+'):<div class="nks">'+L.map(x=>nk(x.u)+(by(x)?'<span class="note">'+by(x)+'</span>':'')).join("")+'</div></div>';
+  const k="inv"+w.id;
+  return '<details class="jlist jinv" data-j="'+esc(k)+'"'+(joinOpen.has(k)?' open':'')+'><summary><span class="jrow">'
+   +'<span class="jc">'+uiIcon("hand")+'</span>'+nk(L[0].u)+'<span class="jmore">+'+(L.length-1)+'</span></span></summary>'
    +'<div class="jv">'+L.map(x=>'<div>'+nk(x.u)+'<span class="note">'+[by(x),onlineIds.includes(x.u)?'🟢 teraz':''].filter(Boolean).join(' · ')+'</span></div>').join("")+'</div></details>';
 }
 /* pole „Kto zobaczy” w formularzu */

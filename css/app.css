@@ -65,8 +65,6 @@ body.pvon{padding-top:30px}body.pvon .hdr{top:30px}.wbeta{border-radius:999px;wi
 .nit .sb{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.nit .sb .b{padding:8px 12px;font-size:14px;border-radius:10px}
 .nit .nnews{font-size:14px;margin-top:6px;padding:6px 9px;border-radius:10px;background:var(--card)}.nit .nmore{color:var(--mut);font-weight:700}
 .bsbox .bsempty{padding:8px 4px;font-size:14px}.bsempty .lnk{font-size:14px;padding:0}
-.wlab{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.04em;border-radius:999px;padding:2px 10px;margin-bottom:6px;background:var(--acc2);color:var(--acc)}
-.wlab.me{background:#fff3c4;color:#8a5a00}html[data-theme=dark] .wlab.me{background:#4a3f12;color:#ffd666}
 .wwx{font-size:14px;color:var(--mut);margin-top:6px}
 .wroute{margin-top:8px;padding:9px 11px;border-radius:12px;background:var(--acc2);font-size:15px}
 .wroute .wrb{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.wroute .wrb .b{background:var(--card)!important;flex:1 1 auto;min-width:0;padding:8px 10px;white-space:nowrap}
@@ -79,19 +77,18 @@ body.pvon{padding-top:30px}body.pvon .hdr{top:30px}.wbeta{border-radius:999px;wi
 .wpc-own{background:var(--fill);color:var(--ink)}
 .wrfile{display:block;margin:0;cursor:pointer}.wrfile input{display:none}.wrfile span{display:block;padding:11px 12px;border-radius:12px;background:var(--fill);color:var(--acc);font-weight:700;font-size:16px;text-align:center}
 .rsbox{max-width:560px;text-align:left}.rsmap{height:300px}
-.wadd{display:inline-block;font-size:12px;font-weight:800;color:var(--white);background:var(--sys-blue,#0a84ff);border-radius:999px;padding:2px 9px;margin:0 6px 6px 0;vertical-align:1px;white-space:nowrap}
 .ttag{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.05em;color:var(--white);background:#e5484d;border-radius:999px;padding:2px 9px;margin:0 0 6px 6px;vertical-align:1px;text-transform:none;box-shadow:0 0 0 0 rgba(229,72,77,.5);animation:tblink 1.3s ease-in-out infinite}
 @keyframes tblink{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(229,72,77,.55)}50%{opacity:.55;box-shadow:0 0 0 4px rgba(229,72,77,0)}}
 @keyframes tpulse{0%,100%{border-color:#e5484d;box-shadow:0 0 0 0 rgba(229,72,77,0)}50%{border-color:#ff9a9d;box-shadow:0 0 0 4px rgba(229,72,77,.28)}}
 @media (prefers-reduced-motion:reduce){.ttag,.want.test,.nit.test{animation:none!important}}
 .nit .tx>.ttag,.want>.ttag{margin-left:0}
+.want.test{position:relative}.want.test>.ttag{position:absolute;top:8px;right:10px;margin:0;font-size:10px;padding:1px 7px;letter-spacing:.04em}   /* TEST pływający w rogu karty (tylko admin) */
 .want.test{border:2px dashed #e5484d;background:repeating-linear-gradient(135deg,transparent 0 10px,rgba(229,72,77,.05) 10px 20px);animation:tpulse 1.6s ease-in-out infinite}
 .nit.test{border:2px dashed #e5484d;animation:tpulse 1.6s ease-in-out infinite}
-.want.test>*:not(.acts):not(.ttag):not(.wlab){opacity:.6;filter:grayscale(.55)}
+.want.test>*:not(.acts):not(.ttag):not(.wic){opacity:.6;filter:grayscale(.55)}
 .nit.test .tx>*:not(.ttag):not(.sb),.nit.test .ic{opacity:.6;filter:grayscale(.55)}
 #wtest button.on[data-test="1"]{background:#e5484d;color:var(--white)}
 .b.big.tbtn{background:#e5484d}
-.wlab.all{background:var(--fill);color:var(--mut)}
 .want.flash{animation:wflash 1.6s ease-out}
 @keyframes wflash{0%,30%{box-shadow:0 0 0 3px var(--acc)}100%{box-shadow:0 0 0 0 transparent}}
 .whelp{display:block;margin:-6px auto 12px;font-size:16px}
@@ -199,7 +196,6 @@ html[data-theme=dark] .ftile:not(.today) .fh,html[data-theme=dark] .ftile:not(.t
 .wl1{font-size:18px;font-weight:700;line-height:1.3}.wl1 i{font-style:normal;font-weight:500;color:var(--mut)}.wl1 .whrs{vertical-align:middle;flex-wrap:wrap;row-gap:2px}.wl1 .whrs b{font-size:14px;padding:2px 8px}
 .wl2{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--mut);margin-top:2px;white-space:nowrap}
 .wme{font-size:13px;font-weight:700;color:var(--acc);background:var(--acc2);border-radius:999px;padding:1px 9px;white-space:nowrap}
-.wl3{font-size:15px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 details.wday .want{margin:0 10px 10px}
 .wsubc{font-size:14px;color:var(--mut);margin:4px 0 0;line-height:1.35}.wsubc a{color:var(--acc);font-weight:600;text-decoration:none;border-bottom:1px solid currentColor}
 .rbwrap{position:relative;width:164px;margin:14px auto 4px}.rbwrap .roundbtn{margin:0}
@@ -326,7 +322,6 @@ details.card>summary{font-size:16px}
 .item{padding:10px 12px;border:1px solid var(--line);border-radius:12px;margin-bottom:6px;cursor:pointer}
 .item.cur{border-color:var(--acc);background:var(--acc2)}
 .want,.lib{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:10px}
-.want.mine{border-color:var(--acc);background:var(--acc2)}
 .wtop{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:18px}.wtop b{font-size:20px}.wtop .note{font-size:14px}
 .wnt{font-size:18px;margin-top:4px}
 .want .meta{font-size:16px;margin-top:6px}.want .nk{font-size:18px}
@@ -334,8 +329,8 @@ details.jlist{margin-top:8px}
 details.jlist>summary{list-style:none;display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;background:var(--fill);font-size:16px;font-weight:600;cursor:pointer;-webkit-user-select:none;user-select:none}
 details.jlist>summary::-webkit-details-marker{display:none}
 details.jlist .jc{flex:none}details.jlist .jf{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-details.jlist>summary::after{content:"›";flex:none;margin-left:auto;font-size:20px;line-height:1;color:var(--mut);transition:transform .15s}
-details.jlist[open]>summary::after{transform:rotate(90deg)}
+details.jlist>summary::after{content:"";flex:none;margin-left:auto;width:8px;height:8px;border:solid var(--mut);border-width:0 2.5px 2.5px 0;border-radius:1px;transform:translateY(-2px) rotate(45deg);transition:transform .15s}   /* strzałka w dół = lista do rozwinięcia */
+details.jlist[open]>summary::after{transform:translateY(2px) rotate(225deg)}
 details.jlist[open]>summary{border-radius:11px 11px 0 0}
 .jv{border:1px solid var(--line);border-top:0;border-radius:0 0 11px 11px;padding:4px 12px}
 .jv>div{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}.jv>div:last-child{border-bottom:0}
@@ -1096,7 +1091,6 @@ html[data-theme=dark] .popbox.wgrp{background:color-mix(in srgb,var(--gc,#8e8e93
 /* 🧪 spokojny wygląd kart testowych (⚙️ → Testy): zostaje czerwona etykieta TEST, znika miganie, czerwona ramka, paski i przygaszenie */
 html.tcalm .ttag{animation:none;box-shadow:none}
 html.tcalm .want.test,html.tcalm .nit.test{animation:none;border-style:solid;border-width:1px;border-color:var(--line);background-image:none}
-html.tcalm .want.mine.test{border-color:var(--acc)}
 html.tcalm .want.test>*,html.tcalm .nit.test .tx>*,html.tcalm .nit.test .ic{opacity:1!important;filter:none!important}
 html.tcalm .want.wgrp.test,html.tcalm .nit.wgrp.test{background:var(--gcb)}
 /* 🏃 komunikat dla spóźnialskich (15 min po starcie) */
@@ -1193,6 +1187,8 @@ details.dmsec>summary{text-align:left}details.dmsec>summary>span:first-child:not
 /* ---- karta zaproszenia: szczegóły zwinięte, przyciski trasy w rzędzie, chipy z ikonami ---- */
 .wopen{font-size:13px;color:var(--mut);white-space:nowrap}
 details.jlist .jf.jfw{white-space:normal;overflow:visible}
+/* lista „zaproszeni” (jinv): ✋ → pierwszy nick (ulubieni najpierw, zwykły rozmiar) → „+N” (reszta); bez kłódki (jest w rzędzie ikon karty) */
+details.jinv .jrow{flex:1;min-width:0;display:flex;flex-wrap:wrap;align-items:center;column-gap:6px;height:26px;overflow:hidden}details.jinv .jrow .nk{flex:0 1 auto;min-width:0;max-width:calc(100% - 100px)}details.jinv .jmore{flex:none;font-weight:800;color:var(--mut)}details.jinv .jrow .jc{margin-right:6px;flex:none;display:inline-flex;align-items:center;gap:4px}details.jinv .ui-i{width:16px;height:16px}
 .wpc{display:inline-flex;align-items:center;gap:5px}.wpc.wbk{flex-direction:row;padding:2px 10px;border:0;font-size:14px;font-weight:700}
 .wpc .ui-i,.wpc.wbk .ui-i{width:15px;height:15px;color:currentColor}
 /* ---- pogoda: ikony wielokolorowe (kontur w stylu aplikacji) + delikatne tło w kolorze warunków ---- */
@@ -1463,7 +1459,7 @@ html[data-theme=dark] .hgwav svg{filter:drop-shadow(0 0 1.2px rgba(255,255,255,.
 .dmlast{line-height:1.45;margin-top:4px}
 
 /* 🕘 Kolejność „od najnowszych”: dopisek „dodano …” w karcie dnia */
-.wl3 .wnew{font-style:normal;font-weight:600;color:var(--mut)}
+.wdad{font-size:12px;font-weight:600;color:var(--mut);opacity:.7;margin-top:3px}
 
 /* 🔒 otwarte okno (.sheet): strona pod spodem się nie przewija i nie reaguje na dotyk (przewija się tylko samo okno) */
 html.sheetlock,html.sheetlock body{overflow:hidden;overscroll-behavior:none}html.sheetlock .sheet{touch-action:none;overscroll-behavior:contain}
@@ -1491,3 +1487,6 @@ html[data-theme=dark] .repbox .rrmini{background:#24332a}
 .repbox .rauth{display:flex;align-items:stretch;justify-content:center;gap:6px}.repbox .rauth .wme{display:inline-flex;align-items:center}
 .repbox .rauth{align-items:center}.repbox .rauth .wme{height:26px;box-sizing:border-box;padding:0 10px;font-size:14px}
 .repbox .rrmini.ph svg{opacity:.28;filter:grayscale(1)}
+
+/* pasek ikon na karcie zaproszenia: 🌐 (publiczne) → Ty (moje, neonowa zieleń) → 🔒 (prywatne); jednakowe kółka 22px w jednej linii */
+.wic{display:flex;align-items:center;gap:6px;margin:0 0 6px}.wic-i{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;font-size:11px;font-weight:800;line-height:1;box-sizing:border-box}.wic-i .ui-i{width:14px;height:14px;margin:0}.wic-i.all{background:#0a84ff;color:#fff}.wic-i.ty{background:#2fd35a;color:#fff;box-shadow:0 0 6px rgba(47,211,90,.55)}.wic-i.lk{background:var(--priv);color:var(--white)}
