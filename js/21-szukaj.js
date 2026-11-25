@@ -142,7 +142,7 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Wyloguj",s:"wyloguj wyjdź",p:"Ustawienia → na dole",i:"logout",hl:'[data-c="out"]',ok:S},
   {t:"Usuń konto",s:"usuń konto skasuj rodo",p:"Ustawienia → na dole",i:"trash",hl:'[data-c="del"]',ok:S},
   {t:"Zaloguj się / załóż konto",s:"zaloguj konto rejestracja",p:"Ustawienia",i:"user",hl:'[data-c="login"]',ok:!S},
-  {t:"Filtry zaproszeń",s:"filtry filtruj kiedy gdzie osoba rower tempo zawijanie mam ochotę sygnały",p:"Zaproszenia → Filtry (działają też w Imprezach i w „Mam ochotę” pod 🔔)",i:"sliders",fn:()=>{show(0);openFlt()},ok:S},
+  {t:"Filtry zaproszeń",s:"filtry filtruj kiedy gdzie osoba rower tempo zawijanie mam ochotę sygnały",p:"Zaproszenia → Filtry (działają też w Imprezach; „Mam ochotę” pod 🔔 zawsze pokazuje wszystko)",i:"sliders",fn:()=>{show(0);openFlt()},ok:S},
   {t:"Kolejność zaproszeń: od najnowszych",s:"kolejność sortowanie sortuj najnowsze najświeższe ostatnio dodane data dodania",p:"Zaproszenia → ikona 🕓 przy „Twoje zaproszenia” albo Filtry → Kolejność",i:"clock",fn:()=>{show(0);openFlt()},ok:S},
   {t:"Filtry imprez",s:"filtry imprez bieg marsz gravel szosa mtb kiedy gdzie zapisany",p:"Imprezy → Filtry",i:"sliders",fn:()=>{show(3);openFlt("ev")},ok:S&&typeof tabOk==="function"&&tabOk(3)},
   {t:"Zakres archiwum (starsze jazdy)",s:"archiwum starsze 3 miesiące rok wszystko historia stare jazdy zakres",p:"Zaproszenia → Archiwum (na dole) → 3 mies. / Rok / Wszystko",i:"archive",fn:()=>{show(0);archOpen=true;renderWants();setTimeout(()=>srPulse(document.querySelector("#wantarch .arng")||$("wantarch")),120)},ok:S},

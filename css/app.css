@@ -1382,7 +1382,7 @@ mark.srmk.out{background:transparent;color:inherit;box-shadow:none}
 .srolt{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700}.srolt .ui-i{width:16px;height:16px}.srolt small{font-weight:400;color:var(--mut)}
 .srold .srolc{margin:0;flex-wrap:wrap}.srold .fch{padding:6px 12px;font-size:14px}
 .srhist{margin-bottom:10px}.srhist .fulbl{display:flex;justify-content:space-between;align-items:center}.srhclr{font-size:12px;color:var(--bad)}
-.sgfnote{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.sgfnote .ui-i{width:15px;height:15px}
+
 .srbox .fulwrap{flex:0 1 auto;min-height:0}.srbox .fulwrap .fulist{flex:0 1 auto;min-height:0;max-height:none}   /* A–Z w wyszukiwaniu: pasek liter zostaje widoczny nad przewijaną listą */
 .srbox .fulwrap .faz{flex:none}
 /* 🏃 KROK 94: plakietka aktywności na karcie zaproszenia (bieg / spacer / wędrówka) — w miejscu plakietki roweru */

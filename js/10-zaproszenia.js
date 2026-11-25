@@ -275,7 +275,7 @@ function fltWknd(){const d=new Date().getDay();return d===6?[0,1]:d===0?[0,6,7]:
 /* 🧩 wspólny silnik filtrów (etap C, 2026-11-24): JEDEN stan `flt` dla zaproszeń, imprez (js/08) i „Mam ochotę” (🔔, js/11).
    Wspólne wymiary: Aktywność, Rodzaj roweru, Kiedy, Gdzie, Relacja, Osoba. Każdy rodzaj sprawdza tylko wymiary, które ma —
    pozostałe go nie zawężają (np. tempo nie ukrywa imprez). FLT_KINDS = które wymiary liczą się przy danym rodzaju. */
-const FLT_KINDS={ev:["act","bike","when","where","who","user"],sig:["act","when","who","user","demo"]};   // 3.0: sygnały zawsze dla wszystkich — bez „Widoczności”
+const FLT_KINDS={ev:["act","bike","when","where","who","user"]};
 const fltKeysFor=k=>FLT_KINDS[k]?fltKeys().filter(x=>FLT_KINDS[k].includes(x)):fltKeys();
 const fltActiveFor=k=>fltKeysFor(k).length>0;
 // Kiedy: d0…d1 = zakres dni od dziś (zaproszenie: jeden dzień, impreza wielodniowa: od–do)
@@ -309,19 +309,6 @@ function fltEvOk(e){
   if(flt.who==="inv"&&!evInv.some(x=>x.event_id===e.id&&x.user_id===uid))return false;
   if(flt.who==="fav"&&!(P.some(isFav)||isFav(e.created_by)))return false;
   if(flt.user.length&&!flt.user.some(u=>P.includes(u)||e.created_by===u))return false;
-  return true}
-// 🙋 „Mam ochotę”: zawsze dziś; relacja: mój / dałem dłoń / prywatny do mnie; osoba: autor albo ktoś z dłonią
-function fltSigOk(x){
-  if(!session||!fltActiveFor("sig"))return true;
-  const R=sigReacts[x.user_id]||[],ppl=[x.user_id].concat(R);
-  if(flt.act&&(x.activity||"bike")!==flt.act)return false;
-  if(!fltWhenOk(0,0))return false;
-  if(flt.who==="mine"&&x.user_id!==uid)return false;
-  if((flt.who==="going"||flt.who==="part")&&x.user_id!==uid&&!R.includes(uid))return false;
-  if(flt.who==="inv"&&!(sigPriv(x)&&(sigTo[x.user_id]||[]).includes(uid)))return false;
-  if(flt.who==="fav"&&!ppl.some(isFav))return false;
-  if(flt.user.length&&!flt.user.some(u=>ppl.includes(u)))return false;
-  if(flt.demo==="hide"&&typeof demoIds!=="undefined"&&demoIds.has(x.user_id))return false;
   return true}
 // „Wyczyść filtry” z 🔔 i z zakładki Imprezy
 document.addEventListener("click",e=>{if(!e.target.closest("[data-fxall]"))return;flt=fltEmpty();fltSave();fltRefresh();
