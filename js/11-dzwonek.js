@@ -332,8 +332,15 @@ const pekSig=u=>'<span class="pekby" title="'+(genders[u]==="K"?'Wysłała':'Wys
 const EK_GEN={bike:"jazdy",run:"biegu",walk:"spaceru",hike:"wędrówki"};   // „Doczekałeś się jazdy / biegu…!” — nowa aktywność bez wpisu: „wspólnego wyjścia”
 const wEkipaKind=w=>!w?"":/^super ekipa/i.test(String(w.title||"").trim())?"super":w.from_sig?"ekipa":"";
 function popEkipaHtml(w,inv){const k=wEkipaKind(w);if(!k)return "";const n=new Set([w.user_id,uid].concat(inv||[],joins[w.id]||[])).size;   // autor + ja + zaproszeni + dołączeni
-  return '<div class="pekb">'+sigCoin()+'<span><b>'+(k==="super"?'SUPER EKIPA':'EKIPA')+'</b><small>'
-   +(k==="super"?'Ekipy z „Mam ochotę” połączyły się':'Z sygnału „Mam ochotę”')+' · <span class="pekn" title="'+n+' '+plf(n,["osoba","osoby","osób"])+' w ekipie">'+uiIcon("users")+'<b>'+n+'</b></span></small></span></div>'}
+  // jednowierszowy pas (23:33): moneta · EKIPA / SUPER EKIPA · 👥 liczba
+  return '<div class="pekb">'+sigCoin()+'<b class="pekt">'+(k==="super"?'SUPER EKIPA':'EKIPA')+'</b><span class="pekn" title="'+n+' '+plf(n,["osoba","osoby","osób"])+' w ekipie">'+uiIcon("users")+'<b>'+n+'</b></span></div>'}
+function popEkFrom(w,inv,actor){const A=wEkipaKind(w)==="super"?popSigAuthors(w,inv):[];
+  if(A.length>=2)return '<div class="pekfrom">Ekipy '+A.slice(0,2).map(u=>'<span class="pekwho">'+pekSig(u)+nk(u)+'</span>').join('<span class="pekplus">+</span>')+(A.length>2?'<span class="pekplus">+'+(A.length-2)+'</span>':'')+'</div>';
+  return '<div class="pekfrom">Zaprasza '+(actor===w.user_id?pekSig(actor):'')+nk(actor,"Ktoś")+'</div>'}
+// SUPER EKIPA: autorzy dzisiejszych sygnałów tej aktywności wśród osób zaproszenia (autor zaproszenia pierwszy) — „Ekipy ⚡Stulls + ⚡TOSTER” (23:28–23:33)
+function popSigAuthors(w,inv){const act=w.activity||"bike",P=[w.user_id,uid].concat(inv||[],joins[w.id]||[]);
+  const S=new Set((typeof sigs!=="undefined"?sigs:[]).filter(x=>!x.cancelled_at&&(x.activity||"bike")===act).map(x=>x.user_id));
+  return [...new Set(P)].filter(u=>S.has(u))}
 function renderPop(dir){   // dir: -1 / 1 = karta wjeżdża z lewej / prawej (przesuw), bez dir — bez animacji
   const p=$("popsheet"),it=popList[popIdx];if(!it){closePop();return}
   const {n,w,moved}=it,d=new Date(w.starts_at),wd=d.toLocaleDateString("pl-PL",{weekday:"long"}),dd=dayDiff(d);
@@ -358,7 +365,7 @@ function renderPop(dir){   // dir: -1 / 1 = karta wjeżdża z lewej / prawej (pr
     :big("join",AV.verb+"! · "+hhmm(d))+'<div class="pbtns">'+sm("read","OK","w")+'</div>';
   p.innerHTML='<div class="sheetbox popbox'+grCls(w)+(priv?' ppriv':'')+(wEkipaKind(w)?' pekipa':'')+'" role="dialog" aria-modal="true"><button class="sclose" data-q="later" aria-label="Później">✕</button><div class="pcard'+(dir?(dir>0?' inr':' inl'):'')+'">'+popEkipaHtml(w,inv)
    +(isTest(w)?'<span class="ttag" style="margin-right:6px">'+uiIcon("flask")+' TEST</span>':'')+(set||time||!wEkipaKind(w)?'<span class="ptag">'+(set?'✅ GODZINA USTALONA':time?'🕖 ZMIANA GODZINY':'📩 NOWE ZAPROSZENIE')+'</span>':'')+(priv&&!wGr(w)&&!wEkipaKind(w)?' <span class="lockt priv">🔒 prywatne</span>':'')+(wGr(w)?' '+grTagHtml(w)+(priv?'<span class="sgpriv pp">'+uiIcon("lock")+' prywatne</span>':''):'')
-   +(wEkipaKind(w)&&!set&&!time?'<div class="ph">'+(genders[uid]==="K"?'Doczekałaś':'Doczekałeś')+' się '+esc(EK_GEN[w.activity||"bike"]||'wspólnego wyjścia')+'!</div><div class="pekfrom">Zaprasza '+(actor===w.user_id?pekSig(actor):'')+nk(actor,"Ktoś")+'</div>':'')
+   +(wEkipaKind(w)&&!set&&!time?'<div class="ph">'+(genders[uid]==="K"?'Doczekałaś':'Doczekałeś')+' się '+esc(EK_GEN[w.activity||"bike"]||'wspólnego wyjścia')+'!</div>'+popEkFrom(w,inv,actor):'')
    +(wEkipaKind(w)&&!set&&!time?'':'<div class="ph">'+(wEkipaKind(w)&&actor===w.user_id?pekSig(actor):'')+nk(actor,"Ktoś")+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w,actor):'')+(set?' '+(genders[actor]==="K"?"ustaliła":"ustalił")+' godzinę':time?' '+(genders[actor]==="K"?"zmieniła":"zmienił")+' godzinę':' zaprasza Cię '+(actOf(w.activity).invite_txt||'na rower'))+'</div>')   // 🤝 ekipa: „Doczekałeś się jazdy!” zamiast „zaprasza Cię” (23:05–23:08)
    +'<div class="pwhen">'+esc(day+" "+wTime(w))+(dd>=0&&dd<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
    +(wLate(w)&&!joined?lateNote():'')
