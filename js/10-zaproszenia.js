@@ -748,11 +748,11 @@ function wantHtml(w,top){
      +(ownCl?wClashHtml(ownCl):'')
      +'<div class="acts">'
      +(mine?(live?'':(open?wSettleBtn(w)+'<div class="agrp ed"><button class="ib" data-my="edit" data-id="'+esc(w.id)+'" title="Edytuj zaproszenie" aria-label="Edytuj zaproszenie">'+ICON.edit+'</button></div><div class="agrp tools">':(fromRange(w)?'<button class="b join" data-my="settlepick" data-id="'+esc(w.id)+'" title="Zmień ustaloną godzinę" aria-label="Zmień ustaloną godzinę '+esc(hhmm(new Date(w.starts_at)))+'">'+uiIcon("tick")+' '+esc(hhmm(new Date(w.starts_at)))+' · zmień</button><button class="ib" data-my="edit" data-id="'+esc(w.id)+'" title="Edytuj zaproszenie" aria-label="Edytuj zaproszenie">'+ICON.edit+'</button>':'<button class="b g join" data-my="edit" data-id="'+esc(w.id)+'">✏️ Edytuj</button>'))
-        +(priv?'<button class="ib" data-my="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
+        +(priv&&wDeclOk(w)?'<button class="ib" data-my="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
         +'<button class="ib" data-my="share" data-id="'+esc(w.id)+'" title="Udostępnij" aria-label="Udostępnij">'+ICON.share+'</button>'):live&&!wLate(w)&&!joined?'<span class="note" style="flex:1">🚴 Jazda trwa — dołączyć już nie można.</span>':peek?'<span class="pkbar">'+uiIcon("shield")+'<span><b>Podgląd admina</b>Nie jesteś zaproszony — możesz podejrzeć lub usunąć.</span></span>'
        :open?'<button class="b join'+(joined?' g':'')+'" data-w="pref" data-id="'+esc(w.id)+'">'+(joined&&myp?'✓ '+esc(hhmm(new Date(myp)))+' · zmień':dec?'Jednak mogę? Wybierz godzinę':'Pasuje mi o…')+'</button>'
        :'<button class="b join'+(joined?' g':ownCl?' off':'')+'" data-w="join" data-id="'+esc(w.id)+'"'+(ownCl?' aria-disabled="true"':'')+'>'+(joined?'Rezygnuję':dec?'Jednak '+wVerb(w).toLowerCase()+'!':wVerb(w)+'!')+'</button>')
-     +(canInv&&!live?'<button class="ib" data-w="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
+     +(canInv&&!live&&wDeclOk(w)?'<button class="ib" data-w="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
      +((mine||isAdmin)?'<button class="ib del'+(mine?'':' adm')+'" data-w="del" data-id="'+esc(w.id)+'" title="'+(mine?'Odwołaj zaproszenie':'Usuń (admin)')+'" aria-label="'+(mine?'Odwołaj zaproszenie':'Usuń (admin)')+'">'+ICON.del+'</button>':'')
      +(myOpen?'</div>':'')+'</div>'
      +(mine&&open&&!live&&wTally(w).length?'<div class="myl myla"><button class="lnk" data-my="settlepick" data-id="'+esc(w.id)+'">Inna godzina ›</button></div>':'')
@@ -1565,7 +1565,9 @@ const wGrList=()=>wGrOk&&typeof grForWant==="function"?grForWant():[];
 const invIds=w=>(invs[w.id]||[]).map(x=>x.u);
 // zaproszony: wpis w want_invitees albo aktywny członek grupy zaproszenia (👥 KROK 71)
 const wInvMe=w=>invIds(w).includes(uid)||(!!wGr(w)&&typeof grIn==="function"&&grIn(w.group_id));
-const wantCanInvite=w=>isPriv(w)&&new Date(w.starts_at).getTime()>Date.now()-36e5&&(w.user_id===uid||wInvMe(w));
+const wantCanInvite=w=>isPriv(w)&&new Date(w.starts_at).getTime()>Date.now()&&(w.user_id===uid||wInvMe(w));   // dopraszanie tylko przed startem (baza: want_invitees „tylko przed startem”)
+// błąd dopraszania po ludzku — reguła bazy „tylko przed startem” (jazda ruszyła, gdy okno było otwarte)
+const invErrTxt=err=>/przed startem/.test(err&&err.message||"")?"Jazda już ruszyła — po starcie nie można już nikogo dopisać.":(err&&err.message?err.message:"błąd");
 // lista zaproszonych: do 2 osób pigułki, od 3 — zwinięta (jak „Dołączyło”); „dopr. X” przy dopraszanych
 function invitedHtml(w){
   if(!isPriv(w))return "";
@@ -1623,6 +1625,7 @@ function whoPlHtml(){
 function openWho(mode,wantId){
   if(!session)return;
   if(needProfile()){askNick();return}
+  if(mode==="add"){const w=wants.find(x=>x.id===wantId);if(w&&!wDeclOk(w)){say("Jazda już ruszyła — po starcie nie można już nikogo dopisać.");renderWants();return}}
   ws.mode=mode;ws.want=wantId||null;ws.q="";ws.topK=null;   // ⬆ zaznaczeni na górze listy (ustalane przy otwarciu, szukaniu i filtrze)
   ws.gr=mode==="form"&&wGrList().some(x=>x.id===wf.gr)?wf.gr:mode==="sig"&&typeof sg!=="undefined"&&wGrList().some(x=>x.id===sg.gr)?sg.gr:"";   // 👥 grupa (KROK 71); 🟡 „Mam ochotę” (KROK 90)
   ws.msg="";pf.who=null;   // 🔎 filtry od nowa przy każdym otwarciu
@@ -1856,7 +1859,7 @@ $("whosheet").addEventListener("click",async e=>{
     if(res.error)throw res.error;
     closeWho();await syncNow();
     say("Zaproszono: "+ids.map(id=>nicks[id]).join(", ")+" ✔ Dostaną powiadomienie.");
-  }catch(err){k.disabled=false;say("Nie udało się zaprosić: "+(err&&err.message?err.message:"błąd"))}
+  }catch(err){k.disabled=false;const t=invErrTxt(err);say(/ruszyła/.test(t)?t:"Nie udało się zaprosić: "+t);if(/ruszyła/.test(t)){closeWho();renderWants()}}
 });
 $("whosheet").addEventListener("input",e=>{if(e.target.id==="wsmsg"){ws.msg=e.target.value;return}if(e.target.id==="wsq"){ws.q=e.target.value;$("wslist").innerHTML=whoGrHtml()+whoPlHtml()+whoListHtml()}});
 /* ---------- zakres godzin, „Pasuje mi o…”, „Ustal godzinę” (KROK 15) ---------- */

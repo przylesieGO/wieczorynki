@@ -52,11 +52,13 @@ async function grLoad(){
     const mine=a.data||[],ids=mine.map(m=>m.group_id),mem={},lim={};
     if(ids.length){
       const [b,c,d]=await Promise.all([
-        sb.from("groups").select("id,owner,name,icon,descr,area,color,visibility,join_mode,member_limit,code,archived_at,posts_mods_only").in("id",ids),
+        sb.from("groups").select("id,owner,name,icon,descr,area,color,visibility,join_mode,member_limit,archived_at,posts_mods_only").in("id",ids),
         sb.from("group_members").select("group_id,user_id,role,status,invited_by,created_at,joined_at").in("group_id",ids).limit(5000),
         sb.from("group_limit_requests").select("id,group_id,from_limit,to_limit,status").in("group_id",ids).eq("status","pending")]);
       if(b.error)throw b.error;if(c.error)throw c.error;
       (b.data||[]).forEach(x=>{grG[x.id]=Object.assign({},grG[x.id]||{},x)});
+      // 🔗 kod zaproszenia: tylko właściciel i moderatorzy (KROK 80 — kolumna code niedostępna z tabeli); bez KROKU 80 funkcji nie ma — link się nie pokaże
+      {const k=await sb.rpc("group_codes");if(!k.error)(k.data||[]).forEach(x=>{if(grG[x.id])grG[x.id].code=x.code})}
       ids.forEach(i=>{mem[i]=[]});(c.data||[]).forEach(x=>{(mem[x.group_id]=mem[x.group_id]||[]).push(x)});
       (d.data||[]).forEach(x=>{lim[x.group_id]=x});
     }
@@ -340,7 +342,7 @@ function grGo(g){grId=g;grTab=grRole(g)?"board":"ppl";grOpenU="";grOpenP="";grEd
 /* 👑 Administracja → Grupy: wszystkie grupy (👑 tymczasowo widzi też ukryte — KROK 70) i prośby o większy limit */
 async function grKLoad(){
   const [a,b,c,d]=await Promise.all([
-    sb.from("groups").select("id,owner,name,icon,descr,area,color,visibility,join_mode,member_limit,code,created_at,archived_at").order("created_at",{ascending:false}).limit(500),
+    sb.from("groups").select("id,owner,name,icon,descr,area,color,visibility,join_mode,member_limit,created_at,archived_at").order("created_at",{ascending:false}).limit(500),
     sb.from("group_limit_requests").select("id,group_id,asked_by,from_limit,to_limit,status,created_at").eq("status","pending").order("created_at").limit(100),
     sb.from("group_members").select("group_id,user_id,role,status,invited_by,created_at,joined_at").limit(10000),
     sb.rpc("admin_group_stats").then(r=>r,()=>({error:1}))]);   // 📊 KROK 84 — bez niego panel działa jak dawniej

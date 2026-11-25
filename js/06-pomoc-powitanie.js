@@ -105,7 +105,7 @@ function helpFullHtml(){
      "<b>Dystans</b> albo <b>„Na ile jedziesz?”</b> (domyślnie 2 h). Pod zegarem widać „⏱ Jazda ok. 18:00–20:40”.",
      "<b>Kilka zaproszeń dziennie</b> — ale nie mogą na siebie nachodzić (+15 min zapasu). Gdy nachodzą, okienko pod zegarem i pasek nad „Wyślij” robią się żółte, a „Ustaw 11:55” podpowiada najwcześniejszą wolną godzinę.",
      "<b>🧪 Testowe / 🚴 Prawdziwe:</b> testowe są na próbę (czerwona migająca plakietka TEST, na kanale z oznaczeniem). Możesz je ukryć: ⚙️ → Testy → „Testowe zaproszenia”.",
-     "<b>Kto zobaczy?</b> 🌍 Wszyscy (także kanał Telegram) albo 🔒 ⭐ Ulubieni / 👥 wybrane osoby. Prywatne widzą tylko zaproszeni; mogą doprosić kolejne osoby.",
+     "<b>Kto zobaczy?</b> 🌍 Wszyscy (także kanał Telegram) albo 🔒 ⭐ Ulubieni / 👥 wybrane osoby. Prywatne widzą tylko zaproszeni; do startu jazdy mogą doprosić kolejne osoby (po starcie przycisk znika).",
      "W oknie wyboru osób (👥 Wybieram): szukanie po nicku, filtry (kobiety, mężczyźni, ulubieni, teraz…), rząd <b>„Często zapraszasz”</b> — osoby, które najczęściej zapraszasz (dotknięcie zaznacza), przy nicku <b>„zapraszano N×”</b>, a przy długiej liście <b>pasek A–Z</b> — dotknij litery albo przesuń po nich palcem, żeby przeskoczyć do osób na tę literę. Przy każdej grupie i liście (sekcje „Twoje grupy” i „Twoje listy”) jest przycisk <b>👥 ⌄</b> — dotknięcie rozwija skład (kto jest w grupie / na liście), bez zaznaczania; na komputerze skład widać też po najechaniu kursorem.",
      "<b>Aktywność</b> (na górze formularza): rower, bieg, spacer albo trekking (wędrówka piesza). Przy biegu, spacerze i trekkingu nie ma wyboru roweru ani tempa, a na karcie zamiast „Jadę!” jest „Biegnę!” / „Idę!”; tytuł domyślny dostaje dopisek, np. „· bieg”.",
      "<b>🚲 Rower / teren</b> (przy rowerze): dla wszystkich (domyślnie), szosa, gravel, MTB, e-bike.",
@@ -182,7 +182,8 @@ function helpFullHtml(){
      "Tylko Ty widzisz swoje listy — nikt nie wie, że jest na Twojej liście. Wybór kilku osób zapiszesz jako listę w oknach wyboru osób — link <b>„Jako lista”</b> obok „Wyczyść” (od 2 zaznaczonych osób). Listę można przekształcić w grupę."]):'')
    +(typeof grOn==="function"&&grOn()?sec("👥 Grupy",[
      "<b>⚙️ → Edytuj profil → Grupy</b>: załóż własną grupę (nazwa, kolor, ikona) albo dołącz do istniejącej. Grupa może być <b>jawna</b> (widać ją w wyszukiwaniu) albo <b>ukryta</b>; dołączanie wolne albo na prośbę / zaproszenie (kłódka).",
-     "Założyciel jest właścicielem, może wyznaczyć moderatorów. Grupę założysz też z jednej albo kilku list. Limit członków zwiększa na prośbę 👑.",
+     "Założyciel jest właścicielem, może wyznaczyć moderatorów i przekazać grupę innemu członkowi. Grupę założysz też z jednej albo kilku list. Limit członków zwiększa na prośbę 👑; zapraszać można do 100 osób na dobę.",
+     "<b>Link z kodem grupy</b> (O grupie → Zaproszenie linkiem) widzą i kopiują właściciel i moderatorzy; „Nowy kod” unieważnia stary link. W <b>Staty</b> prawdziwe km innych osób widzisz, gdy ta osoba i Ty udostępniacie wyniki jazd (Prywatność) — inaczej km z planu zaproszenia.",
      "W grupie: <b>Tablica</b> (ogłoszenia do 500 znaków; nowe wpisy z plakietką), <b>Ludzie</b>, <b>Staty</b> (wspólne jazdy, najaktywniejsi) i <b>O grupie</b>.",
      "Zaproszenie dla grupy wybierzesz w „Kto zobaczy?” — zobaczą je wszyscy członkowie, także ci, którzy dołączą później. Karta ma kolor i etykietę grupy; dotknięcie etykiety otwiera grupę."]):'')
    +(reportOk&&session?sec("🚴 Moje jazdy",[
