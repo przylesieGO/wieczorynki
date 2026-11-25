@@ -576,10 +576,12 @@ function sigFabSync(fabOn){
   if(fabOn===undefined)fabOn=!$("fab").classList.contains("hide");
   const done=Date.now()<sigDoneT;
   b.classList.toggle("hide",!fabOn||!(sigFabOn()||done));b.classList.toggle("done",done);
-  b.classList.toggle("act",!done&&sigActive());sigFabHtml();
+  b.classList.toggle("act",!done&&sigActive());sigFabHtml();sigWinSync();
 }
 // 👋 machająca dłoń (zamiast koła, 2026-11-24): żółta na zielonym tle, taka sama w obu motywach (wariant A), z łukami ruchu — kształt inny niż ✋ w liczniku „Jadę”
 const sigWheel='<svg viewBox="0 0 30 30" fill="none" aria-hidden="true"><path class="wva" d="M4.4 10.6a7 7 0 0 1 2.4-4M1.6 9.2a10 10 0 0 1 3.4-5.6" stroke="#f5d04e" stroke-width="2.1" stroke-linecap="round" opacity=".9"/><g transform="translate(-2 -1)"><g class="wvh" stroke="#f5d04e" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M23 14V9.2a1.9 1.9 0 0 0-3.8 0V14M19.2 13V7.4a1.9 1.9 0 0 0-3.8 0V13M15.4 13.4V9.2a1.9 1.9 0 0 0-3.8 0v7.6"/><path d="M23 11.4a1.9 1.9 0 1 1 3.8 0V17a7.6 7.6 0 0 1-7.6 7.6h-1.9c-2.7 0-4.3-.8-5.7-2.2l-3.4-3.4a1.9 1.9 0 0 1 2.7-2.7l2.5 2.5"/></g></g></svg>';
+const sigWheelG=sigWheel.replace(/#f5d04e/g,"#1a6a30");
+const sigCoin=()=>'<span class="sgcoin" aria-hidden="true">'+sigWheelG+'</span>';
 const sigCheck='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="#248a3d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 function sigFabHtml(){
   const b=$("sigfab");if(!b)return;
@@ -590,6 +592,50 @@ function sigFabHtml(){
   b.setAttribute("aria-label",act?"Twój sygnał „Mam ochotę”"+(n?" — "+n+" "+plf(n,["osoba","osoby","osób"])+" też ma ochotę":"")+" — otwórz":"Mam ochotę — daj znać, że chcesz dziś pojeździć");
 }
 function closeSig(){$("sigsheet").classList.add("hide");$("sigsheet").innerHTML="";sigView=""}
+/* 🙋 Okno „Ekipa na dziś” — lista wszystkich dzisiejszych sygnałów z filtrami (te same wiersze co pod 🔔).
+   Otwiera je machająca dłoń z licznikiem w wierszu „Twoje zaproszenia” i bombel „Sygnały” w Filtry → Relacja (prośba właściciela 2026-11-25).
+   Pod 🔔 sygnały nadal są zawsze w całości — to powiadomienia; filtry dotyczą tylko tego okna. */
+let sgwOpen=false;const sgwF={a:"",w:""};
+const SGW_WHO=[["","Wszystkie","users"],["mine","Moje","user"],["react","Z moją Reakcją","hand"],["fav","Ulubieni","starf"]];
+function sigWinOk(x){
+  if(sgwF.a&&(x.activity||"bike")!==sgwF.a)return false;
+  const R=sigReactIds(x);
+  if(sgwF.w==="mine"&&x.user_id!==uid)return false;
+  if(sgwF.w==="react"&&!(x.user_id!==uid&&R.includes(uid)))return false;
+  if(sgwF.w==="fav"&&!([x.user_id].concat(R).some(isFav)))return false;
+  return true}
+function sigWinChips(){
+  const A=FLT_ACT().map(([v,t])=>'<button type="button" class="fch'+(sgwF.a===v?' on':'')+'" data-swa="'+esc(v)+'">'+uiIcon(actOf(v).icon)+esc(t)+'</button>').join("");
+  const W=SGW_WHO.map(([v,t,i])=>'<button type="button" class="fch'+(sgwF.w===v?' on':'')+'" data-sww="'+v+'">'+uiIcon(i)+t+'</button>').join("");
+  return '<div class="sgwchips">'+A+'</div><div class="sgwchips">'+W+'</div>'}
+function sigWinRender(){
+  const p=$("sigwin");if(!p||p.classList.contains("hide"))return;
+  if(!p.firstChild)p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Ekipa na dziś"><div class="bsgrab"></div><div class="bshead"><span></span><b>'+sigCoin()+'Ekipa na dziś</b><button type="button" class="lnk" data-swx="1">Zamknij</button></div><div class="bslist"><div id="sgwc"></div><div id="sgwl"></div></div></div>';
+  $("sgwc").innerHTML=sigWinChips();
+  const L=sigList().filter(sigWinOk).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)),box=p.querySelector(".bslist"),y=box.scrollTop;
+  $("sgwl").innerHTML=L.length?L.map(x=>sigRow(x,false)).join(""):'<div class="note sgwempty">'+(sigList().length?'Brak sygnałów dla tych filtrów.':'Dziś nikt jeszcze nie dał znać.')+'</div>';
+  box.scrollTop=y}
+function openSigWin(){if(!sigOn())return;sgwOpen=true;const p=$("sigwin");p.classList.remove("hide");p.innerHTML="";sigWinRender()}
+function closeSigWin(){sgwOpen=false;const p=$("sigwin");p.classList.add("hide");p.innerHTML=""}
+function sigWinSync(){
+  const b=$("mysigs");
+  if(b){const on=sigOn();b.classList.toggle("hide",!on);
+    if(on){const n=sigList().length,h=sigWheelG+'<b class="sgn">'+n+'</b>';if(b.dataset.h!==h){b.dataset.h=h;b.innerHTML=h}b.classList.toggle("dis",!n);
+      b.setAttribute("aria-label","Sygnały „Mam ochotę” — dziś "+n+" — otwórz listę");b.title="Sygnały „Mam ochotę” — dziś "+n}}
+  if(sgwOpen){if(!sigOn())closeSigWin();else sigWinRender()}}
+$("mysigs").addEventListener("click",openSigWin);
+$("sigwin").addEventListener("click",e=>{
+  if(e.target===$("sigwin")||e.target.closest("[data-swx]")){closeSigWin();return}
+  const a=e.target.closest("[data-swa]");if(a){sgwF.a=sgwF.a===a.dataset.swa?"":a.dataset.swa;sigWinRender();return}
+  const w=e.target.closest("[data-sww]");if(w){sgwF.w=w.dataset.sww;sigWinRender();return}
+  if(e.target.closest("[data-sgx]")){closeSigWin();sigCancel();return}
+  if(e.target.closest("[data-sge]")){closeSigWin();openSig("pick");return}
+  const sga=e.target.closest("[data-sgadd]");if(sga){const [wid,ids]=sga.dataset.sgadd.split("|");closeSigWin();sigAddTo(wid,ids.split(","));return}
+  const sgw=e.target.closest("[data-sgw]");if(sgw){const x=wants.find(y=>y.id===sgw.dataset.sgw);closeSigWin();if(x)goToWant(x);return}
+  const sgc=e.target.closest("[data-sgc]");if(sgc){closeSigWin();sigInviteEkipa(sgc.dataset.sgc);return}
+  const sgr=e.target.closest("[data-sgr]");if(sgr){sigReact(sgr.dataset.sgr);return}
+  const sgh=e.target.closest("[data-sgh]");if(sgh){sigHideMsg(sgh.dataset.sgh);return}
+});
 function openSig(view){
   if(!session)return;sigView=view||"pick";const m=sigMine();
   if(m&&actList.some(x=>x.key===m.activity))sigPick=m.activity;
@@ -869,7 +915,7 @@ function sigBellHtml(){
   // w klamrze: zaproszenie z paska („Jedziecie razem ›” / „Dopisz ›”) nie powtarza się przy każdym sygnale (2026-11-24)
   const supW=sup?(sigSuperRide(SS)||(sigSuperPart(SS)||{}).w||null):null,rowfS=x=>sigRow(x,U.has(x)||(x.user_id===uid&&RU>0),supW&&supW.id);
   const rowsAll=(sup?sigSuperHtml(SS,sorted.filter(x=>SS.includes(x)).map(rowfS).join(""))+sorted.filter(x=>!SS.includes(x)).map(rowf).join(""):sorted.map(rowf).join(""));
-  return bsSec("sig",'🚲 Ekipa na dziś',U.size+RU+C.length+EK.length+LT.length+SO.length+RM.length,L.length+C.length+EK.length+LT.length+SO.length+RM.length,RM.map(sigRemindRow).join("")+SO.map(sigSoonRow).join("")+LT.map(sigLateRow).join("")+EK.map(sigEkipaRow).join("")+rowsAll+C.map(sigCancelRow).join("")
+  return bsSec("sig",sigCoin()+'Ekipa na dziś',U.size+RU+C.length+EK.length+LT.length+SO.length+RM.length,L.length+C.length+EK.length+LT.length+SO.length+RM.length,RM.map(sigRemindRow).join("")+SO.map(sigSoonRow).join("")+LT.map(sigLateRow).join("")+EK.map(sigEkipaRow).join("")+rowsAll+C.map(sigCancelRow).join("")
     +'<div class="bsempty">Bez godziny i trasy.'+(sig2Ok?' Dłoń = „też mam ochotę” — autor dostanie znać i zaprosi ekipę (zaproszenie na dziś z zakresem godzin). Gdy dajesz Reakcję na cudzy sygnał, a ktoś z tamtej ekipy na Twój — ekipy łączą się w Super ekipę.':'')+'</div>');
 }
 /* 💬 pop-up „X ma ochotę” (KROK 90): raz na sygnał; kilka naraz — jedno okienko przewijane w bok */

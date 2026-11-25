@@ -467,7 +467,7 @@ function fltSecs(){
     vis:FLT_VIS.map(([v,t])=>fltChip("vis",v,t,FLT_ICO[v])).join("")+(fltHasGrp()?fltGrpChip():""),
     act:FLT_ACT().filter(([v])=>fltScope!=="ev"||(actOf(v).ev_kinds||[]).length).map(([v,t])=>fltChip("act",v,t,actOf(v).icon)).join(""),
     when:FLT_WHEN.filter(x=>x[0]!=="7d").map(([v,t])=>fltChip("when",v,t)).join("")+'<label class="fch fdate'+(flt.when==="date"?' on':'')+'">'+uiIcon("cal")+'<input type="date" id="fltdate" value="'+esc(flt.when==="date"?flt.date:"")+'"></label>',
-    who:FLT_WHO.filter(x=>x[0]!=="part").map(([v,t])=>fltChip("who",v,t,FLT_ICO[v])).join(""),
+    who:FLT_WHO.filter(x=>x[0]!=="part").map(([v,t])=>fltChip("who",v,t,FLT_ICO[v])).join("")+(!fltScope&&typeof sigOn==="function"&&sigOn()?'<button type="button" class="fch" data-fk="sigwin">'+(typeof sigCoin==="function"?sigCoin():uiIcon("hand"))+'Sygnały<span class="fcn">'+sigList().length+'</span></button>':""),   // otwiera okno z listą sygnałów (js/11)
     bike:FLT_BIKE().map(([v,t])=>fltChip("bike",v,t)).join(""),
     pace:FLT_PACE().map(([v,t])=>fltChip("pace",v,t)).join("")};
 }
@@ -514,6 +514,7 @@ $("fltsheet").addEventListener("click",e=>{
   const b=e.target.closest("[data-fk]");if(!b||b.tagName==="LABEL")return;
   const k=b.dataset.fk;
   if(k==="close"){closeFlt();return}
+  if(k==="sigwin"){closeFlt();openSigWin();return}   // bombel „Sygnały” w Relacji → okno z listą sygnałów (js/11)
   if(k==="clear"){flt=fltEmpty();fltQ="";fltSave();fltRefresh();return}
   if(k==="sub"){const l=$("fltlist");fltScroll=l?l.scrollTop:0;fltSub=b.dataset.fv;fltQ="";renderFlt();return}
   if(k==="back"){fltSub="";fltQ="";renderFlt();return}
@@ -1432,6 +1433,7 @@ function wsecSync(){const hasMy=myCnt>0,hasCal=!!$("wantlist").querySelector(".w
   sw.classList.toggle("dis",!hasMy);sw.setAttribute("aria-disabled",String(!hasMy));sw.title=hasMy?"Twoje zaproszenia osobno na górze":"Nie masz żadnych zaproszeń";
   if(!sw.firstChild){sw.innerHTML=uiIcon("user");so.innerHTML=uiIcon("clock")}   // dwie ikony: 🕓 od najnowszych (wg daty dodania) | 👤 moje osobno na górze
   const sn=flt.sort==="new";so.classList.toggle("on",sn);so.setAttribute("aria-pressed",String(sn));
+  if(typeof sigWinSync==="function")sigWinSync();
   $("wsecmyn").textContent=hasMy?' · '+myCnt+(on?'':' · w kalendarzu'):''}
 $("mysort").addEventListener("click",()=>{flt.sort=flt.sort==="new"?"":"new";if(flt.sort==="new"&&myCnt)try{localStorage.setItem("myOff","1")}catch(e){}   // toggle: 🕓 i 👤 nie świecą naraz — włączenie sortowania zwija „Moje” do kalendarza
   fltSave();fltRefresh();say(flt.sort==="new"?"Od najnowszych — wg daty dodania (Moje w kalendarzu).":"Kolejność wg godziny jazdy.")});   // to samo co filtr „Kolejność”

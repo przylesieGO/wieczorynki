@@ -150,6 +150,7 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Zaproś na rower",s:"zaproś nowe zaproszenie utwórz jazda",p:"Zaproszenia → ➕",i:"plus",fn:()=>{show(0);openWantForm(null)},ok:S&&!pv},
   {t:"Zaproś na bieg, spacer albo trekking",s:"aktywność bieg bieganie biegnę spacer spacery idę trekking wędrówka piesza las zaproszenie na bieg rodzaj aktywności",p:"Zaproszenia → ➕ → Aktywność (na górze formularza)",i:"run",fn:()=>{show(0);openWantForm(null)},ok:S&&!pv&&wActOk},
   {t:"Powiadomienia",s:"powiadomienia dzwonek",p:"Dzwonek w nagłówku",i:"alarm",fn:()=>$("bellbtn").click(),ok:S},
+  {t:"Lista sygnałów „Mam ochotę”",s:"lista sygnałów mam ochotę dłoń licznik okno ekipa na dziś filtry sygnały przefiltruj aktywność relacja",p:"Zaproszenia → machająca dłoń z liczbą obok 🕓 i 👤 (albo Filtry → Relacja → Sygnały)",i:"hand",fn:()=>{show(0);openSigWin()},ok:S&&typeof sigOn==="function"&&sigOn()},
   {t:"Mam ochotę",s:"mam ochotę sygnał chęć jazdy dłoń machanie bez godziny bieg spacer trekking też mam ochotę reakcja zaproś ekipę ekipa na dziś super ekipa wspólna jazda jesteście umówieni ekipa już się umówiła masz z kim pobiegać konfetti pogoda twój sygnał zmień wycofaj do końca dnia północ wygasł tylko dziś",p:"Zielone kółko z dłonią nad ➕ (zostaje po wysłaniu — dotknij, by zmienić lub wycofać); „Ekipa na dziś” pod 🔔",i:"hand",fn:()=>{show(0);openSig(typeof sigActive==="function"&&sigActive()?"mine":"pick")},ok:S&&typeof sigOn==="function"&&sigOn()},
   {t:"Ekipa startuje (godzinę przed)",s:"ekipa startuje licznik godzinę przed start przypomnienie od godziny masz chętnych zaproś ekipę",p:"🔔 → Ekipa na dziś",i:"timer",fn:()=>{const b=$("bellbtn");if(b)b.click()},ok:S&&typeof sigOn==="function"&&sigOn()},
   {t:"Dopisz do ekipy",s:"dopisz dopisywanie doproś ekipa reakcja też mam ochotę zaproszenie z sygnału dopisany do ekipy koniec ekipy 15 min",p:"Karta zaproszenia z sygnału → dopraszanie (tylko osoby z Reakcją) albo 🔔 → „Dopisz ›”",i:"hand",fn:()=>{const b=$("bellbtn");if(b)b.click()},ok:S&&typeof sigOn==="function"&&sigOn()},
@@ -241,7 +242,7 @@ async function srGoOpt(o){
 function srCounts(L){const c={};L.forEach(x=>c[x.k]=(c[x.k]||0)+1);return c}
 function srChips(L){
   const q=srQ.trim(),c=srCounts(L),av=SR_TY.filter(([k])=>k!=="opt"||srOpt).filter(([k])=>!q||c[k]||srTy===k);
-  const ch=(k,t,ico,n)=>'<button type="button" class="fch'+(srTy===k?' on':'')+'" data-sk="ty" data-sv="'+k+'">'+uiIcon(ico)+esc(t)+(n!=null&&q?'<span class="fcn">'+n+'</span>':'')+'</button>';
+  const ch=(k,t,ico,n)=>'<button type="button" class="fch'+(srTy===k?' on':'')+'" data-sk="ty" data-sv="'+k+'">'+(k==="sig"&&typeof sigCoin==="function"?sigCoin():uiIcon(ico))+esc(t)+(n!=null&&q?'<span class="fcn">'+n+'</span>':'')+'</button>';
   return ch("all","Wszystko","search",L.length)+av.map(([k,t,ico])=>ch(k,t,ico,c[k]||0)).join("");
 }
 // podświetlenie słów zapytania w nazwie (bez względu na polskie znaki: „lodz” znajdzie i podświetli „Łódź”)
