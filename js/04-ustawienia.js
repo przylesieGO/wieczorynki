@@ -22,7 +22,7 @@ let hideTest=false;try{localStorage.removeItem("hideTest")}catch(e){}   // testo
 let testCalm=true;try{testCalm=localStorage.getItem("testCalm")!=="0"}catch(e){}
 document.documentElement.classList.toggle("tcalm",testCalm);
 const hideTestHtml=()=>testOk?'<div class="note" style="margin-top:14px">Testowe zaproszenia 🧪</div><div class="seg">'+[["0","Pokaż"],["1","Ukryj"]].map(([k,t])=>'<button data-ht="'+k+'" class="'+((hideTest?"1":"0")===k?"on":"")+'">'+t+'</button>').join("")+'</div><div class="note" style="margin-top:6px">„Ukryj” — widzisz tylko prawdziwe jazdy. Twoje testowe i te, do których dołączyłeś, zostają.</div>':'';
-function renderMeNick(){const el=$("menick");if(!el)return;const on=showNick&&!!session&&!!me.nick;el.classList.toggle("hide",!on);el.innerHTML=on?'<i title="Zalogowany">👤 </i>'+nk(uid):''}
+function renderMeNick(){const el=$("menick");if(!el)return;const on=showNick&&!!session&&!!me.nick;el.classList.toggle("hide",!on);el.innerHTML=on?'<i title="Zalogowany">👤 </i>'+nk(uid):'';if(typeof renderAreaChip==="function")renderAreaChip()}
 try{guestMode=sessionStorage.getItem("guest")==="1"}catch(e){}
 const setGuest=v=>{guestMode=v;try{v?sessionStorage.setItem("guest","1"):sessionStorage.removeItem("guest")}catch(e){}};
 // 🔍 wyszukiwanie użytkowników w Administracji (po nicku, bez polskich znaków i wielkości liter) + szybkie filtry
@@ -386,19 +386,20 @@ async function loadAvatars(){
   try{localStorage.setItem("avc",JSON.stringify(avData))}catch(e){}
   if(need.length){try{renderWants();renderBell();if(gearOpen)renderGear()}catch(e){}}
 }
+const PRIV_COLS="phone,phone_vis,city,city_lat,city_lon,city_vis,area_km,area_places";   // 📍 KROK 104: promień i ulubione miejscowości
 async function loadMyPriv(){
   if(!session)return;
   await loadPrivFlags();   // 🔒 KROK 62
-  const r=await sb.from("profile_private").select("phone,phone_vis,city,city_lat,city_lon,city_vis").eq("user_id",uid).maybeSingle();
+  const r=await sb.from("profile_private").select(PRIV_COLS).eq("user_id",uid).maybeSingle();
   if(r.error){profExOk=false;return}
-  profExOk=true;myPriv=r.data||null;
+  profExOk=true;myPriv=r.data||null;if(typeof renderAreaChip==="function")setTimeout(renderAreaChip,0);
   // Moja miejscowość z profilu — na nowym telefonie
   if(myPriv&&myPriv.city&&myPriv.city_lat!=null&&!homeGet()){try{localStorage.setItem("home",JSON.stringify({name:myPriv.city,lat:myPriv.city_lat,lon:myPriv.city_lon}))}catch(e){}}
 }
 async function savePrivCity(h){
   if(!profExOk||!session)return;
   const row={user_id:uid,city:h?h.name.slice(0,80):null,city_lat:h?h.lat:null,city_lon:h?h.lon:null,updated_at:new Date().toISOString()};
-  const r=await sb.from("profile_private").upsert(row,{onConflict:"user_id"}).select("phone,phone_vis,city,city_lat,city_lon,city_vis").maybeSingle();
+  const r=await sb.from("profile_private").upsert(row,{onConflict:"user_id"}).select(PRIV_COLS).maybeSingle();
   if(!r.error)myPriv=r.data;
 }
 async function loadUx(id){if(!profExOk||!session||!id)return;const r=await sb.rpc("user_extra",{u:id});uxCache[id]=r.error?{}:(r.data||{});if(gearOpen&&(gearView==="user"||gearView==="teczka")&&userId===id)renderGear()}
@@ -468,7 +469,7 @@ async function saveProfEx(){
     medias[uid]=row.media||{};if(pe.avCh){const t=r.data&&r.data[0]&&r.data[0].avatar_at;if(pe.av){avData[uid]={t,d:pe.av};avAt[uid]=t}else{delete avData[uid];delete avAt[uid]}try{localStorage.setItem("avc",JSON.stringify(avData))}catch(e){}}}
   const h=homeGet(),prv={user_id:uid,phone:ph||null,phone_vis:ph?pe.pvis:"off",city_vis:!!(pe.cvis&&h),city:h?h.name.slice(0,80):null,city_lat:h?h.lat:null,city_lon:h?h.lon:null,updated_at:new Date().toISOString()};
   const o=myPriv||{},chPriv=prv.phone!==(o.phone||null)||prv.phone_vis!==(o.phone_vis||"off")||prv.city_vis!==!!o.city_vis||prv.city!==(o.city||null);
-  if(chPriv){const r=await sb.from("profile_private").upsert(prv,{onConflict:"user_id"}).select("phone,phone_vis,city,city_lat,city_lon,city_vis").maybeSingle();
+  if(chPriv){const r=await sb.from("profile_private").upsert(prv,{onConflict:"user_id"}).select(PRIV_COLS).maybeSingle();
     if(r.error){if(info)info.textContent="Nie udało się zapisać telefonu / miejscowości: "+r.error.message;return false}myPriv=r.data}
   if(changedPub||chPriv){delete uxCache[uid];say("Profil zapisany ✔")}
   return true;

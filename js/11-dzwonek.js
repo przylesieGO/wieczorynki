@@ -464,7 +464,8 @@ async function sigLoad(){
   if(!sigOn()){sigs=[];return}
   const t=sigToday();if(!sigDirty&&sigDay===t)return;
   const dayCh=!!sigDay&&sigDay!==t;   // 🌙 minęła północ — wczorajsze sygnały wygasły (otwarte okienko zamyka się w sigDayOver)
-  let r=await sb.from("ride_signals").select("user_id,activity,is_test,created_at,cancelled_at,msg,vis,msg_hidden").eq("day",t).limit(500);
+  let r=await sb.from("ride_signals").select("user_id,activity,is_test,created_at,cancelled_at,msg,vis,msg_hidden,lat,lon").eq("day",t).limit(500);
+  if(r.error)r=await sb.from("ride_signals").select("user_id,activity,is_test,created_at,cancelled_at,msg,vis,msg_hidden").eq("day",t).limit(500);   // baza bez KROKU 104
   sig2Ok=!r.error;
   if(r.error)r=await sb.from("ride_signals").select("user_id,activity,is_test,created_at,cancelled_at").eq("day",t).limit(500);   // baza bez KROKU 90
   sigOk=!r.error;sigs=sigOk?(r.data||[]):[];sigDay=t;sigDirty=false;

@@ -174,6 +174,11 @@ function helpFullHtml(){
      "<b>⚙️ → Administracja → Narzędzia → Etykiety notatek</b>: słowo → ikona i kolor. Dodaj słowo, wybierz ikonę i kolor (paleta albo własny), sprawdź na przykładowej notatce i zapisz.",
      "Słowo działa od początku wyrazu, bez wielkości liter i polskich znaków („wilk” łapie „Wilki”). Pierwsze pasujące od góry wygrywa — kolejność zmienisz ▲ ▼.",
      "Przełącznik wyłącza słowo bez usuwania; ✏️ edytuje, 🗑 usuwa. Zmianę widać u wszystkich po odświeżeniu (do minuty)."]):'')
+   +sec("📍 Moja okolica",[
+     "Pod nazwą aplikacji jest plakietka <b>📍 miejscowość · km</b> — tak daleko sięga Twoja okolica. Domyślnie 20 km od Twojej miejscowości (bez miejscowości: od Pułtuska).",
+     "Kliknij plakietkę: zobaczysz krąg z zaproszeniami (zielone), sygnałami „Mam ochotę” (złote) i imprezami (granatowe) dookoła. <b>Suwak</b> zmienia promień od 5 do 50 km albo „cała Polska”.",
+     "<b>Moja miejscowość → Zmień</b> — wpisz miejscowość albo użyj lokalizacji z telefonu. Od niej liczymy okolicę i powiadomienia, np. „Ekipa startuje o …” dostajesz tylko z jazd w Twojej okolicy. Twój sygnał „Mam ochotę” pokazuje się w okolicy Twojej miejscowości.",
+     "<b>Podejrzyj inną okolicę</b> — wpisz miejscowość (albo kliknij ⭐ ulubioną), żeby sprawdzić, co się tam dzieje. Plakietka robi się fioletowa (👁), a ✕ wraca do Twojej okolicy. Podgląd nie zmienia powiadomień i znika po ponownym wejściu do aplikacji. ☆ przy wyniku dodaje miejscowość do ulubionych (do 10)."])
    +sec("⭐ Ludzie",[
      "Dotknij nicku: karta osoby — zdjęcie, „Z nami od…”, media, a jeśli ktoś pozwolił: miejscowość i „Zadzwoń / SMS”; „🚴 Zaproś na rower”, ☆ dodaj do ulubionych. ⭐ ulubieni są zawsze na górze list.",
      "🟢 zielona kropka przy nicku = osoba ma teraz otwartą aplikację. Przy nickach: ⭐ ulubiony, 💉 tester, 💡 3 zrealizowane pomysły/zgłoszenia, 👑 główny admin. Administratorów pokaże filtr „Administratorzy” w oknach wyboru osób — do nich piszesz, gdy coś nie działa."])
@@ -202,7 +207,7 @@ function helpFullHtml(){
      "Długie okno (Ustawienia, Pomoc, okienka) ma na samym dole okrągły <b>✕</b> — zamyka okno bez przewijania na górę."])
    +sec("🔒 Prywatność",[
      "Prywatne zaproszenia widzą tylko autor i wybrane osoby — oraz administratorzy, wyłącznie do moderacji (np. usunięcia spamu). Administrator nie może dołączyć ani doprosić się do cudzego prywatnego zaproszenia.",
-     "Nie zapisujemy Twojej lokalizacji — „Moja lokalizacja” na mapie i „📡 moja lokalizacja” w Imprezach działają tylko w telefonie, gdy sam je włączysz. <b>Moja miejscowość</b> jest zapamiętana tylko w Twoim telefonie — nikt jej nie widzi."])
+     "Nie zapisujemy Twojej lokalizacji — „Moja lokalizacja” na mapie i „📡 moja lokalizacja” w Imprezach działają tylko w telefonie, gdy sam je włączysz. <b>Moja miejscowość</b> jest zapisana w Twoim profilu z dokładnością do ok. 2 km (żeby liczyć okolicę i powiadomienia) — widzisz ją tylko Ty, chyba że włączysz „Pokazuj innym”. Twój sygnał „Mam ochotę” pokazuje innym tylko przybliżoną okolicę (ok. 2 km)."])
    +(rides?sec("🗺️ Wieczorynki",["Zaplanowane jazdy z trasą, mapą, wiatrem i odliczaniem — zakładka Wieczorynki."]):'')
    +'</div>';
 }

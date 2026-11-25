@@ -318,7 +318,9 @@ async function loadRemote(selectId){
     (ok(st)||[]).forEach(x=>{
       let m=/^nick_color_([KM])$/.exec(x.key);if(m&&HEX_RE.test(x.value))nickColors[m[1]]=x.value;
       m=/^nick_bg_([KM])$/.exec(x.key);if(m&&(x.value==="none"||HEX_RE.test(x.value)))nickBgs[m[1]]=x.value;
-      if(x.key==="groups_member_limit")window.grStartLimV=+x.value||0;   // 👥 limit startowy nowej grupy (js/17)
+      if(x.key==="groups_member_limit")window.grStartLimV=+x.value||0;
+      if(x.key==="area_default_km")window.areaDefKm=+x.value||0;   // 📍 KROK 104: domyślny promień i środek okolicy
+      if(x.key==="area_default_center")try{window.areaDefC=JSON.parse(x.value)}catch(e){}   // 👥 limit startowy nowej grupy (js/17)
     });
     if(!p.error&&needProfile()&&!pwMode&&nickAskedFor!==uid){nickAskedFor=uid;setTimeout(askNick,0)}
     wants=ok(w)||[];wRaw=wants.slice();wCols=w.error?null:wColsTry;

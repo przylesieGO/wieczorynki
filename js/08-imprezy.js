@@ -153,26 +153,84 @@ async function geoSearch(q){
       return {name:(x.name&&x.name!==c?x.name+", ":"")+c,full:[x.name&&x.name!==c?x.name:"",c,a.county||"",reg].filter(Boolean).join(", "),lat:+x.lat,lon:+x.lon}}).filter(x=>x.name&&isFinite(x.lat))}
   catch(e){return null}
 }
-// okienko „📍 Moja miejscowość” (z filtra i z ⚙️)
-let homeRes=[],homeMsg="";
-function openHome(){homeRes=[];homeMsg="";renderHome();setTimeout(()=>{const i=$("homeq");if(i)i.focus()},120)}
+// 📍 Moja okolica (KROK 104): środek = Moja miejscowość (w profilu, ~2 km), promień 5–50 km (0 = cała Polska),
+// ulubione miejscowości i podgląd innej okolicy (tylko w tej wizycie; powiadomienia zawsze z Mojej okolicy)
+const AREA_KM=[5,10,15,20,25,30,40,50,0];
+let areaPeek=null,homeRes=[],homeMsg="",hmMode="peek",areaSaveT=0;
+const areaDef=()=>{const c=window.areaDefC||{};return {name:c.name||"Pułtusk",lat:isFinite(c.lat)?+c.lat:52.70,lon:isFinite(c.lon)?+c.lon:21.08,def:true}};
+const areaKmDef=()=>{const v=+window.areaDefKm;return v>=5&&v<=50?v:20};
+const areaKm=()=>{let v=null;if(session&&profExOk)v=myPriv?myPriv.area_km:null;else try{const x=localStorage.getItem("areaKm");v=x==null?null:+x}catch(e){}
+  return v==null||!AREA_KM.includes(+v)?areaKmDef():+v};
+const areaHome=()=>{if(session&&myPriv&&myPriv.city&&myPriv.city_lat!=null)return {name:myPriv.city,lat:+myPriv.city_lat,lon:+myPriv.city_lon};return homeGet()||areaDef()};
+const areaCur=()=>Object.assign({},areaPeek||areaHome(),{km:areaKm(),peek:!!areaPeek});
+const areaIn=(a,lat,lon)=>lat==null||lon==null||!isFinite(+lat)||!isFinite(+lon)||!a.km||dist({lat:a.lat,lon:a.lon},{lat:+lat,lon:+lon})<=a.km;
+const inArea=(lat,lon)=>areaIn(areaCur(),lat,lon);
+const areaKmTxt=k=>k?k+" km":"cała Polska";
+const areaFavs=()=>{let a;if(session&&profExOk)a=myPriv&&myPriv.area_places;else try{a=JSON.parse(localStorage.getItem("areaFavs")||"[]")}catch(e){a=[]}
+  return Array.isArray(a)?a.filter(x=>x&&x.name&&isFinite(x.lat)&&isFinite(x.lon)):[]};
+const areaRound=x=>Math.round(x/0.02)*0.02;
+async function areaSave(patch){
+  if(session&&profExOk){myPriv=Object.assign({},myPriv||{},patch);
+    const r=await sb.from("profile_private").upsert(Object.assign({user_id:uid,updated_at:new Date().toISOString()},patch),{onConflict:"user_id"}).select(PRIV_COLS).maybeSingle();
+    if(r.error){say("Nie udało się zapisać okolicy — spróbuj za chwilę.");return false}myPriv=r.data;return true}
+  try{if("area_km" in patch)localStorage.setItem("areaKm",String(patch.area_km));if("area_places" in patch)localStorage.setItem("areaFavs",JSON.stringify(patch.area_places))}catch(e){}
+  return true}
+function areaSetHome(x){const h={name:x.name,lat:areaRound(x.lat),lon:areaRound(x.lon)};
+  try{localStorage.setItem("home",JSON.stringify(h));sessionStorage.removeItem("gpsOrigin")}catch(e){}
+  savePrivCity(h);if(myPriv)Object.assign(myPriv,{city:h.name,city_lat:h.lat,city_lon:h.lon});areaPeek=null;areaChanged()}
+function areaChanged(){renderAreaChip();try{if(curTab===3)renderEvents()}catch(e){}}
+// punkty do obrazka i liczników: zaproszenia (nadchodzące, z miejscem), sygnały z dziś, imprezy nadchodzące
+function areaPts(){const P=[],now=Date.now();
+  (wants||[]).forEach(w=>{if(w.place_lat==null||!w.starts_at||Date.parse(w.starts_at)<now-3*36e5)return;P.push({k:"w",lat:+w.place_lat,lon:+w.place_lon})});
+  try{sigList().forEach(x=>{if(x.lat!=null)P.push({k:"s",lat:+x.lat,lon:+x.lon})})}catch(e){}
+  (evs||[]).forEach(e=>{if(evHasGeo(e)&&!evPast(e))P.push({k:"e",lat:+e.lat,lon:+e.lon})});
+  return P}
+function areaCount(a){const c={w:0,s:0,e:0,out:0};areaPts().forEach(p=>{if(areaIn(a,p.lat,p.lon))c[p.k]++;else c.out++});return c}
+const areaCntTxt=c=>[c.w?c.w+" "+plf(c.w,["zaproszenie","zaproszenia","zaproszeń"]):"",c.s?c.s+" "+plf(c.s,["sygnał","sygnały","sygnałów"]):"",c.e?c.e+" "+plf(c.e,["impreza","imprezy","imprez"]):""].filter(Boolean).join(" · ")||"na razie nic";
+// obrazek: krąg obszaru zawsze tej samej wielkości — suwak „przybliża/oddala” punkty dookoła (na żywo)
+function areaSvg(a){const R0=78,S=a.km||300,C=120,G={};
+  areaPts().forEach(p=>{const dy=(p.lat-a.lat)*111.2,dx=(p.lon-a.lon)*111.2*Math.cos(a.lat*Math.PI/180),d=Math.hypot(dx,dy);
+    let f=R0/S,x=dx*f,y=-dy*f;const m=Math.hypot(x,y);if(m>112){x*=112/m;y*=112/m}
+    const key=p.k+Math.round(x/4)+"_"+Math.round(y/4);(G[key]=G[key]||{k:p.k,x,y,n:0,out:!(d<=S||!a.km)}).n++});
+  // kropki w tym samym miejscu łączą się w jedną większą (np. wszystkie zaproszenia z centrum Pułtuska)
+  const dots=Object.values(G).sort((u,v)=>v.n-u.n).map(g=>'<circle class="ardot '+g.k+(g.out?' out':'')+'" cx="'+(C+g.x).toFixed(1)+'" cy="'+(C+g.y).toFixed(1)+'" r="'+(4.5+Math.min(7,2*Math.log2(g.n))).toFixed(1)+'"/>').join("");
+  return '<svg class="arsvg" viewBox="0 0 240 240" aria-hidden="true"><circle class="arbg" cx="120" cy="120" r="112"/>'
+   +'<circle class="arring" cx="120" cy="120" r="'+R0+'"/><circle class="arpulse" cx="120" cy="120" r="'+R0+'"/>'
+   +dots+'<g class="arpin" transform="translate(108 98)"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></g></svg>'}
+// plakietka w nagłówku: „📍 Pułtusk · 20 km”, w podglądzie „👁 Serock · 20 km ✕”
+function renderAreaChip(){const el=$("mearea");if(!el)return;const a=areaCur();
+  el.classList.toggle("peek",a.peek);el.classList.remove("hide");
+  el.innerHTML=uiIcon(a.peek?"eye":"pin")+'<span class="arname">'+esc(a.name)+'</span><span class="arkm">'+areaKmTxt(a.km)+'</span>'
+    +(a.peek?'<span class="arx" data-area-off="1" role="button" aria-label="Wróć do mojej okolicy">'+uiIcon("x")+'</span>':'');
+  el.title=a.peek?"Podgląd okolicy: "+a.name+" — kliknij ✕, żeby wrócić do swojej":"Twoja okolica — kliknij, żeby zmienić promień albo podejrzeć inną"}
+function openHome(mode){homeRes=[];homeMsg="";hmMode=mode||"peek";renderHome();if(mode==="home")setTimeout(()=>{const i=$("homeq");if(i)i.focus()},120)}
 function renderHome(){
-  const p=$("homesheet"),h=homeGet(),g=gpsGet(),q=$("homeq")?$("homeq").value:"";
-  p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Moja miejscowość"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-hm="close">Zamknij</button><b>📍 Moja miejscowość</b><span style="min-width:64px"></span></div><div class="bslist">'
-   +'<div class="note" style="margin:0 0 10px">Od niej liczymy odległość do imprez („W okolicy”). Zapamiętana tylko w tym telefonie — nikt jej nie widzi.</div>'
-   +(h?'<div class="hmcur">📍 <b>'+esc(h.name)+'</b><button type="button" class="lnk" data-hm="del">Usuń</button></div>':'')
-   +'<div class="hmrow"><input id="homeq" maxlength="80" placeholder="np. Pułtusk, Warszawa Bielany" value="'+esc(q)+'" enterkeyhint="search"><button type="button" class="b" data-hm="find">Szukaj</button></div>'
-   +(homeMsg?'<div class="note" style="margin-top:8px">'+homeMsg+'</div>':'')
-   +homeRes.map((x,i)=>'<button type="button" class="hmres" data-hm="pick" data-i="'+i+'"><b>'+esc(x.name)+'</b><span>'+esc(x.full)+'</span></button>').join("")
-   +'<div class="bsgrp" style="margin-top:16px">Albo</div><button type="button" class="b g big" data-hm="gps">📡 Użyj mojej lokalizacji'+(g?' (teraz: '+esc(g.name)+')':'')+'</button>'
-   +'<div class="note" style="margin-top:6px">Lokalizacja z telefonu działa tylko podczas tej wizyty — przeglądarka zapyta o zgodę.</div>'
+  const p=$("homesheet"),a=areaCur(),h=areaHome(),c=areaCount(a),q=$("homeq")?$("homeq").value:"",favs=areaFavs(),ki=AREA_KM.indexOf(a.km),fk=x=>x.name+"|"+areaRound(x.lat).toFixed(2)+"|"+areaRound(x.lon).toFixed(2);
+  const isFav=x=>favs.some(f=>fk(f)===fk(x));
+  const srch='<div class="hmrow" style="margin-top:8px"><input id="homeq" maxlength="80" placeholder="'+(hmMode==="home"?"Twoja miejscowość, np. Pułtusk":"Miejscowość, np. Serock")+'" value="'+esc(q)+'" enterkeyhint="search"><button type="button" class="b" data-hm="find">Szukaj</button></div>'
+    +(homeMsg?'<div class="note" style="margin-top:8px">'+homeMsg+'</div>':'')
+    +homeRes.map((x,i)=>'<div class="hmresw"><button type="button" class="hmres" data-hm="pick" data-i="'+i+'"><b>'+esc(x.name)+'</b><span>'+esc(x.full)+'</span></button>'
+      +(hmMode==="peek"?'<button type="button" class="hmfav'+(isFav(x)?' on':'')+'" data-hm="fav" data-i="'+i+'" aria-label="Ulubiona miejscowość">'+uiIcon(isFav(x)?"starf":"star")+'</button>':'')+'</div>').join("");
+  p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Moja okolica"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-hm="close">Zamknij</button><b>'+uiIcon("pin")+' Moja okolica</b><span style="min-width:64px"></span></div><div class="bslist">'
+   +(a.peek?'<div class="hmcur arpeek">'+uiIcon("eye")+'<span>Podgląd: <b>'+esc(a.name)+'</b></span><button type="button" class="lnk" data-hm="unpeek">Wróć do: '+esc(h.name)+'</button></div>':'')
+   +'<div class="arvis">'+areaSvg(a)+'<div class="arcnt"><b>'+(a.km?'W promieniu '+a.km+' km':'Cała Polska')+'</b><span>'+areaCntTxt(c)+'</span>'+(a.km&&c.out?'<small>dalej: '+c.out+'</small>':'')+'</div></div>'
+   +'<div class="hleg arleg"><i class="hc w"></i> zaproszenia <i class="hc s"></i> sygnały <i class="hc ev"></i> imprezy</div>'
+   +'<div class="arsl"><div class="arslh"><span>Promień</span><b id="arkmv">'+areaKmTxt(a.km)+'</b></div><input id="arkm" type="range" min="0" max="'+(AREA_KM.length-1)+'" step="1" value="'+(ki<0?3:ki)+'" aria-label="Promień okolicy"><div class="arslt"><span>5 km</span><span>50 km</span><span>Polska</span></div></div>'
+   +'<div class="bsgrp">Moja miejscowość</div>'
+   +'<div class="hmcur">'+uiIcon("pin")+'<span><b>'+esc(h.name)+'</b>'+(h.def?' <small>(domyślnie)</small>':'')+'</span><button type="button" class="lnk" data-hm="'+(hmMode==="home"?"mpeek":"mhome")+'">'+(hmMode==="home"?"Anuluj":"Zmień")+'</button></div>'
+   +(hmMode==="home"?srch+'<button type="button" class="b g big" data-hm="gps" style="margin-top:10px">'+uiIcon("globe")+' Użyj mojej lokalizacji</button>':'')
+   +'<div class="note" style="margin-top:6px">Od niej liczymy Twoją okolicę: zaproszenia, sygnały, imprezy i powiadomienia. Zapisana w profilu z dokładnością do ok. 2 km — widzisz ją tylko Ty.</div>'
+   +'<div class="bsgrp">Podejrzyj inną okolicę</div>'
+   +(favs.length?'<div class="arfavs">'+favs.map((x,i)=>'<button type="button" class="fch'+(a.peek&&areaPeek&&fk(areaPeek)===fk(x)?' on':'')+'" data-hm="fpick" data-i="'+i+'">'+uiIcon("starf")+' '+esc(x.name)+'</button>').join("")+'</div>':'')
+   +(hmMode==="peek"?srch:'')
+   +'<div class="note" style="margin-top:6px">Podgląd pokazuje, co dzieje się w innej okolicy. Nie zmienia powiadomień i kończy się po ponownym wejściu do aplikacji. '+uiIcon("star")+' dodaje miejscowość do ulubionych (do 10).</div>'
    +'</div></div>';
   p.classList.remove("hide");
 }
-function closeHome(){const p=$("homesheet");p.classList.add("hide");p.innerHTML="";if(curTab===3)renderEvents();if(gearOpen&&(gearView==="main"||gearView==="nick"))renderGear()}
+function closeHome(){const p=$("homesheet");p.classList.add("hide");p.innerHTML="";areaChanged();if(gearOpen&&(gearView==="main"||gearView==="nick"))renderGear()}
 async function homeFind(){const q=$("homeq")?$("homeq").value.trim():"";if(q.length<2){homeMsg="Wpisz nazwę miejscowości.";renderHome();return}
   homeMsg="Szukam…";homeRes=[];renderHome();const r=await geoSearch(q);
-  homeRes=r||[];homeMsg=r===null?"Brak połączenia z OpenStreetMap — spróbuj za chwilę.":r.length?"Wybierz właściwe miejsce:":"Nic nie znaleziono — spróbuj inaczej (np. sama nazwa miejscowości).";renderHome()}
+  homeRes=r||[];homeMsg=r===null?"Brak połączenia z OpenStreetMap — spróbuj za chwilę.":r.length?(hmMode==="home"?"Wybierz swoją miejscowość:":"Kliknij, żeby podejrzeć okolicę:"):"Nic nie znaleziono — spróbuj inaczej (np. sama nazwa miejscowości).";renderHome()}
 function useGps(after){
   if(!navigator.geolocation){say("Ta przeglądarka nie udostępnia lokalizacji.");return}
   say("📡 Szukam Twojej lokalizacji…");
@@ -180,25 +238,35 @@ function useGps(after){
     const la=pos.coords.latitude,lo=pos.coords.longitude,g=await revGeo(la,lo);
     try{sessionStorage.setItem("gpsOrigin",JSON.stringify({name:(g&&g.city)||"Twoja lokalizacja",lat:la,lon:lo}))}catch(e){}
     evNearOn=true;try{localStorage.setItem("evNearOn","1")}catch(e){}
-    say("📡 Odległości liczone od: "+((g&&g.city)||"Twojej lokalizacji"));after&&after();if(curTab===3)renderEvents()},
+    say("📡 Odległości liczone od: "+((g&&g.city)||"Twojej lokalizacji"));after&&after({name:(g&&g.city)||"",lat:la,lon:lo});if(curTab===3)renderEvents()},
    err=>{say(err&&err.code===1?"Brak zgody na lokalizację — ustaw swoją miejscowość ręcznie.":"Nie udało się ustalić lokalizacji.")},
    {enableHighAccuracy:false,timeout:12000,maximumAge:600000});
 }
+// suwak: podgląd na żywo, zapis po puszczeniu (oszczędnie dla serwera)
+$("homesheet").addEventListener("input",e=>{if(e.target.id!=="arkm")return;const k=AREA_KM[+e.target.value];const a=Object.assign(areaCur(),{km:k});
+  const v=$("arkmv");if(v)v.textContent=areaKmTxt(k);const s=$("homesheet").querySelector(".arsvg");if(s)s.outerHTML=areaSvg(a);
+  const c=areaCount(a),t=$("homesheet").querySelector(".arcnt");if(t)t.innerHTML='<b>'+(k?'W promieniu '+k+' km':'Cała Polska')+'</b><span>'+areaCntTxt(c)+'</span>'+(k&&c.out?'<small>dalej: '+c.out+'</small>':'')});
+$("homesheet").addEventListener("change",async e=>{if(e.target.id!=="arkm")return;const k=AREA_KM[+e.target.value];if(await areaSave({area_km:k}))areaChanged()});
 $("homesheet").addEventListener("click",async e=>{
   if(e.target===$("homesheet")){closeHome();return}
   const b=e.target.closest("[data-hm]");if(!b)return;const k=b.dataset.hm;
   if(k==="close"){closeHome();return}
   if(k==="find"){homeFind();return}
+  if(k==="mhome"||k==="mpeek"){homeRes=[];homeMsg="";hmMode=k==="mhome"?"home":"peek";renderHome();if(hmMode==="home")setTimeout(()=>{const i=$("homeq");if(i)i.focus()},60);return}
+  if(k==="unpeek"){areaPeek=null;areaChanged();renderHome();return}
   if(k==="pick"){const x=homeRes[+b.dataset.i];if(!x)return;
-    try{localStorage.setItem("home",JSON.stringify({name:x.name,lat:x.lat,lon:x.lon}));sessionStorage.removeItem("gpsOrigin")}catch(err){}
-    savePrivCity({name:x.name,lat:x.lat,lon:x.lon});
-    evNearOn=true;try{localStorage.setItem("evNearOn","1")}catch(err){}
-    closeHome();say("📍 Moja miejscowość: "+x.name);return}
-  if(k==="del"){try{localStorage.removeItem("home")}catch(err){}savePrivCity(null);if(pe)pe.cvis=false;renderHome();return}
-  if(k==="gps"){closeHome();useGps();return}
+    if(hmMode==="home"){areaSetHome(x);evNearOn=true;try{localStorage.setItem("evNearOn","1")}catch(err){}homeRes=[];homeMsg="";hmMode="peek";renderHome();say("📍 Moja miejscowość: "+x.name);return}
+    areaPeek={name:x.name,lat:x.lat,lon:x.lon};areaChanged();homeRes=[];homeMsg="";renderHome();return}
+  if(k==="fpick"){const x=areaFavs()[+b.dataset.i];if(!x)return;areaPeek=(areaPeek&&areaPeek.name===x.name)?null:{name:x.name,lat:+x.lat,lon:+x.lon};areaChanged();renderHome();return}
+  if(k==="fav"){const x=homeRes[+b.dataset.i];if(!x)return;const fk=y=>y.name+"|"+areaRound(y.lat).toFixed(2)+"|"+areaRound(y.lon).toFixed(2);
+    let f=areaFavs();const on=f.some(y=>fk(y)===fk(x));
+    if(on)f=f.filter(y=>fk(y)!==fk(x));else{if(f.length>=10){say("Najwyżej 10 ulubionych miejscowości — usuń którąś.");return}f=f.concat([{name:x.name.slice(0,60),lat:areaRound(x.lat),lon:areaRound(x.lon)}])}
+    await areaSave({area_places:f});renderHome();return}
+  if(k==="gps"){useGps(x=>{if(x&&x.name){areaSetHome(x);hmMode="peek";renderHome();say("📍 Moja miejscowość: "+x.name)}});return}
 });
 $("homesheet").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="homeq"){e.preventDefault();homeFind()}});
-document.addEventListener("click",e=>{if(e.target.closest("[data-home]")){openHome()}});
+document.addEventListener("click",e=>{if(e.target.closest("[data-home]")){openHome("home");return}
+  const ar=e.target.closest("#mearea");if(ar){if(e.target.closest("[data-area-off]")){areaPeek=null;areaChanged();say("📍 Wróciłeś do swojej okolicy: "+areaHome().name)}else openHome();}});
 // filtr imprez = wspólny silnik Filtrów (fltEvOk, js/10 — etap C) + „W okolicy” + 🗑 „Do usunięcia” (admin, tylko tutaj)
 function evMatch(e){
   if(!nearOk(e))return false;
@@ -269,10 +337,10 @@ $("p3").addEventListener("click",async e=>{
   const f=e.target.closest("[data-evf]");if(f){evQuick(f.dataset.evf);return}
   if(e.target.closest("[data-evflt]")){openFlt("ev");return}
   if(e.target.closest("[data-evnear]")){evNearOn=!evNearOn;try{localStorage.setItem("evNearOn",evNearOn?"1":"0")}catch(err){}
-    renderEvents();if(evNearOn&&!originGet())openHome();return}
+    renderEvents();if(evNearOn&&!originGet())openHome("home");return}
   const rr=e.target.closest("[data-evr]");if(rr){evNearR=+rr.dataset.evr;try{localStorage.setItem("evNearR",String(evNearR))}catch(err){}renderEvents();return}
   const eo=e.target.closest("[data-evo]");if(eo){const k=eo.dataset.evo;
-    if(k==="set")openHome();else if(k==="gps")useGps();else if(k==="home"){try{sessionStorage.removeItem("gpsOrigin")}catch(err){}renderEvents()}return}
+    if(k==="set")openHome("home");else if(k==="gps")useGps();else if(k==="home"){try{sessionStorage.removeItem("gpsOrigin")}catch(err){}renderEvents()}return}
   if(e.target.closest("#evadd")){if(!session)return;openEvForm(null);return}
   const b=e.target.closest("[data-ev]");if(!b)return;
   if(b.dataset.ev==="login"){setGuest(false);renderChrome();return}   // 👤 gość → logowanie (jak przy odliczaniu)
