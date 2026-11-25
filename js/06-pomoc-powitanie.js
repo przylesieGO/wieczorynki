@@ -106,6 +106,7 @@ function helpFullHtml(){
      "<b>Kilka zaproszeń dziennie</b> — ale nie mogą na siebie nachodzić (+15 min zapasu). Gdy nachodzą, okienko pod zegarem i pasek nad „Wyślij” robią się żółte, a „Ustaw 11:55” podpowiada najwcześniejszą wolną godzinę.",
      "<b>🧪 Testowe / 🚴 Prawdziwe:</b> testowe są na próbę (czerwona migająca plakietka TEST, na kanale z oznaczeniem). Możesz je ukryć: ⚙️ → Testy → „Testowe zaproszenia”.",
      "<b>Kto zobaczy?</b> 🌍 Wszyscy (także kanał Telegram) albo 🔒 ⭐ Ulubieni / 👥 wybrane osoby. Prywatne widzą tylko zaproszeni; mogą doprosić kolejne osoby.",
+     "W oknie wyboru osób (👥 Wybieram): szukanie po nicku, filtry (kobiety, mężczyźni, ulubieni, teraz…), rząd <b>„Często zapraszasz”</b> — osoby, które najczęściej zapraszasz (dotknięcie zaznacza), przy nicku <b>„zapraszano N×”</b>, a przy długiej liście <b>pasek A–Z</b> — dotknij litery albo przesuń po nich palcem, żeby przeskoczyć do osób na tę literę.",
      "<b>Aktywność</b> (na górze formularza): rower, bieg, spacer albo trekking (wędrówka piesza). Przy biegu, spacerze i trekkingu nie ma wyboru roweru ani tempa, a na karcie zamiast „Jadę!” jest „Biegnę!” / „Idę!”; tytuł domyślny dostaje dopisek, np. „· bieg”.",
      "<b>🚲 Rower / teren</b> (przy rowerze): dla wszystkich (domyślnie), szosa, gravel, MTB, e-bike.",
      "<b>📍 Punkt zbiórki</b> (opcjonalnie): wybierz z listy, „✏️ Inne miejsce…” albo „🗺️ Wskaż na mapie…”. Przełącznik „Dodaj do listy miejsc” zapisze miejsce dla wszystkich. Na karcie „Mapa ›” otwiera nawigację.",
