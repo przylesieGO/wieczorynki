@@ -47,12 +47,15 @@ function bellRowHtml(w){
   const sub=mine?[w.note?esc(w.note):'',isOpen(w)?'🕖 do ustalenia':'','🚴 jedzie '+(jn+1),dn?'🙅 '+dn:''].filter(Boolean).join(' · ')
     :[when,w.note?esc(w.note):'',joined?'🚴 Jedziesz':dec?'Nie dasz rady':act?(wLate(w)?'🏃 ruszyła — możesz jeszcze dogonić!':'⏳ czeka na Twoją odpowiedź'):''].filter(Boolean).join(' · ');
   const sent=!mine&&!un.length&&wSentAt(w)?' · <span class="nsent">wysłane '+agoTxt(wSentAt(w))+'</span>':'';   // przeczytane: kiedy przyszło (nieprzeczytane mają to w ramce nowości)
+  // 🔒 prywatne zaproszenie od kogoś: kogo jeszcze zaproszono (prośba właściciela 2026-11-25; pełna lista — na karcie zaproszenia)
+  const oi=!mine&&isPriv(w)?favFirst(invIds(w).filter(x=>x!==uid&&x!==w.user_id&&nicks[x])):[];
+  const inv=oi.length?'<div class="w ninv">'+uiIcon("users")+' Zaproszeni też: '+oi.slice(0,3).map(x=>'<b>'+esc(nickOf(x))+'</b>').join(", ")+(oi.length>3?' +'+(oi.length-3):'')+'</div>':'';
   const news=un.length?'<div class="nnews">'+N_ICON[un[0].kind]+' '+newsTxt(un[0],w)+' · '+agoTxt(un[0].created_at)+(un.length>1?' <span class="nmore">+'+(un.length-1)+'</span>':'')+'</div>':'';
   const btns=act?'<div class="sb">'+(isOpen(w)?'<button type="button" class="b" data-na="pref" data-wid="'+esc(w.id)+'">Pasuje mi o…</button>'
       :'<button type="button" class="b" data-na="join" data-wid="'+esc(w.id)+'">Jadę! · '+esc(hhmm(new Date(w.starts_at)))+'</button>')
     +(wDeclOk(w)?'<button type="button" class="b w" data-na="no" data-wid="'+esc(w.id)+'">Nie dam rady</button>':'')+'</div>':'';
   return '<div class="nit'+(mine?' mine':'')+(un.length?' new':'')+(isTest(w)?' test':'')+grCls(w)+'" data-wid="'+esc(w.id)+'"><div class="ic">'+(mine?'🙋':isPriv(w)?'📩':'🌍')+'</div>'
-   +'<div class="tx">'+testTag(w)+wTitleHtml(w)+title+'<div class="w">'+sub+sent+'</div>'+news+btns+'</div>'+(un.length?(act?'<span class="dot"></span>':bsMk("w:"+w.id)):'')+'</div>';
+   +'<div class="tx">'+testTag(w)+wTitleHtml(w)+title+'<div class="w">'+sub+sent+'</div>'+inv+news+btns+'</div>'+(un.length?(act?'<span class="dot"></span>':bsMk("w:"+w.id)):'')+'</div>';
 }
 // 🆕 nowi użytkownicy (wszyscy zalogowani — decyzja 2026-11-20): konta z nickiem z ostatnich 14 dni,
 // bez ukrytych/zablokowanych (admini widzą wszystkich); „przeczytane” zapamiętane w tym urządzeniu
@@ -610,17 +613,18 @@ function sigWinChips(){
   return '<div class="sgwchips">'+A+'</div><div class="sgwchips">'+W+'</div>'}
 function sigWinRender(){
   const p=$("sigwin");if(!p||p.classList.contains("hide"))return;
+  const mb=$("mysigs");if(mb)mb.classList.toggle("fon",!!(sgwF.a||sgwF.w));
   if(!p.firstChild)p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Ekipa na dziś"><div class="bsgrab"></div><div class="bshead"><span></span><b>'+sigCoin()+'Ekipa na dziś</b><button type="button" class="lnk" data-swx="1">Zamknij</button></div><div class="bslist"><div id="sgwc"></div><div id="sgwl"></div></div></div>';
   $("sgwc").innerHTML=sigWinChips();
-  const L=sigList().filter(sigWinOk).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)),box=p.querySelector(".bslist"),y=box.scrollTop;
-  $("sgwl").innerHTML=L.length?L.map(x=>sigRow(x,false)).join(""):'<div class="note sgwempty">'+(sigList().length?'Brak sygnałów dla tych filtrów.':'Dziś nikt jeszcze nie dał znać.')+'</div>';
+  const B=sigEkipaBody(sigWinOk,false),box=p.querySelector(".bslist"),y=box.scrollTop;   // te same wiersze co pod 🔔: klamra Super ekipy i powiadomienia ekipy (2026-11-25)
+  $("sgwl").innerHTML=(B.L.length||B.notes?B.html:'')+(B.L.length?'':'<div class="note sgwempty">'+(sigList().length?'Brak sygnałów dla tych filtrów.':'Dziś nikt jeszcze nie dał znać.')+'</div>')+(sigList().length?sigHintHtml():'');
   box.scrollTop=y}
 function openSigWin(){if(!sigOn())return;sgwOpen=true;const p=$("sigwin");p.classList.remove("hide");p.innerHTML="";sigWinRender()}
 function closeSigWin(){sgwOpen=false;const p=$("sigwin");p.classList.add("hide");p.innerHTML=""}
 function sigWinSync(){
   const b=$("mysigs");
   if(b){const on=sigOn();b.classList.toggle("hide",!on);
-    if(on){const n=sigList().length,h=sigWheelG+'<span class="sgl">Ekipa</span><b class="sgn">'+n+'</b>';if(b.dataset.h!==h){b.dataset.h=h;b.innerHTML=h}b.classList.toggle("dis",!n);
+    if(on){const n=sigList().length,h=sigWheelG+'<span class="sgl">Ekipa</span><b class="sgn">'+n+'</b>';if(b.dataset.h!==h){b.dataset.h=h;b.innerHTML=h}b.classList.toggle("dis",!n);b.classList.toggle("fon",!!(sgwF.a||sgwF.w));   // 🔴 czerwona kropka: w oknie „Ekipa na dziś” zostały włączone filtry
       b.setAttribute("aria-label","Sygnały „Mam ochotę” — dziś "+n+" — otwórz listę");b.title="Sygnały „Mam ochotę” — dziś "+n}}
   if(sgwOpen){if(!sigOn())closeSigWin();else sigWinRender()}}
 $("mysigs").addEventListener("click",openSigWin);
@@ -628,6 +632,8 @@ $("sigwin").addEventListener("click",e=>{
   if(e.target===$("sigwin")||e.target.closest("[data-swx]")){closeSigWin();return}
   const a=e.target.closest("[data-swa]");if(a){sgwF.a=sgwF.a===a.dataset.swa?"":a.dataset.swa;sigWinRender();return}
   const w=e.target.closest("[data-sww]");if(w){sgwF.w=w.dataset.sww;sigWinRender();return}
+  if(e.target.closest("[data-sgsup]")){closeSigWin();sigInviteSuper();return}   // 🚲 „Super ekipa ›” z klamry
+  const sgcx=e.target.closest("[data-sgcx]");if(sgcx){markRead([sgcx.dataset.sgcx]);sigWinRender();return}   // ✓ powiadomienie ekipy przeczytane
   if(e.target.closest("[data-sgx]")){closeSigWin();sigCancel();return}
   if(e.target.closest("[data-sge]")){closeSigWin();openSig("pick");return}
   const sga=e.target.closest("[data-sgadd]");if(sga){const [wid,ids]=sga.dataset.sgadd.split("|");closeSigWin();sigAddTo(wid,ids.split(","));return}
@@ -906,17 +912,26 @@ function sigRow(x,un,supWid){
     +(busy?'<div class="note">Ekipa '+sigAlready(x.activity)+' — organizator dostał znać i może Cię dopisać.</div>':'')
     +'</div>'+btn+(un?bsMk(sigKey(x)):'')+'</div>';
 }
+// wnętrze „Ekipa na dziś” — wspólne dla sekcji pod 🔔 i okna z machającą dłonią (2026-11-25): klamra Super ekipy, „Masz z kim …”, „Ekipa startuje”, przypomnienia, wycofane sygnały
+// keep — filtr wierszy sygnałów (okno „Ekipa na dziś”); powiadomienia (przypomnienia, „Dopisz”, wycofane) zawsze w całości; bell — podświetlenie nowych i sortowanie nieprzeczytanych na górze
+function sigEkipaBody(keep,bell){
+  const L=sigList().filter(keep||(()=>true)),C=sigCancelUn(),EK=sigEkipaUn(),LT=sigLateUn(),SO=sigSoonUn(),RM=sigRemindUn();
+  const U=bell?new Set(sigUnread()):new Set(),RU=bell?sigReactUn().length:0;
+  const SS=sigSuperSigs(),sup=sigSuperOn(SS)&&SS.some(x=>L.includes(x));   // klamra zostaje, gdy pasuje choć jeden jej sygnał — pokazuje tylko pasujące wiersze
+  const sorted=bell?L.slice().sort((a,b)=>(U.has(b)?1:0)-(U.has(a)?1:0)):L.slice().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  const un=x=>U.has(x)||(bell&&x.user_id===uid&&RU>0),rowf=x=>sigRow(x,un(x));
+  // w klamrze: zaproszenie z paska („Jedziecie razem ›” / „Dopisz ›”) nie powtarza się przy każdym sygnale (2026-11-24)
+  const supW=sup?(sigSuperRide(SS)||(sigSuperPart(SS)||{}).w||null):null,rowfS=x=>sigRow(x,un(x),supW&&supW.id);
+  const rowsAll=sup?sigSuperHtml(SS,sorted.filter(x=>SS.includes(x)).map(rowfS).join(""))+sorted.filter(x=>!SS.includes(x)).map(rowf).join(""):sorted.map(rowf).join("");
+  const notes=RM.length+SO.length+LT.length+EK.length+C.length;
+  return {L,U,RU,C,EK,LT,SO,RM,notes,html:RM.map(sigRemindRow).join("")+SO.map(sigSoonRow).join("")+LT.map(sigLateRow).join("")+EK.map(sigEkipaRow).join("")+rowsAll+C.map(sigCancelRow).join("")};
+}
+const sigHintHtml=()=>'<div class="bsempty">Bez godziny i trasy.'+(sig2Ok?' Dłoń = „też mam ochotę” — autor dostanie znać i zaprosi ekipę (zaproszenie na dziś z zakresem godzin). Gdy dajesz Reakcję na cudzy sygnał, a ktoś z tamtej ekipy na Twój — ekipy łączą się w Super ekipę.':'')+'</div>';
 function sigBellHtml(){
   if(!sigOn())return "";
-  const L0=sigList(),C=sigCancelUn(),EK=sigEkipaUn(),LT=sigLateUn(),SO=sigSoonUn(),RM=sigRemindUn();if(!L0.length&&!C.length&&!LT.length&&!SO.length)return "";
-  const L=L0;   // sygnały to powiadomienia — Filtry ich nie zawężają (decyzja właściciela 2026-11-25)
-  const U=new Set(sigUnread()),RU=sigReactUn().length;
-  const SS=sigSuperSigs(),sup=sigSuperOn(SS),sorted=L.slice().sort((a,b)=>(U.has(b)?1:0)-(U.has(a)?1:0)),rowf=x=>sigRow(x,U.has(x)||(x.user_id===uid&&RU>0));
-  // w klamrze: zaproszenie z paska („Jedziecie razem ›” / „Dopisz ›”) nie powtarza się przy każdym sygnale (2026-11-24)
-  const supW=sup?(sigSuperRide(SS)||(sigSuperPart(SS)||{}).w||null):null,rowfS=x=>sigRow(x,U.has(x)||(x.user_id===uid&&RU>0),supW&&supW.id);
-  const rowsAll=(sup?sigSuperHtml(SS,sorted.filter(x=>SS.includes(x)).map(rowfS).join(""))+sorted.filter(x=>!SS.includes(x)).map(rowf).join(""):sorted.map(rowf).join(""));
-  return bsSec("sig",sigCoin()+'Ekipa na dziś',U.size+RU+C.length+EK.length+LT.length+SO.length+RM.length,L.length+C.length+EK.length+LT.length+SO.length+RM.length,RM.map(sigRemindRow).join("")+SO.map(sigSoonRow).join("")+LT.map(sigLateRow).join("")+EK.map(sigEkipaRow).join("")+rowsAll+C.map(sigCancelRow).join("")
-    +'<div class="bsempty">Bez godziny i trasy.'+(sig2Ok?' Dłoń = „też mam ochotę” — autor dostanie znać i zaprosi ekipę (zaproszenie na dziś z zakresem godzin). Gdy dajesz Reakcję na cudzy sygnał, a ktoś z tamtej ekipy na Twój — ekipy łączą się w Super ekipę.':'')+'</div>');
+  // sygnały to powiadomienia — Filtry ich nie zawężają (decyzja właściciela 2026-11-25)
+  const B=sigEkipaBody(null,true);if(!B.L.length&&!B.C.length&&!B.LT.length&&!B.SO.length)return "";
+  return bsSec("sig",sigCoin()+'Ekipa na dziś',B.U.size+B.RU+B.notes,B.L.length+B.notes,B.html+sigHintHtml());
 }
 /* 💬 pop-up „X ma ochotę” (KROK 90): raz na sygnał; kilka naraz — jedno okienko przewijane w bok */
 const sigPopOff=()=>lsGet("sigPopOff")==="1";

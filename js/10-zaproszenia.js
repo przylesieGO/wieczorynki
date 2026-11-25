@@ -1435,8 +1435,8 @@ function wsecSync(){const hasMy=myCnt>0,hasCal=!!$("wantlist").querySelector(".w
   const sn=flt.sort==="new";so.classList.toggle("on",sn);so.setAttribute("aria-pressed",String(sn));   // dwie ikony: 🕓 od najnowszych (wg daty dodania) | 👤 moje osobno na górze
   if(typeof sigWinSync==="function")sigWinSync();
   mysfSync()}
-function mysfSync(){const fb=$("fltbtn"),fn=fltKeys().length,fh='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 5h11l-4 5v5l-3 2v-7z"/><path d="M19 7v10m0 0-2.5-2.5M19 17l2.5-2.5"/></svg>'+(fn?'<b class="sfn">'+fn+'</b>':'');
-  if(fb.dataset.h!==fh){fb.dataset.h=fh;fb.innerHTML=fh}fb.classList.toggle("on",fn>0)}
+function mysfSync(){const fb=$("fltbtn"),fn=fltKeys().filter(k=>k!=="sort").length,fh='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 5h11l-4 5v5l-3 2v-7z"/><path d="M19 7v10m0 0-2.5-2.5M19 17l2.5-2.5"/></svg>'+(fn?'<b class="sfn">'+fn+'</b>':'');
+  if(fb.dataset.h!==fh){fb.dataset.h=fh;fb.innerHTML=fh}fb.classList.toggle("on",fn>0);const fl=fn?"Filtry — włączone: "+fn+" (dotknij, by zmienić)":"Filtry i sortowanie";fb.title=fl;fb.setAttribute("aria-label",fl)}   // 🔴 aktywne filtry — czerwony lejek z liczbą (prośba właściciela 2026-11-25)
 $("mysort").addEventListener("click",()=>{flt.sort=flt.sort==="new"?"":"new";if(flt.sort==="new"&&myCnt)try{localStorage.setItem("myOff","1")}catch(e){}   // toggle: 🕓 i 👤 nie świecą naraz — włączenie sortowania zwija „Moje” do kalendarza
   fltSave();fltRefresh();say(flt.sort==="new"?"Od najnowszych — wg daty dodania (Moje w kalendarzu).":"Kolejność wg godziny jazdy.")});
 $("mysw").addEventListener("click",()=>{if(!myCnt){say("Nie masz żadnych zaproszeń.");return}
