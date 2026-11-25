@@ -372,8 +372,8 @@ function renderWants(){try{renderSteps()}catch(e){}
     ws.classList.toggle("hide",!session);ws.innerHTML=uiIcon("hand")+'<button type="button" data-ws="all" class="'+(flt.who!=="part"?"on":"")+'">'+up.length+'</button><s>/</s><button type="button" data-ws="part" class="'+(flt.who==="part"?"on":"")+'">'+me+'</button>';
     ws.title="Zaproszenia widoczne dla Ciebie / te, w których bierzesz udział";ws.setAttribute("aria-label","Zaproszeń widocznych: "+up.length+", w których bierzesz udział: "+me)}
   const b=$("fltbtn"),bar=$("fltbar");if(!b)return;
-  b.classList.toggle("hide",!session);b.classList.toggle("on",on);
-  const n=fltKeys().length;$("fltn").textContent=n;$("fltn").classList.toggle("hide",!on);
+  b.classList.toggle("hide",!session);mysfSync();
+  const n=fltKeys().length;
   if(!on||fltKeys().every(k=>k==="sort")){bar.classList.add("hide");bar.innerHTML="";return}   // sam 🕓 „od najnowszych” nie pokazuje paska filtrów (świeci tylko ikona)
   const up=all.filter(wUpcoming),shown=up.filter(fltOk).length;
   bar.classList.remove("hide");
@@ -1433,9 +1433,9 @@ function wsecSync(){const hasMy=myCnt>0,hasCal=!!$("wantlist").querySelector(".w
   sw.classList.toggle("dis",!hasMy);sw.setAttribute("aria-disabled",String(!hasMy));sw.title=hasMy?"Twoje zaproszenia osobno na górze":"Nie masz żadnych zaproszeń";
   if(!sw.firstChild)sw.innerHTML=uiIcon("user");   // dwie ikony: 🕓 od najnowszych (wg daty dodania) | 👤 moje osobno na górze
   if(typeof sigWinSync==="function")sigWinSync();
-  const fb=$("mysf"),fn=fltKeys().length,fh='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 5h11l-4 5v5l-3 2v-7z"/><path d="M19 7v10m0 0-2.5-2.5M19 17l2.5-2.5"/></svg>'+(fn?'<b class="sfn">'+fn+'</b>':'');
+  mysfSync()}
+function mysfSync(){const fb=$("fltbtn"),fn=fltKeys().length,fh='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 5h11l-4 5v5l-3 2v-7z"/><path d="M19 7v10m0 0-2.5-2.5M19 17l2.5-2.5"/></svg>'+(fn?'<b class="sfn">'+fn+'</b>':'');
   if(fb.dataset.h!==fh){fb.dataset.h=fh;fb.innerHTML=fh}fb.classList.toggle("on",fn>0)}
-$("mysf").addEventListener("click",()=>openFlt());
 $("mysw").addEventListener("click",()=>{if(!myCnt){say("Nie masz żadnych zaproszeń.");return}
   const on=!myOn();try{localStorage.setItem("myOff",on?"0":"1")}catch(e){}if(on&&flt.sort==="new"){flt.sort="";fltSave()}   // toggle: włączenie „Moje” wyłącza sortowanie
   renderWants();say(on?"Twoje zaproszenia — osobno na górze.":"Twoje zaproszenia — w kalendarzu, na swoich godzinach.")});
