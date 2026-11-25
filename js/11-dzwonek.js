@@ -620,7 +620,7 @@ function closeSigWin(){sgwOpen=false;const p=$("sigwin");p.classList.add("hide")
 function sigWinSync(){
   const b=$("mysigs");
   if(b){const on=sigOn();b.classList.toggle("hide",!on);
-    if(on){const n=sigList().length,h=sigWheelG+'<b class="sgn">'+n+'</b>';if(b.dataset.h!==h){b.dataset.h=h;b.innerHTML=h}b.classList.toggle("dis",!n);
+    if(on){const n=sigList().length,h=sigWheelG+'<span class="sgl">Ekipa</span><b class="sgn">'+n+'</b>';if(b.dataset.h!==h){b.dataset.h=h;b.innerHTML=h}b.classList.toggle("dis",!n);
       b.setAttribute("aria-label","Sygnały „Mam ochotę” — dziś "+n+" — otwórz listę");b.title="Sygnały „Mam ochotę” — dziś "+n}}
   if(sgwOpen){if(!sigOn())closeSigWin();else sigWinRender()}}
 $("mysigs").addEventListener("click",openSigWin);
