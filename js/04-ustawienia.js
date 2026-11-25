@@ -675,7 +675,7 @@ function ntPrevHtml(){
   if(!hit)return '<div class="wnt">💬 '+esc(ntf.sample)+'</div><div class="note">Żadne słowo nie pasuje — notatka bez etykiety.</div>';
   const t=hit===p?p:hit;   // ntFind z listą tymczasową — noteHtml użyłby zapisanego słownika, więc plakietka składana tu
   return '<div class="wpcw ntagw"><span class="wpc wbk ntag" style="background:'+ntCol(t)+'">'+uiIcon(ntIc(t))+'<span>'+esc(ntf.sample)+'</span></span></div>'
-   +(ok&&hit!==p?'<div class="note">Wygrywa „'+esc(hit.word)+'” (stoi wyżej albo Twoje słowo nie pasuje).</div>':'');
+   +(hit===p?'':'<div class="note">'+(hit.built?'Słowo z wbudowanego słownika: „'+esc(hit.word)+'”':'Wygrywa „'+esc(hit.word)+'”')+(ok?' — Twoje słowo nie pasuje albo stoi niżej.':'.')+'</div>');
 }
 function ntAdmHtml(){
   const head='<button class="sback" data-c="backadm">‹ Administracja</button><div class="sname" style="margin-top:26px">🏷️ Etykiety notatek</div>';
@@ -691,7 +691,9 @@ function ntAdmHtml(){
   const prev=ntPrevTag();
   return head+'<div class="sleft">'
    +(rows||'<div class="note">Słownik jest pusty.</div>')
-   +'<p class="note">Kolejność: pierwsze pasujące słowo (od góry) wygrywa — „Nocna Wataha” dostanie wilka, gdy „wataha” stoi wyżej niż „nocna”.</p>'
+   +'<p class="note">Kolejność: pierwsze pasujące słowo (od góry) wygrywa — „Nocna Wataha” dostanie wilka, gdy „wataha” stoi wyżej niż „nocna”. Słowa z tej listy mają pierwszeństwo przed wbudowanymi; to samo słowo dodane i wyłączone wyłącza też wbudowane.</p>'
+   +'<details class="ntbuilt"><summary>Wbudowany słownik — '+ntBuilt.length+' słów, działa sam</summary>'
+     +NT_BUILT.map(([i,c,w])=>'<div class="arow"><span>'+ntChip({icon:i,color:c,word:w.split(" ")[0].replace(/\.$/,"")})+'<br><span class="note">'+esc(w.replace(/\./g,""))+'</span></span></div>').join("")+'</details>'
    +'<h3 id="ntform" style="margin-top:18px">'+(ed?'Edytuj „'+esc(ed.word)+'”':'Dodaj słowo')+'</h3>'
    +'<input id="ntword" maxlength="20" autocomplete="off" placeholder="np. wataha" value="'+esc(ntf.word)+'">'
    +'<label>Ikona</label><div class="gricons" role="radiogroup" aria-label="Ikona etykiety">'+NT_ICONS.map(k=>'<button type="button" class="gricb'+(ntf.icon===k?' on':'')+'" data-nt="ic" data-id="'+k+'"'+(ntf.icon===k?' style="background:'+ntCol(prev)+'"':'')+' aria-label="Ikona '+k+'">'+uiIcon(k)+'</button>').join("")+'</div>'
@@ -702,7 +704,7 @@ function ntAdmHtml(){
    +'<div class="note" style="color:var(--bad)">'+esc(ntf.msg)+'</div>'
    +'<button class="b sbtn" data-nt="save"'+(ntf.busy?' disabled':'')+'>'+(ed?'Zapisz zmiany':'Dodaj do słownika')+'</button>'
    +(ed?'<button type="button" class="lnk" data-nt="new" style="display:block;margin:8px auto 0">Anuluj edycję</button>':'')
-   +'<p class="note">Słowo działa od początku wyrazu, bez wielkości liter i polskich znaków („wilk” łapie „Wilki”, „kawa” — „Kawą”). Etykieta pokazuje się przy notatce na karcie, w oknach zaproszeń, pod 🔔 i w „Jak poszło?”; tytuły i Telegram — bez zmian. Wyłączone słowo zostaje na liście.</p></div>';
+   +'<p class="note">Etykiety powstają same z wbudowanego słownika; tu dopisujesz własne słowa albo poprawiasz wbudowane (to samo słowo z inną ikoną lub wyłączone). Słowo działa od początku wyrazu, bez wielkości liter i polskich znaków („wilk” łapie „Wilki”, „kawa” — „Kawą”). Etykieta pokazuje się przy notatce na karcie, w oknach zaproszeń, pod 🔔 i w „Jak poszło?”; tytuły i Telegram — bez zmian. Wyłączone słowo zostaje na liście.</p></div>';
 }
 document.addEventListener("input",e=>{const id=e.target.id;
   if(id==="ntword"||id==="ntsample"){ntf[id==="ntword"?"word":"sample"]=e.target.value;ntf.msg="";const p=document.querySelector(".ntprev");if(p)p.innerHTML=ntPrevHtml()}

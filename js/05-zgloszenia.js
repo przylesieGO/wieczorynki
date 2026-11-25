@@ -5,7 +5,7 @@ const fbf={kind:"bug",rating:0,text:"",dev:true};let fbReplyTxt="",fbMsgTxt="";
 // Nowe wydanie: dopisz pozycję na początku APP_REL (wersja, data, nowości) — w ❓ Pomocy pokaże się „Co nowego” i kropka przy ❓.
 const APP_REL=[
   {v:"0.11",d:"25.11.2026",items:[
-    ["tag","<b>Etykiety notatek</b> — notatka ze znanym słowem („Nocna Wataha”, „Kawa”, „Kebab”, „SPEEDAY”) świeci kolorową plakietką z ikoną (wilk, kubek, księżyc…)."]]},
+    ["tag","<b>Etykiety notatek</b> — same rozpoznają kilkaset słów: „Nocna Wataha” dostaje wilka, „kawa” kubek, „jezioro” fale, „las” drzewo, „deszcz” chmurę — notatka świeci kolorową plakietką z ikoną."]]},
   {v:"0.10",d:"24.11.2026",items:[
     ["bike","<b>Gawron pokaże Ci drogę</b> — animowany przewodnik (Gawron na rowerze) krok po kroku przez „Mam ochotę”. Startuje sam przy pierwszym wejściu; ponownie — na górze Pomocy."],
     ["hand","<b>Mam ochotę</b> — zielone kółko z dłonią nad ➕: daj znać, że chcesz dziś jechać, biegać albo iść na spacer. Komunikat („Nogi same kręcą”), wybór, kto zobaczy, i dłoń „Też mam ochotę!”."],

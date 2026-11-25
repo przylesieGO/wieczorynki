@@ -93,14 +93,66 @@ const actOfEv=b=>{const a=actList.find(x=>(x.ev_kinds||[]).includes(b));return a
 
 /* 🏷️ Etykiety notatek (KROK 103): słownik z bazy (tabela `note_tags`) — słowo → ikona konturowa + kolor; edytuje tylko 👑 (Administracja).
    Notatka zaproszenia z pasującym słowem (początek wyrazu, bez wielkości liter i polskich znaków; „wilk” łapie „Wilki”) = kolorowa plakietka z ikoną
-   jak tempo / rodzaj roweru; pierwsze pasujące słowo wg `sort` wygrywa. Tytuły i Telegram — bez etykiet (decyzja 2026-11-25 21:57).
+   jak tempo / rodzaj roweru; najpierw słownik 👑 (wg `sort`), potem wbudowany NT_BUILT (niżej) — etykiety powstają same. Tytuły i Telegram — bez etykiet (decyzja 2026-11-25 21:57).
    Ostatni słownik zostaje w pamięci telefonu (localStorage „ntags”); ntOk = tabela w bazie jest (false — brak KROKU 103). */
 let ntList=(()=>{try{const a=JSON.parse(localStorage.getItem("ntags")||"null");if(Array.isArray(a)&&a.every(x=>x&&x.key))return a}catch(e){}return []})(),ntOk=false;
 function ntSet(a){if(!Array.isArray(a))return;ntOk=true;ntList=a.slice().sort((p,q)=>(p.sort-q.sort)||p.key.localeCompare(q.key));try{localStorage.setItem("ntags",JSON.stringify(ntList))}catch(e){}}
 const ntWords=s=>String(s||"").toLowerCase().replace(/[ąćęłńóśźż]/g,c=>"acelnoszz"["ąćęłńóśźż".indexOf(c)]).split(/[^a-z]+/).filter(Boolean);
 // słowo pasuje od początku wyrazu; słowo ze spacją („Nocna Wataha” → nocnawataha) — przez kolejne wyrazy
 const ntHit=(W,k)=>W.some((_,i)=>{let c="";for(let j=i;j<W.length&&c.length<k.length;j++)c+=W[j];return c.startsWith(k)});
-const ntFind=(s,L)=>{if(!s)return null;const W=ntWords(s);return (L||ntList).find(t=>t.on!==false&&ntHit(W,t.key))||null};
+/* 🏷️ Wbudowany słownik (decyzja właściciela 2026-11-25 22:12: etykiety mają powstawać same) — [ikona, kolor, rdzenie słów].
+   Rdzeń łapie początek wyrazu po spłaszczeniu (bez polskich znaków): „jezior” → jezioro, jeziorem…; z kropką na końcu — tylko cały wyraz („las.” ≠ „laser”).
+   Kolejność = pierwszeństwo (wyżej wygrywa). Słownik 👑 z bazy (ntList) jest przed wbudowanym; słowo z bazy wyłączone przełącznikiem wyłącza też to samo słowo wbudowane. */
+const NT_BUILT=[
+  ["wolf","gray","wataha wilk wilcz"],
+  ["bolt","red","speeday sprint szybk wyscig race. interwal"],
+  ["strava","#fc4c02","strava segment"],
+  ["trophy","#c98a0b","zawod maraton rekord wyzwani challenge puchar"],
+  ["timer","blue","trening progow"],
+  ["coffee","#a2845e","kawa. kawy. kawe. kawka kawke kawki kawusi kawiarn kafej coffee espresso latte cappuccino"],
+  ["beer","#c98a0b","piw. piwk piwo piwa piwem browar beer radler pifk"],
+  ["icecream","#ff2d55","lody. lodzik lodziar gofr deser"],
+  ["cookie","#a2845e","ciast ciastk paczk drozdzow sernik szarlotk"],
+  ["food","orange","kebab pizz obiad lunch burger frytk zapiekank jedzeni grill kielbas nalesnik pierog sniadan kolacj bistro restaurac knajp gastro kanapk"],
+  ["flame","red","ognisk upal upaln goraco"],
+  ["sunrise","orange","swit. switu swicie wschod porann rano. ranek ranna sunrise"],
+  ["sunset","orange","zachod sunset zmierzch golden"],
+  ["moon","#3a4a8c","nocn noc. noca nocy nocka nocny wieczor ksiezyc polnoc night"],
+  ["star","purple","gwiazd perseid astro"],
+  ["droplet","#64a5ff","woda. wody. wode. wodke napoj bidon"],
+  ["waves","teal","jezior rzek plaz kapiel narew bug. wisla wisle wisly zalew staw. stawu stawem stawie morz molo przystan kajak marina"],
+  ["mountain","#8e6e53","gory. gore. gorach gorsk gorki gorka gorke podjazd wzgorz szczyt przewyz pagork hill climb wspinacz"],
+  ["tree","green","las. lasu lasem lasy lasow lesie lesn puszcz bor. borem knieja park. parku rezerwat forest drzew grzyb"],
+  ["mtb","green","mtb singl enduro trail downhill"],
+  ["gravel","#a2845e","gravel szuter szutr szutrow"],
+  ["road","gray","szos asfalt"],
+  ["ebike","teal","ebik ebike elektryk"],
+  ["walk","green","kijk nordic spacer"],
+  ["run","orange","biega bieg. biegu jogg parkrun"],
+  ["rain","purple","deszcz mokr ulew rain"],
+  ["droplet","#8e6e53","blot. blota blotem blocie"],
+  ["snow","teal","snieg sniez zim. zima zimow mroz chlod zimn morsow"],
+  ["sun","#ffcc00","slonc slonecz pogodn cieplo ciepl"],
+  ["wind","teal","wiatr wieje wietrzn wind"],
+  ["heart","#ff2d55","randk milosc kocham serce walentyn romant"],
+  ["sparkles","purple","urodzin imienin swiet sylwest mikolaj impreza"],
+  ["paw","#a2845e","pies psem psa. psy. psiak piesk dog"],
+  ["music","purple","muzyk glosnik disco koncert playlist"],
+  ["cam","blue","zdjec foto film."],
+  ["backpack","#8e6e53","bikepack sakw nocleg biwak namiot kemping camping"],
+  ["map","blue","wycieczk wyprawa eksplor odkryw przygod tour."],
+  ["turtle","green","spokoj wolno wolne wolniej najwoln luz. luzn lajtow rekreac chill relaks rozmown senior"],
+  ["users","blue","ekip grup. grupa grupy grupow razem wszyscy kumpl znajom druzyn ziomk rodzin dzieci"],
+  ["wrench","gray","serwis napraw detk pompk kapc smar lancuch"],
+  ["shop","blue","sklep zakup biedronk zabk lidl"],
+  ["city","gray","miasto miasta miescie miejsk centrum rynek city"],
+  ["alert","orange","uwaga ostroz niebezp objazd remont zamkniet"],
+  ["clock","blue","punktual spozni"]];
+const ntBuilt=NT_BUILT.flatMap(([icon,color,w],g)=>w.split(" ").map(x=>({key:x.replace(/\.$/,""),ex:x.endsWith("."),word:x.replace(/\.$/,""),icon,color,built:true,sort:g})));
+const ntHitT=(W,t)=>t.ex?W.includes(t.key):ntHit(W,t.key);
+// L — słownik z bazy (domyślnie ntList; podgląd w Administracji podaje listę z niezapisanym słowem); potem wbudowany bez słów, które baza już ma
+const ntFind=(s,L)=>{if(!s)return null;const W=ntWords(s),D=L||ntList,own=new Set(D.map(t=>t.key));
+  return D.find(t=>t.on!==false&&ntHitT(W,t))||ntBuilt.find(t=>!own.has(t.key)&&ntHitT(W,t))||null};
 const ntRaw=t=>/^#[0-9a-f]{6}$/.test(t.color)?t.color:(typeof PL_COL==="object"&&PL_COL[t.color])||"#0a84ff";
 const ntCol=t=>typeof grInk==="function"?grInk(ntRaw(t)):ntRaw(t);   // tło pod biały napis — kontrast jak etykiety grup
 const ntIc=t=>UI_P[t.icon]?t.icon:"tag";

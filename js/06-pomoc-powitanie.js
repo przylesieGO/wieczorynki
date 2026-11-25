@@ -111,7 +111,7 @@ function helpFullHtml(){
      "<b>🚲 Rower / teren</b> (przy rowerze): dla wszystkich (domyślnie), szosa, gravel, MTB, e-bike.",
      "<b>📍 Punkt zbiórki</b> (opcjonalnie): wybierz z listy, „✏️ Inne miejsce…” albo „🗺️ Wskaż na mapie…”. Przełącznik „Dodaj do listy miejsc” zapisze miejsce dla wszystkich. Na karcie „Mapa ›” otwiera nawigację.",
      "<b>Notatka:</b> gotowe (Kebab RIDE, Coffee Ride ☕, SPEEDAY…) albo własna. „↺ Jak ostatnio” ustawia godzinę z poprzedniego razu.",
-     "<b>🏷️ Etykieta notatki:</b> gdy w notatce jest słowo ze słownika (np. „Wataha” → wilk, „Kawa” → kubek, „Nocna” → księżyc, „Kebab”, „SPEEDAY”), notatka pokaże się jako kolorowa plakietka z ikoną — na karcie, w oknach zaproszeń, pod 🔔 i w „Jak poszło?”. Słownik prowadzi 👑; tytuł i Telegram bez zmian.",
+     "<b>🏷️ Etykieta notatki:</b> etykiety powstają same — gdy w notatce jest znane słowo (np. „Wataha” → wilk, „Kawa” → kubek, „jezioro” → fale, „las” → drzewo, „deszcz”, „świt”, „góry”, „kebab”, „SPEEDAY” — kilkaset słów), notatka pokaże się jako kolorowa plakietka z ikoną — na karcie, w oknach zaproszeń, pod 🔔 i w „Jak poszło?”. 👑 może dopisać własne słowa; tytuł i Telegram bez zmian.",
      "<b>📚 Wybierz z bazy tras</b> — gotowa trasa jednym dotknięciem. Przełącznik „📚 Dodaj trasę do bazy tras” zapisze Twój plik GPX dla wszystkich (z nazwą).",
      "<b>✏️ Edytuj</b> na swoim zaproszeniu (to z zielonym kółkiem „Ty”) — zmienisz godzinę, tempo, dystans, trasę i punkt zbiórki; zaproszeni dostaną powiadomienie."])
    +sec("🙋 Odpowiadanie",[
@@ -169,6 +169,7 @@ function helpFullHtml(){
      "<b>Krok 3 — Aktywności</b>: wybierz, co generować (np. sam bieg albo bieg + spacer); liczba przy bomblu = ile grających kont ją ma. Rower dostaje trasę dopasowaną do roweru konta (zbiórka na starcie trasy, w notatce km i przewyższenie), bieg / spacer / trekking — bez roweru i tempa, tytuł automatyczny.",
      "Niżej, <b>Na stałe</b>: <b>Żywa Ekipa demo</b> — przełącznik „Żyje sama” (konta demo co 15 min, 6–22: zaproszenia, „Mam ochotę” i Reakcje, zapisy, tablice grup, „Jak poszło?”), suwak <b>Ruch</b> (zaproszeń na dobę, np. 4 → ok. 3 sygnały), aktywności, które wolno zakładać, liczniki <b>Dziś</b> i <b>ostatnia tura</b>; dalej <b>Ochotnicy</b> (prawdziwe osoby za ich zgodą — filtry, lista, Dodaj / Wypisz nad listą), <b>Odpowiedzi kont demo</b> i <b>Sprzątanie</b>."]):'')
    +(session&&isSuper(uid)?sec("🏷️ Etykiety notatek (tylko 👑)",[   // KROK 103 — słownik note_tags
+     "Etykiety działają same — aplikacja ma wbudowany słownik (kilkaset słów, lista na dole ekranu). Twoje słowa mają pierwszeństwo: dopiszesz nowe albo poprawisz wbudowane (to samo słowo z inną ikoną albo dodane i wyłączone).",
      "<b>⚙️ → Administracja → Narzędzia → Etykiety notatek</b>: słowo → ikona i kolor. Dodaj słowo, wybierz ikonę i kolor (paleta albo własny), sprawdź na przykładowej notatce i zapisz.",
      "Słowo działa od początku wyrazu, bez wielkości liter i polskich znaków („wilk” łapie „Wilki”). Pierwsze pasujące od góry wygrywa — kolejność zmienisz ▲ ▼.",
      "Przełącznik wyłącza słowo bez usuwania; ✏️ edytuje, 🗑 usuwa. Zmianę widać u wszystkich po odświeżeniu (do minuty)."]):'')
