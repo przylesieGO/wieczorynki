@@ -1007,7 +1007,7 @@ function durLineHtml(w){
   return '<div class="wdur">'+(k!=null&&!hasRoute(w)?'📏 '+kmTxt(k).replace(",0","")+' km · ':'')+'⏱ '+(open?'jazda ok. '+durTxt(wantDur(w)):'ok. '+hhmm(wantStart(w))+'–'+hhmm(wantEnd(w)))+'</div>';
 }
 const paceTxt=p=>PACES[p]?PACES[p].e+' '+PACES[p].n+' · '+PACES[p].r:'⏱ '+p;
-const BIKES={road:"🛣 Szosa",gravel:"🪨 Gravel",mtb:"⛰ MTB",ebike:"⚡ E-bike"};   // „trekking” usunięty (KROK 94) — koliduje z aktywnością Trekking
+const BIKES={road:"🛣 Szosa",gravel:"🪨 Gravel",mtb:"⛰ MTB",ebike:"⚡ E-bike"};   // „trekking” usunięty (KROK 94) — koliduje z aktywnością Wędrówka (dawniej „Trekking”)
 // 🏃 KROK 94: zaproszenie na bieg / spacer / wędrówkę — plakietka aktywności w miejscu plakietki roweru
 const bikeHtml=w=>w&&!actIsBike(w.activity)?'<div class="wpcw"><span class="wpc wbk wact">'+uiIcon(actOf(w.activity).icon||"bike")+esc(actOf(w.activity).name)+'</span></div>'
   :w&&w.bike&&BIKES[w.bike]?'<div class="wpcw"><span class="wpc wbk">'+BIKES[w.bike]+'</span></div>':'';

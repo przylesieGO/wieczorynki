@@ -322,14 +322,18 @@ function maybePopup(){
   if(gearOpen||needProfile()||pwMode||!$("whosheet").classList.contains("hide")||!$("wantform").classList.contains("hide"))return;
   popIdx=0;renderPop();
 }
-// 👥 osoby w okienku zaproszenia: do 6 — etykiety, od 7 — zwinięta lista (jak „Dołączyło”, ulubieni na początku)
-function popNks(lbl,ids,k,cnt){
-  if(ids.length<=6)return '<div class="pmeta">'+lbl+(cnt?' ('+ids.length+')':'')+':</div><div class="nks">'+favFirst(ids).map(id=>nk(id)).join("")+'</div>';
-  const fn=favNames(ids);
-  return '<details class="jlist pjl" data-j="'+esc(k)+'"'+(joinOpen.has(k)?' open':'')+'><summary><span class="jc">'+lbl+' '+ids.length+'</span>'
-   +(fn.length?'<span class="jf">· ⭐ '+esc(fn.join(", "))+'</span>':'')+'</summary>'
-   +'<div class="jv">'+favFirst(ids).map(id=>'<div>'+nk(id)+(onlineIds.includes(id)?'<span class="note">🟢 teraz</span>':'')+'</div>').join("")+'</div></details>';
+function popNks(lbl,ids,k,cnt){   // 👥 osoby w okienku zaproszenia: zawsze ta sama lista, przewijana góra–dół bez ramek (ok. 3 wiersze — 23:22), ulubieni na początku
+  return '<div class="pnks"><div class="pmeta">'+lbl+(cnt?' ('+ids.length+')':'')+':</div><div class="nks">'+favFirst(ids).map(id=>nk(id)).join("")+'</div></div>';
 }
+// 🤝 zaproszenie od EKIPY / SUPER EKIPY (prośba właściciela 2026-11-25 22:21–22:55 — „ważna funkcjonalność”, ma być wyraźnie widać):
+// z sygnału „Mam ochotę” (from_sig, KROK 101) → ekipa; z klamry (tytuł „SUPER EKIPA”) → super. W okienku złoty pas na górze ze złotą monetą z dłonią.
+// znaczek „wysłał(a) sygnał”: złota moneta z dłonią + mały piorun, bez tekstu, przed nickiem autora (23:23)
+const pekSig=u=>'<span class="pekby" title="'+(genders[u]==="K"?'Wysłała':'Wysłał')+' sygnał „Mam ochotę”" aria-label="'+(genders[u]==="K"?'Wysłała':'Wysłał')+' sygnał „Mam ochotę”">'+sigCoin()+'<i class="pekbolt">'+uiIcon("bolt")+'</i></span>';
+const EK_GEN={bike:"jazdy",run:"biegu",walk:"spaceru",hike:"wędrówki"};   // „Doczekałeś się jazdy / biegu…!” — nowa aktywność bez wpisu: „wspólnego wyjścia”
+const wEkipaKind=w=>!w?"":/^super ekipa/i.test(String(w.title||"").trim())?"super":w.from_sig?"ekipa":"";
+function popEkipaHtml(w,inv){const k=wEkipaKind(w);if(!k)return "";const n=new Set([w.user_id,uid].concat(inv||[],joins[w.id]||[])).size;   // autor + ja + zaproszeni + dołączeni
+  return '<div class="pekb">'+sigCoin()+'<span><b>'+(k==="super"?'SUPER EKIPA':'EKIPA')+'</b><small>'
+   +(k==="super"?'Ekipy z „Mam ochotę” połączyły się':'Z sygnału „Mam ochotę”')+' · <span class="pekn" title="'+n+' '+plf(n,["osoba","osoby","osób"])+' w ekipie">'+uiIcon("users")+'<b>'+n+'</b></span></small></span></div>'}
 function renderPop(dir){   // dir: -1 / 1 = karta wjeżdża z lewej / prawej (przesuw), bez dir — bez animacji
   const p=$("popsheet"),it=popList[popIdx];if(!it){closePop();return}
   const {n,w,moved}=it,d=new Date(w.starts_at),wd=d.toLocaleDateString("pl-PL",{weekday:"long"}),dd=dayDiff(d);
@@ -339,28 +343,31 @@ function renderPop(dir){   // dir: -1 / 1 = karta wjeżdża z lewej / prawej (pr
   const inv=priv?invIds(w).filter(x=>x!==uid):[],going=(joins[w.id]||[]).filter(x=>x!==uid&&x!==w.user_id);
   const big=(q,t)=>'<button type="button" class="b big" data-q="'+q+'">'+t+'</button>';
   const sm=(q,t,c)=>'<button type="button" class="b '+c+'" data-q="'+q+'">'+t+'</button>';
+  // już zapisany (kliknięte „Jadę!”): zamiast przycisku-potwierdzenia zielony wiersz stanu + „Rezygnuję” i „OK” (prośba 22:57–23:01, bez emotek)
+  const jOK=t=>'<button type="button" class="pjoined" data-q="read">'+uiIcon("check")+'<span>'+esc(t)+' — jesteś na liście</span></button><div class="pbtns">'+sm("leave","Rezygnuję","w")+'</div>';   // zielony wiersz = „OK” (zamyka i odhacza), bez osobnego OK (23:05)
   let btns;const noB=wDeclOk(w)?sm("no","Nie dam rady","w"):'',AV=actOf(w.activity);   // 🏃 KROK 94: „Biegnę!” / „Biegniesz” przy biegu   // po starcie baza nie przyjmie „Nie dam rady”
   // otwarty zakres: wybór godziny w okienku („Pasuje mi o…”)
   if(open)btns='<div class="pmeta"><b style="color:var(--ink)">Kiedy możesz?</b> (liczba = ilu już wybrało)</div>'+slotsHtml(w,popSel,popOther)
     +'<button type="button" class="b big" data-q="pref"'+(popSel?'':' disabled')+'>Pasuje mi o '+(popSel?hhmm(new Date(popSel)):'…')+'</button>'
     +'<div class="pbtns">'+noB+sm("later","Przypomnij później","g")+'</div>';
-  else if(set)btns=joined?big("read","OK 👍 "+AV.verb_you+" o "+hhmm(d))+'<div class="pbtns">'+noB+'</div>'
+  else if(set)btns=joined?jOK(AV.verb_you+" o "+hhmm(d))
     :big("join",AV.verb+"! · "+hhmm(d))+'<div class="pbtns">'+noB+sm("later","Przypomnij później","g")+'</div>';
-  else if(!time)btns=joined?big("read","OK 👍 Już "+String(AV.verb_you).toLowerCase())+'<div class="pbtns">'+sm("later","Przypomnij później","g")+'</div>'
+  else if(!time)btns=joined?jOK(AV.verb_you)
     :big("join",AV.verb+"! · "+hhmm(d))+'<div class="pbtns">'+noB+sm("later","Przypomnij później","g")+'</div>';
-  else btns=joined?big("read","OK 👍")+'<div class="pbtns">'+sm("leave","Rezygnuję","w")+'</div>'
+  else btns=joined?jOK(AV.verb_you+" o "+hhmm(d))
     :big("join",AV.verb+"! · "+hhmm(d))+'<div class="pbtns">'+sm("read","OK","w")+'</div>';
-  p.innerHTML='<div class="sheetbox popbox'+grCls(w)+(priv?' ppriv':'')+'" role="dialog" aria-modal="true"><button class="sclose" data-q="later" aria-label="Później">✕</button><div class="pcard'+(dir?(dir>0?' inr':' inl'):'')+'">'
-   +(isTest(w)?'<span class="ttag" style="margin-right:6px">'+uiIcon("flask")+' TEST</span>':'')+'<span class="ptag">'+(set?'✅ GODZINA USTALONA':time?'🕖 ZMIANA GODZINY':'📩 NOWE ZAPROSZENIE')+'</span>'+(priv&&!wGr(w)?' <span class="lockt priv">🔒 prywatne</span>':'')+(wGr(w)?' '+grTagHtml(w)+(priv?'<span class="sgpriv pp">'+uiIcon("lock")+' prywatne</span>':''):'')
-   +'<div class="ph">'+nk(actor,"Ktoś")+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w,actor):'')+(set?' '+(genders[actor]==="K"?"ustaliła":"ustalił")+' godzinę':time?' '+(genders[actor]==="K"?"zmieniła":"zmienił")+' godzinę':' zaprasza Cię '+(actOf(w.activity).invite_txt||'na rower'))+'</div>'
+  p.innerHTML='<div class="sheetbox popbox'+grCls(w)+(priv?' ppriv':'')+(wEkipaKind(w)?' pekipa':'')+'" role="dialog" aria-modal="true"><button class="sclose" data-q="later" aria-label="Później">✕</button><div class="pcard'+(dir?(dir>0?' inr':' inl'):'')+'">'+popEkipaHtml(w,inv)
+   +(isTest(w)?'<span class="ttag" style="margin-right:6px">'+uiIcon("flask")+' TEST</span>':'')+(set||time||!wEkipaKind(w)?'<span class="ptag">'+(set?'✅ GODZINA USTALONA':time?'🕖 ZMIANA GODZINY':'📩 NOWE ZAPROSZENIE')+'</span>':'')+(priv&&!wGr(w)&&!wEkipaKind(w)?' <span class="lockt priv">🔒 prywatne</span>':'')+(wGr(w)?' '+grTagHtml(w)+(priv?'<span class="sgpriv pp">'+uiIcon("lock")+' prywatne</span>':''):'')
+   +(wEkipaKind(w)&&!set&&!time?'<div class="ph">'+(genders[uid]==="K"?'Doczekałaś':'Doczekałeś')+' się '+esc(EK_GEN[w.activity||"bike"]||'wspólnego wyjścia')+'!</div><div class="pekfrom">Zaprasza '+(actor===w.user_id?pekSig(actor):'')+nk(actor,"Ktoś")+'</div>':'')
+   +(wEkipaKind(w)&&!set&&!time?'':'<div class="ph">'+(wEkipaKind(w)&&actor===w.user_id?pekSig(actor):'')+nk(actor,"Ktoś")+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w,actor):'')+(set?' '+(genders[actor]==="K"?"ustaliła":"ustalił")+' godzinę':time?' '+(genders[actor]==="K"?"zmieniła":"zmienił")+' godzinę':' zaprasza Cię '+(actOf(w.activity).invite_txt||'na rower'))+'</div>')   // 🤝 ekipa: „Doczekałeś się jazdy!” zamiast „zaprasza Cię” (23:05–23:08)
    +'<div class="pwhen">'+esc(day+" "+wTime(w))+(dd>=0&&dd<=2?'<span>'+esc(wd)+'</span>':'')+'</div>'
    +(wLate(w)&&!joined?lateNote():'')
    +(open?'<div class="pmeta">🕖 Zakres godzin — wybierz, kiedy możesz; godzinę ustali '+esc(nickOf(w.user_id))+'.</div>':'')
    +(moved&&!open?'<div class="pmeta">'+(fromRange(w)?'✅ Godzina jest już ustalona — powyżej.':'🕖 Godzina była już zmieniana — powyżej aktualna.')+'</div>':'')
-   +paceHtml(w)+bikeHtml(w)+durLineHtml(w)+placeHtml(w)+noteHtml(w.note,"pnote")
+   +paceHtml(w)+bikeHtml(w)+durLineHtml(w)+(typeof wxHtml==="function"?wxHtml(w):'')+placeHtml(w)+noteHtml(w.note,"pnote")   // 🌡 pogoda jak na karcie (prośba 22:55)
    +(w.user_id!==actor&&!time?'<div class="pmeta">Zaproszenie od '+nk(w.user_id)+'</div>':'')
    +(inv.length?popNks("Zaproszeni też",inv,"pinv"+w.id,false):'')
-   +(going.length&&!open?popNks("Jadą już",going,"pgo"+w.id,true):'')
+   +(going.length&&!open?popNks("Dołączyli",going,"pgo"+w.id,true):'')
    +btns
    +'</div>'
    +(popList.length>1?'<div class="pnav"><button type="button" class="parr" data-pd="-1" aria-label="Poprzednie zaproszenie"'+(popIdx===0?' disabled':'')+'>‹</button>'
@@ -368,6 +375,7 @@ function renderPop(dir){   // dir: -1 / 1 = karta wjeżdża z lewej / prawej (pr
      +'<button type="button" class="parr" data-pd="1" aria-label="Następne zaproszenie"'+(popIdx===popList.length-1?' disabled':'')+'>›</button></div><div class="pct">'+(popIdx+1)+' z '+popList.length+'</div>':'')
    +'<div class="ptg">Zaproszenie znajdziesz też na Starcie, w karcie dnia.</div></div>';
   p.classList.remove("hide");
+  if(typeof fillWx==="function")fillWx();
 }
 /* ↔ karuzela zaproszeń w oknie startowym (2026-11-23, wariant C „przesuw”): przeciągnięcie karty palcem, strzałki ‹ › i kropki; karta wjeżdża z boku */
 let popSwiped=false;
