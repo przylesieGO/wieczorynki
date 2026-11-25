@@ -132,7 +132,7 @@ function bsWants(){
   // zaproszenie znika spod 🔔, gdy jazda się skończy (start + czas trwania; 2026-11-25) — zakończone są w archiwum
   const act=w=>!wDone(w);
   const ord=(a,b)=>((wUnread(b).length?1:0)-(wUnread(a).length?1:0))||((wNeedsAct(b)?1:0)-(wNeedsAct(a)?1:0))||(new Date(a.starts_at)-new Date(b.starts_at));
-  return {forme:wants.filter(w=>w.user_id!==uid&&act(w)&&(w.visibility!=="private"||wInvMe(w)||(joins[w.id]||[]).includes(uid))).sort(ord),
+  return {forme:wants.filter(w=>w.user_id!==uid&&act(w)&&(w.visibility!=="private"||wInvMe(w)||(joins[w.id]||[]).includes(uid))&&(typeof wAreaOk!=="function"||wAreaOk(w))).sort(ord),   // 📍 v270: otwarte spoza okolicy — nie pod 🔔
     mine:wants.filter(w=>w.user_id===uid&&act(w)).sort(ord)};
 }
 // 🧪 testerzy pod ręką (tylko admini): czekające prośby o testera (nawet przeczytane) + lista obecnych testerów; bez licznika nieprzeczytanych
@@ -517,8 +517,10 @@ const sigPriv=x=>x.vis==="pick";
 const sigReactIds=x=>(sigReacts[x.user_id]||[]).filter(id=>id===uid||!modGone(id));
 const sigIReact=x=>(sigReacts[x.user_id]||[]).includes(uid);
 // widoczne sygnały: bez wycofanych, ukrytych / zablokowanych i (przy „ukryj testowe”) cudzych testowych
-const sigList=()=>sigs.filter(x=>!x.cancelled_at&&!x.closed&&(x.user_id===uid||!modGone(x.user_id))&&!(hideTest&&x.is_test&&x.user_id!==uid)&&!(typeof demoHidU==="function"&&demoHidU(x.user_id)&&!sigIReact(x)))   // ⚙️ Ekipa demo ukryta (KROK 95): zostaje sygnał, któremu dałeś dłoń
+const sigListAll=()=>sigs.filter(x=>!x.cancelled_at&&!x.closed&&(x.user_id===uid||!modGone(x.user_id))&&!(hideTest&&x.is_test&&x.user_id!==uid)&&!(typeof demoHidU==="function"&&demoHidU(x.user_id)&&!sigIReact(x)))   // ⚙️ Ekipa demo ukryta (KROK 95): zostaje sygnał, któremu dałeś dłoń
   .sort((a,b)=>(a.user_id===uid?-1:b.user_id===uid?1:0)||String(b.created_at).localeCompare(String(a.created_at)));
+// 📍 v270: sygnały z Mojej okolicy (miejsce = okolica autora, KROK 104); własny i te z moją Reakcją — zawsze
+const sigList=()=>sigListAll().filter(x=>x.user_id===uid||sigIReact(x)||typeof inArea!=="function"||inArea(x.lat,x.lon));
 const sigKey=x=>"sg:"+x.user_id+"|"+x.created_at;
 const sigSk=(o,t)=>o+"|"+new Date(t).getTime();   // klucz pamięci okienek w bazie (KROK 92)
 const sigDbSeen=x=>sigSeenDb.has(sigSk(x.user_id,x.created_at)),sigDbOk=x=>sigSeenDb.get(sigSk(x.user_id,x.created_at))===true;

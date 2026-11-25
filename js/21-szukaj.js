@@ -58,7 +58,7 @@ function srItems(q){
     add("done",w.id,t,srWhen(d)+" · "+d.getFullYear()+(w.place?" · "+w.place:"")+(w.visibility==="private"?" · prywatne":"")+" · starsze",w.visibility==="private"?"lock":"archive",
       [nickOf(w.user_id),J.map(nickOf).join(" "),srWantTags(w),w.place,w.place_city,w.place_area,w.note,srDay(d),"odbyte archiwum starsze"].join(" "),()=>srGoArch(w),d.getTime())})}
   // 🙋 „Mam ochotę” — dzisiejsze sygnały (to, co widać pod 🔔)
-  if(typeof sigOn==="function"&&sigOn())sigList().forEach(x=>{const a=sigA(x.activity),me=x.user_id===uid,R=sigReactIds(x);
+  if(typeof sigOn==="function"&&sigOn())(typeof sigListAll==="function"?sigListAll():sigList()).forEach(x=>{const a=sigA(x.activity),me=x.user_id===uid,R=sigReactIds(x);
     add("sig",x.user_id,(me?"Ty":nickOf(x.user_id))+" — ma ochotę "+a[2],"dziś · "+hhmm(new Date(x.created_at))+(x.msg&&!x.msg_hidden?" · „"+x.msg+"”":"")+(R.length?" · też: "+R.length:"")+(sigPriv(x)?" · prywatny":""),"hand",
       [nickOf(x.user_id),a[1],x.msg_hidden?"":x.msg,R.map(nickOf).join(" "),"mam ochotę sygnał dziś ekipa"].join(" "),()=>srGoSig(x.user_id),-new Date(x.created_at).getTime())});
   // 📣 tablice moich grup (najnowsze wpisy)
@@ -108,8 +108,9 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Zmień nick",s:"nick nazwa pseudonim ksywka",p:"Ustawienia → Edytuj profil → Nick",i:"pencil",go:[SR_PROF],hl:'[data-c="nickopen"]',ok:S},
   {t:"Zdjęcie profilowe",s:"zdjęcie awatar fotka foto",p:"Ustawienia → Edytuj profil → Zdjęcie",i:"cam",go:[SR_PROF],hl:".pe-av",ok:S&&profExOk},
   {t:"Płeć",s:"płeć kobieta mężczyzna kolor nicku",p:"Ustawienia → Edytuj profil → Płeć",i:"users",go:[SR_PROF],hl:"#gsex",ok:S&&genderOk},
-  {t:"Moja okolica (promień)",s:"okolica obszar promień km kilometry zasięg moja okolica suwak cała polska daleko blisko",p:"Nagłówek → plakietka 📍 (miejscowość · km)",i:"pin",fn:()=>openHome(),ok:true},
+  {t:"Moja okolica (promień)",s:"okolica obszar promień km kilometry zasięg moja okolica suwak cała polska daleko blisko dalej wszystkie imprezy trasy w okolicy",p:"Nagłówek → plakietka 📍 (miejscowość · km)",i:"pin",fn:()=>openHome(),ok:true},
   {t:"Moja miejscowość",s:"miejscowość miasto okolica odległość dom środek",p:"Nagłówek → 📍 → Moja miejscowość → Zmień (albo Ustawienia → Edytuj profil → Miejscowość)",i:"pin",fn:()=>openHome("home"),ok:true},
+  {t:"Trasy z okolicy / wszystkie trasy",s:"trasy w okolicy wszystkie trasy baza tras daleko cała polska",p:"Ustawienia → Baza tras → 📍 okolica / Wszystkie trasy",i:"map",fn:()=>openRb(),ok:!!rbOk},
   {t:"Podejrzyj inną okolicę / ulubione miejscowości",s:"podgląd inna okolica miejscowość sprawdź co się dzieje ulubione miejscowości gwiazdka serock nasielsk",p:"Nagłówek → 📍 → Podejrzyj inną okolicę",i:"eye",fn:()=>openHome(),ok:true},
   {t:"Telefon",s:"telefon numer zadzwoń sms",p:"Ustawienia → Edytuj profil → Telefon",i:"phone",go:[SR_PROF],hl:'[data-pe="phone"]',ok:S&&profExOk},
   {t:"Moje media",s:"strava instagram youtube facebook media linki",p:"Ustawienia → Edytuj profil → Moje media",i:"link",go:[SR_PROF],hl:'[data-pet="mopen"]',ok:S&&profExOk},
@@ -214,7 +215,8 @@ function srGoGear(set){gearOpen=true;gearFrom="";set();renderGear()}
 function srReveal(w,arch){let m="";
   if(hideTest&&w.is_test){hideTest=false;try{localStorage.setItem("hideTest","0")}catch(e){}deriveWants();m="Pokazuję też testowe zaproszenia."}
   if(typeof demoHidU==="function"&&demoHidU(w.user_id)){demoPeek=true;deriveWants();m="Pokazuję też Ekipę demo (do zamknięcia aplikacji)."}   // ⚙️ Ekipa demo ukryta (KROK 95)
-  if(session&&(!arch||flt.arch)&&fltActive()&&!fltOk(w)){flt=fltEmpty();fltSave();m="Wyłączyłem filtry, żeby pokazać ten wynik."}   // archiwum filtrujemy tylko z „Filtruj też archiwum”
+  if(session&&(!arch||flt.arch)&&fltActive()&&!fltOk(w)){flt=fltEmpty();fltSave();m="Wyłączyłem filtry, żeby pokazać ten wynik."}
+  if(!arch&&typeof wAreaOk==="function"&&!wAreaOk(w))m=areaReveal(w.place_lat,w.place_lon,w.place_city||w.place)||m;   // 📍 v270: spoza Mojej okolicy → podgląd jej okolicy   // archiwum filtrujemy tylko z „Filtruj też archiwum”
   return m}
 function srGoWant(w){const m=srReveal(w);const x=wants.find(y=>y.id===w.id);if(!x){say("Tego zaproszenia nie da się teraz pokazać.");return}goToWant(x);if(m)setTimeout(()=>say(m),400);
   setTimeout(()=>srFocus(()=>document.querySelector('#mywant .want[data-wid="'+x.id+'"],#wantlist .want[data-wid="'+x.id+'"]'),srGoQ),150)}
@@ -225,13 +227,13 @@ function srGoArch(w){
   show(0);archOpen=true;archAll=true;renderWants();
   setTimeout(()=>{const el=document.querySelector('#wantarch .ai[data-wid="'+w.id+'"]');if(el){srPulse(el);srMark(el,srGoQ)}else{srPulse($("wantarch"));say("Tej jazdy nie widać w archiwum (30 dni).")}if(m)say(m)},80)}
 // 🙋 sygnał: otwórz 🔔, rozwiń „Ekipa na dziś” i pokaż wiersz osoby
-async function srGoSig(id){show(0);const b=$("bellbtn");if(b&&$("bellsheet").classList.contains("hide"))b.click();
+async function srGoSig(id){{const x=sigs.find(y=>y.user_id===id);if(x&&typeof areaReveal==="function"&&!sigList().includes(x)){const m=areaReveal(x.lat,x.lon,"okolica sygnału");if(m)setTimeout(()=>say(m),500)}}show(0);const b=$("bellbtn");if(b&&$("bellsheet").classList.contains("hide"))b.click();
   const h=await srWait(()=>document.querySelector('#bellsheet [data-bsec="sig"]'));if(h&&h.getAttribute("aria-expanded")==="false")h.click();
   srFocus(()=>{const r=document.querySelector(id===uid?'#bellsheet [data-sge]':'#bellsheet [data-sgr="'+id+'"],#bellsheet [data-sgz="'+id+'"]');return r&&r.closest(".sgrow")},srGoQ,$("bellsheet"))}
 // 📣 wpis z tablicy: otwórz grupę na zakładce Tablica
 function srGoPost(p){if(typeof grGo!=="function")return;grGo(p.group_id);
   srFocus(()=>document.querySelector('#gearpanel .gpost[data-pid="'+p.id+'"]'),srGoQ)}
-function srGoEv(id){evGo(id);setTimeout(()=>srFocus(()=>{const h=document.querySelector('#p3 [data-ev="tog"][data-id="'+id+'"]');return h&&h.closest(".ev")},srGoQ),150)}
+function srGoEv(id){const e=evs.find(x=>x.id===id);if(e&&typeof nearOk==="function"&&!nearOk(e)){const m=areaReveal(e.lat,e.lon,e.place);if(m)setTimeout(()=>say(m),500)}evGo(id);setTimeout(()=>srFocus(()=>{const h=document.querySelector('#p3 [data-ev="tog"][data-id="'+id+'"]');return h&&h.closest(".ev")},srGoQ),150)}
 function srGoRide(i){show(1);showRide(i);rcarScrollTo(i,true);setTimeout(()=>srFocus(()=>$("ridecard").textContent.trim()&&$("ridecard"),srGoQ),200)}
 function srGoUser(id){if(id===uid){srGoGear(()=>{gearView="main"});const b=$("gearpanel").querySelector(SR_PROF);if(b)b.click();return}
   userBack="";tkFrom=false;userId=id;srGoGear(()=>{gearView="user"});if(isAdmin){delete admInfo[id];loadAdmInfo(id)}
@@ -283,10 +285,11 @@ async function srOldGo(d){if(srOldBusy)return;
 const SR_AZ=["user","grp","list","route"];
 function srListHtml(L){
   const q=srQ.trim(),all=srTy==="all";
+  const pk=q.length>=3&&all&&typeof openHome==="function"?'<button type="button" class="fusr srr" data-sk="peek" data-sv="'+esc(q)+'"><span class="fuic g">'+uiIcon("eye")+'</span><span class="fun"><span class="srt">Podejrzyj okolicę: „'+esc(q)+'”</span><small class="srsub">Moja okolica → wyszukaj miejscowość i zobacz, co się tam dzieje</small></span></button>':'';   // 📍 v270
   if(!q&&all)return srHistHtml()+'<div class="note srhint">'+uiIcon("search")+' Wpisz, czego szukasz — zaproszenia, „Mam ochotę”, imprezy, wieczorynki, osoby, grupy i ich tablice, listy, trasy'+(srOpt?', opcje aplikacji':'')+'.<br>Filtry nie zawężają wyszukiwania. Bombel u góry pokaże wszystko z jednego rodzaju.</div>';
   const S=all?L:L.filter(x=>x.k===srTy);
   if(!S.length&&!all&&L.length)return '<div class="note srhint">W „'+esc(srTyName(srTy))+'” nic dla „'+esc(q)+'”.</div><button type="button" class="b g big srall" data-sk="ty" data-sv="all">Pokaż wszystkie wyniki ('+L.length+')</button>';   // wybrany rodzaj pusty, a inne mają trafienia
-  if(!S.length)return srOldHtml()+'<div class="note srhint">Nic nie znaleziono'+(q?' dla „'+esc(q)+'”':'')+'.'+(!srOpt&&q?'<br>Szukasz ustawienia? Włącz „Szukaj też w opcjach aplikacji”.':'')+'</div>';
+  if(!S.length)return srOldHtml()+(pk?'<div class="fulist srlist">'+pk+'</div>':'')+'<div class="note srhint">Nic nie znaleziono'+(q?' dla „'+esc(q)+'”':'')+'.'+(!srOpt&&q?'<br>Szukasz ustawienia? Włącz „Szukaj też w opcjach aplikacji”.':'')+'</div>';
   if(!q&&SR_AZ.includes(srTy)&&S.length>12){const L1=x=>(x.t||"").trim().charAt(0).toLocaleUpperCase("pl"),A=S.slice().sort((a,b)=>a.t.localeCompare(b.t,"pl")),az=[...new Set(A.map(L1).filter(c=>/\p{L}/u.test(c)))].sort((a,b)=>a.localeCompare(b,"pl"));
     return '<div class="fulwrap">'+(az.length?'<div class="faz" id="srfaz" aria-hidden="true" data-all="'+esc(az.join(""))+'"></div>':'')+'<div class="fulist srlist'+(az.length?' az':'')+'"><div class="fulbl">'+esc(srTyName(srTy))+' · '+A.length+'</div>'+A.map(x=>srRow(x,q).replace('<button type="button" class="fusr srr"','<button type="button" class="fusr srr" data-fl="'+esc(L1(x))+'"')).join("")+'</div></div>'}
   const by={};S.forEach(x=>(by[x.k]=by[x.k]||[]).push(x));
@@ -294,7 +297,7 @@ function srListHtml(L){
     // w sekcji: najlepsze trafienia na dole (przy polu); bez tekstu — od najbliższych dat / alfabetycznie
     const A=by[k].sort((a,b)=>q?(a.sc-b.sc||b.ord-a.ord||a.t.localeCompare(b.t,"pl")):(k==="want"||k==="ev"||k==="ride"||k==="done"?a.ord-b.ord:a.t.localeCompare(b.t,"pl"))),   // bez tekstu: nazwy od góry alfabetycznie (jak w Filtrach), daty — najbliższe na dole
       lim=all&&!srMore?4:0,cut=lim&&A.length>lim,V=cut?A.slice(-lim):A;
-    return '<div class="fulbl">'+esc(srTyName(k))+' · '+A.length+'</div>'+(cut?'<button type="button" class="fusr fumore" data-sk="ty" data-sv="'+k+'">Pokaż wszystkie ('+A.length+') ›</button>':'')+V.map(x=>srRow(x,q)).join("")}).join("")+'</div>';
+    return '<div class="fulbl">'+esc(srTyName(k))+' · '+A.length+'</div>'+(cut?'<button type="button" class="fusr fumore" data-sk="ty" data-sv="'+k+'">Pokaż wszystkie ('+A.length+') ›</button>':'')+V.map(x=>srRow(x,q)).join("")}).join("")+pk+'</div>';
 }
 let srLast=[];
 function srDraw(keepScroll){
@@ -343,6 +346,7 @@ $("srchsheet").addEventListener("click",e=>{
   if(k==="clear"){srQ="";srTy="all";srMore=false;const i=$("srq");if(i){i.value="";i.focus()}srDraw();return}
   if(k==="opt"){srOpt=!srOpt;try{localStorage.setItem("srOpt",srOpt?"1":"0")}catch(err){}if(!srOpt&&srTy==="opt")srTy="all";b.classList.toggle("on",srOpt);b.setAttribute("aria-checked",srOpt);srDraw();return}
   if(k==="ty"){srTy=srTy===v&&!b.classList.contains("fumore")?"all":v;srMore=false;srDraw();const c=$("srchips"),on=c&&c.querySelector(".fch.on");if(on)on.scrollIntoView({block:"nearest",inline:"center"});return}
+  if(k==="peek"){closeSrch();openHome();const i=$("homeq");if(i){i.value=v;homeFind()}return}   // 📍 v270: podgląd okolicy wpisanej miejscowości
   if(k==="go"){const x=srLast.find(y=>y.k+"|"+y.id===v);if(!x)return;srGoQ=x.k==="opt"?"":srQ.trim();srHistAdd(srQ);closeSrch();x.go();return}
   if(k==="hq"){srQ=v;const i=$("srq");if(i){i.value=v;i.focus()}srDraw();return}   // 🕘 hasło z historii
   if(k==="hclr"){try{localStorage.removeItem("srHist")}catch(err){}srDraw();return}

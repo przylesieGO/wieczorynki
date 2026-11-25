@@ -4,6 +4,8 @@ const fbf={kind:"bug",rating:0,text:"",dev:true};let fbReplyTxt="",fbMsgTxt="";
 // 🔢 numeracja wydań: 0.x.y w czasie BETY (1.0 = publiczne wydanie); x — paczka nowości, y — poprawki.
 // Nowe wydanie: dopisz pozycję na początku APP_REL (wersja, data, nowości) — w ❓ Pomocy pokaże się „Co nowego” i kropka przy ❓.
 const APP_REL=[
+  {v:"0.12",d:"26.11.2026",items:[
+    ["pin","<b>Moja okolica</b> — pod nickiem plakietka <b>📍 miejscowość · km</b>. Aplikacja pokazuje zaproszenia, sygnały „Mam ochotę”, imprezy i trasy z Twojej okolicy (domyślnie 20 km). Kliknij plakietkę: suwak 5–50 km albo cała Polska, zmiana miejscowości, ⭐ ulubione miejscowości i <b>podgląd innej okolicy</b>. Prywatne zaproszenia do Ciebie dochodzą zawsze."]]},
   {v:"0.11",d:"25.11.2026",items:[
     ["tag","<b>Etykiety notatek</b> — same rozpoznają kilkaset słów: „Nocna Wataha” dostaje wilka, „kawa” kubek, „jezioro” fale, „las” drzewo, „deszcz” chmurę — notatka świeci kolorową plakietką z ikoną."]]},
   {v:"0.10",d:"24.11.2026",items:[

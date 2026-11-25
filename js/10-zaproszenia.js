@@ -363,11 +363,13 @@ function fltLabel(k){
 }
 let wantsNoFlt=null;   // wszystkie zaproszenia bez filtrów — „Moje” (👤) zawsze pokazuje wszystkie Twoje, filtry ich nie chowają
 function renderWants(){try{renderSteps()}catch(e){}
-  const all=wants,on=!!session&&fltActive();
-  if(on)wants=all.filter(fltOk);
+  const raw=wants,all=typeof wAreaOk==="function"?raw.filter(wAreaOk):raw,on=!!session&&fltActive();   // 📍 v270: najpierw Moja okolica (js/08), potem Filtry
+  wants=on?all.filter(fltOk):all;
   wantsNoFlt=all;
-  try{renderWants0()}finally{wants=all;wantsNoFlt=null}
-  renderArch(all);
+  try{renderWants0()}finally{wants=raw;wantsNoFlt=null}
+  {const out=raw.filter(wUpcoming).length-all.filter(wUpcoming).length,l=$("wantlist");   // 📍 v270: ile otwartych zaproszeń jest poza okolicą
+    if(out>0&&l&&typeof areaCur==="function"){const a=areaCur();l.insertAdjacentHTML("beforeend",'<div class="note arout">'+uiIcon("pin")+' Poza okolicą ('+esc(a.name)+' · '+areaKmTxt(a.km)+'): '+out+' '+plf(out,["zaproszenie","zaproszenia","zaproszeń"])+' · <button type="button" class="lnk" data-arout="1">zmień okolicę ›</button></div>')}}
+  renderArch(raw);
   const ws=$("wstat");if(ws){const up=all.filter(wUpcoming),me=up.filter(w=>w.user_id===uid||(joins[w.id]||[]).includes(uid)).length;   // widoczne dla mnie / biorę udział
     ws.classList.toggle("hide",!session);ws.innerHTML=uiIcon("hand")+'<button type="button" data-ws="all" class="'+(flt.who!=="part"?"on":"")+'">'+up.length+'</button><s>/</s><button type="button" data-ws="part" class="'+(flt.who==="part"?"on":"")+'">'+me+'</button>';
     ws.title="Zaproszenia widoczne dla Ciebie / te, w których bierzesz udział";ws.setAttribute("aria-label","Zaproszeń widocznych: "+up.length+", w których bierzesz udział: "+me)}
@@ -480,18 +482,19 @@ function fltDraw(){
   ["where","user","to","by"].forEach(k=>{const el=$("fsum_"+k);if(!el)return;el.textContent=fltOn(k)?(k==="to"||k==="by"?fltNm(flt[k]):fltLabel(k)):(k==="where"?"Wszędzie":k==="to"||k==="by"?"Wybierz":"Wszyscy");el.classList.toggle("fnone",!fltOn(k))});
   const bb=$("fltbikebox");if(bb)bb.classList.toggle("hide",!fltBikeOn());
   if(fltScope==="ev"){const ne=evs.filter(e=>!evPast(e)&&evMatch(e)).length;$("fltok").textContent=fltActiveFor("ev")?"Pokaż "+ne+" "+plf(ne,["imprezę","imprezy","imprez"]):"Gotowe";return}
-  const n=wants.filter(wUpcoming).filter(fltOk).length,na=flt.arch&&fltActive()?withOldJoins(()=>archList(wants).filter(fltOk).length):0;$("fltok").textContent=fltActive()?"Pokaż "+n+" "+(n===1?"zaproszenie":n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"zaproszenia":"zaproszeń")+(flt.arch?" + "+na+" w archiwum":""):"Gotowe";
+  const n=wants.filter(wUpcoming).filter(w=>typeof wAreaOk!=="function"||wAreaOk(w)).filter(fltOk).length,na=flt.arch&&fltActive()?withOldJoins(()=>archList(wants).filter(fltOk).length):0;$("fltok").textContent=fltActive()?"Pokaż "+n+" "+(n===1?"zaproszenie":n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"zaproszenia":"zaproszeń")+(flt.arch?" + "+na+" w archiwum":""):"Gotowe";
 }
 function fltRefresh(){if($("fltok"))fltDraw();renderWants();if(typeof renderEvents==="function"&&curTab===3)renderEvents()}
 // okno: widok główny (bomble w rzędach przewijanych w bok) albo podekran „Gdzie” / „Osoba” z polem wpisywania na dole (wyniki rosną w górę)
 function fltMainHtml(){
   const sec=(k,t)=>'<div class="fsec"><div class="bsgrp">'+t+'</div><div class="fchips" id="flt_'+k+'"></div></div>';
   const go=(k,ico,t)=>'<div class="fsec"><button type="button" class="secbar fgo" data-fk="sub" data-fv="'+k+'"><span class="bst">'+uiIcon(ico)+'<span>'+t+'</span></span><span class="wsplsel" id="fsum_'+k+'"></span><svg class="bschev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>';
+  const ar=typeof areaCur==="function"?areaCur():null,area=ar?'<div class="fsec"><button type="button" class="secbar fgo" data-fk="area"><span class="bst">'+uiIcon(ar.peek?"eye":"pin")+'<span>Okolica</span></span><span class="wsplsel'+(ar.peek?' farpeek':'')+'">'+esc(ar.name)+' · '+areaKmTxt(ar.km)+'</span><svg class="bschev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>':'';   // 📍 v270: Moja okolica (promień w profilu, nie znika z filtrami)
   if(fltScope==="ev")return '<div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="close">Zamknij</button><b>Filtry imprez</b><button type="button" class="lnk" data-fk="clear" style="color:var(--bad);text-align:right">Wyczyść</button></div>'
-   +'<div class="bslist" id="fltlist"><div class="note fscope">Te same filtry działają w Zaproszeniach i w „Mam ochotę” pod 🔔.</div>'+sec("act","Aktywność")+'<div id="fltbikebox"'+(fltBikeOn()?'':' class="hide"')+'>'+sec("bike","Rodzaj roweru")+'</div>'+sec("when","Kiedy")+sec("who","Relacja")
+   +'<div class="bslist" id="fltlist"><div class="note fscope">Te same filtry działają w Zaproszeniach i w „Mam ochotę” pod 🔔.</div>'+area+sec("act","Aktywność")+'<div id="fltbikebox"'+(fltBikeOn()?'':' class="hide"')+'>'+sec("bike","Rodzaj roweru")+'</div>'+sec("when","Kiedy")+sec("who","Relacja")
    +go("where","pin","Gdzie")+go("user","user","Osoba")+'</div><button type="button" class="b big" id="fltok" data-fk="close">Gotowe</button>';
   return '<div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="close">Zamknij</button><b>Filtry</b><button type="button" class="lnk" data-fk="clear" style="color:var(--bad);text-align:right">Wyczyść</button></div>'
-   +'<div class="bslist" id="fltlist"><div class="note fscope">Działają też w Imprezach i w „Mam ochotę” pod 🔔 — tam, gdzie mają sens.</div>'+sec("src","Źródło i archiwum")+sec("vis","Widoczność")+(fltHasAct()?sec("act","Aktywność"):'')+sec("when","Kiedy")+sec("sort","Kolejność")+sec("who","Relacja")+(bikeOk?'<div id="fltbikebox"'+(fltBikeOn()?'':' class="hide"')+'>'+sec("bike","Rodzaj roweru")+'</div>':'')+(paceOk?sec("pace","Tempo"):'')
+   +'<div class="bslist" id="fltlist"><div class="note fscope">Działają też w Imprezach i w „Mam ochotę” pod 🔔 — tam, gdzie mają sens.</div>'+area+sec("src","Źródło i archiwum")+sec("vis","Widoczność")+(fltHasAct()?sec("act","Aktywność"):'')+sec("when","Kiedy")+sec("sort","Kolejność")+sec("who","Relacja")+(bikeOk?'<div id="fltbikebox"'+(fltBikeOn()?'':' class="hide"')+'>'+sec("bike","Rodzaj roweru")+'</div>':'')+(paceOk?sec("pace","Tempo"):'')
    +(placeOk?go("where","pin","Gdzie"):'')+go("user","user","Osoba")+(fltAdm()?'<div class="bsgrp">👑 Administrator</div>'+go("to","mail","Zaproszeni: osoba")+go("by","lock","Prywatne od osoby"):'')+'</div>'
    +'<button type="button" class="b big" id="fltok" data-fk="close">Gotowe</button>';
 }
@@ -514,7 +517,8 @@ $("fltsheet").addEventListener("click",e=>{
   const b=e.target.closest("[data-fk]");if(!b||b.tagName==="LABEL")return;
   const k=b.dataset.fk;
   if(k==="close"){closeFlt();return}
-  if(k==="sigwin"){closeFlt();openSigWin();return}   // bombel „Sygnały” w Relacji → okno z listą sygnałów (js/11)
+  if(k==="sigwin"){closeFlt();openSigWin();return}
+  if(k==="area"){closeFlt();openHome();return}   // 📍 v270: okno Moja okolica (js/08)   // bombel „Sygnały” w Relacji → okno z listą sygnałów (js/11)
   if(k==="clear"){flt=fltEmpty();fltQ="";fltSave();fltRefresh();return}
   if(k==="sub"){const l=$("fltlist");fltScroll=l?l.scrollTop:0;fltSub=b.dataset.fv;fltQ="";renderFlt();return}
   if(k==="back"){fltSub="";fltQ="";renderFlt();return}

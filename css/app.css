@@ -1518,3 +1518,5 @@ html[data-theme=dark] .repbox .rrmini{background:#24332a}
 .hmresw{display:flex;align-items:stretch;gap:6px}.hmresw .hmres{flex:1;min-width:0}.hmfav{flex:none;width:46px;margin-top:8px;border:0;border-radius:12px;background:var(--fill);color:var(--mut);cursor:pointer;display:flex;align-items:center;justify-content:center}.hmfav .ui-i{width:20px;height:20px}
 .arfavs{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px}.arfavs .fch{display:inline-flex;align-items:center;gap:5px;font-size:14px;padding:7px 12px}.arfavs .fch .ui-i{width:15px;height:15px}.arfavs .fch.on{background:var(--priv);color:#fff}
 .note .ui-i{width:14px;height:14px;vertical-align:-2px}
+.fgo .wsplsel.farpeek,.wsplsel.farpeek{color:var(--priv)}   /* 📍 v270: podgląd innej okolicy w wierszu „Okolica” w Filtrach */
+.note.arout{margin:12px 0 4px;text-align:center}.note.arout .ui-i{width:14px;height:14px;vertical-align:-2px;color:var(--acc)}   /* 📍 v270: zaproszenia poza okolicą pod listą */

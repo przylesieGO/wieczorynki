@@ -2,7 +2,7 @@
    trasa trafia do bazy tylko przełącznikiem „📚 Dodaj do bazy tras” (decyduje zapraszający) albo przyciskiem
    „📚 Do bazy tras” na karcie; baza w ⚙️ (nie na głównym ekranie) i „📚 Wybierz z bazy tras” w formularzu */
 let rbOk=false,rbList=null,rbStats={},rbAt=0,rbMap=null,rbTok=0;
-const rb={mode:"browse",sort:"uses",bike:"",q:"",open:null,pw:null,rev:false},rbRouteCache={},rbPois={};
+const rb={mode:"browse",sort:"uses",bike:"",q:"",open:null,pw:null,rev:false,all:false},rbRouteCache={},rbPois={};
 let rbOsmOk=false,rbOsmBusy={};
 let rbPts=null;
 const RB_SORTS=[["uses","🔁 Najczęściej"],["best","★ Najlepsze"],["scenic","🌅 Malownicze"],["hard","🪨 Najtrudniejsze"],["easy","🌿 Najłatwiejsze"],["quiet","🚗 Najmniej aut"],["long","📏 Najdłuższe"],["short","📏 Najkrótsze"],["forest","🌳 Najwięcej lasu"],["asphalt","🛣 Asfalt"],["offroad","🪨 Teren"],["food","☕ Gastronomia"],["near","📍 Najbliżej"],["new","🆕 Najnowsze"]];
@@ -43,7 +43,7 @@ function rbSvg(prev,w,h,white){
 }
 function rbFiltered(){
   const q=lc(rb.q.trim()),s=rb.sort;
-  const L=(rbList||[]).filter(x=>(!rb.bike||x.bike===rb.bike)&&(!q||lc(x.name+" "+(x.start_city||"")).includes(q)));
+  const L=(rbList||[]).filter(x=>(!rb.bike||x.bike===rb.bike)&&(!q||lc(x.name+" "+(x.start_city||"")).includes(q))&&(rb.all||q||typeof inArea!=="function"||inArea(x.start_lat,x.start_lon)));   // 📍 v270: domyślnie trasy z Mojej okolicy (szukanie po nazwie — wszędzie)
   return L.sort(s==="new"?(a,b)=>String(b.created_at).localeCompare(String(a.created_at)):s==="long"?(a,b)=>b.km-a.km:s==="short"?(a,b)=>a.km-b.km
     :s==="near"?(a,b)=>((rbKmFrom(a)??1e9)-(rbKmFrom(b)??1e9))
     :RB_MET[s]?(a,b)=>{const [f,d]=RB_MET[s],va=f(a),vb=f(b);if(va==null&&vb==null)return rbUses(b)-rbUses(a);if(va==null)return 1;if(vb==null)return -1;return (va-vb)*d||((rbStats[b.id]||{}).n||0)-((rbStats[a.id]||{}).n||0)||rbUses(b)-rbUses(a)}
@@ -105,6 +105,7 @@ function renderRb(){
        +(isAdmin?'Jako administrator dodasz plik GPX od razu. Użytkownicy dodają trasy przez zaproszenie.':'Utwórz zaproszenie z plikiem GPX i włącz „📚 Dodaj do bazy tras” — po zapisaniu trasa trafi tutaj.')+'</span>'
        +'<button type="button" class="b g small" data-rb="'+(isAdmin?'add':'addinv')+'">'+(isAdmin?'＋ Dodaj trasę z pliku GPX':'＋ Zaproś z trasą')+'</button></div></div>':'')
    +'<input id="rbq" class="rbq srch" placeholder="Szukaj: nazwa albo miejscowość" value="'+esc(rb.q)+'" enterkeyhint="search">'
+   +(typeof areaCur==="function"?'<div class="fchips rbchips"><button type="button" class="fch'+(rb.all?'':' on')+'" data-rba="1">📍 '+(rb.all?'W okolicy':esc(areaCur().name)+' · '+areaKmTxt(areaKm()))+'</button><button type="button" class="fch'+(rb.all?' on':'')+'" data-rba="all">Wszystkie trasy</button></div>':'')
    +'<div class="fchips rbchips">'+RB_SORTS.filter(x=>x[0]!=="near"||originGet()).map(([k,t])=>'<button type="button" class="fch'+(rb.sort===k?' on':'')+'" data-rbs="'+k+'">'+t+'</button>').join("")+'</div>'
    +'<div class="fchips rbchips">'+[["","🚲 Każdy"]].concat(Object.entries(BIKES)).map(([k,t])=>'<button type="button" class="fch'+(rb.bike===k?' on':'')+'" data-rbb="'+k+'">'+t+'</button>').join("")+'</div>'
    +'<div id="rblist">'+rbListHtml()+'</div>'
@@ -461,6 +462,7 @@ $("rbsheet").addEventListener("click",async e=>{
     const hs=$("pwhrs"),sl=hs?hs.scrollLeft:0;$("pwsel").innerHTML=pwSelHtml();const ib=$("rbinvbtn");if(ib)ib.innerHTML=rbInvLbl();const h2=$("pwhrs");if(h2){h2.scrollLeft=sl;if(pd||(ph&&ph.dataset.rbpn))pwHrsCenter()}pwUpdate();return}
   const so=e.target.closest("[data-rbs]");if(so){rb.sort=so.dataset.rbs;renderRb();return}
   const bk=e.target.closest("[data-rbb]");if(bk){rb.bike=bk.dataset.rbb;renderRb();return}
+  const ba=e.target.closest("[data-rba]");if(ba){rb.all=ba.dataset.rba==="all";renderRb();return}   // 📍 v270: trasy z okolicy / wszystkie
   const ab=e.target.closest("[data-rbab]");if(ab&&rb.add){rb.add.bike=ab.dataset.rbab;renderRbAdd();return}
   const b=e.target.closest("[data-rb]");if(!b)return;const k=b.dataset.rb;
   if(k==="add"){rbAddStart();return}
