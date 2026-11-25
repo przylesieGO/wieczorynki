@@ -436,7 +436,7 @@ const sigA=k=>{const a=actOf(k);return [a.icon||"bike",a.name,a.want_txt]};
 const sigMsgs=k=>actOf(k).msgs||[];
 const sigActKeys=()=>{const k=actAvail().map(x=>x.key);return k.length?k:["bike"]};   // do wyboru w okienku: „Wszyscy” (+ „Tylko testerzy” dla testerów)
 let sigs=[],sigOk=false,sig2Ok=false,sigDirty=true,sigDay="",sigBusy=false,sigPick="bike",sigView="",sigDoneT=0;
-let sigReacts={},sigTo={},sigSeenDb=new Map(),sigSeenOk=false,sigBusyO=new Set();   // KROK 92: sigSeenDb {autor|czas sygnału → OK}   // KROK 90: reakcje {autor:[kto]} i odbiorcy prywatnych {autor:[kto]} (widoczne wg reguł bazy)
+let sigSoon={},sigReacts={},sigTo={},sigSeenDb=new Map(),sigSeenOk=false,sigBusyO=new Set();   // KROK 92: sigSeenDb {autor|czas sygnału → OK}   // KROK 90: reakcje {autor:[kto]} i odbiorcy prywatnych {autor:[kto]} (widoczne wg reguł bazy)
 const sg={msg:"",own:false,vis:"all",pick:new Set(),gr:""};   // okienko: komunikat (own = „Inne…”), „Kto zobaczy?”
 let sigPopQ=[],sigPopI=0;
 const sigToday=()=>localIso(new Date()).slice(0,10);
@@ -463,6 +463,8 @@ async function sigLoad(){
     // 🔒 KROK 101: ekipy zamknięte 15 min po starcie wspólnego zaproszenia — sygnał znika z listy, bez Reakcji i powiadomień
     const cl=await sb.rpc("sig_closed_list");const CL=new Set(cl.error?[]:(cl.data||[]).map(x=>typeof x==="string"?x:x.sig_closed_list||Object.values(x)[0]));
     sigs.forEach(x=>{x.closed=CL.has(x.user_id)});
+    // ⏱ KROK 102: start i liczba zadeklarowanych wspólnego zaproszenia ekipy (licznik „Ekipa startuje o …” przy sygnale)
+    const sn=await sb.rpc("sig_soon_list");sigSoon={};if(!sn.error)(sn.data||[]).forEach(x=>{sigSoon[x.owner]={at:new Date(x.starts_at),n:x.n}});
   }
   if(dayCh)sigDayOver();
 }
@@ -482,6 +484,10 @@ function sigGoneCheck(x){
 }
 // ⏳ ile zostało do północy — sygnał i wspólne zaproszenie ekipy liczą się tylko dziś; widać od 21:00, w ostatniej godzinie pomarańczowe (2026-11-25)
 const sigLeftMin=()=>{const n=new Date(),m=new Date(n);m.setHours(24,0,0,0);return Math.max(0,Math.ceil((m-n)/6e4))};
+// ⏱ KROK 102: godzinę przed startem wspólnego zaproszenia ekipy (do 15 min po starcie) — „Ekipa startuje o 19:00 · za 45 min · 4 os.”
+const sigSoonMin=o=>{const s=sigSoon[o];if(!s)return null;const m=Math.round((s.at-Date.now())/6e4);return m<=60&&m>-15?m:null};
+const sigSoonHtml=o=>{const m=sigSoonMin(o);if(m==null)return "";const s=sigSoon[o];
+  return '<span class="sgleft hot">'+uiIcon("timer")+'Ekipa startuje o '+esc(hhmm(s.at))+' · '+(m>0?'za '+m+' min':'już jedzie')+' · '+s.n+' os.</span>'};
 const sigLeftHtml=()=>{const m=sigLeftMin();if(m>180)return "";
   return '<span class="sgleft'+(m<=60?' hot':'')+'">'+uiIcon("hourglass")+'do końca dnia '+(m>=60?Math.floor(m/60)+' h'+(m%60?' '+m%60+' min':''):m+' min')+'</span>'};
 // odświeżenie tuż po północy (bez czekania na minutowy cykl)
@@ -531,7 +537,21 @@ function sigAddTo(wid,ids){
   const w=wants.find(x=>x.id===wid);if(!w){say("Tego zaproszenia nie da się teraz otworzyć.");return}
   openWho("add",wid);ws.pick=new Set(ids.filter(id=>!sigWPeople(w).has(id)));ws.topK=null;renderWho();
 }
-const sigNotifUn=()=>sigReactUn().concat(sigCancelUn(),sigEkipaUn(),sigLateUn());   // powiadomienia sygnałów do licznika 🔔 i „przeczytane”
+// ⏱ KROK 102: „Ekipa X startuje o …” (do wszystkich, godzinę przed startem) i ⏰ przypomnienie autora (Reakcje od godziny, brak zaproszenia)
+const sigTodayN=k=>notifs.filter(n=>n.kind===k&&!n.read_at&&localIso(new Date(n.created_at)).slice(0,10)===sigToday());
+const sigSoonUn=()=>sigOn()?sigTodayN("sig_soon").filter(n=>sigSoonMin(n.actor)!=null&&!(sigs.find(s=>s.user_id===n.actor)||{}).closed):[];
+const sigRemindUn=()=>{const m=sigMine();if(!sigOn()||!m||m.cancelled_at||m.closed||sigEkipaRide(m))return [];return sigTodayN("sig_remind")};
+const sigSoonRow=n=>{const x=sigs.find(s=>s.user_id===n.actor&&!s.cancelled_at&&!s.closed),mine=x&&sigIReact(x);
+  return '<div class="nit stn sgrow new"><div class="ic">'+uiIcon("timer")+'</div><div class="tx">Ekipa '+nk(n.actor)+' startuje o <b>'+esc(hhmm(sigSoon[n.actor].at))+'</b>'
+  +'<div class="w">zadeklarowanych: '+sigSoon[n.actor].n+' os. · Masz ochotę? Daj Reakcję — ktoś z ekipy Cię dopisze.</div></div>'
+  +'<span class="sgbtns">'+(x&&sig2Ok&&x.user_id!==uid?'<button type="button" class="sgre'+(mine?' on':'')+'" data-sgr="'+esc(x.user_id)+'" aria-pressed="'+!!mine+'" aria-label="Też mam ochotę!">'+uiIcon("hand")+'</button>':'')+'</span>'
+  +'<button type="button" class="nmk" data-sgcx="'+esc(n.id)+'" aria-label="Oznacz jako przeczytane" title="Oznacz jako przeczytane">'+uiIcon("check")+'</button></div>'};
+const sigRemindRow=n=>{const m=sigMine(),k=m?sigReactIds(m).filter(id=>id!==uid).length:0;
+  return '<div class="nit stn sgrow new"><div class="ic">'+uiIcon("alarm")+'</div><div class="tx"><b>Od godziny masz chętnych</b>'
+  +'<div class="w">'+k+' '+plf(k,["osoba","osoby","osób"])+' z „Też mam ochotę!”, a zaproszenia jeszcze nie ma</div></div>'
+  +'<span class="sgbtns">'+(k?'<button type="button" class="lnk stgo" data-sgc="'+esc(uid)+'">Zaproś ekipę ('+k+') ›</button>':'')+'</span>'
+  +'<button type="button" class="nmk" data-sgcx="'+esc(n.id)+'" aria-label="Oznacz jako przeczytane" title="Oznacz jako przeczytane">'+uiIcon("check")+'</button></div>'};
+const sigNotifUn=()=>sigReactUn().concat(sigCancelUn(),sigEkipaUn(),sigLateUn(),sigSoonUn(),sigRemindUn());   // powiadomienia sygnałów do licznika 🔔 i „przeczytane”
 // wspólne zaproszenie ekipy na dziś (widoczne dla mnie): autor z ekipy + ktoś inny z ekipy zaproszony albo dołączony
 function sigEkipaRide(x){
   if(!x||typeof wants==="undefined")return null;
@@ -833,7 +853,7 @@ function sigRow(x,un,supWid){
       +(sig2Ok?'<button type="button" class="sgre'+(mine?' on':'')+'" data-sgr="'+esc(x.user_id)+'" aria-pressed="'+mine+'" title="'+(mine?'Cofnij':'Też mam ochotę!')+'" aria-label="'+(mine?'Cofnij „Też mam ochotę”':'Też mam ochotę!')+'">'+uiIcon("hand")+(rc?'<b>'+rc+'</b>':'')+'</button>':'')+'</span>';
   return '<div class="nit stn sgrow'+(un?' new':'')+'"><div class="ic">'+uiIcon(a[0])+'</div><div class="tx">'+(me?'<b>Ty</b>':nk(x.user_id))
     +(x.is_test?' <span class="ttag">'+uiIcon("flask")+' TEST</span>':'')
-    +'<div class="w">'+esc(a[1].toLowerCase())+' · '+esc(hhmm(d))+(!TW&&!busy&&!supWid?' '+sigLeftHtml():'')+'</div>'
+    +'<div class="w">'+esc(a[1].toLowerCase())+' · '+esc(hhmm(d))+(sigSoonHtml(x.user_id)?' '+sigSoonHtml(x.user_id):!TW&&!busy&&!supWid?' '+sigLeftHtml():'')+'</div>'
     +(sigMsgTxt(x)?'<div class="sgmsg">'+sigMsgTxt(x)+(isAdmin&&!me?' <button type="button" class="lnk sghide" data-sgh="'+esc(x.user_id)+'">Ukryj</button>':'')+'</div>':'')
     +(x.msg_hidden&&me?'<div class="note">Komunikat ukryty przez administratora.</div>':'')
     +(rc&&(me||rc>1||!mine)?'<div class="sgrt">'+sigReactTxt(x)+'</div>':'')
@@ -842,7 +862,7 @@ function sigRow(x,un,supWid){
 }
 function sigBellHtml(){
   if(!sigOn())return "";
-  const L0=sigList(),C=sigCancelUn(),EK=sigEkipaUn(),LT=sigLateUn();if(!L0.length&&!C.length&&!LT.length)return "";
+  const L0=sigList(),C=sigCancelUn(),EK=sigEkipaUn(),LT=sigLateUn(),SO=sigSoonUn(),RM=sigRemindUn();if(!L0.length&&!C.length&&!LT.length&&!SO.length)return "";
   const L=typeof fltSigOk==="function"?L0.filter(x=>x.user_id===uid||fltSigOk(x)):L0,nf=L0.length-L.length;   // 🔍 wspólne Filtry (etap C): mój sygnał zawsze widać
   const fnote=nf?'<div class="bsempty sgfnote">'+uiIcon("sliders")+' Filtry ukrywają '+nf+' '+plf(nf,["sygnał","sygnały","sygnałów"])+' ('+esc(fltKeysFor("sig").map(fltLabel).join(", "))+') · <button type="button" class="lnk" data-fxall="1">Pokaż wszystkie</button></div>':'';
   const U=new Set(sigUnread()),RU=sigReactUn().length;
@@ -850,7 +870,7 @@ function sigBellHtml(){
   // w klamrze: zaproszenie z paska („Jedziecie razem ›” / „Dopisz ›”) nie powtarza się przy każdym sygnale (2026-11-24)
   const supW=sup?(sigSuperRide(SS)||(sigSuperPart(SS)||{}).w||null):null,rowfS=x=>sigRow(x,U.has(x)||(x.user_id===uid&&RU>0),supW&&supW.id);
   const rowsAll=(sup?sigSuperHtml(SS,sorted.filter(x=>SS.includes(x)).map(rowfS).join(""))+sorted.filter(x=>!SS.includes(x)).map(rowf).join(""):sorted.map(rowf).join(""));
-  return bsSec("sig",'🚲 Ekipa na dziś',U.size+RU+C.length+EK.length+LT.length,L.length+C.length+EK.length+LT.length,LT.map(sigLateRow).join("")+EK.map(sigEkipaRow).join("")+rowsAll+fnote+C.map(sigCancelRow).join("")
+  return bsSec("sig",'🚲 Ekipa na dziś',U.size+RU+C.length+EK.length+LT.length+SO.length+RM.length,L.length+C.length+EK.length+LT.length+SO.length+RM.length,RM.map(sigRemindRow).join("")+SO.map(sigSoonRow).join("")+LT.map(sigLateRow).join("")+EK.map(sigEkipaRow).join("")+rowsAll+fnote+C.map(sigCancelRow).join("")
     +'<div class="bsempty">Bez godziny i trasy.'+(sig2Ok?' Dłoń = „też mam ochotę” — autor dostanie znać i zaprosi ekipę (zaproszenie na dziś z zakresem godzin). Gdy dajesz Reakcję na cudzy sygnał, a ktoś z tamtej ekipy na Twój — ekipy łączą się w Super ekipę.':'')+'</div>');
 }
 /* 💬 pop-up „X ma ochotę” (KROK 90): raz na sygnał; kilka naraz — jedno okienko przewijane w bok */
