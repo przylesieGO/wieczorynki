@@ -25,7 +25,11 @@ const slN=()=>slBuf.length;
 // gdzie jestem: wierzchnie otwarte okno (jego nagłówek), Ustawienia albo zakładka
 function slWhere(){
   const s=[...document.querySelectorAll(".sheet:not(.hide)")].pop();
-  if(s&&s.id!=="gearpanel"){const h=s.querySelector(".bshead,.sname,h2,h3");return slTxt((h&&h.textContent)||s.id,40)}
+  if(s&&s.id!=="gearpanel"){const h=s.querySelector(".bshead,.sname,h2,h3");
+    // sam tytuł: w nagłówku siedzi też przycisk zamykania, przez co do śladu
+    // trafiało „Ekipa na dziśZamknij" albo „Zamknij Powiadomienia"
+    let t="";if(h){const c=h.cloneNode(true);c.querySelectorAll("button,a,.sclose,.bsx").forEach(e=>e.remove());t=c.textContent}
+    return slTxt(t||s.id,40)}
   if(typeof gearOpen!=="undefined"&&gearOpen)
     return "Ustawienia"+(typeof gearView!=="undefined"&&gearView&&gearView!=="main"?" → "+gearView:"");
   return SL_TAB[typeof curTab!=="undefined"?curTab:0]||"Lista";
