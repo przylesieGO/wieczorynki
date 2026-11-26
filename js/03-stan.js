@@ -168,3 +168,8 @@ function noteInl(n,pre){if(!n)return "";const t=ntFind(n);return t?'<span class=
  const mo=new MutationObserver(lock),ob=el=>mo.observe(el,{attributes:true,attributeFilter:["class"]});document.querySelectorAll(".sheet").forEach(ob);
  new MutationObserver(m=>{m.forEach(r=>r.addedNodes.forEach(n=>{if(n.classList&&n.classList.contains("sheet"))ob(n)}));lock()}).observe(document.body,{childList:true});   // też okna tworzone w locie (np. askOk — #cfm)
  lock()}
+// ⌨️ Esc zamyka wierzchnie okno (.sheet) — tak jak dotknięcie tła (test 2026-11-26: Esc nie zamykał Pomocy). askOk i wyszukiwarka obsługują Esc same.
+document.addEventListener("keydown",e=>{if(e.key!=="Escape"||e.defaultPrevented)return;
+  const S=[...document.querySelectorAll(".sheet")].filter(x=>!x.classList.contains("hide"));if(!S.length)return;
+  const z=x=>+getComputedStyle(x).zIndex||0,top=S.reduce((a,b)=>z(b)>=z(a)?b:a);
+  e.preventDefault();top.dispatchEvent(new MouseEvent("click",{bubbles:true}))});

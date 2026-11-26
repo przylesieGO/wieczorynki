@@ -138,7 +138,7 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Spokojny wygląd testowych",s:"test miganie ramka",p:"Ustawienia → Testy",i:"flask",hl:"[data-tc]",ok:S&&testOk&&!DEMO},
   {t:"Funkcje testowe (BETA)",s:"beta nowe funkcje tester",p:"Ustawienia → Testy",i:"flask",hl:"[data-beta]",ok:meTester()&&!DEMO},
   {t:"Zostań testerem",s:"tester testowanie",p:"Ustawienia → na górze",i:"syringe",hl:".tcard",ok:S&&typeof testerCardHtml==="function"&&!!testerCardHtml()},
-  {t:"Zamknij okno z dołu (✕)",s:"zamknij okno krzyżyk przewijanie dół koniec",p:"Długie okno → przewiń na sam dół",i:"x",fn:()=>say("Przewiń długie okno na sam dół — okrągły ✕ zamyka je bez wracania na górę.")},
+  {t:"Zamknij okno z dołu (✕)",s:"zamknij okno krzyżyk przewijanie dół koniec esc escape klawiatura klawisz",p:"Długie okno → przewiń na sam dół (na komputerze także Esc)",i:"x",fn:()=>say("Przewiń długie okno na sam dół — okrągły ✕ zamyka je bez wracania na górę. Na komputerze zamkniesz okno klawiszem Esc.")},
   {t:"Przewodnik Gawron: Mam ochotę",s:"przewodnik gawron samouczek krok po kroku jak dać znać tutorial prezentacja pokaz animacja kruk",p:"Pomoc → na górze → Gawron pokaże Ci „Mam ochotę”",i:"hand",fn:()=>{if(window.Gawron)Gawron.start("mam_ochote")},ok:S&&typeof sigOn==="function"&&sigOn()},
   {t:"Przewodnik Gawron: cała historia",s:"przewodnik gawron samouczek ekipa super ekipa zaproś ekipę tutorial prezentacja",p:"Pomoc → na górze → Cała historia",i:"hand",fn:()=>{if(window.Gawron)Gawron.start("mam_ochote_pelny")},ok:S&&typeof sigOn==="function"&&sigOn()},
   {t:"Pomoc — co potrafi aplikacja",s:"pomoc instrukcja jak działa nowości wersja",p:"Ustawienia → Pomoc i opinie",i:"help",fn:()=>openHelp()},

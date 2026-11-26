@@ -320,6 +320,7 @@ function maybePopup(){
   if(!popList.length){if(popOpen())closePop();return}
   if(popOpen()){popIdx=Math.min(popIdx,popList.length-1);renderPop();return}
   if(gearOpen||needProfile()||pwMode||!$("whosheet").classList.contains("hide")||!$("wantform").classList.contains("hide"))return;
+  if([...document.querySelectorAll(".sheet")].some(x=>x.id!=="popsheet"&&!x.classList.contains("hide")))return;   // jedno okienko naraz (test 2026-11-26: złote zaproszenie pod „X ma ochotę”) — wróci po zamknięciu
   popIdx=0;renderPop();
 }
 function popNks(lbl,ids,k,cnt){   // 👥 osoby w okienku zaproszenia: zawsze ta sama lista, przewijana góra–dół bez ramek (ok. 3 wiersze — 23:22), ulubieni na początku
@@ -535,7 +536,10 @@ const sigUnread=()=>{if(!sigOn())return [];const s=lsGet("sigSeen")||"",D=bsDone
 const sigReactUn=()=>{const m=sigMine();if(!sigOn()||!m||m.cancelled_at||m.closed||sigEkipaRide(m))return [];const t=sigToday();
   return notifs.filter(n=>n.kind==="sig_react"&&!n.read_at&&localIso(new Date(n.created_at)).slice(0,10)===t)};
 // ✋ „X wycofał(a) sygnał” (KROK 91) — do osób, które dały „Też mam ochotę!”; nieprzeczytane z ostatnich 20 h
-const sigCancelUn=()=>sigOn()?notifs.filter(n=>n.kind==="sig_cancel"&&!n.read_at&&Date.now()-new Date(n.created_at).getTime()<72e6&&!sigs.some(x=>x.user_id===n.actor&&!x.cancelled_at)):[];   // znika, gdy ta osoba dała dziś znać ponownie
+// znika, gdy ta osoba dała dziś znać ponownie; tylko z dziś (sygnał jest na jeden dzień) i tylko najnowszy od danej osoby (test 2026-11-26: dwa wpisy 21:43 i 00:22)
+const sigCancelUn=()=>{if(!sigOn())return [];const seen=new Set();
+  return notifs.filter(n=>n.kind==="sig_cancel"&&!n.read_at&&dayDiff(new Date(n.created_at))===0&&!sigs.some(x=>x.user_id===n.actor&&!x.cancelled_at))
+    .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).filter(n=>!seen.has(n.actor)&&seen.add(n.actor))};
 const sigCancelRow=n=>'<div class="nit stn sgrow new"><div class="ic">'+uiIcon("hand")+'</div><div class="tx">'+nk(n.actor)
   +'<div class="w">'+(genders[n.actor]==="K"?'wycofała':'wycofał')+' swój sygnał „Mam ochotę” · '+esc(hhmm(new Date(n.created_at)))+'</div></div>'
   +'<button type="button" class="nmk" data-sgcx="'+esc(n.id)+'" aria-label="Oznacz jako przeczytane" title="Oznacz jako przeczytane">'+uiIcon("check")+'</button></div>';
@@ -613,7 +617,7 @@ function sigFabHtml(){
   if(b.dataset.h!==h){b.dataset.h=h;b.innerHTML=h}
   b.setAttribute("aria-label",act?"Twój sygnał „Mam ochotę”"+(n?" — "+n+" "+plf(n,["osoba","osoby","osób"])+" też ma ochotę":"")+" — otwórz":"Mam ochotę — daj znać, że chcesz dziś pojeździć");
 }
-function closeSig(){$("sigsheet").classList.add("hide");$("sigsheet").innerHTML="";sigView=""}
+function closeSig(){$("sigsheet").classList.add("hide");$("sigsheet").innerHTML="";sigView="";setTimeout(()=>{if(typeof maybePopup==="function")maybePopup()},450)}   // czekające okienko zaproszenia
 /* 🙋 Okno „Ekipa na dziś” — lista wszystkich dzisiejszych sygnałów z filtrami (te same wiersze co pod 🔔).
    Otwiera je machająca dłoń z licznikiem w wierszu „Twoje zaproszenia” i bombel „Sygnały” w Filtry → Relacja (prośba właściciela 2026-11-25).
    Pod 🔔 sygnały nadal są zawsze w całości — to powiadomienia; filtry dotyczą tylko tego okna. */
@@ -628,7 +632,7 @@ function sigWinOk(x){
   return true}
 function sigWinChips(){
   const A=FLT_ACT().map(([v,t])=>'<button type="button" class="fch'+(sgwF.a===v?' on':'')+'" data-swa="'+esc(v)+'">'+uiIcon(actOf(v).icon)+esc(t)+'</button>').join("");
-  const W=SGW_WHO.map(([v,t,i])=>'<button type="button" class="fch'+(sgwF.w===v?' on':'')+'" data-sww="'+v+'">'+uiIcon(i)+t+'</button>').join("");
+  const W=SGW_WHO.map(([v,t,i])=>'<button type="button" class="fch'+((v?sgwF.w===v:!sgwF.a&&!sgwF.w)?' on':'')+'" data-sww="'+v+'">'+uiIcon(i)+t+'</button>').join("");   // „Wszystkie” zielone tylko bez żadnego filtra (test 2026-11-26)
   return '<div class="sgwchips">'+A+'</div><div class="sgwchips">'+W+'</div>'}
 function sigWinRender(){
   const p=$("sigwin");if(!p||p.classList.contains("hide"))return;
@@ -652,7 +656,7 @@ $("mysigs").addEventListener("click",openSigWin);
 $("sigwin").addEventListener("click",e=>{
   if(e.target===$("sigwin")||e.target.closest("[data-swx]")){closeSigWin();return}
   const a=e.target.closest("[data-swa]");if(a){sgwF.a=sgwF.a===a.dataset.swa?"":a.dataset.swa;sigWinRender();return}
-  const w=e.target.closest("[data-sww]");if(w){sgwF.w=w.dataset.sww;sigWinRender();return}
+  const w=e.target.closest("[data-sww]");if(w){sgwF.w=w.dataset.sww;if(!sgwF.w)sgwF.a="";sigWinRender();return}   // „Wszystkie” czyści też aktywność
   if(e.target.closest("[data-sgsup]")){closeSigWin();sigInviteSuper();return}   // 🚲 „Super ekipa ›” z klamry
   const sgcx=e.target.closest("[data-sgcx]");if(sgcx){markRead([sgcx.dataset.sgcx]);sigWinRender();return}   // ✓ powiadomienie ekipy przeczytane
   if(e.target.closest("[data-sgx]")){closeSigWin();sigCancel();return}
@@ -685,6 +689,10 @@ function renderSigMine(){
   if(!m||m.cancelled_at){closeSig();return}
   const a=sigA(m.activity),R=sigReactIds(m).filter(id=>id!==uid&&nicks[id]),n=R.length;
   const tg=flags.mam_ochote&&flags.mam_ochote.state==="all";
+  // 🚲 wspólne zaproszenie już jest (ekipa albo Super ekipa z moim sygnałem) → „Jedziecie razem ›” zamiast „Zaproś ekipę” (decyzja 2026-11-24, test 2026-11-26)
+  const S=sig2Ok?sigSuperSigs():[],inSup=S.some(x=>x.user_id===uid)&&sigSuperOn(S);
+  const RW=sig2Ok?sigEkipaRide(m)||(inSup?sigSuperRide(S)||(sigSuperPart(S)||{}).w||null:null):null;
+  const late=RW&&wantCanInvite(RW)?(inSup?sigSuperAll(S):sigEkipa(m)).filter(id=>!sigWPeople(RW).has(id)):[];
   p.innerHTML='<div class="sheetbox popbox sigbox sgmine" role="dialog" aria-modal="true"><button class="sclose" data-sg="later" aria-label="Zamknij">✕</button>'
    +'<span class="ptag">TWÓJ SYGNAŁ</span>'
    +'<div class="ph sgmh"><span class="sgmic">'+uiIcon(a[0])+'</span>'+esc(a[1])+' · '+esc(hhmm(new Date(m.created_at)))+'</div>'
@@ -693,7 +701,9 @@ function renderSigMine(){
    +(sig2Ok?'<div class="sglbl">Też mają ochotę'+(n?' ('+n+')':'')+'</div>'
      +(n?'<div class="sgrl">'+R.map(id=>'<span class="sgrc">'+uiIcon("hand")+nk(id)+'</span>').join("")+'</div>'
         :'<div class="note">Na razie nikt. Gdy ktoś da „Też mam ochotę!”, zobaczysz to tutaj i dostaniesz powiadomienie.</div>'):'')
-   +(sig2Ok&&n?'<button type="button" class="b big sgmkeen" data-sg="keen">Zaproś ekipę ('+n+') ›</button>':'')
+   +(RW?'<button type="button" class="b big sgmkeen" data-sgw="'+esc(RW.id)+'">'+uiIcon("users")+' '+sigTogether(RW.activity)+'</button>'
+       +(late.length?'<button type="button" class="lnk sgmbell" data-sgadd="'+esc(RW.id+'|'+late.join(","))+'">'+sigAddLbl(late)+'</button>':'')
+     :sig2Ok&&n?'<button type="button" class="b big sgmkeen" data-sg="keen">Zaproś ekipę ('+n+') ›</button>':'')
    +(sig2Ok?'<button type="button" class="lnk sgmbell" data-sg="bell">Cała ekipa pod 🔔 ›</button>':'')
    +'<div class="pbtns"><button type="button" class="b w" data-sg="edit">Zmień</button><button type="button" class="b w" data-sg="cancel">Wycofaj</button></div>'
    +'</div>';
@@ -751,6 +761,8 @@ async function sigSend(){
 }
 async function sigCancel(){
   if(sigGoneCheck(sigMine()))return;
+  {const k=sig2Ok&&sigMine()?sigReactIds(sigMine()).filter(id=>id!==uid).length:0;   // potwierdzenie (decyzja właściciela 2026-11-26)
+   if(!await askOk("Wycofać sygnał?\n\nZniknie u wszystkich"+(k?", a "+k+" "+plf(k,["osoba z „Też mam ochotę” dostanie","osoby z „Też mam ochotę” dostaną","osób z „Też mam ochotę” dostanie"])+" znać":"")+". Możesz dziś dać znać ponownie.","Wycofaj",1))return}
   try{const r=await sb.from("ride_signals").update({cancelled_at:new Date().toISOString()}).eq("user_id",uid).eq("day",sigDay||sigToday()).select("user_id");
     if(r.error)throw r.error;const n=sig2Ok&&sigMine()?sigReactIds(sigMine()).filter(id=>id!==uid).length:0;sigDirty=true;await syncNow();
     say("Wycofane — przycisk z dłonią wrócił nad ➕."+(n?" "+n+" "+plf(n,["osoba z „Też mam ochotę” dostanie","osoby z „Też mam ochotę” dostaną","osób z „Też mam ochotę” dostanie"])+" znać.":""))}
@@ -767,14 +779,14 @@ async function sigReact(owner){
   if(on)sigReacts[owner]=prev.filter(id=>id!==uid);else sigReacts[owner]=prev.concat(uid);
   try{navigator.vibrate&&navigator.vibrate(on?8:25)}catch(e){}
   if(!on)bsDoneAdd([sigKey(x)]);   // dłoń „Też mam ochotę!” odhacza też wiersz (przeczytane) — sprawa załatwiona
-  renderBell();if(sigView==="pop")renderSigPop();   // renderBell przerysowuje też otwarte 🔔
+  renderBell();if(sigView==="pop")renderSigPop();if(sgwOpen)sigWinRender();   // renderBell przerysowuje też otwarte 🔔
   try{
     const r=on?await sb.from("ride_signal_reacts").delete().eq("owner",owner).eq("day",day).eq("user_id",uid)
       :await sb.from("ride_signal_reacts").insert({owner,day});
     if(r.error)throw r.error;
     say(on?"Cofnięte.":"👋 "+nickOf(owner)+" dostanie znać, że też masz ochotę.");
     sigDirty=true;syncNow();
-  }catch(e){sigReacts[owner]=prev;renderBell();if(sigView==="pop")renderSigPop();say(sigErr(e))}
+  }catch(e){sigReacts[owner]=prev;renderBell();if(sigView==="pop")renderSigPop();if(sgwOpen)sigWinRender();say(sigErr(e))}
   finally{sigReactBusy[owner]=false}
 }
 // komunikat sygnału → tytuł zaproszenia (≥ 6 znaków, jak tytuły w bazie) albo notatka (krótszy) — decyzja właściciela 2026-11-24 03:59
@@ -938,7 +950,7 @@ function sigRow(x,un,supWid){
 // wnętrze „Ekipa na dziś” — wspólne dla sekcji pod 🔔 i okna z machającą dłonią (2026-11-25): klamra Super ekipy, „Masz z kim …”, „Ekipa startuje”, przypomnienia, wycofane sygnały
 // keep — filtr wierszy sygnałów (okno „Ekipa na dziś”); powiadomienia (przypomnienia, „Dopisz”, wycofane) zawsze w całości; bell — podświetlenie nowych i sortowanie nieprzeczytanych na górze
 function sigEkipaBody(keep,bell){
-  const L=sigList().filter(keep||(()=>true)),C=sigCancelUn(),EK=sigEkipaUn(),LT=sigLateUn(),SO=sigSoonUn(),RM=sigRemindUn();
+  const L=sigList().filter(keep||(()=>true)),C=sigCancelUn().filter(n=>{const x=keep&&sigs.find(s=>s.user_id===n.actor);return !x||keep(x)}),EK=sigEkipaUn(),LT=sigLateUn(),SO=sigSoonUn(),RM=sigRemindUn();
   const U=bell?new Set(sigUnread()):new Set(),RU=bell?sigReactUn().length:0;
   const SS=sigSuperSigs(),sup=sigSuperOn(SS)&&SS.some(x=>L.includes(x));   // klamra zostaje, gdy pasuje choć jeden jej sygnał — pokazuje tylko pasujące wiersze
   const sorted=bell?L.slice().sort((a,b)=>(U.has(b)?1:0)-(U.has(a)?1:0)):L.slice().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
@@ -951,7 +963,7 @@ function sigEkipaBody(keep,bell){
   const notes=RM.length+SO.length+LT.length+EKs.length+C.length;
   return {L,U,RU,C,EK,LT,SO,RM,notes,html:RM.map(sigRemindRow).join("")+SO.map(sigSoonRow).join("")+LT.map(sigLateRow).join("")+EKs.map(sigEkipaRow).join("")+rowsAll+C.map(sigCancelRow).join("")};
 }
-const sigHintHtml=()=>'<div class="bsempty">Bez godziny i trasy.'+(sig2Ok?' Dłoń = „też mam ochotę” — autor dostanie znać i zaprosi ekipę (zaproszenie na dziś z zakresem godzin). Gdy dajesz Reakcję na cudzy sygnał, a ktoś z tamtej ekipy na Twój — ekipy łączą się w Super ekipę.':'')+'</div>';
+const sigHintHtml=()=>'<div class="bsempty">Bez godziny i trasy.'+(sig2Ok?' Reakcja = „Też mam ochotę!” — autor dostanie znać i zaprosi ekipę (zaproszenie na dziś z zakresem godzin). Gdy dajesz Reakcję na cudzy sygnał, a ktoś z tamtej ekipy na Twój — ekipy łączą się w Super ekipę.':'')+'</div>';
 function sigBellHtml(){
   if(!sigOn())return "";
   // sygnały to powiadomienia — Filtry ich nie zawężają (decyzja właściciela 2026-11-25)
@@ -1020,6 +1032,8 @@ $("sigsheet").addEventListener("click",e=>{
   const mm=e.target.closest("[data-sgm]");
   if(mm){const t=mm.dataset.sgm;if(!t){sg.own=!sg.own;sg.msg="";renderSig();if(sg.own){const i=$("sgown");if(i)i.focus()}}else{sg.own=false;sg.msg=sg.msg===t?"":t;renderSig()}return}
   const rr=e.target.closest("[data-sgr]");if(rr){sigReact(rr.dataset.sgr);return}
+  const sw=e.target.closest("[data-sgw]");if(sw){const w=wants.find(y=>y.id===sw.dataset.sgw);closeSig();if(w)goToWant(w);return}   // „Jedziecie razem ›” w „Twój sygnał”
+  const sa=e.target.closest("[data-sgadd]");if(sa){const [wid,ids]=sa.dataset.sgadd.split("|");closeSig();sigAddTo(wid,ids.split(","));return}
   const dt=e.target.closest("[data-sgd]");if(dt){sigPopI=+dt.dataset.sgd;const c=$("sgpc");if(c)c.scrollTo({left:sigPopI*c.clientWidth,behavior:"smooth"});return}
   const b=e.target.closest("[data-sg]");if(!b)return;
   const k=b.dataset.sg;

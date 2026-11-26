@@ -27,8 +27,11 @@ function shKeep(p){
 }
 // opakowanie funkcji rysującej okienko: function renderX(){…} → renderX=shWrap(renderX,"xsheet") na końcu pliku
 const shWrap=(fn,id,cond)=>function(...a){const r=(!cond||cond(...a))?shKeep(document.getElementById(id)):()=>{};const x=fn.apply(this,a);r();return x};
+// komunikat: emotki → ikony konturowe ze słownika UI_MAP (js/02, wywołanie dopiero w trakcie działania); 👋 w komunikacie to dłoń, nie „wyloguj” (test 2026-11-26)
+const sayHtml=t=>{const e=String(t).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+  if(typeof UI_RE==="undefined"||typeof uiIcon!=="function")return e;UI_RE.lastIndex=0;return e.replace(UI_RE,(m,x)=>uiIcon(x==="👋"?"hand":UI_K[x]))};
 function say(t){if(SAY_GONE.test(String(t))){t="To zaproszenie zostało odwołane albo już się zaczęło — odświeżam listę.";setTimeout(()=>{try{if(typeof syncNow==="function")syncNow()}catch(e){}},50)}
-  const m=$("toast");if(document.body.classList.contains("wfopen")){const f=document.querySelector(".wffoot");if(f)document.body.style.setProperty("--wffh",f.offsetHeight+"px")}m.textContent=t;m.classList.remove("hide");clearTimeout(say.t);say.t=setTimeout(()=>m.classList.add("hide"),6000)}
+  const m=$("toast");if(document.body.classList.contains("wfopen")){const f=document.querySelector(".wffoot");if(f)document.body.style.setProperty("--wffh",f.offsetHeight+"px")}m.innerHTML=sayHtml(t);m.classList.remove("hide");clearTimeout(say.t);say.t=setTimeout(()=>m.classList.add("hide"),6000)}
 function routeKm(p){let s=0;for(let i=1;i<p.length;i++)s+=dist(p[i-1],p[i]);return s}
 function paceKmh(p){const m=/(\d+)/.exec(p||"");return m?+m[1]:24}
 const NICK_RE=/^[A-Za-z0-9ĄąĆćĘęŁłŃńÓóŚśŹźŻż ._-]{2,20}$/;

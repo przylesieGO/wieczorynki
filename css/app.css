@@ -1271,7 +1271,7 @@ details.wday>summary{flex-wrap:wrap;width:100%;box-sizing:border-box}details.wda
 .fstk mark{background:none;color:var(--acc);font-weight:800}.fusr.on mark{color:inherit}
 .fltbox>.bsq{margin-bottom:0}
 /* v112: okno nie buja się na boki (ujemny margines rzędów wystawał poza listę); bombel „Grupy” w rzędzie Widoczność */
-.fltbox .bslist{overflow-x:hidden;overscroll-behavior-x:none}
+.fltbox .bslist,#sigwin .bslist,#bellsheet .bslist{overflow-x:hidden;overscroll-behavior-x:none}
 .fch .fchev{width:14px;height:14px;margin-left:2px}.fch .fchev.r{transform:rotate(-90deg)}
 .fuic.g .ui-i{color:var(--mut)}.fusr.on .fuic.g .ui-i{color:inherit}
 /* v114: rząd „Kiedy” jak pozostałe rzędy filtrów (ta sama wysokość, odstęp i padding, także pole daty) */
