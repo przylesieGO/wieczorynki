@@ -128,6 +128,8 @@ function bsSec(k,title,un,total,body){
    +'<div class="bsecb'+(col?' hide':'')+'">'+(un&&BS_MK[k]?'<div class="bsmka"><button type="button" class="lnk" data-mks="'+k+'">'+uiIcon("check")+' Oznacz sekcję jako przeczytane</button></div>':'')+body+'</div>';
 }
 // zaproszenia widoczne w 🔔: „Do Ciebie” i „Twoje” — nieprzeczytane i czekające na odpowiedź na górze
+// 🔔 v285: zaproszenia innych aktywności, których nie widać pod 🔔 (podpowiedź „Nie widzisz … o:”, jak w liście zaproszeń)
+const bsActHid=()=>wants.filter(w=>w.user_id!==uid&&!wDone(w)&&(w.visibility!=="private"||wInvMe(w)||(joins[w.id]||[]).includes(uid))&&(typeof wAreaOk!=="function"||wAreaOk(w))&&typeof wActShow==="function"&&!wActShow(w)).map(w=>w.activity);
 function bsWants(){
   // zaproszenie znika spod 🔔, gdy jazda się skończy (start + czas trwania; 2026-11-25) — zakończone są w archiwum
   const act=w=>!wDone(w);
@@ -174,7 +176,7 @@ function renderBellSheet(){
    (EVB.length?bsSec("ev",'🏁 Imprezy',EVu.size,EVB.length,uf(EVB,EVu,evKey).slice(0,8).map(x=>evBellRow(x,EVu.has(evKey(x)))).join("")
       +(EVB.length>8?'<div class="bsempty">i jeszcze '+(EVB.length-8)+' — zobacz w zakładce Imprezy</div>':'')):''),
    bsSec("forme",'📩 Do Ciebie',forMe.filter(w=>wUnread(w).length).length,forMe.length,
-      forMe.length?forMe.map(bellRowHtml).join(""):'<div class="bsempty">Na razie nikt nie zaprasza.</div>'),
+      (forMe.length?forMe.map(bellRowHtml).join(""):'<div class="bsempty">Na razie nikt nie zaprasza.</div>')+(typeof actHidHtml==="function"?actHidHtml(bsActHid(),"zaproszeń"):"")),
    bsSec("mine",'🙋 Twoje zaproszenia',mine.filter(w=>wUnread(w).length).length,mine.length,
       mine.length?mine.map(bellRowHtml).join(""):'<div class="bsempty">Nie masz aktywnych zaproszeń. <button type="button" class="lnk" data-bk="new">Idziemy na rower? ›</button></div>')
    
