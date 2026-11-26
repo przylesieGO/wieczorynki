@@ -1000,6 +1000,8 @@ function ftLiveSync(){document.querySelectorAll("details.wday[data-day]").forEac
 const wLive=w=>{const n=Date.now();return wantStart(w).getTime()<=n&&wantEnd(w).getTime()>n};
 // spóźnialscy: przez 15 min po starcie zwykłej jazdy można jeszcze dołączyć (baza tego nie blokuje) — krótki komunikat zamiast „Jazda trwa”
 const wLate=w=>!isOpen(w)&&wLive(w)&&Date.now()<new Date(w.starts_at).getTime()+15*60000;
+// można jeszcze dołączyć? = reguła bazy want_join_open: przed startem albo do 15 min po starcie (zakres bez ustalonej godziny — tylko przed startem)
+const wJoinOk=w=>!!w&&(new Date(w.starts_at).getTime()>Date.now()||(!isOpen(w)&&Date.now()<new Date(w.starts_at).getTime()+15*60000));
 const lateNote=()=>'<div class="note latenote">🏃 Jazda już ruszyła — możesz jeszcze dogonić!</div>';
 const wDone=w=>wantEnd(w).getTime()<=Date.now();
 const trwaTag=()=>'<span class="trwa">🚴 TRWA<span class="tdots" aria-hidden="true"><i></i><i></i><i></i></span></span>';
@@ -1555,7 +1557,7 @@ $("wantlist").addEventListener("click",async e=>{
     if(b.dataset.w==="join"){
       if(needProfile()){askNick();return}
       const joined=(joins[id]||[]).includes(uid);
-      if(!joined){const w=wants.find(x=>x.id===id);if(w&&!await joinClashOk(w))return}
+      if(!joined){const w=wants.find(x=>x.id===id);if(w&&!wJoinOk(w)){rideStartedInfo();return}if(w&&!await joinClashOk(w))return}
       const res=joined?await sb.from("want_joins").delete().eq("want_id",id).eq("user_id",uid):await sb.from("want_joins").insert({want_id:id});
       if(res.error)throw res.error;
       if(!joined&&(decls[id]||[]).includes(uid))await sb.from("want_declines").delete().eq("want_id",id).eq("user_id",uid);

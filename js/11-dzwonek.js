@@ -300,6 +300,7 @@ $("bellsheet").addEventListener("click",async e=>{
     a.disabled=true;
     try{
       if(a.dataset.na==="join"){
+        if(!(joins[w.id]||[]).includes(uid)&&!wJoinOk(w)){a.disabled=false;rideStartedInfo();return}
         if(!(joins[w.id]||[]).includes(uid)&&!await joinClashOk(w)){a.disabled=false;return}
         const r=await sb.from("want_joins").insert({want_id:w.id});if(r.error&&r.error.code!=="23505")throw r.error;
         if((decls[w.id]||[]).includes(uid))await sb.from("want_declines").delete().eq("want_id",w.id).eq("user_id",uid);
@@ -331,7 +332,7 @@ function popPending(){
   return Object.keys(by).map(id=>{
     const ns=by[id],inv=ns.find(n=>n.kind==="invite"),set=ns.find(n=>n.kind==="set");
     return {ns,n:inv||set||ns[ns.length-1],moved:!!inv&&ns.some(n=>n.kind!=="invite"),w:wants.find(x=>x.id===id)};
-  }).filter(x=>x.w&&x.ns.some(n=>n.kind==="invite")&&new Date(x.w.starts_at).getTime()>=Date.now()-36e5)
+  }).filter(x=>x.w&&x.ns.some(n=>n.kind==="invite")&&wJoinOk(x.w))   // okienko znika, gdy baza i tak nie przyjmie zapisu: 15 min po starcie (wcześniej 60 min — test 2026-11-26)
     .sort((a,b)=>String(a.n.created_at).localeCompare(String(b.n.created_at)));
 }
 const popIds=it=>it.ns.map(n=>n.id);
@@ -446,6 +447,7 @@ $("popsheet").addEventListener("click",async e=>{
   const chosen=popSel;
   popBusy=true;
   try{
+    if((q==="join"||q==="pref")&&!(joins[it.w.id]||[]).includes(uid)&&!wJoinOk(it.w)){popNext();rideStartedInfo();return}   // jazda ruszyła, gdy okienko było otwarte
     if(q==="join"&&!(joins[it.w.id]||[]).includes(uid)){
       if(!await joinClashOk(it.w))return;
       const r=await sb.from("want_joins").insert({want_id:it.w.id});if(r.error)throw r.error;

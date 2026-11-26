@@ -45,7 +45,11 @@ window.addEventListener("unhandledrejection",ev=>slPre("blad","odrzucona obietni
 // komunikat: emotki → ikony konturowe ze słownika UI_MAP (js/02, wywołanie dopiero w trakcie działania); 👋 w komunikacie to dłoń, nie „wyloguj” (test 2026-11-26)
 const sayHtml=t=>{const e=String(t).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
   if(typeof UI_RE==="undefined"||typeof uiIcon!=="function")return e;UI_RE.lastIndex=0;return e.replace(UI_RE,(m,x)=>uiIcon(x==="👋"?"hand":UI_K[x]))};
+// 🏁 jazda już wystartowała (baza: want_joins „tylko przed startem”, 15 min po starcie dla spóźnialskich) — okno w stylu aplikacji zamiast surowego błędu (2026-11-26)
+const SAY_STARTED=/want_joins: (zmiana )?tylko przed startem/;
+function rideStartedInfo(){askOk("Ta jazda już wystartowała — nie można już dołączyć.","OK",false,false);setTimeout(()=>{try{if(typeof syncNow==="function")syncNow()}catch(e){}},50)}
 function say(t){slPre("komunikat",t);                                    // 🔎 ślad (KROK 110)
+  if(SAY_STARTED.test(String(t))){rideStartedInfo();return}
   if(SAY_GONE.test(String(t))){t="To zaproszenie zostało odwołane albo już się zaczęło — odświeżam listę.";setTimeout(()=>{try{if(typeof syncNow==="function")syncNow()}catch(e){}},50)}
   const m=$("toast");if(document.body.classList.contains("wfopen")){const f=document.querySelector(".wffoot");if(f)document.body.style.setProperty("--wffh",f.offsetHeight+"px")}m.innerHTML=sayHtml(t);m.classList.remove("hide");clearTimeout(say.t);say.t=setTimeout(()=>m.classList.add("hide"),6000)}
 function routeKm(p){let s=0;for(let i=1;i<p.length;i++)s+=dist(p[i-1],p[i]);return s}
@@ -250,14 +254,14 @@ document.addEventListener("click",e=>{
   b.setAttribute("aria-label",show?"Ukryj hasło":"Pokaż hasło");
 });
 /* ✅ okno potwierdzenia w stylu aplikacji (zamiast systemowego confirm(), który część przeglądarek blokuje — wtedy nic się nie działo).
-   askOk(tekst, napis przycisku, czerwony?, napis anulowania?) → Promise<true/false>. Pierwszy akapit (do „\n\n”) to pytanie, reszta — opis pod nim. Enter = potwierdź, Esc / tło = anuluj. */
+   askOk(tekst, napis przycisku, czerwony?, napis anulowania? — false = samo „OK”, okno informacyjne) → Promise<true/false>. Pierwszy akapit (do „\n\n”) to pytanie, reszta — opis pod nim. Enter = potwierdź, Esc / tło = anuluj. */
 function askOk(msg,ok,danger,no){
   return new Promise(res=>{
     const old=document.getElementById("cfm");if(old)old.remove();
     const [t,...rest]=String(msg).split("\n\n");
     const d=document.createElement("div");d.id="cfm";d.className="sheet cfm";d.setAttribute("role","alertdialog");d.setAttribute("aria-modal","true");
     d.innerHTML='<div class="sheetbox cfmbox"><div class="cfmt">'+esc(t)+'</div>'+(rest.length?'<div class="cfmd">'+esc(rest.join("\n\n"))+'</div>':'')
-      +'<div class="cfmb"><button type="button" class="cfmno">'+esc(no||"Anuluj")+'</button><button type="button" class="cfmok'+(danger?' bad':'')+'">'+esc(ok||"OK")+'</button></div></div>';
+      +'<div class="cfmb">'+(no===false?'':'<button type="button" class="cfmno">'+esc(no||"Anuluj")+'</button>')+'<button type="button" class="cfmok'+(danger?' bad':'')+'">'+esc(ok||"OK")+'</button></div></div>';
     const kd=e=>{if(e.key==="Escape"||e.key==="Enter"){e.preventDefault();e.stopPropagation();done(e.key==="Enter")}};
     const done=v=>{document.removeEventListener("keydown",kd,true);d.remove();res(v)};
     d.addEventListener("click",e=>{e.stopPropagation();if(e.target===d||e.target.closest(".cfmno"))done(false);else if(e.target.closest(".cfmok"))done(true)});
