@@ -5,6 +5,7 @@ const fbf={kind:"bug",rating:0,text:"",dev:true};let fbReplyTxt="",fbMsgTxt="";
 // Nowe wydanie: dopisz pozycję na początku APP_REL (wersja, data, nowości) — w ❓ Pomocy pokaże się „Co nowego” i kropka przy ❓.
 const APP_REL=[
   {v:"0.12",d:"26.11.2026",items:[
+    ["hourglass","<b>Ekipa czeka</b> — gdy Twój sygnał „Mam ochotę” dostanie dwie Reakcje, wyskoczy okienko: <b>Zaproś ekipę</b> albo <b>Czekaj</b>. Przy „Czekaj” chętni zobaczą, że jeszcze zbierasz ekipę, a aplikacja zapyta znowu za 30 minut."],
     ["pin","<b>Moja okolica</b> — pod nickiem plakietka <b>📍 miejscowość · km</b>. Aplikacja pokazuje zaproszenia, sygnały „Mam ochotę”, imprezy i trasy z Twojej okolicy (domyślnie 20 km). Kliknij plakietkę: suwak 5–50 km albo cała Polska, zmiana miejscowości, ⭐ ulubione miejscowości i <b>podgląd innej okolicy</b>. Prywatne zaproszenia do Ciebie dochodzą zawsze."]]},
   {v:"0.11",d:"25.11.2026",items:[
     ["tag","<b>Etykiety notatek</b> — same rozpoznają kilkaset słów: „Nocna Wataha” dostaje wilka, „kawa” kubek, „jezioro” fale, „las” drzewo, „deszcz” chmurę — notatka świeci kolorową plakietką z ikoną."]]},
