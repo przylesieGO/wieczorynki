@@ -945,6 +945,10 @@ function sigWithRide(x){
     &&(()=>{const P=sigWPeople(w);return P.has(uid)&&P.has(x.user_id)})())||null;
 }
 // supWid: wiersz w klamrze Super ekipy, której pasek prowadzi do zaproszenia supWid — wtedy wiersz nie zaprasza osobno (2026-11-24)
+/* 📍 v281: sygnał z innej miejscowości — „ok. N km” od Mojej miejscowości (współrzędne autora są już zaokrąglone do ok. 2 km, a tu jeszcze do 5 km; nazwy miejscowości autora nie ujawniamy) */
+function sigKmHtml(x){if(x.user_id===uid||x.lat==null||x.lon==null||typeof areaHome!=="function")return "";
+  const h=areaHome(),d=dist({lat:h.lat,lon:h.lon},{lat:+x.lat,lon:+x.lon});if(!isFinite(d)||d<8)return "";
+  return ' <span class="sgkm">'+uiIcon("pin")+'ok. '+Math.max(10,Math.round(d/5)*5)+' km od Ciebie</span>'}
 function sigRow(x,un,supWid){
   const a=sigA(x.activity),me=x.user_id===uid,d=new Date(x.created_at),rc=sigReactIds(x).length,mine=sigIReact(x);
   const RW=sig2Ok&&(me||mine)?sigEkipaRide(x):null;   // 🚲 KROK 92: ekipa ma już wspólne zaproszenie na dziś
@@ -961,7 +965,7 @@ function sigRow(x,un,supWid){
       +(sig2Ok?'<button type="button" class="sgre'+(mine?' on':'')+'" data-sgr="'+esc(x.user_id)+'" aria-pressed="'+mine+'" title="'+(mine?'Cofnij':'Też mam ochotę!')+'" aria-label="'+(mine?'Cofnij „Też mam ochotę”':'Też mam ochotę!')+'">'+uiIcon("hand")+(rc?'<b>'+rc+'</b>':'')+'</button>':'')+'</span>';
   return '<div class="nit stn sgrow'+(un?' new':'')+'"><div class="ic">'+uiIcon(a[0])+'</div><div class="tx">'+(me?'<b>Ty</b>':nk(x.user_id))
     +(x.is_test?' <span class="ttag">'+uiIcon("flask")+' TEST</span>':'')
-    +'<div class="w">'+esc(a[1].toLowerCase())+' · '+esc(hhmm(d))+(sigSoonHtml(x.user_id)?' '+sigSoonHtml(x.user_id):!TW&&!busy&&!supWid?' '+sigLeftHtml():'')+'</div>'+rwRow
+    +'<div class="w">'+esc(a[1].toLowerCase())+' · '+esc(hhmm(d))+sigKmHtml(x)+(sigSoonHtml(x.user_id)?' '+sigSoonHtml(x.user_id):!TW&&!busy&&!supWid?' '+sigLeftHtml():'')+'</div>'+rwRow
     +(sigMsgTxt(x)?'<div class="sgmsg">'+sigMsgTxt(x)+(isAdmin&&!me?' <button type="button" class="lnk sghide" data-sgh="'+esc(x.user_id)+'">Ukryj</button>':'')+'</div>':'')
     +(x.msg_hidden&&me?'<div class="note">Komunikat ukryty przez administratora.</div>':'')
     +(rc&&(me||rc>1||!mine)?'<div class="sgrt">'+sigReactTxt(x)+'</div>':'')

@@ -1559,3 +1559,4 @@ html[data-theme=dark] .tdeck{filter:drop-shadow(0 8px 6px rgba(0,0,0,.9)) drop-s
 
 .wfar{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:3px}.wfar .ui-i{width:15px;height:15px;color:var(--acc);flex:none}.wfar b,.wfar .wfc{font:inherit;font-size:13px;font-weight:800;color:var(--ink);background:var(--fill);border:0;border-radius:10px;padding:1px 8px;line-height:1.5}.wfar .wfc{cursor:pointer;-webkit-tap-highlight-color:transparent}.wfar .wfc:active{background:var(--navon)}.wfar .wfc.on{background:var(--acc);color:var(--white)}   /* 📍 v279: miejscowości dalekich zaproszeń w zwiniętej karcie dnia */
 .wfar .wfc i{font-style:normal;font-weight:700;opacity:.65;margin-left:2px}.wfar .wfc.on i{opacity:.85}
+.sgkm{white-space:nowrap}.sgkm .ui-i{width:12px;height:12px;vertical-align:-1px;margin-right:2px;color:var(--acc)}   /* 📍 v281: odległość sygnału z innej miejscowości */
