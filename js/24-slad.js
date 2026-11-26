@@ -31,13 +31,16 @@ function slWhere(){
   return SL_TAB[typeof curTab!=="undefined"?curTab:0]||"Lista";
 }
 function slAdd(e,v){
-  // po zalogowaniu zbiera tylko 👑; komu innemu nic nie dopisujemy (przed
-  // zalogowaniem nie wiadomo kto to, a i tak nikt poza 👑 nie ma czym wysłać)
-  if(typeof uid!=="undefined"&&uid&&typeof isSuper==="function"&&!isSuper(uid)){if(slBuf.length)slBuf=[];return}
+  // zbiera tylko 👑. Dopóki aplikacja nie wie, kto to (lista 👑 wczytuje się
+  // z bazy — supers w js/04), zapisujemy; gdy już wiadomo, że to nie 👑,
+  // bufor idzie do kosza. Dzięki temu nie gubimy pierwszych sekund sesji 👑.
+  // isKingReal, nie isSuper: 👑 w „Podglądzie aplikacji" też chce zgłaszać.
+  if(typeof supers!=="undefined"&&supers.size&&typeof isKingReal==="function"&&!isKingReal()){
+    if(slBuf.length)slBuf=[];return}
   const w=slWhere(),k=e+"|"+v+"|"+w;
   if(k===slPrev&&e!=="klik")return;                     // to samo zdarzenie tuż po sobie
   slPrev=k;
-  slBuf.push({t:Date.now()-SL_T0,e,v:slTxt(v,60),w});
+  slBuf.push({t:Date.now()-SL_T0,e,v:slTxt(v,60),w:(e==="ekran"&&v===w)?"":w});   // przy zmianie ekranu nie powtarzamy nazwy
   if(slBuf.length>SL_MAX)slBuf.shift();
 }
 // podpis klikniętego elementu; z pól tylko ich nazwa, nigdy wpisana treść
