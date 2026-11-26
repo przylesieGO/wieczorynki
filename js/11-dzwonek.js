@@ -104,10 +104,30 @@ function lsRows(){if(!lgOk)return [];
 function lsRow(x){
   return '<div class="nit" data-nu="'+esc(x.user_id)+'"><div class="ic">'+(x.now?'🟢':'🕖')+'</div><div class="tx">'+nk(x.user_id)+'<div class="w">'+(x.now?'teraz w aplikacji':'w aplikacji '+esc(agoTxt(x.last_seen)))+'</div></div></div>'}
 const bellUnread=()=>notifs.filter(n=>!n.read_at&&nWant(n)&&!wDone(nWant(n))&&(ME_KINDS.includes(n.kind)||OWN_KINDS.includes(n.kind)));
+// 🖥 v294: powiadomienia systemowe na pulpicie — przełącznik w nagłówku; pokazują się, gdy przybywa nieprzeczytanych, a karta jest w tle
+let dskPrevN=null;
+const dskOn=()=>{try{return localStorage.getItem("dskNotif")==="1"}catch(e){return false}};
+function dskUi(){const k=isKingReal();$("thmbtn")?.classList.toggle("hide",!k);const b=$("dskbtn");if(!b)return;b.classList.toggle("hide",!k);const on=dskOn()&&typeof Notification!=="undefined"&&Notification.permission==="granted";b.classList.toggle("on",on);b.innerHTML='<svg class="ui-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>'+(on?'':'<path d="M3 3l18 18"/>')+'</svg>';b.title=on?"Powiadomienia na pulpicie: włączone (kliknij, aby wyłączyć)":"Powiadomienia na pulpicie: wyłączone (kliknij, aby włączyć)"}
+async function dskToggle(){
+  if(dskOn()){try{localStorage.setItem("dskNotif","0")}catch(e){}say("Powiadomienia na pulpicie wyłączone");dskUi();return}
+  if(typeof Notification==="undefined"){say("Ta przeglądarka nie pokazuje powiadomień na pulpicie");return}
+  let p=Notification.permission;if(p==="default")p=await Notification.requestPermission();
+  if(p!=="granted"){say("Powiadomienia zablokowane w przeglądarce — zmień to w ustawieniach strony");dskUi();return}
+  try{localStorage.setItem("dskNotif","1")}catch(e){}say("Powiadomienia na pulpicie włączone");dskUi();
+}
+function dskCheck(n){
+  const first=dskPrevN===null,more=!first&&n>dskPrevN;dskPrevN=n;
+  if(first||!more||!dskOn()||typeof Notification==="undefined"||Notification.permission!=="granted"||!document.hidden)return;
+  try{new Notification("PrzylesieGo!",{body:"Masz nowe powiadomienia: "+n,tag:"przylesiego-bell"})}catch(e){}
+}
+document.addEventListener("click",e=>{if(e.target.closest("#dskbtn"))dskToggle()});
+dskUi();
 function renderBell(){
   const b=$("bellbtn");if(!b)return;
+  dskUi();
   const on=!!session&&visOk,n=on?bellUnread().length+fbMineUnread().length+fbAdmUnread().length+nuUnread().length+stepsBadge()+evBellUn().length+repTodoN()+sigUnread().length+sigNotifUn().length+(typeof grBellN==="function"?grBellN():0)+(typeof svBellN==="function"?svBellN():0):0,bd=$("bellbadge");
   b.classList.toggle("hide",!on);
+  if(on)dskCheck(n);
   bd.textContent=n>9?"9+":String(n);bd.classList.toggle("hide",!n);
   b.setAttribute("aria-label",n?"Powiadomienia — nowe: "+n:"Powiadomienia");
   // liczba na ikonie aplikacji w telefonie (gdy aplikacja jest na ekranie głównym)

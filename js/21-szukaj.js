@@ -136,6 +136,8 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Powiadomienia od Ekipy demo",s:"ekipa demo powiadomienia telegram dzwonek wycisz konta demo",p:"Ustawienia → Jazdy i zaproszenia",i:"bell",hl:'[data-dmo="notif"]',ok:S&&!DEMO&&typeof demoOpt!=="undefined"&&demoOpt.show},
   {t:"Okienka „Mam ochotę”",s:"mam ochotę okienko pop-up sygnał wyłącz",p:"Ustawienia → Jazdy i zaproszenia",i:"hand",hl:"[data-sgp]",ok:S&&typeof sigOn==="function"&&sigOn()},
   {t:"Motyw: jasny / ciemny",s:"motyw ciemny jasny tryb nocny dark wygląd kolory",p:"Ustawienia → Wygląd i ekran → Motyw",i:"moon",hl:"[data-t]"},
+  {t:"Przełącznik motywu (nagłówek)",s:"motyw przełącznik nagłówek szybko jasny ciemny księżyc słońce",p:"Nagłówek → przy nazwie PrzylesieGo! (księżyc / słońce)",i:"moon",hl:"#thmbtn",ok:KR},
+  {t:"Powiadomienia na pulpicie",s:"powiadomienia pulpit desktop systemowe okienko przeglądarka dzwonek",p:"Nagłówek → przy nazwie PrzylesieGo! (dzwonek)",i:"bell",hl:"#dskbtn",ok:KR},
   {t:"Nick na górze ekranu",s:"nick nagłówek pokaż ukryj",p:"Ustawienia → Wygląd i ekran",i:"user",hl:"[data-sn]",ok:S},
   {t:"Pomoc przy starcie",s:"pomoc start powitanie",p:"Ustawienia → Wygląd i ekran",i:"help",hl:"[data-hs]"},
   {t:"Testowe zaproszenia",s:"test testowe ukryj pokaż",p:"Ustawienia → Testy",i:"flask",hl:"[data-ht]",ok:S&&testOk&&!DEMO},

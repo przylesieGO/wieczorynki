@@ -1563,3 +1563,4 @@ html[data-theme=dark] .tdeck{filter:drop-shadow(0 8px 6px rgba(0,0,0,.9)) drop-s
 .wfar .wfc{background:var(--acc2);color:var(--acc)}   /* 📍 v290: miejscowości w zwiniętej karcie w stylu chipa Senior Adventure (.wpc-senior) */
 :root:not([data-theme=dark]) .wfar .wfc:not(.on){background:var(--ink);color:var(--white)}   /* 📍 v293: w jasnym motywie czarne tło i białe litery miejscowości (jak kafelek daty) */
 .sgkm{white-space:nowrap}.sgkm .ui-i{width:12px;height:12px;vertical-align:-1px;margin-right:2px;color:var(--acc)}   /* 📍 v281: odległość sygnału z innej miejscowości */
+.hdr .thmb,.hdr .dskb{width:34px;height:34px;margin-left:6px;font-size:16px;box-shadow:none;flex:none}.hdr .thmb .ui-i,.hdr .dskb .ui-i{width:18px;height:18px}.hdr .dskb:not(.on){opacity:.5}.hdr .dskb.on{color:var(--acc)}   /* 🌓🖥 v294: przełączniki w linii nazwy (motyw, powiadomienia na pulpicie) */
