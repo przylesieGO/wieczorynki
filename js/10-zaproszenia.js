@@ -1467,7 +1467,7 @@ let myCnt=0;
 function wsecSync(){const hasMy=myCnt>0,hasCal=!!$("wantlist").querySelector(".wday"),on=myOn()&&hasMy;
   $("wsecmy").classList.remove("hide");$("wseccal").classList.toggle("hide",!(hasMy&&hasCal));   // pasek z 🕓 i 👤 jest zawsze (prośba właściciela 2026-11-25): bez własnych zaproszeń 👤 jest wyszarzone
   const sw=$("mysw"),so=$("mysort");sw.classList.toggle("on",on);sw.setAttribute("aria-pressed",String(on));
-  sw.classList.toggle("dis",!hasMy);sw.setAttribute("aria-disabled",String(!hasMy));sw.title=hasMy?"Twoje zaproszenia osobno na górze":"Nie masz żadnych zaproszeń";
+  sw.classList.toggle("dis",!hasMy);sw.setAttribute("aria-disabled",String(!hasMy));sw.title=hasMy?"Twoje zaproszenia osobno na górze":"Nie masz swoich zaproszeń";
   if(!sw.firstChild){sw.innerHTML=uiIcon("user");so.innerHTML=uiIcon("clock")}
   const sn=flt.sort==="new";so.classList.toggle("on",sn);so.setAttribute("aria-pressed",String(sn));   // dwie ikony: 🕓 od najnowszych (wg daty dodania) | 👤 moje osobno na górze
   if(typeof sigWinSync==="function")sigWinSync();
@@ -1476,7 +1476,7 @@ function mysfSync(){const fb=$("fltbtn"),fn=fltKeys().filter(k=>k!=="sort").leng
   if(fb.dataset.h!==fh){fb.dataset.h=fh;fb.innerHTML=fh}fb.classList.toggle("on",fn>0);const fl=fn?"Filtry — włączone: "+fn+" (dotknij, by zmienić)":"Filtry i sortowanie";fb.title=fl;fb.setAttribute("aria-label",fl)}   // 🔴 aktywne filtry — czerwony lejek z liczbą (prośba właściciela 2026-11-25)
 $("mysort").addEventListener("click",()=>{flt.sort=flt.sort==="new"?"":"new";if(flt.sort==="new"&&myCnt)try{localStorage.setItem("myOff","1")}catch(e){}   // toggle: 🕓 i 👤 nie świecą naraz — włączenie sortowania zwija „Moje” do kalendarza
   fltSave();fltRefresh();say(flt.sort==="new"?"Od najnowszych — wg daty dodania (Moje w kalendarzu).":"Kolejność wg godziny jazdy.")});
-$("mysw").addEventListener("click",()=>{if(!myCnt){say("Nie masz żadnych zaproszeń.");return}
+$("mysw").addEventListener("click",()=>{if(!myCnt){say("Nie masz swoich zaproszeń.");return}
   const on=!myOn();try{localStorage.setItem("myOff",on?"0":"1")}catch(e){}if(on&&flt.sort==="new"){flt.sort="";fltSave()}   // toggle: włączenie „Moje” wyłącza sortowanie
   renderWants();say(on?"Twoje zaproszenia — osobno na górze.":"Twoje zaproszenia — w kalendarzu, na swoich godzinach.")});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-wmup]");if(!b)return;const w=wants.find(x=>x.id===b.dataset.wmup);if(w)goToWant(w)});
