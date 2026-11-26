@@ -215,7 +215,8 @@ function areaSvg(a){const R0=78,S=a.km||300,C=120,G={};
   const dots=Object.values(G).sort((u,v)=>v.n-u.n).map(g=>{const r0=4.5+Math.min(7,2*Math.log2(g.n));const cx=(C+g.x).toFixed(1),cy=(C+g.y).toFixed(1);const tip=K&&g.nm.length?'<title>'+esc([...new Set(g.nm)].slice(0,6).join("\n"))+'</title>':"";
     const at='class="ardot '+g.k+(g.out?' out':'')+'" cx="'+cx+'" cy="'+cy+'" r="'+r0.toFixed(1)+'"';
     if(!K)return tip?'<circle '+at+'>'+tip+'</circle>':'<circle '+at+'/>';
-    return '<g class="ardg"><circle class="ardhit" cx="'+cx+'" cy="'+cy+'" r="'+(r0+9).toFixed(1)+'">'+tip+'</circle><circle '+at+'/></g>'}).join("");
+    // dymek na całej grupie: najechanie na widoczną kropkę (leży nad polem trafienia) też go pokazuje
+    return '<g class="ardg">'+tip+'<circle class="ardhit" cx="'+cx+'" cy="'+cy+'" r="'+(r0+9).toFixed(1)+'"/><circle '+at+'/></g>'}).join("");
   return '<svg class="arsvg'+(K?' kg':'')+'" viewBox="0 0 240 240" aria-hidden="true"><circle class="arbg" cx="120" cy="120" r="112"/>'
    +'<circle class="arring" cx="120" cy="120" r="'+R0+'"/><circle class="arpulse" cx="120" cy="120" r="'+R0+'"/>'
    +dots+'<g class="arpin" transform="translate(108 98)"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></g></svg>'}
