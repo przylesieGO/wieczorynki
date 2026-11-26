@@ -1144,7 +1144,7 @@ function placeHtml(w){
   if(w&&!w.place)return '<div class="wplace warn">⚠️ <b>Brak punktu zbiórki</b> — '+(w.user_id===uid?'wskaż go przez ✏️ Edytuj':'autor jeszcze go nie wskazał')+'</div>';
   if(!w||!w.place)return "";
   const g=w.place_lat!=null;
-  return '<div class="wplace">📍 <b>'+esc(w.place)+'</b>'+(w.place_city?' · '+esc(w.place_city+(w.place_area?' · '+w.place_area:'')):'')+(g?' · <a href="'+esc(mapUrl(w.place_lat,w.place_lon))+'" target="_blank" rel="noopener">Mapa ›</a>':'')+'</div>';
+  return '<div class="wplace">📍 <b>'+esc(w.place)+'</b>'+(w.place_city?' · <b>'+esc(w.place_city+(w.place_area?' · '+w.place_area:''))+'</b>':'')+(g?' · <a href="'+esc(mapUrl(w.place_lat,w.place_lon))+'" target="_blank" rel="noopener">Mapa ›</a>':'')+'</div>';
 }
 function wfPlaceSync(){
   if(!placeOk){$("wplacewrap").classList.add("hide");return}
