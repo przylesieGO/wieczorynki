@@ -96,6 +96,8 @@ function helpFullHtml(){
    +sec("📲 Instalacja",["PrzylesieGo! to aplikacja z przeglądarki (PWA) — instalujesz ją z poziomu przeglądarki, bez sklepu. Instrukcja dla Twojej przeglądarki jest na samej górze Pomocy (i w ⚙️ → 📲 Zainstaluj aplikację).",
      "Po instalacji: ikona z dwoma kołami, pełny ekran, liczba nieprzeczytanych powiadomień na ikonie. Aktualizacje przychodzą same."])
    +sec("✨ Pierwsze kroki",["Przez 14 dni od założenia konta na górze Zaproszeń jest karta <b>„Pierwsze kroki”</b> — odhacza się sama (nick, instalacja, pierwsza jazda, Telegram, ulubieni). „Ukryj” chowa kartę; pozostałe kroki zostają pod 🔔 jako <b>„✨ Dokończ start”</b>."])
+   +(session&&visTabs().length>1?sec("🃏 Zakładki",["Zakładki (Zaproszenia, Imprezy…) to <b>talia kart</b> w nagłówku, pod 🔔 i ⚙️. Na wierzchu leży zakładka, w której jesteś; następne wystają z prawej, poprzednia z lewej. <b>Przesuń talię palcem</b> w bok albo kliknij wystającą kartę. Karty z przerywaną ramką to zakładki, które dopiero będą.",
+     "Kółka na kartach pod spodem: 🟢 przy Zaproszeniach — w ilu zaproszeniach bierzesz udział; przy Imprezach 🔴 nieprzeczytane i co 30 s 🟠 nadchodzące (14 dni). Im głębiej karta, tym ciemniejsze kółko."]):'')
    +sec("🚲 Zapraszanie",[
      "<b>➕ Zaproś na rower</b> (prawy dolny róg) otwiera formularz. Na dole zawsze są „Wyślij” i „Anuluj”; ✕ albo „Anuluj” po zmianach pytają, czy odrzucić.",
      "<b>Dzień i godzina:</b> Dziś / Jutro / Inny dzień, godzina na kartkach zegara (przeciągnij palcem albo ▲▼) i skróty „Za 30 min”, 17:30, 18:00, 19:00.",

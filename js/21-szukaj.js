@@ -166,7 +166,8 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Masz z kim jechać",s:"masz z kim jechać ekipa na dziś powiadomienie jedziecie razem zaproś ekipę wspólne zaproszenie ekipa już jedzie dopisz doproś spóźniony",p:"🔔 → Ekipa na dziś",i:"users",fn:()=>{const b=$("bellbtn");if(b)b.click()},ok:S&&typeof sigOn==="function"&&sigOn()},
   {t:"Kto jest online",s:"online zielona kropka teraz w aplikacji aktywni",p:"Zielona kropka przy liczniku zaproszeń",i:"users",fn:()=>{show(0);const o=$("onlbtn");if(o)srPulse(o)},ok:S},
   {t:"Archiwum zaproszeń",s:"archiwum odbyte zakończone historia",p:"Zaproszenia → Archiwum (na dole)",i:"archive",fn:()=>{show(0);archOpen=true;renderWants();setTimeout(()=>srPulse($("wantarch")),120)},ok:S},
-  {t:"Imprezy",s:"imprezy zawody maraton wyścig",p:"Zakładka Imprezy",i:"medal",fn:()=>show(3),ok:typeof tabOk==="function"&&tabOk(3)},
+  {t:"Imprezy",s:"imprezy zawody maraton wyścig",p:"Talia kart w nagłówku → Imprezy",i:"medal",fn:()=>show(3),ok:typeof tabOk==="function"&&tabOk(3)},
+  {t:"Zakładki (talia kart)",s:"zakładki talia karty przełącz przesuń palcem zaproszenia imprezy wieczorynki zaawansowane kółka plakietki nadchodzące nieprzeczytane",p:"Nagłówek, pod 🔔 i ⚙️",i:"pointer",fn:()=>{scrollTo({top:0});const d=$("tdeck");if(d)srPulse(d)},ok:S&&typeof visTabs==="function"&&visTabs().length>1},
   // 🛡️ Administracja
   {t:"Administracja",s:"admin panel",p:"Ustawienia → Administracja",i:"shield",go:[ADM],ok:A},
   {t:"Statystyki",s:"statystyki logowania aktywność wykresy",p:"Ustawienia → Administracja → Narzędzia",i:"chart",go:[ADM,'[data-c="stats"]'],ok:A},

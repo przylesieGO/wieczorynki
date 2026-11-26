@@ -5,6 +5,7 @@ const fbf={kind:"bug",rating:0,text:"",dev:true};let fbReplyTxt="",fbMsgTxt="";
 // Nowe wydanie: dopisz pozycję na początku APP_REL (wersja, data, nowości) — w ❓ Pomocy pokaże się „Co nowego” i kropka przy ❓.
 const APP_REL=[
   {v:"0.12",d:"26.11.2026",items:[
+    ["pointer","<b>Zakładki jako talia kart</b> — Zaproszenia i Imprezy nie zajmują już całego wiersza: to mała talia kart w nagłówku, pod 🔔 i ⚙️. Przesuń ją palcem w bok albo kliknij wystającą kartę. Kółka na kartach pod spodem: 🟢 Twoje zaproszenia, przy Imprezach 🔴 nieprzeczytane i 🟠 nadchodzące."],
     ["hourglass","<b>Ekipa czeka</b> — gdy Twój sygnał „Mam ochotę” dostanie dwie Reakcje, wyskoczy okienko: <b>Zaproś ekipę</b> albo <b>Czekaj</b>. Przy „Czekaj” chętni zobaczą, że jeszcze zbierasz ekipę, a aplikacja zapyta znowu za 30 minut."],
     ["pin","<b>Moja okolica</b> — pod nickiem plakietka <b>📍 miejscowość · km</b>. Aplikacja pokazuje zaproszenia, sygnały „Mam ochotę”, imprezy i trasy z Twojej okolicy (domyślnie 20 km). Kliknij plakietkę: suwak 5–50 km albo cała Polska, zmiana miejscowości, ⭐ ulubione miejscowości i <b>podgląd innej okolicy</b>. Prywatne zaproszenia do Ciebie dochodzą zawsze."]]},
   {v:"0.11",d:"25.11.2026",items:[
@@ -396,6 +397,7 @@ function renderChrome(){
   });
   // jedna widoczna zakładka = bez paska zakładek (nie zabiera miejsca)
   const nv=document.querySelector(".hdr nav");if(nv)nv.classList.toggle("hide",visTabs().length<2);
+  if(typeof tdLay==="function")try{tdLay()}catch(e){}   // 🃏 talia kart: puste karty dla wyłączonych zakładek
   $("pwbox").classList.toggle("hide",!(pwMode&&session));
 }
 $("gear").onclick=()=>{gearOpen=!gearOpen;gearView="main";renderGear()};
