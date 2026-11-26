@@ -50,8 +50,10 @@ function fillFtWx(){
   });
 }
 const wDemoRt=w=>!!(w&&w.route_base_id&&typeof rbList!=="undefined"&&rbList&&(rbList.find(r=>r.id===w.route_base_id)||{}).demo);   // 🧪 v275: trasa DEMO — bez GPX
+let wRbPre=false;   // 🧪 v276: lista tras wczytywana raz w tle — karta musi wiedzieć, czy trasa to DEMO (bez GPX)
 function routeBoxHtml(w){
   if(!hasRoute(w))return "";
+  if(w.route_base_id&&!rbList&&!wRbPre&&typeof rbLoad==="function"){wRbPre=true;rbLoad().then(()=>{if(typeof renderWants==="function")renderWants()},()=>{})}
   return '<div class="wroute"><div>🗺️ <b>Proponowana trasa</b> · 📏 '+kmTxt(w.route_km)+' km · ⏱ ≈ '+esc(durTxt(w.route_km/wPaceKmh(w.pace)*60))+'</div>'
    +'<div class="wrb">'+(wDemoRt(w)?'':'<button type="button" class="b g small" data-rt="gpx" data-id="'+esc(w.id)+'">⬇ Pobierz GPX</button>')+'<button type="button" class="b g small" data-rt="show" data-id="'+esc(w.id)+'">🗺️ Szczegóły</button>'+rbBtnHtml(w)+'</div></div>';
 }
