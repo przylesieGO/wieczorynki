@@ -1553,3 +1553,6 @@ html[data-theme=dark] .tdeck{filter:drop-shadow(0 8px 6px rgba(0,0,0,.9)) drop-s
 @keyframes tdFinger{0%{transform:translateX(0) rotate(-8deg) scale(1)}12%{transform:translateX(0) rotate(-8deg) scale(.88)}70%{transform:translateX(-100px) rotate(-14deg) scale(.88)}85%,100%{transform:translateX(-100px) rotate(-14deg) scale(1);opacity:0}}
 @keyframes tdTrail{0%,12%{width:0;right:22px}70%{width:100px;right:22px;opacity:.8}100%{width:100px;opacity:0}}
 @media (prefers-reduced-motion:reduce){.tdhint.go .ui-i,.tdhint.go .tdtr,.tdeck.nudge .tdc,.tdc.wob,.tdb.pop{animation:none}.tdc{transition:none}}
+/* 🚪 ekran startowy (KROK 106, js/23): okno .popbox nad ⚙️; kafelki aktywności = .wbike.sigacts, wybór zielony (nie złoty jak „Mam ochotę”) */
+#stsheet{z-index:4400}.stbox .ph,.stbox .pmeta{text-align:center}.stbox .ptag{margin-right:0;display:table;margin-left:auto;margin-right:auto}.stform{margin-top:14px;text-align:left}
+.stacts .wbk.on .ui-i,html[data-theme=dark] .stacts .wbk.on .ui-i{color:var(--acc)}

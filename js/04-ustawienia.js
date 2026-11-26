@@ -362,7 +362,7 @@ function favsHtml(){
 /* 🗓 data dołączenia (KROK 25): „Z nami od 12 marca 2026 · 245 dni” */
 let joinedAt={};
 /* 👤 profil (KROK 50): zdjęcie i media w profiles (widzą zalogowani), telefon i miejscowość w profile_private (user_extra) */
-let profExOk=false,avAt={},medias={},avData={},myPriv=null,uxCache={},pe=null;
+let profExOk=false,privReady=false,avAt={},medias={},avData={},myPriv=null,uxCache={},pe=null;
 try{avData=JSON.parse(localStorage.getItem("avc")||"{}")||{}}catch(e){avData={}}
 const avImg=(id,cls)=>avData[id]&&avData[id].d?'<img class="'+cls+'" src="'+avData[id].d+'" alt="" aria-hidden="true">':'';
 const MEDIA=[["strava","strava","Strava","#fc4c02","strava.com/athletes/…"],["instagram","ig","Instagram","#c13584","@nazwa albo link"],["youtube","yt","YouTube","#ff0000","@kanał albo link"],["facebook","fb","Facebook","#1877f2","link albo nazwa"],["www","globe","Strona www","#636366","adres strony"]];
@@ -386,13 +386,13 @@ async function loadAvatars(){
   try{localStorage.setItem("avc",JSON.stringify(avData))}catch(e){}
   if(need.length){try{renderWants();renderBell();if(gearOpen)renderGear()}catch(e){}}
 }
-const PRIV_COLS="phone,phone_vis,city,city_lat,city_lon,city_vis,area_km,area_places";   // 📍 KROK 104: promień i ulubione miejscowości
+const PRIV_COLS="phone,phone_vis,city,city_lat,city_lon,city_vis,area_km,area_places,acts";   // 📍 KROK 104: promień i ulubione miejscowości; 🚪 KROK 106: aktywności
 async function loadMyPriv(){
   if(!session)return;
   await loadPrivFlags();   // 🔒 KROK 62
   const r=await sb.from("profile_private").select(PRIV_COLS).eq("user_id",uid).maybeSingle();
   if(r.error){profExOk=false;return}
-  profExOk=true;myPriv=r.data||null;if(typeof renderAreaChip==="function")setTimeout(renderAreaChip,0);
+  profExOk=true;privReady=true;myPriv=r.data||null;if(typeof renderAreaChip==="function")setTimeout(renderAreaChip,0);
   // Moja miejscowość z profilu — na nowym telefonie
   if(myPriv&&myPriv.city&&myPriv.city_lat!=null&&!homeGet()){try{localStorage.setItem("home",JSON.stringify({name:myPriv.city,lat:myPriv.city_lat,lon:myPriv.city_lon}))}catch(e){}}
 }

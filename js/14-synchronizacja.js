@@ -110,8 +110,8 @@ async function afterData(){
   try{if(typeof sigConfetti==="function")sigConfetti()}catch(e){}
   sigFabSync();if(sigView==="mine"||sigView==="ask"||sigView==="waitpop")renderSig();   // okienko „Twój sygnał” odświeża się z synchronizacją
   if(sigOn())renderBell();
-  // 🐦 Gawron (js/22) przy pierwszym wejściu ma pierwszeństwo — pozostałe okienka po jego zakończeniu (gwAfter)
-  if(!(typeof gwAuto==="function"&&gwAuto())){
+  // 🚪 ekran startowy (js/23, KROK 106), potem 🐦 Gawron (js/22) — pozostałe okienka po ich zakończeniu (gwAfter)
+  if(!(typeof stAuto==="function"&&stAuto())&&!(typeof gwAuto==="function"&&gwAuto())){
   maybePopup();
   maybeHelp();
   maybeFb();
