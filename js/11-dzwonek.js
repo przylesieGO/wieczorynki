@@ -733,6 +733,7 @@ function renderSig(){
   if(sigView==="mine"){renderSigMine();return}
   if(sigView==="pop"){renderSigPop();return}
   if(sigView==="ask"){renderSigAsk();return}
+  if(sigView==="waitpop"){renderSigWaitPop();return}
   const p=$("sigsheet"),intro=sigView==="intro",tg=flags.mam_ochote&&flags.mam_ochote.state==="all",edit=!!(sigMine()&&!sigMine().cancelled_at);
   const fo=document.activeElement&&document.activeElement.id==="sgown";
   // jedno okienko: przy pierwszych wejściach (intro) z zachętą i podpowiedzią, gdzie jest dłoń; z dłoni — sam wybór
@@ -1035,6 +1036,29 @@ async function sigWait(){
     sigDirty=true;await syncNow()}
   catch(e){const m=e&&e.message||"";say(/SIG_GONE/.test(m)?"Sygnał wygasł albo został wycofany.":"Nie udało się: "+(m||"błąd"))}
 }
+// ⏳ „X jeszcze czeka na chętnych” — także okienko u osób z Reakcją (prośba właściciela 2026-11-26 01:32), raz na każde „Czekaj”
+let sigWaitN=null;
+function maybeSigWaitPop(){
+  if(!sigOn()||!sigOk||DEMO)return false;
+  if([...document.querySelectorAll(".sheet")].some(x=>!x.classList.contains("hide"))||gearOpen||needProfile()||pwMode||!$("wantform").classList.contains("hide"))return false;
+  const S=sigAskSeen(),n=sigWaitUn().find(x=>!S.has(x.id));if(!n)return false;
+  S.add(n.id);lsSet("sigAsk:"+uid,JSON.stringify([...S].slice(-60)));
+  sigWaitN=n;sigView="waitpop";renderSigWaitPop();return true;
+}
+function renderSigWaitPop(){
+  const p=$("sigsheet"),n=sigWaitN,x=n&&sigs.find(s=>s.user_id===n.actor&&!s.cancelled_at);
+  if(!x||!sigWaitUn().some(y=>y.id===n.id)){closeSig();return}
+  const a=sigA(x.activity),k=sigEkipa(x).length;
+  p.innerHTML='<div class="sheetbox popbox sigbox sgpop" role="dialog" aria-modal="true"><button class="sclose" data-sg="later" aria-label="Zamknij">✕</button>'
+   +'<span class="ptag">EKIPA CZEKA</span>'
+   +'<div class="ph">'+esc(nickOf(x.user_id))+' jeszcze czeka na chętnych</div>'
+   +'<div class="sgpcard"><div class="sgpava">'+sigAvHtml(x.user_id)+'<span class="sgpact" data-a="'+esc(x.activity)+'">'+uiIcon(a[0])+'</span></div>'
+   +'<div class="sgpbub">'+(sigMsgTxt(x)||'Mam dziś ochotę '+esc(a[2])+'!')+'<small>'+esc(a[1].toLowerCase())+' · w ekipie '+k+' '+plf(k,["osoba","osoby","osób"])+(sigLeftHtml()?' '+sigLeftHtml():'')+'</small></div>'
+   +'<div class="note">'+(genders[uid]==="K"?'Dałaś':'Dałeś')+' Reakcję — zaproszenie przyjdzie, gdy '+esc(nickOf(x.user_id))+' je założy.</div></div>'
+   +'<div class="pbtns"><button type="button" class="b" data-sg="waitok">OK</button></div>'
+   +'</div>';
+  if(p.classList.contains("hide"))p.classList.remove("hide");
+}
 function sigAvHtml(id){
   const a=avData[id]&&avData[id].d;
   return '<span class="sgpav'+(genders[id]==="K"?' k':'')+(a?' ph':'')+'">'+(a?avImg(id,"gavi"):esc(String(nicks[id]||"?").charAt(0).toUpperCase()))+'</span>';
@@ -1075,7 +1099,7 @@ function maybeSigIntro(){
   if([...document.querySelectorAll(".sheet")].some(x=>!x.classList.contains("hide"))||gearOpen||needProfile()||pwMode||!$("wantform").classList.contains("hide"))return;
   sigIntroDone=true;lsSet("sigIntro",String(n+1));openSig("intro");
 }
-{const mo=new MutationObserver(()=>{setTimeout(()=>{if(!sigIntroDone)maybeSigIntro();if(!maybeSigAsk())maybeSigPop()},450)});document.querySelectorAll(".sheet").forEach(el=>{if(el.id!=="sigsheet")mo.observe(el,{attributes:true,attributeFilter:["class"]})})}
+{const mo=new MutationObserver(()=>{setTimeout(()=>{if(!sigIntroDone)maybeSigIntro();if(!maybeSigAsk()&&!maybeSigWaitPop())maybeSigPop()},450)});document.querySelectorAll(".sheet").forEach(el=>{if(el.id!=="sigsheet")mo.observe(el,{attributes:true,attributeFilter:["class"]})})}
 $("sigfab").innerHTML=sigWheel;
 $("sigfab").onclick=()=>{if(Date.now()<sigDoneT)return;openSig(sigActive()?"mine":"pick")};
 $("sigsheet").addEventListener("click",e=>{
@@ -1091,7 +1115,7 @@ $("sigsheet").addEventListener("click",e=>{
   const k=b.dataset.sg;
   if(k==="popok"){const L=sigPopQ.map(id=>sigs.find(s=>s.user_id===id)).filter(Boolean);bsDoneAdd(L.map(sigKey));sigSeenSave(L,true);closeSig();renderBell();return}   // „OK” = przeczytane też pod 🔔
   if(k==="later"||k==="popx")closeSig();else if(k==="send")sigSend();
-  else if(k==="edit")openSig("pick");else if(k==="keen"){closeSig();sigInviteKeen()}else if(k==="wait"){closeSig();sigWait()}else if(k==="cancel"){closeSig();sigCancel()}else if(k==="bell"){closeSig();$("bellbtn").click()}
+  else if(k==="edit")openSig("pick");else if(k==="keen"){closeSig();sigInviteKeen()}else if(k==="wait"){closeSig();sigWait()}else if(k==="waitok"){const n=sigWaitN;closeSig();if(n)markRead([n.id]);renderBell()}else if(k==="cancel"){closeSig();sigCancel()}else if(k==="bell"){closeSig();$("bellbtn").click()}
 });
 $("sigsheet").addEventListener("input",e=>{if(e.target.id==="sgown"){sg.msg=e.target.value.slice(0,40);const c=$("sgcnt");if(c)c.textContent=sg.msg.length+"/40"}});
 // wybór z okna „Kogo zapraszasz?” (js/10, tryb „sig”) wraca tutaj

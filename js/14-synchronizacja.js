@@ -108,7 +108,7 @@ async function syncFb(){
 async function afterData(){
   try{await sigLoad()}catch(e){sigOk=false}   // 🟡 „Mam ochotę” (KROK 64)
   try{if(typeof sigConfetti==="function")sigConfetti()}catch(e){}
-  sigFabSync();if(sigView==="mine"||sigView==="ask")renderSig();   // okienko „Twój sygnał” odświeża się z synchronizacją
+  sigFabSync();if(sigView==="mine"||sigView==="ask"||sigView==="waitpop")renderSig();   // okienko „Twój sygnał” odświeża się z synchronizacją
   if(sigOn())renderBell();
   // 🐦 Gawron (js/22) przy pierwszym wejściu ma pierwszeństwo — pozostałe okienka po jego zakończeniu (gwAfter)
   if(!(typeof gwAuto==="function"&&gwAuto())){
@@ -117,7 +117,7 @@ async function afterData(){
   maybeFb();
   maybeReport();
   maybeSigIntro();
-  if(!maybeSigAsk())maybeSigPop();   // 🙋 „Ekipa czeka” (KROK 105) przed 💬 „X ma ochotę” (KROK 90)
+  if(!maybeSigAsk()&&!maybeSigWaitPop())maybeSigPop();   // 🙋 „Ekipa czeka” (KROK 105) przed 💬 „X ma ochotę” (KROK 90)
   }
   if(curTab===3)renderEvents();
   if(session&&(seenFor!==uid||Date.now()-seenAt>15*60000)){seenFor=uid;seenAt=Date.now();Promise.resolve(sb.rpc("touch_seen")).catch(()=>{})}
