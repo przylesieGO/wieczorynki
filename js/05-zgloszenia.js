@@ -1,6 +1,6 @@
 /* ---------- 💬 Oceń aplikację / zgłoś błąd / pomysł + wiadomości od admina (KROK 26) ---------- */
 let fbOk=false,fbList=[],fbDone={},fbMsgs={},fbId="",fbBack="fb",fbAdmFilter="new",fbTo="",fbBusy=false;
-const fbf={kind:"bug",rating:0,text:"",dev:true};let fbReplyTxt="",fbMsgTxt="";
+const fbf={kind:"bug",rating:0,text:"",dev:true,trace:true};let fbReplyTxt="",fbMsgTxt="";
 // 🔢 numeracja wydań: 0.x.y w czasie BETY (1.0 = publiczne wydanie); x — paczka nowości, y — poprawki.
 // Nowe wydanie: dopisz pozycję na początku APP_REL (wersja, data, nowości) — w ❓ Pomocy pokaże się „Co nowego” i kropka przy ❓.
 const APP_REL=[
@@ -61,9 +61,33 @@ function fbFormHtml(){
    +(k==="rating"?'<div class="fbstars">'+starsHtml(fbf.rating,true)+'<div class="note">Przesuń palcem po gwiazdkach</div></div>':'')
    +'<textarea id="fbtext" rows="4" maxlength="2000" placeholder="'+esc(ph)+'">'+esc(fbf.text)+'</textarea>'
    +'<label class="fbdev"><input type="checkbox" id="fbdev"'+(fbf.dev?' checked':'')+'> Dołącz info o telefonie (model, przeglądarka) — pomaga przy błędach</label>'
+   +(isSuper(uid)?fbEvidHtml():'')
    +'<div class="note" id="fbinfo" style="color:var(--bad)"></div>'
    +'<button class="b sbtn" data-c="fbsend"'+(fbBusy?' disabled':'')+'>Wyślij</button>'
    +'<p class="note">Zgłoszenie trafia do administratora pod Twoim nickiem — może odpisać (zobaczysz pod 🔔). Za 3 zrealizowane zgłoszenia dostajesz 💡 przy nicku.</p>';
+}
+/* 🔎 dowody w zgłoszeniu — TYLKO 👑 (KROK 110)
+   Ślad (ostatnie kliknięcia, ekrany i komunikaty) zbiera js/24 w pamięci karty,
+   zrzut ekranu wybiera się z galerii (telefon robi go przyciskami). Oba lecą do
+   bazy dopiero przy „Wyślij”; komu innemu baza je pomija. Komponenty istniejące:
+   .fbdev (pole wyboru jak „info o telefonie”), .sv-chip / .sv-file (chip z plikiem
+   i wybór pliku z serwisu rowerowego), .fbdv (rozwijany ślad). */
+function fbEvidHtml(){
+  const n=typeof slN==="function"?slN():0,sh=typeof slShot!=="undefined"&&slShot;
+  return '<label class="fbdev"><input type="checkbox" id="fbtrace"'+(fbf.trace?' checked':'')+'> Dołącz ślad — ostatnie '
+     +n+' '+plf(n,["zdarzenie","zdarzenia","zdarzeń"])+' (ekrany, kliknięcia, komunikaty; bez wpisywanych treści)</label>'
+   +(fbf.trace&&n?slListHtml(slGet(),"Podejrzyj, co wyślesz — "+n+" "+plf(n,["zdarzenie","zdarzenia","zdarzeń"])):'')
+   +'<div class="sv-chips">'+(sh
+      ?'<span class="sv-chip"><button type="button" class="sv-cv" data-c="fbshotview">'+uiIcon("clip")+esc(slShot.file.name||"zrzut.jpg")+'</button>'
+        +'<button type="button" class="sv-cx" data-c="fbshotrm" aria-label="Usuń wybrany zrzut ekranu" title="Usuń zrzut">×</button></span>'
+      :'<label class="sv-chip add">'+uiIcon("cam")+'Dołącz zrzut ekranu<input type="file" accept="image/*" class="sv-file" id="fbshot"></label>')+'</div>';
+}
+/* dowody przy już wysłanym zgłoszeniu (wątek) — też tylko 👑 */
+function fbEvidViewHtml(f){
+  if(!f.trace&&!f.shot)return "";
+  return (f.trace?slListHtml(f.trace):'')
+   +(f.shot?'<div class="sv-chips"><span class="sv-chip"><button type="button" class="sv-cv" data-c="fbshotopen">'+uiIcon("clip")+'Zrzut ekranu</button></span></div>':'')
+   +'<button type="button" class="b sbtn sgray" data-c="fbevidclr">Usuń dowody z tego zgłoszenia</button>';
 }
 /* 🧪 prośba o zostanie testerem (karta na górze Ustawień) */
 function testerCardHtml(){
@@ -132,7 +156,8 @@ function fbThreadHtml(){
   return back+'<div class="sname" style="margin-top:26px">'+FB_KIND[f.kind]+'</div>'
    +'<div class="smail">'+(adm?'od '+nk(f.user_id)+' · ':f.kind==="msg"?'od administratora · ':'')+(f.kind!=="msg"?'<span class="fbs s-'+f.status+'">'+FB_ST[f.status]+'</span>':'')+'</div>'
    +'<div class="sleft fbthread">'+bub(first)+(M?M.map(bub).join(""):'<div class="note">Ładuję…</div>')
-   +(adm&&f.device?'<details class="fbdv"><summary>📱 '+esc(devShort(f.device))+'</summary><div>'+esc(f.device)+'</div></details>':'')
+   +((adm||isSuper(uid))&&f.device?'<details class="fbdv"><summary>📱 '+esc(devShort(f.device))+'</summary><div>'+esc(f.device)+'</div></details>':'')
+   +(isSuper(uid)?fbEvidViewHtml(f):'')                                   // 🔎 KROK 110: ślad i zrzut widzi tylko 👑
    +'<textarea id="fbreply" rows="3" maxlength="1000" placeholder="'+(adm?'Odpowiedz '+esc(nickOf(f.user_id)):'Odpisz administratorowi')+'…">'+esc(fbReplyTxt)+'</textarea>'
    +'<div class="note" id="fbrinfo" style="color:var(--bad)"></div>'
    +'<button class="b sbtn'+(adm&&f.kind!=="msg"?' sgray':'')+'" data-c="fbreply"'+(fbBusy?' disabled':'')+'>Wyślij odpowiedź</button>'
@@ -168,9 +193,15 @@ async function fbSend(){
   if(k==="rating"&&fbf.rating<=3&&t.length<3){inf.textContent="Napisz, co poprawić (przy 1–3 ★).";return}
   if(k!=="rating"&&t.length<3){inf.textContent="Opisz zgłoszenie (min. 3 znaki).";return}
   fbBusy=true;renderGear();
-  try{const r=await sb.rpc("fb_send",{k,r:k==="rating"?fbf.rating:null,b:t||null,dev:fbf.dev?fbDevice():null});if(r.error)throw r.error;
+  const king=isSuper(uid);let shot=null;                                  // 🔎 KROK 110: dowody tylko od 👑
+  try{
+    if(king&&typeof slShot!=="undefined"&&slShot)shot=await slShotUpload();
+    const tr=king&&fbf.trace&&typeof slGet==="function"?slGet():null;
+    const r=await sb.rpc("fb_send",{k,r:k==="rating"?fbf.rating:null,b:t||null,dev:fbf.dev?fbDevice():null,tr,shot});if(r.error)throw r.error;
+    if(king&&typeof slShotClear==="function")slShotClear();
     fbf.text="";fbf.rating=0;fbBusy=false;await syncNow();say(k==="rating"?"⭐ Dzięki za ocenę!":"💬 Wysłane — dzięki! Odpowiedź zobaczysz pod 🔔.")}
-  catch(e){fbBusy=false;renderGear();const i=$("fbinfo");if(i)i.textContent=fbErr(e)}
+  catch(e){if(shot&&typeof slShotRm==="function")slShotRm(shot);          // zgłoszenie nie weszło — zrzut nie zostaje sierotą
+    fbBusy=false;renderGear();const i=$("fbinfo");if(i)i.textContent=/FB_SHOT/.test(e&&e.message||"")?"Nie udało się dołączyć zrzutu — spróbuj jeszcze raz.":fbErr(e)}
 }
 async function fbReply(){
   const t=fbReplyTxt.trim();if(t.length<1){$("fbrinfo").textContent="Wpisz odpowiedź.";return}
@@ -614,6 +645,14 @@ $("gearpanel").addEventListener("click",async e=>{
   if(c==="fb"){gearView="fb";renderGear();return}
   if(c==="fbadmin"){gearView="fbadmin";renderGear();return}
   if(c==="fbsend"){await fbSend();return}
+  // 🔎 KROK 110: dowody w zgłoszeniu (tylko 👑)
+  if(c==="fbshotview"){if(slShot&&slShot.url)window.open(slShot.url,"_blank");return}
+  if(c==="fbshotrm"){slShotClear();renderGear();return}
+  if(c==="fbshotopen"){const f=fbList.find(x=>x.id===fbId);if(f&&f.shot)await slShotView(f.shot);return}
+  if(c==="fbevidclr"){const f=fbList.find(x=>x.id===fbId);if(!f)return;
+    if(!await askOk("Usunąć ślad i zrzut ekranu z tego zgłoszenia?\n\nTreść zgłoszenia zostaje. Dowodów nie da się przywrócić.","Usuń dowody",1))return;
+    try{const r=await sb.rpc("fb_shot_clear",{f:f.id});if(r.error)throw r.error;f.trace=null;f.shot=null;renderGear();say("Dowody usunięte.")}
+    catch(e){say("Nie udało się: "+(e&&e.message||"błąd"))}return}
   if(c==="testerreq"){await testerReq(b);return}
   if(c==="fbgrant"){const f=fbList.find(x=>x.id===fbId);if(f&&isSuper(uid))await testerGrant(f);return}
   if(c==="fbgpdel"){const f=fbList.find(x=>x.id===fbId);if(!f||!f.post_id)return;   // 📣 KROK 76: zgłoszony wpis z tablicy grupy
@@ -680,7 +719,11 @@ $("gearpanel").addEventListener("click",async e=>{
 $("gearpanel").addEventListener("input",e=>{if(/^(col|bg|nob)[KM]$/.test(e.target.id))colorsPreview()});
 /* 💬 zgłoszenia: stan formularzy (przetrwa odświeżenie panelu co minutę) */
 $("gearpanel").addEventListener("input",e=>{const id=e.target.id;if(id==="fbtext")fbf.text=e.target.value;else if(id==="fbreply")fbReplyTxt=e.target.value;else if(id==="fbmsgtext")fbMsgTxt=e.target.value});
-$("gearpanel").addEventListener("change",e=>{if(e.target.id==="fbdev")fbf.dev=e.target.checked});
+$("gearpanel").addEventListener("change",e=>{
+  if(e.target.id==="fbdev"){fbf.dev=e.target.checked;return}
+  if(e.target.id==="fbtrace"){fbf.trace=e.target.checked;renderGear();return}          // 🔎 KROK 110: ślad + podgląd
+  if(e.target.id==="fbshot"){const f=e.target.files&&e.target.files[0];if(f)slShotPick(f)}
+});
 $("gearpanel").addEventListener("click",async e=>{
   const k=e.target.closest("button[data-fk]");if(k){fbf.kind=k.dataset.fk;renderGear();return}
   const ff=e.target.closest("button[data-ff]");if(ff){fbAdmFilter=ff.dataset.ff;renderGear();return}

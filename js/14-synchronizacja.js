@@ -99,7 +99,7 @@ async function syncMe(){
   await loadMyPriv();
 }
 async function syncFb(){
-  const fq=await sb.from("feedback").select("id,user_id,kind,rating,body,device,status,started_by,user_unread,admin_unread,created_at,updated_at,post_id").order("updated_at",{ascending:false}).limit(300);
+  const fq=await sb.from("feedback").select("id,user_id,kind,rating,body,device,status,started_by,user_unread,admin_unread,created_at,updated_at,post_id,trace,shot").order("updated_at",{ascending:false}).limit(300);
   if(fq.error)throw fq.error;fbOk=true;fbList=fq.data||[];
   const fc=await sb.rpc("fb_done_counts");if(!fc.error){fbDone={};(fc.data||[]).forEach(x=>{fbDone[x.user_id]=+x.n||0})}
   if(gearOpen&&/^fb/.test(gearView))renderGear();
@@ -304,7 +304,7 @@ async function loadRemote(selectId){
     const ts=await sb.from("testers").select("user_id");testerOk=!ts.error;testerIds=new Set((!ts.error&&ts.data||[]).map(x=>x.user_id));
     // 🏁 imprezy masowe (KROK 40) — tylko gdy zakładka dostępna
     if(flags.tab_events&&tabOk(3))await loadEvents();
-    const fq=await sb.from("feedback").select("id,user_id,kind,rating,body,device,status,started_by,user_unread,admin_unread,created_at,updated_at,post_id").order("updated_at",{ascending:false}).limit(300);fbOk=!fq.error;fbList=fbOk?fq.data||[]:[];
+    const fq=await sb.from("feedback").select("id,user_id,kind,rating,body,device,status,started_by,user_unread,admin_unread,created_at,updated_at,post_id,trace,shot").order("updated_at",{ascending:false}).limit(300);fbOk=!fq.error;fbList=fbOk?fq.data||[]:[];
     fbDone={};if(fbOk){const fc=await sb.rpc("fb_done_counts");if(!fc.error)(fc.data||[]).forEach(x=>{fbDone[x.user_id]=+x.n||0})}
     const tl=await sb.from("telegram_links").select("tg_name,linked_at").eq("user_id",uid).limit(1);tgOk=!tl.error;tgLink=tgOk&&tl.data&&tl.data[0]||null;
     nicks={};genders={};joinedAt={};avAt={};medias={};(ok(p)||[]).forEach(x=>{nicks[x.user_id]=x.nick;if(x.gender)genders[x.user_id]=x.gender;if(x.joined_at)joinedAt[x.user_id]=x.joined_at;if(x.avatar_at)avAt[x.user_id]=x.avatar_at;if(x.media)medias[x.user_id]=x.media});

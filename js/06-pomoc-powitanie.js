@@ -183,6 +183,12 @@ function helpFullHtml(){
      "<b>⚙️ → Administracja → Narzędzia → Etykiety notatek</b>: słowo → ikona i kolor. Dodaj słowo, wybierz ikonę i kolor (paleta albo własny), sprawdź na przykładowej notatce i zapisz.",
      "Słowo działa od początku wyrazu, bez wielkości liter i polskich znaków („wilk” łapie „Wilki”). Pierwsze pasujące od góry wygrywa — kolejność zmienisz ▲ ▼.",
      "Przełącznik wyłącza słowo bez usuwania; ✏️ edytuje, 🗑 usuwa. Zmianę widać u wszystkich po odświeżeniu (do minuty)."]):'')
+   +(session&&isSuper(uid)?sec("🔎 Ślad i zrzut w zgłoszeniu (tylko 👑)",[   // KROK 110
+     "Co to jest: do zgłoszenia błędu dołączysz <b>ślad</b> (ostatnie 80 zdarzeń: otwarte ekrany i okna, kliknięte przyciski, komunikaty aplikacji, błędy) i <b>zrzut ekranu</b> z galerii. Dzięki temu da się potem odtworzyć drogę do błędu zamiast opisywać ją z pamięci.",
+     "Gdzie: <b>⚙️ → 💬 Oceń / zgłoś błąd</b> — pod „Dołącz info o telefonie” są „Dołącz ślad” i „Dołącz zrzut ekranu”. Oba widzisz tylko Ty; zwykły użytkownik nic nie zbiera i nic nie wysyła.",
+     "Jak użyć: zauważ błąd → zrób zrzut przyciskami telefonu → wejdź w ⚙️ → 💬 → opisz, co jest nie tak → „Dołącz zrzut ekranu” i wybierz go z galerii → Wyślij. Ślad jest zaznaczony domyślnie, a „Podejrzyj, co wyślesz” pokazuje go przed wysłaniem.",
+     "Ślad leży tylko w pamięci karty — nie zapisuje się na telefonie, ginie po odświeżeniu i nic nie wychodzi bez kliknięcia „Wyślij”. <b>Wpisywanych treści nie zapisujemy</b>, tylko to, że pole było użyte.",
+     "W wątku zgłoszenia (💬 Zgłoszenia albo Twoje zgłoszenia) rozwiniesz ślad i otworzysz zrzut; <b>„Usuń dowody z tego zgłoszenia”</b> czyści ślad i zrzut, zostawiając treść."]):'')
    +sec("📍 Moja okolica",[
      "Pod nazwą aplikacji jest plakietka <b>📍 miejscowość · km</b> — tak daleko sięga Twoja okolica. Domyślnie 20 km od Twojej miejscowości (bez miejscowości: od Pułtuska).",
      "Kliknij plakietkę: zobaczysz krąg z zaproszeniami (zielone), sygnałami „Mam ochotę” (złote) i imprezami (granatowe) dookoła. <b>Suwak</b> zmienia promień od 5 do 50 km albo „cała Polska”. Kropki pokazują miejsca zbiórki, a nie środki miejscowości."+(isKingReal()?" <b>👑:</b> po najechaniu kursorem na kropkę zaproszeń lub imprez widać nazwy miejscowości (sygnałów nie podpisujemy). Suwak przesuwa się co 1 km, „⤢ Powiększ” powiększa radar, a kropki rosną pod kursorem, żeby łatwiej w nie trafić.":""),
