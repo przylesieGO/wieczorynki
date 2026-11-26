@@ -165,6 +165,8 @@ const AREA_INFO='<div class="note" style="margin-top:8px">Promień decyduje, co 
 const areaIn=(a,lat,lon)=>lat==null||lon==null||!isFinite(+lat)||!isFinite(+lon)||!a.km||dist({lat:a.lat,lon:a.lon},{lat:+lat,lon:+lon})<=a.km;
 const inArea=(lat,lon)=>areaIn(areaCur(),lat,lon);
 const areaKmTxt=k=>k?k+" km":"cała Polska";
+// wartość suwaka → km: zwykły użytkownik — lista AREA_KM; 👑 — płynnie co 1 km (5–50), 51 = cała Polska
+const arKmFromSl=v=>(typeof isKingReal==="function"&&isKingReal())?(+v>=51?0:+v):AREA_KM[+v];
 const areaFavs=()=>{let a;if(session&&profExOk)a=myPriv&&myPriv.area_places;else try{a=JSON.parse(localStorage.getItem("areaFavs")||"[]")}catch(e){a=[]}
   return Array.isArray(a)?a.filter(x=>x&&x.name&&isFinite(x.lat)&&isFinite(x.lon)):[]};
 const areaRound=x=>Math.round(x/0.02)*0.02;
@@ -208,9 +210,13 @@ function areaSvg(a){const R0=78,S=a.km||300,C=120,G={};
     const key=p.k+Math.round(x/4)+"_"+Math.round(y/4);(G[key]=G[key]||{k:p.k,x,y,n:0,nm:[],out:!(d<=S||!a.km)}).n++;if(p.nm)G[key].nm.push(p.nm)});
   // kropki w tym samym miejscu łączą się w jedną większą (np. wszystkie zaproszenia z centrum Pułtuska)
   // 👑: po najechaniu kursorem nazwy miejscowości (dymek <title>); sygnałów nie podpisujemy (prywatne)
-  const kingTip=typeof isKingReal==="function"&&isKingReal();
-  const dots=Object.values(G).sort((u,v)=>v.n-u.n).map(g=>{const at='class="ardot '+g.k+(g.out?' out':'')+'" cx="'+(C+g.x).toFixed(1)+'" cy="'+(C+g.y).toFixed(1)+'" r="'+(4.5+Math.min(7,2*Math.log2(g.n))).toFixed(1)+'"';const tip=kingTip&&g.nm.length?'<title>'+esc([...new Set(g.nm)].slice(0,6).join("\n"))+'</title>':"";return tip?'<circle '+at+'>'+tip+'</circle>':'<circle '+at+'/>'}).join("");
-  return '<svg class="arsvg" viewBox="0 0 240 240" aria-hidden="true"><circle class="arbg" cx="120" cy="120" r="112"/>'
+  // 👑 (tylko dla 👑): większy, przezroczysty obszar trafienia wokół kropki + powiększenie po najechaniu
+  const K=typeof isKingReal==="function"&&isKingReal();
+  const dots=Object.values(G).sort((u,v)=>v.n-u.n).map(g=>{const r0=4.5+Math.min(7,2*Math.log2(g.n));const cx=(C+g.x).toFixed(1),cy=(C+g.y).toFixed(1);const tip=K&&g.nm.length?'<title>'+esc([...new Set(g.nm)].slice(0,6).join("\n"))+'</title>':"";
+    const at='class="ardot '+g.k+(g.out?' out':'')+'" cx="'+cx+'" cy="'+cy+'" r="'+r0.toFixed(1)+'"';
+    if(!K)return tip?'<circle '+at+'>'+tip+'</circle>':'<circle '+at+'/>';
+    return '<g class="ardg"><circle class="ardhit" cx="'+cx+'" cy="'+cy+'" r="'+(r0+9).toFixed(1)+'">'+tip+'</circle><circle '+at+'/></g>'}).join("");
+  return '<svg class="arsvg'+(K?' kg':'')+'" viewBox="0 0 240 240" aria-hidden="true"><circle class="arbg" cx="120" cy="120" r="112"/>'
    +'<circle class="arring" cx="120" cy="120" r="'+R0+'"/><circle class="arpulse" cx="120" cy="120" r="'+R0+'"/>'
    +dots+'<g class="arpin" transform="translate(108 98)"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></g></svg>'}
 // plakietka w nagłówku: „📍 Pułtusk · 20 km”, w podglądzie „👁 Serock · 20 km ✕”
@@ -229,9 +235,9 @@ function renderHome(){
       +(hmMode==="peek"?'<button type="button" class="hmfav'+(isFav(x)?' on':'')+'" data-hm="fav" data-i="'+i+'" aria-label="Ulubiona miejscowość">'+uiIcon(isFav(x)?"starf":"star")+'</button>':'')+'</div>').join("");
   p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Moja okolica"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-hm="close">Zamknij</button><b>'+uiIcon("pin")+' Moja okolica</b><span style="min-width:64px"></span></div><div class="bslist">'
    +(a.peek?'<div class="hmcur arpeek">'+uiIcon("eye")+'<span>Podgląd: <b>'+esc(a.name)+'</b></span><button type="button" class="lnk" data-hm="unpeek">Wróć do: '+esc(h.name)+'</button></div>':'')
-   +'<div class="arvis">'+areaSvg(a)+'<div class="arcnt"><b>'+(a.km?'W promieniu '+a.km+' km':'Cała Polska')+'</b><span>'+areaCntTxt(c)+'</span>'+(a.km&&c.out?'<small>dalej: '+c.out+'</small>':'')+'</div></div>'
+   +(typeof isKingReal==="function"&&isKingReal()?'<button type="button" class="lnk arbigb">⤢ Powiększ</button>':'')+'<div class="arvis">'+areaSvg(a)+'<div class="arcnt"><b>'+(a.km?'W promieniu '+a.km+' km':'Cała Polska')+'</b><span>'+areaCntTxt(c)+'</span>'+(a.km&&c.out?'<small>dalej: '+c.out+'</small>':'')+'</div></div>'
    +'<div class="hleg arleg"><i class="hc w"></i> zaproszenia <i class="hc s"></i> sygnały <i class="hc ev"></i> imprezy</div>'
-   +'<div class="arsl"><div class="arslh"><span>Promień</span><b id="arkmv">'+areaKmTxt(a.km)+'</b></div><input id="arkm" type="range" min="0" max="'+(AREA_KM.length-1)+'" step="1" value="'+(ki<0?3:ki)+'" aria-label="Promień okolicy"><div class="arslt"><span>5 km</span><span>50 km</span><span>Polska</span></div>'+AREA_INFO+'</div>'
+   +'<div class="arsl"><div class="arslh"><span>Promień</span><b id="arkmv">'+areaKmTxt(a.km)+'</b></div><input id="arkm" type="range" '+((typeof isKingReal==="function"&&isKingReal())?'min="5" max="51" step="1" value="'+(a.km?a.km:51)+'"':'min="0" max="'+(AREA_KM.length-1)+'" step="1" value="'+(ki<0?3:ki)+'"')+' aria-label="Promień okolicy"><div class="arslt"><span>5 km</span><span>50 km</span><span>Polska</span></div>'+AREA_INFO+'</div>'
    +'<div class="bsgrp">Moja miejscowość</div>'
    +'<div class="hmcur">'+uiIcon("pin")+'<span><b>'+esc(h.name)+'</b>'+(h.def?' <small>(domyślnie)</small>':'')+'</span><button type="button" class="lnk" data-hm="'+(hmMode==="home"?"mpeek":"mhome")+'">'+(hmMode==="home"?"Anuluj":"Zmień")+'</button></div>'
    +(hmMode==="home"?srch+'<button type="button" class="b g big" data-hm="gps" style="margin-top:10px">'+uiIcon("globe")+' Użyj mojej lokalizacji</button>':'')
@@ -259,10 +265,12 @@ function useGps(after){
    {enableHighAccuracy:false,timeout:12000,maximumAge:600000});
 }
 // suwak: podgląd na żywo, zapis po puszczeniu (oszczędnie dla serwera)
-$("homesheet").addEventListener("input",e=>{if(e.target.id!=="arkm")return;const k=AREA_KM[+e.target.value];const a=Object.assign(areaCur(),{km:k});
+// 👑 powiększenie radaru (przełącznik pod suwakiem; tylko dla 👑)
+document.addEventListener("click",e=>{const b=e.target.closest(".arbigb");if(!b)return;const v=b.nextElementSibling;if(!v)return;v.classList.toggle("arbig");b.textContent=v.classList.contains("arbig")?"⤡ Zmniejsz":"⤢ Powiększ"});
+$("homesheet").addEventListener("input",e=>{if(e.target.id!=="arkm")return;const k=arKmFromSl(e.target.value);const a=Object.assign(areaCur(),{km:k});
   const v=$("arkmv");if(v)v.textContent=areaKmTxt(k);const s=$("homesheet").querySelector(".arsvg");if(s)s.outerHTML=areaSvg(a);
   const c=areaCount(a),t=$("homesheet").querySelector(".arcnt");if(t)t.innerHTML='<b>'+(k?'W promieniu '+k+' km':'Cała Polska')+'</b><span>'+areaCntTxt(c)+'</span>'+(k&&c.out?'<small>dalej: '+c.out+'</small>':'')});
-$("homesheet").addEventListener("change",async e=>{if(e.target.id!=="arkm")return;const k=AREA_KM[+e.target.value];if(await areaSave({area_km:k}))areaChanged()});
+$("homesheet").addEventListener("change",async e=>{if(e.target.id!=="arkm")return;const k=arKmFromSl(e.target.value);if(await areaSave({area_km:k}))areaChanged()});
 $("homesheet").addEventListener("click",async e=>{
   if(e.target===$("homesheet")){closeHome();return}
   const b=e.target.closest("[data-hm]");if(!b)return;const k=b.dataset.hm;
