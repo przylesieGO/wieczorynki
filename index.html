@@ -27,7 +27,7 @@
 <meta property="og:image:height" content="512">
 <meta property="og:image:alt" content="Logo PrzylesieGo! — dwa koła">
 <meta name="twitter:card" content="summary">
-<link rel="stylesheet" href="css/app.css?v=284">
+<link rel="stylesheet" href="css/app.css?v=285">
 </head>
 <body>
 <!-- ===== EKRAN ŁADOWANIA (wariant A2 — kręcące się koła logo; znika po wczytaniu danych) ===== -->
@@ -85,6 +85,10 @@
   <div class="wfhead"><span class="wfsp"></span><b id="wfhtitle">🚲 Zaproś na rower</b><button type="button" class="sclose wfx" id="wfx" aria-label="Zamknij">✕</button></div>
   <div class="wfscroll" id="wfscroll">
     <div id="wactwrap" class="hide"><div class="wlbl" style="margin-top:6px">Aktywność</div><div class="wbike" id="wactsel"></div></div>
+    <div id="wplacewrap" class="hide"><div class="wlbl" style="margin-top:6px">📍 Punkt zbiórki</div><select id="wplacesel"></select>
+      <div id="wplaceown" class="hide"><input id="wplacename" maxlength="40" placeholder="Nazwa miejsca, np. Pod ratuszem">
+        <label class="wpladd"><span>Dodaj do listy miejsc — zobaczą ją inni</span><button type="button" class="ios-sw" id="wpladd" role="switch" aria-checked="false"></button></label></div>
+      <div class="wplinfo hide" id="wplinfo"></div></div>
     <div class="wlbl" id="wftitle" style="margin-top:6px">Planowany start</div>
     <div class="seg" id="wdays"><button type="button" data-d="0" class="on">Dziś</button><button type="button" data-d="1">Jutro</button><button type="button" data-d="x">Inny dzień</button></div>
     <div id="wdwrap" class="hide" style="margin-top:8px"><input type="date" id="wdt"></div>
@@ -114,10 +118,6 @@
     <div id="wbikewrap" class="hide"><div class="wlbl">Rower / teren</div><div class="wbike" id="wbikesel"></div></div>
     <div id="wdistwrap" class="hide"><div class="wlbl">Dystans</div><select id="wkmsel"><option value="">— nie wiem —</option><option value="20">20 km</option><option value="30">30 km</option><option value="50">50 km</option><option value="80">80 km</option><option value="100">100 km</option><option value="*">Inny… (wpisz)</option></select><input id="wkmown" class="hide" inputmode="decimal" maxlength="5" placeholder="ile km, np. 42"></div>
     <div id="wdurwrap" class="hide"><div class="wlbl" id="wdurlbl">Na ile jedziesz?</div><select id="wdursel"><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">1 h</option><option value="90">1,5 h</option><option value="120">2 h</option><option value="150">2,5 h</option><option value="180">3 h</option><option value="240">4 h</option><option value="300">5 h</option><option value="360">6 h</option><option value="*">Inny… (wpisz)</option></select><input id="wdurown" class="hide" maxlength="8" placeholder="np. 3,5 h albo 40 min"></div>
-    <div id="wplacewrap" class="hide"><div class="wlbl">📍 Punkt zbiórki</div><select id="wplacesel"></select>
-      <div id="wplaceown" class="hide"><input id="wplacename" maxlength="40" placeholder="Nazwa miejsca, np. Pod ratuszem">
-        <label class="wpladd"><span>Dodaj do listy miejsc — zobaczą ją inni</span><button type="button" class="ios-sw" id="wpladd" role="switch" aria-checked="false"></button></label></div>
-      <div class="wplinfo hide" id="wplinfo"></div></div>
     <div id="wtestwrap" class="hide"><div class="wlbl">Rodzaj zaproszenia</div><div class="seg" id="wtest"><button type="button" data-test="1" class="on">🧪 Testowe</button><button type="button" data-test="0">🚴 Prawdziwe</button></div><div class="note" id="wtestnote" style="margin-top:6px"></div></div>
     <div id="wtitlewrap" class="hide"><div class="wlbl">Tytuł <span class="note">(opcjonalnie)</span></div><input id="wtitle" maxlength="40" placeholder="np. Zapachy lasu"><div class="note hide" id="wtitlehint" style="margin-top:4px"></div></div>
     <div class="wlbl">Notatka</div>
@@ -302,27 +302,27 @@
 <div class="toast hide" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
-<script src="js/01-podstawy.js?v=284"></script>
-<script src="js/02-ikony.js?v=284"></script>
-<script src="js/03-stan.js?v=284"></script>
-<script src="js/04-ustawienia.js?v=284"></script>
-<script src="js/05-zgloszenia.js?v=284"></script>
-<script src="js/06-pomoc-powitanie.js?v=284"></script>
-<script src="js/07-pogoda-zaproszen.js?v=284"></script>
-<script src="js/08-imprezy.js?v=284"></script>
-<script src="js/09-trasy.js?v=284"></script>
-<script src="js/10-zaproszenia.js?v=284"></script>
-<script src="js/11-dzwonek.js?v=284"></script>
-<script src="js/12-wieczorynki.js?v=284"></script>
-<script src="js/13-online-statystyki.js?v=284"></script>
-<script src="js/14-synchronizacja.js?v=284"></script>
-<script src="js/15-wieczorynki-formularz.js?v=284"></script>
-<script src="js/16-start.js?v=284"></script>
-<script src="js/17-grupy.js?v=284"></script>
-<script src="js/18-ekipa-demo.js?v=284"></script>
-<script src="js/20-serwis.js?v=284"></script>
-<script src="js/21-szukaj.js?v=284"></script>
-<script src="js/22-przewodnik.js?v=284"></script>
-<script src="js/23-start.js?v=284"></script>
+<script src="js/01-podstawy.js?v=285"></script>
+<script src="js/02-ikony.js?v=285"></script>
+<script src="js/03-stan.js?v=285"></script>
+<script src="js/04-ustawienia.js?v=285"></script>
+<script src="js/05-zgloszenia.js?v=285"></script>
+<script src="js/06-pomoc-powitanie.js?v=285"></script>
+<script src="js/07-pogoda-zaproszen.js?v=285"></script>
+<script src="js/08-imprezy.js?v=285"></script>
+<script src="js/09-trasy.js?v=285"></script>
+<script src="js/10-zaproszenia.js?v=285"></script>
+<script src="js/11-dzwonek.js?v=285"></script>
+<script src="js/12-wieczorynki.js?v=285"></script>
+<script src="js/13-online-statystyki.js?v=285"></script>
+<script src="js/14-synchronizacja.js?v=285"></script>
+<script src="js/15-wieczorynki-formularz.js?v=285"></script>
+<script src="js/16-start.js?v=285"></script>
+<script src="js/17-grupy.js?v=285"></script>
+<script src="js/18-ekipa-demo.js?v=285"></script>
+<script src="js/20-serwis.js?v=285"></script>
+<script src="js/21-szukaj.js?v=285"></script>
+<script src="js/22-przewodnik.js?v=285"></script>
+<script src="js/23-start.js?v=285"></script>
 </body>
 </html>

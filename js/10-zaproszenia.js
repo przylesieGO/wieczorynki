@@ -623,8 +623,11 @@ function renderWants0(){
 const wMyDay=k=>myOn()?(wantsNoFlt||wants).filter(w=>w.user_id===uid&&!wDone(w)&&localIso(new Date(w.starts_at)).slice(0,10)===k):[];
 /* 📍 v279/v280: „inna miejscowość” = miejsce zaproszenia w innej miejscowości niż Twoja (Moja miejscowość / podgląd okolicy) — oznaczamy ją w zwiniętej karcie dnia; dotknięcie pigułki włącza filtr „Gdzie” */
 const wFar=w=>!!w.place_city&&w.place_lat!=null&&typeof areaCur==="function"&&lc(w.place_city)!==lc(areaCur().name||"");
-function wFarLine(ws){const c=new Map();ws.filter(wFar).forEach(w=>c.set(w.place_city,(c.get(w.place_city)||0)+1));const a=[...c.keys()];   // miejscowość → ile zaproszeń z niej w tym dniu
-  return a.length?'<div class="wl2 wfar">'+uiIcon("pin")+a.slice(0,3).map(x=>'<button type="button" class="wfc'+(flt.where==="c:"+x?' on':'')+'" data-wc="'+esc(x)+'">'+esc(x)+(c.get(x)>1?' <i>'+c.get(x)+'</i>':'')+'</button>').join("")+(a.length>3?'<b>+'+(a.length-3)+'</b>':'')+'</div>':''}
+// 📍 v284: przy miejscowości odległość od środka okolicy („Zatory · 34 km”); kolejność od najbliższej
+function wFarLine(ws){const c=new Map(),o=areaCur(),km=w=>dist({lat:o.lat,lon:o.lon},{lat:+w.place_lat,lon:+w.place_lon});
+  ws.filter(wFar).forEach(w=>{const p=c.get(w.place_city)||{n:0,k:Infinity};p.n++;p.k=Math.min(p.k,km(w));c.set(w.place_city,p)});   // miejscowość → ile zaproszeń z niej w tym dniu, najbliższe
+  const a=[...c.keys()].sort((x,y)=>c.get(x).k-c.get(y).k);
+  return a.length?'<div class="wl2 wfar">'+uiIcon("pin")+a.slice(0,3).map(x=>{const p=c.get(x);return '<button type="button" class="wfc'+(flt.where==="c:"+x?' on':'')+'" data-wc="'+esc(x)+'">'+esc(x)+(isFinite(p.k)?' · '+(p.k<1?'&lt;1':Math.round(p.k))+' km':'')+(p.n>1?' <i>'+p.n+'</i>':'')+'</button>'}).join("")+(a.length>3?'<b>+'+(a.length-3)+'</b>':'')+'</div>':''}
 function wHrsHtml(ws0,open,cur,k){
   const ex=k?wMyDay(k).filter(w=>!ws0.includes(w)):[],ws=ex.length?ws0.concat(ex).sort(flt.sort==="new"?(a,b)=>new Date(b.created_at||b.starts_at)-new Date(a.created_at||a.starts_at):(a,b)=>new Date(a.starts_at)-new Date(b.starts_at)):ws0;   // cur = zaproszenie widoczne w rozwiniętym dniu (.hon) — pozostałe godziny przygaszone, tylko gdy dzień otwarty
   const hw=ws.filter(wLive).concat(ws.filter(w=>!wLive(w)));
@@ -1145,17 +1148,20 @@ function wfPlaceSync(){
   if(!placeOk){$("wplacewrap").classList.add("hide");return}
   $("wplacewrap").classList.remove("hide");
   const s=$("wplacesel"),cur=wf.place||"",known=places.find(x=>x.name.toLowerCase()===cur.toLowerCase());
-  s.innerHTML='<option value="">— bez punktu zbiórki —</option>'+places.map(x=>'<option value="p:'+esc(x.id)+'">'+esc(x.name)+(x.lat!=null?' · na mapie':'')+'</option>').join("")
-    +'<option value="own">Inne miejsce… (wpisz)</option><option value="map">Wskaż na mapie…</option>';
-  s.value=wf.placeOwn?"own":!cur?"":known&&!wf.placeMap?"p:"+known.id:"own";
+  // 📍 v284: punkt zbiórki obowiązkowy, z pinezką — na liście tylko miejsca z pinezką z okolicy (od najbliższych); własne miejsce = pinezka na mapie
+  const a=typeof areaCur==="function"?areaCur():null,km=x=>a?dist({lat:a.lat,lon:a.lon},{lat:+x.lat,lon:+x.lon}):0;
+  const L=places.filter(x=>x.lat!=null&&(!a||x===known||inArea(x.lat,x.lon))).sort((x,y)=>km(x)-km(y));
+  s.innerHTML='<option value="">— wybierz miejsce —</option>'+L.map(x=>'<option value="p:'+esc(x.id)+'">'+esc(x.name)+(a?' · '+(km(x)<1?'&lt;1':Math.round(km(x)))+' km':'')+'</option>').join("")
+    +(cur&&(!known||wf.placeOwn||wf.placeMap)?'<option value="own">'+esc(cur)+'</option>':'')+'<option value="map">＋ Nowe miejsce — wskaż na mapie…</option>';
+  s.value=!cur?"":known&&known.lat!=null&&!wf.placeMap&&!wf.placeOwn?"p:"+known.id:"own";
   $("wplaceown").classList.toggle("hide",!(wf.placeOwn||(cur&&!known)));
   if(!$("wplaceown").classList.contains("hide")&&document.activeElement!==$("wplacename"))$("wplacename").value=cur;
   const sw=$("wpladd");sw.classList.toggle("on",!!wf.placeAdd);sw.setAttribute("aria-checked",!!wf.placeAdd);
   $("wpladd").closest(".wpladd").classList.toggle("hide",!!known);
   const inf=$("wplinfo");
-  if(cur&&wf.plat!=null){inf.innerHTML='📌 Pinezka'+(wf.pcity?': '+esc(wf.pcity+(wf.parea?' · '+wf.parea:'')):': '+wf.plat.toFixed(4)+', '+wf.plon.toFixed(4))+' · <button type="button" class="lnk" id="wplmap">zmień na mapie</button> · <button type="button" class="lnk" id="wplnopin" style="color:var(--bad)">usuń pinezkę</button>';inf.classList.remove("hide")}
-  else if(cur){inf.innerHTML='<button type="button" class="lnk" id="wplmap">📌 Dodaj pinezkę na mapie</button> <span class="note">— łatwiej trafić</span>';inf.classList.remove("hide")}
-  else inf.classList.add("hide");
+  if(cur&&wf.plat!=null){inf.innerHTML='📌 Pinezka'+(wf.pcity?': '+esc(wf.pcity+(wf.parea?' · '+wf.parea:'')):': '+wf.plat.toFixed(4)+', '+wf.plon.toFixed(4))+' · <button type="button" class="lnk" id="wplmap">zmień na mapie</button>';inf.classList.remove("hide")}
+  else if(cur){inf.innerHTML='<button type="button" class="lnk" id="wplmap">📌 Wskaż to miejsce na mapie</button> <span class="note">— wymagane</span>';inf.classList.remove("hide")}
+  else{inf.innerHTML='<span class="note">Wybierz miejsce z listy albo wskaż nowe na mapie — po nim aplikacja wie, do kogo z okolicy wysłać zaproszenie.</span>';inf.classList.remove("hide")}
 }
 // mapa do wskazania miejsca (Leaflet / OpenStreetMap)
 let pickMap=null,pickMk=null,pickCtx=null;
@@ -1169,10 +1175,11 @@ function openPlaceMap(ctx){
    +'<div class="mpbtns"><button type="button" class="lnk" data-mp="me">📍 Moja lokalizacja</button></div>'
    +'<button type="button" class="b big" data-mp="ok">Gotowe</button></div>';
   p.classList.remove("hide");
-  const c=la!=null?[+la,+lo]:(()=>{const k=places.find(x=>x.lat!=null);return k?[+k.lat,+k.lon]:[52.7031,21.0838]})();
+  const ac=typeof areaCur==="function"?areaCur():null;   // 📍 v284: bez pinezki mapa startuje w środku Twojej okolicy (albo podglądanej)
+  const c=la!=null?[+la,+lo]:ac&&ac.lat!=null?[+ac.lat,+ac.lon]:[52.7031,21.0838];
   needL().then(()=>setTimeout(()=>{
     if(!$("pickmap"))return;
-    try{pickMap=L.map("pickmap",{zoomControl:true}).setView(c,la!=null?17:15);
+    try{pickMap=L.map("pickmap",{zoomControl:true}).setView(c,la!=null?17:13);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(pickMap);
       pickMk=L.marker(c,{draggable:true}).addTo(pickMap);
       pickMap.on("click",e=>pickMk.setLatLng(e.latlng));
@@ -1244,11 +1251,11 @@ const wfJump=e=>{
 $("wdurinfo").addEventListener("click",wfJump);$("wfclash").addEventListener("click",wfJump);
 $("wplacesel").addEventListener("change",()=>{const v=$("wplacesel").value;
   if(v==="map"){openPlaceMap();return}
-  if(v==="own"){wf.placeOwn=true;wf.placeMap=false;wf.place="";wf.plat=wf.plon=null;wf.pcity=wf.parea=null;wf.placeAdd=false;wfPlaceSync();$("wplacename").value="";$("wplacename").focus();return}
+  if(v==="own"){wfPlaceSync();return}   // 📍 v284: „own” = bieżące własne miejsce (pinezka z mapy) — bez zmian
   wf.placeOwn=false;wf.placeMap=false;wf.placeAdd=false;
   if(!v){wf.place=null;wf.plat=wf.plon=null;wf.pcity=wf.parea=null}else{const x=places.find(y=>"p:"+y.id===v);wf.place=x?x.name:null;wf.plat=x&&x.lat!=null?+x.lat:null;wf.plon=x&&x.lon!=null?+x.lon:null;wf.pcity=x&&x.city||null;wf.parea=x&&x.area||null}
   wfPlaceSync()});
-$("wplacename").addEventListener("input",()=>{wf.place=$("wplacename").value.trim().slice(0,40)||null;if(!wf.place)wf.plat=wf.plon=null;const i=$("wplinfo");if(wf.place&&wf.plat==null){i.innerHTML='<button type="button" class="lnk" id="wplmap">📌 Dodaj pinezkę na mapie</button> <span class="note">— łatwiej trafić</span>';i.classList.remove("hide")}else if(!wf.place)i.classList.add("hide")});
+$("wplacename").addEventListener("input",()=>{wf.place=$("wplacename").value.trim().slice(0,40)||null;if(!wf.place){wf.plat=wf.plon=null;wfPlaceSync()}});   // 📍 v284: zmiana nazwy nie rusza pinezki
 $("wpladd").addEventListener("click",()=>{wf.placeAdd=!wf.placeAdd;wfPlaceSync()});
 $("wplinfo").addEventListener("click",e=>{if(e.target.id==="wplmap")openPlaceMap();if(e.target.id==="wplnopin"){wf.plat=wf.plon=null;wf.pcity=wf.parea=null;wfPlaceSync()}});
 $("wkmsel").addEventListener("change",()=>{const v=$("wkmsel").value;
@@ -1368,6 +1375,9 @@ $("wsave").onclick=async()=>{
   if(rng&&d.getTime()<Date.now()+65*60000){say("Zakres zaczyna się za mniej niż godzinę — wtedy godzina ustala się sama i nikt nie może zaproponować swojej. Przesuń początek zakresu albo wybierz „Godzina”.");return}
   const note=$("wnote").value.trim()||null,title=wf.titleAuto?null:($("wtitle").value.trim()||null),k=localIso(d).slice(0,10);
   if(title&&title.length<6){say("Tytuł: co najmniej 6 znaków — albo zostaw puste (tytuł ułoży się sam).");return}
+  // 📍 v284: punkt zbiórki z pinezką obowiązkowy — od niego zależy, kto z okolicy dostanie zaproszenie
+  if(placeOk&&(!wf.place||wf.plat==null)){const pw=$("wplacewrap");say(wf.place?"📍 Wskaż „"+wf.place+"” na mapie — bez pinezki zaproszenie nie trafi do ludzi z okolicy.":"📍 Wybierz punkt zbiórki albo wskaż nowe miejsce na mapie.");
+    if(pw){pw.scrollIntoView({behavior:"smooth",block:"center"});pw.classList.remove("srhl");void pw.offsetWidth;pw.classList.add("srhl");setTimeout(()=>pw.classList.remove("srhl"),3200)}return}
   // kilka zaproszeń dziennie wolno (decyzja 2026-11-15) — blokada tylko dla tej samej godziny startu
   const same=wants.find(w=>w.user_id===uid&&w.id!==wf.editId&&Math.abs(new Date(w.starts_at).getTime()-d.getTime())<60000);
   if(same){say("Masz już zaproszenie na "+wfLabel(d).toLowerCase()+" — wybierz inną godzinę albo zmień tamto.");return}
