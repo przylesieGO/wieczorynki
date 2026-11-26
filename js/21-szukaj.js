@@ -138,7 +138,7 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Pomoc przy starcie",s:"pomoc start powitanie",p:"Ustawienia → Wygląd i ekran",i:"help",hl:"[data-hs]"},
   {t:"Testowe zaproszenia",s:"test testowe ukryj pokaż",p:"Ustawienia → Testy",i:"flask",hl:"[data-ht]",ok:S&&testOk&&!DEMO},
   {t:"Spokojny wygląd testowych",s:"test miganie ramka",p:"Ustawienia → Testy",i:"flask",hl:"[data-tc]",ok:S&&testOk&&!DEMO},
-  {t:"Moje aktywności",s:"aktywności rower bieg bieganie spacer spacery wędrówka wędrówki co lubię o czym dawać znać powiadomienia ekran startowy",p:"Ustawienia → Jazdy i zaproszenia → Moje aktywności",i:"heart",hl:'[data-stgo="acts"]',ok:S&&typeof stOn==="function"&&stOn()},
+  {t:"Powiadamiaj mnie o",s:"powiadamiaj powiadomienia moje aktywności rower bieg bieganie spacer spacery wędrówka wędrówki co lubię o czym dawać znać powiadomienia ekran startowy",p:"Ustawienia → Jazdy i zaproszenia → Powiadamiaj mnie o",i:"heart",hl:'[data-stgo="acts"]',ok:S&&typeof stOn==="function"&&stOn()},
   {t:"Ekran startowy jeszcze raz",s:"ekran startowy powitanie kroki profil okolica aktywności start nowe konto",p:"Ustawienia → Testy → Pokaż ekran startowy jeszcze raz",i:"sparkles",hl:'[data-stgo="all"]',ok:S&&!DEMO&&meTester()&&typeof stOn==="function"&&stOn()},
   {t:"Funkcje testowe (BETA)",s:"beta nowe funkcje tester",p:"Ustawienia → Testy",i:"flask",hl:"[data-beta]",ok:meTester()&&!DEMO},
   {t:"Zostań testerem",s:"tester testowanie",p:"Ustawienia → na górze",i:"syringe",hl:".tcard",ok:S&&typeof testerCardHtml==="function"&&!!testerCardHtml()},

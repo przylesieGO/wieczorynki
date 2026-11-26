@@ -3,7 +3,7 @@
    Nowy krok (nick, zdjęcie, płeć, Telegram…) = nowy wpis w ST_STEPS; kolejność wpisów = kolejność na ekranie.
    Tryby: "auto" — po zalogowaniu, tylko nieuzupełnione kroki, bez ✕ i „Później” (okolica obowiązkowa);
           "all"  — ⚙️ → Testy → „Pokaż ekran startowy jeszcze raz” (wszystkie kroki, z bieżącymi danymi);
-          "acts" — ⚙️ → Jazdy i zaproszenia → Moje aktywności (sam krok 2, można zamknąć).
+          "acts" — ⚙️ → Jazdy i zaproszenia → Powiadamiaj mnie o (sam krok 2, można zamknąć).
    Kolejność przy wejściu (afterData, js/14): needProfile (nick, płeć) → ekran startowy → Gawron → pozostałe okienka. */
 const ST={on:false,mode:"auto",i:0,steps:[],res:[],msg:"",q:"",city:null,km:null,acts:null,busy:false};
 const stHasCity=()=>!!(myPriv&&myPriv.city&&myPriv.city_lat!=null);
@@ -35,7 +35,7 @@ function stRender(){
   const p=$("stsheet"),s=ST.steps[ST.i],n=ST.steps.length,can=ST.mode==="acts";
   p.innerHTML='<div class="sheetbox popbox stbox" role="dialog" aria-modal="true" aria-labelledby="sth">'
    +(can?'<button class="sclose" data-st="close" aria-label="Zamknij">✕</button>':'')
-   +'<span class="ptag">'+(n>1?'KROK '+(ST.i+1)+' Z '+n:can?'MOJE AKTYWNOŚCI':'TWÓJ PROFIL')+'</span>'
+   +'<span class="ptag">'+(n>1?'KROK '+(ST.i+1)+' Z '+n:can?'POWIADAMIAJ MNIE O':'TWÓJ PROFIL')+'</span>'
    +s.html()
    +'<button type="button" class="b big" data-st="next"'+(s.ok()&&!ST.busy?'':' disabled')+'>'+(ST.i<n-1?'Dalej':can?'Zapisz':'Gotowe')+'</button>'
    +(ST.i>0||can?'<div class="pbtns"><button type="button" class="b w" data-st="'+(ST.i>0?'back':'close')+'">'+(ST.i>0?'‹ Wstecz':'Anuluj')+'</button></div>':'')
@@ -116,8 +116,8 @@ $("stsheet").addEventListener("click",async e=>{
 $("stsheet").addEventListener("input",e=>{if(e.target.id==="stkm"){ST.km=AREA_KM[+e.target.value];const v=$("stkmv");if(v)v.textContent=areaKmTxt(ST.km)}
   else if(e.target.id==="stq")ST.q=e.target.value});
 $("stsheet").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="stq"){e.preventDefault();stFind()}});
-// ⚙️ → Testy → „Pokaż ekran startowy jeszcze raz” i ⚙️ → Jazdy i zaproszenia → Moje aktywności
+// ⚙️ → Testy → „Pokaż ekran startowy jeszcze raz” i ⚙️ → Jazdy i zaproszenia → Powiadamiaj mnie o
 document.addEventListener("click",e=>{const b=e.target.closest("[data-stgo]");if(!b||!stOn())return;stOpen(b.dataset.stgo)});
 // wiersze do ⚙️ (js/06 woła je przy rysowaniu, gdy plik jest wczytany)
 const stTestRow=()=>stOn()&&meTester()?gRow("#bf5af2","sparkles","Pokaż ekran startowy jeszcze raz","Kroki po zalogowaniu: okolica i aktywności (🧪 BETA)","",'data-stgo="all"'):"";
-const stActsRow=()=>stOn()?gRow("#34c759","heart","Moje aktywności",stActsTxt(),"",'data-stgo="acts"'):"";
+const stActsRow=()=>stOn()?gRow("#34c759","heart","Powiadamiaj mnie o",stActsTxt(),"",'data-stgo="acts"'):"";
