@@ -27,10 +27,21 @@ function shKeep(p){
 }
 // opakowanie funkcji rysującej okienko: function renderX(){…} → renderX=shWrap(renderX,"xsheet") na końcu pliku
 const shWrap=(fn,id,cond)=>function(...a){const r=(!cond||cond(...a))?shKeep(document.getElementById(id)):()=>{};const x=fn.apply(this,a);r();return x};
+/* 🔎 ślad zgłoszeń (KROK 110, js/24) — początek odliczania i poczekalnia.
+   js/24 wczytuje się na końcu, więc błędy i komunikaty z samego startu
+   aplikacji nie miałyby gdzie trafić. Tu zbieramy je od pierwszej chwili
+   (maks. 20 wpisów, tylko w pamięci karty); js/24 przy wczytaniu przepisuje
+   je do śladu i podmienia slPre na zapis wprost do śladu. */
+const SL_T0=Date.now(),SL_PRE=[];
+let slPre=(e,v)=>{if(SL_PRE.length<20)SL_PRE.push({t:Date.now()-SL_T0,e,v:String(v==null?"":v)})};
+window.addEventListener("error",ev=>slPre("blad",(ev.message||"błąd")+" @ "+String(ev.filename||"").split("/").pop()+":"+(ev.lineno||"?")));
+window.addEventListener("unhandledrejection",ev=>slPre("blad","odrzucona obietnica: "+((ev.reason&&(ev.reason.message||ev.reason))||"?")));
+
 // komunikat: emotki → ikony konturowe ze słownika UI_MAP (js/02, wywołanie dopiero w trakcie działania); 👋 w komunikacie to dłoń, nie „wyloguj” (test 2026-11-26)
 const sayHtml=t=>{const e=String(t).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
   if(typeof UI_RE==="undefined"||typeof uiIcon!=="function")return e;UI_RE.lastIndex=0;return e.replace(UI_RE,(m,x)=>uiIcon(x==="👋"?"hand":UI_K[x]))};
-function say(t){if(SAY_GONE.test(String(t))){t="To zaproszenie zostało odwołane albo już się zaczęło — odświeżam listę.";setTimeout(()=>{try{if(typeof syncNow==="function")syncNow()}catch(e){}},50)}
+function say(t){slPre("komunikat",t);                                    // 🔎 ślad (KROK 110)
+  if(SAY_GONE.test(String(t))){t="To zaproszenie zostało odwołane albo już się zaczęło — odświeżam listę.";setTimeout(()=>{try{if(typeof syncNow==="function")syncNow()}catch(e){}},50)}
   const m=$("toast");if(document.body.classList.contains("wfopen")){const f=document.querySelector(".wffoot");if(f)document.body.style.setProperty("--wffh",f.offsetHeight+"px")}m.innerHTML=sayHtml(t);m.classList.remove("hide");clearTimeout(say.t);say.t=setTimeout(()=>m.classList.add("hide"),6000)}
 function routeKm(p){let s=0;for(let i=1;i<p.length;i++)s+=dist(p[i-1],p[i]);return s}
 function paceKmh(p){const m=/(\d+)/.exec(p||"");return m?+m[1]:24}

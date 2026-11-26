@@ -14,7 +14,7 @@
    Plik wczytywany jako ostatni, więc owija gotowe say() i widzi wszystko,
    co użytkownik robi po wejściu (błędów z samego wczytywania nie złapie).
    ====================================================================== */
-const SL_MAX=80,SL_T0=Date.now(),
+const SL_MAX=80,                                        // SL_T0 i SL_PRE: js/01 (liczą od pierwszej chwili)
       SL_TAB={0:"Zaproszenia",1:"Wieczorynki",2:"Zaawansowane",3:"Imprezy"},
       SL_E={start:"▶",ekran:"🖼",klik:"👆",komunikat:"💬",blad:"⚠️"};
 let slBuf=[],slPrev="",slScr="";
@@ -71,6 +71,12 @@ const slListHtml=(L,sum)=>'<details class="fbdv"><summary>🔎 '+esc(sum||("Śla
   slAdd("start","okno "+innerWidth+"×"+innerHeight+", ekran "+((screen||{}).width||"?")+"×"+((screen||{}).height||"?")
     +", motyw "+dt+(sa?", z ikony":", przeglądarka")+", wersja "+(typeof APP_VER!=="undefined"?APP_VER:"?"));
 
+  // zdarzenia sprzed wczytania tego pliku (błędy i komunikaty ze startu) — js/01
+  for(const z of SL_PRE)slBuf.push({t:z.t,e:z.e,v:slTxt(z.v,z.e==="start"?140:60),w:""});
+  SL_PRE.length=0;
+  slPre=(e,v)=>slAdd(e,v);                              // od teraz prosto do śladu
+  slBuf.sort((x,y)=>x.t-y.t);                           // „start" i wpisy z poczekalni we właściwej kolejności
+
   document.addEventListener("click",e=>{
     const el=e.target;if(!el||el.nodeType!==1)return;
     if(el.closest(".fbdv"))return;                      // rozwijanie samego śladu nie jest śladem
@@ -82,12 +88,7 @@ const slListHtml=(L,sum)=>'<details class="fbdv"><summary>🔎 '+esc(sum||("Śla
    new MutationObserver(()=>{if(!q)q=setTimeout(chk,120)})
      .observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:["class"]});}
 
-  // komunikaty aplikacji
-  if(typeof say==="function"){const _say=say;say=function(t){slAdd("komunikat",t);return _say.apply(this,arguments)}}
-
-  // błędy
-  window.addEventListener("error",e=>slAdd("blad",(e.message||"błąd")+" @ "+String(e.filename||"").split("/").pop()+":"+(e.lineno||"?")));
-  window.addEventListener("unhandledrejection",e=>slAdd("blad","odrzucona obietnica: "+slTxt((e.reason&&(e.reason.message||e.reason))||"?",60)));
+  // komunikaty aplikacji i błędy wchodzą przez slPre (js/01) — bez drugiego nasłuchu
 }
 
 /* ---------- 📷 zrzut ekranu z galerii (tylko 👑) ---------- */
