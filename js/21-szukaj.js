@@ -223,7 +223,7 @@ function srReveal(w,arch){let m="";
   if(hideTest&&w.is_test){hideTest=false;try{localStorage.setItem("hideTest","0")}catch(e){}deriveWants();m="Pokazuję też testowe zaproszenia."}
   if(typeof demoHidU==="function"&&demoHidU(w.user_id)){demoPeek=true;deriveWants();m="Pokazuję też Ekipę demo (do zamknięcia aplikacji)."}   // ⚙️ Ekipa demo ukryta (KROK 95)
   if(session&&(!arch||flt.arch)&&fltActive()&&!fltOk(w)){flt=fltEmpty();fltSave();m="Wyłączyłem filtry, żeby pokazać ten wynik."}
-  if(!arch&&typeof wActOk==="function"&&!wActOk(w)){actPeek=true;m="Pokazuję też aktywności spoza „Powiadamiaj mnie o” (do zamknięcia aplikacji)."}   // 🔔 v283
+  if(!arch&&typeof wActShow==="function"&&!wActShow(w)){actPeek=true;m="Pokazuję też aktywności spoza „Powiadamiaj mnie o” (do zamknięcia aplikacji)."}   // 🔔 v283
   if(!arch&&typeof wAreaOk==="function"&&!wAreaOk(w))m=areaReveal(w.place_lat,w.place_lon,w.place_city||w.place)||m;   // 📍 v270: spoza Mojej okolicy → podgląd jej okolicy   // archiwum filtrujemy tylko z „Filtruj też archiwum”
   return m}
 function srGoWant(w){const m=srReveal(w);const x=wants.find(y=>y.id===w.id);if(!x){say("Tego zaproszenia nie da się teraz pokazać.");return}goToWant(x);if(m)setTimeout(()=>say(m),400);

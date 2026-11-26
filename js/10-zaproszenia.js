@@ -363,7 +363,7 @@ function fltLabel(k){
 }
 let wantsNoFlt=null;   // wszystkie zaproszenia bez filtrów — „Moje” (👤) zawsze pokazuje wszystkie Twoje, filtry ich nie chowają
 function renderWants(){try{renderSteps()}catch(e){}
-  const raw=wants,inA=typeof wAreaOk==="function"?raw.filter(wAreaOk):raw,all=typeof wActOk==="function"?inA.filter(wActOk):inA,on=!!session&&fltActive();   // 📍 v270: najpierw Moja okolica (js/08), 🔔 v283: potem „Powiadamiaj mnie o”, potem Filtry
+  const raw=wants,inA=typeof wAreaOk==="function"?raw.filter(wAreaOk):raw,all=typeof wActShow==="function"?inA.filter(wActShow):inA,on=!!session&&fltActive();   // 📍 v270: najpierw Moja okolica (js/08), 🔔 v283: potem „Powiadamiaj mnie o”, potem Filtry
   wants=on?all.filter(fltOk):all;
   wantsNoFlt=all;
   try{renderWants0()}finally{wants=raw;wantsNoFlt=null}
@@ -484,7 +484,7 @@ function fltDraw(){
   ["where","user","to","by"].forEach(k=>{const el=$("fsum_"+k);if(!el)return;el.textContent=fltOn(k)?(k==="to"||k==="by"?fltNm(flt[k]):fltLabel(k)):(k==="where"?"Wszędzie":k==="to"||k==="by"?"Wybierz":"Wszyscy");el.classList.toggle("fnone",!fltOn(k))});
   const bb=$("fltbikebox");if(bb)bb.classList.toggle("hide",!fltBikeOn());
   if(fltScope==="ev"){const ne=evs.filter(e=>!evPast(e)&&evMatch(e)).length;$("fltok").textContent=fltActiveFor("ev")?"Pokaż "+ne+" "+plf(ne,["imprezę","imprezy","imprez"]):"Gotowe";return}
-  const n=wants.filter(wUpcoming).filter(w=>typeof wAreaOk!=="function"||wAreaOk(w)).filter(w=>typeof wActOk!=="function"||wActOk(w)).filter(fltOk).length,na=flt.arch&&fltActive()?withOldJoins(()=>archList(wants).filter(fltOk).length):0;$("fltok").textContent=fltActive()?"Pokaż "+n+" "+(n===1?"zaproszenie":n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"zaproszenia":"zaproszeń")+(flt.arch?" + "+na+" w archiwum":""):"Gotowe";
+  const n=wants.filter(wUpcoming).filter(w=>typeof wAreaOk!=="function"||wAreaOk(w)).filter(w=>typeof wActShow!=="function"||wActShow(w)).filter(fltOk).length,na=flt.arch&&fltActive()?withOldJoins(()=>archList(wants).filter(fltOk).length):0;$("fltok").textContent=fltActive()?"Pokaż "+n+" "+(n===1?"zaproszenie":n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"zaproszenia":"zaproszeń")+(flt.arch?" + "+na+" w archiwum":""):"Gotowe";
 }
 function fltRefresh(){if($("fltok"))fltDraw();renderWants();if(typeof renderEvents==="function"&&curTab===3)renderEvents()}
 // okno: widok główny (bomble w rzędach przewijanych w bok) albo podekran „Gdzie” / „Osoba” z polem wpisywania na dole (wyniki rosną w górę)

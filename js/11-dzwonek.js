@@ -132,7 +132,7 @@ function bsWants(){
   // zaproszenie znika spod 🔔, gdy jazda się skończy (start + czas trwania; 2026-11-25) — zakończone są w archiwum
   const act=w=>!wDone(w);
   const ord=(a,b)=>((wUnread(b).length?1:0)-(wUnread(a).length?1:0))||((wNeedsAct(b)?1:0)-(wNeedsAct(a)?1:0))||(new Date(a.starts_at)-new Date(b.starts_at));
-  return {forme:wants.filter(w=>w.user_id!==uid&&act(w)&&(w.visibility!=="private"||wInvMe(w)||(joins[w.id]||[]).includes(uid))&&(typeof wAreaOk!=="function"||wAreaOk(w))&&(typeof wActOk!=="function"||wActOk(w))).sort(ord),   // 📍 v270: otwarte spoza okolicy — nie pod 🔔; 🔔 v283: ani innych aktywności
+  return {forme:wants.filter(w=>w.user_id!==uid&&act(w)&&(w.visibility!=="private"||wInvMe(w)||(joins[w.id]||[]).includes(uid))&&(typeof wAreaOk!=="function"||wAreaOk(w))&&(typeof wActShow!=="function"||wActShow(w))).sort(ord),   // 📍 v270: otwarte spoza okolicy — nie pod 🔔; 🔔 v283: ani innych aktywności
     mine:wants.filter(w=>w.user_id===uid&&act(w)).sort(ord)};
 }
 // 🧪 testerzy pod ręką (tylko admini): czekające prośby o testera (nawet przeczytane) + lista obecnych testerów; bez licznika nieprzeczytanych

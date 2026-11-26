@@ -185,7 +185,7 @@ const wAreaOk=w=>w.user_id===uid||w.visibility==="private"||!!w.group_id||(joins
 let actPeek=false;
 const myActs=()=>!actPeek&&session&&myPriv&&Array.isArray(myPriv.acts)&&myPriv.acts.length&&!isSuper(uid)?myPriv.acts:null;
 const actOk=k=>{const A=myActs();return !A||A.includes(k||"bike")};
-const wActOk=w=>w.user_id===uid||w.visibility==="private"||!!w.group_id||(joins[w.id]||[]).includes(uid)||(typeof wInvMe==="function"&&wInvMe(w))||actOk(w.activity);
+const wActShow=w=>w.user_id===uid||w.visibility==="private"||!!w.group_id||(joins[w.id]||[]).includes(uid)||(typeof wInvMe==="function"&&wInvMe(w))||actOk(w.activity);
 // podpowiedź pod listą (ten sam wiersz co „Poza okolicą”): „Nie widzisz zaproszeń o: Rower · zmień ›”
 function actHidHtml(keys,what){const K=[...new Set(keys.map(k=>k||"bike"))];if(!K.length)return "";
   return '<div class="note arout">'+uiIcon("heart")+' Nie widzisz '+what+' o: '+esc(K.map(k=>{const a=actOf(k);return a.name_many||a.name}).join(", "))
