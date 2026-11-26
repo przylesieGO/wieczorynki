@@ -606,7 +606,7 @@ function renderWants0(){
      +'<div class="ftile'+(n===0?' today':'')+(d.ws.some(wLive)?' live':'')+'">'+ftInner(dt)+ftWxHtml(d.ws)+'</div>'
      +'<div class="wtx"><div class="wl1">'+l1+' · <span class="whrs'+(open?' whrsall':'')+'">'+wHrsHtml(d.ws,open,ord.length?ord[Math.min(dayIdx[d.k]||0,ord.length-1)].id:'',d.k)+'</span></div>'
      +(byNew&&typeof agoTxt==="function"?'<div class="wdad">dodano '+esc(agoTxt(cr(d.ws[0])))+'</div>':'')
-     +'<div class="wl2">'+pplHtml+'</div></div>'+wl4Html(d.ws)
+     +'<div class="wl2">'+pplHtml+'</div>'+wFarLine(d.ws)+'</div>'+wl4Html(d.ws)
      +(cnt>1||dPriv?'<span class="wbd">'+(dPriv?'<span class="wlk" aria-label="'+dPriv+' prywatne">'+uiIcon("lock")+dPriv+'</span>':'')+(cnt>1?'<span class="wcnt" aria-label="'+cnt+' '+zg+'">'+cnt+'</span>':'')+'</span>':'')
      +'</summary>'+mineTop.map(wantDayHtml).join("")+(ord.length>1
        ?'<div class="dcar" data-day="'+d.k+'">'+ord.map(w=>wantHtml(w)).join("")+'</div><div class="mydots ddots"><button type="button" class="darr" data-dd="-1" aria-label="Poprzednie zaproszenie"'+((dayIdx[d.k]||0)<=0?' disabled':'')+'><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button>'+ord.map((_,i)=>'<button type="button" data-ddot="'+i+'" class="'+(i===(dayIdx[d.k]||0)?'on':'')+'" aria-label="Zaproszenie '+(i+1)+'"></button>').join("")+'<button type="button" class="darr" data-dd="1" aria-label="Następne zaproszenie"'+((dayIdx[d.k]||0)>=ord.length-1?' disabled':'')+'><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><span>'+(Math.min(dayIdx[d.k]||0,ord.length-1)+1)+' z '+ord.length+'</span></div>'
@@ -619,6 +619,10 @@ function renderWants0(){
 /* godziny w nagłówku karty dnia: zwinięta karta — 4 + „+N” (etykieta); rozwinięta — wszystkie, klikalne (przewijają/otwierają właściwe zaproszenie w karuzeli) */
 // Twoje zaproszenia z tego dnia pokazane osobno na górze (👤 włączone) — ich godziny są też w nagłówku karty dnia (zielone / gradient)
 const wMyDay=k=>myOn()?(wantsNoFlt||wants).filter(w=>w.user_id===uid&&!wDone(w)&&localIso(new Date(w.starts_at)).slice(0,10)===k):[];
+/* 📍 v279: dalekie zaproszenie = miejsce poza Twoją okolicą (przy „cała Polska” — poza 20 km od Mojej miejscowości); oznaczamy je miejscowością w zwiniętej karcie dnia */
+const wFar=w=>w.place_lat!=null&&!!w.place_city&&typeof areaIn==="function"&&typeof areaCur==="function"&&!areaIn(Object.assign({},areaCur(),{km:areaKm()||20}),w.place_lat,w.place_lon);
+function wFarLine(ws){const c=[];ws.filter(wFar).forEach(w=>{if(!c.includes(w.place_city))c.push(w.place_city)});
+  return c.length?'<div class="wl2 wfar">'+uiIcon("pin")+c.slice(0,3).map(x=>'<b>'+esc(x)+'</b>').join("")+(c.length>3?'<b>+'+(c.length-3)+'</b>':'')+'</div>':''}
 function wHrsHtml(ws0,open,cur,k){
   const ex=k?wMyDay(k).filter(w=>!ws0.includes(w)):[],ws=ex.length?ws0.concat(ex).sort(flt.sort==="new"?(a,b)=>new Date(b.created_at||b.starts_at)-new Date(a.created_at||a.starts_at):(a,b)=>new Date(a.starts_at)-new Date(b.starts_at)):ws0;   // cur = zaproszenie widoczne w rozwiniętym dniu (.hon) — pozostałe godziny przygaszone, tylko gdy dzień otwarty
   const hw=ws.filter(wLive).concat(ws.filter(w=>!wLive(w)));
@@ -626,7 +630,7 @@ function wHrsHtml(ws0,open,cur,k){
   const mk=w=>'<button type="button" class="whb'+(wLive(w)?' hlive':'')+(isPriv(w)?' hpriv':'')+(w.user_id===uid?' hme':'')+(w.id===cur?' hon':'')+'" data-whr="'+esc(w.id)+'"'+(wLive(w)?' title="Trwa"':w.user_id===uid?' title="Twoje zaproszenie"':'')+'>'+wTime(w)+'</button>';
   if(open||hw.length<=4)return hw.map(mk).join("");
   // zwinięta karta: 4 godziny — trwające i Twoje mają pierwszeństwo przed resztą
-  const pick=new Set(hw.filter(w=>wLive(w)||w.user_id===uid).slice(0,4));hw.forEach(w=>{if(pick.size<4)pick.add(w)});
+  const pick=new Set(hw.filter(w=>wLive(w)||w.user_id===uid).slice(0,4));hw.filter(wFar).forEach(w=>{if(pick.size<4)pick.add(w)});hw.forEach(w=>{if(pick.size<4)pick.add(w)});   // 📍 v279: dalekie zaproszenia przed resztą — nie chowają się pod „+N"
   return hw.filter(w=>pick.has(w)).map(mk).join("")+'<b class="whmore">+'+(hw.length-pick.size)+'</b>';
 }
 /* karuzela zaproszeń w karcie dnia */

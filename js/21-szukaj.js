@@ -109,6 +109,7 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Zdjęcie profilowe",s:"zdjęcie awatar fotka foto",p:"Ustawienia → Edytuj profil → Zdjęcie",i:"cam",go:[SR_PROF],hl:".pe-av",ok:S&&profExOk},
   {t:"Płeć",s:"płeć kobieta mężczyzna kolor nicku",p:"Ustawienia → Edytuj profil → Płeć",i:"users",go:[SR_PROF],hl:"#gsex",ok:S&&genderOk},
   {t:"Moja okolica (promień)",s:"okolica obszar promień km kilometry zasięg moja okolica suwak cała polska daleko blisko dalej wszystkie imprezy trasy w okolicy",p:"Nagłówek → plakietka 📍 (miejscowość · km)",i:"pin",fn:()=>openHome(),ok:true},
+  {t:"Miejscowość dalekiego zaproszenia",s:"miejscowość etykieta daleko poza okolicą karta dnia zwinięta kraków warszawa linijka pin",p:"Zaproszenia → karta dnia → 📍 miejscowości",i:"pin",fn:()=>{show(0)}},
   {t:"Moja miejscowość",s:"miejscowość miasto okolica odległość dom środek",p:"Nagłówek → 📍 → Moja miejscowość → Zmień (albo Ustawienia → Edytuj profil → Miejscowość)",i:"pin",fn:()=>openHome("home"),ok:true},
   {t:"Trasy z okolicy / wszystkie trasy",s:"trasy w okolicy wszystkie trasy baza tras daleko cała polska",p:"Ustawienia → Baza tras → 📍 okolica / Wszystkie trasy",i:"map",fn:()=>openRb(),ok:!!rbOk},
   {t:"Podejrzyj inną okolicę / ulubione miejscowości",s:"podgląd inna okolica miejscowość sprawdź co się dzieje ulubione miejscowości gwiazdka serock nasielsk",p:"Nagłówek → 📍 → Podejrzyj inną okolicę",i:"eye",fn:()=>openHome(),ok:true},

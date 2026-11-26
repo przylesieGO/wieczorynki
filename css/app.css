@@ -1556,3 +1556,5 @@ html[data-theme=dark] .tdeck{filter:drop-shadow(0 8px 6px rgba(0,0,0,.9)) drop-s
 /* 🚪 ekran startowy (KROK 106, js/23): okno .popbox nad ⚙️; kafelki aktywności = .wbike.sigacts, wybór zielony (nie złoty jak „Mam ochotę”) */
 #stsheet{z-index:4400}.stbox .ph,.stbox .pmeta{text-align:center}.stbox .ptag{margin-right:0;display:table;margin-left:auto;margin-right:auto}.stform{margin-top:14px;text-align:left}
 .stacts .wbk.on .ui-i,html[data-theme=dark] .stacts .wbk.on .ui-i{color:var(--acc)}
+
+.wfar{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:3px}.wfar .ui-i{width:15px;height:15px;color:var(--acc);flex:none}.wfar b{font-size:13px;font-weight:800;color:var(--ink);background:var(--fill);border-radius:10px;padding:1px 8px;line-height:1.5}   /* 📍 v279: miejscowości dalekich zaproszeń w zwiniętej karcie dnia */
