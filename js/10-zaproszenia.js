@@ -619,10 +619,10 @@ function renderWants0(){
 /* godziny w nagłówku karty dnia: zwinięta karta — 4 + „+N” (etykieta); rozwinięta — wszystkie, klikalne (przewijają/otwierają właściwe zaproszenie w karuzeli) */
 // Twoje zaproszenia z tego dnia pokazane osobno na górze (👤 włączone) — ich godziny są też w nagłówku karty dnia (zielone / gradient)
 const wMyDay=k=>myOn()?(wantsNoFlt||wants).filter(w=>w.user_id===uid&&!wDone(w)&&localIso(new Date(w.starts_at)).slice(0,10)===k):[];
-/* 📍 v279: dalekie zaproszenie = miejsce poza Twoją okolicą (przy „cała Polska” — poza 20 km od Mojej miejscowości); oznaczamy je miejscowością w zwiniętej karcie dnia */
-const wFar=w=>w.place_lat!=null&&!!w.place_city&&typeof areaIn==="function"&&typeof areaCur==="function"&&!areaIn(Object.assign({},areaCur(),{km:areaKm()||20}),w.place_lat,w.place_lon);
-function wFarLine(ws){const c=[];ws.filter(wFar).forEach(w=>{if(!c.includes(w.place_city))c.push(w.place_city)});
-  return c.length?'<div class="wl2 wfar">'+uiIcon("pin")+c.slice(0,3).map(x=>'<b>'+esc(x)+'</b>').join("")+(c.length>3?'<b>+'+(c.length-3)+'</b>':'')+'</div>':''}
+/* 📍 v279/v280: „inna miejscowość” = miejsce zaproszenia w innej miejscowości niż Twoja (Moja miejscowość / podgląd okolicy) — oznaczamy ją w zwiniętej karcie dnia; dotknięcie pigułki włącza filtr „Gdzie” */
+const wFar=w=>!!w.place_city&&w.place_lat!=null&&typeof areaCur==="function"&&lc(w.place_city)!==lc(areaCur().name||"");
+function wFarLine(ws){const c=new Map();ws.filter(wFar).forEach(w=>c.set(w.place_city,(c.get(w.place_city)||0)+1));const a=[...c.keys()];   // miejscowość → ile zaproszeń z niej w tym dniu
+  return a.length?'<div class="wl2 wfar">'+uiIcon("pin")+a.slice(0,3).map(x=>'<button type="button" class="wfc'+(flt.where==="c:"+x?' on':'')+'" data-wc="'+esc(x)+'">'+esc(x)+(c.get(x)>1?' <i>'+c.get(x)+'</i>':'')+'</button>').join("")+(a.length>3?'<b>+'+(a.length-3)+'</b>':'')+'</div>':''}
 function wHrsHtml(ws0,open,cur,k){
   const ex=k?wMyDay(k).filter(w=>!ws0.includes(w)):[],ws=ex.length?ws0.concat(ex).sort(flt.sort==="new"?(a,b)=>new Date(b.created_at||b.starts_at)-new Date(a.created_at||a.starts_at):(a,b)=>new Date(a.starts_at)-new Date(b.starts_at)):ws0;   // cur = zaproszenie widoczne w rozwiniętym dniu (.hon) — pozostałe godziny przygaszone, tylko gdy dzień otwarty
   const hw=ws.filter(wLive).concat(ws.filter(w=>!wLive(w)));
@@ -672,6 +672,8 @@ $("wantlist").addEventListener("click",e=>{
 });
 // 🕖 klik w godzinę u góry karty dnia: otwiera dzień (jeśli zwinięty) i przewija do tego zaproszenia — w karuzeli albo wśród „Twoich” przypiętych wyżej
 $("wantlist").addEventListener("click",e=>{
+  const wc=e.target.closest("button.wfc");   // 📍 v280: pigułka miejscowości → filtr „Gdzie: miejscowość” (drugi raz = zdejmuje)
+  if(wc){e.preventDefault();e.stopPropagation();const v="c:"+wc.dataset.wc;flt.where=flt.where===v?"":v;fltSave();fltRefresh();return}
   const hb=e.target.closest("button.whb");if(!hb)return;
   e.preventDefault();e.stopPropagation();
   const d=hb.closest("details.wday");if(!d)return;
