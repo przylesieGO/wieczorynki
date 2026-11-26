@@ -17,7 +17,7 @@
 const SL_MAX=80,SL_T0=Date.now(),
       SL_TAB={0:"Zaproszenia",1:"Wieczorynki",2:"Zaawansowane",3:"Imprezy"},
       SL_E={start:"▶",ekran:"🖼",klik:"👆",komunikat:"💬",blad:"⚠️"};
-let slBuf=[],slPrev="";
+let slBuf=[],slPrev="",slScr="";
 const slTxt=(t,n)=>String(t==null?"":t).replace(/\s+/g," ").trim().slice(0,n||48);
 const slGet=()=>slBuf.length?slBuf.slice():null;
 const slN=()=>slBuf.length;
@@ -38,7 +38,10 @@ function slAdd(e,v){
   if(typeof supers!=="undefined"&&supers.size&&typeof isKingReal==="function"&&!isKingReal()){
     if(slBuf.length)slBuf=[];return}
   const w=slWhere(),k=e+"|"+v+"|"+w;
-  if(k===slPrev&&e!=="klik")return;                     // to samo zdarzenie tuż po sobie
+  // ten sam ekran po przerysowaniu (każde kliknięcie odrysowuje panel) — pomijamy,
+  // żeby 80 zdarzeń nie zapełniło się powtórkami; wejście na ekran z powrotem zapisujemy
+  if(e==="ekran"){if(v===slScr)return;slScr=v}
+  else if(k===slPrev)return;                            // to samo zdarzenie tuż po sobie
   slPrev=k;
   slBuf.push({t:Date.now()-SL_T0,e,v:slTxt(v,e==="start"?140:60),w:(e==="ekran"&&v===w)?"":w});   // przy zmianie ekranu nie powtarzamy nazwy
   if(slBuf.length>SL_MAX)slBuf.shift();
