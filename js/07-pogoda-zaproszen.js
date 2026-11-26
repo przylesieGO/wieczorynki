@@ -49,10 +49,11 @@ function fillFtWx(){
     });
   });
 }
+const wDemoRt=w=>!!(w&&w.route_base_id&&typeof rbList!=="undefined"&&rbList&&(rbList.find(r=>r.id===w.route_base_id)||{}).demo);   // 🧪 v275: trasa DEMO — bez GPX
 function routeBoxHtml(w){
   if(!hasRoute(w))return "";
   return '<div class="wroute"><div>🗺️ <b>Proponowana trasa</b> · 📏 '+kmTxt(w.route_km)+' km · ⏱ ≈ '+esc(durTxt(w.route_km/wPaceKmh(w.pace)*60))+'</div>'
-   +'<div class="wrb"><button type="button" class="b g small" data-rt="gpx" data-id="'+esc(w.id)+'">⬇ Pobierz GPX</button><button type="button" class="b g small" data-rt="show" data-id="'+esc(w.id)+'">🗺️ Szczegóły</button>'+rbBtnHtml(w)+'</div></div>';
+   +'<div class="wrb">'+(wDemoRt(w)?'':'<button type="button" class="b g small" data-rt="gpx" data-id="'+esc(w.id)+'">⬇ Pobierz GPX</button>')+'<button type="button" class="b g small" data-rt="show" data-id="'+esc(w.id)+'">🗺️ Szczegóły</button>'+rbBtnHtml(w)+'</div></div>';
 }
 /* okienko „Szczegóły trasy”: mapa z wiatrem, statystyki, miejscowości */
 let rsMap=null,rsTok=0;
@@ -65,7 +66,7 @@ async function openRouteSheet(w){
    +'<div class="mapwrap"><div class="map rsmap" id="map3"></div><div class="warrow hide" id="warrow3"></div></div>'
    +'<div class="legend"><span><i class="dot" style="background:#d64545"></i>pod wiatr</span><span><i class="dot" style="background:#e0b83a"></i>bocznie</span><span><i class="dot" style="background:#2a9d5c"></i>z wiatrem</span></div>'
    +'<div class="stats" id="stats3"></div><div class="note" id="windinfo3" style="margin-top:8px">Ładuję trasę…</div><div class="tip hide" id="tip3"></div><div class="routeinfo hide" id="placesbox3"></div>'
-   +'<div class="pbtns" style="margin-top:14px"><button type="button" class="b" data-rt="gpx" data-id="'+esc(w.id)+'">⬇ Pobierz GPX</button><button type="button" class="b w" data-rk="close">Zamknij</button></div>'
+   +'<div class="pbtns" style="margin-top:14px">'+(wDemoRt(w)?'':'<button type="button" class="b" data-rt="gpx" data-id="'+esc(w.id)+'">⬇ Pobierz GPX</button>')+'<button type="button" class="b w" data-rk="close">Zamknij</button></div>'
    +'<div class="ptg">Czas przy tempie ok. '+String(Math.round(wPaceKmh(w.pace)*10)/10).replace(".",",")+' km/h, z uwzględnieniem wiatru. Mapa © OpenStreetMap · pogoda: Open-Meteo.</div></div>';
   p.classList.remove("hide");
   let pts;
@@ -95,6 +96,8 @@ document.addEventListener("click",async e=>{
     if(b.dataset.rt==="show"){openRouteSheet(w);return}
     if(b.dataset.rt==="rbopen"){await rbLoad(true);rb.mode="browse";rb.open=w.route_base_id;renderRb();return}
     if(b.dataset.rt==="rbadd"){rbAddFromWant(w);return}
+    if(w.route_base_id&&typeof rbLoad==="function"){try{await rbLoad()}catch(err){}}
+    if(wDemoRt(w)){say("🧪 Trasa DEMO nie ma pliku GPX.");return}
     try{const pts=await getWantRoute(w.id);if(!pts){say("To zaproszenie nie ma trasy.");return}
       const nm="trasa-"+slug(nickOf(w.user_id))+"-"+localIso(new Date(w.starts_at)).slice(0,10)+".gpx";
       say(saveFile(makeGpx(pts,"Trasa — "+nickOf(w.user_id)+", "+wfLabel(new Date(w.starts_at))),nm,"application/gpx+xml")?"Pobrano: "+nm:"Nie udało się pobrać pliku.")}
