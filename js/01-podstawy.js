@@ -27,6 +27,11 @@ function shKeep(p){
 }
 // opakowanie funkcji rysującej okienko: function renderX(){…} → renderX=shWrap(renderX,"xsheet") na końcu pliku
 const shWrap=(fn,id,cond)=>function(...a){const r=(!cond||cond(...a))?shKeep(document.getElementById(id)):()=>{};const x=fn.apply(this,a);r();return x};
+// 🔢 numer budowy: znacznik ?v= przy tym pliku w index.html (ten sam w sw.js).
+// APP_VER (js/05) to numer wydania „Co nowego" i nie zmienia się przy poprawkach,
+// więc po nim nie da się poznać, czy telefon ma już nowy kod. Pokazywany tylko 👑.
+const APP_BUILD=(()=>{try{const m=/[?&]v=(\d+)/.exec((document.currentScript&&document.currentScript.src)||"");return m?m[1]:""}catch(e){return ""}})();
+
 /* 🔎 ślad zgłoszeń (KROK 110, js/24) — początek odliczania i poczekalnia.
    js/24 wczytuje się na końcu, więc błędy i komunikaty z samego startu
    aplikacji nie miałyby gdzie trafić. Tu zbieramy je od pierwszej chwili

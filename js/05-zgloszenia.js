@@ -66,6 +66,9 @@ function fbFormHtml(){
    +'<button class="b sbtn" data-c="fbsend"'+(fbBusy?' disabled':'')+'>Wyślij</button>'
    +'<p class="note">Zgłoszenie trafia do administratora pod Twoim nickiem — może odpisać (zobaczysz pod 🔔). Za 3 zrealizowane zgłoszenia dostajesz 💡 przy nicku.</p>';
 }
+// 🔢 numer budowy przy wersji — tylko 👑 (po numerze wydania nie poznasz, czy telefon ma nowy kod)
+const bldTxt=()=>(typeof isKingReal==="function"&&isKingReal()&&APP_BUILD)?" · "+esc(APP_BUILD):"";
+
 /* 🔎 dowody w zgłoszeniu — TYLKO 👑 (KROK 110)
    Ślad (ostatnie kliknięcia, ekrany i komunikaty) zbiera js/24 w pamięci karty,
    zrzut ekranu wybiera się z galerii (telefon robi go przyciskami). Oba lecą do
@@ -350,14 +353,14 @@ function renderGear(){
      +rbHeroHtml()+testerCardHtml()+setRidesHtml()
      +setLookHtml(false)
      +setTestHtml()
-     +gGrp("Pomoc i opinie",[gRow("#30d158","help","Pomoc — co potrafi aplikacja","Wersja "+esc(APP_VER),relNew()?'<span class="ios-bdg">Nowości</span>':'','data-c="help"'),
+     +gGrp("Pomoc i opinie",[gRow("#30d158","help","Pomoc — co potrafi aplikacja","Wersja "+esc(APP_VER)+bldTxt(),relNew()?'<span class="ios-bdg">Nowości</span>':'','data-c="help"'),
         fbOk?gRow("#bf5af2","msg","Oceń aplikację / zgłoś błąd","Błąd, pomysł albo ocena — odpisujemy",fbMineUnread().length?'<span class="ios-bdg">'+fbMineUnread().length+'</span>':'','data-c="fb"'):"",
         isStandalone()?"":gRow("#636366","phone","Zainstaluj aplikację","Ikona na ekranie telefonu","",'data-c="inst"')])
      +'<div class="ios-grp" style="margin-top:22px"><button type="button" class="ios-it ios-row ios-out" data-c="out">Wyloguj</button></div>'
      +'<button class="sdanger" data-c="del">Usuń konto…</button>'
     :'<div class="sname" style="margin-top:28px">Przeglądasz jako gość</div><div class="smail">Zaloguj się, żeby zapraszać na rower i dołączać do jazd.</div>'
      +'<button class="b sbtn" data-c="login">Zaloguj się / załóż konto</button>'
-     +gGrp("Pomoc",[gRow("#30d158","help","Pomoc — co potrafi aplikacja","Wersja "+esc(APP_VER),relNew()?'<span class="ios-bdg">Nowości</span>':'','data-c="help"'),
+     +gGrp("Pomoc",[gRow("#30d158","help","Pomoc — co potrafi aplikacja","Wersja "+esc(APP_VER)+bldTxt(),relNew()?'<span class="ios-bdg">Nowości</span>':'','data-c="help"'),
         isStandalone()?"":gRow("#636366","phone","Zainstaluj aplikację","Ikona na ekranie telefonu","",'data-c="inst"')])
      +setLookHtml(true);
   // przewinięcie: odświeżenie tego samego ekranu (sync, doczytanie danych) nie wraca na górę; zmiana ekranu zaczyna od góry

@@ -151,6 +151,7 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Przewodnik Gawron: cała historia",s:"przewodnik gawron samouczek ekipa super ekipa zaproś ekipę tutorial prezentacja",p:"Pomoc → na górze → Cała historia",i:"hand",fn:()=>{if(window.Gawron)Gawron.start("mam_ochote_pelny")},ok:S&&typeof sigOn==="function"&&sigOn()},
   {t:"Pomoc — co potrafi aplikacja",s:"pomoc instrukcja jak działa nowości wersja",p:"Ustawienia → Pomoc i opinie",i:"help",fn:()=>openHelp()},
   {t:"Oceń aplikację / zgłoś błąd",s:"błąd zgłoś opinia ocena pomysł uwagi",p:"Ustawienia → Pomoc i opinie",i:"msg",go:['[data-c="fb"]'],ok:S&&fbOk},
+  {t:"Numer budowy aplikacji",s:"wersja numer budowy build czy mam najnowsza aktualizacja odswiez",p:"Ustawienia → Pomoc i opinie (przy „Wersja”)",i:"help",go:['[data-c="help"]'],ok:S&&typeof isKingReal==="function"&&isKingReal()},   // tylko 👑
   {t:"Ślad i zrzut w zgłoszeniu",s:"ślad zrzut ekranu screen dowody usterka kroki przed błędem co klikałem odtworzenie",p:"Ustawienia → Pomoc i opinie → Oceń / zgłoś błąd",i:"clip",go:['[data-c="fb"]'],ok:S&&fbOk&&isSuper(uid)},   // KROK 110, tylko 👑
   {t:"Zainstaluj aplikację",s:"instaluj ikona ekran telefon",p:"Ustawienia → Pomoc i opinie",i:"phone",go:['[data-c="inst"]'],ok:!isStandalone()},
   {t:"Wyloguj",s:"wyloguj wyjdź",p:"Ustawienia → na dole",i:"logout",hl:'[data-c="out"]',ok:S},

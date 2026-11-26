@@ -157,8 +157,12 @@ const AREA_KM=[5,10,15,20,25,30,40,50,0];
 let areaPeek=null,homeRes=[],homeMsg="",hmMode="peek",areaSaveT=0;
 const areaDef=()=>{const c=window.areaDefC||{};return {name:c.name||"Pułtusk",lat:isFinite(c.lat)?+c.lat:52.70,lon:isFinite(c.lon)?+c.lon:21.08,def:true}};
 const areaKmDef=()=>{const v=+window.areaDefKm;return v>=5&&v<=50?v:20};
+// co jest poprawnym promieniem: dokładnie to, co dopuszcza baza (CHECK na profile_private.area_km):
+// 0 = cała Polska albo pełne 5–50 km. Sama lista AREA_KM to tylko pozycje suwaka dla zwykłego
+// użytkownika — 👑 ustawia co 1 km (v297), więc np. 36 km jest poprawne i musi przetrwać wyjście z okna.
+const areaKmOk=v=>v!=null&&isFinite(+v)&&Number.isInteger(+v)&&(+v===0||(+v>=5&&+v<=50));
 const areaKm=()=>{let v=null;if(session&&profExOk)v=myPriv?myPriv.area_km:null;else try{const x=localStorage.getItem("areaKm");v=x==null?null:+x}catch(e){}
-  return v==null||!AREA_KM.includes(+v)?areaKmDef():+v};
+  return areaKmOk(v)?+v:areaKmDef()};
 const areaHome=()=>{if(session&&myPriv&&myPriv.city&&myPriv.city_lat!=null)return {name:myPriv.city,lat:+myPriv.city_lat,lon:+myPriv.city_lon};return homeGet()||areaDef()};
 const areaCur=()=>Object.assign({},areaPeek||areaHome(),{km:areaKm(),peek:!!areaPeek});
 const AREA_INFO='<div class="note" style="margin-top:8px">Promień decyduje, co widzisz i o czym dostajesz powiadomienia: otwarte zaproszenia, sygnały „Mam ochotę” i imprezy z tej odległości od Twojej miejscowości. Większy promień — więcej propozycji, ale też z dalszych miejsc. Zaproszenia prywatne i grupowe do Ciebie dochodzą zawsze.</div>';   // ℹ️ opis suwaka promienia (okno „Moja okolica” i ekran startowy js/23)

@@ -188,7 +188,8 @@ function helpFullHtml(){
      "Gdzie: <b>⚙️ → 💬 Oceń / zgłoś błąd</b> — pod „Dołącz info o telefonie” są „Dołącz ślad” i „Dołącz zrzut ekranu”. Oba widzisz tylko Ty; zwykły użytkownik nic nie zbiera i nic nie wysyła.",
      "Jak użyć: zauważ błąd → zrób zrzut przyciskami telefonu → wejdź w ⚙️ → 💬 → opisz, co jest nie tak → „Dołącz zrzut ekranu” i wybierz go z galerii → Wyślij. Ślad jest zaznaczony domyślnie, a „Podejrzyj, co wyślesz” pokazuje go przed wysłaniem.",
      "Ślad leży tylko w pamięci karty — nie zapisuje się na telefonie, ginie po odświeżeniu i nic nie wychodzi bez kliknięcia „Wyślij”. <b>Wpisywanych treści nie zapisujemy</b>, tylko to, że pole było użyte.",
-     "W wątku zgłoszenia (💬 Zgłoszenia albo Twoje zgłoszenia) rozwiniesz ślad i otworzysz zrzut; <b>„Usuń dowody z tego zgłoszenia”</b> czyści ślad i zrzut, zostawiając treść."]):'')
+     "W wątku zgłoszenia (💬 Zgłoszenia albo Twoje zgłoszenia) rozwiniesz ślad i otworzysz zrzut; <b>„Usuń dowody z tego zgłoszenia”</b> czyści ślad i zrzut, zostawiając treść.",
+     "<b>Numer budowy</b> — przy „Wersja 0.xx” w ⚙️ → Pomoc i opinie oraz na dole Pomocy widzisz dodatkowo numer po kropce środkowej (np. <b>Wersja 0.12 · 306</b>). Numer wydania zmienia się tylko przy paczce nowości, a numer budowy przy każdej poprawce — po nim poznasz, czy telefon ma już nowy kod. Widzisz go tylko Ty."]):'')
    +sec("📍 Moja okolica",[
      "Pod nazwą aplikacji jest plakietka <b>📍 miejscowość · km</b> — tak daleko sięga Twoja okolica. Domyślnie 20 km od Twojej miejscowości (bez miejscowości: od Pułtuska).",
      "Kliknij plakietkę: zobaczysz krąg z zaproszeniami (zielone), sygnałami „Mam ochotę” (złote) i imprezami (granatowe) dookoła. <b>Suwak</b> zmienia promień od 5 do 50 km albo „cała Polska”. Kropki pokazują miejsca zbiórki, a nie środki miejscowości."+(isKingReal()?" <b>👑:</b> po najechaniu kursorem na kropkę zaproszeń lub imprez widać nazwy miejscowości (sygnałów nie podpisujemy). Suwak przesuwa się co 1 km, „⤢ Powiększ” powiększa radar, a kropki rosną pod kursorem, żeby łatwiej w nie trafić.":""),
@@ -277,7 +278,7 @@ function helpHtml(){
      :'')
    +(session&&fbOk?'<button type="button" class="lnk" data-h="fb" style="display:block;margin:12px auto 0">💬 Coś nie działa albo masz pomysł? Napisz ›</button>':'')
    +'<label class="hoff"><input type="checkbox" id="helpoff"'+(helpOff?' checked':'')+'> Nie pokazuj przy starcie</label>'
-   +'<div class="note hver">PrzylesieGo! · wersja '+esc(APP_VER)+' (BETA) · '+esc(APP_REL[0].d)+'</div>'
+   +'<div class="note hver">PrzylesieGo! · wersja '+esc(APP_VER)+bldTxt()+' (BETA) · '+esc(APP_REL[0].d)+'</div>'
    +'<button type="button" class="b big" data-h="close">Zaczynamy!</button></div>';
 }
 function openHelp(){helpMore=false;const p=$("helpsheet");p.innerHTML=helpHtml();p.classList.remove("hide");relMark()}
