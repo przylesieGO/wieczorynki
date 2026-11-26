@@ -46,6 +46,7 @@ function stRender(){
 function stClose(){
   const p=$("stsheet");p.classList.add("hide");p.innerHTML="";const m=ST.mode;ST.on=false;
   if(gearOpen)try{renderGear()}catch(e){}
+  try{if(typeof areaChanged==="function")areaChanged();if(typeof sigWinRender==="function")sigWinRender();if(typeof sigWinSync==="function")sigWinSync()}catch(e){}   // 🔔 v283: nowy wybór aktywności od razu na liście i w oknie Ekipa
   if(m==="auto"&&!(typeof gwAuto==="function"&&gwAuto())&&typeof gwAfter==="function")gwAfter();   // potem Gawron albo zaległe okienka
 }
 async function stSave(patch){
@@ -117,7 +118,10 @@ $("stsheet").addEventListener("input",e=>{if(e.target.id==="stkm"){ST.km=AREA_KM
   else if(e.target.id==="stq")ST.q=e.target.value});
 $("stsheet").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="stq"){e.preventDefault();stFind()}});
 // ⚙️ → Testy → „Pokaż ekran startowy jeszcze raz” i ⚙️ → Jazdy i zaproszenia → Powiadamiaj mnie o
-document.addEventListener("click",e=>{const b=e.target.closest("[data-stgo]");if(!b||!stOn())return;stOpen(b.dataset.stgo)});
+// 🔔 v283: „Powiadamiaj mnie o” działa też bez flagi, gdy ktoś ma już wybrane aktywności (filtr działa u każdego — decyzja 04:42)
+const stActsHas=()=>!!session&&!DEMO&&profExOk&&privReady&&!!(myPriv&&Array.isArray(myPriv.acts)&&myPriv.acts.length);
+document.addEventListener("click",e=>{const b=e.target.closest("[data-stgo]");if(!b||!(stOn()||(b.dataset.stgo==="acts"&&stActsHas())))return;
+  stOpen(b.dataset.stgo)});
 // wiersze do ⚙️ (js/06 woła je przy rysowaniu, gdy plik jest wczytany)
 const stTestRow=()=>stOn()&&meTester()?gRow("#bf5af2","sparkles","Pokaż ekran startowy jeszcze raz","Kroki po zalogowaniu: okolica i aktywności (🧪 BETA)","",'data-stgo="all"'):"";
-const stActsRow=()=>stOn()?gRow("#34c759","heart","Powiadamiaj mnie o",stActsTxt(),"",'data-stgo="acts"'):"";
+const stActsRow=()=>stOn()||stActsHas()?gRow("#34c759","heart","Powiadamiaj mnie o",stActsTxt(),"",'data-stgo="acts"'):"";

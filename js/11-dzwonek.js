@@ -132,7 +132,7 @@ function bsWants(){
   // zaproszenie znika spod 🔔, gdy jazda się skończy (start + czas trwania; 2026-11-25) — zakończone są w archiwum
   const act=w=>!wDone(w);
   const ord=(a,b)=>((wUnread(b).length?1:0)-(wUnread(a).length?1:0))||((wNeedsAct(b)?1:0)-(wNeedsAct(a)?1:0))||(new Date(a.starts_at)-new Date(b.starts_at));
-  return {forme:wants.filter(w=>w.user_id!==uid&&act(w)&&(w.visibility!=="private"||wInvMe(w)||(joins[w.id]||[]).includes(uid))&&(typeof wAreaOk!=="function"||wAreaOk(w))).sort(ord),   // 📍 v270: otwarte spoza okolicy — nie pod 🔔
+  return {forme:wants.filter(w=>w.user_id!==uid&&act(w)&&(w.visibility!=="private"||wInvMe(w)||(joins[w.id]||[]).includes(uid))&&(typeof wAreaOk!=="function"||wAreaOk(w))&&(typeof wActOk!=="function"||wActOk(w))).sort(ord),   // 📍 v270: otwarte spoza okolicy — nie pod 🔔; 🔔 v283: ani innych aktywności
     mine:wants.filter(w=>w.user_id===uid&&act(w)).sort(ord)};
 }
 // 🧪 testerzy pod ręką (tylko admini): czekające prośby o testera (nawet przeczytane) + lista obecnych testerów; bez licznika nieprzeczytanych
@@ -522,7 +522,11 @@ const sigIReact=x=>(sigReacts[x.user_id]||[]).includes(uid);
 const sigListAll=()=>sigs.filter(x=>!x.cancelled_at&&!x.closed&&(x.user_id===uid||!modGone(x.user_id))&&!(hideTest&&x.is_test&&x.user_id!==uid)&&!(typeof demoHidU==="function"&&demoHidU(x.user_id)&&!sigIReact(x)))   // ⚙️ Ekipa demo ukryta (KROK 95): zostaje sygnał, któremu dałeś dłoń
   .sort((a,b)=>(a.user_id===uid?-1:b.user_id===uid?1:0)||String(b.created_at).localeCompare(String(a.created_at)));
 // 📍 v270: sygnały z Mojej okolicy (miejsce = okolica autora, KROK 104); własny i te z moją Reakcją — zawsze
-const sigList=()=>sigListAll().filter(x=>x.user_id===uid||sigIReact(x)||typeof inArea!=="function"||inArea(x.lat,x.lon));
+// 🔔 v283: i tylko aktywności z „Powiadamiaj mnie o” (js/08 actOk) — dotyczy listy, okienek i 🔔
+const sigAreaOk=x=>typeof inArea!=="function"||inArea(x.lat,x.lon);
+const sigActOk=x=>typeof actOk!=="function"||actOk(x.activity);
+const sigList=()=>sigListAll().filter(x=>x.user_id===uid||sigIReact(x)||(sigAreaOk(x)&&sigActOk(x)));
+const sigActHid=()=>sigListAll().filter(x=>x.user_id!==uid&&!sigIReact(x)&&sigAreaOk(x)&&!sigActOk(x));   // ukryte tylko przez aktywność — do podpowiedzi
 const sigKey=x=>"sg:"+x.user_id+"|"+x.created_at;
 const sigSk=(o,t)=>o+"|"+new Date(t).getTime();   // klucz pamięci okienek w bazie (KROK 92)
 const sigDbSeen=x=>sigSeenDb.has(sigSk(x.user_id,x.created_at)),sigDbOk=x=>sigSeenDb.get(sigSk(x.user_id,x.created_at))===true;
@@ -658,7 +662,8 @@ function sigWinRender(){
   if(!p.firstChild)p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Ekipa na dziś"><div class="bsgrab"></div><div class="bshead"><span></span><b>'+sigCoin()+'Ekipa na dziś</b><button type="button" class="lnk" data-swx="1">Zamknij</button></div><div class="bslist"><div id="sgwc"></div><div id="sgwl"></div></div></div>';
   $("sgwc").innerHTML=sigWinChips();
   const B=sigEkipaBody(sigWinOk,false),box=p.querySelector(".bslist"),y=box.scrollTop;   // te same wiersze co pod 🔔: klamra Super ekipy i powiadomienia ekipy (2026-11-25)
-  $("sgwl").innerHTML=(B.L.length||B.notes?B.html:'')+(B.L.length?'':'<div class="note sgwempty">'+(sigList().length?'Brak sygnałów dla tych filtrów.':'Dziś nikt jeszcze nie dał znać.')+'</div>')+(sigList().length?sigHintHtml():'');
+  $("sgwl").innerHTML=(B.L.length||B.notes?B.html:'')+(B.L.length?'':'<div class="note sgwempty">'+(sigList().length?'Brak sygnałów dla tych filtrów.':'Dziś nikt jeszcze nie dał znać.')+'</div>')+(sigList().length?sigHintHtml():'')
+    +(typeof actHidHtml==="function"?actHidHtml(sigActHid().map(x=>x.activity),"sygnałów"):'');   // 🔔 v283
   box.scrollTop=y}
 // „Masz z kim …” (nie u autora — on ma tam „Zaproś ekipę”) samo jako przeczytane po otwarciu okna „Ekipa” albo rozwinięciu sekcji pod 🔔
 const sigEkipaAutoRead=()=>markRead(sigEkipaUn().filter(n=>n.actor!==uid).map(n=>n.id));

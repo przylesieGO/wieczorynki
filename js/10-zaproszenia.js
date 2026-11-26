@@ -363,12 +363,14 @@ function fltLabel(k){
 }
 let wantsNoFlt=null;   // wszystkie zaproszenia bez filtrów — „Moje” (👤) zawsze pokazuje wszystkie Twoje, filtry ich nie chowają
 function renderWants(){try{renderSteps()}catch(e){}
-  const raw=wants,all=typeof wAreaOk==="function"?raw.filter(wAreaOk):raw,on=!!session&&fltActive();   // 📍 v270: najpierw Moja okolica (js/08), potem Filtry
+  const raw=wants,inA=typeof wAreaOk==="function"?raw.filter(wAreaOk):raw,all=typeof wActOk==="function"?inA.filter(wActOk):inA,on=!!session&&fltActive();   // 📍 v270: najpierw Moja okolica (js/08), 🔔 v283: potem „Powiadamiaj mnie o”, potem Filtry
   wants=on?all.filter(fltOk):all;
   wantsNoFlt=all;
   try{renderWants0()}finally{wants=raw;wantsNoFlt=null}
-  {const out=raw.filter(wUpcoming).length-all.filter(wUpcoming).length,l=$("wantlist");   // 📍 v270: ile otwartych zaproszeń jest poza okolicą
-    if(out>0&&l&&typeof areaCur==="function"){const a=areaCur();l.insertAdjacentHTML("beforeend",'<div class="note arout">'+uiIcon("pin")+' Poza okolicą ('+esc(a.name)+' · '+areaKmTxt(a.km)+'): '+out+' '+plf(out,["zaproszenie","zaproszenia","zaproszeń"])+' · <button type="button" class="lnk" data-arout="1">zmień okolicę ›</button></div>')}}
+  {const out=raw.filter(wUpcoming).length-inA.filter(wUpcoming).length,l=$("wantlist");   // 📍 v270: ile otwartych zaproszeń jest poza okolicą
+    if(out>0&&l&&typeof areaCur==="function"){const a=areaCur();l.insertAdjacentHTML("beforeend",'<div class="note arout">'+uiIcon("pin")+' Poza okolicą ('+esc(a.name)+' · '+areaKmTxt(a.km)+'): '+out+' '+plf(out,["zaproszenie","zaproszenia","zaproszeń"])+' · <button type="button" class="lnk" data-arout="1">zmień okolicę ›</button></div>')}
+    const hid=inA.filter(wUpcoming).filter(w=>!all.includes(w));   // 🔔 v283: zaproszenia innych aktywności w okolicy
+    if(hid.length&&l&&typeof actHidHtml==="function")l.insertAdjacentHTML("beforeend",actHidHtml(hid.map(w=>w.activity),"zaproszeń"))}
   renderArch(raw);
   const ws=$("wstat");if(ws){const up=all.filter(wUpcoming),me=up.filter(w=>w.user_id===uid||(joins[w.id]||[]).includes(uid)).length;   // widoczne dla mnie / biorę udział
     ws.classList.toggle("hide",!session);ws.innerHTML=uiIcon("hand")+'<button type="button" data-ws="all" class="'+(flt.who!=="part"?"on":"")+'">'+up.length+'</button><s>/</s><button type="button" data-ws="part" class="'+(flt.who==="part"?"on":"")+'">'+me+'</button>';
@@ -482,7 +484,7 @@ function fltDraw(){
   ["where","user","to","by"].forEach(k=>{const el=$("fsum_"+k);if(!el)return;el.textContent=fltOn(k)?(k==="to"||k==="by"?fltNm(flt[k]):fltLabel(k)):(k==="where"?"Wszędzie":k==="to"||k==="by"?"Wybierz":"Wszyscy");el.classList.toggle("fnone",!fltOn(k))});
   const bb=$("fltbikebox");if(bb)bb.classList.toggle("hide",!fltBikeOn());
   if(fltScope==="ev"){const ne=evs.filter(e=>!evPast(e)&&evMatch(e)).length;$("fltok").textContent=fltActiveFor("ev")?"Pokaż "+ne+" "+plf(ne,["imprezę","imprezy","imprez"]):"Gotowe";return}
-  const n=wants.filter(wUpcoming).filter(w=>typeof wAreaOk!=="function"||wAreaOk(w)).filter(fltOk).length,na=flt.arch&&fltActive()?withOldJoins(()=>archList(wants).filter(fltOk).length):0;$("fltok").textContent=fltActive()?"Pokaż "+n+" "+(n===1?"zaproszenie":n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"zaproszenia":"zaproszeń")+(flt.arch?" + "+na+" w archiwum":""):"Gotowe";
+  const n=wants.filter(wUpcoming).filter(w=>typeof wAreaOk!=="function"||wAreaOk(w)).filter(w=>typeof wActOk!=="function"||wActOk(w)).filter(fltOk).length,na=flt.arch&&fltActive()?withOldJoins(()=>archList(wants).filter(fltOk).length):0;$("fltok").textContent=fltActive()?"Pokaż "+n+" "+(n===1?"zaproszenie":n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"zaproszenia":"zaproszeń")+(flt.arch?" + "+na+" w archiwum":""):"Gotowe";
 }
 function fltRefresh(){if($("fltok"))fltDraw();renderWants();if(typeof renderEvents==="function"&&curTab===3)renderEvents()}
 // okno: widok główny (bomble w rzędach przewijanych w bok) albo podekran „Gdzie” / „Osoba” z polem wpisywania na dole (wyniki rosną w górę)

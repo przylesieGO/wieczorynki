@@ -139,7 +139,7 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Pomoc przy starcie",s:"pomoc start powitanie",p:"Ustawienia → Wygląd i ekran",i:"help",hl:"[data-hs]"},
   {t:"Testowe zaproszenia",s:"test testowe ukryj pokaż",p:"Ustawienia → Testy",i:"flask",hl:"[data-ht]",ok:S&&testOk&&!DEMO},
   {t:"Spokojny wygląd testowych",s:"test miganie ramka",p:"Ustawienia → Testy",i:"flask",hl:"[data-tc]",ok:S&&testOk&&!DEMO},
-  {t:"Powiadamiaj mnie o",s:"powiadamiaj powiadomienia moje aktywności rower bieg bieganie spacer spacery wędrówka wędrówki co lubię o czym dawać znać powiadomienia ekran startowy",p:"Ustawienia → Jazdy i zaproszenia → Powiadamiaj mnie o",i:"heart",hl:'[data-stgo="acts"]',ok:S&&typeof stOn==="function"&&stOn()},
+  {t:"Powiadamiaj mnie o",s:"powiadamiaj powiadomienia moje aktywności rower bieg bieganie spacer spacery wędrówka wędrówki co lubię o czym dawać znać powiadomienia ekran startowy ukryte aktywności nie widzę zaproszeń sygnałów filtr aktywności",p:"Ustawienia → Jazdy i zaproszenia → Powiadamiaj mnie o",i:"heart",hl:'[data-stgo="acts"]',ok:S&&typeof stActsRow==="function"&&!!stActsRow()},
   {t:"Ekran startowy jeszcze raz",s:"ekran startowy powitanie kroki profil okolica aktywności start nowe konto",p:"Ustawienia → Testy → Pokaż ekran startowy jeszcze raz",i:"sparkles",hl:'[data-stgo="all"]',ok:S&&!DEMO&&meTester()&&typeof stOn==="function"&&stOn()},
   {t:"Funkcje testowe (BETA)",s:"beta nowe funkcje tester",p:"Ustawienia → Testy",i:"flask",hl:"[data-beta]",ok:meTester()&&!DEMO},
   {t:"Zostań testerem",s:"tester testowanie",p:"Ustawienia → na górze",i:"syringe",hl:".tcard",ok:S&&typeof testerCardHtml==="function"&&!!testerCardHtml()},
@@ -223,6 +223,7 @@ function srReveal(w,arch){let m="";
   if(hideTest&&w.is_test){hideTest=false;try{localStorage.setItem("hideTest","0")}catch(e){}deriveWants();m="Pokazuję też testowe zaproszenia."}
   if(typeof demoHidU==="function"&&demoHidU(w.user_id)){demoPeek=true;deriveWants();m="Pokazuję też Ekipę demo (do zamknięcia aplikacji)."}   // ⚙️ Ekipa demo ukryta (KROK 95)
   if(session&&(!arch||flt.arch)&&fltActive()&&!fltOk(w)){flt=fltEmpty();fltSave();m="Wyłączyłem filtry, żeby pokazać ten wynik."}
+  if(!arch&&typeof wActOk==="function"&&!wActOk(w)){actPeek=true;m="Pokazuję też aktywności spoza „Powiadamiaj mnie o” (do zamknięcia aplikacji)."}   // 🔔 v283
   if(!arch&&typeof wAreaOk==="function"&&!wAreaOk(w))m=areaReveal(w.place_lat,w.place_lon,w.place_city||w.place)||m;   // 📍 v270: spoza Mojej okolicy → podgląd jej okolicy   // archiwum filtrujemy tylko z „Filtruj też archiwum”
   return m}
 function srGoWant(w){const m=srReveal(w);const x=wants.find(y=>y.id===w.id);if(!x){say("Tego zaproszenia nie da się teraz pokazać.");return}goToWant(x);if(m)setTimeout(()=>say(m),400);

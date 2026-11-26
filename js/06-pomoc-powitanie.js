@@ -190,8 +190,12 @@ function helpFullHtml(){
      "<b>Podejrzyj inną okolicę</b> — wpisz miejscowość (albo kliknij ⭐ ulubioną), żeby sprawdzić, co się tam dzieje. Plakietka robi się fioletowa (👁), a ✕ wraca do Twojej okolicy. Podgląd nie zmienia powiadomień i znika po ponownym wejściu do aplikacji. ☆ przy wyniku dodaje miejscowość do ulubionych (do 10)."])
    +(typeof stOn==="function"&&stOn()?sec("🚪 Ekran startowy (🧪 BETA)",[   // KROK 106 — tylko z flagą ekran_startowy
      "Po zalogowaniu aplikacja prosi o dwie rzeczy: <b>okolicę</b> (miejscowość — wpisz ją albo użyj lokalizacji z telefonu — i promień) oraz <b>aktywności</b>, o których mamy dawać znać (rower, bieganie, spacery, wędrówki — można kilka). Miejscowość jest obowiązkowa — bez niej nie pokażemy zaproszeń i sygnałów z sąsiedztwa.",
-     "Aktywności zmienisz w <b>⚙️ → Jazdy i zaproszenia → Powiadamiaj mnie o</b>. Na razie aplikacja tylko zapamiętuje wybór — powiadomienia według aktywności dojdą później.",
+     "Aktywności zmienisz w <b>⚙️ → Jazdy i zaproszenia → Powiadamiaj mnie o</b> (opis niżej, w „🔔 Powiadamiaj mnie o”).",
      "Testerzy obejrzą ekran ponownie: <b>⚙️ → Testy → Pokaż ekran startowy jeszcze raz</b>."]):'')
+   +(typeof stActsRow==="function"&&stActsRow()?sec("🔔 Powiadamiaj mnie o",[   // v283 (KROK 108) — u każdego, kto wybrał aktywności
+     "<b>⚙️ → Jazdy i zaproszenia → Powiadamiaj mnie o</b> — wybierz aktywności, które Cię interesują (rower, bieganie, spacery, wędrówki — można kilka). Na liście zaproszeń, w „Mam ochotę”, w oknie Ekipa i pod 🔔 widzisz wtedy tylko otwarte zaproszenia i sygnały tych aktywności, a powiadomienie „Ekipa startuje” dostajesz tylko o nich.",
+     "<b>Zawsze</b> widzisz swoje zaproszenia i sygnały, te, na które jedziesz, sygnały z Twoją Reakcją oraz zaproszenia prywatne i grupowe do Ciebie — bez względu na aktywność. Kanał Telegram @PrzylesieGo jest wspólny i pokazuje wszystko.",
+     "Pod listą zaproszeń i w oknie Ekipa linijka <b>❤ Nie widzisz … o: …</b> mówi, czego aktywności są ukryte — „zmień w Powiadamiaj mnie o ›” otwiera wybór. Lupa szuka wszędzie: po kliknięciu wyniku innej aktywności aplikacja pokaże wszystkie aktywności do zamknięcia aplikacji."]):'')
    +sec("⭐ Ludzie",[
      "Dotknij nicku: karta osoby — zdjęcie, „Z nami od…”, media, a jeśli ktoś pozwolił: miejscowość i „Zadzwoń / SMS”; „🚴 Zaproś na rower”, ☆ dodaj do ulubionych. ⭐ ulubieni są zawsze na górze list.",
      "🟢 zielona kropka przy nicku = osoba ma teraz otwartą aplikację. Przy nickach: ⭐ ulubiony, 💉 tester, 💡 3 zrealizowane pomysły/zgłoszenia, 👑 główny admin. Administratorów pokaże filtr „Administratorzy” w oknach wyboru osób — do nich piszesz, gdy coś nie działa."])

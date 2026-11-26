@@ -180,6 +180,16 @@ function areaChanged(){renderAreaChip();try{renderWants()}catch(e){}try{if(curTa
   try{if(!$("bellsheet").classList.contains("hide"))renderBellSheet()}catch(e){}try{if(!$("rbsheet").classList.contains("hide")&&!rb.open&&!rb.add)renderRb()}catch(e){}}
 // 📍 v270: zaproszenie w okolicy — obszar ukrywa tylko otwarte zaproszenia innych; moje, te, na które jadę, prywatne i grupowe — zawsze
 const wAreaOk=w=>w.user_id===uid||w.visibility==="private"||!!w.group_id||(joins[w.id]||[]).includes(uid)||inArea(w.place_lat,w.place_lon);
+// 🔔 v283 (KROK 108): „Powiadamiaj mnie o” — otwarte zaproszenia i sygnały innych aktywności są ukryte u każdego, kto wybrał aktywności;
+// nie wybrał (acts = null) → wszystko; 👑 widzi wszystko; actPeek = podgląd z lupy (do zamknięcia aplikacji)
+let actPeek=false;
+const myActs=()=>!actPeek&&session&&myPriv&&Array.isArray(myPriv.acts)&&myPriv.acts.length&&!isSuper(uid)?myPriv.acts:null;
+const actOk=k=>{const A=myActs();return !A||A.includes(k||"bike")};
+const wActOk=w=>w.user_id===uid||w.visibility==="private"||!!w.group_id||(joins[w.id]||[]).includes(uid)||(typeof wInvMe==="function"&&wInvMe(w))||actOk(w.activity);
+// podpowiedź pod listą (ten sam wiersz co „Poza okolicą”): „Nie widzisz zaproszeń o: Rower · zmień ›”
+function actHidHtml(keys,what){const K=[...new Set(keys.map(k=>k||"bike"))];if(!K.length)return "";
+  return '<div class="note arout">'+uiIcon("heart")+' Nie widzisz '+what+' o: '+esc(K.map(k=>{const a=actOf(k);return a.name_many||a.name}).join(", "))
+    +' · <button type="button" class="lnk" data-stgo="acts">zmień w Powiadamiaj mnie o ›</button></div>'}
 // podgląd okolicy wybranego miejsca (z lupy: wynik spoza Mojej okolicy)
 function areaReveal(lat,lon,name){if(lat==null||lon==null||inArea(lat,lon))return "";areaPeek={name:name||"miejsce",lat:+lat,lon:+lon};areaChanged();return "Pokazuję okolicę: "+areaPeek.name+" (podgląd — ✕ na plakietce wraca)."}
 // punkty do obrazka i liczników: zaproszenia (nadchodzące, z miejscem), sygnały z dziś, imprezy nadchodzące
