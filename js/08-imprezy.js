@@ -195,9 +195,9 @@ function actHidHtml(keys,what){const K=[...new Set(keys.map(k=>k||"bike"))];if(!
 function areaReveal(lat,lon,name){if(lat==null||lon==null||inArea(lat,lon))return "";areaPeek={name:name||"miejsce",lat:+lat,lon:+lon};areaChanged();return "Pokazuję okolicę: "+areaPeek.name+" (podgląd — ✕ na plakietce wraca)."}
 // punkty do obrazka i liczników: zaproszenia (nadchodzące, z miejscem), sygnały z dziś, imprezy nadchodzące
 function areaPts(){const P=[],now=Date.now();
-  (wants||[]).forEach(w=>{if(w.place_lat==null||!w.starts_at||Date.parse(w.starts_at)<now-3*36e5)return;P.push({k:"w",lat:+w.place_lat,lon:+w.place_lon})});
+  (wants||[]).forEach(w=>{if(w.place_lat==null||!w.starts_at||Date.parse(w.starts_at)<now-3*36e5)return;P.push({k:"w",lat:+w.place_lat,lon:+w.place_lon,nm:[w.place,w.place_city].filter(Boolean).join(" · ")})});
   try{sigListAll().forEach(x=>{if(x.lat!=null)P.push({k:"s",lat:+x.lat,lon:+x.lon})})}catch(e){}
-  (evs||[]).forEach(e=>{if(evHasGeo(e)&&!evPast(e))P.push({k:"e",lat:+e.lat,lon:+e.lon})});
+  (evs||[]).forEach(e=>{if(evHasGeo(e)&&!evPast(e))P.push({k:"e",lat:+e.lat,lon:+e.lon,nm:e.place||""})});
   return P}
 function areaCount(a){const c={w:0,s:0,e:0,out:0};areaPts().forEach(p=>{if(areaIn(a,p.lat,p.lon))c[p.k]++;else c.out++});return c}
 const areaCntTxt=c=>[c.w?c.w+" "+plf(c.w,["zaproszenie","zaproszenia","zaproszeń"]):"",c.s?c.s+" "+plf(c.s,["sygnał","sygnały","sygnałów"]):"",c.e?c.e+" "+plf(c.e,["impreza","imprezy","imprez"]):""].filter(Boolean).join(" · ")||"na razie nic";
@@ -205,9 +205,11 @@ const areaCntTxt=c=>[c.w?c.w+" "+plf(c.w,["zaproszenie","zaproszenia","zaprosze�
 function areaSvg(a){const R0=78,S=a.km||300,C=120,G={};
   areaPts().forEach(p=>{const dy=(p.lat-a.lat)*111.2,dx=(p.lon-a.lon)*111.2*Math.cos(a.lat*Math.PI/180),d=Math.hypot(dx,dy);
     let f=R0/S,x=dx*f,y=-dy*f;const m=Math.hypot(x,y);if(m>112){x*=112/m;y*=112/m}
-    const key=p.k+Math.round(x/4)+"_"+Math.round(y/4);(G[key]=G[key]||{k:p.k,x,y,n:0,out:!(d<=S||!a.km)}).n++});
+    const key=p.k+Math.round(x/4)+"_"+Math.round(y/4);(G[key]=G[key]||{k:p.k,x,y,n:0,nm:[],out:!(d<=S||!a.km)}).n++;if(p.nm)G[key].nm.push(p.nm)});
   // kropki w tym samym miejscu łączą się w jedną większą (np. wszystkie zaproszenia z centrum Pułtuska)
-  const dots=Object.values(G).sort((u,v)=>v.n-u.n).map(g=>'<circle class="ardot '+g.k+(g.out?' out':'')+'" cx="'+(C+g.x).toFixed(1)+'" cy="'+(C+g.y).toFixed(1)+'" r="'+(4.5+Math.min(7,2*Math.log2(g.n))).toFixed(1)+'"/>').join("");
+  // 👑: po najechaniu kursorem nazwy miejscowości (dymek <title>); sygnałów nie podpisujemy (prywatne)
+  const kingTip=typeof isKingReal==="function"&&isKingReal();
+  const dots=Object.values(G).sort((u,v)=>v.n-u.n).map(g=>{const at='class="ardot '+g.k+(g.out?' out':'')+'" cx="'+(C+g.x).toFixed(1)+'" cy="'+(C+g.y).toFixed(1)+'" r="'+(4.5+Math.min(7,2*Math.log2(g.n))).toFixed(1)+'"';const tip=kingTip&&g.nm.length?'<title>'+esc([...new Set(g.nm)].slice(0,6).join("\n"))+'</title>':"";return tip?'<circle '+at+'>'+tip+'</circle>':'<circle '+at+'/>'}).join("");
   return '<svg class="arsvg" viewBox="0 0 240 240" aria-hidden="true"><circle class="arbg" cx="120" cy="120" r="112"/>'
    +'<circle class="arring" cx="120" cy="120" r="'+R0+'"/><circle class="arpulse" cx="120" cy="120" r="'+R0+'"/>'
    +dots+'<g class="arpin" transform="translate(108 98)"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></g></svg>'}
