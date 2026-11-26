@@ -126,6 +126,7 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Telegram",s:"telegram powiadomienia bot wiadomości",p:"Ustawienia → Edytuj profil → Powiadomienia → Telegram",i:"send",go:[SR_PROF,'[data-c="tg"]'],ok:typeof tgOn==="function"&&tgOn()},
   {t:"Kanał @PrzylesieGo",s:"kanał telegram ogłoszenia",p:"Ustawienia → Edytuj profil → Powiadomienia",i:"mega",go:[SR_PROF],hl:'a[href="https://t.me/PrzylesieGo"]',ok:S},
   {t:"Zmień hasło",s:"hasło password",p:"Ustawienia → Edytuj profil → Konto → Zmień hasło",i:"key",go:[SR_PROF,'[data-c="pwd"]'],ok:S},
+  {t:"Trasy DEMO (testowe)",s:"trasa demo widmo testowe zaproszenie bez gpx dalekie miasta",p:"Ustawienia → Baza tras → plakietka 🧪 DEMO",i:"map",fn:()=>openRb(),ok:!!rbOk},
   {t:"Baza tras",s:"trasy gpx mapa odkryj",p:"Ustawienia → Baza tras",i:"map",fn:()=>openRb(),ok:!!rbOk},
   {t:"Pytaj „Jak poszło?”",s:"jak poszło ankieta ocena po jeździe km",p:"Ustawienia → Jazdy i zaproszenia",i:"bike",hl:"[data-ro]",ok:S&&reportOk},
   {t:"Ekipa demo: pokazuj",s:"ekipa demo konta demo zmyślone ukryj pokaż zombie testowe osoby",p:"Ustawienia → Jazdy i zaproszenia",i:"users",hl:'[data-dmo="show"]',ok:S&&!DEMO},

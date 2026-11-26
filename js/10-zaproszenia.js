@@ -854,7 +854,7 @@ function wfStep(unit,dir){
 }
 function wfTestSync(){try{wfRbSync()}catch(e){}
   [...$("wtest").children].forEach(b=>b.classList.toggle("on",(b.dataset.test==="1")===wf.test));
-  $("wtestnote").textContent=wf.test?"🧪 Na próbę — będzie przygaszone, z czerwoną migającą plakietką TEST; na kanale Telegram z oznaczeniem „TESTOWE”. Testowe zostaną kiedyś usunięte.":"🚴 Prawdziwa jazda — zaproszenie zobaczą wszyscy bez plakietki TEST.";
+  $("wtestnote").textContent=wf.test?"🧪 Na próbę — będzie przygaszone, z czerwoną migającą plakietką TEST; na kanale Telegram z oznaczeniem „TESTOWE”. Testowe zostaną kiedyś usunięte."+(wfDemoRoute()?" Trasa DEMO działa tylko w testowych.":""):"🚴 Prawdziwa jazda — zaproszenie zobaczą wszyscy bez plakietki TEST.";
 }
 let wxTimer=null;
 function wfUpdate(){
@@ -1301,7 +1301,7 @@ $("wrfile").addEventListener("change",async e=>{
   wf.route=thin(p,500);wf.routeName=f.name.replace(/\.gpx$/i,"");wf.rbId=null;wf.rbName="";wf.routeTouched=true;wfRouteSync();
 });
 $("wrdel").addEventListener("click",()=>{wf.route=null;wf.routeName="";wf.rbId=null;wf.routeTouched=true;$("wrfile").value="";wfRouteSync()});
-$("wtest").addEventListener("click",e=>{const b=e.target.closest("button[data-test]");if(!b)return;wf.test=b.dataset.test==="1";wfTestSync();wfUpdate()});
+$("wtest").addEventListener("click",e=>{const b=e.target.closest("button[data-test]");if(!b)return;wf.test=b.dataset.test==="1";if(!wf.test&&wfDemoRoute()){wf.test=true;say("🧪 Trasa DEMO — tylko do zaproszeń testowych.")}wfTestSync();wfUpdate()});
 $("wdays").addEventListener("click",e=>{const b=e.target.closest("button[data-d]");if(!b)return;wfSetDay(b.dataset.d);wfUpdate()});
 $("wdt").addEventListener("change",wfUpdate);
 ["fclock","fclock2"].forEach(id=>$(id).addEventListener("click",e=>{const b=e.target.closest(".farr");if(!b)return;wfStep(b.closest(".fcol").dataset.u,+b.dataset.s)}));

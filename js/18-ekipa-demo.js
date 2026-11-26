@@ -1,5 +1,5 @@
 /* 🧪 Ekipa demo (KROK 74–75) — 👑 ⚙️ → Administracja → „Generator zaproszeń” (na górze) → „Zaproszenia testowe”:
-   konta demo (1–30, pula nicków), generator zaproszeń testowych (bez nachodzących jazd, część dla grup demo),
+   konta demo (1–46, pula nicków), generator zaproszeń testowych (bez nachodzących jazd, część dla grup demo),
    grupy demo (1–10), automatyczne odpowiedzi kont demo (cron co 15 min, przełącznik), ochotnicy, sprzątanie;
    plakietka DEMO przy nickach i grupach kont demo.
    2026-11-21: panel w zwijanych sekcjach (Ekipa demo, Zaproszenia, Ochotnicy, Grupy demo, Odpowiedzi, Sprzątanie);
@@ -212,7 +212,7 @@ function demoHtml(){
    +demoK("acc",1,"Konta demo",ld?"…":made.length?"✓ "+made.length+" kont":"do zrobienia",made.length>0,
      'Zmyślone osoby, które zapraszają i jeżdżą. Bez nich kolejne kroki nie ruszą.',
      '<div class="ios-grp">'
-     +demoStep("acc",demoAcc,1,30,"Ile kont gra",made.length?"Np. 10 — gra pierwsze 10, reszta czeka":"Np. 10 — nicki z puli 30")
+     +demoStep("acc",demoAcc,1,46,"Ile kont gra",made.length?"Np. 10 — gra pierwsze 10, reszta czeka":"Np. 10 — nicki z puli 46")
      +'<button type="button" class="ios-it ios-row dmact" data-dx="acc"'+dis+'><span class="ios-t">'+(demoAcc>made.length?'Utwórz brakujące ('+(demoAcc-made.length)+')':'Ustaw: gra '+demoAcc)+'</span></button></div>'
      +(bikes.length?'<div class="dmbikes">'+bikes.map(([b,n])=>'<span class="dmbk dm-'+b+'">'+uiIcon(b==="road"?"road":b==="any"?"bike":b)+' '+DEMO_BIKE[b]+' '+n+'</span>').join("")+'</div>':'')
      +(made.length?'<div class="dmbikes">'+demoActs().map(a=>[a,demoActN(a.key,made.filter(p=>p.slot<=act))]).filter(x=>x[1]).map(([a,n])=>'<span class="dmbk dm-act">'+uiIcon(a.icon||"bike")+' '+esc(a.name)+' '+n+'</span>').join("")+'</div>':'')
@@ -314,7 +314,7 @@ $("gearpanel").addEventListener("click",async e=>{
     demoBusy=false;demoVolPart();
     if(err)demoErr(err);say((on?"🙋 Dodano do ochotników: ":"Wypisano z ochotników: ")+ok+(ok<L.length?" z "+L.length:""));return}
   if(a==="user"){userBack="demo";tkFrom=false;userId=b.dataset.du;gearView="user";renderGear();if(isAdmin&&typeof loadAdmInfo==="function"){delete admInfo[userId];loadAdmInfo(userId)}return}
-  if(a==="acc-"||a==="acc+"){demoAccSet=true;demoAcc=Math.max(1,Math.min(30,demoAcc+(a==="acc+"?1:-1)));demoRender();return}
+  if(a==="acc-"||a==="acc+"){demoAccSet=true;demoAcc=Math.max(1,Math.min(46,demoAcc+(a==="acc+"?1:-1)));demoRender();return}
   if(a==="grn-"||a==="grn+"){demoGrN=Math.max(1,Math.min(10,demoGrN+(a==="grn+"?1:-1)));demoRender();return}
   if(a==="grp"){await demoRun("admin_demo_groups",{p_count:demoGrN,p_volunteers:true},d=>d&&d.created?"👥 Założono grup demo: "+d.created+(d.invited?" · zaproszeni ochotnicy: "+d.invited:""):"Nie założono grup — konta demo są w limitach albo pula nazw się skończyła");
     if(typeof grReload==="function")grReload();return}

@@ -12,7 +12,7 @@ const RB_MET={forest:[x=>osmPct(x,"las"),-1],asphalt:[x=>osmPct(x,"asf"),-1],off
 async function rbLoad(force){
   if(!rbOk||!session)return;
   if(!force&&rbList&&Date.now()-rbAt<120000)return;
-  const RBC="id,name,km,up_m,start_lat,start_lon,start_city,bike,created_by,created_at,hidden,preview,src_want";
+  const RBC="id,name,km,up_m,start_lat,start_lon,start_city,bike,created_by,created_at,hidden,preview,src_want,demo";   // 🧪 v275: demo = trasa-widmo (KROK 107)
   let r=await sb.from("route_base").select(RBC+",osm,osm_at").order("created_at",{ascending:false}).limit(1000);rbOsmOk=!r.error;   // 🌳 KROK 51
   if(r.error)r=await sb.from("route_base").select(RBC).order("created_at",{ascending:false}).limit(1000);
   rbList=r.error?[]:(r.data||[]);
@@ -64,7 +64,7 @@ function rbCard(x,i){
    +(x.osm&&OSM_SORT.includes(rb.sort)?'<span class="rbm rbmet">'+osmMetTxt(rb.sort,x)+'</span>':'')
    +(x.osm?osmBar(x.osm,x.km,true):'')
    +((x.start_city||k!=null)?'<span class="rbm">📍 '+(x.start_city?esc(x.start_city):'start')+(k!=null?' · '+nearKm(k)+' km od Ciebie':'')+'</span>':'')
-   +'<span class="rbtg">'+(B?'<i>'+B+'</i>':'')+(x.hidden?'<i>🙈 ukryta</i>':'')+(x.created_by&&nicks[x.created_by]?'<i>👤 '+esc(nicks[x.created_by])+'</i>':'')+'</span></span></button>';
+   +'<span class="rbtg">'+(B?'<i>'+B+'</i>':'')+(x.demo?'<i>🧪 DEMO</i>':'')+(x.hidden?'<i>🙈 ukryta</i>':'')+(x.created_by&&nicks[x.created_by]?'<i>👤 '+esc(nicks[x.created_by])+'</i>':'')+'</span></span></button>';
 }
 function rbListHtml(){
   if(!rbList)return '<div class="note" style="text-align:center;margin-top:16px">Wczytuję trasy…</div>';
@@ -126,9 +126,9 @@ async function renderRbDetail(){
       '🔁 wybrana '+(u.uses||0)+'×'+(u.planned?' · zaplanowana '+u.planned+'×':'')+(u.last?' · ostatnio '+esc(dd(u.last)):''),
       '👤 '+(x.created_by&&nicks[x.created_by]?esc(nicks[x.created_by]):'—')+' · dodana '+esc(dd(x.created_at))].filter(Boolean).map(t=>'<div>'+t+'</div>').join("")+'</div>'
    +'<div id="rbrev">'+rbRevHtml(x)+'</div>'
-   +(x.hidden?'<div class="note warnbox" style="margin-top:8px">🙈 Ukryta — widzisz ją tylko Ty'+(isAdmin?' i admini':'')+'.</div>':'')
+   +(x.demo?'<div class="note warnbox" style="margin-top:8px">🧪 Trasa DEMO — kształt do podglądu. Bez pliku GPX; tylko do zaproszeń testowych.</div>':'')+(x.hidden?'<div class="note warnbox" style="margin-top:8px">🙈 Ukryta — widzisz ją tylko Ty'+(isAdmin?' i admini':'')+'.</div>':'')
    +'<button type="button" class="b big" style="margin-top:12px;width:100%" data-rb="'+(rb.mode==="pick"?'pick':'invite')+'" id="rbinvbtn">'+rbInvLbl()+'</button>'
-   +'<div class="pbtns" style="margin-top:8px"><button type="button" class="b g" data-rb="gpx">⬇ GPX</button>'+(can?'<button type="button" class="b g" data-rb="rename">✏️ Nazwa</button><button type="button" class="b g" data-rb="hide">'+(x.hidden?'👁 Pokaż':'🙈 Ukryj')+'</button>':'')+'</div>'
+   +'<div class="pbtns" style="margin-top:8px">'+(x.demo?'':'<button type="button" class="b g" data-rb="gpx">⬇ GPX</button>')+(can?'<button type="button" class="b g" data-rb="rename">✏️ Nazwa</button><button type="button" class="b g" data-rb="hide">'+(x.hidden?'👁 Pokaż':'🙈 Ukryj')+'</button>':'')+'</div>'
    +(can?'<button type="button" class="lnk rbdel" data-rb="del">Usuń z bazy tras</button>':'')
    +'<div class="ptg">Czas jazdy przy tempie ok. 20 km/h, z wiatrem. Pogoda dla punktu startu. Mapa © OpenStreetMap · pogoda: Open-Meteo.</div></div></div>';
   p.classList.remove("hide");
@@ -391,6 +391,7 @@ function renderRbRate(){
    +'<div class="note" style="margin-top:10px;text-align:center">Ocena trafia do rankingów w Bazie tras. Jedna ocena na osobę — możesz ją zmienić.</div></div></div>';
   p.classList.remove("hide");
 }
+const wfDemoRoute=()=>!!(wf.rbId&&rbList&&(rbList.find(r=>r.id===wf.rbId)||{}).demo);   // 🧪 v275
 function rbApplyToForm(x,pts){
   wf.route=pts;wf.routeName=x.name;wf.rbId=x.id;wf.routeTouched=true;$("wrfile").value="";
   if(!wf.bike&&x.bike&&bikeOk){wf.bike=x.bike;wbikeRender()}
@@ -489,11 +490,14 @@ $("rbsheet").addEventListener("click",async e=>{
   if(k==="towns"){rbTowns(rbTok);return}
   if(k==="osmre"){rbOsmShow(rbTok,true);return}
   if(k==="rev"){rb.rev=!rb.rev;if(rbMap&&rbPts)drawRoute(rbMap,rb.rev?rbPts.slice().reverse():rbPts,null,false);rbTowns(rbTok);rbOsmShow(rbTok);pwUpdate();return}
+  if((k==="pick"||k==="invite")&&x.demo&&!testOk){say("🧪 Trasa DEMO jest tylko do testowych zaproszeń — a ich nie masz włączonych.");return}
   if(k==="pick"||k==="invite"){let pts;try{pts=await rbRoute(x.id)}catch(err){pts=null}if(!pts){say("Nie udało się wczytać trasy.");return}
     if(rb.rev)pts=pts.slice().reverse();
     const at=k==="invite"||(rb.pw&&rb.pw.ch)?pwWhen():null;closeRb();if(k==="invite"){show(0);openWantForm(null,{at})}rbApplyToForm(x,pts);
+    if(x.demo){wf.test=true;wfTestSync();wfUpdate()}   // 🧪 v275: trasa DEMO → zawsze zaproszenie testowe
     if(k==="pick"&&at&&at.getTime()>Date.now())wfApplyAt(at);
     say("📚 Trasa z bazy: "+x.name+(at&&at.getTime()>Date.now()?" · "+(dayDiff(at)===0?"dziś":dayDiff(at)===1?"jutro":at.toLocaleDateString("pl-PL",{weekday:"long"}))+" "+hhmm(at):""));return}
+  if(k==="gpx"&&x.demo){say("🧪 Trasa DEMO nie ma pliku GPX.");return}
   if(k==="gpx"){let pts;try{pts=await rbRoute(x.id)}catch(err){pts=null}if(!pts){say("Nie udało się wczytać trasy.");return}
     const nm=slug(x.name)+".gpx";say(saveFile(makeGpx(pts,x.name),nm,"application/gpx+xml")?"Pobrano: "+nm:"Nie udało się pobrać pliku.");return}
   if(k==="rename"){const n=prompt("Nazwa trasy (2–60 znaków):",x.name);if(n==null)return;const t=n.trim();if(t.length<2||t.length>60){say("Nazwa: od 2 do 60 znaków.");return}
