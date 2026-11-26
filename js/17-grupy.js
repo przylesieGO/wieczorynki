@@ -71,7 +71,8 @@ async function grLoad(){
   }catch(err){grOk=false;grFor=uid;grMsg=grErr(err)==="Grupy wymagają KROKU 70 w bazie."?grErr(err):"Nie udało się wczytać grup: "+grErr(err)}
   grLoading=false;
 }
-function grRefresh(){try{if(gearOpen&&["main","nick","groups","group","gradm","admin","user","plist"].includes(gearView))renderGear();renderBell();if(wGrOk)renderWants();if(wGrOk&&!$("popsheet").classList.contains("hide"))renderPop()}catch(e){}}   // 👥 KROK 71: plakietki grup na kartach i w okienku nowego zaproszenia (nazwa zamiast „grupa”, gdy grupy dociągną się po okienku)
+function grRefresh(){try{if(gf.mode==="code"&&gf.prev&&!gf.busy&&!grSheet().classList.contains("hide"))grCheckCode();   // otwarte „Dołącz kodem”: świeży stan (np. przyszło zaproszenie → „Dołącz do grupy”)
+  if(gearOpen&&["main","nick","groups","group","gradm","admin","user","plist"].includes(gearView))renderGear();renderBell();if(wGrOk)renderWants();if(wGrOk&&!$("popsheet").classList.contains("hide"))renderPop()}catch(e){}}   // 👥 KROK 71: plakietki grup na kartach i w okienku nowego zaproszenia (nazwa zamiast „grupa”, gdy grupy dociągną się po okienku)
 async function grReload(){await grLoad();grRefresh()}
 const grFresh=()=>{if(session&&grFor!==uid){grOk=null;grMine=[];grMem={};grLim={};grReqs=[];grFind=null}if(session&&grOk===null&&!grLoading)grReload()};
 
@@ -471,7 +472,9 @@ $("gearpanel").addEventListener("input",e=>{if(e.target.id!=="grq")return;grQ=e.
   try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}
   let n=0,told=false;const t=setInterval(()=>{n++;if(n>900){clearInterval(t);return}
     if(!ready)return;if(!session){if(!told&&n>3){told=true;say("Zaloguj się, żeby dołączyć do grupy z linku.")}return}
-    if(!nicks[uid])return;clearInterval(t);openGrCode(code)},1000)})();
+    if(!nicks[uid])return;
+    if(typeof ST!=="undefined"&&(ST.on||(n<25&&typeof stOn==="function"&&stOn()&&!ST_STEPS.every(s=>s.done()))))return;   // najpierw ekran startowy (okolica, aktywności, js/23) — okno grupy po nim
+    clearInterval(t);openGrCode(code)},1000)})();
 
 /* 👥 zaproszenie na rower dla grupy (KROK 71) — pomocniki dla js/10, js/11, js/14 (wołane przez typeof przy rysowaniu i odświeżaniu)
    grActIds: moje aktywne grupy (porównanie przed/po odświeżeniu); grForWant: grupy do wyboru w „Kto zobaczy?” (aktywne, nie w archiwum);

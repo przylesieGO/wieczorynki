@@ -66,7 +66,7 @@ function stAreaHtml(){
       +'<div class="hmrow" style="margin-top:10px"><input id="stq" maxlength="80" placeholder="Wpisz miejscowość, np. Pułtusk" value="'+esc(ST.q)+'" enterkeyhint="search" autocomplete="off"><button type="button" class="b" data-st="find">Szukaj</button></div>'
       +(ST.msg?'<div class="note" style="margin-top:8px">'+ST.msg+'</div>':'')
       +ST.res.map((x,i)=>'<button type="button" class="hmres" data-st="pick" data-i="'+i+'"><b>'+esc(x.name)+'</b><span>'+esc(x.full)+'</span></button>').join(""))
-   +'<div class="arsl" style="margin-top:12px"><div class="arslh"><span>Promień</span><b id="stkmv">'+areaKmTxt(ST.km)+'</b></div><input id="stkm" type="range" min="0" max="'+(AREA_KM.length-1)+'" step="1" value="'+(ki<0?3:ki)+'" aria-label="Promień okolicy"><div class="arslt"><span>5 km</span><span>50 km</span><span>Polska</span></div></div>'
+   +'<div class="arsl" style="margin-top:12px"><div class="arslh"><span>Promień</span><b id="stkmv">'+areaKmTxt(ST.km)+'</b></div><input id="stkm" type="range" min="0" max="'+(AREA_KM.length-1)+'" step="1" value="'+(ki<0?3:ki)+'" aria-label="Promień okolicy"><div class="arslt"><span>5 km</span><span>50 km</span><span>Polska</span></div>'+AREA_INFO+'</div>'
    +'<div class="note" style="margin-top:8px"><i>Zapisujemy tylko miejscowość (z dokładnością do ok. 2 km). Widzisz ją tylko Ty.</i></div>'
    +'</div>';
 }

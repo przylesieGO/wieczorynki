@@ -161,6 +161,7 @@ const areaKm=()=>{let v=null;if(session&&profExOk)v=myPriv?myPriv.area_km:null;e
   return v==null||!AREA_KM.includes(+v)?areaKmDef():+v};
 const areaHome=()=>{if(session&&myPriv&&myPriv.city&&myPriv.city_lat!=null)return {name:myPriv.city,lat:+myPriv.city_lat,lon:+myPriv.city_lon};return homeGet()||areaDef()};
 const areaCur=()=>Object.assign({},areaPeek||areaHome(),{km:areaKm(),peek:!!areaPeek});
+const AREA_INFO='<div class="note" style="margin-top:8px">Promień decyduje, co widzisz i o czym dostajesz powiadomienia: otwarte zaproszenia, sygnały „Mam ochotę” i imprezy z tej odległości od Twojej miejscowości. Większy promień — więcej propozycji, ale też z dalszych miejsc. Zaproszenia prywatne i grupowe do Ciebie dochodzą zawsze.</div>';   // ℹ️ opis suwaka promienia (okno „Moja okolica” i ekran startowy js/23)
 const areaIn=(a,lat,lon)=>lat==null||lon==null||!isFinite(+lat)||!isFinite(+lon)||!a.km||dist({lat:a.lat,lon:a.lon},{lat:+lat,lon:+lon})<=a.km;
 const inArea=(lat,lon)=>areaIn(areaCur(),lat,lon);
 const areaKmTxt=k=>k?k+" km":"cała Polska";
@@ -228,7 +229,7 @@ function renderHome(){
    +(a.peek?'<div class="hmcur arpeek">'+uiIcon("eye")+'<span>Podgląd: <b>'+esc(a.name)+'</b></span><button type="button" class="lnk" data-hm="unpeek">Wróć do: '+esc(h.name)+'</button></div>':'')
    +'<div class="arvis">'+areaSvg(a)+'<div class="arcnt"><b>'+(a.km?'W promieniu '+a.km+' km':'Cała Polska')+'</b><span>'+areaCntTxt(c)+'</span>'+(a.km&&c.out?'<small>dalej: '+c.out+'</small>':'')+'</div></div>'
    +'<div class="hleg arleg"><i class="hc w"></i> zaproszenia <i class="hc s"></i> sygnały <i class="hc ev"></i> imprezy</div>'
-   +'<div class="arsl"><div class="arslh"><span>Promień</span><b id="arkmv">'+areaKmTxt(a.km)+'</b></div><input id="arkm" type="range" min="0" max="'+(AREA_KM.length-1)+'" step="1" value="'+(ki<0?3:ki)+'" aria-label="Promień okolicy"><div class="arslt"><span>5 km</span><span>50 km</span><span>Polska</span></div></div>'
+   +'<div class="arsl"><div class="arslh"><span>Promień</span><b id="arkmv">'+areaKmTxt(a.km)+'</b></div><input id="arkm" type="range" min="0" max="'+(AREA_KM.length-1)+'" step="1" value="'+(ki<0?3:ki)+'" aria-label="Promień okolicy"><div class="arslt"><span>5 km</span><span>50 km</span><span>Polska</span></div>'+AREA_INFO+'</div>'
    +'<div class="bsgrp">Moja miejscowość</div>'
    +'<div class="hmcur">'+uiIcon("pin")+'<span><b>'+esc(h.name)+'</b>'+(h.def?' <small>(domyślnie)</small>':'')+'</span><button type="button" class="lnk" data-hm="'+(hmMode==="home"?"mpeek":"mhome")+'">'+(hmMode==="home"?"Anuluj":"Zmień")+'</button></div>'
    +(hmMode==="home"?srch+'<button type="button" class="b g big" data-hm="gps" style="margin-top:10px">'+uiIcon("globe")+' Użyj mojej lokalizacji</button>':'')
