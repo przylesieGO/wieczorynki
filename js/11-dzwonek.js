@@ -522,8 +522,8 @@ function sigDayOver(){
 }
 // sprawdzenie przed akcją: wygasły (po północy) albo zniknął → komunikat, zamknięcie okienka i odświeżenie
 function sigGoneCheck(x){
-  if(!sigStale()&&x&&!x.cancelled_at)return false;
-  if(sigView)closeSig();say(sigStale()?SIG_GONE:"Ten sygnał nie jest już aktywny.");
+  if(!sigStale()&&x&&!x.cancelled_at&&!x.closed)return false;
+  if(sigView)closeSig();say(sigStale()?SIG_GONE:x&&x.closed?SIG_ZAMK:"Ten sygnał nie jest już aktywny.");
   sigDirty=true;Promise.resolve(syncNow()).catch(()=>{});return true;
 }
 // ⏳ ile zostało do północy — sygnał i wspólne zaproszenie ekipy liczą się tylko dziś; widać od 21:00, w ostatniej godzinie pomarańczowe (2026-11-25)
@@ -778,10 +778,14 @@ function renderSig(){
   p.classList.remove("hide");
   if(fo){const i=$("sgown");if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}}
 }
+const SIG_ZAMK="Ekipa z tego sygnału już pojechała — nie można się już dopisać.";
 const sigErr=e=>{const m=e&&e.message||"";
   return /BANNED/.test(m)?"Konto zablokowane — napisz do administratora."
     :/MSG_BAN/.test(m)?"Komunikat zawiera niedozwolone słowo albo link — popraw go."
     :/MSG_HIDDEN/.test(m)?"Administrator ukrył dziś Twój komunikat — wyślij sygnał bez komunikatu."
+    :/zamknięciu ekipy/.test(m)?SIG_ZAMK                                  // reguła bazy „nie po zamknięciu ekipy"
+    :/ride_signal_reacts/.test(m)?"Nie można już dać znać przy tym sygnale — odświeżam listę."
+    :/row-level security|violates/.test(m)?"Tego już nie da się zrobić — odświeżam listę."   // nigdy surowy tekst bazy
     :"Nie udało się: "+(m||"błąd")};
 async function sigSend(){
   if(sigBusy)return;
@@ -834,7 +838,9 @@ async function sigReact(owner){
     if(r.error)throw r.error;
     say(on?"Cofnięte.":"👋 "+nickOf(owner)+" dostanie znać, że też masz ochotę.");
     sigDirty=true;syncNow();
-  }catch(e){sigReacts[owner]=prev;renderBell();if(sigView==="pop")renderSigPop();if(sgwOpen)sigWinRender();say(sigErr(e))}
+  }catch(e){sigReacts[owner]=prev;
+    if(/zamknięciu ekipy/.test(e&&e.message||"")&&x)x.closed=true;        // baza wie lepiej — znika z list i okienek
+    renderBell();if(sigView==="pop")renderSigPop();if(sgwOpen)sigWinRender();say(sigErr(e));sigDirty=true;syncNow()}
   finally{sigReactBusy[owner]=false}
 }
 // komunikat sygnału → tytuł zaproszenia (≥ 6 znaków, jak tytuły w bazie) albo notatka (krótszy) — decyzja właściciela 2026-11-24 03:59
@@ -1095,7 +1101,7 @@ function sigAvHtml(id){
   return '<span class="sgpav'+(genders[id]==="K"?' k':'')+(a?' ph':'')+'">'+(a?avImg(id,"gavi"):esc(String(nicks[id]||"?").charAt(0).toUpperCase()))+'</span>';
 }
 function renderSigPop(){
-  const p=$("sigsheet"),L=sigPopQ.map(id=>sigs.find(s=>s.user_id===id)).filter(x=>x&&!x.cancelled_at);
+  const p=$("sigsheet"),L=sigPopQ.map(id=>sigs.find(s=>s.user_id===id)).filter(x=>x&&!x.cancelled_at&&!x.closed);   // !closed jak w sigListAll: ekipa mogła pojechać, gdy okienko było otwarte
   if(!L.length){closeSig();return}
   if(sigPopI>=L.length)sigPopI=L.length-1;
   const n=L.length,first=L[0],K=genders[first.user_id]==="K";
