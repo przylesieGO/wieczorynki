@@ -652,6 +652,7 @@ details.stsec[open]>summary::after{transform:rotate(90deg)}
 .naccs{background:var(--fill);border-radius:12px;overflow:hidden}.nacc{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px}.nacc+.nacc{border-top:.5px solid var(--line)}.nacc .note{text-align:right;margin:0}
 .nnew{font-size:12px;font-weight:800;color:#30a14e;margin-left:6px}
 .wplace{margin-top:5px;font-size:15px}.wplace a{color:var(--acc);font-weight:600}
+.wplace.warn{color:#b34700}html[data-theme=dark] .wplace.warn{color:#ffb074}   /* 📍 v287: jak .efgeo.warn */
 .wpladd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;font-size:14px;color:var(--mut)}#wplacename{margin-top:8px}
 .wplinfo{margin-top:8px;font-size:14px}.wplinfo .lnk{font-size:14px;font-weight:600;color:var(--acc)}
 .pickmap{height:min(52vh,420px);border-radius:14px;overflow:hidden;margin:10px 0}.mapbox{max-width:560px;width:100%}.mapbox input{margin-top:4px}.mpbtns{text-align:center;margin-top:6px}

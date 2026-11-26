@@ -1140,6 +1140,8 @@ function closeWantForm(){$("wantform").classList.add("hide");$("wfask").classLis
 let placeOk=false,bikeOk=false,places=[],wantsAll=[];
 const mapUrl=(lat,lon,name)=>"https://www.google.com/maps/search/?api=1&query="+(lat!=null?lat+","+lon:encodeURIComponent(name||""));
 function placeHtml(w){
+  // 📍 v287: zaproszenie bez punktu zbiórki (sprzed v285; testowe też) — ostrzeżenie: autor uzupełnia przez ✏️, zaproszeni widzą, że miejsce jeszcze nie ustalone
+  if(w&&!w.place)return '<div class="wplace warn">⚠️ <b>Brak punktu zbiórki</b> — '+(w.user_id===uid?'wskaż go przez ✏️ Edytuj':'autor jeszcze go nie wskazał')+'</div>';
   if(!w||!w.place)return "";
   const g=w.place_lat!=null;
   return '<div class="wplace">📍 <b>'+esc(w.place)+'</b>'+(w.place_city?' · '+esc(w.place_city+(w.place_area?' · '+w.place_area:'')):'')+(g?' · <a href="'+esc(mapUrl(w.place_lat,w.place_lon))+'" target="_blank" rel="noopener">Mapa ›</a>':'')+'</div>';
