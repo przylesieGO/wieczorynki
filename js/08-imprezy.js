@@ -228,6 +228,20 @@ const arRng=()=>{let r=[0,4];try{const x=localStorage.getItem("arRng"),d=localSt
 const arRngTxt=([lo,hi])=>{const a=lo<=.01,b=hi>=AR_CLN-.01;return a&&b?"wszystkie":b?"do "+arTys(arPopUp(lo)):a?"od "+arTys(arPopLow(hi)):"od "+arTys(arPopLow(hi)).replace(" tys.","")+" do "+arTys(arPopUp(lo))};
 const arAutoS=()=>1+(AR_SMAX-1)*arRng()[0]/AR_CLN;   // „sam się przybliża”: im mniejsze największe miejscowości (lewy uchwyt w prawo), tym bliżej
 const arHomeView=()=>({z:1,x:0,y:0,s:arAutoS()});
+// v337: 🗺️ trasa GPX na radarze (podgląd, tylko w tej karcie): kreska rysuje się od startu do mety, miejscowości po drodze podpisane
+let arRoute=null;const AR_RT_MS=3000;
+function arRouteSet(pts,name){pts=thin(pts,400);const T=arTownsGet(),on=[];
+  T.forEach(t=>{let b=1e9,bi=0;for(let i=0;i<pts.length;i++){const d=dist({lat:t[1],lon:t[2]},pts[i]);if(d<b){b=d;bi=i}}if(b<=1.2)on.push([bi,t[0]])});   // miejscowości z listy radaru do 1,2 km od śladu
+  arRoute={pts,name:String(name||"Trasa").slice(0,60),km:routeKm(pts),towns:on.sort((u,v)=>u[0]-v[0]).map(x=>x[1]),t0:performance.now()};
+  if($("homesheet").classList.contains("hide"))openHome();else renderHome()}
+const arRouteHtml=a=>{const R=arRoute,far=R&&a.km?Math.max(...R.pts.map(p=>dist(a,p))):0;
+  return '<div class="bsgrp">Trasa na radarze</div><div class="wrrow"><label class="wrfile"><input type="file" id="argpx" accept=".gpx,application/gpx+xml,text/xml"><span>🗺️ '+(R?'Zmień plik GPX':'Wczytaj GPX')+'</span></label>'
+   +(typeof rbOk!=="undefined"&&rbOk?'<div class="wrbase"><button type="button" class="wrbb" data-hm="rtbase">📚 Baza tras ›</button></div>':'')
+   +(R?'<button type="button" class="ib del" data-hm="rtdel" aria-label="Usuń trasę z radaru" title="Usuń trasę z radaru"></button>':'')+'</div>'
+   +(R?'<div class="routeinfo arrti"><div><b>'+esc(R.name)+'</b> · '+kmTxt(R.km)+' km <button type="button" class="lnk" data-hm="rtplay">'+uiIcon("play")+' Odtwórz</button></div>'
+     +(R.towns.length?'<div class="note">'+R.towns.map(esc).join(" → ")+'</div>':'<div class="note">Brak większych miejscowości przy trasie.</div>')
+     +(far>a.km?'<div class="note">Trasa wychodzi poza promień ('+Math.round(far)+' km od środka) — przesuń suwak Promień, żeby zobaczyć całą.</div>':'')+'</div>'
+    :'<div class="note" style="margin-top:6px">Podejrzyj trasę na radarze: kreska narysuje się od startu do mety, a miejscowości po drodze dostaną podpis. Nic nie zapisujemy.</div>')};
 const arBear=(a,b)=>{const y=Math.sin(rad(b.lon-a.lon))*Math.cos(rad(b.lat)),x=Math.cos(rad(a.lat))*Math.sin(rad(b.lat))-Math.sin(rad(a.lat))*Math.cos(rad(b.lat))*Math.cos(rad(b.lon-a.lon));return (Math.atan2(y,x)*180/Math.PI+360)%360};
 const arKmT=d=>(d<10?d.toFixed(1).replace(".",","):String(Math.round(d)))+" km";
 // miejscowości na radarze: wbudowana lista (miasta Polski + całe Mazowsze z wsiami gminnymi), „nazwa|szer.|dł.|tys. mieszkańców|stała”;
@@ -286,6 +300,13 @@ function areaSvgIn(a){const V={z:1,x:arView.x,y:arView.y},S=a.km||300,CX=AR_CX,C
   let lab="",seen=new Set([String(a.name||"").toLowerCase()]);
   areaPts().filter(p=>p.k==="e"&&p.lab).forEach(p=>{const q=xy(p.lat,p.lon);if(Math.hypot(q.x,q.y)>AR_RM||seen.has(p.lab.toLowerCase()))return;
     const t=label(CX+q.x,CY+q.y,arCut(p.lab,16),11.5,"arte");if(t){lab+=t;seen.add(p.lab.toLowerCase())}});
+  let rt="";const RT=arRoute;
+  if(RT){const P=RT.pts.map(p=>xy(p.lat,p.lon)),d=P.map((q,i)=>(i?'L':'M')+(CX+q.x).toFixed(1)+' '+(CY+q.y).toFixed(1)).join(""),el=performance.now()-RT.t0,s0=P[0],s1=P[P.length-1];
+    rt='<g clip-path="url(#arclip)"><path class="arrtc" d="'+d+'" style="stroke-width:'+(6/Z).toFixed(2)+'px"/><path class="arrt'+(el<AR_RT_MS?' an':'')+'" pathLength="1" d="'+d+'" style="stroke-width:'+(3/Z).toFixed(2)+'px'+(el<AR_RT_MS?';animation-delay:-'+Math.round(el)+'ms':'')+'"/>'
+      +'<circle class="arrts" cx="'+(CX+s0.x).toFixed(1)+'" cy="'+(CY+s0.y).toFixed(1)+'" r="'+(4.5/Z).toFixed(2)+'"/><circle class="arrtm'+(el<AR_RT_MS?' an':'')+'" cx="'+(CX+s1.x).toFixed(1)+'" cy="'+(CY+s1.y).toFixed(1)+'" r="'+(4.5/Z).toFixed(2)+'" style="stroke-width:'+(2.5/Z).toFixed(2)+'px'+(el<AR_RT_MS?';animation-delay:'+Math.round(2900-el)+'ms':'')+'"/></g>';
+    const TT=arTownsGet(),nm=new Set(RT.towns.map(t=>t.toLowerCase()));
+    TT.filter(t=>nm.has(t[0].toLowerCase())&&!seen.has(t[0].toLowerCase())).forEach(t=>{const q=xy(t[1],t[2]);if(Math.hypot(q.x,q.y)>AR_RM-3)return;
+      const x=CX+q.x,y=CY+q.y,l=label(x,y,arCut(t[0],16),11.5,"artn rt");if(!l)return;seen.add(t[0].toLowerCase());rt+='<circle class="artd rt" cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(2.4/Z).toFixed(2)+'"/>'+l})}
   const [lo,hi]=arRng(),pU=arPopUp(lo),pL=arPopLow(hi),T=arTownsGet();let tw="";
   if(T)T.map(t=>Object.assign({t},xy(t[1],t[2]))).filter(o=>{const p=o.t[4];return p<pU&&p>=pL&&o.d>1.5&&Math.hypot(o.x,o.y)<AR_RM-3&&!seen.has(o.t[0].toLowerCase())})
     .sort((u,v)=>(v.t[5]-u.t[5])||(v.t[4]-u.t[4])).forEach(o=>{const x=CX+o.x,y=CY+o.y,big=o.t[3]===2,out=!!a.km&&o.d>S;
@@ -310,7 +331,7 @@ function areaSvgIn(a){const V={z:1,x:arView.x,y:arView.y},S=a.km||300,CX=AR_CX,C
    +'<g clip-path="url(#arclip)"><circle class="arring" cx="'+OX+'" cy="'+OY+'" r="'+R0+'"/>'+(a.km?'<circle class="arhalf" cx="'+OX+'" cy="'+OY+'" r="'+R0/2+'"/>':'')
    +'<circle class="arpulse" cx="'+OX+'" cy="'+OY+'" r="'+R0+'"/></g><g class="arsweep"><path d="M'+CX+' '+CY+'L'+CX+' '+(CY-AR_RB)+'A'+AR_RB+' '+AR_RB+' 0 0 1 '+(CX+AR_RB*Math.sin(.6)).toFixed(1)+' '+(CY-AR_RB*Math.cos(.6)).toFixed(1)+'Z"/></g>'
    +(ringT&&Math.hypot(V.x,V.y-R0/2)<AR_RB-12?'<text class="arrk" x="'+(OX+3)+'" y="'+(OY-R0/2-3)+'">'+ringT+'</text>':'')
-   +tw+co+dots+lab
+   +tw+rt+co+dots+lab
    +(homeIn?'<g class="arpin" transform="translate('+(OX-12)+' '+(OY-22)+')"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></g>'
    +'<text class="arhome" x="'+OX+'" y="'+(OY+16)+'" text-anchor="middle" font-size="'+hfs+'">'+esc(hn)+'</text>':'')}
 // licznik pod radarem
@@ -352,7 +373,7 @@ function renderHome(){arHeadOn();
    +'<div class="hleg arleg"><i class="hc w"></i> zaproszenia <i class="hc s"></i> sygnały <i class="hc ev"></i> imprezy</div>'
    +'<div class="arsl"><div class="arslh"><span>Promień</span><b id="arkmv">'+areaKmTxt(a.km)+'</b></div><input id="arkm" class="arrng" type="range" min="5" max="51" step="any" value="'+arSlVal(a.km)+'" style="--p:'+arSlP(arSlVal(a.km),5,51)+'" aria-label="Promień okolicy"><div class="arslt"><span>5 km</span><span>50 km</span><span>Polska</span></div>'
    +'<div class="arslh arsl2"><span>Miejscowości na radarze</span><b id="ardensv">'+arRngTxt(arRng())+'</b></div>'+arRngHtml()+'<div class="arslt ar2t">'+AR_CLT.map(t=>'<span>'+t+'</span>').join("")+'</div>'+AREA_INFO+'</div>'
-   +areaNearHtml(a)
+   +arRouteHtml(a)+areaNearHtml(a)
    +'<div class="bsgrp">Moja miejscowość</div>'
    +'<div class="hmcur">'+uiIcon("pin")+'<span><b>'+esc(h.name)+'</b>'+(h.def?' <small>(domyślnie)</small>':'')+'</span><button type="button" class="lnk" data-hm="'+(hmMode==="home"?"mpeek":"mhome")+'">'+(hmMode==="home"?"Anuluj":"Zmień")+'</button></div>'
    +(hmMode==="home"?srch+'<button type="button" class="b g big" data-hm="gps" style="margin-top:10px">'+uiIcon("globe")+' Użyj mojej lokalizacji</button>':'')
@@ -405,12 +426,18 @@ $("homesheet").addEventListener("pointermove",e=>{if(!arPt.has(e.pointerId))retu
 ["pointerup","pointercancel"].forEach(t=>$("homesheet").addEventListener(t,e=>{arPt.delete(e.pointerId);arG=null}));
 $("homesheet").addEventListener("wheel",e=>{const s=e.target.closest(".arsvg");if(!s)return;e.preventDefault();arZoomAt(arU(s,e),arView.s*Math.exp(-e.deltaY*.0015))},{passive:false});
 $("homesheet").addEventListener("dblclick",e=>{if(!e.target.closest(".arsvg"))return;arView=arHomeView();arRedraw()});
-$("homesheet").addEventListener("change",async e=>{if(e.target.id!=="arkm")return;const k=arKmFromSl(e.target.value);if(await areaSave({area_km:k})){arLiveKm=null;areaChanged()}});
+$("homesheet").addEventListener("change",async e=>{
+  if(e.target.id==="argpx"){const f=e.target.files&&e.target.files[0];e.target.value="";if(!f)return;const p=parseGpx(await f.text());
+    if(p.length<2){say("Nie znaleziono punktów trasy w pliku GPX.");return}arRouteSet(p,f.name.replace(/\.gpx$/i,""));return}
+  if(e.target.id!=="arkm")return;const k=arKmFromSl(e.target.value);if(await areaSave({area_km:k})){arLiveKm=null;areaChanged()}});
 $("homesheet").addEventListener("click",async e=>{
   if(e.target===$("homesheet")){closeHome();return}
   const b=e.target.closest("[data-hm]");if(!b)return;const k=b.dataset.hm;
   if(k==="close"){closeHome();return}
   if(k==="center"){arView=arHomeView();arRedraw();return}
+  if(k==="rtbase"){openRb("radar");return}
+  if(k==="rtdel"){arRoute=null;renderHome();return}
+  if(k==="rtplay"){if(arRoute){arRoute.t0=performance.now();arRedraw()}return}
   // 📡 radar od mojej lokalizacji z telefonu: podgląd okolicy (nic nie zapisujemy, powiadomienia dalej z Mojej miejscowości)
   if(k==="gpspeek"){arHeadAsk();useGps(x=>{if(!x)return;areaPeek={name:x.name||"Tu jesteś",lat:+x.lat,lon:+x.lon,gps:true};arView=arHomeView();areaChanged();renderHome()});return}
   if(k==="find"){homeFind();return}

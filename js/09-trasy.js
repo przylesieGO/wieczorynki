@@ -100,7 +100,7 @@ function renderRb(){
   if(rb.open){renderRbDetail();return}
   rbCloseMap();
   const p=$("rbsheet"),keep=p.querySelector("#rblist"),st=keep&&p.querySelector(".bslist")?p.querySelector(".bslist").scrollTop:0,n=rbList?rbList.filter(x=>!x.hidden).length:null;
-  p.innerHTML='<div class="bsbox rbbox" role="dialog" aria-modal="true" aria-label="Baza tras"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-rb="close">'+(rb.mode==="pick"?'Anuluj':'Zamknij')+'</button><b>🗺️ '+(rb.mode==="pick"?'Wybierz trasę':'Baza tras')+(n!=null?' · '+n:'')+'</b><span style="min-width:64px"></span></div><div class="bslist">'
+  p.innerHTML='<div class="bsbox rbbox" role="dialog" aria-modal="true" aria-label="Baza tras"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-rb="close">'+(rbPicking()?'Anuluj':'Zamknij')+'</button><b>🗺️ '+(rbPicking()?'Wybierz trasę':'Baza tras')+(n!=null?' · '+n:'')+'</b><span style="min-width:64px"></span></div><div class="bslist">'
    +(rb.mode==="browse"?'<div class="rbinfo2">'+uiIcon("plus")+'<div><b>'+(isAdmin?'Dodaj trasę do bazy':'Jak dodać swoją trasę?')+'</b><span>'
        +(isAdmin?'Jako administrator dodasz plik GPX od razu. Użytkownicy dodają trasy przez zaproszenie.':'Utwórz zaproszenie z plikiem GPX i włącz „📚 Dodaj do bazy tras” — po zapisaniu trasa trafi tutaj.')+'</span>'
        +'<button type="button" class="b g small" data-rb="'+(isAdmin?'add':'addinv')+'">'+(isAdmin?'＋ Dodaj trasę z pliku GPX':'＋ Zaproś z trasą')+'</button></div></div>':'')
@@ -127,7 +127,7 @@ async function renderRbDetail(){
       '👤 '+(x.created_by&&nicks[x.created_by]?esc(nicks[x.created_by]):'—')+' · dodana '+esc(dd(x.created_at))].filter(Boolean).map(t=>'<div>'+t+'</div>').join("")+'</div>'
    +'<div id="rbrev">'+rbRevHtml(x)+'</div>'
    +(x.demo?'<div class="note warnbox" style="margin-top:8px">🧪 Trasa DEMO — kształt do podglądu. Bez pliku GPX; tylko do zaproszeń testowych.</div>':'')+(x.hidden?'<div class="note warnbox" style="margin-top:8px">🙈 Ukryta — widzisz ją tylko Ty'+(isAdmin?' i admini':'')+'.</div>':'')
-   +'<button type="button" class="b big" style="margin-top:12px;width:100%" data-rb="'+(rb.mode==="pick"?'pick':'invite')+'" id="rbinvbtn">'+rbInvLbl()+'</button>'
+   +'<button type="button" class="b big" style="margin-top:12px;width:100%" data-rb="'+(rbPicking()?'pick':'invite')+'" id="rbinvbtn">'+rbInvLbl()+'</button>'
    +'<div class="pbtns" style="margin-top:8px">'+(x.demo?'':'<button type="button" class="b g" data-rb="gpx">⬇ GPX</button>')+(can?'<button type="button" class="b g" data-rb="rename">✏️ Nazwa</button><button type="button" class="b g" data-rb="hide">'+(x.hidden?'👁 Pokaż':'🙈 Ukryj')+'</button>':'')+'</div>'
    +(can?'<button type="button" class="lnk rbdel" data-rb="del">Usuń z bazy tras</button>':'')
    +'<div class="ptg">Czas jazdy przy tempie ok. 20 km/h, z wiatrem. Pogoda dla punktu startu. Mapa © OpenStreetMap · pogoda: Open-Meteo.</div></div></div>';
@@ -147,7 +147,9 @@ async function renderRbDetail(){
 const WMO=c=>c==null?"":uiIcon(c===0?"sun":c<=2?"cloudsun":c===3?"cloud":c<=48?"fog":c<=57?"drizzle":c<=67?"rain":c<=77?"cloudsnow":c<=82?"rain":c<=86?"cloudsnow":"storm");
 const WMO_T=c=>c==null?"":c===0?"bezchmurnie":c<=2?"małe zachmurzenie":c===3?"pochmurno":c<=48?"mgła":c<=57?"mżawka":c<=67?"deszcz":c<=77?"śnieg":c<=82?"przelotny deszcz":c<=86?"przelotny śnieg":"burza";
 // przycisk „Zaproś na tę trasę” z terminem wybranym w „Przed jazdą”
-function rbInvLbl(){const d=pwWhen(),n=dayDiff(d),dn=d.toLocaleDateString("pl-PL",{weekday:"long"});
+// v337: tryb „radar” — wybór trasy do podglądu na radarze okolicy (jak „pick”, ale bez terminu)
+const rbPicking=()=>rb.mode==="pick"||rb.mode==="radar";
+function rbInvLbl(){if(rb.mode==="radar")return uiIcon("radar")+' Pokaż na radarze';const d=pwWhen(),n=dayDiff(d),dn=d.toLocaleDateString("pl-PL",{weekday:"long"});
   return (rb.mode==="pick"?uiIcon("check")+' Wybierz tę trasę':uiIcon("bike")+' Zaproś na tę trasę')+'<small class="rbinvt">'+esc((n===0?"Dziś":n===1?"Jutro ("+dn+")":dn.charAt(0).toUpperCase()+dn.slice(1)+" "+d.getDate()+"."+pad(d.getMonth()+1))+" · "+hhmm(d))+'</small>'}
 function pwDefault(){const h=new Date().getHours()+1;return h>23?{day:1,h:0}:{day:0,h}}
 // pasek godzin: wybrana godzina na środku (bez przewijania strony)
@@ -490,6 +492,8 @@ $("rbsheet").addEventListener("click",async e=>{
   if(k==="towns"){rbTowns(rbTok);return}
   if(k==="osmre"){rbOsmShow(rbTok,true);return}
   if(k==="rev"){rb.rev=!rb.rev;if(rbMap&&rbPts)drawRoute(rbMap,rb.rev?rbPts.slice().reverse():rbPts,null,false);rbTowns(rbTok);rbOsmShow(rbTok);pwUpdate();return}
+  if(k==="pick"&&rb.mode==="radar"){let pts;try{pts=await rbRoute(x.id)}catch(err){pts=null}if(!pts){say("Nie udało się wczytać trasy.");return}
+    if(rb.rev)pts=pts.slice().reverse();closeRb();arRouteSet(pts,x.name);return}
   if((k==="pick"||k==="invite")&&x.demo&&!testOk){say("🧪 Trasa DEMO jest tylko do testowych zaproszeń — a ich nie masz włączonych.");return}
   if(k==="pick"||k==="invite"){let pts;try{pts=await rbRoute(x.id)}catch(err){pts=null}if(!pts){say("Nie udało się wczytać trasy.");return}
     if(rb.rev)pts=pts.slice().reverse();

@@ -1745,3 +1745,16 @@ html[data-theme=dark] .wdeck{filter:drop-shadow(0 7px 5px rgba(0,0,0,.85)) drop-
 .ar2 #arlo::-webkit-slider-thumb{border-color:var(--g1);background:radial-gradient(circle,var(--g1) 0 3px,var(--card) 3.5px);box-shadow:0 0 0 4px color-mix(in srgb,var(--g1) 20%,transparent),0 1px 4px rgba(0,0,0,.25)}
 .ar2 #arlo::-moz-range-thumb{border-color:var(--g1);background:radial-gradient(circle,var(--g1) 0 3px,var(--card) 3.5px)}
 .arsl .ar2t span{width:0;display:flex;justify-content:center;white-space:nowrap}.arsl .ar2t{padding:0 11px}
+/* v337: 🗺️ trasa GPX na radarze — fioletowa kreska z obwódką, rysowana od startu do mety (pathLength=1), start zielony, meta pojawia się na końcu */
+.arsvg .arrtc{fill:none;stroke:var(--card);stroke-linecap:round;stroke-linejoin:round;opacity:.85}
+.arsvg .arrt{fill:none;stroke:#af52de;stroke-linecap:round;stroke-linejoin:round}
+.arsvg .arrt.an{stroke-dasharray:1 1;stroke-dashoffset:1;animation:arrt 3s ease-in-out forwards}
+@keyframes arrt{to{stroke-dashoffset:0}}
+.arsvg .arrts{fill:var(--acc);stroke:var(--card);stroke-width:1.5px}
+.arsvg .arrtm{fill:var(--card);stroke:#af52de}
+.arsvg .arrtm.an{opacity:0;animation:arrtm .3s 2.9s forwards}
+@keyframes arrtm{to{opacity:1}}
+.arsvg .artn.rt{fill:#af52de;font-weight:700}.arsvg .artd.rt{fill:#af52de}
+.arrti .lnk{margin-left:6px;font-weight:700}.arrti .note{margin-top:4px}
+@media (prefers-reduced-motion:reduce){.arsvg .arrt.an,.arsvg .arrtm.an{animation:none;stroke-dashoffset:0;opacity:1}}
+
