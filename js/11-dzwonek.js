@@ -398,7 +398,7 @@ function renderPop(dir){   // dir: -1 / 1 = karta wjeżdża z lewej / prawej (pr
    +(moved&&!open?'<div class="pmeta">'+(fromRange(w)?'✅ Godzina jest już ustalona — powyżej.':'🕖 Godzina była już zmieniana — powyżej aktualna.')+'</div>':'')
    +paceHtml(w)+bikeHtml(w)+durLineHtml(w)+(typeof wxHtml==="function"?wxHtml(w):'')+placeHtml(w)+noteHtml(w.note,"pnote")   // 🌡 pogoda jak na karcie (prośba 22:55)
    +(w.user_id!==actor&&!time?'<div class="pmeta">Zaproszenie od '+nk(w.user_id)+'</div>':'')
-   +(inv.length?popNks("Zaproszeni też",inv,"pinv"+w.id,false):'')
+   +(inv.length?popNks("Zaproszeni też",inv,"pinv"+w.id,false):priv&&!wGr(w)&&!wEkipaKind(w)&&w.user_id!==uid?'<div class="pmeta">'+uiIcon("lock")+' Tylko Ty jesteś zaproszony</div>':'')
    +(going.length&&!open?popNks("Dołączyli",going,"pgo"+w.id,true):'')
    +btns
    +'</div>'

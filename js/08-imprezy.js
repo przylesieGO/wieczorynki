@@ -210,6 +210,7 @@ const areaCntTxt=c=>[c.w?c.w+" "+plf(c.w,["zaproszenie","zaproszenia","zaprosze�
 // Kierunki i odległości prawdziwe (północ u góry). Na radarze: miejscowości z OpenStreetMap (ile — suwak gęstości),
 // miejscowości z imprezami (zawsze podpisane), a rzeczy spoza radaru przy brzegu z odnośnikiem: nazwa · km.
 const AR_W=430,AR_H=290,AR_CX=215,AR_CY=145,AR_R0=75,AR_RB=105,AR_RM=101;   // R0 = promień okolicy, RB = brzeg radaru, RM = do niego dociągamy dalekie punkty
+const arSlP=(v,mn,mx)=>(((+v)-mn)/(mx-mn)).toFixed(4);   // 0–1: pozycja suwaka radaru (wypełnienie skali)
 const AR_DENS=[0,3,6,10,15,21,28,36];   // suwak gęstości → ile mniejszych miejscowości dokładamy do stałych (stałe — zawsze)
 const AR_DIR=["płn.","płn.-wsch.","wsch.","płd.-wsch.","płd.","płd.-zach.","zach.","płn.-zach."];
 const arLab=t=>{t=String(t||"").split(/[,·(]/)[0].trim();return t.length>2?t:""};
@@ -313,8 +314,8 @@ function renderHome(){
    +(a.peek?'<div class="hmcur arpeek">'+uiIcon("eye")+'<span>Podgląd: <b>'+esc(a.name)+'</b></span><button type="button" class="lnk" data-hm="unpeek">Wróć do: '+esc(h.name)+'</button></div>':'')
    +'<div class="arvis">'+areaSvg(a)+'<button type="button" class="fch arctr arloc'+(areaPeek&&areaPeek.gps?' on':'')+'" data-hm="gpspeek">'+uiIcon("locate")+' Gdzie jestem</button>'+'<button type="button" class="fch arctr'+(arViewMoved()?'':' off')+'" data-hm="center">'+uiIcon("target")+' Wyśrodkuj</button></div><div class="arcnt">'+arCntInner(a.km,c)+'</div>'
    +'<div class="hleg arleg"><i class="hc w"></i> zaproszenia <i class="hc s"></i> sygnały <i class="hc ev"></i> imprezy</div>'
-   +'<div class="arsl"><div class="arslh"><span>Promień</span><b id="arkmv">'+areaKmTxt(a.km)+'</b></div><input id="arkm" type="range" min="5" max="51" step="1" value="'+arSlVal(a.km)+'" aria-label="Promień okolicy"><div class="arslt"><span>5 km</span><span>50 km</span><span>Polska</span></div>'
-   +'<div class="arslh arsl2"><span>Miejscowości na radarze</span><b id="ardensv">'+arDensTxt(arDens())+'</b></div><input id="ardens" type="range" min="0" max="'+(AR_DENS.length-1)+'" step="1" value="'+arDens()+'" aria-label="Ile miejscowości podpisać na radarze"><div class="arslt"><span>tylko główne</span><span>więcej</span></div>'+AREA_INFO+'</div>'
+   +'<div class="arsl"><div class="arslh"><span>Promień</span><b id="arkmv">'+areaKmTxt(a.km)+'</b></div><input id="arkm" class="arrng" type="range" min="5" max="51" step="1" value="'+arSlVal(a.km)+'" style="--p:'+arSlP(arSlVal(a.km),5,51)+'" aria-label="Promień okolicy"><div class="arslt"><span>5 km</span><span>50 km</span><span>Polska</span></div>'
+   +'<div class="arslh arsl2"><span>Miejscowości na radarze</span><b id="ardensv">'+arDensTxt(arDens())+'</b></div><input id="ardens" class="arrng" type="range" min="0" max="'+(AR_DENS.length-1)+'" step="1" value="'+arDens()+'" style="--p:'+arSlP(arDens(),0,AR_DENS.length-1)+';--tk:'+(100/(AR_DENS.length-1)).toFixed(3)+'%" aria-label="Ile miejscowości podpisać na radarze"><div class="arslt"><span>tylko główne</span><span>więcej</span></div>'+AREA_INFO+'</div>'
    +areaNearHtml(a)
    +'<div class="bsgrp">Moja miejscowość</div>'
    +'<div class="hmcur">'+uiIcon("pin")+'<span><b>'+esc(h.name)+'</b>'+(h.def?' <small>(domyślnie)</small>':'')+'</span><button type="button" class="lnk" data-hm="'+(hmMode==="home"?"mpeek":"mhome")+'">'+(hmMode==="home"?"Anuluj":"Zmień")+'</button></div>'
@@ -344,6 +345,7 @@ function useGps(after){
 }
 // suwaki: radar na żywo (najwyżej raz na klatkę), promień zapisany po puszczeniu (oszczędnie dla serwera)
 $("homesheet").addEventListener("input",e=>{const id=e.target.id;
+  if(e.target.classList&&e.target.classList.contains("arrng"))e.target.style.setProperty("--p",arSlP(e.target.value,+e.target.min,+e.target.max));
   if(id==="ardens"){try{localStorage.setItem("arDens",String(e.target.value))}catch(x){}const v=$("ardensv");if(v)v.textContent=arDensTxt(arDens())}
   else if(id==="arkm"){arLiveKm=arKmFromSl(e.target.value);const v=$("arkmv");if(v)v.textContent=areaKmTxt(arLiveKm)}
   else return;
