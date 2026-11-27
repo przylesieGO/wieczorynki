@@ -300,20 +300,24 @@ function arHeadAsk(){try{const D=window.DeviceOrientationEvent;if(D&&typeof D.re
 let arWx={k:"",at:0,d:null,busy:false,err:false};
 const AR_WXC=[["sun","słonecznie"],["part","częściowe zachmurzenie"],["cloud","pochmurno"],["fog","mgła"],["rain","deszcz"],["snow","śnieg"],["storm","burza"]];
 const arWxOn=()=>{try{return localStorage.getItem("arWxOn")!=="0"}catch(e){return true}};
-const arWxT=()=>{let v="0";try{v=localStorage.getItem("arWxT")||"0"}catch(e){}return v==="3"||v==="j"?v:"0"};
+// v342: czas pogody suwakiem — 0…48 h do przodu (płynnie, dane co godzinę); dawny wybór Teraz/+3 h/Jutro przeliczany na godziny
+const arWxH=()=>{let v=0;try{const x=localStorage.getItem("arWxH"),t=localStorage.getItem("arWxT");
+    if(x!=null&&x!=="")v=+x;else if(t==="3")v=3;else if(t==="j"){const d=new Date(),j=new Date(d);j.setDate(d.getDate()+1);j.setHours(12,0,0,0);v=Math.round((j-d)/36e5)}}catch(e){}
+  return Math.max(0,Math.min(48,isFinite(v)?v:0))};
+const arWxHTxt=h=>{h=Math.round(h);if(!h)return "teraz";const d=new Date(Date.now()+h*36e5);return "+"+h+" h · "+d.toLocaleDateString("pl-PL",{weekday:"short"})+" "+pad(d.getHours())+":00"};
 function arWxPts(a){const S=a.km||300,D=Math.max(8,Math.min(60,S)),k=Math.cos(a.lat*Math.PI/180),out=[[a.lat,a.lon]];
   for(let i=0;i<16;i++){const b=i*22.5*Math.PI/180;out.push([a.lat+D*Math.cos(b)/111.2,a.lon+D*Math.sin(b)/(111.2*k)])}return {D,out}}
 async function arWxLoad(a){if(!arWxOn())return;const {D,out}=arWxPts(a),k=a.lat.toFixed(2)+","+a.lon.toFixed(2)+":"+D;
   if(arWx.k===k&&(arWx.busy||(arWx.d&&Date.now()-arWx.at<18e5)))return;
   arWx={k,at:Date.now(),d:arWx.k===k?arWx.d:null,busy:true,err:false};
   try{const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude="+out.map(p=>p[0].toFixed(3)).join(",")+"&longitude="+out.map(p=>p[1].toFixed(3)).join(",")
-      +"&hourly=weather_code,precipitation,cloud_cover,wind_speed_10m,wind_direction_10m&forecast_days=2&timezone=auto");
+      +"&hourly=weather_code,precipitation,cloud_cover,wind_speed_10m,wind_direction_10m&forecast_days=3&timezone=auto");
     if(!r.ok)throw new Error(r.status);let j=await r.json();if(!Array.isArray(j))j=[j];if(arWx.k!==k)return;
     arWx.d=j;arWx.busy=false;arWx.at=Date.now()}
   catch(e){if(arWx.k!==k)return;arWx.busy=false;arWx.err=true;arWx.at=0}
   arRedraw()}
 // godzina z wybranego czasu → indeks w danych godzinowych (czas lokalny miejsca, timezone=auto)
-function arWxIdx(h){const t=h&&h.time;if(!t||!t.length)return -1;const d=new Date(),v=arWxT();if(v==="3")d.setHours(d.getHours()+3);else if(v==="j"){d.setDate(d.getDate()+1);d.setHours(12)}
+function arWxIdx(h){const t=h&&h.time;if(!t||!t.length)return -1;const d=new Date(Date.now()+Math.round(arWxH())*36e5);
   const s=d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"T"+pad(d.getHours())+":00",i=t.indexOf(s);return i>=0?i:Math.min(t.length-1,Math.max(0,t.findIndex(x=>x>s)))}
 const arWxCat=(c,p,cl)=>c>=95?["storm",1]:(c>=71&&c<=77)||c===85||c===86?["snow",.8]:(c>=51&&c<=67)||(c>=80&&c<=82)||p>=.1?["rain",Math.min(1,.35+(p||0)/3)]
   :c===45||c===48?["fog",.7]:c===3||cl>=85?["cloud",.6]:c===1||c===2||cl>=35?["part",.5]:["sun",.6];
@@ -330,11 +334,11 @@ function arWxLeg(){if(!arWxOn())return "";const P=arWxGet();
   const has=new Set(P.map(q=>q.cat[0])),c=P[0],strong=Math.max(...P.map(q=>q.w))>=40;
   return AR_WXC.filter(([k])=>has.has(k)).map(([k,t])=>'<i class="hc wx '+k+'"></i> '+t).join(" ")
     +'<span class="arwxw">'+uiIcon("wind")+' wiatr '+Math.round(c.w)+' km/h z kier. '+AR_DIR[Math.round(c.wd/45)%8]+(strong?' · <b>miejscami silny</b>':'')+'</span>'}
-// v341: przełączniki pogody pionowo na lewej krawędzi radaru — same napisy, bez plakietek (aktywny zielony)
-const arWxSide=()=>{const on=arWxOn(),t=arWxT();
-  return '<div class="arwxv"><button type="button" class="'+(on?'on':'')+'" data-hm="wxon" aria-pressed="'+on+'">'+uiIcon("cloudsun")+' Pogoda</button>'
-    +(on?[["0","Teraz"],["3","+3 h"],["j","Jutro"]].map(([v,l])=>'<button type="button" class="'+(t===v?'on':'')+'" data-hm="wxt" data-v="'+v+'" aria-pressed="'+(t===v)+'">'+l+'</button>').join(""):'')+'</div>'};
-const arWxBar=()=>'<div class="hleg arleg arwxleg" id="arwxleg">'+arWxLeg()+'</div>';
+const arWxSl=()=>{if(!arWxOn())return "";const h=arWxH();
+  return '<div class="arslh arsl2"><span>Pogoda</span><b id="arwxhv">'+arWxHTxt(h)+'</b></div><input id="arwxh" class="arrng" type="range" min="0" max="48" step="any" value="'+h+'" style="--p:'+arSlP(h,0,48)+';--tk:12.5%" aria-label="Pogoda za ile godzin (do 48)">'
+    +'<div class="arslt"><span>teraz</span><span>+24 h</span><span>+48 h</span></div>'};
+// v342: przełącznik „Pogoda” pod radarem, po lewej w wierszu legendy pogody — jak pozycje legendy (wyłączony przekreślony)
+const arWxBar=()=>{const on=arWxOn();return '<div class="hleg arleg arwxleg"><button type="button" class="arlg'+(on?'':' off')+'" data-hm="wxon" aria-pressed="'+on+'">'+uiIcon("cloudsun")+' Pogoda</button><span id="arwxleg">'+arWxLeg()+'</span></div>'};
 function areaSvg(a){return '<svg class="arsvg'+(typeof isKingReal==="function"&&isKingReal()?' kg':'')+(arView.s>1.01?' zm':'')+'" viewBox="0 0 '+AR_W+' '+AR_H+'" role="img" aria-label="Radar okolicy: '+esc(a.name||"")+', '+areaKmTxt(a.km)+' — przesuń palcem, przybliż dwoma palcami">'+'<g class="arzm" transform="'+arZmT(arView.s)+'"><g class="arwx">'+arWxSvg()+'</g>'+arCompass()+'<g class="arin">'+areaSvgIn(a)+'</g></g></svg>'}
 function areaSvgIn(a){const V={z:arView.z||1,x:arView.x,y:arView.y},S=a.km||300,CX=AR_CX,CY=AR_CY,f=AR_R0/S*V.z,G={},far={},B=[],K=typeof isKingReal==="function"&&isKingReal();
   const OX=CX+V.x,OY=CY+V.y,R0=AR_R0*V.z,homeIn=Math.hypot(V.x,V.y)<AR_RB-14;   // OX/OY — gdzie na radarze jest środek okolicy po przesunięciu
@@ -430,10 +434,10 @@ function renderHome(){arHeadOn();
       +(hmMode==="peek"?'<button type="button" class="hmfav'+(isFav(x)?' on':'')+'" data-hm="fav" data-i="'+i+'" aria-label="Ulubiona miejscowość">'+uiIcon(isFav(x)?"starf":"star")+'</button>':'')+'</div>').join("");
   p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Moja okolica"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-hm="close">Zamknij</button><b>'+uiIcon("pin")+' Moja okolica</b><span style="min-width:64px"></span></div><div class="bslist">'
    +(a.peek?'<div class="hmcur arpeek">'+uiIcon("eye")+'<span>Podgląd: <b>'+esc(a.name)+'</b></span><button type="button" class="lnk" data-hm="unpeek">Wróć do: '+esc(h.name)+'</button></div>':'')
-   +'<div class="arvis">'+areaSvg(a)+'<button type="button" class="fch arctr arloc'+(areaPeek&&areaPeek.gps?' on':'')+'" data-hm="gpspeek">'+uiIcon("locate")+' Gdzie jestem</button>'+'<button type="button" class="fch arctr'+(arViewMoved()?'':' off')+'" data-hm="center">'+uiIcon("target")+' Wyśrodkuj</button>'+arWxSide()+(arRoute?'<button type="button" class="fch arctr arplay" data-hm="rtplay">'+uiIcon("play")+' Odtwórz</button>':'')+'</div><div class="arcnt">'+arCntInner(a.km,c)+'</div>'
+   +'<div class="arvis">'+areaSvg(a)+'<button type="button" class="fch arctr arloc'+(areaPeek&&areaPeek.gps?' on':'')+'" data-hm="gpspeek">'+uiIcon("locate")+' Gdzie jestem</button>'+'<button type="button" class="fch arctr'+(arViewMoved()?'':' off')+'" data-hm="center">'+uiIcon("target")+' Wyśrodkuj</button>'+(arRoute?'<button type="button" class="fch arctr arplay" data-hm="rtplay">'+uiIcon("play")+' Odtwórz</button>':'')+'</div><div class="arcnt">'+arCntInner(a.km,c)+'</div>'
    +arLegHtml()+arWxBar()
    +'<div class="arsl"><div class="arslh"><span>Promień'+arQ("arinfo","Co daje promień?")+'</span><b id="arkmv">'+areaKmTxt(a.km)+'</b></div><input id="arkm" class="arrng" type="range" min="5" max="51" step="any" value="'+arSlVal(a.km)+'" style="--p:'+arSlP(arSlVal(a.km),5,51)+'" aria-label="Promień okolicy"><div class="arslt"><span>5 km</span><span>50 km</span><span>Polska</span></div>'
-   +'<div class="arslh arsl2"><span>Miejscowości na radarze</span><b id="ardensv">'+arRngTxt(arRng())+'</b></div>'+arRngHtml()+'<div class="arslt ar2t">'+AR_CLT.map(t=>'<span>'+t+'</span>').join("")+'</div>'+AREA_INFO.replace('<div class="note"','<div class="note hide" id="arinfo"')+'</div>'
+   +'<div class="arslh arsl2"><span>Miejscowości na radarze</span><b id="ardensv">'+arRngTxt(arRng())+'</b></div>'+arRngHtml()+'<div class="arslt ar2t">'+AR_CLT.map(t=>'<span>'+t+'</span>').join("")+'</div>'+arWxSl()+AREA_INFO.replace('<div class="note"','<div class="note hide" id="arinfo"')+'</div>'
    +arRouteHtml(a)+areaNearHtml(a)
    +'<div class="bsgrp">Moja miejscowość</div>'
    +'<div class="hmcur">'+uiIcon("pin")+'<span><b>'+esc(h.name)+'</b>'+(h.def?' <small>(domyślnie)</small>':'')+'</span><button type="button" class="lnk" data-hm="'+(hmMode==="home"?"mpeek":"mhome")+'">'+(hmMode==="home"?"Anuluj":"Zmień")+'</button></div>'
@@ -467,6 +471,7 @@ $("homesheet").addEventListener("input",e=>{const id=e.target.id;
   if(id==="arlo"||id==="arhi"){const L=$("arlo"),H=$("arhi");let lo=+L.value,hi=+H.value;if(lo>hi){if(id==="arlo")H.value=hi=lo;else L.value=lo=hi}   // uchwyt popycha drugi — nigdy się nie zakleszczą
     try{localStorage.setItem("arRng",lo.toFixed(2)+"-"+hi.toFixed(2))}catch(x){}const w=L.parentNode;w.style.setProperty("--a",(lo/AR_CLN).toFixed(4));w.style.setProperty("--b",(hi/AR_CLN).toFixed(4));
     const v=$("ardensv");if(v)v.textContent=arRngTxt([lo,hi]);arView.s=arAutoS();const V=arView,m=AR_RB,d=Math.hypot(V.x,V.y);if(d>m){V.x*=m/d;V.y*=m/d}}
+  else if(id==="arwxh"){const h=+e.target.value;try{localStorage.setItem("arWxH",h.toFixed(2))}catch(x){}const v=$("arwxhv");if(v)v.textContent=arWxHTxt(h)}
   else if(id==="arkm"){const k=+e.target.value;arLiveKm=k>=50.5?0:Math.max(5,k);const v=$("arkmv");if(v)v.textContent=areaKmTxt(arKmFromSl(k))}   // v336: radar płynnie, napis i zapis co 1 km
   else return;
   if(!arRaf)arRaf=requestAnimationFrame(()=>{arRaf=0;arRedraw()})});
@@ -501,7 +506,6 @@ $("homesheet").addEventListener("click",async e=>{
   if(k==="rtbase"){openRb("radar");return}
   if(k==="rtosm"){arRouteOsm();return}
   if(k==="wxon"){try{localStorage.setItem("arWxOn",arWxOn()?"0":"1")}catch(err){}renderHome();return}
-  if(k==="wxt"){try{localStorage.setItem("arWxT",b.dataset.v)}catch(err){}renderHome();return}
   if(k==="rtdel"){arRoute=null;arView=arHomeView();renderHome();return}
   if(k==="rtplay"){if(arRoute){arRoute.t0=performance.now();arRedraw()}return}   // v339: odtwórz = tylko narysuj od nowa, widok (przybliżenie, przesunięcie) zostaje
   // 📡 radar od mojej lokalizacji z telefonu: podgląd okolicy (nic nie zapisujemy, powiadomienia dalej z Mojej miejscowości)

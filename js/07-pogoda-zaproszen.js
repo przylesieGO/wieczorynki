@@ -68,7 +68,7 @@ async function openRouteSheet(w){
    +'<div class="mapwrap"><div class="map rsmap" id="map3"></div><div class="warrow hide" id="warrow3"></div></div>'
    +'<div class="legend"><span><i class="dot" style="background:#d64545"></i>pod wiatr</span><span><i class="dot" style="background:#e0b83a"></i>bocznie</span><span><i class="dot" style="background:#2a9d5c"></i>z wiatrem</span></div>'
    +'<div class="stats" id="stats3"></div><div class="note" id="windinfo3" style="margin-top:8px">Ładuję trasę…</div><div class="tip hide" id="tip3"></div><div class="routeinfo hide" id="placesbox3"></div>'
-   +'<div class="pbtns" style="margin-top:14px">'+(wDemoRt(w)?'':'<button type="button" class="b" data-rt="gpx" data-id="'+esc(w.id)+'">⬇ Pobierz GPX</button>')+'<button type="button" class="b w" data-rk="close">Zamknij</button></div>'
+   +'<div class="pbtns" style="margin-top:14px">'+(wDemoRt(w)?'':'<button type="button" class="b" data-rt="gpx" data-id="'+esc(w.id)+'">⬇ Pobierz GPX</button>')+'<button type="button" class="b w" data-rt="radar" data-id="'+esc(w.id)+'">'+uiIcon("radar")+' Pokaż na radarze</button></div>'
    +'<div class="ptg">Czas przy tempie ok. '+String(Math.round(wPaceKmh(w.pace)*10)/10).replace(".",",")+' km/h, z uwzględnieniem wiatru. Mapa © OpenStreetMap · pogoda: Open-Meteo.</div></div>';
   p.classList.remove("hide");
   let pts;
@@ -78,13 +78,14 @@ async function openRouteSheet(w){
   let an=analyze(pts,0,0,wPaceKmh(w.pace),false);$("stats3").innerHTML=statsHtml(an);
   await needL();if(tok!==rsTok)return;
   rsMap=makeMap("map3");
-  if(rsMap){setTimeout(()=>{if(rsMap){rsMap.m.invalidateSize();drawRoute(rsMap,pts,null,true)}},60)}
+  let segsNow=null;   // v342: wiatr z pamięci przychodzi szybciej niż mapa — pierwsze rysowanie nie może zamazać kolorów (pod wiatr / z wiatrem)
+  if(rsMap){setTimeout(()=>{if(rsMap&&tok===rsTok){rsMap.m.invalidateSize();drawRoute(rsMap,pts,segsNow,true)}},60)}
   else $("map3").outerHTML='<div class="note">Nie udało się załadować mapy (sprawdź internet).</div>';
   placesAlong(pts,"w"+w.id+":"+w.route_km).then(l=>{if(tok===rsTok)renderPlaces("placesbox3",rsMap,l)}).catch(()=>{});
   $("windinfo3").textContent="Sprawdzam prognozę wiatru…";
   try{
     const x=await getWind(pts[0].lat,pts[0].lon,wxWhen(w));if(tok!==rsTok)return;
-    an=analyze(pts,x.dir,x.speed,wPaceKmh(w.pace),false);$("stats3").innerHTML=statsHtml(an);
+    an=analyze(pts,x.dir,x.speed,wPaceKmh(w.pace),false);$("stats3").innerHTML=statsHtml(an);segsNow=an.segs;
     if(rsMap){drawRoute(rsMap,pts,an.segs,false);setArrow("warrow3",x.dir,x.speed)}
     $("tip3").textContent=an.tip;$("tip3").classList.remove("hide");
     $("windinfo3").textContent="Wiatr o "+x.time+": "+windLabel(x.dir)+", "+Math.round(x.speed)+" km/h, porywy do "+Math.round(x.gust)+" km/h"+(x.temp!=null?" · "+Math.round(x.temp)+"°C":"")+(x.rain!=null?" · deszcz "+Math.round(x.rain)+"%":"")+" (Open-Meteo).";
@@ -96,6 +97,8 @@ document.addEventListener("click",async e=>{
     e.stopPropagation();
     const w=wants.find(x=>x.id===b.dataset.id);if(!w)return;
     if(b.dataset.rt==="show"){openRouteSheet(w);return}
+    if(b.dataset.rt==="radar"){let pts;try{pts=await getWantRoute(w.id)}catch(err){pts=null}if(!pts){say("Nie udało się pobrać trasy.");return}   // v342: trasa zaproszenia na radarze okolicy
+      closeRouteSheet();arRouteSet(pts,nickOf(w.user_id)+" · "+relDay(new Date(w.starts_at))+" "+wTime(w));return}
     if(b.dataset.rt==="rbopen"){await rbLoad(true);rb.mode="browse";rb.open=w.route_base_id;renderRb();return}
     if(b.dataset.rt==="rbadd"){rbAddFromWant(w);return}
     if(w.route_base_id&&typeof rbLoad==="function"){try{await rbLoad()}catch(err){}}

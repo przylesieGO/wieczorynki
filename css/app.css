@@ -1773,9 +1773,7 @@ html[data-theme=dark] .wdeck{filter:drop-shadow(0 7px 5px rgba(0,0,0,.85)) drop-
 .arwxs.cloud,.hc.wx.cloud{fill:#8e8e93;background:#8e8e93}.arwxs.fog,.hc.wx.fog{fill:#c7c7cc;background:#c7c7cc}
 .arwxs.rain,.hc.wx.rain{fill:#0a84ff;background:#0a84ff}.arwxs.snow,.hc.wx.snow{fill:#d6ecff;background:#d6ecff}
 .arwxs.storm,.hc.wx.storm{fill:#bf5af2;background:#bf5af2}
-.arwxv{position:absolute;left:6px;top:50%;transform:translateY(-50%);z-index:2;display:flex;flex-direction:column;align-items:flex-start;gap:1px}   /* v341: pogoda pionowo na lewej krawędzi radaru */
-.arwxv button{display:inline-flex;align-items:center;gap:4px;border:0;background:none;padding:4px 2px;font:600 12px/1.2 inherit;color:var(--mut);opacity:.8;cursor:pointer;text-shadow:0 0 4px var(--card),0 0 2px var(--card)}
-.arwxv button.on{color:var(--acc);opacity:1;font-weight:800}.arwxv .ui-i{width:13px;height:13px}
+.arwxleg .arlg .ui-i{width:14px;height:14px}.arwxleg>span{display:inline-flex;flex-wrap:wrap;align-items:center;gap:5px;margin-left:10px}   /* v342: „Pogoda” pod radarem, po lewej */
 .arwxleg{margin-top:0}.arwxleg .arwxw{display:inline-flex;align-items:center;gap:4px;margin-left:8px}.arwxleg .arwxw .ui-i{width:13px;height:13px}
 /* v340: legenda radaru do odklikania (zaproszenia / sygnały / imprezy) */
 .arleg .arlg{display:inline-flex;align-items:center;gap:5px;border:0;background:none;color:inherit;font:inherit;padding:4px 0;cursor:pointer}.arleg .arlg+.arlg{margin-left:10px}
