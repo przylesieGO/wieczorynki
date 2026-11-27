@@ -1645,3 +1645,8 @@ html[data-theme=dark] .arte,html[data-theme=dark] .arco.e .arcon{fill:#8fa8ff}ht
 @keyframes fabtip{0%,100%{opacity:0;transform:translateY(-4px) rotate(45deg)}12%{opacity:1}38%{opacity:1;transform:translateY(12px) rotate(45deg)}50%{opacity:0;transform:translateY(12px) rotate(45deg)}62%{opacity:0;transform:translateY(-2px) rotate(-135deg)}70%{opacity:1}88%{opacity:1;transform:translateY(-14px) rotate(-135deg)}96%{opacity:0;transform:translateY(-14px) rotate(-135deg)}}
 .fabb[data-fk=undo]:active::before,.fabb[data-fk=undo]:active::after{animation:none;opacity:0}
 @media (prefers-reduced-motion:reduce){.fabb[data-fk=undo]::before,.fabb[data-fk=undo]::after{animation:none;opacity:0}}
+/* v318: echo radaru — co kilka sekund od ikony rozchodzi się pierścień z zielonego w żółty */
+.archip:not(.peek){position:relative}
+.archip:not(.peek)::before{content:"";position:absolute;left:7px;top:50%;width:14px;height:14px;margin-top:-7px;border-radius:50%;border:1.5px solid var(--acc);pointer-events:none;opacity:0;animation:arping 7s ease-out 2.5s infinite}
+@keyframes arping{0%{opacity:0;transform:scale(.8);border-color:var(--acc)}6%{opacity:.75}55%{opacity:0;transform:scale(3.2);border-color:#ffcc00}100%{opacity:0;transform:scale(3.2);border-color:#ffcc00}}
+@media (prefers-reduced-motion:reduce){.archip:not(.peek)::before{animation:none}}
