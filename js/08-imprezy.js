@@ -202,9 +202,9 @@ function actHidHtml(keys,what){const K=[...new Set(keys.map(k=>k||"bike"))];if(!
 function areaReveal(lat,lon,name){if(lat==null||lon==null||inArea(lat,lon))return "";areaPeek={name:name||"miejsce",lat:+lat,lon:+lon};areaChanged();return "Pokazuję okolicę: "+areaPeek.name+" (podgląd — ✕ na plakietce wraca)."}
 // punkty do obrazka i liczników: zaproszenia (nadchodzące, z miejscem), sygnały z dziś, imprezy nadchodzące
 function areaPts(){const P=[],now=Date.now();
-  (wants||[]).forEach(w=>{if(w.place_lat==null||!w.starts_at||Date.parse(w.starts_at)<now-3*36e5)return;P.push({k:"w",lat:+w.place_lat,lon:+w.place_lon,nm:[w.place,w.place_city].filter(Boolean).join(" · "),lab:arLab(w.place_city||w.place)})});
-  try{sigListAll().forEach(x=>{if(x.lat!=null)P.push({k:"s",lat:+x.lat,lon:+x.lon})})}catch(e){}
-  (evs||[]).forEach(e=>{if(evHasGeo(e)&&!evPast(e))P.push({k:"e",lat:+e.lat,lon:+e.lon,nm:e.place||"",lab:arLab(e.place)})});
+  (wants||[]).forEach(w=>{if(w.place_lat==null||!w.starts_at||Date.parse(w.starts_at)<now-3*36e5)return;P.push({k:"w",id:w.id,lat:+w.place_lat,lon:+w.place_lon,nm:[w.place,w.place_city].filter(Boolean).join(" · "),lab:arLab(w.place_city||w.place),t:(w.place_city||w.place||"Zaproszenie")+" · "+new Date(w.starts_at).toLocaleString("pl-PL",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit"})})});
+  try{sigListAll().forEach(x=>{if(x.lat!=null)P.push({k:"s",id:x.user_id,lat:+x.lat,lon:+x.lon,t:(x.user_id===uid?"Ty":nickOf(x.user_id))+" — ma ochotę"+(typeof sigA==="function"?" "+sigA(x.activity)[2]:"")})})}catch(e){}
+  (evs||[]).forEach(e=>{if(evHasGeo(e)&&!evPast(e))P.push({k:"e",id:e.id,lat:+e.lat,lon:+e.lon,nm:e.place||"",lab:arLab(e.place),t:(e.name||e.place||"Impreza")+(e.date_from?" · "+new Date(e.date_from+"T12:00").toLocaleDateString("pl-PL",{day:"numeric",month:"short"}):"")})});
   return P}
 function areaCount(a){const c={w:0,s:0,e:0,out:0};areaPts().forEach(p=>{if(areaIn(a,p.lat,p.lon))c[p.k]++;else c.out++});return c}
 const areaCntTxt=c=>[c.w?c.w+" "+plf(c.w,["zaproszenie","zaproszenia","zaproszeń"]):"",c.s?c.s+" "+plf(c.s,["sygnał","sygnały","sygnałów"]):"",c.e?c.e+" "+plf(c.e,["impreza","imprezy","imprez"]):""].filter(Boolean).join(" · ")||"na razie nic";
@@ -436,7 +436,7 @@ function areaNearHtml(a){const c={lat:a.lat,lon:a.lon},best={};
   const tile=(k,t)=>{const b=best[k];
     if(!b)return '<div class="arnr off"><span class="arna '+k+'">'+ar+'</span><div><small>'+t+'</small><b>brak</b><span>na razie nic</span></div></div>';
     const deg=Math.round(arBear(c,b.p)),here=b.d<1.5;
-    return '<button type="button" class="arnr" data-hm="nrgo" data-k="'+k+'" data-lat="'+b.p.lat.toFixed(5)+'" data-lon="'+b.p.lon.toFixed(5)+'" aria-label="'+t+' — pokaż na radarze"><span class="arna '+k+'"'+(here?'':' style="transform:rotate('+deg+'deg)"')+'>'+(here?uiIcon("pin"):ar)+'</span><div><small>'+t+'</small><b>'+(here?'tutaj':arKmT(b.d))+'</b>'
+    return '<button type="button" class="arnr" data-hm="nrgo" data-k="'+k+'" data-id="'+esc(String(b.p.id||""))+'" data-t="'+esc(b.p.t||"")+'" data-lat="'+b.p.lat.toFixed(5)+'" data-lon="'+b.p.lon.toFixed(5)+'" aria-label="'+t+' — pokaż na radarze"><span class="arna '+k+'"'+(here?'':' style="transform:rotate('+deg+'deg)"')+'>'+(here?uiIcon("pin"):ar)+'</span><div><small>'+t+'</small><b>'+(here?'tutaj':arKmT(b.d))+'</b>'
       +'<span>'+(here?esc(a.name||""):AR_DIR[Math.round(deg/45)%8]+(b.p.lab&&k!=="s"?' · '+esc(arCut(b.p.lab,14)):''))+'</span></div></button>'};
   // v349: las i woda z siatki terenu (js/25) — kafelki jak wyżej, bez nazwy (OSM nie zawsze ją ma)
   const tt=(k,t,ic)=>{const q=typeof terNear==="function"?terNear(a,k):null;
@@ -446,13 +446,18 @@ function areaNearHtml(a){const c={lat:a.lat,lon:a.lon},best={};
   return '<div class="bsgrp">Najbliżej</div><div class="arnear">'+tile("s","Sygnał")+tile("w","Zaproszenie")+tile("e","Impreza")+tt("f","Las","tree")+tt("w","Woda","droplet")+'</div>'+(typeof poiTilesHtml==="function"?poiTilesHtml(a):'')}
 // v360: gdy dociągną się miejsca z OSM — przerysowanie okna (z zachowaniem przewinięcia), tylko gdy dotyczą tego, co widać
 // v362: kafelek sygnału / zaproszenia / imprezy → przewinięcie do radaru, przybliżenie na to miejsce i znikający duży punkt z ikoną
-function arPing(k,lat,lon){const a=Object.assign(areaCur(),arLiveKm!=null?{km:arLiveKm}:{}),S=a.km||300,kc=Math.cos(a.lat*Math.PI/180);
+function arPing(k,lat,lon,id,t){const a=Object.assign(areaCur(),arLiveKm!=null?{km:arLiveKm}:{}),S=a.km||300,kc=Math.cos(a.lat*Math.PI/180);
   const dy=(lat-a.lat)*111.2,dx=(lon-a.lon)*111.2*kc,d=Math.hypot(dx,dy),z=Math.max(1,Math.min(8,S*1.4/Math.max(4,d*.8))),f=AR_R0/S*z;
   arView={z,x:-dx*f,y:dy*f,s:arView.s||1};arRedraw();
   const sv=$("homesheet").querySelector(".arsvg .arzm");if(!sv)return;const o=sv.querySelector(".arping");if(o)o.remove();
   const ic=uiIcon(k==="s"?"hand":k==="e"?"flag":"ebike").replace('<svg ','<svg x="'+(AR_CX-11)+'" y="'+(AR_CY-11)+'" width="22" height="22" ');
   sv.insertAdjacentHTML("beforeend",'<g class="arping '+k+'"><circle cx="'+AR_CX+'" cy="'+AR_CY+'" r="16"/><circle cx="'+AR_CX+'" cy="'+AR_CY+'" r="16"/><circle class="arpgc" cx="'+AR_CX+'" cy="'+AR_CY+'" r="15"/><g class="arpgi">'+ic+'</g></g>');
-  setTimeout(()=>{const g=sv.querySelector(".arping");if(g)g.remove()},3200)}
+  setTimeout(()=>{const g=sv.querySelector(".arping");if(g)g.remove()},3200);
+  // etykieta pod punktem — przenosi do karty (zaproszenie, sygnał w 🔔, impreza); znika po 8 s albo przy przebudowie okna
+  const vis=$("homesheet").querySelector(".arvis"),svg=vis&&vis.querySelector(".arsvg");if(!vis||!svg||!id)return;const ol=vis.querySelector(".arplab");if(ol)ol.remove();
+  const r=svg.getBoundingClientRect(),R=vis.getBoundingClientRect(),sc=r.width/AR_W;
+  vis.insertAdjacentHTML("beforeend",'<button type="button" class="arplab '+k+'" data-hm="nrcard" data-k="'+k+'" data-id="'+esc(id)+'" style="left:'+(r.left-R.left+AR_CX*sc).toFixed(1)+'px;top:'+(r.top-R.top+(AR_CY+18*(arView.s||1))*sc).toFixed(1)+'px">'+esc(arCut(t||"",34))+' ›</button>');
+  clearTimeout(arPing.tm);arPing.tm=setTimeout(()=>{const x=vis.querySelector(".arplab");if(x){x.classList.add("out");setTimeout(()=>x.remove(),300)}},8000)}
 function arPoiDone(key){try{const s=$("homesheet");if(s&&!s.classList.contains("hide")&&typeof areaCur==="function"&&poiKey(areaCur())===key)renderHome()}catch(e){}}
 // odrysowanie samego radaru i licznika (suwaki, dociągnięte miejscowości) — bez przebudowy całego okna
 function arRedraw(){const p=$("homesheet");if(!p||p.classList.contains("hide"))return;const s=p.querySelector(".arsvg");if(!s)return;
@@ -552,7 +557,11 @@ $("homesheet").addEventListener("click",async e=>{
   if(k==="center"){arView={z:1,x:0,y:0,s:1};if(arHide.size){arHide.clear();renderHome();return}arRedraw();return}
   if(k==="lg"){const t=b.dataset.k;if(arHide.has(t))arHide.delete(t);else arHide.add(t);b.classList.toggle("off",arHide.has(t));b.setAttribute("aria-pressed",String(!arHide.has(t)));arRedraw();return}   // v339: pełny widok (suwak dalej decyduje, które miejscowości)
   if(k==="nrgo"){const l=$("homesheet").querySelector(".bslist"),rm=matchMedia("(prefers-reduced-motion: reduce)").matches;if(l)l.scrollTo({top:0,behavior:rm?"auto":"smooth"});
-    setTimeout(()=>arPing(b.dataset.k,+b.dataset.lat,+b.dataset.lon),l&&l.scrollTop>40&&!rm?420:0);return}
+    setTimeout(()=>arPing(b.dataset.k,+b.dataset.lat,+b.dataset.lon,b.dataset.id,b.dataset.t),l&&l.scrollTop>40&&!rm?420:0);return}
+  if(k==="nrcard"){const id=b.dataset.id,kk=b.dataset.k;closeHome();
+    if(kk==="w"){const w=wants.find(x=>x.id===id);if(w&&typeof srGoWant==="function")srGoWant(w);else if(w)goToWant(w)}
+    else if(kk==="e"&&typeof srGoEv==="function")srGoEv(id);
+    else if(kk==="s"&&typeof srGoSig==="function")srGoSig(id);return}
   if(k==="poi"){const la=b.dataset.lat,lo=b.dataset.lon,ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
     window.open(ios?"https://maps.apple.com/?daddr="+la+","+lo+"&dirflg=w":"https://www.google.com/maps/dir/?api=1&destination="+la+","+lo+"&travelmode=bicycling","_blank","noopener");return}   // v361: kafelek → nawigacja w telefonie (iPhone: Mapy Apple, Android: Mapy Google rowerem)
   if(k==="more"){try{sessionStorage.setItem("arMore",arMoreOn()?"0":"1")}catch(err){}renderHome();return}
