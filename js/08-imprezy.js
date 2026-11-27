@@ -233,9 +233,19 @@ const arHomeView=()=>({z:1,x:0,y:0,s:arAutoS()});
 // v337: 🗺️ trasa GPX na radarze (podgląd, tylko w tej karcie): kreska rysuje się od startu do mety, miejscowości po drodze podpisane
 let arRoute=null;const AR_RT_MS=3000;
 function arRouteSet(pts,name){pts=thin(pts,400);const T=arTownsGet(),on=[];
-  T.forEach(t=>{let b=1e9,bi=0;for(let i=0;i<pts.length;i++){const d=dist({lat:t[1],lon:t[2]},pts[i]);if(d<b){b=d;bi=i}}if(b<=1.2)on.push([bi,t[0]])});   // miejscowości z listy radaru do 1,2 km od śladu
-  arRoute={pts,name:String(name||"Trasa").slice(0,60),km:routeKm(pts),towns:on.sort((u,v)=>u[0]-v[0]).map(x=>x[1]),t0:performance.now()};
-  if($("homesheet").classList.contains("hide"))openHome();else renderHome();arRouteFit();arRedraw()}
+  T.forEach(t=>{let b=1e9,bi=0;for(let i=0;i<pts.length;i++){const d=dist({lat:t[1],lon:t[2]},pts[i]);if(d<b){b=d;bi=i}}if(b<=1.2)on.push([bi,t])});   // zapas: miejscowości z listy radaru do 1,2 km od śladu
+  arRoute={pts,name:String(name||"Trasa").slice(0,60),km:routeKm(pts),places:on.sort((u,v)=>u[0]-v[0]).map(([i,t])=>({name:t[0],lat:t[1],lon:t[2],type:t[3]===2?"city":t[3]===1?"town":"village"})),osm:null,t0:performance.now()};
+  if($("homesheet").classList.contains("hide"))openHome();else renderHome();arRouteFit();arRedraw();arRouteOsm()}
+// v339: pełna lista miejscowości przy trasie z OpenStreetMap (jak w Bazie tras: placesAlong, ta sama lista „Miejscowości na trasie”); do odpowiedzi — zapas z listy radaru
+function arRouteOsm(){const R=arRoute;if(!R)return;R.osm=null;arRoutePlacesUi();
+  placesAlong(R.pts,"ar:"+R.name+":"+R.pts.length+":"+R.pts[0].lat.toFixed(4)).then(l=>{if(arRoute!==R)return;R.osm=l;if(l.length)R.places=l;arRoutePlacesUi();arRedraw()})
+    .catch(()=>{if(arRoute!==R)return;R.osm=false;arRoutePlacesUi()})}
+function arRoutePlacesUi(){const R=arRoute,box=$("arplaces");if(!R||!box)return;
+  if(R.osm&&R.osm.length){renderPlaces("arplaces",null,R.osm);return}
+  const fb=R.places.length?'<div class="note">'+R.places.map(p=>esc(p.name)).join(" → ")+'</div>':'';
+  box.innerHTML=R.osm===null?fb+'<div class="note">Szukam wszystkich miejscowości w OpenStreetMap…</div>'
+    :R.osm===false?fb+'<div class="note">Nie udało się pobrać pełnej listy z OpenStreetMap. <button type="button" class="lnk" data-hm="rtosm">Spróbuj ponownie ›</button></div>'
+    :'<div class="note">Brak miejscowości blisko trasy.</div>';box.classList.remove("hide")}
 // v338: dopasuj radar do trasy — środek widoku na środku trasy, skala treści (z) tak, żeby cała trasa zmieściła się w kole; start animacji od nowa
 function arRouteFit(){const R=arRoute,a=areaCur();if(!R)return;const S=(arLiveKm!=null?arLiveKm:a.km)||300,k=Math.cos(a.lat*Math.PI/180);
   const P=R.pts.map(p=>[(p.lon-a.lon)*111.2*k,(p.lat-a.lat)*111.2]),X=P.map(q=>q[0]),Y=P.map(q=>q[1]),cx=(Math.min(...X)+Math.max(...X))/2,cy=(Math.min(...Y)+Math.max(...Y))/2;
@@ -244,9 +254,9 @@ function arRouteFit(){const R=arRoute,a=areaCur();if(!R)return;const S=(arLiveKm
 const arRouteHtml=a=>{const R=arRoute,far=R&&a.km?Math.max(...R.pts.map(p=>dist(a,p))):0;
   return '<div class="bsgrp">Trasa na radarze'+(R?'':arQ("artinfo","Jak działa trasa na radarze?"))+'</div><div class="wrrow"><label class="wrfile"><input type="file" id="argpx" accept=".gpx,application/gpx+xml,text/xml"><span>🗺️ '+(R?'Zmień plik GPX':'Wczytaj GPX')+'</span></label>'
    +(typeof rbOk!=="undefined"&&rbOk?'<div class="wrbase"><button type="button" class="wrbb" data-hm="rtbase">📚 Baza tras ›</button></div>':'')
-   +(R?'<button type="button" class="ib del" data-hm="rtdel" aria-label="Usuń trasę z radaru" title="Usuń trasę z radaru"></button>':'')+'</div>'
+   +(R?'<button type="button" class="ib del" data-hm="rtdel" aria-label="Usuń trasę z radaru" title="Usuń trasę z radaru">'+ICON.del+'</button>':'')+'</div>'
    +(R?'<div class="routeinfo arrti"><div><b>'+esc(R.name)+'</b> · '+kmTxt(R.km)+' km <button type="button" class="lnk" data-hm="rtplay">'+uiIcon("play")+' Odtwórz</button></div>'
-     +(R.towns.length?'<div class="note">'+R.towns.map(esc).join(" → ")+'</div>':'<div class="note">Brak większych miejscowości przy trasie.</div>')
+     +'<div id="arplaces"></div>'
      +(far>a.km?'<div class="note">Trasa sięga '+Math.round(far)+' km od Twojej miejscowości — dalej niż Twój promień.</div>':'')+'</div>'
     :'<div class="note hide" id="artinfo" style="margin-top:6px">Podejrzyj trasę na radarze: kreska narysuje się od startu do mety, a miejscowości po drodze dostaną podpis. Nic nie zapisujemy.</div>')};
 const arBear=(a,b)=>{const y=Math.sin(rad(b.lon-a.lon))*Math.cos(rad(b.lat)),x=Math.cos(rad(a.lat))*Math.sin(rad(b.lat))-Math.sin(rad(a.lat))*Math.cos(rad(b.lat))*Math.cos(rad(b.lon-a.lon));return (Math.atan2(y,x)*180/Math.PI+360)%360};
@@ -260,7 +270,7 @@ const arTownsGet=()=>arTownsL||(arTownsL=AR_TOWNS_RAW.split(";").map(x=>{const v
 // 🤏 przybliżanie i przesuwanie radaru (dwa palce / kółko myszy / jeden palec lub mysz); „Wyśrodkuj” i dwuklik wracają do skali i środka
 let arView={z:1,x:0,y:0,s:1};   // z — zawsze 1, s — skala całego radaru z pierścieniem (1…AR_SMAX)
 const AR_SMAX=2.4,arZmT=s=>'translate('+AR_CX+' '+AR_CY+') scale('+s.toFixed(3)+') translate('+(-AR_CX)+' '+(-AR_CY)+')';
-const arViewMoved=()=>Math.abs(arView.s-arAutoS())>.01||Math.abs((arView.z||1)-1)>.01||Math.abs(arView.x)>.5||Math.abs(arView.y)>.5;
+const arViewMoved=()=>arView.s>1.01||Math.abs((arView.z||1)-1)>.01||Math.abs(arView.x)>.5||Math.abs(arView.y)>.5;
 // 🧭 pierścień kompasu wokół radaru (półprzezroczysty, nieruchomy przy przybliżaniu): N/E/S/W, co 30° liczby, co 10° kreski; delikatny jasny łuk krąży (animacja),
 // a pomarańczowy znacznik pokazuje, w którą stronę patrzy telefon (jeśli ma kompas) — północ na radarze zawsze u góry, jak w prawdziwych kierunkach
 const AR_CI=108,AR_CO=128;let arCmpHtml="";
@@ -282,7 +292,7 @@ function arHeadOn(){if(arHeadOnF||typeof window.DeviceOrientationEvent==="undefi
   const f=e=>{const h=typeof e.webkitCompassHeading==="number"?e.webkitCompassHeading:(e.absolute||e.type==="deviceorientationabsolute")&&e.alpha!=null?(360-e.alpha)%360:null;if(h!=null&&isFinite(h))arHeadSet(h)};
   window.addEventListener("deviceorientationabsolute",f,true);window.addEventListener("deviceorientation",f,true)}
 function arHeadAsk(){try{const D=window.DeviceOrientationEvent;if(D&&typeof D.requestPermission==="function")D.requestPermission().then(r=>{if(r==="granted")arHeadOn()}).catch(()=>{});else arHeadOn()}catch(e){}}
-function areaSvg(a){return '<svg class="arsvg'+(typeof isKingReal==="function"&&isKingReal()?' kg':'')+'" viewBox="0 0 '+AR_W+' '+AR_H+'" role="img" aria-label="Radar okolicy: '+esc(a.name||"")+', '+areaKmTxt(a.km)+' — przesuń palcem, przybliż dwoma palcami">'+'<g class="arzm" transform="'+arZmT(arView.s)+'">'+arCompass()+'<g class="arin">'+areaSvgIn(a)+'</g></g></svg>'}
+function areaSvg(a){return '<svg class="arsvg'+(typeof isKingReal==="function"&&isKingReal()?' kg':'')+(arView.s>1.01?' zm':'')+'" viewBox="0 0 '+AR_W+' '+AR_H+'" role="img" aria-label="Radar okolicy: '+esc(a.name||"")+', '+areaKmTxt(a.km)+' — przesuń palcem, przybliż dwoma palcami">'+'<g class="arzm" transform="'+arZmT(arView.s)+'">'+arCompass()+'<g class="arin">'+areaSvgIn(a)+'</g></g></svg>'}
 function areaSvgIn(a){const V={z:arView.z||1,x:arView.x,y:arView.y},S=a.km||300,CX=AR_CX,CY=AR_CY,f=AR_R0/S*V.z,G={},far={},B=[],K=typeof isKingReal==="function"&&isKingReal();
   const OX=CX+V.x,OY=CY+V.y,R0=AR_R0*V.z,homeIn=Math.hypot(V.x,V.y)<AR_RB-14;   // OX/OY — gdzie na radarze jest środek okolicy po przesunięciu
   const xy=(lat,lon)=>{const dy=(lat-a.lat)*111.2,dx=(lon-a.lon)*111.2*Math.cos(a.lat*Math.PI/180);return {x:dx*f+V.x,y:-dy*f+V.y,d:Math.hypot(dx,dy)}};
@@ -311,9 +321,9 @@ function areaSvgIn(a){const V={z:arView.z||1,x:arView.x,y:arView.y},S=a.km||300,
   if(RT){const P=RT.pts.map(p=>xy(p.lat,p.lon)),d=P.map((q,i)=>(i?'L':'M')+(CX+q.x).toFixed(1)+' '+(CY+q.y).toFixed(1)).join(""),el=performance.now()-RT.t0,s0=P[0],s1=P[P.length-1];
     rt='<g clip-path="url(#arclip)"><path class="arrtc" d="'+d+'" style="stroke-width:'+(6/Z).toFixed(2)+'px"/><path class="arrt'+(el<AR_RT_MS?' an':'')+'" pathLength="1" d="'+d+'" style="stroke-width:'+(3/Z).toFixed(2)+'px'+(el<AR_RT_MS?';animation-delay:-'+Math.round(el)+'ms':'')+'"/>'
       +'<circle class="arrts" cx="'+(CX+s0.x).toFixed(1)+'" cy="'+(CY+s0.y).toFixed(1)+'" r="'+(4.5/Z).toFixed(2)+'"/><circle class="arrtm'+(el<AR_RT_MS?' an':'')+'" cx="'+(CX+s1.x).toFixed(1)+'" cy="'+(CY+s1.y).toFixed(1)+'" r="'+(4.5/Z).toFixed(2)+'" style="stroke-width:'+(2.5/Z).toFixed(2)+'px'+(el<AR_RT_MS?';animation-delay:'+Math.round(2900-el)+'ms':'')+'"/></g>';
-    const TT=arTownsGet(),nm=new Set(RT.towns.map(t=>t.toLowerCase()));
-    TT.filter(t=>nm.has(t[0].toLowerCase())&&!seen.has(t[0].toLowerCase())).forEach(t=>{const q=xy(t[1],t[2]);if(Math.hypot(q.x,q.y)>AR_RM-3)return;
-      const x=CX+q.x,y=CY+q.y,l=label(x,y,arCut(t[0],16),11.5,"artn rt");if(!l)return;seen.add(t[0].toLowerCase());rt+='<circle class="artd rt" cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(2.4/Z).toFixed(2)+'"/>'+l})}
+    const RK={city:0,town:1,village:2,suburb:3,hamlet:4},rk=p=>RK[p.type]!=null?RK[p.type]:2;   // najpierw miasta, potem wsie i osady — ile się zmieści
+    RT.places.slice().sort((u,v)=>rk(u)-rk(v)).forEach(p=>{const n=String(p.name||"");if(!n||seen.has(n.toLowerCase()))return;const q=xy(p.lat,p.lon);if(Math.hypot(q.x,q.y)>AR_RM-3)return;
+      const x=CX+q.x,y=CY+q.y,l=label(x,y,arCut(n,16),rk(p)<2?11.5:10.5,"artn rt");if(!l)return;seen.add(n.toLowerCase());rt+='<circle class="artd rt" cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+((rk(p)<2?2.4:1.8)/Z).toFixed(2)+'"/>'+l})}
   const [lo,hi]=arRng(),pU=arPopUp(lo),pL=arPopLow(hi),T=arTownsGet();let tw="";
   if(T)T.map(t=>Object.assign({t},xy(t[1],t[2]))).filter(o=>{const p=o.t[4];return p<pU&&p>=pL&&o.d>1.5&&Math.hypot(o.x,o.y)<AR_RM-3&&!seen.has(o.t[0].toLowerCase())})
     .sort((u,v)=>(v.t[5]-u.t[5])||(v.t[4]-u.t[4])).forEach(o=>{const x=CX+o.x,y=CY+o.y,big=o.t[3]===2,out=!!a.km&&o.d>S;
@@ -390,7 +400,7 @@ function renderHome(){arHeadOn();
    +(hmMode==="peek"?srch:'')
    +'<div class="note" style="margin-top:6px">Podgląd pokazuje, co dzieje się w innej okolicy. Nie zmienia powiadomień i kończy się po ponownym wejściu do aplikacji. '+uiIcon("star")+' dodaje miejscowość do ulubionych (do 10).</div>'
    +'</div></div>';
-  p.classList.remove("hide");
+  p.classList.remove("hide");if(arRoute)arRoutePlacesUi();
 }
 function closeHome(){const p=$("homesheet");p.classList.add("hide");p.innerHTML="";areaChanged();if(gearOpen&&(gearView==="main"||gearView==="nick"))renderGear()}
 async function homeFind(){const q=$("homeq")?$("homeq").value.trim():"";if(q.length<2){homeMsg="Wpisz nazwę miejscowości.";renderHome();return}
@@ -432,7 +442,7 @@ $("homesheet").addEventListener("pointermove",e=>{if(!arPt.has(e.pointerId))retu
   arView.x+=(mid.x-arG.mid.x)/arView.s;arView.y+=(mid.y-arG.mid.y)/arView.s;arG.mid=mid;arZoomAt(mid,arG.z*dd/Math.max(1,arG.d))});
 ["pointerup","pointercancel"].forEach(t=>$("homesheet").addEventListener(t,e=>{arPt.delete(e.pointerId);arG=null}));
 $("homesheet").addEventListener("wheel",e=>{const s=e.target.closest(".arsvg");if(!s)return;e.preventDefault();arZoomAt(arU(s,e),arView.s*Math.exp(-e.deltaY*.0015))},{passive:false});
-$("homesheet").addEventListener("dblclick",e=>{if(!e.target.closest(".arsvg"))return;arView=arHomeView();arRedraw()});
+$("homesheet").addEventListener("dblclick",e=>{if(!e.target.closest(".arsvg"))return;arView={z:1,x:0,y:0,s:1};arRedraw()});
 $("homesheet").addEventListener("change",async e=>{
   if(e.target.id==="argpx"){const f=e.target.files&&e.target.files[0];e.target.value="";if(!f)return;const p=parseGpx(await f.text());
     if(p.length<2){say("Nie znaleziono punktów trasy w pliku GPX.");return}arRouteSet(p,f.name.replace(/\.gpx$/i,""));return}
@@ -441,11 +451,12 @@ $("homesheet").addEventListener("click",async e=>{
   if(e.target===$("homesheet")){closeHome();return}
   const b=e.target.closest("[data-hm]");if(!b)return;const k=b.dataset.hm;
   if(k==="close"){closeHome();return}
-  if(k==="center"){arView=arHomeView();arRedraw();return}
+  if(k==="center"){arView={z:1,x:0,y:0,s:1};arRedraw();return}   // v339: pełny widok (suwak dalej decyduje, które miejscowości)
   if(k==="q"){const n=$(b.dataset.q);if(n){const on=n.classList.toggle("hide")===false;b.setAttribute("aria-expanded",String(on))}return}
   if(k==="rtbase"){openRb("radar");return}
+  if(k==="rtosm"){arRouteOsm();return}
   if(k==="rtdel"){arRoute=null;arView=arHomeView();renderHome();return}
-  if(k==="rtplay"){if(arRoute){arRouteFit();arRedraw()}return}   // odtwórz = dopasuj widok do trasy i narysuj od nowa
+  if(k==="rtplay"){if(arRoute){arRoute.t0=performance.now();arRedraw()}return}   // v339: odtwórz = tylko narysuj od nowa, widok (przybliżenie, przesunięcie) zostaje
   // 📡 radar od mojej lokalizacji z telefonu: podgląd okolicy (nic nie zapisujemy, powiadomienia dalej z Mojej miejscowości)
   if(k==="gpspeek"){arHeadAsk();useGps(x=>{if(!x)return;areaPeek={name:x.name||"Tu jesteś",lat:+x.lat,lon:+x.lon,gps:true};arView=arHomeView();areaChanged();renderHome()});return}
   if(k==="find"){homeFind();return}

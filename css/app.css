@@ -1734,11 +1734,11 @@ html[data-theme=dark] .wdeck{filter:drop-shadow(0 7px 5px rgba(0,0,0,.85)) drop-
 .arsl .ar2 input.arrng{position:absolute;left:0;top:0;pointer-events:none}
 .ar2 .arrng::-webkit-slider-thumb{pointer-events:auto}.ar2 .arrng::-moz-range-thumb{pointer-events:auto}
 .ar2 #arlo::-webkit-slider-runnable-track{background:
- linear-gradient(90deg,var(--g1),var(--g2)) calc(11px + (100% - 22px)*var(--a)) 50%/calc((100% - 22px)*(var(--b) - var(--a)) + 2px) 4px no-repeat,
+ linear-gradient(90deg,transparent calc(11px + (100% - 22px)*var(--a)),var(--g1) calc(11px + (100% - 22px)*var(--a)),var(--g2) calc(11px + (100% - 22px)*var(--b)),transparent calc(11px + (100% - 22px)*var(--b))) 0 50%/100% 4px no-repeat,
  linear-gradient(var(--line),var(--line)) 0 50%/100% 4px no-repeat,
  repeating-linear-gradient(90deg,var(--mut) 0 1px,transparent 1px var(--tk)) 0 100%/calc(100% + 1px) 6px no-repeat}
 .ar2 #arlo::-moz-range-track{background:
- linear-gradient(90deg,var(--g1),var(--g2)) calc(11px + (100% - 22px)*var(--a)) 50%/calc((100% - 22px)*(var(--b) - var(--a)) + 2px) 4px no-repeat,
+ linear-gradient(90deg,transparent calc(11px + (100% - 22px)*var(--a)),var(--g1) calc(11px + (100% - 22px)*var(--a)),var(--g2) calc(11px + (100% - 22px)*var(--b)),transparent calc(11px + (100% - 22px)*var(--b))) 0 50%/100% 4px no-repeat,
  linear-gradient(var(--line),var(--line)) 0 50%/100% 4px no-repeat,
  repeating-linear-gradient(90deg,var(--mut) 0 1px,transparent 1px var(--tk)) 0 100%/calc(100% + 1px) 6px no-repeat}
 .ar2 #arhi::-webkit-slider-runnable-track{background:none}.ar2 #arhi::-moz-range-track{background:none}
@@ -1763,4 +1763,8 @@ html[data-theme=dark] .wdeck{filter:drop-shadow(0 7px 5px rgba(0,0,0,.85)) drop-
 .arq[aria-expanded="true"]{background:var(--acc);color:var(--card)}
 .arctr.arplay{top:auto;bottom:6px;left:8px;right:auto;color:#af52de;font-weight:800}.arctr.arplay .ui-i{color:#af52de}   /* v338: „Odtwórz” trasy na radarze (lewy dolny róg) */
 .arvis.stvis{position:static;margin:10px -6px 0;box-shadow:none}.stvis .arsvg{cursor:default;touch-action:auto}   /* v338: radar w kreatorze startu — bez przypinania i gestów */
+/* v339: suwaki radaru bez ramki „pole aktywne” (input:focus) po dotknięciu; z klawiatury podświetlony uchwyt */
+.arsl input.arrng:focus,#stkm:focus{border-color:transparent;box-shadow:none;background:transparent;outline:none}
+.arrng:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 7px color-mix(in srgb,var(--g2) 30%,transparent),0 1px 4px rgba(0,0,0,.25)}
+.arrng:focus-visible::-moz-range-thumb{box-shadow:0 0 0 7px color-mix(in srgb,var(--g2) 30%,transparent)}
 
