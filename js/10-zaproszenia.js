@@ -1278,7 +1278,7 @@ function wfActSync(){
   $("wbikewrap").classList.toggle("hide",!bikeOk||!bk);
   $("wpacewrap").classList.toggle("hide",!paceOk||!bk);
   const dl=$("wdurlbl");if(dl)dl.textContent="Na ile "+String(A.verb_you||"jedziesz").toLowerCase()+"?";
-  $("wfhtitle").textContent=wf.editId?"✏️ Edytuj zaproszenie":(A.emoji||"🚲")+" Zaproś "+(A.invite_txt||"na rower");
+  $("wfhtitle").textContent=wf.editId?"✏️ Edytuj zaproszenie":"➕ Nowe zaproszenie";   // v329: aktywność widać na kafelkach — tytuł okna już jej nie powtarza
 }
 $("wactsel").addEventListener("click",e=>{const b=e.target.closest("[data-wact]");if(!b)return;wf.act=b.dataset.wact||"bike";
   if(!actIsBike(wf.act)){wf.bike=null;wf.pace=null;wbikeRender();wfPaceSync()}
