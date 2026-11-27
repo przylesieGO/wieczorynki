@@ -235,7 +235,7 @@ function helpFullHtml(){
      "Na górze karta profilu → <b>Edytuj profil</b>: zdjęcie, nick i płeć, miejscowość (domyślnie ukryta), Moje media (Strava, Instagram, YouTube, Facebook, www) i telefon z wyborem, kto go widzi (tylko ulubieni albo wszyscy zalogowani). Tam też: Moje jazdy, Serwis rowerowy, Ulubieni i listy, Grupy, Moja miejscowość, Prywatność oraz Powiadomienia (Telegram, kanał).",
      "Dalej w ⚙️: <b>🗺️ Baza tras</b>, wygląd ☀️ / 🌙 / Auto, <b>Jazdy i zaproszenia</b> („Jak poszło?”, okienka „Mam ochotę”, <b>Ekipa demo</b> — pokazuj zmyślone konta do zabawy i ich powiadomienia; wyłączenie zapisuje się na koncie, więc działa na każdym telefonie, a 🔔 i Telegram od kont demo przestają przychodzić), Testy (testowe zaproszenia, spokojny wygląd), Pomoc i opinie (💬 oceń aplikację / zgłoś błąd lub pomysł — odpowiedź pod 🔔, instalacja), wyloguj, usuń konto.",
      "<b>⬆</b> w lewym dolnym rogu wraca na górę strony.",
-     "Przycisk <b>„wstecz”</b> w telefonie nie zamyka aplikacji od razu: pierwsze naciśnięcie pokazuje ostrzeżenie, dopiero drugie (w ciągu 3 s) wychodzi.",
+     "Przycisk <b>„wstecz”</b> w telefonie nie zamyka aplikacji od razu: pojawi się okno <b>„Wyjść z aplikacji?”</b> na środku ekranu — <b>„Wyjdź”</b> zamyka aplikację, <b>„Zostań”</b> zostawia Cię w niej.",
      "Długie okno (Ustawienia, Pomoc, okienka) ma na samym dole okrągły <b>✕</b> — zamyka okno bez przewijania na górę. Na komputerze okno zamkniesz też klawiszem <b>Esc</b>."])
    +sec("🔒 Prywatność",[
      "Prywatne zaproszenia widzą tylko autor i wybrane osoby — oraz administratorzy, wyłącznie do moderacji (np. usunięcia spamu). Administrator nie może dołączyć ani doprosić się do cudzego prywatnego zaproszenia.",

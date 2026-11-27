@@ -226,10 +226,11 @@ iaBar();
    Na wierzchu historii leży „strażnik” (pushState). Pierwsze „wstecz” zdejmuje go i pokazuje komunikat; drugie w ciągu 3 s wychodzi z aplikacji.
    Strażnik zakładany przy dotknięciu / klawiszu — Chrome pomija wpisy historii dodane bez działania użytkownika. */
 (()=>{if(!history.pushState)return;
-  let wait=false,t=0;
-  const arm=()=>{if(wait)return;try{if(!(history.state&&history.state.pgGuard))history.pushState({pgGuard:1},"",location.href)}catch(e){}};
+  let asking=false,leaving=false;
+  const arm=()=>{if(asking||leaving)return;try{if(!(history.state&&history.state.pgGuard))history.pushState({pgGuard:1},"",location.href)}catch(e){}};
   ["pointerdown","keydown"].forEach(ev=>addEventListener(ev,arm,{capture:true,passive:true}));
-  addEventListener("popstate",e=>{if(e.state&&e.state.pgGuard)return;
-    wait=true;clearTimeout(t);say("Naciśnij jeszcze raz „wstecz”, żeby wyjść z aplikacji.");
-    t=setTimeout(()=>{wait=false},3000)});
+  addEventListener("popstate",e=>{if(e.state&&e.state.pgGuard)return;if(asking||leaving)return;
+    // okno na środku ekranu (askOk, js/01) zamiast dymku; strażnik wraca od razu, żeby nic się nie wyjdzie bez zgody
+    asking=true;try{history.pushState({pgGuard:1},"",location.href)}catch(x){}
+    askOk("Wyjść z aplikacji?\n\nNaciśnij „Wyjdź”, żeby zamknąć aplikację, albo „Zostań”, żeby zostać.","Wyjdź",false,"Zostań").then(ok=>{asking=false;if(!ok)return;leaving=true;history.go(-2);setTimeout(()=>{leaving=false},3000)})});
 })();
