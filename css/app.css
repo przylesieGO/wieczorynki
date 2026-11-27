@@ -1790,4 +1790,7 @@ html[data-theme=dark] .wdeck{filter:drop-shadow(0 7px 5px rgba(0,0,0,.85)) drop-
 /* v344: wiersz pogody zawsze w jednej linii — dłuższy tekst skracany „…”, radar nad nim nie skacze */
 .hleg.arwxleg{flex-wrap:nowrap;white-space:nowrap;min-width:0}.arwxleg>span#arwxleg{display:block;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .arwxleg #arwxleg .arwxw{display:inline;margin-left:0}.arwxleg #arwxleg .ui-i{vertical-align:-2px}
+/* v345: legenda zaproszenia / sygnały / imprezy jak wiersz pogody — jeden wiersz od lewej, bez zawijania (nie rozjeżdża się w kolumnę) */
+.hleg.arleg:not(.arwxleg){display:flex;flex-direction:row;flex-wrap:nowrap;justify-content:flex-start;align-items:center;width:100%;white-space:nowrap;overflow:hidden;position:static;float:none;clear:both}
+.hleg.arleg .arlg{flex:none;width:auto}
 
