@@ -4,6 +4,11 @@ const fbf={kind:"bug",rating:0,text:"",dev:true,trace:true};let fbReplyTxt="",fb
 // 🔢 numeracja wydań: 0.x.y w czasie BETY (1.0 = publiczne wydanie); x — paczka nowości, y — poprawki.
 // Nowe wydanie: dopisz pozycję na początku APP_REL (wersja, data, nowości) — w ❓ Pomocy pokaże się „Co nowego” i kropka przy ❓.
 const APP_REL=[
+  {v:"0.15",d:"27.11.2026",items:[
+    ["pin","<b>Wsie na radarze</b> — w oknie <b>📍 Moja okolica</b> przesuń prawy uchwyt suwaka <b>Miejscowości na radarze</b> do końca („wsie”): pojawią się wszystkie okoliczne wsie. Przybliż radar dwoma palcami (teraz do 3×), a nazw będzie coraz więcej."],
+    ["shop","<b>Najbliżej Ciebie</b> — pod radarem najbliższa stacja benzynowa, sklep spożywczy, szpital lub pogotowie, wiata leśna i miejsce do wypoczynku nad wodą, z odległością i kierunkiem."],
+    ["map","<b>Nawigacja z radaru</b> — stuknij kafelek (sygnał, zaproszenie, impreza, las, woda, stacja…): radar pokaże to miejsce, a etykieta pod nim otworzy kartę albo nawigację w mapach telefonu."],
+    ["sliders","<b>Prostsze ustawienia radaru</b> — <b>Więcej ustawień</b> przy Promieniu rozwija i włącza suwaki Miejscowości i Pogoda, <b>Mniej ustawień</b> je chowa i czyści radar. Suwaki nie zmieniają już przybliżenia, które ustawisz palcami."]]},
   {v:"0.14",d:"27.11.2026",items:[
     ["tree","<b>Lasy, woda i rzeki na radarze</b> — w oknie <b>📍 Moja okolica</b> po prawej od licznika włączysz zielone plamy lasów, niebieskie jezior i zalewów oraz linie głównych rzek (Mazowsze z okolicą, działa też bez internetu). Kafelki <b>Najbliżej</b> pokazują teraz także najbliższy las i wodę."],
     ["cloudsun","<b>Pogoda na radarze</b> — kolorowy pierścień wokół radaru pokazuje pogodę w każdym kierunku, a suwak <b>Pogoda</b> przesuwa czas do 48 godzin do przodu; przy największych miejscowościach widać temperaturę."],
