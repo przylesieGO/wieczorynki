@@ -1002,6 +1002,7 @@ function openWantForm(w,preset){
   $("wantform").classList.remove("hide");document.body.classList.add("wfopen");
   $("wfscroll").scrollTop=0;$("wftop").classList.remove("on");
   wfUpdate();try{wfQuickScroll()}catch(e){}
+  setTimeout(wdHint,900);   // 👆 podpowiedź gestu na stosach
   wf.snap0=wfSnap();
 }
 /* 🗺️ trasa w zaproszeniu (KROK 23) */
@@ -1371,14 +1372,23 @@ function wDeckLay(d){if(!d)return;const E=[...d.querySelectorAll(".tdc")],n=E.le
 // przesunięcie palcem / strzałki ← → przełącza kartę; klik w wystającą kartę — zwykły klik (obsługa wyżej)
 function wDeckInit(d,pick){let sx=null,mv=false;
   const step=g=>{const E=[...d.querySelectorAll(".tdc")],a=Math.max(0,E.findIndex(x=>x.classList.contains("on")));pick(E[((a+g)%E.length+E.length)%E.length]);try{navigator.vibrate&&navigator.vibrate(8)}catch(_){}};
-  const up=e=>{if(sx===null)return;const dx=e.clientX-sx;sx=null;if(Math.abs(dx)>30){step(dx<0?1:-1);setTimeout(()=>mv=false,60)}};
+  const up=e=>{if(sx===null)return;const dx=e.clientX-sx;sx=null;if(Math.abs(dx)>30){step(dx<0?1:-1);wdHintDone();setTimeout(()=>mv=false,60)}};
   d.addEventListener("pointerdown",e=>{sx=e.clientX;mv=false});
   d.addEventListener("pointermove",e=>{if(sx!==null&&Math.abs(e.clientX-sx)>8)mv=true});
   d.addEventListener("pointerup",up);d.addEventListener("pointerleave",e=>{if(sx!==null)up(e)});d.addEventListener("pointercancel",()=>{sx=null});
-  d.addEventListener("click",e=>{if(mv)e.stopImmediatePropagation()},true);
+  d.addEventListener("click",e=>{if(mv){e.stopImmediatePropagation();return}const c=e.target.closest(".tdc");if(c&&!c.classList.contains("top"))wdHintDone()},true);
   d.addEventListener("keydown",e=>{if(e.key!=="ArrowRight"&&e.key!=="ArrowLeft")return;e.preventDefault();step(e.key==="ArrowRight"?1:-1);const t=d.querySelector(".tdc.top");if(t)t.focus()})}
 wDeckInit($("wdays"),b=>{wfSetDay(b.dataset.d);wfUpdate();wfQuickScroll()});
 wDeckInit($("wmode"),b=>wfSetMode(b.dataset.mode));
+// 👆 v328: podpowiedź gestu na stosach — ta sama co w talii zakładek (js/16 tdHint): karty drgają w bok, palec ze smugą; do pierwszego przesunięcia / kliknięcia wystającej karty
+const WD_HK="wdHintDone";
+function wdHint(){if(lsGet(WD_HK)||$("wantform").classList.contains("hide")||document.hidden)return;
+  ["wdays","wmode"].forEach(id=>{const d=$(id);if(!d||d.classList.contains("hide"))return;let h=d.querySelector(".wdhint");
+    if(!h){h=document.createElement("div");h.className="tdhint wdhint";h.setAttribute("aria-hidden","true");h.innerHTML='<span class="tdtr"></span>'+uiIcon("pointer");d.appendChild(h)}
+    h.classList.remove("go");d.classList.remove("nudge");void h.offsetWidth;h.classList.add("go");d.classList.add("nudge");
+    setTimeout(()=>{h.classList.remove("go");d.classList.remove("nudge")},3000)})}
+function wdHintDone(){lsSet(WD_HK,"1");document.querySelectorAll(".wdhint").forEach(h=>h.remove())}
+setInterval(wdHint,45000);
 try{const ro=new ResizeObserver(()=>{wDeckLay($("wdays"));wDeckLay($("wmode"))});ro.observe($("wdays"));ro.observe($("wmode"))}catch(e){}   // RWD: stosy dopasowują się do szerokości okna
 $("wdt").addEventListener("change",wfUpdate);
 ["fclock","fclock2"].forEach(id=>$(id).addEventListener("click",e=>{const b=e.target.closest(".farr");if(!b)return;wfStep(b.closest(".fcol").dataset.u,+b.dataset.s)}));

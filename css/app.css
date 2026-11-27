@@ -1711,3 +1711,7 @@ html[data-theme=dark] .wdeck{filter:drop-shadow(0 7px 5px rgba(0,0,0,.85)) drop-
 .wfclk.rng .fclock .fcolon{font-size:clamp(18px,5vw,28px)}
 .wfclk.rng #fclock2::before{content:"–";font:700 clamp(18px,5vw,28px)/1 "SF Mono",ui-monospace,Menlo,monospace;color:var(--acc);margin-right:2px}
 .qchips.qcol button.nx::after{content:"+1";font-size:10px;margin-left:2px;vertical-align:super;opacity:.8}
+/* v328: podpowiedź gestu na stosach formularza — ta sama animacja co talia zakładek (tdNudge, tdhint) */
+.wdeck.nudge .tdc{animation:tdNudge 1.4s cubic-bezier(.45,0,.25,1) 2}
+.wdeck .tdhint.wdhint{display:block;right:4px;top:48px}
+@media (prefers-reduced-motion:reduce){.wdeck.nudge .tdc,.wdhint.go .ui-i,.wdhint.go .tdtr{animation:none}}
