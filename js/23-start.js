@@ -57,8 +57,8 @@ async function stSave(patch){
 
 // ── Krok: okolica (obowiązkowa miejscowość, promień — js/08: geoSearch, useGps, arKmFromSl/arSlVal) ──
 // v338: mały radar po wybraniu miejscowości — ten sam co w „Moja okolica” (js/08), rośnie i maleje z suwakiem promienia; bez gestów i bez trasy
-function stRadarIn(km){const r=arRoute;arRoute=null;arView={z:1,x:0,y:0,s:1};const c=ST.city,h=areaSvgIn({name:c.name,lat:+c.lat,lon:+c.lon,km});arRoute=r;return h}
-const stRadar=()=>{if(!ST.city)return "";const r=arRoute;arRoute=null;arView={z:1,x:0,y:0,s:1};const c=ST.city,h=areaSvg({name:c.name,lat:+c.lat,lon:+c.lon,km:ST.km});arRoute=r;return '<div class="arvis stvis">'+h+'</div>'};
+function stRadarIn(km){const r=arRoute;arRoute=null;arView={z:1,x:0,y:0,s:1};arAllOn=true;const c=ST.city;let h;try{h=areaSvgIn({name:c.name,lat:+c.lat,lon:+c.lon,km})}finally{arAllOn=false}arRoute=r;return h}
+const stRadar=()=>{if(!ST.city)return "";const r=arRoute;arRoute=null;arView={z:1,x:0,y:0,s:1};arAllOn=true;const c=ST.city;let h;try{h=areaSvg({name:c.name,lat:+c.lat,lon:+c.lon,km:ST.km})}finally{arAllOn=false}arRoute=r;return '<div class="arvis stvis">'+h+'</div>'};
 let stRaf=0;
 function stAreaHtml(){
   return '<div class="ph" id="sth">W jakiej okolicy się ruszasz?</div>'

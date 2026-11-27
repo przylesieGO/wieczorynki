@@ -276,7 +276,8 @@ const arLegHtml=()=>'<div class="hleg arleg">'+[["w","w","zaproszenia"],["s","s"
 const arTerOff=()=>{let v="fwr";try{const x=localStorage.getItem("arTerOff");if(x!=null)v=x}catch(e){}return new Set(v.split("").filter(x=>"fwr".includes(x)))};
 const arTerLegHtml=()=>{const o=arTerOff();return '<div class="hleg arleg arlegr">'+[["f","tf","lasy"],["w","tw","woda"],["r","tr","rzeki"]].map(([k,c,t])=>'<button type="button" class="arlg'+(o.has(k)?' off':'')+'" data-hm="tlg" data-k="'+k+'" aria-pressed="'+!o.has(k)+'">'+t+' <i class="hc '+c+'"></i></button>').join("")+'</div>'};
 // v349: przełączniki przy suwakach — „Miejscowości na radarze” i „Pogoda” (wyłączone: radar czystszy, suwak schowany)
-const arTwOn=()=>{try{return sessionStorage.getItem("arTwOn")!=="0"}catch(e){return true}};
+let arAllOn=false;   // v368: mały radar w kreatorze startu — nazwy i pogoda zawsze (js/23)
+const arTwOn=()=>{if(arAllOn)return true;if(!arMoreOn())return false;try{return sessionStorage.getItem("arTwOn")!=="0"}catch(e){return true}};   // v368: zwinięte „Więcej ustawień” = wyłączone
 const arTgl=(k,on,l)=>'<button type="button" class="tgl'+(on?' on':'')+'" data-hm="'+k+'" role="switch" aria-checked="'+on+'" aria-label="'+l+'"><span></span></button>';
 const arViewMoved=()=>arHide.size>0||arView.s>1.01||Math.abs((arView.z||1)-1)>.01||Math.abs(arView.x)>.5||Math.abs(arView.y)>.5;
 // 🧭 pierścień kompasu wokół radaru (półprzezroczysty, nieruchomy przy przybliżaniu): N/E/S/W, co 30° liczby, co 10° kreski; delikatny jasny łuk krąży (animacja),
@@ -304,7 +305,7 @@ function arHeadAsk(){try{const D=window.DeviceOrientationEvent;if(D&&typeof D.re
 // rozmyte klinki pod pierścieniem kompasu, legenda tylko z warunkami, które występują, i linijka o wietrze. Czas: teraz / +3 h / jutro 12:00
 let arWx={k:"",at:0,d:null,busy:false,err:false};
 const AR_WXC=[["sun","słonecznie"],["part","częściowe zachmurzenie"],["cloud","pochmurno"],["fog","mgła"],["rain","deszcz"],["snow","śnieg"],["storm","burza"]];
-const arWxOn=()=>{try{return sessionStorage.getItem("arWxOn")!=="0"}catch(e){return true}};
+const arWxOn=()=>{if(arAllOn)return true;if(!arMoreOn())return false;try{return sessionStorage.getItem("arWxOn")!=="0"}catch(e){return true}};
 // v342: czas pogody suwakiem — 0…48 h do przodu (płynnie, dane co godzinę); dawny wybór Teraz/+3 h/Jutro przeliczany na godziny
 const arWxH=()=>{let v=0;try{const x=localStorage.getItem("arWxH"),t=localStorage.getItem("arWxT");
     if(x!=null&&x!=="")v=+x;else if(t==="3")v=3;else if(t==="j"){const d=new Date(),j=new Date(d);j.setDate(d.getDate()+1);j.setHours(12,0,0,0);v=Math.round((j-d)/36e5)}}catch(e){}
@@ -570,7 +571,7 @@ $("homesheet").addEventListener("click",async e=>{
     else if(kk==="e"&&typeof srGoEv==="function")srGoEv(id);
     else if(kk==="s"&&typeof srGoSig==="function")srGoSig(id);return}
   if(k==="poi"){arNav(b.dataset.lat,b.dataset.lon);return}
-  if(k==="more"){try{sessionStorage.setItem("arMore",arMoreOn()?"0":"1")}catch(err){}renderHome();return}
+  if(k==="more"){try{const on=!arMoreOn();sessionStorage.setItem("arMore",on?"1":"0");if(on){sessionStorage.setItem("arTwOn","1");sessionStorage.setItem("arWxOn","1")}}catch(err){}renderHome();return}   // v368: rozwinięcie włącza oba suwaki, zwinięcie wyłącza (nazwy miejscowości i pogodę)
   if(k==="q"){const n=$(b.dataset.q);if(n){const on=n.classList.toggle("hide")===false;b.setAttribute("aria-expanded",String(on))}return}
   if(k==="rtbase"){openRb("radar");return}
   if(k==="rtosm"){arRouteOsm();return}
