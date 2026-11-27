@@ -211,7 +211,8 @@ iaBar();
   const evh=/#event=([0-9a-f-]{36})/i.exec(location.hash||"");if(evh){try{history.replaceState(null,"",location.pathname)}catch(e){}}
   try{
     const fromSnap=!!session&&!m&&snapLoad();   // ⚡ ostatni stan z telefonu — od razu na ekranie
-    if(fromSnap)await loadTail(null,null);else await loadRemote(m?m[1]:null);
+    if(fromSnap){const p=loadTail(null,null);bootDone();await p}   // ⚡ stan z telefonu już narysowany — ekran ładowania znika od razu
+    else await loadRemote(m?m[1]:null);
     $("dbnote").textContent="";bootDone();if(evh)evGo(evh[1]);
     if(fromSnap)setTimeout(()=>syncDelta().catch(()=>{}),0);
   }
