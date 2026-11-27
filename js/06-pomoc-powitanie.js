@@ -237,6 +237,7 @@ function helpFullHtml(){
      "Długie okno (Ustawienia, Pomoc, okienka) ma na samym dole okrągły <b>✕</b> — zamyka okno bez przewijania na górę. Na komputerze okno zamkniesz też klawiszem <b>Esc</b>."])
    +sec("🔒 Prywatność",[
      "Prywatne zaproszenia widzą tylko autor i wybrane osoby — oraz administratorzy, wyłącznie do moderacji (np. usunięcia spamu). Administrator nie może dołączyć ani doprosić się do cudzego prywatnego zaproszenia.",
+     "Plakietka 🔒 na prywatnym zaproszeniu ma nazwę losowaną z puli (np. „Cicha ustawka”, „Wąskie grono”) — dla danego zaproszenia zawsze tę samą. W filtrach ta grupa zaproszeń nazywa się „Tylko dla swoich”.",
      "Nie zapisujemy Twojej lokalizacji — „Moja lokalizacja” na mapie i „📡 moja lokalizacja” w Imprezach działają tylko w telefonie, gdy sam je włączysz. <b>Moja miejscowość</b> jest zapisana w Twoim profilu z dokładnością do ok. 2 km (żeby liczyć okolicę i powiadomienia) — widzisz ją tylko Ty, chyba że włączysz „Pokazuj innym”. Twój sygnał „Mam ochotę” pokazuje innym tylko przybliżoną okolicę (ok. 2 km)."])
    +(rides?sec("🗺️ Wieczorynki",["Zaplanowane jazdy z trasą, mapą, wiatrem i odliczaniem — zakładka Wieczorynki."]):'')
    +'</div>';
