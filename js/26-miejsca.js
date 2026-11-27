@@ -44,7 +44,7 @@ function poiGet(a){const key=poiKey(a);let S=poiMem[key];
 const poiTile=(k,t,ic,p,c)=>{
   if(!p)return '<div class="arnr off"><span class="arna">'+uiIcon(ic)+'</span><div><small>'+t+'</small><b>daleko</b><span>ponad 30 km</span></div></div>';
   const deg=Math.round(arBear(c,p)),dir=AR_DIR[Math.round(deg/45)%8];
-  return '<button type="button" class="arnr" data-hm="poi" data-lat="'+p.lat.toFixed(5)+'" data-lon="'+p.lon.toFixed(5)+'" aria-label="'+t+' — pokaż na mapie"><span class="arna">'+uiIcon(ic)+'</span><div><small>'+t+'</small><b>'+(p.d<.15?'tutaj':arKmT(p.d))+'</b><span>'+dir+(p.name?' · '+esc(arCut(p.name,14)):'')+'</span></div></button>'};
+  return '<button type="button" class="arnr" data-hm="nrgo" data-k="'+k+'" data-id="nav" data-t="'+esc(p.name||t)+'" data-lat="'+p.lat.toFixed(5)+'" data-lon="'+p.lon.toFixed(5)+'" aria-label="'+t+' — pokaż na radarze"><span class="arna">'+uiIcon(ic)+'</span><div><small>'+t+'</small><b>'+(p.d<.15?'tutaj':arKmT(p.d))+'</b><span>'+dir+(p.name?' · '+esc(arCut(p.name,14)):'')+'</span></div></button>'};
 function poiTilesHtml(a){const S=poiGet(a),c={lat:a.lat,lon:a.lon};
   const wait=S&&S.busy,bad=S&&S.err;
   return '<div class="bsgrp">Najbliżej Ciebie</div><div class="arnear arpoi">'+POI_K.map(([k,t,ic])=>{

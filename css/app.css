@@ -1855,3 +1855,6 @@ button.arnr{border:0;font:inherit;color:inherit;cursor:pointer;width:100%;-webki
 .arplab{position:absolute;z-index:4;transform:translateX(-50%);max-width:78%;padding:6px 12px;border:0;border-radius:14px;background:var(--card);color:var(--ink);font:600 13px/1.2 inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 4px 14px rgba(0,0,0,.28),0 0 0 2px var(--pc,var(--acc));cursor:pointer;animation:arplin .25s ease-out both;transition:opacity .3s}
 .arplab.s{--pc:#f5b301}.arplab.e{--pc:#6b8cff}.arplab.out{opacity:0}.arplab:active{transform:translateX(-50%) scale(.96)}
 @keyframes arplin{from{opacity:0;transform:translate(-50%,-6px)}to{opacity:1;transform:translate(-50%,0)}}
+/* v365: punkt na radarze także dla lasu, wody i „Najbliżej Ciebie” — kolory; etykieta prowadzi do nawigacji */
+.arping.tf,.arplab.tf{--pc:#2a9d5c}.arping.tw,.arplab.tw,.arping.rest,.arplab.rest{--pc:#2f7fe8}.arping.fuel,.arplab.fuel{--pc:#e8590c}.arping.shop,.arplab.shop{--pc:#8e44ad}.arping.med,.arplab.med{--pc:#e03131}.arping.hut,.arplab.hut{--pc:#8d6e3f}
+.arplab .ui-i{width:14px;height:14px;vertical-align:-2px}
