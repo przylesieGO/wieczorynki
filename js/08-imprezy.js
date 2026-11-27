@@ -293,7 +293,7 @@ function areaNearHtml(a){const c={lat:a.lat,lon:a.lon},best={};
   return '<div class="bsgrp">Najbliżej</div><div class="arnear">'+tile("s","Sygnał")+tile("w","Zaproszenie")+tile("e","Impreza")+'</div>'}
 // odrysowanie samego radaru i licznika (suwaki, dociągnięte miejscowości) — bez przebudowy całego okna
 function arRedraw(){const p=$("homesheet");if(!p||p.classList.contains("hide"))return;const s=p.querySelector(".arsvg");if(!s)return;
-  const a=Object.assign(areaCur(),arLiveKm!=null?{km:arLiveKm}:{});s.innerHTML=areaSvgIn(a);const c=p.querySelector(".arctr");if(c)c.classList.toggle("hide",!arViewMoved());
+  const a=Object.assign(areaCur(),arLiveKm!=null?{km:arLiveKm}:{});s.innerHTML=areaSvgIn(a);const c=p.querySelector(".arctr");if(c)c.classList.toggle("off",!arViewMoved());   // zawsze widoczny; przygaszony, gdy radar jest w środku
   const t=p.querySelector(".arcnt");if(t)t.innerHTML=arCntInner(a.km,areaCount(a))}
 // plakietka w nagłówku: „📍 Pułtusk · 20 km”, w podglądzie „👁 Serock · 20 km ✕”
 function renderAreaChip(){const el=$("mearea");if(!el)return;const a=areaCur();
@@ -311,7 +311,7 @@ function renderHome(){
       +(hmMode==="peek"?'<button type="button" class="hmfav'+(isFav(x)?' on':'')+'" data-hm="fav" data-i="'+i+'" aria-label="Ulubiona miejscowość">'+uiIcon(isFav(x)?"starf":"star")+'</button>':'')+'</div>').join("");
   p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Moja okolica"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-hm="close">Zamknij</button><b>'+uiIcon("pin")+' Moja okolica</b><span style="min-width:64px"></span></div><div class="bslist">'
    +(a.peek?'<div class="hmcur arpeek">'+uiIcon("eye")+'<span>Podgląd: <b>'+esc(a.name)+'</b></span><button type="button" class="lnk" data-hm="unpeek">Wróć do: '+esc(h.name)+'</button></div>':'')
-   +'<div class="arvis">'+areaSvg(a)+'<button type="button" class="fch arctr arloc'+(areaPeek&&areaPeek.gps?' on':'')+'" data-hm="gpspeek">'+uiIcon("locate")+' Gdzie jestem</button>'+'<button type="button" class="fch arctr'+(arViewMoved()?'':' hide')+'" data-hm="center">'+uiIcon("target")+' Wyśrodkuj</button></div><div class="arcnt">'+arCntInner(a.km,c)+'</div>'
+   +'<div class="arvis">'+areaSvg(a)+'<button type="button" class="fch arctr arloc'+(areaPeek&&areaPeek.gps?' on':'')+'" data-hm="gpspeek">'+uiIcon("locate")+' Gdzie jestem</button>'+'<button type="button" class="fch arctr'+(arViewMoved()?'':' off')+'" data-hm="center">'+uiIcon("target")+' Wyśrodkuj</button></div><div class="arcnt">'+arCntInner(a.km,c)+'</div>'
    +'<div class="hleg arleg"><i class="hc w"></i> zaproszenia <i class="hc s"></i> sygnały <i class="hc ev"></i> imprezy</div>'
    +'<div class="arsl"><div class="arslh"><span>Promień</span><b id="arkmv">'+areaKmTxt(a.km)+'</b></div><input id="arkm" type="range" min="5" max="51" step="1" value="'+arSlVal(a.km)+'" aria-label="Promień okolicy"><div class="arslt"><span>5 km</span><span>50 km</span><span>Polska</span></div>'
    +'<div class="arslh arsl2"><span>Miejscowości na radarze</span><b id="ardensv">'+arDensTxt(arDens())+'</b></div><input id="ardens" type="range" min="0" max="'+(AR_DENS.length-1)+'" step="1" value="'+arDens()+'" aria-label="Ile miejscowości podpisać na radarze"><div class="arslt"><span>tylko główne</span><span>więcej</span></div>'+AREA_INFO+'</div>'
