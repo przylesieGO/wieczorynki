@@ -1757,4 +1757,10 @@ html[data-theme=dark] .wdeck{filter:drop-shadow(0 7px 5px rgba(0,0,0,.85)) drop-
 .arsvg .artn.rt{fill:#af52de;font-weight:700}.arsvg .artd.rt{fill:#af52de}
 .arrti .lnk{margin-left:6px;font-weight:700}.arrti .note{margin-top:4px}
 @media (prefers-reduced-motion:reduce){.arsvg .arrt.an,.arsvg .arrtm.an{animation:none;stroke-dashoffset:0;opacity:1}}
+/* v338: „?” przy nagłówku — rozwija zwinięty opis (radar: Promień, Trasa na radarze); większe pole trafienia pod kciuk */
+.arq{position:relative;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;margin-left:8px;padding:0;border:1.5px solid var(--acc);border-radius:50%;background:transparent;color:var(--acc);font:700 12px/1 inherit;letter-spacing:0;text-transform:none;vertical-align:1px;cursor:pointer}
+.arq::after{content:"";position:absolute;inset:-12px}
+.arq[aria-expanded="true"]{background:var(--acc);color:var(--card)}
+.arctr.arplay{top:auto;bottom:6px;left:8px;right:auto;color:#af52de;font-weight:800}.arctr.arplay .ui-i{color:#af52de}   /* v338: „Odtwórz” trasy na radarze (lewy dolny róg) */
+.arvis.stvis{position:static;margin:10px -6px 0;box-shadow:none}.stvis .arsvg{cursor:default;touch-action:auto}   /* v338: radar w kreatorze startu — bez przypinania i gestów */
 

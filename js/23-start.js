@@ -56,11 +56,15 @@ async function stSave(patch){
 }
 
 // ── Krok: okolica (obowiązkowa miejscowość, promień — js/08: geoSearch, useGps, arKmFromSl/arSlVal) ──
+// v338: mały radar po wybraniu miejscowości — ten sam co w „Moja okolica” (js/08), rośnie i maleje z suwakiem promienia; bez gestów i bez trasy
+function stRadarIn(km){const r=arRoute;arRoute=null;arView={z:1,x:0,y:0,s:1};const c=ST.city,h=areaSvgIn({name:c.name,lat:+c.lat,lon:+c.lon,km});arRoute=r;return h}
+const stRadar=()=>{if(!ST.city)return "";const r=arRoute;arRoute=null;arView={z:1,x:0,y:0,s:1};const c=ST.city,h=areaSvg({name:c.name,lat:+c.lat,lon:+c.lon,km:ST.km});arRoute=r;return '<div class="arvis stvis">'+h+'</div>'};
+let stRaf=0;
 function stAreaHtml(){
   return '<div class="ph" id="sth">W jakiej okolicy się ruszasz?</div>'
    +'<div class="pmeta">PrzylesieGO łączy ludzi, którzy ruszają się blisko siebie — na rowerze, biegając, na spacerze i na wędrówce. Bez Twojej okolicy nie pokażemy Ci zaproszeń ani sygnałów z sąsiedztwa i nikt w pobliżu nie dowie się, że masz ochotę ruszyć.</div>'
    +'<div class="stform">'
-   +(ST.city?'<div class="hmcur">'+uiIcon("pin")+'<span><b>'+esc(ST.city.name)+'</b></span><button type="button" class="lnk" data-st="chg">Zmień</button></div>'
+   +(ST.city?'<div class="hmcur">'+uiIcon("pin")+'<span><b>'+esc(ST.city.name)+'</b></span><button type="button" class="lnk" data-st="chg">Zmień</button></div>'+stRadar()
      :'<button type="button" class="b g big" data-st="gps">'+uiIcon("globe")+' Użyj mojej lokalizacji</button>'
       +'<div class="hmrow" style="margin-top:10px"><input id="stq" maxlength="80" placeholder="Wpisz miejscowość, np. Pułtusk" value="'+esc(ST.q)+'" enterkeyhint="search" autocomplete="off"><button type="button" class="b" data-st="find">Szukaj</button></div>'
       +(ST.msg?'<div class="note" style="margin-top:8px">'+ST.msg+'</div>':'')
@@ -113,7 +117,8 @@ $("stsheet").addEventListener("click",async e=>{
     if(ST.i<ST.steps.length-1){ST.i++;stRender();return}
     stClose();say(ST.mode==="acts"?"Zapisane: "+stActsTxt()+".":"Gotowe — witaj w PrzylesieGO!")}
 });
-$("stsheet").addEventListener("input",e=>{if(e.target.id==="stkm"){ST.km=arKmFromSl(e.target.value);const v=$("stkmv");if(v)v.textContent=areaKmTxt(ST.km)}
+$("stsheet").addEventListener("input",e=>{if(e.target.id==="stkm"){const k=+e.target.value;ST.km=arKmFromSl(k);const v=$("stkmv");if(v)v.textContent=areaKmTxt(ST.km)
+    const ia=ST.city&&$("stsheet").querySelector(".stvis .arin");if(ia&&!stRaf)stRaf=requestAnimationFrame(()=>{stRaf=0;const k2=+($("stkm")||{}).value;ia.innerHTML=stRadarIn(k2>=50.5?0:Math.max(5,k2))})}   // radar płynnie z suwakiem
   else if(e.target.id==="stq")ST.q=e.target.value});
 $("stsheet").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="stq"){e.preventDefault();stFind()}});
 // ⚙️ → Testy → „Pokaż ekran startowy jeszcze raz” i ⚙️ → Jazdy i zaproszenia → Powiadamiaj mnie o
