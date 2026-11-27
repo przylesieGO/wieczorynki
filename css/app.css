@@ -1652,3 +1652,4 @@ html[data-theme=dark] .arte,html[data-theme=dark] .arco.e .arcon{fill:#8fa8ff}ht
 @media (prefers-reduced-motion:reduce){.archip:not(.peek)::before{animation:none}}
 .arsvg.zm{overflow:hidden}   /* v319: przybliżony radar (cały, z pierścieniem) przycięty do ramki */
 .archip{max-width:calc(100vw - 32px)}   /* v320: plakietka nie jest już zwężana do szerokości nagłówka (h1 kurczy się na telefonie do ~75 px i ucinało „Pułtusk”) */
+.menick{width:max-content;max-width:calc(100vw - 32px)}   /* v321: nick pod tytułem też nie jest ucinany do szerokości kurczącego się nagłówka */
