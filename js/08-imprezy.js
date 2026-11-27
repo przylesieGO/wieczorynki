@@ -277,7 +277,7 @@ const arLegHtml=()=>'<div class="hleg arleg">'+[["w","w","zaproszenia"],["s","s"
 const arTerOff=()=>{let v="fwr";try{const x=localStorage.getItem("arTerOff");if(x!=null)v=x}catch(e){}return new Set(v.split("").filter(x=>"fwr".includes(x)))};
 const arTerLegHtml=()=>{const o=arTerOff();return '<div class="hleg arleg arlegr">'+[["f","tf","lasy"],["w","tw","woda"],["r","tr","rzeki"]].map(([k,c,t])=>'<button type="button" class="arlg'+(o.has(k)?' off':'')+'" data-hm="tlg" data-k="'+k+'" aria-pressed="'+!o.has(k)+'">'+t+' <i class="hc '+c+'"></i></button>').join("")+'</div>'};
 // v349: przełączniki przy suwakach — „Miejscowości na radarze” i „Pogoda” (wyłączone: radar czystszy, suwak schowany)
-const arTwOn=()=>{try{return localStorage.getItem("arTwOn")!=="0"}catch(e){return true}};
+const arTwOn=()=>{try{return sessionStorage.getItem("arTwOn")!=="0"}catch(e){return true}};
 const arTgl=(k,on,l)=>'<button type="button" class="tgl'+(on?' on':'')+'" data-hm="'+k+'" role="switch" aria-checked="'+on+'" aria-label="'+l+'"><span></span></button>';
 const arViewMoved=()=>arHide.size>0||arView.s>1.01||Math.abs((arView.z||1)-1)>.01||Math.abs(arView.x)>.5||Math.abs(arView.y)>.5;
 // 🧭 pierścień kompasu wokół radaru (półprzezroczysty, nieruchomy przy przybliżaniu): N/E/S/W, co 30° liczby, co 10° kreski; delikatny jasny łuk krąży (animacja),
@@ -305,7 +305,7 @@ function arHeadAsk(){try{const D=window.DeviceOrientationEvent;if(D&&typeof D.re
 // rozmyte klinki pod pierścieniem kompasu, legenda tylko z warunkami, które występują, i linijka o wietrze. Czas: teraz / +3 h / jutro 12:00
 let arWx={k:"",at:0,d:null,busy:false,err:false};
 const AR_WXC=[["sun","słonecznie"],["part","częściowe zachmurzenie"],["cloud","pochmurno"],["fog","mgła"],["rain","deszcz"],["snow","śnieg"],["storm","burza"]];
-const arWxOn=()=>{try{return localStorage.getItem("arWxOn")!=="0"}catch(e){return true}};
+const arWxOn=()=>{try{return sessionStorage.getItem("arWxOn")!=="0"}catch(e){return true}};
 // v342: czas pogody suwakiem — 0…48 h do przodu (płynnie, dane co godzinę); dawny wybór Teraz/+3 h/Jutro przeliczany na godziny
 const arWxH=()=>{let v=0;try{const x=localStorage.getItem("arWxH"),t=localStorage.getItem("arWxT");
     if(x!=null&&x!=="")v=+x;else if(t==="3")v=3;else if(t==="j"){const d=new Date(),j=new Date(d);j.setDate(d.getDate()+1);j.setHours(12,0,0,0);v=Math.round((j-d)/36e5)}}catch(e){}
@@ -357,9 +357,10 @@ function arWxGr(){const g=$("arwxgr");if(!g)return;const P=arWxOn()?arWxGet():nu
   if(mk){mk.style.left=arWxPos(P[0])+"%";g.querySelector(".arwxtk").innerHTML=tk;return}   // ten sam znacznik — przesuwa się płynnie (CSS transition)
   g.innerHTML='<div class="arwxgb"><div class="arwxtk">'+tk+'</div><b class="arwxm" style="left:'+arWxPos(P[0])+'%" title="u Ciebie"></b></div>'
     +'<div class="arslt"><span>słonecznie</span><span>pochmurno</span><span>deszcz</span><span>burza</span></div>'}
-const arMoreOn=()=>{try{return localStorage.getItem("arMore")==="1"}catch(e){return false}};   // v354: „Więcej ustawień” — suwaki Miejscowości i Pogoda domyślnie schowane
+try{["arTwOn","arWxOn","arMore"].forEach(k=>localStorage.removeItem(k))}catch(e){}   // v361: te trzy ustawienia tylko na czas sesji (nowe wejście → suwaki włączone, „Więcej ustawień” zwinięte)
+const arMoreOn=()=>{try{return sessionStorage.getItem("arMore")==="1"}catch(e){return false}};   // v354: „Więcej ustawień” — suwaki Miejscowości i Pogoda domyślnie schowane
 const arWxSl=()=>{const on=arWxOn(),h=arWxH();
-  return '<div class="arslh arsl2"><span>Pogoda</span><b id="arwxhv">'+(on?arWxHTxt(h):'wyłączona')+'</b>'+arTgl("wxon",on,"Pogoda na radarze")+'</div>'
+  return '<div class="arslh arsl2"><span>Pogoda'+(on?' <small class="arsv" id="arwxhv">'+arWxHTxt(h)+'</small>':'')+'</span>'+arTgl("wxon",on,"Pogoda na radarze")+'</div>'
     +(on?'<input id="arwxh" class="arrng" type="range" min="0" max="48" step="any" value="'+h+'" style="--p:'+arSlP(h,0,48)+';--tk:12.5%" aria-label="Pogoda za ile godzin (do 48)">'
     +'<div class="arslt"><span>teraz</span><span>+24 h</span><span>+48 h</span></div>':'')};
 // v342 → v349: wiersz pogody pod radarem (bez przycisku — włącza się przełącznikiem przy suwaku „Pogoda”)
@@ -441,8 +442,10 @@ function areaNearHtml(a){const c={lat:a.lat,lon:a.lon},best={};
   const tt=(k,t,ic)=>{const q=typeof terNear==="function"?terNear(a,k):null;
     if(!q)return '<div class="arnr off"><span class="arna t'+k+'">'+uiIcon(ic)+'</span><div><small>'+t+'</small><b>daleko</b><span>ponad 60 km</span></div></div>';
     const d=dist(c,q),deg=Math.round(arBear(c,q)),here=d<1;
-    return '<div class="arnr"><span class="arna t'+k+'"'+(here?'':' style="transform:rotate('+deg+'deg)"')+'>'+(here?uiIcon(ic):ar)+'</span><div><small>'+t+'</small><b>'+(here?'tutaj':arKmT(d))+'</b><span>'+(here?'w okolicy środka':AR_DIR[Math.round(deg/45)%8])+'</span></div></div>'};
-  return '<div class="bsgrp">Najbliżej</div><div class="arnear">'+tile("s","Sygnał")+tile("w","Zaproszenie")+tile("e","Impreza")+tt("f","Las","tree")+tt("w","Woda","droplet")+'</div>'}
+    return '<button type="button" class="arnr" data-hm="poi" data-lat="'+q.lat.toFixed(5)+'" data-lon="'+q.lon.toFixed(5)+'" aria-label="'+t+' — pokaż na mapie"><span class="arna t'+k+'"'+(here?'':' style="transform:rotate('+deg+'deg)"')+'>'+(here?uiIcon(ic):ar)+'</span><div><small>'+t+'</small><b>'+(here?'tutaj':arKmT(d))+'</b><span>'+(here?'w okolicy środka':AR_DIR[Math.round(deg/45)%8])+'</span></div></button>'};
+  return '<div class="bsgrp">Najbliżej</div><div class="arnear">'+tile("s","Sygnał")+tile("w","Zaproszenie")+tile("e","Impreza")+tt("f","Las","tree")+tt("w","Woda","droplet")+'</div>'+(typeof poiTilesHtml==="function"?poiTilesHtml(a):'')}
+// v360: gdy dociągną się miejsca z OSM — przerysowanie okna (z zachowaniem przewinięcia), tylko gdy dotyczą tego, co widać
+function arPoiDone(key){try{const s=$("homesheet");if(s&&!s.classList.contains("hide")&&typeof areaCur==="function"&&poiKey(areaCur())===key)renderHome()}catch(e){}}
 // odrysowanie samego radaru i licznika (suwaki, dociągnięte miejscowości) — bez przebudowy całego okna
 function arRedraw(){const p=$("homesheet");if(!p||p.classList.contains("hide"))return;const s=p.querySelector(".arsvg");if(!s)return;
   const a=Object.assign(areaCur(),arLiveKm!=null?{km:arLiveKm}:{});const zm=s.querySelector(".arzm");if(zm)zm.setAttribute("transform",arZmT(arView.s));s.classList.toggle("zm",arView.s>1.01);const ia=s.querySelector(".arin");if(ia)ia.innerHTML=areaSvgIn(a);const wx=s.querySelector(".arwx");if(wx)wx.innerHTML=arWxSvg();const wl=$("arwxleg");if(wl)wl.innerHTML=arWxLeg();arWxGr();const c=p.querySelector(".arctr[data-hm=center]");if(c)c.classList.toggle("off",!arViewMoved());   // zawsze widoczny; przygaszony, gdy radar jest w środku
@@ -474,7 +477,7 @@ function renderHome(){arHeadOn();
    +'<div class="arvis">'+areaSvg(a)+'<button type="button" class="fch arctr arloc'+(areaPeek&&areaPeek.gps?' on':'')+'" data-hm="gpspeek">'+uiIcon("locate")+' Gdzie jestem</button>'+'<button type="button" class="fch arctr'+(arViewMoved()?'':' off')+'" data-hm="center">'+uiIcon("target")+' Wyśrodkuj</button>'+(arRoute?'<button type="button" class="fch arctr arplay" data-hm="rtplay">'+uiIcon("play")+' Odtwórz</button>':'')+'</div><div class="arcntrow">'+arLegHtml()+'<div class="arcnt">'+arCntInner(a.km,c)+'</div>'+arTerLegHtml()+'</div>'
    +arWxBar()
    +'<div class="arsl"><div class="arslh"><span>Promień'+arQ("arinfo","Co daje promień?")+'<button type="button" class="arq arqm'+(arMoreOn()?' on':'')+'" data-hm="more" aria-expanded="'+arMoreOn()+'">'+uiIcon("sliders")+' '+(arMoreOn()?'Mniej ustawień':'Więcej ustawień')+'</button></span><b id="arkmv">'+areaKmTxt(a.km)+'</b></div><input id="arkm" class="arrng" type="range" min="5" max="51" step="any" value="'+arSlVal(a.km)+'" style="--p:'+arSlP(arSlVal(a.km),5,51)+'" aria-label="Promień okolicy"><div class="arslt"><span>5 km</span><span>50 km</span><span>Polska</span></div>'
-   +(!arMoreOn()?'':('<div class="arslh arsl2"><span>Miejscowości na radarze</span><b id="ardensv">'+(arTwOn()?arRngTxt(arRng()):'wyłączone')+'</b>'+arTgl("twon",arTwOn(),"Miejscowości na radarze")+'</div>')+(arTwOn()?arRngHtml()+'<div class="arslt ar2t">'+AR_CLT.map(t=>'<span>'+t+'</span>').join("")+'</div>':'')+arWxSl())+AREA_INFO.replace('<div class="note"','<div class="note hide" id="arinfo"')+'</div>'
+   +(!arMoreOn()?'':('<div class="arslh arsl2"><span>Miejscowości na radarze'+(arTwOn()?' <small class="arsv" id="ardensv">'+arRngTxt(arRng())+'</small>':'')+'</span>'+arTgl("twon",arTwOn(),"Miejscowości na radarze")+'</div>')+(arTwOn()?arRngHtml()+'<div class="arslt ar2t">'+AR_CLT.map(t=>'<span>'+t+'</span>').join("")+'</div>':'')+arWxSl())+AREA_INFO.replace('<div class="note"','<div class="note hide" id="arinfo"')+'</div>'
    +arRouteHtml(a)+areaNearHtml(a)
    +'<div class="bsgrp">Moja miejscowość</div>'
    +'<div class="hmcur">'+uiIcon("pin")+'<span><b>'+esc(h.name)+'</b>'+(h.def?' <small>(domyślnie)</small>':'')+'</span><button type="button" class="lnk" data-hm="'+(hmMode==="home"?"mpeek":"mhome")+'">'+(hmMode==="home"?"Anuluj":"Zmień")+'</button></div>'
@@ -540,13 +543,15 @@ $("homesheet").addEventListener("click",async e=>{
   if(k==="top"){const l=$("homesheet").querySelector(".bslist");if(l)l.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});try{navigator.vibrate&&navigator.vibrate(8)}catch(err){}return}   // v349: ⬆ jak w formularzu zaproszenia (.totop)
   if(k==="center"){arView={z:1,x:0,y:0,s:1};if(arHide.size){arHide.clear();renderHome();return}arRedraw();return}
   if(k==="lg"){const t=b.dataset.k;if(arHide.has(t))arHide.delete(t);else arHide.add(t);b.classList.toggle("off",arHide.has(t));b.setAttribute("aria-pressed",String(!arHide.has(t)));arRedraw();return}   // v339: pełny widok (suwak dalej decyduje, które miejscowości)
-  if(k==="more"){try{localStorage.setItem("arMore",arMoreOn()?"0":"1")}catch(err){}renderHome();return}
+  if(k==="poi"){const la=b.dataset.lat,lo=b.dataset.lon,ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+    window.open(ios?"https://maps.apple.com/?daddr="+la+","+lo+"&dirflg=w":"https://www.google.com/maps/dir/?api=1&destination="+la+","+lo+"&travelmode=bicycling","_blank","noopener");return}   // v361: kafelek → nawigacja w telefonie (iPhone: Mapy Apple, Android: Mapy Google rowerem)
+  if(k==="more"){try{sessionStorage.setItem("arMore",arMoreOn()?"0":"1")}catch(err){}renderHome();return}
   if(k==="q"){const n=$(b.dataset.q);if(n){const on=n.classList.toggle("hide")===false;b.setAttribute("aria-expanded",String(on))}return}
   if(k==="rtbase"){openRb("radar");return}
   if(k==="rtosm"){arRouteOsm();return}
   if(k==="tlg"){const o=arTerOff(),t=b.dataset.k;if(o.has(t))o.delete(t);else o.add(t);try{localStorage.setItem("arTerOff",[...o].join(""))}catch(err){}b.classList.toggle("off",o.has(t));b.setAttribute("aria-pressed",String(!o.has(t)));arRedraw();return}
-  if(k==="twon"){try{localStorage.setItem("arTwOn",arTwOn()?"0":"1")}catch(err){}arView.s=arAutoS();arClamp();renderHome();return}
-  if(k==="wxon"){try{localStorage.setItem("arWxOn",arWxOn()?"0":"1")}catch(err){}renderHome();return}
+  if(k==="twon"){try{sessionStorage.setItem("arTwOn",arTwOn()?"0":"1")}catch(err){}arView.s=arAutoS();arClamp();renderHome();return}
+  if(k==="wxon"){try{sessionStorage.setItem("arWxOn",arWxOn()?"0":"1")}catch(err){}renderHome();return}
   if(k==="rtdel"){arRoute=null;arView=arHomeView();renderHome();return}
   if(k==="rtplay"){if(arRoute){arRoute.t0=performance.now();arRedraw()}return}   // v339: odtwórz = tylko narysuj od nowa, widok (przybliżenie, przesunięcie) zostaje
   // 📡 radar od mojej lokalizacji z telefonu: podgląd okolicy (nic nie zapisujemy, powiadomienia dalej z Mojej miejscowości)
