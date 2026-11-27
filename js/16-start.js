@@ -108,9 +108,10 @@ function setSession(s){
 }
 const amsg=e=>({"Invalid login credentials":"Nieprawidłowy e-mail lub hasło.","User already registered":"Konto z tym adresem już istnieje — zaloguj się."}[e.message]||e.message);
 $("login").onclick=async()=>{
-  if(!sb)return;
-  const r=await sb.auth.signInWithPassword({email:$("ae").value.trim(),password:$("ap").value});
-  $("ainfo").textContent=r.error?amsg(r.error):"";
+  const b=$("login");if(!sb||b.disabled)return;b.disabled=true;   // jedno żądanie naraz (szybkie klikanie wysyłało kilka prób)
+  try{const r=await sb.auth.signInWithPassword({email:$("ae").value.trim(),password:$("ap").value});
+    $("ainfo").textContent=r.error?amsg(r.error):""}
+  finally{b.disabled=false}
 };
 $("signup").onclick=async()=>{
   if(!sb)return;

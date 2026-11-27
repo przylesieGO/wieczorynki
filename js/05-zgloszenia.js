@@ -76,7 +76,7 @@ function fbFormHtml(){
    +(isSuper(uid)?fbEvidHtml():'')
    +'<div class="note" id="fbinfo" style="color:var(--bad)"></div>'
    +'<button class="b sbtn" data-c="fbsend"'+(fbBusy?' disabled':'')+'>Wyślij</button>'
-   +'<p class="note">Zgłoszenie trafia do administratora pod Twoim nickiem — może odpisać (zobaczysz pod 🔔). Za 3 zrealizowane zgłoszenia dostajesz 💡 przy nicku.</p>';
+   +'<p class="note">Zgłoszenie trafia do administratora pod Twoim nickiem — może odpisać (zobaczysz pod 🔔). Za 3 zrealizowane zgłoszenia dostajesz 💡 przy nicku. Limit: 3 zgłoszenia na dobę, co najmniej 2 minuty przerwy.</p>';
 }
 // 🔢 numer budowy przy wersji — tylko 👑 (po numerze wydania nie poznasz, czy telefon ma nowy kod)
 const bldTxt=()=>(typeof isKingReal==="function"&&isKingReal()&&APP_BUILD)?" · "+esc(APP_BUILD):"";
@@ -201,7 +201,7 @@ async function fbOpen(id,back){
   }
   if(gearView==="fbt"&&fbId===id)renderGear();
 }
-const fbErr=e=>{const m=e&&e.message||"";return /FB_DUP/.test(m)?"Twoja prośba już czeka — odezwiemy się.":/FB_TESTER/.test(m)?"Już jesteś testerem 💉":/FB_LIMIT/.test(m)?"Dzisiejszy limit wyczerpany — spróbuj jutro.":/check/.test(m)?"Za krótki tekst (min. 3 znaki).":"Nie udało się: "+(m||"błąd")};
+const fbErr=e=>{const m=e&&e.message||"";return /FB_DUP/.test(m)?"Twoja prośba już czeka — odezwiemy się.":/FB_TESTER/.test(m)?"Już jesteś testerem 💉":/FB_LIMIT/.test(m)?"Dzisiejszy limit wyczerpany — spróbuj jutro.":/FB_WAIT/.test(m)?"Odczekaj chwilę przed kolejną wiadomością.":/FB_LONG/.test(m)?"Za długi tekst — skróć go.":/FB_TWAIT/.test(m)?"Prośba została niedawno odrzucona — spróbuj ponownie za kilka dni.":/check/.test(m)?"Za krótki tekst (min. 3 znaki).":"Nie udało się: "+(m||"błąd")};
 async function fbSend(){
   const t=fbf.text.trim(),k=fbf.kind,inf=$("fbinfo");
   if(k==="rating"&&!fbf.rating){inf.textContent="Zaznacz gwiazdki — przesuń palcem.";return}
