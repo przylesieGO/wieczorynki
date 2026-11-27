@@ -205,7 +205,8 @@ async function overpass(q,o){
     try{const r=o.post?await fetch(ep,Object.assign({method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"data="+encodeURIComponent(q)},ac?{signal:ac.signal}:{}))
         :await fetch(ep+"?data="+encodeURIComponent(q),ac?{signal:ac.signal}:{});
       if(!r.ok)throw new Error(r.status===429?"serwer zajęty (429)":r.status===504?"serwer przeciążony (504)":"błąd serwera "+r.status);
-      const j=await r.json();clearTimeout(tm);
+      const j=o.txt?await r.text():await r.json();clearTimeout(tm);   // o.txt — odpowiedź tekstowa (CSV, v366)
+      if(o.txt&&/^\s*</.test(j))throw new Error("błąd serwera");
       if(j&&j.remark&&/error|timed out|out of memory/i.test(j.remark))throw new Error(/timed out/i.test(j.remark)?"przekroczony czas na serwerze":"błąd zapytania");
       return j}catch(e){clearTimeout(tm);last=e&&e.name==="AbortError"?new Error("brak odpowiedzi"):e}
   }

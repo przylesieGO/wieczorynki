@@ -51,3 +51,24 @@ function poiTilesHtml(a){const S=poiGet(a),c={lat:a.lat,lon:a.lon};
     if(wait||bad)return '<div class="arnr off"><span class="arna">'+uiIcon(ic)+'</span><div><small>'+t+'</small><b>'+(wait?'…':'—')+'</b><span>'+(wait?'szukam':'brak danych')+'</span></div></div>';
     return poiTile(k,t,ic,(S.r||{})[k],c)}).join("")+'</div>'
     +(bad?'<div class="note" style="margin:-6px 0 10px">Nie udało się pobrać miejsc z OpenStreetMap — spróbuj za chwilę (otwórz okno ponownie).</div>':'')}
+
+/* ---------- 🏡 wsie na radarze (v366) — prawy uchwyt suwaka „Miejscowości na radarze” na „wsie”
+   Dane: OpenStreetMap (Overpass, ODbL, place=village) w promieniu WS_R km od środka okolicy (zaokrąglonego do 0,1°); pobierane tylko, gdy wsie są włączone,
+   pamiętane 30 dni w localStorage „arWs” (najwyżej 3 okolice, ok. 50 KB każda). Rysowanie: areaSvgIn (js/08) woła wsGet dopiero przy rysowaniu. */
+const WS_R=40,WS_TTL=2592e6;
+let wsMem={};
+const wsKey=a=>a.lat.toFixed(1)+"|"+a.lon.toFixed(1);
+const wsLoad=()=>{try{return JSON.parse(localStorage.getItem("arWs")||"{}")}catch(e){return {}}};
+const wsSave=(k,v)=>{try{const o=wsLoad();o[k]=v;Object.keys(o).sort((x,y)=>o[y].t-o[x].t).slice(3).forEach(x=>delete o[x]);localStorage.setItem("arWs",JSON.stringify(o))}catch(e){}};
+async function wsFetch(key){
+  const [la,lo]=key.split("|");
+  try{const T=await overpass('[out:csv(::lat,::lon,name;false;"|")][timeout:25];node["place"="village"]["name"](around:'+(WS_R*1000)+','+la+','+lo+');out;',{post:true,ms:25000,txt:true});
+    const l=String(T||"").split("\n").map(s=>s.split("|")).filter(v=>v.length>=3&&v[2]&&isFinite(+v[0])&&isFinite(+v[1])&&v[0]!=="").map(v=>[v[2].trim().slice(0,40),+(+v[0]).toFixed(4),+(+v[1]).toFixed(4)]);
+    wsMem[key]={t:Date.now(),l};wsSave(key,wsMem[key])}
+  catch(e){wsMem[key]={t:Date.now(),err:true}}
+  if(typeof arRedraw==="function")arRedraw()}
+function wsGet(a){const key=wsKey(a);let S=wsMem[key];
+  if(!S){const o=wsLoad()[key];if(o&&o.l&&Date.now()-o.t<WS_TTL)S=wsMem[key]=o}
+  if(S&&S.err&&Date.now()-S.t>6e4){delete wsMem[key];S=null}   // po błędzie ponowna próba najwcześniej za minutę
+  if(!S){wsMem[key]={busy:true};wsFetch(key);S=wsMem[key]}
+  return S.l||null}

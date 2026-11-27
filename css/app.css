@@ -1572,7 +1572,7 @@ html[data-theme=dark] .tdeck{filter:drop-shadow(0 8px 6px rgba(0,0,0,.9)) drop-s
 .arsweep{transform-origin:215px 145px;animation:arsw 7s linear infinite}.arsweep path{fill:var(--acc);opacity:.07}@keyframes arsw{to{transform:rotate(360deg)}}
 .arsvg text{paint-order:stroke;stroke:var(--card);stroke-width:3px;stroke-linejoin:round}
 .arnn{font-size:10px;font-weight:700;fill:var(--mut)}.arrk{font-size:9.5px;fill:var(--mut)}
-.artd{fill:var(--mut)}.artd.out,.artn.out{opacity:.45}.artn{fill:var(--ink);opacity:.85}.artn.big{font-weight:700;opacity:1}
+.artd{fill:var(--mut)}.artd.out,.artn.out{opacity:.45}.artn{fill:var(--ink);opacity:.85}.artn.big{font-weight:700;opacity:1}.artn.ws{opacity:.68}.artd.ws{opacity:.7}
 .arte{fill:#1e3a8a;font-weight:700}.arhome{fill:var(--acc);font-weight:800}
 .arco polyline{fill:none;stroke:var(--mut);stroke-width:1}.arco.e polyline{stroke:#1e3a8a}.arco.w polyline{stroke:var(--acc)}
 .arcon{font-size:12px;font-weight:700;fill:var(--ink)}.arco.e .arcon{fill:#1e3a8a}.arcok{font-size:10.5px;fill:var(--mut)}
