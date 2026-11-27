@@ -330,10 +330,11 @@ function arWxLeg(){if(!arWxOn())return "";const P=arWxGet();
   const has=new Set(P.map(q=>q.cat[0])),c=P[0],strong=Math.max(...P.map(q=>q.w))>=40;
   return AR_WXC.filter(([k])=>has.has(k)).map(([k,t])=>'<i class="hc wx '+k+'"></i> '+t).join(" ")
     +'<span class="arwxw">'+uiIcon("wind")+' wiatr '+Math.round(c.w)+' km/h z kier. '+AR_DIR[Math.round(c.wd/45)%8]+(strong?' · <b>miejscami silny</b>':'')+'</span>'}
-const arWxBar=()=>{const on=arWxOn(),t=arWxT();
-  return '<div class="fchips arwxbar"><button type="button" class="fch'+(on?' on':'')+'" data-hm="wxon">'+uiIcon("cloudsun")+' Pogoda</button>'
-    +(on?[["0","Teraz"],["3","+3 h"],["j","Jutro 12:00"]].map(([v,l])=>'<button type="button" class="fch'+(t===v?' on':'')+'" data-hm="wxt" data-v="'+v+'">'+l+'</button>').join(""):'')+'</div>'
-    +'<div class="hleg arleg arwxleg" id="arwxleg">'+arWxLeg()+'</div>'};
+// v341: przełączniki pogody pionowo na lewej krawędzi radaru — same napisy, bez plakietek (aktywny zielony)
+const arWxSide=()=>{const on=arWxOn(),t=arWxT();
+  return '<div class="arwxv"><button type="button" class="'+(on?'on':'')+'" data-hm="wxon" aria-pressed="'+on+'">'+uiIcon("cloudsun")+' Pogoda</button>'
+    +(on?[["0","Teraz"],["3","+3 h"],["j","Jutro"]].map(([v,l])=>'<button type="button" class="'+(t===v?'on':'')+'" data-hm="wxt" data-v="'+v+'" aria-pressed="'+(t===v)+'">'+l+'</button>').join(""):'')+'</div>'};
+const arWxBar=()=>'<div class="hleg arleg arwxleg" id="arwxleg">'+arWxLeg()+'</div>';
 function areaSvg(a){return '<svg class="arsvg'+(typeof isKingReal==="function"&&isKingReal()?' kg':'')+(arView.s>1.01?' zm':'')+'" viewBox="0 0 '+AR_W+' '+AR_H+'" role="img" aria-label="Radar okolicy: '+esc(a.name||"")+', '+areaKmTxt(a.km)+' — przesuń palcem, przybliż dwoma palcami">'+'<g class="arzm" transform="'+arZmT(arView.s)+'"><g class="arwx">'+arWxSvg()+'</g>'+arCompass()+'<g class="arin">'+areaSvgIn(a)+'</g></g></svg>'}
 function areaSvgIn(a){const V={z:arView.z||1,x:arView.x,y:arView.y},S=a.km||300,CX=AR_CX,CY=AR_CY,f=AR_R0/S*V.z,G={},far={},B=[],K=typeof isKingReal==="function"&&isKingReal();
   const OX=CX+V.x,OY=CY+V.y,R0=AR_R0*V.z,homeIn=Math.hypot(V.x,V.y)<AR_RB-14;   // OX/OY — gdzie na radarze jest środek okolicy po przesunięciu
@@ -429,7 +430,7 @@ function renderHome(){arHeadOn();
       +(hmMode==="peek"?'<button type="button" class="hmfav'+(isFav(x)?' on':'')+'" data-hm="fav" data-i="'+i+'" aria-label="Ulubiona miejscowość">'+uiIcon(isFav(x)?"starf":"star")+'</button>':'')+'</div>').join("");
   p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Moja okolica"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-hm="close">Zamknij</button><b>'+uiIcon("pin")+' Moja okolica</b><span style="min-width:64px"></span></div><div class="bslist">'
    +(a.peek?'<div class="hmcur arpeek">'+uiIcon("eye")+'<span>Podgląd: <b>'+esc(a.name)+'</b></span><button type="button" class="lnk" data-hm="unpeek">Wróć do: '+esc(h.name)+'</button></div>':'')
-   +'<div class="arvis">'+areaSvg(a)+'<button type="button" class="fch arctr arloc'+(areaPeek&&areaPeek.gps?' on':'')+'" data-hm="gpspeek">'+uiIcon("locate")+' Gdzie jestem</button>'+'<button type="button" class="fch arctr'+(arViewMoved()?'':' off')+'" data-hm="center">'+uiIcon("target")+' Wyśrodkuj</button>'+(arRoute?'<button type="button" class="fch arctr arplay" data-hm="rtplay">'+uiIcon("play")+' Odtwórz</button>':'')+'</div><div class="arcnt">'+arCntInner(a.km,c)+'</div>'
+   +'<div class="arvis">'+areaSvg(a)+'<button type="button" class="fch arctr arloc'+(areaPeek&&areaPeek.gps?' on':'')+'" data-hm="gpspeek">'+uiIcon("locate")+' Gdzie jestem</button>'+'<button type="button" class="fch arctr'+(arViewMoved()?'':' off')+'" data-hm="center">'+uiIcon("target")+' Wyśrodkuj</button>'+arWxSide()+(arRoute?'<button type="button" class="fch arctr arplay" data-hm="rtplay">'+uiIcon("play")+' Odtwórz</button>':'')+'</div><div class="arcnt">'+arCntInner(a.km,c)+'</div>'
    +arLegHtml()+arWxBar()
    +'<div class="arsl"><div class="arslh"><span>Promień'+arQ("arinfo","Co daje promień?")+'</span><b id="arkmv">'+areaKmTxt(a.km)+'</b></div><input id="arkm" class="arrng" type="range" min="5" max="51" step="any" value="'+arSlVal(a.km)+'" style="--p:'+arSlP(arSlVal(a.km),5,51)+'" aria-label="Promień okolicy"><div class="arslt"><span>5 km</span><span>50 km</span><span>Polska</span></div>'
    +'<div class="arslh arsl2"><span>Miejscowości na radarze</span><b id="ardensv">'+arRngTxt(arRng())+'</b></div>'+arRngHtml()+'<div class="arslt ar2t">'+AR_CLT.map(t=>'<span>'+t+'</span>').join("")+'</div>'+AREA_INFO.replace('<div class="note"','<div class="note hide" id="arinfo"')+'</div>'
