@@ -1907,7 +1907,7 @@ $("whosheet").addEventListener("click",async e=>{
   const fb=e.target.closest("[data-fk]");
   if(fb&&fb.dataset.fk==="undo"){if(Date.now()-ws.swiped<500)return;   // przesunięcie kciukiem nie jest stuknięciem
     if(fb.dataset.ok){const o=$("wsok");if(o.disabled){say("Wybierz osoby.");return}o.click();return}   // OK = dawne „Gotowe”
-    const t=ws.hist.pop();if(!t){say("Nie ma czego cofnąć — przesuń kciukiem po przycisku, żeby zatwierdzić (OK).");return}
+    const t=ws.hist.pop();if(!t){closeWho();return}   // nic nie zmieniono — Cofnij zamyka okno (jak w Filtrach), wybór zostaje jak przed otwarciem
     const [v,fo,g,P]=JSON.parse(t);ws.vis=v;ws.fo=fo;ws.gr=g;ws.pick=new Set(P);ws.last=t;ws.topK=null;renderWho();return}
   if(fb&&fb.dataset.fk==="clear"){const L=whoLocked();
     if(ws.vis==="fav"||ws.fo){const all=ws.vis==="fav"||favIds().every(id=>ws.pick.has(id));
