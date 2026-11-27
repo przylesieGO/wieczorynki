@@ -1672,3 +1672,7 @@ html[data-theme=dark] .mymode{filter:drop-shadow(0 5px 5px rgba(0,0,0,.8)) drop-
 .mymode:has(#mysw.on,#mysort.on) button.sgmini .sgl,.mymode:has(#mysw.on,#mysort.on) button.sgmini .sgn{max-width:0;opacity:0;margin-left:0}
 .mymode:has(#mysw.on,#mysort.on) button.sgmini svg{width:17px;height:17px}
 @media (prefers-reduced-motion:reduce){.mymode button.sgmini .sgl,.mymode button.sgmini .sgn,.mymode button.sgmini svg{transition:none}}
+/* v324: gdy okno Ekipy jest otwarte, Ekipa rozkłada podpis, a Najnowsze/Moje składają się do ikon */
+.mymode.sgo:has(#mysw.on,#mysort.on) button.sgmini .sgl,.mymode.sgo:has(#mysw.on,#mysort.on) button.sgmini .sgn{max-width:60px;opacity:1;margin-left:4px}
+.mymode.sgo:has(#mysw.on,#mysort.on) button.sgmini svg{width:22px;height:22px}
+.mymode.sgo button.on .mml{max-width:0;opacity:0;margin-left:0}

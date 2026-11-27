@@ -691,8 +691,9 @@ function sigWinRender(){
   box.scrollTop=y}
 // „Masz z kim …” (nie u autora — on ma tam „Zaproś ekipę”) samo jako przeczytane po otwarciu okna „Ekipa” albo rozwinięciu sekcji pod 🔔
 const sigEkipaAutoRead=()=>markRead(sigEkipaUn().filter(n=>n.actor!==uid).map(n=>n.id));
-function openSigWin(){if(!sigOn())return;sigEkipaAutoRead();sgwOpen=true;const p=$("sigwin");p.classList.remove("hide");p.innerHTML="";sigWinRender()}
-function closeSigWin(){sgwOpen=false;const p=$("sigwin");p.classList.add("hide");p.innerHTML=""}
+const mymSgo=on=>{const m=document.querySelector(".mymode");if(m)m.classList.toggle("sgo",on)};   // v324: okno Ekipy otwarte — karta Ekipa rozkłada podpis, Moje/Najnowsze składają się do ikon
+function openSigWin(){if(!sigOn())return;sigEkipaAutoRead();sgwOpen=true;mymSgo(true);const p=$("sigwin");p.classList.remove("hide");p.innerHTML="";sigWinRender()}
+function closeSigWin(){sgwOpen=false;mymSgo(false);const p=$("sigwin");p.classList.add("hide");p.innerHTML=""}
 function sigWinSync(){
   const b=$("mysigs");
   if(b){const on=sigOn();b.classList.toggle("hide",!on);
