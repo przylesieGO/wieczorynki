@@ -217,11 +217,15 @@ const AR_DIR=["płn.","płn.-wsch.","wsch.","płd.-wsch.","płd.","płd.-zach.",
 const arLab=t=>{t=String(t||"").split(/[,·(]/)[0].trim();return t.length>2?t:""};
 const arCut=(t,n)=>t.length>n?t.slice(0,n-1)+"…":t;
 let arLiveKm=null,arRaf=0;
-const arCls=p=>{for(let i=0;i<AR_CLN;i++)if(p>=AR_CLS[i])return i;return AR_CLN};
+// v336: płynnie — uchwyty stoją między kreskami, granice wielkości liczone pośrodku (skala logarytmiczna), miejscowości dochodzą pojedynczo
+const AR_UP=[2000,100,50,20,10,5,2];   // tys.: górna granica przy lewym uchwycie w punktach skali (0 = bez granicy)
+const arLog=(A,x)=>{const i=Math.max(0,Math.min(A.length-2,Math.floor(x))),t=x-i,a=Math.max(.5,A[i]),b=Math.max(.5,A[i+1]);return Math.exp(Math.log(a)+(Math.log(b)-Math.log(a))*t)};
+const arPopUp=x=>x<=.01?Infinity:arLog(AR_UP,x),arPopLow=x=>x>=AR_CLN-.01?0:arLog(AR_CLS,x);
+const arTys=v=>(v>=10?String(Math.round(v)):String(Math.round(v*10)/10).replace(".",","))+" tys.";
 const arRng=()=>{let r=[0,4];try{const x=localStorage.getItem("arRng"),d=localStorage.getItem("arDens");   // dawny suwak gęstości (arDens 0–7) → zbliżony przedział
     if(x){const v=x.split("-").map(Number);if(v.length===2&&v.every(isFinite))r=v}else if(d!=null&&d!==""&&isFinite(+d))r=[0,+d<1?3:+d<4?4:+d<6?5:6]}catch(e){}
-  r=r.map(n=>Math.max(0,Math.min(AR_CLN,Math.round(n))));return r[0]>r[1]?[r[1],r[0]]:r};
-const arRngTxt=([lo,hi])=>lo===0&&hi===AR_CLN?"wszystkie":hi===AR_CLN?"do "+AR_CLS[lo-1]+" tys.":lo===0?"od "+AR_CLS[hi]+" tys.":"od "+AR_CLS[hi]+" do "+AR_CLS[lo-1]+" tys.";
+  r=r.map(n=>Math.max(0,Math.min(AR_CLN,+n)));return r[0]>r[1]?[r[1],r[0]]:r};
+const arRngTxt=([lo,hi])=>{const a=lo<=.01,b=hi>=AR_CLN-.01;return a&&b?"wszystkie":b?"do "+arTys(arPopUp(lo)):a?"od "+arTys(arPopLow(hi)):"od "+arTys(arPopLow(hi)).replace(" tys.","")+" do "+arTys(arPopUp(lo))};
 const arAutoS=()=>1+(AR_SMAX-1)*arRng()[0]/AR_CLN;   // „sam się przybliża”: im mniejsze największe miejscowości (lewy uchwyt w prawo), tym bliżej
 const arHomeView=()=>({z:1,x:0,y:0,s:arAutoS()});
 const arBear=(a,b)=>{const y=Math.sin(rad(b.lon-a.lon))*Math.cos(rad(b.lat)),x=Math.cos(rad(a.lat))*Math.sin(rad(b.lat))-Math.sin(rad(a.lat))*Math.cos(rad(b.lat))*Math.cos(rad(b.lon-a.lon));return (Math.atan2(y,x)*180/Math.PI+360)%360};
@@ -282,8 +286,8 @@ function areaSvgIn(a){const V={z:1,x:arView.x,y:arView.y},S=a.km||300,CX=AR_CX,C
   let lab="",seen=new Set([String(a.name||"").toLowerCase()]);
   areaPts().filter(p=>p.k==="e"&&p.lab).forEach(p=>{const q=xy(p.lat,p.lon);if(Math.hypot(q.x,q.y)>AR_RM||seen.has(p.lab.toLowerCase()))return;
     const t=label(CX+q.x,CY+q.y,arCut(p.lab,16),11.5,"arte");if(t){lab+=t;seen.add(p.lab.toLowerCase())}});
-  const [lo,hi]=arRng(),T=arTownsGet();let tw="";
-  if(T)T.map(t=>Object.assign({t},xy(t[1],t[2]))).filter(o=>{const c=arCls(o.t[4]);return c>=lo&&c<=hi&&o.d>1.5&&Math.hypot(o.x,o.y)<AR_RM-3&&!seen.has(o.t[0].toLowerCase())})
+  const [lo,hi]=arRng(),pU=arPopUp(lo),pL=arPopLow(hi),T=arTownsGet();let tw="";
+  if(T)T.map(t=>Object.assign({t},xy(t[1],t[2]))).filter(o=>{const p=o.t[4];return p<pU&&p>=pL&&o.d>1.5&&Math.hypot(o.x,o.y)<AR_RM-3&&!seen.has(o.t[0].toLowerCase())})
     .sort((u,v)=>(v.t[5]-u.t[5])||(v.t[4]-u.t[4])).forEach(o=>{const x=CX+o.x,y=CY+o.y,big=o.t[3]===2,out=!!a.km&&o.d>S;
       const t=label(x,y,arCut(o.t[0],16),big?12:11,"artn"+(big?" big":"")+(out?" out":""));if(!t)return;seen.add(o.t[0].toLowerCase());
       tw+='<circle class="artd'+(out?' out':'')+'" cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+((big?2.6:2)/Z).toFixed(2)+'"/>'+t});
@@ -310,7 +314,7 @@ function areaSvgIn(a){const V={z:1,x:arView.x,y:arView.y},S=a.km||300,CX=AR_CX,C
    +(homeIn?'<g class="arpin" transform="translate('+(OX-12)+' '+(OY-22)+')"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></g>'
    +'<text class="arhome" x="'+OX+'" y="'+(OY+16)+'" text-anchor="middle" font-size="'+hfs+'">'+esc(hn)+'</text>':'')}
 // licznik pod radarem
-const arCntInner=(k,c)=>'<b>'+(k?'W promieniu '+k+' km':'Cała Polska')+'</b><span>'+areaCntTxt(c)+'</span>'+(k&&c.out?'<small>dalej: '+c.out+'</small>':'');
+const arCntInner=(k,c)=>'<b>'+(k?'W promieniu '+Math.round(k)+' km':'Cała Polska')+'</b><span>'+areaCntTxt(c)+'</span>'+(k&&c.out?'<small>dalej: '+c.out+'</small>':'');
 // „Najbliżej”: sygnał, zaproszenie, impreza — odległość od środka okolicy i kierunek (strzałka obrócona jak na radarze)
 function areaNearHtml(a){const c={lat:a.lat,lon:a.lon},best={};
   areaPts().forEach(p=>{const d=dist(c,p);if(!best[p.k]||d<best[p.k].d)best[p.k]={d,p}});
@@ -333,7 +337,7 @@ function renderAreaChip(){const el=$("mearea");if(!el)return;const a=areaCur();
   el.title=a.peek?"Podgląd okolicy: "+a.name+" — kliknij ✕, żeby wrócić do swojej":"Twoja okolica — kliknij, żeby zmienić promień albo podejrzeć inną"}
 function openHome(mode){arView=arHomeView();homeRes=[];homeMsg="";hmMode=mode||"peek";renderHome();if(mode==="home")setTimeout(()=>{const i=$("homeq");if(i)i.focus()},120)}
 // v335: suwak z dwoma uchwytami = dwa .arrng nałożone na siebie; dolny (#arlo) rysuje ścieżkę z wypełnieniem między uchwytami (--a…--b)
-const arRngHtml=()=>{const [lo,hi]=arRng(),i=(id,v,l)=>'<input id="'+id+'" class="arrng" type="range" min="0" max="'+AR_CLN+'" step="1" value="'+v+'" aria-label="'+l+'">';
+const arRngHtml=()=>{const [lo,hi]=arRng(),i=(id,v,l)=>'<input id="'+id+'" class="arrng" type="range" min="0" max="'+AR_CLN+'" step="any" value="'+v+'" aria-label="'+l+'">';
   return '<div class="ar2" style="--a:'+(lo/AR_CLN).toFixed(4)+';--b:'+(hi/AR_CLN).toFixed(4)+';--tk:'+(100/AR_CLN).toFixed(3)+'%">'+i("arlo",lo,"Największe miejscowości na radarze")+i("arhi",hi,"Najmniejsze miejscowości na radarze")+'</div>'};
 function renderHome(){arHeadOn();
   arLiveKm=null;const p=$("homesheet"),a=areaCur(),h=areaHome(),c=areaCount(a),q=$("homeq")?$("homeq").value:"",favs=areaFavs(),fk=x=>x.name+"|"+areaRound(x.lat).toFixed(2)+"|"+areaRound(x.lon).toFixed(2);
@@ -346,7 +350,7 @@ function renderHome(){arHeadOn();
    +(a.peek?'<div class="hmcur arpeek">'+uiIcon("eye")+'<span>Podgląd: <b>'+esc(a.name)+'</b></span><button type="button" class="lnk" data-hm="unpeek">Wróć do: '+esc(h.name)+'</button></div>':'')
    +'<div class="arvis">'+areaSvg(a)+'<button type="button" class="fch arctr arloc'+(areaPeek&&areaPeek.gps?' on':'')+'" data-hm="gpspeek">'+uiIcon("locate")+' Gdzie jestem</button>'+'<button type="button" class="fch arctr'+(arViewMoved()?'':' off')+'" data-hm="center">'+uiIcon("target")+' Wyśrodkuj</button></div><div class="arcnt">'+arCntInner(a.km,c)+'</div>'
    +'<div class="hleg arleg"><i class="hc w"></i> zaproszenia <i class="hc s"></i> sygnały <i class="hc ev"></i> imprezy</div>'
-   +'<div class="arsl"><div class="arslh"><span>Promień</span><b id="arkmv">'+areaKmTxt(a.km)+'</b></div><input id="arkm" class="arrng" type="range" min="5" max="51" step="1" value="'+arSlVal(a.km)+'" style="--p:'+arSlP(arSlVal(a.km),5,51)+'" aria-label="Promień okolicy"><div class="arslt"><span>5 km</span><span>50 km</span><span>Polska</span></div>'
+   +'<div class="arsl"><div class="arslh"><span>Promień</span><b id="arkmv">'+areaKmTxt(a.km)+'</b></div><input id="arkm" class="arrng" type="range" min="5" max="51" step="any" value="'+arSlVal(a.km)+'" style="--p:'+arSlP(arSlVal(a.km),5,51)+'" aria-label="Promień okolicy"><div class="arslt"><span>5 km</span><span>50 km</span><span>Polska</span></div>'
    +'<div class="arslh arsl2"><span>Miejscowości na radarze</span><b id="ardensv">'+arRngTxt(arRng())+'</b></div>'+arRngHtml()+'<div class="arslt ar2t">'+AR_CLT.map(t=>'<span>'+t+'</span>').join("")+'</div>'+AREA_INFO+'</div>'
    +areaNearHtml(a)
    +'<div class="bsgrp">Moja miejscowość</div>'
@@ -379,9 +383,9 @@ function useGps(after){
 $("homesheet").addEventListener("input",e=>{const id=e.target.id;
   if(e.target.classList&&e.target.classList.contains("arrng"))e.target.style.setProperty("--p",arSlP(e.target.value,+e.target.min,+e.target.max));
   if(id==="arlo"||id==="arhi"){const L=$("arlo"),H=$("arhi");let lo=+L.value,hi=+H.value;if(lo>hi){if(id==="arlo")H.value=hi=lo;else L.value=lo=hi}   // uchwyt popycha drugi — nigdy się nie zakleszczą
-    try{localStorage.setItem("arRng",lo+"-"+hi)}catch(x){}const w=L.parentNode;w.style.setProperty("--a",(lo/AR_CLN).toFixed(4));w.style.setProperty("--b",(hi/AR_CLN).toFixed(4));
+    try{localStorage.setItem("arRng",lo.toFixed(2)+"-"+hi.toFixed(2))}catch(x){}const w=L.parentNode;w.style.setProperty("--a",(lo/AR_CLN).toFixed(4));w.style.setProperty("--b",(hi/AR_CLN).toFixed(4));
     const v=$("ardensv");if(v)v.textContent=arRngTxt([lo,hi]);arView.s=arAutoS();const V=arView,m=AR_RB,d=Math.hypot(V.x,V.y);if(d>m){V.x*=m/d;V.y*=m/d}}
-  else if(id==="arkm"){arLiveKm=arKmFromSl(e.target.value);const v=$("arkmv");if(v)v.textContent=areaKmTxt(arLiveKm)}
+  else if(id==="arkm"){const k=+e.target.value;arLiveKm=k>=50.5?0:Math.max(5,k);const v=$("arkmv");if(v)v.textContent=areaKmTxt(arKmFromSl(k))}   // v336: radar płynnie, napis i zapis co 1 km
   else return;
   if(!arRaf)arRaf=requestAnimationFrame(()=>{arRaf=0;arRedraw()})});
 // 🤏 gesty na radarze: 1 palec / mysz — przesuwanie, 2 palce — przybliżanie, kółko — przybliżanie pod kursorem, dwuklik — wyśrodkuj
