@@ -1824,3 +1824,5 @@ html[data-theme=dark] .wdeck{filter:drop-shadow(0 7px 5px rgba(0,0,0,.85)) drop-
 .rbfoot{padding-top:8px}.rbfoot .b{width:100%}.totop.rbtop{position:absolute;left:16px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:5}
 /* v354: „Więcej ustawień” obok „?” przy suwaku Promień */
 .arq.arqm{width:auto;height:24px;padding:0 9px;border-radius:12px;gap:5px;font-size:12px;white-space:nowrap}.arq.arqm .ui-i{width:13px;height:13px}.arq.arqm.on{background:var(--acc);color:var(--card)}
+.arslh>span:first-child{display:inline-flex;align-items:center}.arq.arqm{vertical-align:baseline}
+.wrbb .wrsk{width:auto;height:auto;font-weight:700}

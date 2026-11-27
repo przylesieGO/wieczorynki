@@ -358,8 +358,7 @@ function arWxGr(){const g=$("arwxgr");if(!g)return;const P=arWxOn()?arWxGet():nu
   g.innerHTML='<div class="arwxgb"><div class="arwxtk">'+tk+'</div><b class="arwxm" style="left:'+arWxPos(P[0])+'%" title="u Ciebie"></b></div>'
     +'<div class="arslt"><span>słonecznie</span><span>pochmurno</span><span>deszcz</span><span>burza</span></div>'}
 const arMoreOn=()=>{try{return localStorage.getItem("arMore")==="1"}catch(e){return false}};   // v354: „Więcej ustawień” — suwaki Miejscowości i Pogoda domyślnie schowane
-const arSlOff=()=>!arTwOn()&&!arWxOn();   // v352: oba przełączniki wyłączone → wiersze z przełącznikami się chowają (włączy je coś innego)
-const arWxSl=()=>{if(arSlOff())return '';const on=arWxOn(),h=arWxH();
+const arWxSl=()=>{const on=arWxOn(),h=arWxH();
   return '<div class="arslh arsl2"><span>Pogoda</span><b id="arwxhv">'+(on?arWxHTxt(h):'wyłączona')+'</b>'+arTgl("wxon",on,"Pogoda na radarze")+'</div>'
     +(on?'<input id="arwxh" class="arrng" type="range" min="0" max="48" step="any" value="'+h+'" style="--p:'+arSlP(h,0,48)+';--tk:12.5%" aria-label="Pogoda za ile godzin (do 48)">'
     +'<div class="arslt"><span>teraz</span><span>+24 h</span><span>+48 h</span></div>':'')};
@@ -475,7 +474,7 @@ function renderHome(){arHeadOn();
    +'<div class="arvis">'+areaSvg(a)+'<button type="button" class="fch arctr arloc'+(areaPeek&&areaPeek.gps?' on':'')+'" data-hm="gpspeek">'+uiIcon("locate")+' Gdzie jestem</button>'+'<button type="button" class="fch arctr'+(arViewMoved()?'':' off')+'" data-hm="center">'+uiIcon("target")+' Wyśrodkuj</button>'+(arRoute?'<button type="button" class="fch arctr arplay" data-hm="rtplay">'+uiIcon("play")+' Odtwórz</button>':'')+'</div><div class="arcntrow">'+arLegHtml()+'<div class="arcnt">'+arCntInner(a.km,c)+'</div>'+arTerLegHtml()+'</div>'
    +arWxBar()
    +'<div class="arsl"><div class="arslh"><span>Promień'+arQ("arinfo","Co daje promień?")+'<button type="button" class="arq arqm'+(arMoreOn()?' on':'')+'" data-hm="more" aria-expanded="'+arMoreOn()+'">'+uiIcon("sliders")+' '+(arMoreOn()?'Mniej ustawień':'Więcej ustawień')+'</button></span><b id="arkmv">'+areaKmTxt(a.km)+'</b></div><input id="arkm" class="arrng" type="range" min="5" max="51" step="any" value="'+arSlVal(a.km)+'" style="--p:'+arSlP(arSlVal(a.km),5,51)+'" aria-label="Promień okolicy"><div class="arslt"><span>5 km</span><span>50 km</span><span>Polska</span></div>'
-   +(!arMoreOn()?'':(arSlOff()?'':'<div class="arslh arsl2"><span>Miejscowości na radarze</span><b id="ardensv">'+(arTwOn()?arRngTxt(arRng()):'wyłączone')+'</b>'+arTgl("twon",arTwOn(),"Miejscowości na radarze")+'</div>')+(arTwOn()?arRngHtml()+'<div class="arslt ar2t">'+AR_CLT.map(t=>'<span>'+t+'</span>').join("")+'</div>':'')+arWxSl())+AREA_INFO.replace('<div class="note"','<div class="note hide" id="arinfo"')+'</div>'
+   +(!arMoreOn()?'':('<div class="arslh arsl2"><span>Miejscowości na radarze</span><b id="ardensv">'+(arTwOn()?arRngTxt(arRng()):'wyłączone')+'</b>'+arTgl("twon",arTwOn(),"Miejscowości na radarze")+'</div>')+(arTwOn()?arRngHtml()+'<div class="arslt ar2t">'+AR_CLT.map(t=>'<span>'+t+'</span>').join("")+'</div>':'')+arWxSl())+AREA_INFO.replace('<div class="note"','<div class="note hide" id="arinfo"')+'</div>'
    +arRouteHtml(a)+areaNearHtml(a)
    +'<div class="bsgrp">Moja miejscowość</div>'
    +'<div class="hmcur">'+uiIcon("pin")+'<span><b>'+esc(h.name)+'</b>'+(h.def?' <small>(domyślnie)</small>':'')+'</span><button type="button" class="lnk" data-hm="'+(hmMode==="home"?"mpeek":"mhome")+'">'+(hmMode==="home"?"Anuluj":"Zmień")+'</button></div>'

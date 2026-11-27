@@ -42,8 +42,7 @@ function rbSvg(prev,w,h,white){
   return '<svg viewBox="0 0 '+w+' '+h+'" aria-hidden="true"><path d="M'+P.map(p=>pt(p).join(' ')).join(' L')+'" fill="none" stroke="'+c+'" stroke-width="'+(white?2.6:3)+'" stroke-linejoin="round" stroke-linecap="round"/><circle cx="'+a[0]+'" cy="'+a[1]+'" r="4" fill="'+(white?'#1f9d55':'#fff')+'" stroke="'+c+'" stroke-width="2.5"/></svg>';
 }
 // v352: zawartość przycisku „Baza tras” — mały szkic prawdziwej trasy z bazy (najczęściej używana) + ikona stosu; bez tekstu
-function rbBtnIn(){let L=(rbList||[]).filter(x=>x.preview&&!x.hidden).sort((a,b)=>rbUses(b)-rbUses(a)),P=L.slice(0,3).map(x=>x.preview);if(!P.length&&typeof REP_DEMO_ROUTE!=="undefined")P=[REP_DEMO_ROUTE];
-  return P.map(p=>'<span class="wrsk">'+rbSvg(p,30,26)+'</span>').join("")+uiIcon("layers")}
+function rbBtnIn(){return uiIcon("layers")+'<span class="wrsk">GPX</span>'}
 function rbFiltered(){
   const q=lc(rb.q.trim()),s=rb.sort;
   const L=(rbList||[]).filter(x=>(!rb.bike||x.bike===rb.bike)&&(!q||lc(x.name+" "+(x.start_city||"")).includes(q))&&(rb.all||q||typeof inArea!=="function"||inArea(x.start_lat,x.start_lon)));   // 📍 v270: domyślnie trasy z Mojej okolicy (szukanie po nazwie — wszędzie)
