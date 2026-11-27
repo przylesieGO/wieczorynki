@@ -228,8 +228,7 @@ const arRng=()=>{let r=[0,4];try{const x=localStorage.getItem("arRng"),d=localSt
     if(x){const v=x.split("-").map(Number);if(v.length===2&&v.every(isFinite))r=v}else if(d!=null&&d!==""&&isFinite(+d))r=[0,+d<1?3:+d<4?4:+d<6?5:6]}catch(e){}
   r=r.map(n=>Math.max(0,Math.min(AR_CLN,+n)));return r[0]>r[1]?[r[1],r[0]]:r};
 const arRngTxt=([lo,hi])=>{const a=lo<=.01,b=hi>=AR_CLN-.01;return a&&b?"wszystkie":b?"do "+arTys(arPopUp(lo)):a?"od "+arTys(arPopLow(hi)):"od "+arTys(arPopLow(hi)).replace(" tys.","")+" do "+arTys(arPopUp(lo))};
-const arAutoS=()=>arTwOn()?1+(AR_SAUTO-1)*arRng()[0]/AR_CLN:1;   // „sam się przybliża”: im mniejsze największe miejscowości (lewy uchwyt w prawo), tym bliżej
-const arHomeView=()=>({z:1,x:0,y:0,s:arAutoS()});
+const arHomeView=()=>({z:1,x:0,y:0,s:1});   // v367: suwak miejscowości tylko filtruje nazwy — nie zmienia przybliżenia (przybliżasz palcami / kółkiem)
 // v337: 🗺️ trasa GPX na radarze (podgląd, tylko w tej karcie): kreska rysuje się od startu do mety, miejscowości po drodze podpisane
 let arRoute=null;const AR_RT_MS=3000;
 function arRouteSet(pts,name){pts=thin(pts,400);const T=arTownsGet(),on=[];
@@ -269,7 +268,7 @@ let arTownsL=null;
 const arTownsGet=()=>arTownsL||(arTownsL=AR_TOWNS_RAW.split(";").map(x=>{const v=x.split("|"),p=+v[3];return [v[0],+v[1],+v[2],p>=50?2:p>=5?1:0,p,v[4]==="1"]}));
 // 🤏 przybliżanie i przesuwanie radaru (dwa palce / kółko myszy / jeden palec lub mysz); „Wyśrodkuj” i dwuklik wracają do skali i środka
 let arView={z:1,x:0,y:0,s:1};   // z — zawsze 1, s — skala całego radaru z pierścieniem (1…AR_SMAX)
-const AR_SMAX=3,AR_SAUTO=2.4,arZmT=s=>'translate('+AR_CX+' '+AR_CY+') scale('+s.toFixed(3)+') translate('+(-AR_CX)+' '+(-AR_CY)+')';
+const AR_SMAX=3,arZmT=s=>'translate('+AR_CX+' '+AR_CY+') scale('+s.toFixed(3)+') translate('+(-AR_CX)+' '+(-AR_CY)+')';
 // v340: legenda radaru do odklikania — ukryte rodzaje kropek (w/s/e), „Wyśrodkuj” przywraca
 const arHide=new Set();
 const arLegHtml=()=>'<div class="hleg arleg">'+[["w","w","zaproszenia"],["s","s","sygnały"],["e","ev","imprezy"]].map(([k,c,t])=>'<button type="button" class="arlg'+(arHide.has(k)?' off':'')+'" data-hm="lg" data-k="'+k+'" aria-pressed="'+!arHide.has(k)+'"><i class="hc '+c+'"></i> '+t+'</button>').join("")+'</div>';
@@ -530,7 +529,7 @@ $("homesheet").addEventListener("input",e=>{const id=e.target.id;
   if(e.target.classList&&e.target.classList.contains("arrng"))e.target.style.setProperty("--p",arSlP(e.target.value,+e.target.min,+e.target.max));
   if(id==="arlo"||id==="arhi"){const L=$("arlo"),H=$("arhi");let lo=+L.value,hi=+H.value;if(lo>hi){if(id==="arlo")H.value=hi=lo;else L.value=lo=hi}   // uchwyt popycha drugi — nigdy się nie zakleszczą
     try{localStorage.setItem("arRng",lo.toFixed(2)+"-"+hi.toFixed(2))}catch(x){}const w=L.parentNode;w.style.setProperty("--a",(lo/AR_CLN).toFixed(4));w.style.setProperty("--b",(hi/AR_CLN).toFixed(4));
-    const v=$("ardensv");if(v)v.textContent=arRngTxt([lo,hi]);arView.s=arAutoS();const V=arView,m=AR_RB,d=Math.hypot(V.x,V.y);if(d>m){V.x*=m/d;V.y*=m/d}}
+    const v=$("ardensv");if(v)v.textContent=arRngTxt([lo,hi])}
   else if(id==="arwxh"){const h=+e.target.value;try{localStorage.setItem("arWxH",h.toFixed(2))}catch(x){}const v=$("arwxhv");if(v)v.textContent=arWxHTxt(h)}
   else if(id==="arkm"){const k=+e.target.value;arLiveKm=k>=50.5?0:Math.max(5,k);const v=$("arkmv");if(v)v.textContent=areaKmTxt(arKmFromSl(k))}   // v336: radar płynnie, napis i zapis co 1 km
   else return;
@@ -538,7 +537,7 @@ $("homesheet").addEventListener("input",e=>{const id=e.target.id;
 // 🤏 gesty na radarze: 1 palec / mysz — przesuwanie, 2 palce — przybliżanie, kółko — przybliżanie pod kursorem, dwuklik — wyśrodkuj
 const arPt=new Map();let arG=null;
 const arU=(s,e)=>{const r=s.getBoundingClientRect(),k=AR_W/r.width;return {x:(e.clientX-r.left)*k-AR_CX,y:(e.clientY-r.top)*k-AR_CY}};   // punkt względem środka radaru, w jednostkach rysunku
-function arZoomAt(p,z){arView.s=Math.max(1,Math.min(AR_SMAX,z));arClamp()}   // skala całego radaru razem z pierścieniem (v366: do 3×; suwak miejscowości sam przybliża do 2,4× — AR_SAUTO)
+function arZoomAt(p,z){arView.s=Math.max(1,Math.min(AR_SMAX,z));arClamp()}   // skala całego radaru razem z pierścieniem (do 3×)
 function arClamp(){const V=arView,m=arRoute?1e4:AR_RB,d=Math.hypot(V.x,V.y);if(d>m){V.x*=m/d;V.y*=m/d}if(d<3){V.x=0;V.y=0}
   if(!arRaf)arRaf=requestAnimationFrame(()=>{arRaf=0;arRedraw()})}
 $("homesheet").addEventListener("pointerdown",e=>{const s=e.target.closest(".arsvg");if(!s)return;try{s.setPointerCapture(e.pointerId)}catch(x){}
@@ -576,7 +575,7 @@ $("homesheet").addEventListener("click",async e=>{
   if(k==="rtbase"){openRb("radar");return}
   if(k==="rtosm"){arRouteOsm();return}
   if(k==="tlg"){const o=arTerOff(),t=b.dataset.k;if(o.has(t))o.delete(t);else o.add(t);try{localStorage.setItem("arTerOff",[...o].join(""))}catch(err){}b.classList.toggle("off",o.has(t));b.setAttribute("aria-pressed",String(!o.has(t)));arRedraw();return}
-  if(k==="twon"){try{sessionStorage.setItem("arTwOn",arTwOn()?"0":"1")}catch(err){}arView.s=arAutoS();arClamp();renderHome();return}
+  if(k==="twon"){try{sessionStorage.setItem("arTwOn",arTwOn()?"0":"1")}catch(err){}renderHome();return}
   if(k==="wxon"){try{sessionStorage.setItem("arWxOn",arWxOn()?"0":"1")}catch(err){}renderHome();return}
   if(k==="rtdel"){arRoute=null;arView=arHomeView();renderHome();return}
   if(k==="rtplay"){if(arRoute){arRoute.t0=performance.now();arRedraw()}return}   // v339: odtwórz = tylko narysuj od nowa, widok (przybliżenie, przesunięcie) zostaje
