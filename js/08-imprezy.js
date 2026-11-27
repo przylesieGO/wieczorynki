@@ -270,7 +270,10 @@ const arTownsGet=()=>arTownsL||(arTownsL=AR_TOWNS_RAW.split(";").map(x=>{const v
 // 🤏 przybliżanie i przesuwanie radaru (dwa palce / kółko myszy / jeden palec lub mysz); „Wyśrodkuj” i dwuklik wracają do skali i środka
 let arView={z:1,x:0,y:0,s:1};   // z — zawsze 1, s — skala całego radaru z pierścieniem (1…AR_SMAX)
 const AR_SMAX=2.4,arZmT=s=>'translate('+AR_CX+' '+AR_CY+') scale('+s.toFixed(3)+') translate('+(-AR_CX)+' '+(-AR_CY)+')';
-const arViewMoved=()=>arView.s>1.01||Math.abs((arView.z||1)-1)>.01||Math.abs(arView.x)>.5||Math.abs(arView.y)>.5;
+// v340: legenda radaru do odklikania — ukryte rodzaje kropek (w/s/e), „Wyśrodkuj” przywraca
+const arHide=new Set();
+const arLegHtml=()=>'<div class="hleg arleg">'+[["w","w","zaproszenia"],["s","s","sygnały"],["e","ev","imprezy"]].map(([k,c,t])=>'<button type="button" class="arlg'+(arHide.has(k)?' off':'')+'" data-hm="lg" data-k="'+k+'" aria-pressed="'+!arHide.has(k)+'"><i class="hc '+c+'"></i> '+t+'</button>').join("")+'</div>';
+const arViewMoved=()=>arHide.size>0||arView.s>1.01||Math.abs((arView.z||1)-1)>.01||Math.abs(arView.x)>.5||Math.abs(arView.y)>.5;
 // 🧭 pierścień kompasu wokół radaru (półprzezroczysty, nieruchomy przy przybliżaniu): N/E/S/W, co 30° liczby, co 10° kreski; delikatny jasny łuk krąży (animacja),
 // a pomarańczowy znacznik pokazuje, w którą stronę patrzy telefon (jeśli ma kompas) — północ na radarze zawsze u góry, jak w prawdziwych kierunkach
 const AR_CI=108,AR_CO=128;let arCmpHtml="";
@@ -292,7 +295,46 @@ function arHeadOn(){if(arHeadOnF||typeof window.DeviceOrientationEvent==="undefi
   const f=e=>{const h=typeof e.webkitCompassHeading==="number"?e.webkitCompassHeading:(e.absolute||e.type==="deviceorientationabsolute")&&e.alpha!=null?(360-e.alpha)%360:null;if(h!=null&&isFinite(h))arHeadSet(h)};
   window.addEventListener("deviceorientationabsolute",f,true);window.addEventListener("deviceorientation",f,true)}
 function arHeadAsk(){try{const D=window.DeviceOrientationEvent;if(D&&typeof D.requestPermission==="function")D.requestPermission().then(r=>{if(r==="granted")arHeadOn()}).catch(()=>{});else arHeadOn()}catch(e){}}
-function areaSvg(a){return '<svg class="arsvg'+(typeof isKingReal==="function"&&isKingReal()?' kg':'')+(arView.s>1.01?' zm':'')+'" viewBox="0 0 '+AR_W+' '+AR_H+'" role="img" aria-label="Radar okolicy: '+esc(a.name||"")+', '+areaKmTxt(a.km)+' — przesuń palcem, przybliż dwoma palcami">'+'<g class="arzm" transform="'+arZmT(arView.s)+'">'+arCompass()+'<g class="arin">'+areaSvgIn(a)+'</g></g></svg>'}
+// v340: 🌦 mapa cieplna pogody wokół radaru — 16 kierunków co 22,5° (na brzegu okolicy, 8–60 km) + środek, Open-Meteo, pamięć 30 min;
+// rozmyte klinki pod pierścieniem kompasu, legenda tylko z warunkami, które występują, i linijka o wietrze. Czas: teraz / +3 h / jutro 12:00
+let arWx={k:"",at:0,d:null,busy:false,err:false};
+const AR_WXC=[["sun","słonecznie"],["part","częściowe zachmurzenie"],["cloud","pochmurno"],["fog","mgła"],["rain","deszcz"],["snow","śnieg"],["storm","burza"]];
+const arWxOn=()=>{try{return localStorage.getItem("arWxOn")!=="0"}catch(e){return true}};
+const arWxT=()=>{let v="0";try{v=localStorage.getItem("arWxT")||"0"}catch(e){}return v==="3"||v==="j"?v:"0"};
+function arWxPts(a){const S=a.km||300,D=Math.max(8,Math.min(60,S)),k=Math.cos(a.lat*Math.PI/180),out=[[a.lat,a.lon]];
+  for(let i=0;i<16;i++){const b=i*22.5*Math.PI/180;out.push([a.lat+D*Math.cos(b)/111.2,a.lon+D*Math.sin(b)/(111.2*k)])}return {D,out}}
+async function arWxLoad(a){if(!arWxOn())return;const {D,out}=arWxPts(a),k=a.lat.toFixed(2)+","+a.lon.toFixed(2)+":"+D;
+  if(arWx.k===k&&(arWx.busy||(arWx.d&&Date.now()-arWx.at<18e5)))return;
+  arWx={k,at:Date.now(),d:arWx.k===k?arWx.d:null,busy:true,err:false};
+  try{const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude="+out.map(p=>p[0].toFixed(3)).join(",")+"&longitude="+out.map(p=>p[1].toFixed(3)).join(",")
+      +"&hourly=weather_code,precipitation,cloud_cover,wind_speed_10m,wind_direction_10m&forecast_days=2&timezone=auto");
+    if(!r.ok)throw new Error(r.status);let j=await r.json();if(!Array.isArray(j))j=[j];if(arWx.k!==k)return;
+    arWx.d=j;arWx.busy=false;arWx.at=Date.now()}
+  catch(e){if(arWx.k!==k)return;arWx.busy=false;arWx.err=true;arWx.at=0}
+  arRedraw()}
+// godzina z wybranego czasu → indeks w danych godzinowych (czas lokalny miejsca, timezone=auto)
+function arWxIdx(h){const t=h&&h.time;if(!t||!t.length)return -1;const d=new Date(),v=arWxT();if(v==="3")d.setHours(d.getHours()+3);else if(v==="j"){d.setDate(d.getDate()+1);d.setHours(12)}
+  const s=d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"T"+pad(d.getHours())+":00",i=t.indexOf(s);return i>=0?i:Math.min(t.length-1,Math.max(0,t.findIndex(x=>x>s)))}
+const arWxCat=(c,p,cl)=>c>=95?["storm",1]:(c>=71&&c<=77)||c===85||c===86?["snow",.8]:(c>=51&&c<=67)||(c>=80&&c<=82)||p>=.1?["rain",Math.min(1,.35+(p||0)/3)]
+  :c===45||c===48?["fog",.7]:c===3||cl>=85?["cloud",.6]:c===1||c===2||cl>=35?["part",.5]:["sun",.6];
+function arWxGet(){if(!arWxOn()||!arWx.d)return null;const P=arWx.d.map(j=>{const h=j&&j.hourly,i=arWxIdx(h);if(i<0)return null;
+    return {cat:arWxCat(h.weather_code[i],h.precipitation[i],h.cloud_cover[i]),w:h.wind_speed_10m[i],wd:h.wind_direction_10m[i]}});
+  return P.every(Boolean)?P:null}
+function arWxSvg(){const P=arWxGet();if(!P)return "";const CX=AR_CX,CY=AR_CY,r1=AR_RB-2,r2=AR_CO+8,
+    pt=(a,r)=>(CX+r*Math.sin(a)).toFixed(1)+' '+(CY-r*Math.cos(a)).toFixed(1);
+  return '<defs><filter id="arwxb" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7"/></filter></defs><g filter="url(#arwxb)">'
+    +P.slice(1).map((q,i)=>{const b=i*22.5,a0=(b-13)*Math.PI/180,a1=(b+13)*Math.PI/180;
+      return '<path class="arwxs '+q.cat[0]+'" style="opacity:'+(q.cat[1]*.55).toFixed(2)+'" d="M'+pt(a0,r1)+'A'+r1+' '+r1+' 0 0 1 '+pt(a1,r1)+'L'+pt(a1,r2)+'A'+r2+' '+r2+' 0 0 0 '+pt(a0,r2)+'Z"/>'}).join("")+'</g>'}
+function arWxLeg(){if(!arWxOn())return "";const P=arWxGet();
+  if(!P)return '<span class="note">'+(arWx.err?'Nie udało się pobrać pogody — spróbuj za chwilę.':'Pobieram pogodę…')+'</span>';
+  const has=new Set(P.map(q=>q.cat[0])),c=P[0],strong=Math.max(...P.map(q=>q.w))>=40;
+  return AR_WXC.filter(([k])=>has.has(k)).map(([k,t])=>'<i class="hc wx '+k+'"></i> '+t).join(" ")
+    +'<span class="arwxw">'+uiIcon("wind")+' wiatr '+Math.round(c.w)+' km/h z kier. '+AR_DIR[Math.round(c.wd/45)%8]+(strong?' · <b>miejscami silny</b>':'')+'</span>'}
+const arWxBar=()=>{const on=arWxOn(),t=arWxT();
+  return '<div class="fchips arwxbar"><button type="button" class="fch'+(on?' on':'')+'" data-hm="wxon">'+uiIcon("cloudsun")+' Pogoda</button>'
+    +(on?[["0","Teraz"],["3","+3 h"],["j","Jutro 12:00"]].map(([v,l])=>'<button type="button" class="fch'+(t===v?' on':'')+'" data-hm="wxt" data-v="'+v+'">'+l+'</button>').join(""):'')+'</div>'
+    +'<div class="hleg arleg arwxleg" id="arwxleg">'+arWxLeg()+'</div>'};
+function areaSvg(a){return '<svg class="arsvg'+(typeof isKingReal==="function"&&isKingReal()?' kg':'')+(arView.s>1.01?' zm':'')+'" viewBox="0 0 '+AR_W+' '+AR_H+'" role="img" aria-label="Radar okolicy: '+esc(a.name||"")+', '+areaKmTxt(a.km)+' — przesuń palcem, przybliż dwoma palcami">'+'<g class="arzm" transform="'+arZmT(arView.s)+'"><g class="arwx">'+arWxSvg()+'</g>'+arCompass()+'<g class="arin">'+areaSvgIn(a)+'</g></g></svg>'}
 function areaSvgIn(a){const V={z:arView.z||1,x:arView.x,y:arView.y},S=a.km||300,CX=AR_CX,CY=AR_CY,f=AR_R0/S*V.z,G={},far={},B=[],K=typeof isKingReal==="function"&&isKingReal();
   const OX=CX+V.x,OY=CY+V.y,R0=AR_R0*V.z,homeIn=Math.hypot(V.x,V.y)<AR_RB-14;   // OX/OY — gdzie na radarze jest środek okolicy po przesunięciu
   const xy=(lat,lon)=>{const dy=(lat-a.lat)*111.2,dx=(lon-a.lon)*111.2*Math.cos(a.lat*Math.PI/180);return {x:dx*f+V.x,y:-dy*f+V.y,d:Math.hypot(dx,dy)}};
@@ -306,7 +348,8 @@ function areaSvgIn(a){const V={z:arView.z||1,x:arView.x,y:arView.y},S=a.km||300,
       return '<text class="'+cls+'" x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'" text-anchor="'+an+'" font-size="'+fs.toFixed(2)+'"'+(Z>1.01?' style="stroke-width:'+(3/Z).toFixed(2)+'px"':'')+'>'+esc(t)+'</text>'}
     return null};
   // punkty: zaproszenia, sygnały, imprezy (kropki w tym samym miejscu łączą się w jedną większą)
-  areaPts().forEach(p=>{let {x,y,d}=xy(p.lat,p.lon);const m=Math.hypot(x,y),edge=m>AR_RM;if(edge){x*=AR_RM/m;y*=AR_RM/m}
+  const PTS=areaPts().filter(p=>!arHide.has(p.k));
+  PTS.forEach(p=>{let {x,y,d}=xy(p.lat,p.lon);const m=Math.hypot(x,y),edge=m>AR_RM;if(edge){x*=AR_RM/m;y*=AR_RM/m}
     const key=p.k+Math.round(x/4)+"_"+Math.round(y/4),g=(G[key]=G[key]||{k:p.k,x,y,n:0,nm:[],out:!!a.km&&d>S});g.n++;if(p.nm)g.nm.push(p.nm);
     if(edge&&p.lab&&p.k!=="s"){const o=far[p.lab];if(!o||d<o.d)far[p.lab]={k:p.k,x,y,d,lab:p.lab,n:(o?o.n:0)+1};else o.n++}});
   // środek: pinezka i nazwa mojej (albo podglądanej) miejscowości
@@ -315,7 +358,7 @@ function areaSvgIn(a){const V={z:arView.z||1,x:arView.x,y:arView.y},S=a.km||300,
   const ringT=a.km?Math.round(S/2)+" km":"";if(ringT)B.push({x:OX+2,y:OY-R0/2-11,w:ringT.length*5.4+2,h:11});
   // podpisy: najpierw miejscowości z imprezami (zawsze), potem miejscowości z OSM z przedziału wielkości (suwak) — od największych, ile się zmieści
   let lab="",seen=new Set([String(a.name||"").toLowerCase()]);
-  areaPts().filter(p=>p.k==="e"&&p.lab).forEach(p=>{const q=xy(p.lat,p.lon);if(Math.hypot(q.x,q.y)>AR_RM||seen.has(p.lab.toLowerCase()))return;
+  PTS.filter(p=>p.k==="e"&&p.lab).forEach(p=>{const q=xy(p.lat,p.lon);if(Math.hypot(q.x,q.y)>AR_RM||seen.has(p.lab.toLowerCase()))return;
     const t=label(CX+q.x,CY+q.y,arCut(p.lab,16),11.5,"arte");if(t){lab+=t;seen.add(p.lab.toLowerCase())}});
   let rt="";const RT=arRoute;
   if(RT){const P=RT.pts.map(p=>xy(p.lat,p.lon)),d=P.map((q,i)=>(i?'L':'M')+(CX+q.x).toFixed(1)+' '+(CY+q.y).toFixed(1)).join(""),el=performance.now()-RT.t0,s0=P[0],s1=P[P.length-1];
@@ -365,7 +408,7 @@ function areaNearHtml(a){const c={lat:a.lat,lon:a.lon},best={};
   return '<div class="bsgrp">Najbliżej</div><div class="arnear">'+tile("s","Sygnał")+tile("w","Zaproszenie")+tile("e","Impreza")+'</div>'}
 // odrysowanie samego radaru i licznika (suwaki, dociągnięte miejscowości) — bez przebudowy całego okna
 function arRedraw(){const p=$("homesheet");if(!p||p.classList.contains("hide"))return;const s=p.querySelector(".arsvg");if(!s)return;
-  const a=Object.assign(areaCur(),arLiveKm!=null?{km:arLiveKm}:{});const zm=s.querySelector(".arzm");if(zm)zm.setAttribute("transform",arZmT(arView.s));s.classList.toggle("zm",arView.s>1.01);const ia=s.querySelector(".arin");if(ia)ia.innerHTML=areaSvgIn(a);const c=p.querySelector(".arctr[data-hm=center]");if(c)c.classList.toggle("off",!arViewMoved());   // zawsze widoczny; przygaszony, gdy radar jest w środku
+  const a=Object.assign(areaCur(),arLiveKm!=null?{km:arLiveKm}:{});const zm=s.querySelector(".arzm");if(zm)zm.setAttribute("transform",arZmT(arView.s));s.classList.toggle("zm",arView.s>1.01);const ia=s.querySelector(".arin");if(ia)ia.innerHTML=areaSvgIn(a);const wx=s.querySelector(".arwx");if(wx)wx.innerHTML=arWxSvg();const wl=$("arwxleg");if(wl)wl.innerHTML=arWxLeg();const c=p.querySelector(".arctr[data-hm=center]");if(c)c.classList.toggle("off",!arViewMoved());   // zawsze widoczny; przygaszony, gdy radar jest w środku
   const t=p.querySelector(".arcnt");if(t)t.innerHTML=arCntInner(a.km,areaCount(a))}
 // plakietka w nagłówku: „📍 Pułtusk · 20 km”, w podglądzie „👁 Serock · 20 km ✕”
 function renderAreaChip(){const el=$("mearea");if(!el)return;const a=areaCur();
@@ -387,7 +430,7 @@ function renderHome(){arHeadOn();
   p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Moja okolica"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-hm="close">Zamknij</button><b>'+uiIcon("pin")+' Moja okolica</b><span style="min-width:64px"></span></div><div class="bslist">'
    +(a.peek?'<div class="hmcur arpeek">'+uiIcon("eye")+'<span>Podgląd: <b>'+esc(a.name)+'</b></span><button type="button" class="lnk" data-hm="unpeek">Wróć do: '+esc(h.name)+'</button></div>':'')
    +'<div class="arvis">'+areaSvg(a)+'<button type="button" class="fch arctr arloc'+(areaPeek&&areaPeek.gps?' on':'')+'" data-hm="gpspeek">'+uiIcon("locate")+' Gdzie jestem</button>'+'<button type="button" class="fch arctr'+(arViewMoved()?'':' off')+'" data-hm="center">'+uiIcon("target")+' Wyśrodkuj</button>'+(arRoute?'<button type="button" class="fch arctr arplay" data-hm="rtplay">'+uiIcon("play")+' Odtwórz</button>':'')+'</div><div class="arcnt">'+arCntInner(a.km,c)+'</div>'
-   +'<div class="hleg arleg"><i class="hc w"></i> zaproszenia <i class="hc s"></i> sygnały <i class="hc ev"></i> imprezy</div>'
+   +arLegHtml()+arWxBar()
    +'<div class="arsl"><div class="arslh"><span>Promień'+arQ("arinfo","Co daje promień?")+'</span><b id="arkmv">'+areaKmTxt(a.km)+'</b></div><input id="arkm" class="arrng" type="range" min="5" max="51" step="any" value="'+arSlVal(a.km)+'" style="--p:'+arSlP(arSlVal(a.km),5,51)+'" aria-label="Promień okolicy"><div class="arslt"><span>5 km</span><span>50 km</span><span>Polska</span></div>'
    +'<div class="arslh arsl2"><span>Miejscowości na radarze</span><b id="ardensv">'+arRngTxt(arRng())+'</b></div>'+arRngHtml()+'<div class="arslt ar2t">'+AR_CLT.map(t=>'<span>'+t+'</span>').join("")+'</div>'+AREA_INFO.replace('<div class="note"','<div class="note hide" id="arinfo"')+'</div>'
    +arRouteHtml(a)+areaNearHtml(a)
@@ -400,7 +443,7 @@ function renderHome(){arHeadOn();
    +(hmMode==="peek"?srch:'')
    +'<div class="note" style="margin-top:6px">Podgląd pokazuje, co dzieje się w innej okolicy. Nie zmienia powiadomień i kończy się po ponownym wejściu do aplikacji. '+uiIcon("star")+' dodaje miejscowość do ulubionych (do 10).</div>'
    +'</div></div>';
-  p.classList.remove("hide");if(arRoute)arRoutePlacesUi();
+  p.classList.remove("hide");if(arRoute)arRoutePlacesUi();arWxLoad(areaCur());
 }
 function closeHome(){const p=$("homesheet");p.classList.add("hide");p.innerHTML="";areaChanged();if(gearOpen&&(gearView==="main"||gearView==="nick"))renderGear()}
 async function homeFind(){const q=$("homeq")?$("homeq").value.trim():"";if(q.length<2){homeMsg="Wpisz nazwę miejscowości.";renderHome();return}
@@ -451,10 +494,13 @@ $("homesheet").addEventListener("click",async e=>{
   if(e.target===$("homesheet")){closeHome();return}
   const b=e.target.closest("[data-hm]");if(!b)return;const k=b.dataset.hm;
   if(k==="close"){closeHome();return}
-  if(k==="center"){arView={z:1,x:0,y:0,s:1};arRedraw();return}   // v339: pełny widok (suwak dalej decyduje, które miejscowości)
+  if(k==="center"){arView={z:1,x:0,y:0,s:1};if(arHide.size){arHide.clear();renderHome();return}arRedraw();return}
+  if(k==="lg"){const t=b.dataset.k;if(arHide.has(t))arHide.delete(t);else arHide.add(t);b.classList.toggle("off",arHide.has(t));b.setAttribute("aria-pressed",String(!arHide.has(t)));arRedraw();return}   // v339: pełny widok (suwak dalej decyduje, które miejscowości)
   if(k==="q"){const n=$(b.dataset.q);if(n){const on=n.classList.toggle("hide")===false;b.setAttribute("aria-expanded",String(on))}return}
   if(k==="rtbase"){openRb("radar");return}
   if(k==="rtosm"){arRouteOsm();return}
+  if(k==="wxon"){try{localStorage.setItem("arWxOn",arWxOn()?"0":"1")}catch(err){}renderHome();return}
+  if(k==="wxt"){try{localStorage.setItem("arWxT",b.dataset.v)}catch(err){}renderHome();return}
   if(k==="rtdel"){arRoute=null;arView=arHomeView();renderHome();return}
   if(k==="rtplay"){if(arRoute){arRoute.t0=performance.now();arRedraw()}return}   // v339: odtwórz = tylko narysuj od nowa, widok (przybliżenie, przesunięcie) zostaje
   // 📡 radar od mojej lokalizacji z telefonu: podgląd okolicy (nic nie zapisujemy, powiadomienia dalej z Mojej miejscowości)
