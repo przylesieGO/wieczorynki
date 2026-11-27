@@ -55,9 +55,8 @@ async function stSave(patch){
   myPriv=r.data;return true;
 }
 
-// ── Krok: okolica (obowiązkowa miejscowość, promień — js/08: geoSearch, useGps, AREA_KM) ──
+// ── Krok: okolica (obowiązkowa miejscowość, promień — js/08: geoSearch, useGps, arKmFromSl/arSlVal) ──
 function stAreaHtml(){
-  const ki=AREA_KM.indexOf(ST.km);
   return '<div class="ph" id="sth">W jakiej okolicy się ruszasz?</div>'
    +'<div class="pmeta">PrzylesieGO łączy ludzi, którzy ruszają się blisko siebie — na rowerze, biegając, na spacerze i na wędrówce. Bez Twojej okolicy nie pokażemy Ci zaproszeń ani sygnałów z sąsiedztwa i nikt w pobliżu nie dowie się, że masz ochotę ruszyć.</div>'
    +'<div class="stform">'
@@ -66,7 +65,7 @@ function stAreaHtml(){
       +'<div class="hmrow" style="margin-top:10px"><input id="stq" maxlength="80" placeholder="Wpisz miejscowość, np. Pułtusk" value="'+esc(ST.q)+'" enterkeyhint="search" autocomplete="off"><button type="button" class="b" data-st="find">Szukaj</button></div>'
       +(ST.msg?'<div class="note" style="margin-top:8px">'+ST.msg+'</div>':'')
       +ST.res.map((x,i)=>'<button type="button" class="hmres" data-st="pick" data-i="'+i+'"><b>'+esc(x.name)+'</b><span>'+esc(x.full)+'</span></button>').join(""))
-   +'<div class="arsl" style="margin-top:12px"><div class="arslh"><span>Promień</span><b id="stkmv">'+areaKmTxt(ST.km)+'</b></div><input id="stkm" type="range" min="0" max="'+(AREA_KM.length-1)+'" step="1" value="'+(ki<0?3:ki)+'" aria-label="Promień okolicy"><div class="arslt"><span>5 km</span><span>50 km</span><span>Polska</span></div>'+AREA_INFO+'</div>'
+   +'<div class="arsl" style="margin-top:12px"><div class="arslh"><span>Promień</span><b id="stkmv">'+areaKmTxt(ST.km)+'</b></div><input id="stkm" type="range" min="5" max="51" step="1" value="'+arSlVal(ST.km)+'" aria-label="Promień okolicy"><div class="arslt"><span>5 km</span><span>50 km</span><span>Polska</span></div>'+AREA_INFO+'</div>'
    +'<div class="note" style="margin-top:8px"><i>Zapisujemy tylko miejscowość (z dokładnością do ok. 2 km). Widzisz ją tylko Ty.</i></div>'
    +'</div>';
 }
@@ -114,7 +113,7 @@ $("stsheet").addEventListener("click",async e=>{
     if(ST.i<ST.steps.length-1){ST.i++;stRender();return}
     stClose();say(ST.mode==="acts"?"Zapisane: "+stActsTxt()+".":"Gotowe — witaj w PrzylesieGO!")}
 });
-$("stsheet").addEventListener("input",e=>{if(e.target.id==="stkm"){ST.km=AREA_KM[+e.target.value];const v=$("stkmv");if(v)v.textContent=areaKmTxt(ST.km)}
+$("stsheet").addEventListener("input",e=>{if(e.target.id==="stkm"){ST.km=arKmFromSl(e.target.value);const v=$("stkmv");if(v)v.textContent=areaKmTxt(ST.km)}
   else if(e.target.id==="stq")ST.q=e.target.value});
 $("stsheet").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="stq"){e.preventDefault();stFind()}});
 // ⚙️ → Testy → „Pokaż ekran startowy jeszcze raz” i ⚙️ → Jazdy i zaproszenia → Powiadamiaj mnie o

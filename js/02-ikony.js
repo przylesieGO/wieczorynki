@@ -78,6 +78,8 @@ palette:'<circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><c
 venus:'<circle cx="12" cy="9" r="5"/><path d="M12 14v8M9 19h6"/>',
 mars:'<circle cx="10" cy="14" r="5"/><path d="M14 10l6-6M15 4h5v5"/>',
 pin:'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>',
+locate:'<path d="M3 11 22 2l-9 19-2-8z"/>',   // ➤ strzałka nawigacji (radar → „Gdzie jestem”, v308)
+target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2"/><path d="M12 1v3M12 20v3M1 12h3M20 12h3"/>',   // 🎯 celownik (radar → „Wyśrodkuj”, v308)
 tag:'<path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/>',flag:'<path d="M4 22V4"/><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1"/>',
 gravel:'<path d="M3 15c3-4 6 0 9-4s6 0 9-4"/><circle cx="5" cy="20" r="1"/><circle cx="10" cy="19" r="1"/><circle cx="15" cy="20" r="1"/><circle cx="20" cy="18" r="1"/>',
 road:'<path d="M8 3 4 21"/><path d="M16 3l4 18"/><path d="M12 4v3"/><path d="M12 11v3"/><path d="M12 18v3"/>',

@@ -4,6 +4,8 @@ const fbf={kind:"bug",rating:0,text:"",dev:true,trace:true};let fbReplyTxt="",fb
 // 🔢 numeracja wydań: 0.x.y w czasie BETY (1.0 = publiczne wydanie); x — paczka nowości, y — poprawki.
 // Nowe wydanie: dopisz pozycję na początku APP_REL (wersja, data, nowości) — w ❓ Pomocy pokaże się „Co nowego” i kropka przy ❓.
 const APP_REL=[
+  {v:"0.13",d:"27.11.2026",items:[
+    ["pin","<b>Radar okolicy</b> — kliknij plakietkę <b>📍 miejscowość · km</b>: radar jest teraz duży, na środku, z nazwami miejscowości (główne zawsze, mniejsze dokłada suwak), podpisanymi imprezami i odnośnikami do dalekich miejsc („Kraków · 304 km”). Suwak promienia chodzi płynnie co 1 km, a pod nim kafelki <b>Najbliżej</b> pokazują najbliższy sygnał, zaproszenie i imprezę ze strzałką w ich stronę."]]},
   {v:"0.12",d:"26.11.2026",items:[
     ["pin","<b>Punkt zbiórki z pinezką</b> — w nowym zaproszeniu miejsce jest teraz na samej górze i jest obowiązkowe: wybierz je z listy (miejsca z Twojej okolicy, od najbliższych) albo wskaż nowe na mapie. Dzięki temu zaproszenie trafia do ludzi z okolicy. W karcie dnia przy miejscowościach z daleka widać odległość, np. <b>Zatory · 34 km</b>."],
     ["pointer","<b>Zakładki jako talia kart</b> — Zaproszenia i Imprezy nie zajmują już całego wiersza: to mała talia kart w nagłówku, pod 🔔 i ⚙️. Przesuń ją palcem w bok albo kliknij wystającą kartę. Kółka na kartach pod spodem: 🟢 Twoje zaproszenia, przy Imprezach 🔴 nieprzeczytane i 🟠 nadchodzące."],
