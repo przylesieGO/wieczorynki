@@ -1717,3 +1717,15 @@ html[data-theme=dark] .wdeck{filter:drop-shadow(0 7px 5px rgba(0,0,0,.85)) drop-
 @media (prefers-reduced-motion:reduce){.wdeck.nudge .tdc,.wdhint.go .ui-i,.wdhint.go .tdtr{animation:none}}
 /* v330: „Wyśrodkuj” na radarze — gdy aktywny (radar przybliżony / przesunięty), czerwony pogrubiony tekst i ikona, żeby był czytelny na tle radaru */
 .arctr[data-hm=center]:not(.off){color:var(--sys-red);font-weight:800}.arctr[data-hm=center]:not(.off) .ui-i{color:var(--sys-red)}
+/* 👥 okno wyboru osób (2026-11-27, prośba właściciela): lista na 4 osoby; stopka — szukajka + 💾 i małe filtry po lewej, Cofnij/OK i Wyczyść po prawej (te same .fabb co w Filtrach) */
+.wsbox #wslist{flex:none;max-height:calc(4 * var(--wsrow,45px))}
+.wsbox .wsgl{flex:none;max-height:30vh;overflow-y:auto;margin:6px -4px 0;padding:0 4px}
+.wsfoot{flex:none;display:flex;align-items:flex-end;gap:10px;margin-top:10px}.wsfl{flex:1;min-width:0}.wsfoot .wsqrow{margin-top:0}
+.wsfab{position:static;pointer-events:auto}.wsfab .fabb{width:auto;min-width:118px;white-space:nowrap}
+.wsfoot .pfrow{justify-content:flex-start;gap:5px;margin:6px 0 0}.wsfoot .pfrow .fch{padding:4px 9px;font-size:12px;gap:4px}.wsfoot .pfrow .fch .ui-i{width:12px;height:12px}
+.wscnt{min-width:64px;text-align:right;font-size:13px;font-weight:600;color:var(--acc);white-space:nowrap}.wsqrow .wsplsv{flex:none;color:var(--acc)}
+/* 🎲 „Losuj” komentarz (2026-11-27): kostki kiwają się co kilka sekund, po stuknięciu turlają się z odbiciem */
+.dice .ui-i{transform-origin:50% 55%;animation:dicewig 4s ease-in-out 1s infinite}.dice.roll .ui-i{animation:diceroll .7s cubic-bezier(.3,1.4,.5,1)}
+@keyframes dicewig{0%,86%,100%{transform:rotate(0)}90%{transform:rotate(-14deg)}94%{transform:rotate(10deg)}97%{transform:rotate(-4deg)}}
+@keyframes diceroll{0%{transform:rotate(0) scale(1)}25%{transform:rotate(-200deg) scale(1.35) translateY(-3px)}55%{transform:rotate(-330deg) scale(.9)}75%{transform:rotate(-370deg) scale(1.08)}100%{transform:rotate(-360deg) scale(1)}}
+@media (prefers-reduced-motion:reduce){.dice .ui-i,.dice.roll .ui-i{animation:none}}

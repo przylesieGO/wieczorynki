@@ -1002,7 +1002,7 @@ function pfMatch(k,id){const s=pfS(k);
   if(s.q&&!nickKey(nicks[id]||"").includes(nickKey(s.q)))return false;return true}
 function pfChips(k){const s=pfS(k),c=(v,on,h)=>'<button type="button" class="fch pfc'+(on?' on':'')+'" data-pfk="'+k+'" data-pfc="'+v+'">'+h+'</button>';
   return '<div class="pfrow">'+(genderOk?c("K",s.g==="K",uiIcon("venus")+" Kobiety")+c("M",s.g==="M",uiIcon("mars")+" Mężczyźni"):'')
-   +c("fav",s.fav,"⭐ Ulubieni")+c("on",s.on,"🟢 Teraz")
+   +(k!=="who"?c("fav",s.fav,"⭐ Ulubieni"):"")+c("on",s.on,"🟢 Teraz")
    +(testerIds.size?c("tst",s.tst,uiIcon("syringe")+" Testerzy"):'')+(adminIds.length?c("adm",s.adm,uiIcon("shield")+" Administratorzy"):'')+(k!=="gm"&&typeof grHasMine==="function"&&grHasMine()?c("grp",s.grp,uiIcon("users")+" Z moich grup"):'')+(pfOn(k)&&k!=="who"?'<button type="button" class="fch pfc pfx" data-pfk="'+k+'" data-pfc="x">✕ Wyczyść</button>':'')+'</div>'}
 const pfBar=(k,n)=>n>8?'<div class="pfbar" data-pfbar="'+k+'"><input class="bsq srch" type="search" data-pfq="'+k+'" placeholder="Szukaj nicku…" autocomplete="off" value="'+esc(pfS(k).q)+'">'+pfChips(k)+'</div>':'';
 // filtrowanie wierszy w Ustawieniach bez przerysowania panelu (pole szukania nie traci kursora)
