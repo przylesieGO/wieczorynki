@@ -1822,3 +1822,5 @@ html[data-theme=dark] .wdeck{filter:drop-shadow(0 7px 5px rgba(0,0,0,.85)) drop-
 .rbtopb{display:flex;gap:8px}.rbtopb .rbinvb{flex:2;min-width:0}.rbtopb .rbprev{flex:1;min-width:0;white-space:nowrap}
 /* v353: okno trasy z bazy — „Cofnij” na dole + ⬆ po lewej (jak w „Mojej okolicy”) */
 .rbfoot{padding-top:8px}.rbfoot .b{width:100%}.totop.rbtop{position:absolute;left:16px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:5}
+/* v354: „Więcej ustawień” obok „?” przy suwaku Promień */
+.arq.arqm{width:auto;height:24px;padding:0 9px;border-radius:12px;gap:5px;font-size:12px;white-space:nowrap}.arq.arqm .ui-i{width:13px;height:13px}.arq.arqm.on{background:var(--acc);color:var(--card)}
