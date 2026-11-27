@@ -227,8 +227,9 @@ const AR_TOWNS_RAW="Warszawa|52.232|21.007|1860|1;Radom|51.402|21.154|200|1;Pło
 let arTownsL=null;
 const arTownsGet=()=>arTownsL||(arTownsL=AR_TOWNS_RAW.split(";").map(x=>{const v=x.split("|"),p=+v[3];return [v[0],+v[1],+v[2],p>=50?2:p>=5?1:0,p,v[4]==="1"]}));
 // 🤏 przybliżanie i przesuwanie radaru (dwa palce / kółko myszy / jeden palec lub mysz); „Wyśrodkuj” i dwuklik wracają do skali i środka
-let arView={z:1,x:0,y:0};
-const arViewMoved=()=>arView.z!==1||Math.abs(arView.x)>.5||Math.abs(arView.y)>.5;
+let arView={z:1,x:0,y:0,s:1};   // z — zawsze 1, s — skala całego radaru z pierścieniem (1…AR_SMAX)
+const AR_SMAX=2.4,arZmT=s=>'translate('+AR_CX+' '+AR_CY+') scale('+s.toFixed(3)+') translate('+(-AR_CX)+' '+(-AR_CY)+')';
+const arViewMoved=()=>arView.s>1.01||Math.abs(arView.x)>.5||Math.abs(arView.y)>.5;
 // 🧭 pierścień kompasu wokół radaru (półprzezroczysty, nieruchomy przy przybliżaniu): N/E/S/W, co 30° liczby, co 10° kreski; delikatny jasny łuk krąży (animacja),
 // a pomarańczowy znacznik pokazuje, w którą stronę patrzy telefon (jeśli ma kompas) — północ na radarze zawsze u góry, jak w prawdziwych kierunkach
 const AR_CI=108,AR_CO=128;let arCmpHtml="";
@@ -250,8 +251,8 @@ function arHeadOn(){if(arHeadOnF||typeof window.DeviceOrientationEvent==="undefi
   const f=e=>{const h=typeof e.webkitCompassHeading==="number"?e.webkitCompassHeading:(e.absolute||e.type==="deviceorientationabsolute")&&e.alpha!=null?(360-e.alpha)%360:null;if(h!=null&&isFinite(h))arHeadSet(h)};
   window.addEventListener("deviceorientationabsolute",f,true);window.addEventListener("deviceorientation",f,true)}
 function arHeadAsk(){try{const D=window.DeviceOrientationEvent;if(D&&typeof D.requestPermission==="function")D.requestPermission().then(r=>{if(r==="granted")arHeadOn()}).catch(()=>{});else arHeadOn()}catch(e){}}
-function areaSvg(a){return '<svg class="arsvg'+(typeof isKingReal==="function"&&isKingReal()?' kg':'')+'" viewBox="0 0 '+AR_W+' '+AR_H+'" role="img" aria-label="Radar okolicy: '+esc(a.name||"")+', '+areaKmTxt(a.km)+' — przesuń palcem, przybliż dwoma palcami">'+arCompass()+'<g class="arin">'+areaSvgIn(a)+'</g></svg>'}
-function areaSvgIn(a){const V=arView,S=a.km||300,CX=AR_CX,CY=AR_CY,f=AR_R0/S*V.z,G={},far={},B=[],K=typeof isKingReal==="function"&&isKingReal();
+function areaSvg(a){return '<svg class="arsvg'+(typeof isKingReal==="function"&&isKingReal()?' kg':'')+'" viewBox="0 0 '+AR_W+' '+AR_H+'" role="img" aria-label="Radar okolicy: '+esc(a.name||"")+', '+areaKmTxt(a.km)+' — przesuń palcem, przybliż dwoma palcami">'+'<g class="arzm" transform="'+arZmT(arView.s)+'">'+arCompass()+'<g class="arin">'+areaSvgIn(a)+'</g></g></svg>'}
+function areaSvgIn(a){const V={z:1,x:arView.x,y:arView.y},S=a.km||300,CX=AR_CX,CY=AR_CY,f=AR_R0/S*V.z,G={},far={},B=[],K=typeof isKingReal==="function"&&isKingReal();
   const OX=CX+V.x,OY=CY+V.y,R0=AR_R0*V.z,homeIn=Math.hypot(V.x,V.y)<AR_RB-14;   // OX/OY — gdzie na radarze jest środek okolicy po przesunięciu
   const xy=(lat,lon)=>{const dy=(lat-a.lat)*111.2,dx=(lon-a.lon)*111.2*Math.cos(a.lat*Math.PI/180);return {x:dx*f+V.x,y:-dy*f+V.y,d:Math.hypot(dx,dy)}};
   const hit=b=>B.some(o=>b.x<o.x+o.w&&b.x+b.w>o.x&&b.y<o.y+o.h&&b.y+b.h>o.y);
@@ -315,7 +316,7 @@ function areaNearHtml(a){const c={lat:a.lat,lon:a.lon},best={};
   return '<div class="bsgrp">Najbliżej</div><div class="arnear">'+tile("s","Sygnał")+tile("w","Zaproszenie")+tile("e","Impreza")+'</div>'}
 // odrysowanie samego radaru i licznika (suwaki, dociągnięte miejscowości) — bez przebudowy całego okna
 function arRedraw(){const p=$("homesheet");if(!p||p.classList.contains("hide"))return;const s=p.querySelector(".arsvg");if(!s)return;
-  const a=Object.assign(areaCur(),arLiveKm!=null?{km:arLiveKm}:{});const ia=s.querySelector(".arin");if(ia)ia.innerHTML=areaSvgIn(a);const c=p.querySelector(".arctr");if(c)c.classList.toggle("off",!arViewMoved());   // zawsze widoczny; przygaszony, gdy radar jest w środku
+  const a=Object.assign(areaCur(),arLiveKm!=null?{km:arLiveKm}:{});const zm=s.querySelector(".arzm");if(zm)zm.setAttribute("transform",arZmT(arView.s));s.classList.toggle("zm",arView.s>1.01);const ia=s.querySelector(".arin");if(ia)ia.innerHTML=areaSvgIn(a);const c=p.querySelector(".arctr");if(c)c.classList.toggle("off",!arViewMoved());   // zawsze widoczny; przygaszony, gdy radar jest w środku
   const t=p.querySelector(".arcnt");if(t)t.innerHTML=arCntInner(a.km,areaCount(a))}
 // plakietka w nagłówku: „📍 Pułtusk · 20 km”, w podglądzie „👁 Serock · 20 km ✕”
 function renderAreaChip(){const el=$("mearea");if(!el)return;const a=areaCur();
@@ -323,7 +324,7 @@ function renderAreaChip(){const el=$("mearea");if(!el)return;const a=areaCur();
   el.innerHTML=uiIcon(a.peek?"eye":"radar")+'<span class="arname">'+esc(a.name)+'</span><span class="arkm">'+areaKmTxt(a.km)+'</span>'
     +(a.peek?'<span class="arx" data-area-off="1" role="button" aria-label="Wróć do mojej okolicy">'+uiIcon("x")+'</span>':'');
   el.title=a.peek?"Podgląd okolicy: "+a.name+" — kliknij ✕, żeby wrócić do swojej":"Twoja okolica — kliknij, żeby zmienić promień albo podejrzeć inną"}
-function openHome(mode){arView={z:1,x:0,y:0};homeRes=[];homeMsg="";hmMode=mode||"peek";renderHome();if(mode==="home")setTimeout(()=>{const i=$("homeq");if(i)i.focus()},120)}
+function openHome(mode){arView={z:1,x:0,y:0,s:1};homeRes=[];homeMsg="";hmMode=mode||"peek";renderHome();if(mode==="home")setTimeout(()=>{const i=$("homeq");if(i)i.focus()},120)}
 function renderHome(){arHeadOn();
   arLiveKm=null;const p=$("homesheet"),a=areaCur(),h=areaHome(),c=areaCount(a),q=$("homeq")?$("homeq").value:"",favs=areaFavs(),fk=x=>x.name+"|"+areaRound(x.lat).toFixed(2)+"|"+areaRound(x.lon).toFixed(2);
   const isFav=x=>favs.some(f=>fk(f)===fk(x));
@@ -374,28 +375,28 @@ $("homesheet").addEventListener("input",e=>{const id=e.target.id;
 // 🤏 gesty na radarze: 1 palec / mysz — przesuwanie, 2 palce — przybliżanie, kółko — przybliżanie pod kursorem, dwuklik — wyśrodkuj
 const arPt=new Map();let arG=null;
 const arU=(s,e)=>{const r=s.getBoundingClientRect(),k=AR_W/r.width;return {x:(e.clientX-r.left)*k-AR_CX,y:(e.clientY-r.top)*k-AR_CY}};   // punkt względem środka radaru, w jednostkach rysunku
-function arZoomAt(p,z){z=Math.max(1,Math.min(8,z));const V=arView,gx=(p.x-V.x)/V.z,gy=(p.y-V.y)/V.z;arView={z,x:p.x-gx*z,y:p.y-gy*z};arClamp()}
-function arClamp(){const V=arView,m=AR_RB*V.z,d=Math.hypot(V.x,V.y);if(d>m){V.x*=m/d;V.y*=m/d}if(V.z===1&&d<3){V.x=0;V.y=0}
+function arZoomAt(p,z){arView.s=Math.max(1,Math.min(AR_SMAX,z));arClamp()}   // skala całego radaru razem z pierścieniem (do ok. 2,4× — aż pierścień kompasu zniknie poza ekranem)
+function arClamp(){const V=arView,m=AR_RB,d=Math.hypot(V.x,V.y);if(d>m){V.x*=m/d;V.y*=m/d}if(d<3){V.x=0;V.y=0}
   if(!arRaf)arRaf=requestAnimationFrame(()=>{arRaf=0;arRedraw()})}
 $("homesheet").addEventListener("pointerdown",e=>{const s=e.target.closest(".arsvg");if(!s)return;try{s.setPointerCapture(e.pointerId)}catch(x){}
   arPt.set(e.pointerId,arU(s,e));arG=null});
 $("homesheet").addEventListener("pointermove",e=>{if(!arPt.has(e.pointerId))return;const s=$("homesheet").querySelector(".arsvg");if(!s)return;
   const p=arU(s,e),q=arPt.get(e.pointerId);
-  if(arPt.size===1){arView.x+=p.x-q.x;arView.y+=p.y-q.y;arPt.set(e.pointerId,p);arClamp();return}
+  if(arPt.size===1){arView.x+=(p.x-q.x)/arView.s;arView.y+=(p.y-q.y)/arView.s;arPt.set(e.pointerId,p);arClamp();return}
   arPt.set(e.pointerId,p);const [A,B]=[...arPt.values()],dd=Math.hypot(A.x-B.x,A.y-B.y),mid={x:(A.x+B.x)/2,y:(A.y+B.y)/2};
-  if(!arG){arG={d:dd,z:arView.z,mid};return}
-  arView.x+=mid.x-arG.mid.x;arView.y+=mid.y-arG.mid.y;arG.mid=mid;arZoomAt(mid,arG.z*dd/Math.max(1,arG.d))});
+  if(!arG){arG={d:dd,z:arView.s,mid};return}
+  arView.x+=(mid.x-arG.mid.x)/arView.s;arView.y+=(mid.y-arG.mid.y)/arView.s;arG.mid=mid;arZoomAt(mid,arG.z*dd/Math.max(1,arG.d))});
 ["pointerup","pointercancel"].forEach(t=>$("homesheet").addEventListener(t,e=>{arPt.delete(e.pointerId);arG=null}));
-$("homesheet").addEventListener("wheel",e=>{const s=e.target.closest(".arsvg");if(!s)return;e.preventDefault();arZoomAt(arU(s,e),arView.z*Math.exp(-e.deltaY*.0015))},{passive:false});
-$("homesheet").addEventListener("dblclick",e=>{if(!e.target.closest(".arsvg"))return;arView={z:1,x:0,y:0};arRedraw()});
+$("homesheet").addEventListener("wheel",e=>{const s=e.target.closest(".arsvg");if(!s)return;e.preventDefault();arZoomAt(arU(s,e),arView.s*Math.exp(-e.deltaY*.0015))},{passive:false});
+$("homesheet").addEventListener("dblclick",e=>{if(!e.target.closest(".arsvg"))return;arView={z:1,x:0,y:0,s:1};arRedraw()});
 $("homesheet").addEventListener("change",async e=>{if(e.target.id!=="arkm")return;const k=arKmFromSl(e.target.value);if(await areaSave({area_km:k})){arLiveKm=null;areaChanged()}});
 $("homesheet").addEventListener("click",async e=>{
   if(e.target===$("homesheet")){closeHome();return}
   const b=e.target.closest("[data-hm]");if(!b)return;const k=b.dataset.hm;
   if(k==="close"){closeHome();return}
-  if(k==="center"){arView={z:1,x:0,y:0};arRedraw();return}
+  if(k==="center"){arView={z:1,x:0,y:0,s:1};arRedraw();return}
   // 📡 radar od mojej lokalizacji z telefonu: podgląd okolicy (nic nie zapisujemy, powiadomienia dalej z Mojej miejscowości)
-  if(k==="gpspeek"){arHeadAsk();useGps(x=>{if(!x)return;areaPeek={name:x.name||"Tu jesteś",lat:+x.lat,lon:+x.lon,gps:true};arView={z:1,x:0,y:0};areaChanged();renderHome()});return}
+  if(k==="gpspeek"){arHeadAsk();useGps(x=>{if(!x)return;areaPeek={name:x.name||"Tu jesteś",lat:+x.lat,lon:+x.lon,gps:true};arView={z:1,x:0,y:0,s:1};areaChanged();renderHome()});return}
   if(k==="find"){homeFind();return}
   if(k==="mhome"||k==="mpeek"){homeRes=[];homeMsg="";hmMode=k==="mhome"?"home":"peek";renderHome();if(hmMode==="home")setTimeout(()=>{const i=$("homeq");if(i)i.focus()},60);return}
   if(k==="unpeek"){areaPeek=null;areaChanged();renderHome();return}
