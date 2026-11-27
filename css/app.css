@@ -1806,3 +1806,7 @@ html[data-theme=dark] .wdeck{filter:drop-shadow(0 7px 5px rgba(0,0,0,.85)) drop-
 .bsbox.bsstay{animation:none}   /* v349: przebudowa otwartego okna bez ponownego „wyskoku” */
 .totop.hmtop{position:absolute;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:5}   /* v349: ⬆ w oknie „Moja okolica” (jak .wftop w formularzu) */
 .hmcur.arpeek{flex-wrap:wrap}.hmcur.arpeek .arpkb{display:flex;flex-wrap:wrap;gap:4px 14px;margin-left:auto}   /* v351: „Ustaw jako moją” obok „Wróć do:” */
+/* v352: przyciski „GPX” i „Baza tras” — same symbole (ikona mapy + GPX; szkic trasy z bazy + ikona stosu) */
+.wrfile span,.wrbb{display:flex;align-items:center;justify-content:center;gap:8px}
+.wrfile span .ui-i,.wrbb .ui-i{width:22px;height:22px;flex:none}
+.wrbb .wrsk{display:block;width:56px;height:32px;flex:none}.wrbb .wrsk svg{display:block;width:100%;height:100%}

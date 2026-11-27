@@ -1171,7 +1171,7 @@ const ceil5=t=>new Date(Math.ceil(t/300000)*300000);
 const kmTxt=k=>Number(k).toFixed(1).replace(".",",");
 function wfRouteSync(){
   const i=$("wrinfo"),R=wf.route;
-  $("wrlbl").textContent=R?"🗺️ Zmień plik GPX":"🗺️ Dodaj plik GPX";
+  $("wrlbl").innerHTML=uiIcon("map")+" GPX";$("wrlbl").title=$("wrlbl").ariaLabel=R?"Zmień plik GPX":"Dodaj plik GPX";
   const dl=$("wrdel");if(!dl.innerHTML)dl.innerHTML=ICON.del;dl.classList.toggle("hide",!R);
   i.innerHTML=R?'<span>✅ '+kmTxt(routeKm(R))+' km · ⏱ ≈ '+esc(durTxt(routeKm(R)/wPaceKmh(wf.pace)*60))+(wf.pace?' <span class="note">('+esc(PACES[wf.pace]?PACES[wf.pace].r:wf.pace)+')</span>':'')+(wf.rbId?' · 📚 '+esc(wf.routeName||'z bazy tras'):wf.routeName?' · '+esc(wf.routeName):'')+'</span>'
     :(wf.editId&&wf.routeHad?'<span class="note">Trasa zostanie usunięta po zapisaniu.</span>':'<span class="note">Inni zobaczą długość, mapę z wiatrem i pobiorą GPX.</span>');

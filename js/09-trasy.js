@@ -41,6 +41,9 @@ function rbSvg(prev,w,h,white){
   const c=white?"#fff":"#1f9d55";
   return '<svg viewBox="0 0 '+w+' '+h+'" aria-hidden="true"><path d="M'+P.map(p=>pt(p).join(' ')).join(' L')+'" fill="none" stroke="'+c+'" stroke-width="'+(white?2.6:3)+'" stroke-linejoin="round" stroke-linecap="round"/><circle cx="'+a[0]+'" cy="'+a[1]+'" r="4" fill="'+(white?'#1f9d55':'#fff')+'" stroke="'+c+'" stroke-width="2.5"/></svg>';
 }
+// v352: zawartość przycisku „Baza tras” — mały szkic prawdziwej trasy z bazy (najczęściej używana) + ikona stosu; bez tekstu
+function rbBtnIn(){const L=(rbList||[]).filter(x=>x.preview&&!x.hidden).sort((a,b)=>rbUses(b)-rbUses(a)),x=L[0],pv=x?x.preview:(typeof REP_DEMO_ROUTE!=="undefined"?REP_DEMO_ROUTE:"");
+  return '<span class="wrsk">'+rbSvg(pv,56,32)+'</span>'+uiIcon("layers")}
 function rbFiltered(){
   const q=lc(rb.q.trim()),s=rb.sort;
   const L=(rbList||[]).filter(x=>(!rb.bike||x.bike===rb.bike)&&(!q||lc(x.name+" "+(x.start_city||"")).includes(q))&&(rb.all||q||typeof inArea!=="function"||inArea(x.start_lat,x.start_lon)));   // 📍 v270: domyślnie trasy z Mojej okolicy (szukanie po nazwie — wszędzie)
@@ -436,7 +439,7 @@ const rbBtnHtml=w=>!rbOk||!hasRoute(w)?'':w.route_base_id?'<button type="button"
 const rbAddOn=()=>wf.rbAdd!=null?wf.rbAdd:(!wf.test&&wf.vis==="all");
 function wfRbSync(){
   const bb=$("wrbase"),ad=$("wrbadd");if(!bb||!ad)return;
-  bb.classList.toggle("hide",!rbOk);
+  bb.classList.toggle("hide",!rbOk);if(rbOk)$("wrbasebtn").innerHTML=rbBtnIn();
   const vis=rbOk&&!!wf.route&&!wf.rbId;ad.classList.toggle("hide",!vis);if(!vis){ad.innerHTML="";return}
   if(!ad.querySelector("#wrbsw"))ad.innerHTML='<div class="wrbrow"><span>📚 Dodaj trasę do bazy tras<small>Inni wybiorą ją przy swoich zaproszeniach. Zdecyduj sam(a) — także przy prywatnych.</small></span><button type="button" class="ios-sw" role="switch" id="wrbsw" aria-label="Dodaj trasę do bazy tras"></button></div><input id="wrbname" maxlength="60" placeholder="Nazwa trasy, np. Pętla przez Puszczę Białą">';
   const on=rbAddOn(),sw=$("wrbsw"),nm=$("wrbname");sw.classList.toggle("on",on);sw.setAttribute("aria-checked",String(on));nm.classList.toggle("hide",!on);
