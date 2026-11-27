@@ -1569,7 +1569,7 @@ function mysfSync(){const fb=$("fltbtn"),fn=fltKeys().filter(k=>k!=="sort").leng
   if(fb.dataset.h!==fh){fb.dataset.h=fh;fb.innerHTML=fh}fb.classList.toggle("on",fn>0);const fl=fn?"Filtry — włączone: "+fn+" (dotknij, by zmienić)":"Filtry i sortowanie";fb.title=fl;fb.setAttribute("aria-label",fl)}   // 🔴 aktywne filtry — czerwony lejek z liczbą (prośba właściciela 2026-11-25)
 $("mysort").addEventListener("click",()=>{flt.sort=flt.sort==="new"?"":"new";if(flt.sort==="new"&&myCnt)try{localStorage.setItem("myOff","1")}catch(e){}   // toggle: 🕓 i 👤 nie świecą naraz — włączenie sortowania zwija „Moje” do kalendarza
   fltSave();fltRefresh();say(flt.sort==="new"?"Od najnowszych — wg daty dodania (Moje w kalendarzu).":"Kolejność wg godziny jazdy.")});
-$("mysw").addEventListener("click",()=>{if(!myCnt){say("Nie masz swoich zaproszeń.");return}
+$("mysw").addEventListener("click",()=>{if(!myCnt){askOk("Nie masz swoich zaproszeń.","OK",false,false);return}
   const on=!myOn();try{localStorage.setItem("myOff",on?"0":"1")}catch(e){}if(on&&flt.sort==="new"){flt.sort="";fltSave()}   // toggle: włączenie „Moje” wyłącza sortowanie
   renderWants();say(on?"Twoje zaproszenia — osobno na górze.":"Twoje zaproszenia — w kalendarzu, na swoich godzinach.")});
 document.addEventListener("click",e=>{const b=e.target.closest("[data-wmup]");if(!b)return;const w=wants.find(x=>x.id===b.dataset.wmup);if(w)goToWant(w)});

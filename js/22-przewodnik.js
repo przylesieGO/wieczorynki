@@ -22,17 +22,20 @@ const GW_SVG='<svg viewBox="0 0 140 100" aria-hidden="true">'
    +'<path class="gwwing" d="M52 30Q62 22 78 34Q66 45 52 38Z" fill="#1d2029" stroke="#4a5168" stroke-width=".8"/>'
  +'</g></svg>';
 
+/* przy cofaniu („Wstecz”) okienko „Daj znać” mogło się już zamknąć — otwieramy je ponownie (tylko gdy dziś nie ma jeszcze mojego sygnału; sygnału nigdy nie wysyłamy) */
+const GW_OP=()=>{const sh=document.getElementById("sigsheet");
+  if(typeof openSig==="function"&&typeof sigActive==="function"&&sh&&sh.classList.contains("hide")&&!sigActive())openSig("pick")};
 const GW_TOURS={
  mam_ochote:{name:"Mam ochotę — jak dać znać",steps:[
   {sel:"#sigfab",act:"click",wait:300,title:"Znajdź Reakcję",
    text:"Nie masz pomysłu na jazdę, ale masz ochotę pojeździć? Ta okrągła Reakcja daje znać innym — bez godziny i trasy. Kliknij ją.",
    miss:"Reakcji teraz nie widać: dziś masz już własne zaproszenie albo ekran, na którym jej nie ma (jest na Starcie). Wróć na Start — Reakcja stoi nad plusem."},
-  {sel:".sigacts",tap:true,wait:4000,title:"Wybierz aktywność",
+  {sel:".sigacts",pre:GW_OP,tap:true,wait:4000,title:"Wybierz aktywność",
    text:"Rower, bieg, spacer albo wędrówka (piesza). Dotknij tej, na którą masz dziś ochotę."},
-  {sel:".sgmsgs",opt:true,tap:true,wait:600,title:"Komunikat (opcjonalnie)",
+  {sel:".sgmsgs",pre:GW_OP,opt:true,tap:true,wait:600,title:"Komunikat (opcjonalnie)",
    text:"Krótkie hasło dla innych, np. dokąd albo jak szybko. „Inne…” pozwala wpisać własne (do 40 znaków). Możesz to pominąć."},
-  {sel:'[data-sg="send"]',tap:true,wait:600,title:"Daj znać",last:true,
-   text:"Kliknij, a wszyscy zobaczą Twój sygnał pod 🔔 i dadzą Reakcję — zaproszenie założysz Ty. Sygnał wygasa z końcem dnia, a wycofasz go w okienku „Twój sygnał”.<span class=\"gwm\">Ja niczego za Ciebie nie wyślę — to Twoja decyzja.</span>"}
+  {sel:'[data-sg="send"]',pre:GW_OP,wait:600,title:"Daj znać",last:true,
+   text:"Ten przycisk wysyła sygnał: wszyscy zobaczą go pod 🔔 i dadzą Reakcję — zaproszenie założysz Ty. Sygnał wygasa z końcem dnia, a wycofasz go w okienku „Twój sygnał”.<span class=\"gwm\">Ja go nie kliknę i w przewodniku jest nieaktywny — jeśli chcesz dać znać, zamknij przewodnik i kliknij sam.</span>"}
  ]}
 };
 
@@ -79,11 +82,11 @@ GW_TOURS.mam_ochote_pelny={name:"Mam ochotę — cała historia (rower)",steps:[
   {ch:"Dajesz znać",sel:"#sigfab",act:"click",wait:300,title:"Znajdź Reakcję",
    text:"Masz ochotę pojeździć, ale bez pomysłu na godzinę i trasę? Ta Reakcja daje znać innym. Kliknij ją.",
    miss:"Reakcji teraz nie widać: dziś masz już własne zaproszenie albo jesteś na ekranie, gdzie jej nie ma (jest na Starcie nad plusem). Przejdź na Start i uruchom przewodnik ponownie."},
-  {ch:"Dajesz znać",sel:'.sigacts [data-sga="bike"]',tap:true,wait:4000,title:"Wybierz „Rower”",
+  {ch:"Dajesz znać",sel:'.sigacts [data-sga="bike"]',pre:GW_OP,tap:true,wait:4000,title:"Wybierz „Rower”",
    text:"Dotknij „Rower”. Bieg, spacer i wędrówka działają tak samo — zmieniają się tylko słowa w powiadomieniach."},
-  {ch:"Dajesz znać",sel:".sgmsgs",opt:true,tap:true,wait:600,title:"Komunikat (opcjonalnie)",
+  {ch:"Dajesz znać",sel:".sgmsgs",pre:GW_OP,opt:true,tap:true,wait:600,title:"Komunikat (opcjonalnie)",
    text:"Krótkie hasło, np. „Nogi same kręcą”. „Inne…” pozwala wpisać własne (do 40 znaków). To hasło zobaczą inni i może zostać tytułem wspólnego zaproszenia."},
-  {ch:"Dajesz znać",sel:'[data-sg="send"]',wait:600,title:"Daj znać",
+  {ch:"Dajesz znać",sel:'[data-sg="send"]',pre:GW_OP,wait:600,title:"Daj znać",
    text:"To ten przycisk wysyła sygnał. Ja go nie kliknę za Ciebie. Kliknij „Dalej” w moim dymku, a pokażę, co dzieje się potem."},
   {ch:"Po wysłaniu",pre:GW_CL,title:"Co się dzieje po „Daj znać”",demo:GW_D.fab,
    text:"Okienko się zamyka, a Reakcja zostaje na ekranie — z zielonym ptaszkiem. Dotkniesz jej w każdej chwili, żeby zobaczyć „Twój sygnał”: kto ma też ochotę, „Zmień” i „Wycofaj”. Sygnał wygasa z końcem dnia."},
