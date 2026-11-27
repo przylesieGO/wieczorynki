@@ -316,7 +316,7 @@ function areaNearHtml(a){const c={lat:a.lat,lon:a.lon},best={};
   return '<div class="bsgrp">Najbliżej</div><div class="arnear">'+tile("s","Sygnał")+tile("w","Zaproszenie")+tile("e","Impreza")+'</div>'}
 // odrysowanie samego radaru i licznika (suwaki, dociągnięte miejscowości) — bez przebudowy całego okna
 function arRedraw(){const p=$("homesheet");if(!p||p.classList.contains("hide"))return;const s=p.querySelector(".arsvg");if(!s)return;
-  const a=Object.assign(areaCur(),arLiveKm!=null?{km:arLiveKm}:{});const zm=s.querySelector(".arzm");if(zm)zm.setAttribute("transform",arZmT(arView.s));s.classList.toggle("zm",arView.s>1.01);const ia=s.querySelector(".arin");if(ia)ia.innerHTML=areaSvgIn(a);const c=p.querySelector(".arctr");if(c)c.classList.toggle("off",!arViewMoved());   // zawsze widoczny; przygaszony, gdy radar jest w środku
+  const a=Object.assign(areaCur(),arLiveKm!=null?{km:arLiveKm}:{});const zm=s.querySelector(".arzm");if(zm)zm.setAttribute("transform",arZmT(arView.s));s.classList.toggle("zm",arView.s>1.01);const ia=s.querySelector(".arin");if(ia)ia.innerHTML=areaSvgIn(a);const c=p.querySelector(".arctr[data-hm=center]");if(c)c.classList.toggle("off",!arViewMoved());   // zawsze widoczny; przygaszony, gdy radar jest w środku
   const t=p.querySelector(".arcnt");if(t)t.innerHTML=arCntInner(a.km,areaCount(a))}
 // plakietka w nagłówku: „📍 Pułtusk · 20 km”, w podglądzie „👁 Serock · 20 km ✕”
 function renderAreaChip(){const el=$("mearea");if(!el)return;const a=areaCur();
