@@ -1805,3 +1805,4 @@ html[data-theme=dark] .wdeck{filter:drop-shadow(0 7px 5px rgba(0,0,0,.85)) drop-
 .arwxleg>.ui-i{width:14px;height:14px;flex:none;color:var(--mut)}
 .bsbox.bsstay{animation:none}   /* v349: przebudowa otwartego okna bez ponownego „wyskoku” */
 .totop.hmtop{position:absolute;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:5}   /* v349: ⬆ w oknie „Moja okolica” (jak .wftop w formularzu) */
+.hmcur.arpeek{flex-wrap:wrap}.hmcur.arpeek .arpkb{display:flex;flex-wrap:wrap;gap:4px 14px;margin-left:auto}   /* v351: „Ustaw jako moją” obok „Wróć do:” */

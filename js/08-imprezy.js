@@ -466,7 +466,10 @@ function renderHome(){arHeadOn();
     +homeRes.map((x,i)=>'<div class="hmresw"><button type="button" class="hmres" data-hm="pick" data-i="'+i+'"><b>'+esc(x.name)+'</b><span>'+esc(x.full)+'</span></button>'
       +(hmMode==="peek"?'<button type="button" class="hmfav'+(isFav(x)?' on':'')+'" data-hm="fav" data-i="'+i+'" aria-label="Ulubiona miejscowość">'+uiIcon(isFav(x)?"starf":"star")+'</button>':'')+'</div>').join("");
   p.innerHTML='<div class="bsbox" role="dialog" aria-modal="true" aria-label="Moja okolica"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-hm="close">Zamknij</button><b>'+uiIcon("pin")+' Moja okolica</b><span style="min-width:64px"></span></div><div class="bslist">'
-   +(a.peek?'<div class="hmcur arpeek">'+uiIcon("eye")+'<span>Podgląd: <b>'+esc(a.name)+'</b></span><button type="button" class="lnk" data-hm="unpeek">Wróć do: '+esc(h.name)+'</button></div>':'')
+   // v351: podgląd (też „Gdzie jestem”) można zatwierdzić jako Moją miejscowość — wcześniej było tylko „Wróć”
+   +(a.peek?'<div class="hmcur arpeek">'+uiIcon(areaPeek&&areaPeek.gps?"locate":"eye")+'<span>'+(areaPeek&&areaPeek.gps?'Tu jesteś':'Podgląd')+': <b>'+esc(a.name)+'</b></span><div class="arpkb">'
+     +(areaPeek&&areaPeek.name&&areaPeek.name!=="Tu jesteś"&&areaPeek.name!==h.name?'<button type="button" class="lnk" data-hm="sethome">Ustaw jako moją</button>':'')
+     +'<button type="button" class="lnk" data-hm="unpeek">Wróć do: '+esc(h.name)+'</button></div></div>':'')
    +'<div class="arvis">'+areaSvg(a)+'<button type="button" class="fch arctr arloc'+(areaPeek&&areaPeek.gps?' on':'')+'" data-hm="gpspeek">'+uiIcon("locate")+' Gdzie jestem</button>'+'<button type="button" class="fch arctr'+(arViewMoved()?'':' off')+'" data-hm="center">'+uiIcon("target")+' Wyśrodkuj</button>'+(arRoute?'<button type="button" class="fch arctr arplay" data-hm="rtplay">'+uiIcon("play")+' Odtwórz</button>':'')+'</div><div class="arcntrow">'+arLegHtml()+'<div class="arcnt">'+arCntInner(a.km,c)+'</div>'+arTerLegHtml()+'</div>'
    +arWxBar()
    +'<div class="arsl"><div class="arslh"><span>Promień'+arQ("arinfo","Co daje promień?")+'</span><b id="arkmv">'+areaKmTxt(a.km)+'</b></div><input id="arkm" class="arrng" type="range" min="5" max="51" step="any" value="'+arSlVal(a.km)+'" style="--p:'+arSlP(arSlVal(a.km),5,51)+'" aria-label="Promień okolicy"><div class="arslt"><span>5 km</span><span>50 km</span><span>Polska</span></div>'
@@ -549,6 +552,7 @@ $("homesheet").addEventListener("click",async e=>{
   if(k==="find"){homeFind();return}
   if(k==="mhome"||k==="mpeek"){homeRes=[];homeMsg="";hmMode=k==="mhome"?"home":"peek";renderHome();if(hmMode==="home")setTimeout(()=>{const i=$("homeq");if(i)i.focus()},60);return}
   if(k==="unpeek"){areaPeek=null;areaChanged();renderHome();return}
+  if(k==="sethome"){const x=areaPeek;if(!x||!x.name)return;areaSetHome({name:x.name,lat:+x.lat,lon:+x.lon});hmMode="peek";arView=arHomeView();renderHome();say("📍 Moja miejscowość: "+x.name);return}
   if(k==="pick"){const x=homeRes[+b.dataset.i];if(!x)return;
     if(hmMode==="home"){areaSetHome(x);evNearOn=true;try{localStorage.setItem("evNearOn","1")}catch(err){}homeRes=[];homeMsg="";hmMode="peek";renderHome();say("📍 Moja miejscowość: "+x.name);return}
     areaPeek={name:x.name,lat:x.lat,lon:x.lon};areaChanged();homeRes=[];homeMsg="";renderHome();return}
