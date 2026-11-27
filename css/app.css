@@ -1787,4 +1787,7 @@ html[data-theme=dark] .wdeck{filter:drop-shadow(0 7px 5px rgba(0,0,0,.85)) drop-
 .arwxm{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--card);border:3px solid var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.35);transition:left .35s ease}
 .arwxgr .arslt{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
 @media (prefers-reduced-motion:reduce){.arwxm{transition:none}}
+/* v344: wiersz pogody zawsze w jednej linii — dłuższy tekst skracany „…”, radar nad nim nie skacze */
+.hleg.arwxleg{flex-wrap:nowrap;white-space:nowrap;min-width:0}.arwxleg>span#arwxleg{display:block;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.arwxleg #arwxleg .arwxw{display:inline;margin-left:0}.arwxleg #arwxleg .ui-i{vertical-align:-2px}
 

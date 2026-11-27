@@ -343,7 +343,7 @@ function arWxSvg(){const P=arWxGet();if(!P)return "";const CX=AR_CX,CY=AR_CY,r1=
 function arWxLeg(){if(!arWxOn())return "";const P=arWxGet();
   if(!P)return '<span class="note">'+(arWx.err?'Nie udało się pobrać pogody — spróbuj za chwilę.':'Pobieram pogodę…')+'</span>';
   const c=P[0],strong=Math.max(...P.map(q=>q.w))>=40,nm=(AR_WXC.find(([k])=>k===c.cat[0])||[,""])[1];
-  return '<span>u Ciebie: <b>'+nm+'</b>'+(arTmpHome()?' ·'+arTmpHome():'')+'</span><span class="arwxw">'+uiIcon("wind")+' '+Math.round(c.w)+' km/h z kier. '+AR_DIR[Math.round(c.wd/45)%8]+(strong?' · <b>miejscami silny</b>':'')+'</span>'}
+  return 'u Ciebie: <b>'+nm+'</b>'+(arTmpHome()?' ·'+arTmpHome():'')+' · <span class="arwxw">'+uiIcon("wind")+' '+Math.round(c.w)+' km/h '+AR_DIR[Math.round(c.wd/45)%8]+(strong?' · <b>silny</b>':'')+'</span>'}   // v344: jeden wiersz, skracany „…” (CSS)
 // v343: pasek-gradient warunków (słonecznie → … → burza) zamiast kropek: kreski = 16 kierunków wokół, znacznik = u Ciebie (płynnie z suwakiem)
 const arWxPos=q=>{const i=AR_WXC.findIndex(([k])=>k===q.cat[0]);return ((Math.max(0,i)+(q.cat[0]==="rain"?.15+.7*Math.min(1,(q.cat[1]-.35)/.65):.5))/AR_WXC.length*100).toFixed(1)};
 function arWxGr(){const g=$("arwxgr");if(!g)return;const P=arWxOn()?arWxGet():null;if(!P){g.innerHTML="";return}
