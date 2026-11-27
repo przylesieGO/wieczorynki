@@ -805,7 +805,7 @@ function wfDate2(){const d=wfDate();if(!d)return null;const e=new Date(d);e.setH
 const wfRange=()=>rangeOk&&wf.mode==="range";
 function wfSetMode(m){
   wf.mode=m;const r=m==="range";
-  [...$("wmode").children].forEach(b=>b.classList.toggle("on",b.dataset.mode===m));
+  [...$("wmode").children].forEach(b=>b.classList.toggle("on",b.dataset.mode===m));wDeckLay($("wmode"));
   ["flbl1","flbl2","fclock2"].forEach(id=>$(id).classList.toggle("hide",!r));
   $("fclock").classList.toggle("sm",r);
   wfEndFix();
@@ -822,8 +822,11 @@ function wfEndFix(){
 // skróty godzin: nieaktywne, gdy godzina już minęła (dla zakresu — gdy start za wcześnie)
 function wfQuickSync(){
   const b=wfDate(),lim=Date.now()+(wfRange()?65:5)*60000;
-  [...$("wquick").children].forEach(x=>{const [h,m]=x.dataset.q.split(":").map(Number);let dis=false;if(b){const t=new Date(b);t.setHours(h,m,0,0);dis=t.getTime()<lim}x.disabled=dis});
+  [...$("wquick").children].forEach(x=>{const [h,m]=x.dataset.q.split(":").map(Number);let dis=false;if(b){const t=new Date(b);t.setHours(h,m,0,0);dis=t.getTime()<lim}x.disabled=dis;x.classList.toggle("on",h===wf.h&&m===wf.m)});
 }
+// ⏰ v325: lista godzin co godzinę (pion, widać 4) — przewija się do godziny z zegara albo pierwszej, która jeszcze nie minęła
+function wfQuickScroll(){const q=$("wquick"),B=[...q.children];if(!B.length)return;
+  const t=B.find(b=>+b.dataset.q.split(":")[0]===wf.h&&!b.disabled)||B.find(b=>!b.disabled)||B[B.length-1];q.scrollTop=Math.max(0,t.offsetTop-40)}
 function wfSetTime2(hh,mm){
   wf.h2=((hh%24)+24)%24;wf.m2=mm;
   flipCard($("fch2"),pad(wf.h2));flipCard($("fcm2"),pad(wf.m2));
@@ -835,7 +838,7 @@ function flipCard(el,txt){
 }
 function wfSetDay(day,keep){
   wf.day=day;
-  [...$("wdays").children].forEach(b=>b.classList.toggle("on",b.dataset.d===day));
+  [...$("wdays").children].forEach(b=>b.classList.toggle("on",b.dataset.d===day));wDeckLay($("wdays"));
   $("wdwrap").classList.toggle("hide",day!=="x");
   if(day==="x"&&!$("wdt").value&&!keep){const t=new Date();t.setDate(t.getDate()+3);$("wdt").value=localIso(t).slice(0,10)}
 }
@@ -982,8 +985,8 @@ function openWantForm(w,preset){
   wfActSync();   // wybór aktywności, rower / tempo tylko przy rowerze, nagłówek „Zaproś na bieg”
   $("wfask").classList.add("hide");
   $("wantform").classList.remove("hide");document.body.classList.add("wfopen");
-  $("wfscroll").scrollTop=0;
-  wfUpdate();
+  $("wfscroll").scrollTop=0;$("wftop").classList.remove("on");
+  wfUpdate();try{wfQuickScroll()}catch(e){}
   wf.snap0=wfSnap();
 }
 /* 🗺️ trasa w zaproszeniu (KROK 23) */
@@ -1046,7 +1049,12 @@ const paceHtml=w=>w&&w.pace?'<div class="wpcw"><span class="wpc wpc-'+(PACES[w.p
 function wfPaceSync(){
   const p=wf.pace||"",s=$("wpacesel"),own=!!p&&!PACES[p];
   s.value=own?"*":p;$("wpaceown").classList.toggle("hide",!own);if(own)$("wpaceown").value=p;
+  wpaceRender();
 }
+// ⏱ v325: tempo jako kafelki (jak Rower / teren); wybór dalej przez ukryty #wpacesel — ta sama logika zapisu
+const WPACE=[["","bike","Dowolne",""],["senior","heart","Senior","15–18"],["tour","map","Turyst.","18–24"],["speed","bolt","SPEEDAY","26+"],["*","pencil","Inne",""]];
+function wpaceRender(){const el=$("wpacech");if(!el)return;const sv=$("wpacesel").value;
+  el.innerHTML=WPACE.map(([v,i,t,r])=>'<button type="button" class="wbk'+(sv===v?' on':'')+'" data-wpc="'+v+'" aria-pressed="'+(sv===v)+'"'+(r?' aria-label="'+t+' '+r+' km/h"':'')+'>'+uiIcon(i)+'<span>'+t+'</span>'+(r?'<span class="wbkr">'+r+'</span>':'')+'</button>').join("")}
 // formularz: czas jazdy tego zaproszenia (min)
 function wfKm(){return wf.route?routeKm(wf.route):wf.km||null}
 function wfDurMin(){const k=wfKm();return k?Math.round(k/wPaceKmh(wf.pace)*60):wf.dur||DUR_DEF}
@@ -1241,7 +1249,8 @@ $("wfx").onclick=wfTryClose;
 $("wpacesel").addEventListener("change",()=>{const v=$("wpacesel").value;
   if(v==="*"){wf.pace=null;$("wpaceown").value="";$("wpaceown").classList.remove("hide");$("wpaceown").focus()}
   else{wf.pace=v||null;$("wpaceown").classList.add("hide")}
-  wfRouteSync()});
+  wpaceRender();wfRouteSync()});
+$("wpacech").addEventListener("click",e=>{const b=e.target.closest("[data-wpc]");if(!b)return;const s=$("wpacesel");s.value=b.dataset.wpc;s.dispatchEvent(new Event("change"))});
 const WBIKE=[["","bike","Każdy"],["road","road","Szosa"],["gravel","gravel","Gravel"],["mtb","mtb","MTB"],["ebike","ebike","E-bike"]];
 function wbikeRender(){const el=$("wbikesel");if(!el)return;el.innerHTML=WBIKE.map(([v,k,t])=>'<button type="button" class="wbk'+((wf.bike||"")===v?' on':'')+'" data-wbk="'+v+'" aria-pressed="'+((wf.bike||"")===v)+'">'+uiIcon(k)+'<span>'+t+'</span></button>').join("")}
 // 🏃 aktywność w formularzu (KROK 94): lista z bazy; rower i tempo tylko przy aktywności z rowerem; widać, gdy do wyboru jest więcej niż rower
@@ -1335,7 +1344,27 @@ $("wrfile").addEventListener("change",async e=>{
 });
 $("wrdel").addEventListener("click",()=>{wf.route=null;wf.routeName="";wf.rbId=null;wf.routeTouched=true;$("wrfile").value="";wfRouteSync()});
 $("wtest").addEventListener("click",e=>{const b=e.target.closest("button[data-test]");if(!b)return;wf.test=b.dataset.test==="1";if(!wf.test&&wfDemoRoute()){wf.test=true;say("🧪 Trasa DEMO — tylko do zaproszeń testowych.")}wfTestSync();wfUpdate()});
-$("wdays").addEventListener("click",e=>{const b=e.target.closest("button[data-d]");if(!b)return;wfSetDay(b.dataset.d);wfUpdate()});
+$("wdays").addEventListener("click",e=>{const b=e.target.closest("button[data-d]");if(!b)return;wfSetDay(b.dataset.d);wfUpdate();wfQuickScroll()});
+// 🃏 v325: stosy w formularzu (Dziś · Jutro · Inny dzień, Godzina · Zakres) — ta sama geometria co talia zakładek (js/16 tdLay): wybrana karta z przodu, reszta wystaje spod niej
+function wDeckLay(d){if(!d)return;const E=[...d.querySelectorAll(".tdc")],n=E.length;if(!n)return;let a=E.findIndex(e=>e.classList.contains("on"));if(a<0)a=0;
+  E.forEach((e,k)=>{e.classList.toggle("top",k===a);e.setAttribute("role","tab");e.setAttribute("aria-selected",k===a?"true":"false");e.tabIndex=k===a?0:-1});
+  // szeroki stos (pół okna, RWD): karta z wierzchu wypełnia miejsce poza wystającymi brzegami pozostałych
+  requestAnimationFrame(()=>{const W=d.clientWidth,S=20;if(!W)return;const tw=Math.max(60,W-S-Math.max(0,n-2)*S);E.forEach((e,k)=>e.style.width=k===a?tw+"px":"");
+    for(let r=0;r<n;r++){const e=E[(a+r)%n],L=n>1&&r===n-1,dp=L?1:r,x=r===0?S:L?0:S+tw-44+r*S;
+      e.classList.toggle("tdleft",L);e.style.transformOrigin=L?"left center":"right center";
+      e.style.transform="translateX("+x+"px) scale("+(r?Math.pow(.9,dp):1)+")";e.style.zIndex=L?9:10-r;e.style.opacity=r?Math.max(.5,1-dp*.17):1}})}
+// przesunięcie palcem / strzałki ← → przełącza kartę; klik w wystającą kartę — zwykły klik (obsługa wyżej)
+function wDeckInit(d,pick){let sx=null,mv=false;
+  const step=g=>{const E=[...d.querySelectorAll(".tdc")],a=Math.max(0,E.findIndex(x=>x.classList.contains("on")));pick(E[((a+g)%E.length+E.length)%E.length]);try{navigator.vibrate&&navigator.vibrate(8)}catch(_){}};
+  const up=e=>{if(sx===null)return;const dx=e.clientX-sx;sx=null;if(Math.abs(dx)>30){step(dx<0?1:-1);setTimeout(()=>mv=false,60)}};
+  d.addEventListener("pointerdown",e=>{sx=e.clientX;mv=false});
+  d.addEventListener("pointermove",e=>{if(sx!==null&&Math.abs(e.clientX-sx)>8)mv=true});
+  d.addEventListener("pointerup",up);d.addEventListener("pointerleave",e=>{if(sx!==null)up(e)});d.addEventListener("pointercancel",()=>{sx=null});
+  d.addEventListener("click",e=>{if(mv)e.stopImmediatePropagation()},true);
+  d.addEventListener("keydown",e=>{if(e.key!=="ArrowRight"&&e.key!=="ArrowLeft")return;e.preventDefault();step(e.key==="ArrowRight"?1:-1);const t=d.querySelector(".tdc.top");if(t)t.focus()})}
+wDeckInit($("wdays"),b=>{wfSetDay(b.dataset.d);wfUpdate();wfQuickScroll()});
+wDeckInit($("wmode"),b=>wfSetMode(b.dataset.mode));
+try{const ro=new ResizeObserver(()=>{wDeckLay($("wdays"));wDeckLay($("wmode"))});ro.observe($("wdays"));ro.observe($("wmode"))}catch(e){}   // RWD: stosy dopasowują się do szerokości okna
 $("wdt").addEventListener("change",wfUpdate);
 ["fclock","fclock2"].forEach(id=>$(id).addEventListener("click",e=>{const b=e.target.closest(".farr");if(!b)return;wfStep(b.closest(".fcol").dataset.u,+b.dataset.s)}));
 $("wmode").addEventListener("click",e=>{const b=e.target.closest("button[data-mode]");if(b)wfSetMode(b.dataset.mode)});
@@ -1362,6 +1391,7 @@ let wheelT=0;
   });
   window.addEventListener("mouseup",()=>{my0=null});
 });
+$("wquick").innerHTML=Array.from({length:24},(_,h)=>'<button type="button" data-q="'+h+':00">'+h+':00</button>').join("");
 $("wquick").addEventListener("click",e=>{
   const b=e.target.closest("button[data-q]");if(!b||b.disabled)return;
   // skok: ustawia tylko zegar „od” (dzień bez zmian); „do” = „od” + 2 h
@@ -1376,6 +1406,13 @@ $("wnotesel").addEventListener("change",()=>{
   if(v==="*"){$("wnote").value="";$("wnote").classList.remove("hide");$("wnote").focus()}
   else{$("wnote").value=v;$("wnote").classList.add("hide")}
 });
+// 🎲 v325: „Losuj” przy komentarzu — zabawne komentarze (lista w kodzie; nowe dopisywać tutaj)
+const WF_FUN=["Podróż po żołędzie","Jedziemy zbierać liście i igły","Poszukamy czystego śniegu","Liczymy wrony na polach","Szukamy najkrótszej drogi naokoło","Wyprowadzam rower na spacer","Testujemy błoto — certyfikowane","Pogoń za zachodem słońca","Objazd kałuż całego powiatu","Ekspedycja po jedną bułkę","Kontrola stanu jesieni","Sprawdzamy, czy las jeszcze stoi","Szukamy szyszki idealnej","Wyścig z żółwiem — dajemy fory","Jazda bez celu, ale z kawą","Przewietrzyć kask","Inspekcja mostków i kładek","Polowanie na grzyby z siodełka","Odwiedzamy znajome bociany","Trasa: tam i z powrotem (chyba)","Zgubimy się, ale razem","Rozjeżdżamy kalorie z obiadu","Szukamy końca tęczy","Posłuchać, co mówi las","Czy rzeka dalej płynie w tę stronę?","Wielka wyprawa po małe lody","Na skraj mapy i z powrotem","Wiatr w oczy, uśmiech na twarzy","Gonimy własny cień","Zbieramy kilometry do słoika","Degustacja świeżego powietrza","Pedałujemy na przekór kanapie","Mgła, mrok i my","Szlakiem zagubionych skarpetek","Wieczorny patrol sarenek","Jesienny przegląd kolorów","Odśnieżamy ścieżki oponami","Spis powszechny kretowisk","Sprawdzamy, czy góry są dalej płaskie","Wycieczka do najbliższej ławki"];
+$("wnoterand").innerHTML=uiIcon("sparkles")+"Losuj";
+$("wnoterand").onclick=()=>{const cur=$("wnote").value.trim(),P=WF_FUN.filter(x=>x!==cur);$("wnote").value=P[Math.floor(Math.random()*P.length)];wfNoteSync();try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}};
+// ⬆ v325: „Na górę” w formularzu — ten sam przycisk co przy kartach zaproszeń, lewy dolny róg nad „Wyślij”
+$("wfscroll").addEventListener("scroll",()=>$("wftop").classList.toggle("on",$("wfscroll").scrollTop>260),{passive:true});
+$("wftop").onclick=()=>{$("wfscroll").scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}};
 $("wlast").onclick=()=>{
   const L=lastWant();if(!L)return;
   const d=wfDate()||new Date();d.setHours(L.h,L.m,0,0);

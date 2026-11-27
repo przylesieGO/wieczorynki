@@ -1676,3 +1676,29 @@ html[data-theme=dark] .mymode{filter:drop-shadow(0 5px 5px rgba(0,0,0,.8)) drop-
 .mymode.sgo:has(#mysw.on,#mysort.on) button.sgmini .sgl,.mymode.sgo:has(#mysw.on,#mysort.on) button.sgmini .sgn{max-width:60px;opacity:1;margin-left:4px}
 .mymode.sgo:has(#mysw.on,#mysort.on) button.sgmini svg{width:22px;height:22px}
 .mymode.sgo button.on .mml{max-width:0;opacity:0;margin-left:0}
+/* v325: formularz zaproszenia — zwarty układ (decyzja 2026-11-27): kafelki w jednym rzędzie, stosy dni i trybu jak talia zakładek, zegar + lista godzin obok siebie */
+.wbike.wbrow{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(64px,1fr);gap:6px;overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain;padding:2px}
+.wbike.wbrow::-webkit-scrollbar{display:none}
+.wbike.wbrow .wbk{gap:2px;padding:6px 2px 5px;font-size:12.5px;border-radius:10px;white-space:nowrap}
+.wbike.wbrow .wbk .ui-i{width:19px;height:19px}
+.wbk .wbkr{font-size:10.5px;font-weight:500;color:var(--mut);line-height:1.1}.wbk.on .wbkr{color:var(--acc)}
+.wfsts{display:grid;grid-template-columns:minmax(0,1fr) 2px minmax(0,1fr);align-items:center;gap:14px;margin-top:2px}
+.wfsts:has(#wmode.hide){grid-template-columns:minmax(0,1fr)}.wfsts:has(#wmode.hide) .wfdiv{display:none}
+.wfdiv{display:block;width:2px;height:30px;border-radius:2px;background:var(--acc);box-shadow:0 0 6px var(--acc),0 0 14px color-mix(in srgb,var(--acc) 55%,transparent)}
+.wdeck{position:relative;height:36px;width:100%;min-width:0;touch-action:pan-y;user-select:none;-webkit-user-select:none;filter:drop-shadow(0 6px 4px rgba(0,0,0,.3)) drop-shadow(0 2px 2px rgba(0,0,0,.16))}
+html[data-theme=dark] .wdeck{filter:drop-shadow(0 7px 5px rgba(0,0,0,.85)) drop-shadow(0 2px 2px rgba(0,0,0,.55))}
+.wdeck .tdc{height:36px;font-size:14px;border-radius:11px;justify-content:center}.wdeck .tdc.top .tdl{overflow:hidden;text-overflow:ellipsis}
+.wdeck .tdc.top{outline:2px solid var(--acc);outline-offset:-1px}
+.wfclk{display:flex;justify-content:center;align-items:center;gap:16px;margin-top:6px}
+.wfclkl{flex:none}.wfclk .fclock{margin:6px 0 2px}
+.qchips.qcol{flex-direction:column;flex-wrap:nowrap;justify-content:flex-start;gap:6px;margin:0;height:154px;overflow-y:auto;scroll-snap-type:y mandatory;overscroll-behavior:contain;scrollbar-width:none;padding:0 2px}
+.qchips.qcol::-webkit-scrollbar{display:none}
+.qchips.qcol button{flex:none;scroll-snap-align:start;width:76px;height:34px;padding:0;text-align:center}
+.qchips.qcol button.on{background:var(--accbtn);color:var(--white)}
+.wrrow .wrbase{flex:1;min-width:0;margin-top:0}
+.wrbb{display:block;width:100%;height:100%;border:0;padding:11px 12px;border-radius:12px;background:var(--fill);color:var(--acc);font:inherit;font-weight:700;font-size:16px;cursor:pointer;white-space:nowrap}
+.wf2col{display:flex;gap:10px}.wf2col>div{flex:1;min-width:0}.wf2col select,.wf2col input{width:100%}
+.wlblr{display:flex;justify-content:space-between;align-items:center}
+.wfrand{display:inline-flex;align-items:center;gap:4px;padding:0;text-transform:none;letter-spacing:0;font-size:14px;font-weight:700}.wfrand .ui-i{width:16px;height:16px}
+.totop.wftop{position:absolute;left:16px;bottom:calc(100% + 12px);z-index:3}
+.qchips.qcol{position:relative}

@@ -27,7 +27,7 @@
 <meta property="og:image:height" content="512">
 <meta property="og:image:alt" content="Logo PrzylesieGo! — dwa koła">
 <meta name="twitter:card" content="summary">
-<link rel="stylesheet" href="css/app.css?v=324">
+<link rel="stylesheet" href="css/app.css?v=325">
 </head>
 <body>
 <!-- ===== EKRAN ŁADOWANIA (wariant A2 — kręcące się koła logo; znika po wczytaniu danych) ===== -->
@@ -84,47 +84,50 @@
 <div class="sheet bsh hide" id="wantform"><div class="bsbox wfbox" role="dialog" aria-modal="true" aria-labelledby="wfhtitle"><div class="bsgrab"></div>
   <div class="wfhead"><span class="wfsp"></span><b id="wfhtitle">🚲 Zaproś na rower</b><button type="button" class="sclose wfx" id="wfx" aria-label="Zamknij">✕</button></div>
   <div class="wfscroll" id="wfscroll">
-    <div id="wactwrap" class="hide"><div class="wlbl" style="margin-top:6px">Aktywność</div><div class="wbike" id="wactsel"></div></div>
+    <div id="wactwrap" class="hide"><div class="wlbl" style="margin-top:6px">Aktywność</div><div class="wbike wbrow" id="wactsel"></div></div>
     <div id="wplacewrap" class="hide"><div class="wlbl" style="margin-top:6px">📍 Punkt zbiórki</div><select id="wplacesel"></select>
       <div id="wplaceown" class="hide"><input id="wplacename" maxlength="40" placeholder="Nazwa miejsca, np. Pod ratuszem">
         <label class="wpladd"><span>Dodaj do listy miejsc — zobaczą ją inni</span><button type="button" class="ios-sw" id="wpladd" role="switch" aria-checked="false"></button></label></div>
       <div class="wplinfo hide" id="wplinfo"></div></div>
-    <div class="wlbl" id="wftitle" style="margin-top:6px">Planowany start</div>
-    <div class="seg" id="wdays"><button type="button" data-d="0" class="on">Dziś</button><button type="button" data-d="1">Jutro</button><button type="button" data-d="x">Inny dzień</button></div>
+    <div id="wwhowrap" class="hide"><div class="wlbl">Kto zobaczy zaproszenie?</div><button type="button" class="who" id="wwho"></button></div>
+    <div class="wlbl" id="wftitle">Planowany start</div>
+    <div class="wfsts"><div class="wdeck" id="wdays" role="tablist" aria-label="Dzień — przesuń palcem w bok"><button type="button" class="tdc on" data-d="0"><span class="tdl">Dziś</span></button><button type="button" class="tdc" data-d="1"><span class="tdl">Jutro</span></button><button type="button" class="tdc" data-d="x"><span class="tdl">Inny dzień</span></button></div>
+     <i class="wfdiv" aria-hidden="true"></i><div class="wdeck hide" id="wmode" role="tablist" aria-label="Godzina albo zakres — przesuń palcem w bok"><button type="button" class="tdc on" data-mode="one"><span class="tdl">Godzina</span></button><button type="button" class="tdc" data-mode="range"><span class="tdl">Zakres godzin</span></button></div></div>
     <div id="wdwrap" class="hide" style="margin-top:8px"><input type="date" id="wdt"></div>
-    <div class="seg hide" id="wmode" style="margin-top:8px"><button type="button" data-mode="one" class="on">🕖 Godzina</button><button type="button" data-mode="range">↔ Zakres godzin</button></div>
-    <div class="flbl hide" id="flbl1">OD</div>
-    <div class="fclock" id="fclock">
+    <div class="wfclk"><div class="wfclkl">
+     <div class="flbl hide" id="flbl1">OD</div>
+     <div class="fclock" id="fclock">
      <div class="fcol" data-u="h"><button type="button" class="farr" data-s="1" aria-label="Godzina później">▲</button><div class="fcard" id="fch" title="Przeciągnij w górę/dół albo przewiń">19</div><button type="button" class="farr" data-s="-1" aria-label="Godzina wcześniej">▼</button></div>
      <div class="fcolon">:</div>
      <div class="fcol" data-u="m"><button type="button" class="farr" data-s="1" aria-label="Minuty później">▲</button><div class="fcard" id="fcm" title="Przeciągnij w górę/dół albo przewiń">00</div><button type="button" class="farr" data-s="-1" aria-label="Minuty wcześniej">▼</button></div>
-    </div>
-    <div class="flbl hide" id="flbl2">DO</div>
-    <div class="fclock sm hide" id="fclock2">
+     </div>
+     <div class="flbl hide" id="flbl2">DO</div>
+     <div class="fclock sm hide" id="fclock2">
      <div class="fcol" data-u="h2"><button type="button" class="farr" data-s="1" aria-label="Koniec zakresu: godzina później">▲</button><div class="fcard" id="fch2" title="Przeciągnij w górę/dół albo przewiń">21</div><button type="button" class="farr" data-s="-1" aria-label="Koniec zakresu: godzina wcześniej">▼</button></div>
      <div class="fcolon">:</div>
      <div class="fcol" data-u="m2"><button type="button" class="farr" data-s="1" aria-label="Koniec zakresu: minuty później">▲</button><div class="fcard" id="fcm2" title="Przeciągnij w górę/dół albo przewiń">00</div><button type="button" class="farr" data-s="-1" aria-label="Koniec zakresu: minuty wcześniej">▼</button></div>
-    </div>
-    <div class="qchips" id="wquick"><button type="button" data-q="8:00">8:00</button><button type="button" data-q="12:00">12:00</button><button type="button" data-q="16:00">16:00</button><button type="button" data-q="20:00">20:00</button></div>
+     </div>
+    </div><div class="qchips qcol" id="wquick" aria-label="Szybki wybór godziny"></div></div>
     <div class="wdurinfo hide" id="wdurinfo"></div>
     <div class="wx hide" id="wwx"></div>
-    <div id="wwhowrap" class="hide"><div class="wlbl">Kto zobaczy zaproszenie?</div><button type="button" class="who" id="wwho"></button></div>
     <div id="wroutewrap" class="hide"><div class="wlbl">Proponowana trasa (opcjonalnie)</div>
-     <div class="wrrow"><label class="wrfile"><input type="file" id="wrfile" accept=".gpx,application/gpx+xml,text/xml"><span id="wrlbl">🗺️ Dodaj plik GPX</span></label><button type="button" class="ib del hide" id="wrdel" aria-label="Usuń trasę" title="Usuń trasę"></button></div>
+     <div class="wrrow"><label class="wrfile"><input type="file" id="wrfile" accept=".gpx,application/gpx+xml,text/xml"><span id="wrlbl">🗺️ Dodaj plik GPX</span></label><div id="wrbase" class="wrbase hide"><button type="button" class="wrbb" id="wrbasebtn">📚 Baza tras ›</button></div><button type="button" class="ib del hide" id="wrdel" aria-label="Usuń trasę" title="Usuń trasę"></button></div>
      <div class="row" id="wrinfo" style="margin-top:6px;gap:10px"></div>
-     <div id="wrbase" class="wrbase hide"><button type="button" class="lnk" id="wrbasebtn">📚 Wybierz z bazy tras ›</button></div>
      <div id="wrbadd" class="wrbadd hide"></div></div>
-    <div id="wpacewrap" class="hide"><div class="wlbl">Tempo</div><select id="wpacesel"><option value="">— tempo dowolne —</option><option value="senior">Senior Adventure · 15–18 km/h</option><option value="tour">Turystycznie · 18–24 km/h</option><option value="speed">SPEEDAY · 26+ km/h</option><option value="*">Inne… (wpisz)</option></select><input id="wpaceown" class="hide" maxlength="30" placeholder="np. 20–22 km/h, bez pośpiechu"></div>
-    <div id="wbikewrap" class="hide"><div class="wlbl">Rower / teren</div><div class="wbike" id="wbikesel"></div></div>
+    <div id="wpacewrap" class="hide"><div class="wlbl">Tempo</div><div class="wbike wbrow" id="wpacech"></div><select id="wpacesel" class="hide"><option value="">— tempo dowolne —</option><option value="senior">Senior Adventure · 15–18 km/h</option><option value="tour">Turystycznie · 18–24 km/h</option><option value="speed">SPEEDAY · 26+ km/h</option><option value="*">Inne… (wpisz)</option></select><input id="wpaceown" class="hide" maxlength="30" placeholder="np. 20–22 km/h, bez pośpiechu"></div>
+    <div id="wbikewrap" class="hide"><div class="wlbl">Rower / teren</div><div class="wbike wbrow" id="wbikesel"></div></div>
+    <div class="wf2col">
     <div id="wdistwrap" class="hide"><div class="wlbl">Dystans</div><select id="wkmsel"><option value="">— nie wiem —</option><option value="20">20 km</option><option value="30">30 km</option><option value="50">50 km</option><option value="80">80 km</option><option value="100">100 km</option><option value="*">Inny… (wpisz)</option></select><input id="wkmown" class="hide" inputmode="decimal" maxlength="5" placeholder="ile km, np. 42"></div>
     <div id="wdurwrap" class="hide"><div class="wlbl" id="wdurlbl">Na ile jedziesz?</div><select id="wdursel"><option value="15">15 min</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">1 h</option><option value="90">1,5 h</option><option value="120">2 h</option><option value="150">2,5 h</option><option value="180">3 h</option><option value="240">4 h</option><option value="300">5 h</option><option value="360">6 h</option><option value="*">Inny… (wpisz)</option></select><input id="wdurown" class="hide" maxlength="8" placeholder="np. 3,5 h albo 40 min"></div>
-    <div id="wtestwrap" class="hide"><div class="wlbl">Rodzaj zaproszenia</div><div class="seg" id="wtest"><button type="button" data-test="1" class="on">🧪 Testowe</button><button type="button" data-test="0">🚴 Prawdziwe</button></div><div class="note" id="wtestnote" style="margin-top:6px"></div></div>
+    </div>
     <div id="wtitlewrap" class="hide"><div class="wlbl">Tytuł <span class="note">(opcjonalnie)</span></div><input id="wtitle" maxlength="40" placeholder="np. Zapachy lasu"><div class="note hide" id="wtitlehint" style="margin-top:4px"></div></div>
-    <div class="wlbl">Notatka</div>
+    <div class="wlbl wlblr"><span>Komentarz</span><button type="button" class="lnk wfrand" id="wnoterand">Losuj</button></div>
     <select id="wnotesel"><option value="">— bez notatki —</option><option>W słusznej sprawie</option><option>Kebab RIDE</option><option>Na lody i pizza</option><option>SPEEDAY</option><option value="Coffee Ride ☕">Coffee Ride</option><option>Na godzinkę +/- :)</option><option>Trochę po mieście</option><option>Może do lasu</option><option>Nad rzekę</option><option>Nocna Wataha</option><option value="*">Własna… (wpisz)</option></select>
     <input id="wnote" class="hide" maxlength="200" placeholder="Napisz własną notatkę">
+    <div id="wtestwrap" class="hide"><div class="wlbl">Rodzaj zaproszenia</div><div class="seg" id="wtest"><button type="button" data-test="1" class="on">🧪 Testowe</button><button type="button" data-test="0">🚴 Prawdziwe</button></div><div class="note" id="wtestnote" style="margin-top:6px"></div></div>
   </div>
   <div class="wffoot">
+    <button type="button" class="totop wftop" id="wftop" aria-label="Na górę formularza" title="Na górę"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 14.5l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <div class="wfclash hide" id="wfclash"></div>
     <button type="button" class="b big" id="wsave" >Wyślij zaproszenie</button>
     <div class="row between" style="margin-top:6px"><button type="button" class="lnk" id="wlast"></button><button type="button" class="lnk" id="wcancel">Anuluj</button></div>
@@ -302,28 +305,28 @@
 <div class="toast hide" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
-<script src="js/01-podstawy.js?v=324"></script>
-<script src="js/02-ikony.js?v=324"></script>
-<script src="js/03-stan.js?v=324"></script>
-<script src="js/04-ustawienia.js?v=324"></script>
-<script src="js/05-zgloszenia.js?v=324"></script>
-<script src="js/06-pomoc-powitanie.js?v=324"></script>
-<script src="js/07-pogoda-zaproszen.js?v=324"></script>
-<script src="js/08-imprezy.js?v=324"></script>
-<script src="js/09-trasy.js?v=324"></script>
-<script src="js/10-zaproszenia.js?v=324"></script>
-<script src="js/11-dzwonek.js?v=324"></script>
-<script src="js/12-wieczorynki.js?v=324"></script>
-<script src="js/13-online-statystyki.js?v=324"></script>
-<script src="js/14-synchronizacja.js?v=324"></script>
-<script src="js/15-wieczorynki-formularz.js?v=324"></script>
-<script src="js/16-start.js?v=324"></script>
-<script src="js/17-grupy.js?v=324"></script>
-<script src="js/18-ekipa-demo.js?v=324"></script>
-<script src="js/20-serwis.js?v=324"></script>
-<script src="js/21-szukaj.js?v=324"></script>
-<script src="js/22-przewodnik.js?v=324"></script>
-<script src="js/23-start.js?v=324"></script>
-<script src="js/24-slad.js?v=324"></script>
+<script src="js/01-podstawy.js?v=325"></script>
+<script src="js/02-ikony.js?v=325"></script>
+<script src="js/03-stan.js?v=325"></script>
+<script src="js/04-ustawienia.js?v=325"></script>
+<script src="js/05-zgloszenia.js?v=325"></script>
+<script src="js/06-pomoc-powitanie.js?v=325"></script>
+<script src="js/07-pogoda-zaproszen.js?v=325"></script>
+<script src="js/08-imprezy.js?v=325"></script>
+<script src="js/09-trasy.js?v=325"></script>
+<script src="js/10-zaproszenia.js?v=325"></script>
+<script src="js/11-dzwonek.js?v=325"></script>
+<script src="js/12-wieczorynki.js?v=325"></script>
+<script src="js/13-online-statystyki.js?v=325"></script>
+<script src="js/14-synchronizacja.js?v=325"></script>
+<script src="js/15-wieczorynki-formularz.js?v=325"></script>
+<script src="js/16-start.js?v=325"></script>
+<script src="js/17-grupy.js?v=325"></script>
+<script src="js/18-ekipa-demo.js?v=325"></script>
+<script src="js/20-serwis.js?v=325"></script>
+<script src="js/21-szukaj.js?v=325"></script>
+<script src="js/22-przewodnik.js?v=325"></script>
+<script src="js/23-start.js?v=325"></script>
+<script src="js/24-slad.js?v=325"></script>
 </body>
 </html>
