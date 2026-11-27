@@ -250,7 +250,10 @@ let flt=(()=>{let f;try{f=Object.assign(fltEmpty(),JSON.parse(localStorage.getIt
   FLT_MULTI.forEach(k=>{if(!Array.isArray(f[k]))f[k]=f[k]?[f[k]]:[]});   // stary zapis: jedna osoba jako tekst
   f.demo="";   // konta demo (i testowe zaproszenia, js/04) są zawsze pokazane po wejściu do aplikacji; ukrycie działa tylko do zamknięcia
   return f})(),fltQ="",fltSub="",fltScroll=0,fltScope="";   // fltScope: "" = zaproszenia, "ev" = imprezy (okno Filtrów otwarte z zakładki Imprezy)
-const fltFabHtml=()=>'<div class="fltfab" id="fltfab"><button type="button" class="fabb" id="fltundo" data-fk="close">'+uiIcon("undo")+'Cofnij</button><button type="button" class="fabb w" id="fltclrb" data-fk="clear">Wyczyść</button></div>';   // pływające przyciski w prawym dolnym rogu, jeden nad drugim: Cofnij (= wróć do poprzedniego widoku, zamyka okno), a pod nim Wyczyść — pod kciukiem
+let fltHist=[],fltSwiped=0;   // 🔙 historia zmian filtrów (do „Cofnij”) — czyszczona przy otwarciu okna
+const fltSnap=()=>{const t=JSON.stringify(flt);if(fltHist[fltHist.length-1]!==t){fltHist.push(t);if(fltHist.length>30)fltHist.shift()}};
+const fltUndoLbl=ok=>ok?uiIcon("check")+"OK":uiIcon("undo")+"Cofnij";
+const fltFabHtml=()=>'<div class="fltfab" id="fltfab"><button type="button" class="fabb" id="fltundo" data-fk="undo">'+fltUndoLbl(false)+'</button><button type="button" class="fabb w" id="fltclrb" data-fk="clear">Wyczyść</button></div>';   // pływające przyciski w prawym dolnym rogu, jeden nad drugim: Cofnij (stuknięcie cofa ostatnią zmianę filtrów; przesunięcie po nim kciukiem zamienia go w OK, które zamyka okno), a pod nim Wyczyść — pod kciukiem
 function fltSave(){try{localStorage.setItem("flt",JSON.stringify(flt))}catch(e){}}
 // 🧹 filtry nie przechodzą między wejściami do aplikacji (jak w sklepach online): każde nowe wczytanie i powrót po 15+ min przerwy zaczyna bez filtrów
 const FLT_AWAY=15*6e4;
@@ -489,7 +492,7 @@ function fltDraw(){
   const S=fltSecs();Object.keys(S).forEach(k=>{const el=$("flt_"+k);if(el)el.innerHTML=S[k]});
   ["where","user","to","by"].forEach(k=>{const el=$("fsum_"+k);if(!el)return;el.textContent=fltOn(k)?(k==="to"||k==="by"?fltNm(flt[k]):fltLabel(k)):(k==="where"?"Wszędzie":k==="to"||k==="by"?"Wybierz":"Wszyscy");el.classList.toggle("fnone",!fltOn(k))});
   const bb=$("fltbikebox");if(bb)bb.classList.toggle("hide",!fltBikeOn());
-  {const c=$("fltclrb");if(c)c.classList.toggle("hide",!fltKeys().length)}   // „Wyczyść” tylko gdy jakiś filtr jest włączony
+  {const c=$("fltclrb");if(c)c.classList.toggle("hide",!fltKeys().length);const u=$("fltundo");if(u&&u.dataset.ok){delete u.dataset.ok;u.innerHTML=fltUndoLbl(false)}}   // „Wyczyść” tylko gdy jakiś filtr jest włączony
   if(fltScope==="ev"){const ne=evs.filter(e=>!evPast(e)&&evMatch(e)).length;$("fltok").textContent=fltActiveFor("ev")?"Pokaż "+ne+" "+plf(ne,["imprezę","imprezy","imprez"]):"Gotowe";return}
   const n=wants.filter(wUpcoming).filter(w=>typeof wAreaOk!=="function"||wAreaOk(w)).filter(w=>typeof wActShow!=="function"||wActShow(w)).filter(fltOk).length,na=flt.arch&&fltActive()?withOldJoins(()=>archList(wants).filter(fltOk).length):0;$("fltok").textContent=fltActive()?"Pokaż "+n+" "+(n===1?"zaproszenie":n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"zaproszenia":"zaproszeń")+(flt.arch?" + "+na+" w archiwum":""):"Gotowe";
 }
@@ -517,7 +520,7 @@ function renderFlt(){
   const p=$("fltsheet");p.innerHTML='<div class="bsbox fltbox" role="dialog" aria-modal="true" aria-label="Filtry">'+(fltSub?fltSubHtml():fltMainHtml())+'</div>';
   fltDraw();const l=$("fltlist");if(l&&fltScroll){l.scrollTop=fltScroll;fltScroll=0}
 }
-function openFlt(scope){fltScope=scope||"";$("fltsheet").classList.remove("hide");fltSub="";fltQ="";fltScroll=0;renderFlt();
+function openFlt(scope){fltScope=scope||"";fltHist=[];$("fltsheet").classList.remove("hide");fltSub="";fltQ="";fltScroll=0;renderFlt();
   // 👑 „Zaproszeni” musi znać skład wszystkich grup (także tych, do których 👑 nie należy) — jedno wczytanie na sesję
   if(fltAdm()&&typeof grK!=="undefined"&&!grK&&typeof grKLoad==="function")grKLoad().then(()=>{if(!$("fltsheet").classList.contains("hide"))fltDraw()}).catch(()=>{})}
 function closeFlt(){const p=$("fltsheet");p.classList.add("hide");p.innerHTML=""}
@@ -528,14 +531,15 @@ $("fltsheet").addEventListener("click",e=>{
   if(k==="close"){closeFlt();return}
   if(k==="sigwin"){closeFlt();openSigWin();return}
   if(k==="area"){closeFlt();openHome();return}   // 📍 v270: okno Moja okolica (js/08)   // bombel „Sygnały” w Relacji → okno z listą sygnałów (js/11)
-  if(k==="clear"){flt=fltEmpty();fltQ="";fltSave();fltRefresh();return}
+  if(k==="undo"){if(Date.now()-fltSwiped<500)return;if(b.dataset.ok){closeFlt();return}const t=fltHist.pop();if(t){flt=Object.assign(fltEmpty(),JSON.parse(t));fltSave();fltRefresh()}else closeFlt();return}   // Cofnij: cofa zmianę; po przesunięciu kciukiem to OK = zamknij; bez zmian do cofnięcia — zamyka okno
+  if(k==="clear"){fltSnap();flt=fltEmpty();fltQ="";fltSave();fltRefresh();return}
   if(k==="sub"){const l=$("fltlist");fltScroll=l?l.scrollTop:0;fltSub=b.dataset.fv;fltQ="";renderFlt();return}
   if(k==="back"){fltSub="";fltQ="";renderFlt();return}
-  if(k==="clearsub"){const u0=document.querySelector("#fltsheet .fulist");fltStkY=u0?u0.scrollHeight-u0.clientHeight-u0.scrollTop:null;flt[fltSub]=FLT_MULTI.includes(fltSub)?[]:"";fltSave();fltRefresh();return}   // czyści wybór tylko w tym podekranie
+  if(k==="clearsub"){fltSnap();const u0=document.querySelector("#fltsheet .fulist");fltStkY=u0?u0.scrollHeight-u0.clientHeight-u0.scrollTop:null;flt[fltSub]=FLT_MULTI.includes(fltSub)?[]:"";fltSave();fltRefresh();return}   // czyści wybór tylko w tym podekranie
   if(k==="arng"){archRange(+b.dataset.fv);return}   // zakres archiwum (30 dni / 3 mies. / rok / wszystko)
   if(k==="tgdemo"){if(typeof demoOpt!=="undefined"&&!demoOpt.show){demoPeek=!demoPeek;flt.demo="";deriveWants();renderBell()}else flt.demo=flt.demo==="hide"?"":"hide";fltSave();fltRefresh();return}   // Ekipa demo ukryta w ⚙️ → odsłonięcie do zamknięcia aplikacji (KROK 95)
   if(k==="ht"){hideTest=!hideTest;try{localStorage.setItem("hideTest",hideTest?"1":"0")}catch(err){}deriveWants();fltRefresh();syncNow();return}   // to samo ustawienie co ⚙️ → Testy
-  const v=b.dataset.fv;
+  const v=b.dataset.fv;fltSnap();
   if(fltSub){const u0=document.querySelector("#fltsheet .fulist");fltStkY=u0?u0.scrollHeight-u0.clientHeight-u0.scrollTop:null}
   if(FLT_MULTI.includes(k)){const i=flt[k].indexOf(v);if(i<0){flt[k].push(v);fltUfBump(v)}else flt[k].splice(i,1)}   // osoby: dodaj / zdejmij z wyboru
   else flt[k]=flt[k]===v?"":v;
@@ -544,6 +548,9 @@ $("fltsheet").addEventListener("click",e=>{
   if(k==="act"&&flt.act&&flt.act!=="bike")flt.bike="";   // rodzaj roweru nie dotyczy innych aktywności
   fltSave();fltRefresh();
 });
+$("fltsheet").addEventListener("pointerdown",e=>{const b=e.target.closest("#fltundo");if(b)b._sw={x:e.clientX,y:e.clientY}});
+$("fltsheet").addEventListener("pointermove",e=>{const b=e.target.closest("#fltundo");if(!b||!b._sw||b.dataset.ok)return;if(Math.hypot(e.clientX-b._sw.x,e.clientY-b._sw.y)>18){b.dataset.ok="1";b.innerHTML=fltUndoLbl(true);fltSwiped=Date.now();if(navigator.vibrate)try{navigator.vibrate(8)}catch(x){}}});   // przesunięcie kciukiem po „Cofnij” → „OK”
+$("fltsheet").addEventListener("pointerup",e=>{const b=e.target.closest("#fltundo");if(b)b._sw=null});
 $("fltsheet").addEventListener("input",e=>{if(e.target.id==="fltq"){fltQ=e.target.value;fltStkPaint(null)}});
 $("fltsheet").addEventListener("change",e=>{if(e.target.id==="fltdate"){flt.date=e.target.value;flt.when=flt.date?"date":"";fltSave();fltRefresh()}});
 let placesGeoDone=false;
