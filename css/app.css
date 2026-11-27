@@ -1606,7 +1606,28 @@ html[data-theme=dark] .arte,html[data-theme=dark] .arco.e .arcon{fill:#8fa8ff}ht
 .arrng::-moz-range-thumb{width:18px;height:18px;border-radius:50%;border:2px solid var(--acc);background:radial-gradient(circle,var(--acc) 0 3px,var(--card) 3.5px);box-shadow:0 0 0 4px color-mix(in srgb,var(--acc) 18%,transparent),0 1px 4px rgba(0,0,0,.25)}
 .arrng:active::-webkit-slider-thumb{box-shadow:0 0 0 7px color-mix(in srgb,var(--acc) 26%,transparent),0 1px 4px rgba(0,0,0,.25)}
 .arsl .arslt{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-top:-2px}
-/* v312: pływające „Cofnij” i „Wyczyść” w Filtrach — nad „Gotowe”, pod kciukiem */
-.fltfab{position:absolute;left:16px;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;gap:10px;z-index:2;pointer-events:none}
-.fltfab.hide{display:none}.fabb{pointer-events:auto;display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 20px;border-radius:999px;border:1px solid var(--line);background:color-mix(in srgb,var(--card) 86%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 4px 16px rgba(0,0,0,.28);color:var(--ink);font:inherit;font-size:15px;font-weight:600;cursor:pointer}
-.fabb.hide{display:none}.fabb .ui-i{width:17px;height:17px}.fabb.w{color:var(--bad)}.fltbox.hasfab .bslist{padding-bottom:60px}
+/* v313: pływające „Cofnij” (wróć) i „Wyczyść” w Filtrach — prawy dolny róg, jeden nad drugim (Cofnij, pod nim Wyczyść), pod kciukiem */
+.fltfab{position:absolute;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;align-items:flex-end;gap:8px;z-index:2;pointer-events:none}
+.fabb{pointer-events:auto;display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 20px;border-radius:999px;border:1px solid var(--line);background:color-mix(in srgb,var(--card) 86%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 4px 16px rgba(0,0,0,.28);color:var(--ink);font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+.fabb.hide{display:none}.fabb .ui-i{width:17px;height:17px}.fabb.w{color:var(--bad)}.fltbox .bslist{padding-bottom:104px}
+/* v313: pierścień kompasu wokół radaru + delikatne gradienty suwaków */
+.arcmb{fill:none;stroke:var(--acc);opacity:.07}.arco1{fill:none;stroke:var(--acc);stroke-width:1.2;opacity:.45}
+.arcsw{fill:none;stroke:var(--acc);opacity:.16;transform-origin:215px 145px;animation:arcsw 14s linear infinite}@keyframes arcsw{to{transform:rotate(360deg)}}
+.arct line{stroke:var(--mut);stroke-width:1;opacity:.6}
+.arcd{font-size:7.5px;font-weight:600;fill:var(--mut);opacity:.85}.arcl{font-size:11px;font-weight:800;fill:var(--ink);opacity:.8}.arcl.n{fill:#f59e0b;opacity:1}
+.arhd{transform-origin:215px 145px;transition:opacity .3s}.arhd path{fill:#f59e0b;filter:drop-shadow(0 0 3px rgba(245,158,11,.7))}.arhd.off{opacity:0}
+.arcon,.arcok{paint-order:stroke}
+@media (prefers-reduced-motion:reduce){.arcsw{animation:none}}
+.arsl{background:linear-gradient(135deg,color-mix(in srgb,var(--acc) 9%,var(--fill)),var(--fill) 60%,color-mix(in srgb,#5ac8fa 8%,var(--fill)))}
+.arrng{--g1:var(--acc);--g2:#5ac8fa}#ardens.arrng{--g1:#f5b301;--g2:var(--acc)}
+.arrng::-webkit-slider-runnable-track{background:
+ linear-gradient(90deg,var(--g1),var(--g2)) 0 50%/calc(11px + (100% - 22px)*var(--p)) 4px no-repeat,
+ linear-gradient(var(--line),var(--line)) 0 50%/100% 4px no-repeat,
+ repeating-linear-gradient(90deg,var(--mut) 0 1px,transparent 1px var(--tk)) 0 100%/calc(100% + 1px) 6px no-repeat}
+.arrng::-moz-range-track{background:
+ linear-gradient(90deg,var(--g1),var(--g2)) 0 50%/calc(11px + (100% - 22px)*var(--p)) 4px no-repeat,
+ linear-gradient(var(--line),var(--line)) 0 50%/100% 4px no-repeat,
+ repeating-linear-gradient(90deg,var(--mut) 0 1px,transparent 1px var(--tk)) 0 100%/calc(100% + 1px) 6px no-repeat}
+.arrng::-webkit-slider-thumb{border-color:var(--g2);background:radial-gradient(circle,var(--g2) 0 3px,var(--card) 3.5px);box-shadow:0 0 0 4px color-mix(in srgb,var(--g2) 20%,transparent),0 1px 4px rgba(0,0,0,.25)}
+.arrng::-moz-range-thumb{border-color:var(--g2);background:radial-gradient(circle,var(--g2) 0 3px,var(--card) 3.5px)}
+.arslh b{background:linear-gradient(90deg,var(--acc),#5ac8fa);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
