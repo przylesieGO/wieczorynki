@@ -311,7 +311,7 @@ async function arWxLoad(a){if(!arWxOn())return;const {D,out}=arWxPts(a),k=a.lat.
   if(arWx.k===k&&(arWx.busy||(arWx.d&&Date.now()-arWx.at<18e5)))return;
   arWx={k,at:Date.now(),d:arWx.k===k?arWx.d:null,busy:true,err:false};
   try{const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude="+out.map(p=>p[0].toFixed(3)).join(",")+"&longitude="+out.map(p=>p[1].toFixed(3)).join(",")
-      +"&hourly=weather_code,precipitation,cloud_cover,wind_speed_10m,wind_direction_10m&forecast_days=3&timezone=auto");
+      +"&hourly=weather_code,precipitation,cloud_cover,wind_speed_10m,wind_direction_10m,temperature_2m&forecast_days=3&timezone=auto");
     if(!r.ok)throw new Error(r.status);let j=await r.json();if(!Array.isArray(j))j=[j];if(arWx.k!==k)return;
     arWx.d=j;arWx.busy=false;arWx.at=Date.now()}
   catch(e){if(arWx.k!==k)return;arWx.busy=false;arWx.err=true;arWx.at=0}
@@ -324,6 +324,17 @@ const arWxCat=(c,p,cl)=>c>=95?["storm",1]:(c>=71&&c<=77)||c===85||c===86?["snow"
 function arWxGet(){if(!arWxOn()||!arWx.d)return null;const P=arWx.d.map(j=>{const h=j&&j.hourly,i=arWxIdx(h);if(i<0)return null;
     return {cat:arWxCat(h.weather_code[i],h.precipitation[i],h.cloud_cover[i]),w:h.wind_speed_10m[i],wd:h.wind_direction_10m[i]}});
   return P.every(Boolean)?P:null}
+// v343: 🌡 temperatura przy głównych miejscowościach na radarze (do 10 największych podpisanych) i przy środku — wg suwaka pogody
+const arTmpC={};let arTmpQ=0;
+const arTmpTxt=v=>v==null||!isFinite(v)?"":" "+String(Math.round(v)).replace("-","−")+"°";
+function arTmpOf(n){if(!arWxOn())return "";const c=arTmpC[n];if(!c||!c.h)return "";const i=arWxIdx(c.h);return i<0?"":arTmpTxt(c.h.temperature_2m[i])}
+function arTmpHome(){if(!arWxOn()||!arWx.d||!arWx.d[0])return "";const h=arWx.d[0].hourly,i=arWxIdx(h);return i<0||!h.temperature_2m?"":arTmpTxt(h.temperature_2m[i])}
+function arTmpLoad(L){if(!arWxOn())return;const need=L.filter(o=>{const c=arTmpC[o.n];return !c||(!c.busy&&Date.now()-c.at>18e5)});if(!need.length)return;
+  clearTimeout(arTmpQ);arTmpQ=setTimeout(async()=>{const N=need.slice(0,10);N.forEach(o=>arTmpC[o.n]=Object.assign(arTmpC[o.n]||{},{busy:true,at:Date.now()}));
+    try{const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude="+N.map(o=>o.lat.toFixed(3)).join(",")+"&longitude="+N.map(o=>o.lon.toFixed(3)).join(",")+"&hourly=temperature_2m&forecast_days=3&timezone=auto");
+      if(!r.ok)throw 0;let j=await r.json();if(!Array.isArray(j))j=[j];N.forEach((o,i)=>{arTmpC[o.n]={h:j[i]&&j[i].hourly,at:Date.now(),busy:false}})}
+    catch(e){N.forEach(o=>{arTmpC[o.n]={at:Date.now()-15e5,busy:false}})}   // błąd: spróbujemy znów za ok. 5 min
+    arRedraw()},400)}
 function arWxSvg(){const P=arWxGet();if(!P)return "";const CX=AR_CX,CY=AR_CY,r1=AR_RB-2,r2=AR_CO+8,
     pt=(a,r)=>(CX+r*Math.sin(a)).toFixed(1)+' '+(CY-r*Math.cos(a)).toFixed(1);
   return '<defs><filter id="arwxb" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7"/></filter></defs><g filter="url(#arwxb)">'
@@ -331,14 +342,20 @@ function arWxSvg(){const P=arWxGet();if(!P)return "";const CX=AR_CX,CY=AR_CY,r1=
       return '<path class="arwxs '+q.cat[0]+'" style="opacity:'+(q.cat[1]*.55).toFixed(2)+'" d="M'+pt(a0,r1)+'A'+r1+' '+r1+' 0 0 1 '+pt(a1,r1)+'L'+pt(a1,r2)+'A'+r2+' '+r2+' 0 0 0 '+pt(a0,r2)+'Z"/>'}).join("")+'</g>'}
 function arWxLeg(){if(!arWxOn())return "";const P=arWxGet();
   if(!P)return '<span class="note">'+(arWx.err?'Nie udało się pobrać pogody — spróbuj za chwilę.':'Pobieram pogodę…')+'</span>';
-  const has=new Set(P.map(q=>q.cat[0])),c=P[0],strong=Math.max(...P.map(q=>q.w))>=40;
-  return AR_WXC.filter(([k])=>has.has(k)).map(([k,t])=>'<i class="hc wx '+k+'"></i> '+t).join(" ")
-    +'<span class="arwxw">'+uiIcon("wind")+' wiatr '+Math.round(c.w)+' km/h z kier. '+AR_DIR[Math.round(c.wd/45)%8]+(strong?' · <b>miejscami silny</b>':'')+'</span>'}
+  const c=P[0],strong=Math.max(...P.map(q=>q.w))>=40,nm=(AR_WXC.find(([k])=>k===c.cat[0])||[,""])[1];
+  return '<span>u Ciebie: <b>'+nm+'</b>'+(arTmpHome()?' ·'+arTmpHome():'')+'</span><span class="arwxw">'+uiIcon("wind")+' '+Math.round(c.w)+' km/h z kier. '+AR_DIR[Math.round(c.wd/45)%8]+(strong?' · <b>miejscami silny</b>':'')+'</span>'}
+// v343: pasek-gradient warunków (słonecznie → … → burza) zamiast kropek: kreski = 16 kierunków wokół, znacznik = u Ciebie (płynnie z suwakiem)
+const arWxPos=q=>{const i=AR_WXC.findIndex(([k])=>k===q.cat[0]);return ((Math.max(0,i)+(q.cat[0]==="rain"?.15+.7*Math.min(1,(q.cat[1]-.35)/.65):.5))/AR_WXC.length*100).toFixed(1)};
+function arWxGr(){const g=$("arwxgr");if(!g)return;const P=arWxOn()?arWxGet():null;if(!P){g.innerHTML="";return}
+  const tk=P.slice(1).map(q=>'<i style="left:'+arWxPos(q)+'%"></i>').join(""),mk=g.querySelector(".arwxm");
+  if(mk){mk.style.left=arWxPos(P[0])+"%";g.querySelector(".arwxtk").innerHTML=tk;return}   // ten sam znacznik — przesuwa się płynnie (CSS transition)
+  g.innerHTML='<div class="arwxgb"><div class="arwxtk">'+tk+'</div><b class="arwxm" style="left:'+arWxPos(P[0])+'%" title="u Ciebie"></b></div>'
+    +'<div class="arslt"><span>słonecznie</span><span>pochmurno</span><span>deszcz</span><span>burza</span></div>'}
 const arWxSl=()=>{if(!arWxOn())return "";const h=arWxH();
   return '<div class="arslh arsl2"><span>Pogoda</span><b id="arwxhv">'+arWxHTxt(h)+'</b></div><input id="arwxh" class="arrng" type="range" min="0" max="48" step="any" value="'+h+'" style="--p:'+arSlP(h,0,48)+';--tk:12.5%" aria-label="Pogoda za ile godzin (do 48)">'
     +'<div class="arslt"><span>teraz</span><span>+24 h</span><span>+48 h</span></div>'};
 // v342: przełącznik „Pogoda” pod radarem, po lewej w wierszu legendy pogody — jak pozycje legendy (wyłączony przekreślony)
-const arWxBar=()=>{const on=arWxOn();return '<div class="hleg arleg arwxleg"><button type="button" class="arlg'+(on?'':' off')+'" data-hm="wxon" aria-pressed="'+on+'">'+uiIcon("cloudsun")+' Pogoda</button><span id="arwxleg">'+arWxLeg()+'</span></div>'};
+const arWxBar=()=>{const on=arWxOn();return '<div class="hleg arleg arwxleg"><button type="button" class="arlg'+(on?'':' off')+'" data-hm="wxon" aria-pressed="'+on+'">'+uiIcon("cloudsun")+' Pogoda</button><span id="arwxleg">'+arWxLeg()+'</span></div><div id="arwxgr" class="arwxgr"></div>'};
 function areaSvg(a){return '<svg class="arsvg'+(typeof isKingReal==="function"&&isKingReal()?' kg':'')+(arView.s>1.01?' zm':'')+'" viewBox="0 0 '+AR_W+' '+AR_H+'" role="img" aria-label="Radar okolicy: '+esc(a.name||"")+', '+areaKmTxt(a.km)+' — przesuń palcem, przybliż dwoma palcami">'+'<g class="arzm" transform="'+arZmT(arView.s)+'"><g class="arwx">'+arWxSvg()+'</g>'+arCompass()+'<g class="arin">'+areaSvgIn(a)+'</g></g></svg>'}
 function areaSvgIn(a){const V={z:arView.z||1,x:arView.x,y:arView.y},S=a.km||300,CX=AR_CX,CY=AR_CY,f=AR_R0/S*V.z,G={},far={},B=[],K=typeof isKingReal==="function"&&isKingReal();
   const OX=CX+V.x,OY=CY+V.y,R0=AR_R0*V.z,homeIn=Math.hypot(V.x,V.y)<AR_RB-14;   // OX/OY — gdzie na radarze jest środek okolicy po przesunięciu
@@ -347,10 +364,10 @@ function areaSvgIn(a){const V={z:arView.z||1,x:arView.x,y:arView.y},S=a.km||300,
   const inR=b=>[[b.x,b.y],[b.x+b.w,b.y],[b.x,b.y+b.h],[b.x+b.w,b.y+b.h]].every(([x,y])=>Math.hypot(x-CX,y-CY)<AR_RB-2);
   // napis obok punktu: próbujemy prawo, lewo, nad, pod — pierwszy wolny i mieszczący się w radarze
   // v335: napisy i kropki miejscowości w stałej wielkości na ekranie — przy przybliżeniu nie rosną, więc mieści się ich więcej
-  const Z=Math.max(1,arView.s),label=(x,y,t,fs,cls)=>{fs/=Z;const w=t.length*fs*.56,h=fs*1.15,o=5/Z;
+  const Z=Math.max(1,arView.s),label=(x,y,t,fs,cls,suf)=>{fs/=Z;suf=suf||"";const w=(t+suf).length*fs*.56,h=fs*1.15,o=5/Z;
     for(const [lx,ly,an,bx] of [[x+o,y+fs*.35,"start",x+o],[x-o,y+fs*.35,"end",x-o-w],[x,y-6/Z,"middle",x-w/2],[x,y+fs+4/Z,"middle",x-w/2]]){
       const b={x:bx-1/Z,y:ly-fs*.85,w:w+2/Z,h};if(hit(b)||!inR(b))continue;B.push(b);
-      return '<text class="'+cls+'" x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'" text-anchor="'+an+'" font-size="'+fs.toFixed(2)+'"'+(Z>1.01?' style="stroke-width:'+(3/Z).toFixed(2)+'px"':'')+'>'+esc(t)+'</text>'}
+      return '<text class="'+cls+'" x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'" text-anchor="'+an+'" font-size="'+fs.toFixed(2)+'"'+(Z>1.01?' style="stroke-width:'+(3/Z).toFixed(2)+'px"':'')+'>'+esc(t)+(suf?'<tspan class="artmp">'+esc(suf)+'</tspan>':'')+'</text>'}
     return null};
   // punkty: zaproszenia, sygnały, imprezy (kropki w tym samym miejscu łączą się w jedną większą)
   const PTS=areaPts().filter(p=>!arHide.has(p.k));
@@ -372,11 +389,13 @@ function areaSvgIn(a){const V={z:arView.z||1,x:arView.x,y:arView.y},S=a.km||300,
     const RK={city:0,town:1,village:2,suburb:3,hamlet:4},rk=p=>RK[p.type]!=null?RK[p.type]:2;   // najpierw miasta, potem wsie i osady — ile się zmieści
     RT.places.slice().sort((u,v)=>rk(u)-rk(v)).forEach(p=>{const n=String(p.name||"");if(!n||seen.has(n.toLowerCase()))return;const q=xy(p.lat,p.lon);if(Math.hypot(q.x,q.y)>AR_RM-3)return;
       const x=CX+q.x,y=CY+q.y,l=label(x,y,arCut(n,16),rk(p)<2?11.5:10.5,"artn rt");if(!l)return;seen.add(n.toLowerCase());rt+='<circle class="artd rt" cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+((rk(p)<2?2.4:1.8)/Z).toFixed(2)+'"/>'+l})}
-  const [lo,hi]=arRng(),pU=arPopUp(lo),pL=arPopLow(hi),T=arTownsGet();let tw="";
+  const [lo,hi]=arRng(),pU=arPopUp(lo),pL=arPopLow(hi),T=arTownsGet();let tw="",nT=0;const TM=[];
   if(T)T.map(t=>Object.assign({t},xy(t[1],t[2]))).filter(o=>{const p=o.t[4];return p<pU&&p>=pL&&o.d>1.5&&Math.hypot(o.x,o.y)<AR_RM-3&&!seen.has(o.t[0].toLowerCase())})
     .sort((u,v)=>(v.t[5]-u.t[5])||(v.t[4]-u.t[4])).forEach(o=>{const x=CX+o.x,y=CY+o.y,big=o.t[3]===2,out=!!a.km&&o.d>S;
-      const t=label(x,y,arCut(o.t[0],16),big?12:11,"artn"+(big?" big":"")+(out?" out":""));if(!t)return;seen.add(o.t[0].toLowerCase());
+      const main=(o.t[5]||big)&&nT<10,tp=main?arTmpOf(o.t[0]):"";   // temperatura przy 10 największych głównych na radarze
+      const t=label(x,y,arCut(o.t[0],16),big?12:11,"artn"+(big?" big":"")+(out?" out":""),tp);if(!t)return;seen.add(o.t[0].toLowerCase());if(main){nT++;TM.push({n:o.t[0],lat:o.t[1],lon:o.t[2]})}
       tw+='<circle class="artd'+(out?' out':'')+'" cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+((big?2.6:2)/Z).toFixed(2)+'"/>'+t});
+  if(TM.length&&arWxOn())arTmpLoad(TM);
   // spoza radaru: odnośniki na boki — po 4 z każdej strony, najbliższe
   let co="";const F=Object.values(far).sort((u,v)=>u.d-v.d).slice(0,8);
   [1,-1].forEach(sd=>{const L=F.filter(o=>(o.x>=0?1:-1)===sd).slice(0,4).sort((u,v)=>u.y-v.y);let prev=-1e9;
@@ -398,7 +417,7 @@ function areaSvgIn(a){const V={z:arView.z||1,x:arView.x,y:arView.y},S=a.km||300,
    +(ringT&&Math.hypot(V.x,V.y-R0/2)<AR_RB-12?'<text class="arrk" x="'+(OX+3)+'" y="'+(OY-R0/2-3)+'">'+ringT+'</text>':'')
    +tw+rt+co+dots+lab
    +(homeIn?'<g class="arpin" transform="translate('+(OX-12)+' '+(OY-22)+')"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></g>'
-   +'<text class="arhome" x="'+OX+'" y="'+(OY+16)+'" text-anchor="middle" font-size="'+hfs+'">'+esc(hn)+'</text>':'')}
+   +'<text class="arhome" x="'+OX+'" y="'+(OY+16)+'" text-anchor="middle" font-size="'+hfs+'">'+esc(hn)+(arTmpHome()?'<tspan class="artmp">'+arTmpHome()+'</tspan>':'')+'</text>':'')}
 // licznik pod radarem
 const arCntInner=(k,c)=>'<b>'+(k?'W promieniu '+Math.round(k)+' km':'Cała Polska')+'</b><span>'+areaCntTxt(c)+'</span>'+(k&&c.out?'<small>dalej: '+c.out+'</small>':'');
 // „Najbliżej”: sygnał, zaproszenie, impreza — odległość od środka okolicy i kierunek (strzałka obrócona jak na radarze)
@@ -413,7 +432,7 @@ function areaNearHtml(a){const c={lat:a.lat,lon:a.lon},best={};
   return '<div class="bsgrp">Najbliżej</div><div class="arnear">'+tile("s","Sygnał")+tile("w","Zaproszenie")+tile("e","Impreza")+'</div>'}
 // odrysowanie samego radaru i licznika (suwaki, dociągnięte miejscowości) — bez przebudowy całego okna
 function arRedraw(){const p=$("homesheet");if(!p||p.classList.contains("hide"))return;const s=p.querySelector(".arsvg");if(!s)return;
-  const a=Object.assign(areaCur(),arLiveKm!=null?{km:arLiveKm}:{});const zm=s.querySelector(".arzm");if(zm)zm.setAttribute("transform",arZmT(arView.s));s.classList.toggle("zm",arView.s>1.01);const ia=s.querySelector(".arin");if(ia)ia.innerHTML=areaSvgIn(a);const wx=s.querySelector(".arwx");if(wx)wx.innerHTML=arWxSvg();const wl=$("arwxleg");if(wl)wl.innerHTML=arWxLeg();const c=p.querySelector(".arctr[data-hm=center]");if(c)c.classList.toggle("off",!arViewMoved());   // zawsze widoczny; przygaszony, gdy radar jest w środku
+  const a=Object.assign(areaCur(),arLiveKm!=null?{km:arLiveKm}:{});const zm=s.querySelector(".arzm");if(zm)zm.setAttribute("transform",arZmT(arView.s));s.classList.toggle("zm",arView.s>1.01);const ia=s.querySelector(".arin");if(ia)ia.innerHTML=areaSvgIn(a);const wx=s.querySelector(".arwx");if(wx)wx.innerHTML=arWxSvg();const wl=$("arwxleg");if(wl)wl.innerHTML=arWxLeg();arWxGr();const c=p.querySelector(".arctr[data-hm=center]");if(c)c.classList.toggle("off",!arViewMoved());   // zawsze widoczny; przygaszony, gdy radar jest w środku
   const t=p.querySelector(".arcnt");if(t)t.innerHTML=arCntInner(a.km,areaCount(a))}
 // plakietka w nagłówku: „📍 Pułtusk · 20 km”, w podglądzie „👁 Serock · 20 km ✕”
 function renderAreaChip(){const el=$("mearea");if(!el)return;const a=areaCur();
@@ -448,7 +467,7 @@ function renderHome(){arHeadOn();
    +(hmMode==="peek"?srch:'')
    +'<div class="note" style="margin-top:6px">Podgląd pokazuje, co dzieje się w innej okolicy. Nie zmienia powiadomień i kończy się po ponownym wejściu do aplikacji. '+uiIcon("star")+' dodaje miejscowość do ulubionych (do 10).</div>'
    +'</div></div>';
-  p.classList.remove("hide");if(arRoute)arRoutePlacesUi();arWxLoad(areaCur());
+  p.classList.remove("hide");if(arRoute)arRoutePlacesUi();arWxGr();arWxLoad(areaCur());
 }
 function closeHome(){const p=$("homesheet");p.classList.add("hide");p.innerHTML="";areaChanged();if(gearOpen&&(gearView==="main"||gearView==="nick"))renderGear()}
 async function homeFind(){const q=$("homeq")?$("homeq").value.trim():"";if(q.length<2){homeMsg="Wpisz nazwę miejscowości.";renderHome();return}

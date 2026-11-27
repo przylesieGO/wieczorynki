@@ -1769,14 +1769,22 @@ html[data-theme=dark] .wdeck{filter:drop-shadow(0 7px 5px rgba(0,0,0,.85)) drop-
 .arrng:focus-visible::-moz-range-thumb{box-shadow:0 0 0 7px color-mix(in srgb,var(--g2) 30%,transparent)}
 /* v340: 🌦 mapa cieplna pogody wokół radaru — rozmyte klinki pod pierścieniem kompasu; te same kolory w legendzie */
 .arsvg .arwxs{stroke:none}
-.arwxs.sun,.hc.wx.sun{fill:#ffcc00;background:#ffcc00}.arwxs.part,.hc.wx.part{fill:#ffe08a;background:#ffe08a}
-.arwxs.cloud,.hc.wx.cloud{fill:#8e8e93;background:#8e8e93}.arwxs.fog,.hc.wx.fog{fill:#c7c7cc;background:#c7c7cc}
-.arwxs.rain,.hc.wx.rain{fill:#0a84ff;background:#0a84ff}.arwxs.snow,.hc.wx.snow{fill:#d6ecff;background:#d6ecff}
-.arwxs.storm,.hc.wx.storm{fill:#bf5af2;background:#bf5af2}
+.arwxs.sun,.hc.awx.sun{fill:#ffcc00;background:#ffcc00}.arwxs.part,.hc.awx.part{fill:#ffe08a;background:#ffe08a}
+.arwxs.cloud,.hc.awx.cloud{fill:#8e8e93;background:#8e8e93}.arwxs.fog,.hc.awx.fog{fill:#c7c7cc;background:#c7c7cc}
+.arwxs.rain,.hc.awx.rain{fill:#0a84ff;background:#0a84ff}.arwxs.snow,.hc.awx.snow{fill:#d6ecff;background:#d6ecff}
+.arwxs.storm,.hc.awx.storm{fill:#bf5af2;background:#bf5af2}
 .arwxleg .arlg .ui-i{width:14px;height:14px}.arwxleg>span{display:inline-flex;flex-wrap:wrap;align-items:center;gap:5px;margin-left:10px}   /* v342: „Pogoda” pod radarem, po lewej */
 .arwxleg{margin-top:0}.arwxleg .arwxw{display:inline-flex;align-items:center;gap:4px;margin-left:8px}.arwxleg .arwxw .ui-i{width:13px;height:13px}
 /* v340: legenda radaru do odklikania (zaproszenia / sygnały / imprezy) */
 .arleg .arlg{display:inline-flex;align-items:center;gap:5px;border:0;background:none;color:inherit;font:inherit;padding:4px 0;cursor:pointer}.arleg .arlg+.arlg{margin-left:10px}
 .arleg .arlg i.hc{margin-left:0}.arleg .arlg.off{opacity:.4;text-decoration:line-through}
 .hleg i.ev{border:0;margin-top:0;border-radius:2px}.arleg i.hc.ev{border-radius:50%}   /* v341: kropka „imprezy” w legendzie nie dziedziczy ramki i odstępu karty imprezy (.ev) — wyrównana z pozostałymi */
+.arsvg .artmp{fill:#ff9f0a;font-weight:700}   /* v343: 🌡 temperatura przy miejscowościach (wg suwaka pogody) */
+/* v343: pasek-gradient pogody — słonecznie, częściowe, pochmurno, mgła, deszcz, śnieg, burza (te same kolory co pierścień) */
+.arwxgr{margin:-4px 0 10px}.arwxgr:empty{display:none}
+.arwxgb{position:relative;height:10px;margin:8px 0 4px;border-radius:5px;background:linear-gradient(90deg,#ffcc00 0%,#ffe08a 21%,#8e8e93 36%,#c7c7cc 50%,#0a84ff 64%,#d6ecff 79%,#bf5af2 100%);opacity:.85}
+.arwxtk i{position:absolute;top:-6px;width:2px;height:5px;margin-left:-1px;border-radius:1px;background:var(--mut);opacity:.6}
+.arwxm{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--card);border:3px solid var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.35);transition:left .35s ease}
+.arwxgr .arslt{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+@media (prefers-reduced-motion:reduce){.arwxm{transition:none}}
 
