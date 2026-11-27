@@ -444,7 +444,8 @@ function fltStackHtml(){
   if(!r.length)return '<div class="note">'+(q?'Nic nie znaleziono.':k==="where"?'Brak miejsc w '+(fltScope==="ev"?'imprezach':'zaproszeniach')+'.':k==="grp"?'Brak grup.':'Brak osób.')+'</div>';
   const sel=mu&&flt[k].length?'<div class="fltchips fselr">'+flt[k].map(u=>'<button type="button" class="fac" data-fk="'+k+'" data-fv="'+esc(u)+'">'+esc(nicks[u]||"osoba")+' ✕</button>').join("")+'</div>':'';
   const L1=x=>(x.t||"").trim().charAt(0).toLocaleUpperCase("pl"),az=!q&&r.length>12?[...new Set(r.map(L1).filter(c=>/\p{L}/u.test(c)))].sort((a,b)=>a.localeCompare(b,"pl")):[];   // pasek A–Z: przy długiej liście (osoby, miejsca, grupy) i bez wpisanego tekstu
-  return sel
+  const clr=fltOn(k)?'<div class="fclr"><button type="button" class="lnk" data-fk="clearsub">Wyczyść'+(mu?' ('+flt[k].length+')':'')+'</button></div>':'';   // pod kciukiem: tuż nad paskiem A–Z, nie w nagłówku
+  return sel+clr
    +'<div class="fulwrap">'+(az.length?'<div class="faz" id="faz" aria-hidden="true" data-all="'+esc(az.join(""))+'"></div>':'')+'<div class="fulist'+(az.length?' az':'')+'">'+r.map(x=>{const on=mu?flt[k].includes(x.v):flt[k]===x.v;
      return '<button type="button" class="fusr'+(on?' on':'')+'" data-fl="'+esc(L1(x))+'" data-fk="'+k+'" data-fv="'+esc(x.v)+'"><span class="fuic'+(x.ico?' g':'')+'">'+(x.fav?uiIcon("starf"):x.ico?uiIcon(x.ico):'')+'</span><span class="fun">'+(x.free||x.user?esc(x.t):fltHl(x.t,q))+(x.user&&typeof demoTag==="function"?demoTag(x.v):'')+(x.bdg||'')+'</span>'+(x.ty?'<small>'+x.ty+'</small>':'')+(x.cnt!=null?'<b class="fucnt'+(x.cnt?'':' z')+'">'+x.cnt+'</b>':'')+(on?'<span class="fuck">'+uiIcon("check")+'</span>':'')+'</button>'}).join("")+'</div>'
    +'</div>';
@@ -490,7 +491,7 @@ function fltDraw(){
   if(fltScope==="ev"){const ne=evs.filter(e=>!evPast(e)&&evMatch(e)).length;$("fltok").textContent=fltActiveFor("ev")?"Pokaż "+ne+" "+plf(ne,["imprezę","imprezy","imprez"]):"Gotowe";return}
   const n=wants.filter(wUpcoming).filter(w=>typeof wAreaOk!=="function"||wAreaOk(w)).filter(w=>typeof wActShow!=="function"||wActShow(w)).filter(fltOk).length,na=flt.arch&&fltActive()?withOldJoins(()=>archList(wants).filter(fltOk).length):0;$("fltok").textContent=fltActive()?"Pokaż "+n+" "+(n===1?"zaproszenie":n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"zaproszenia":"zaproszeń")+(flt.arch?" + "+na+" w archiwum":""):"Gotowe";
 }
-function fltRefresh(){if($("fltok"))fltDraw();renderWants();if(typeof renderEvents==="function"&&curTab===3)renderEvents()}
+function fltRefresh(){if($("fltok")||$("fltstk"))fltDraw();renderWants();if(typeof renderEvents==="function"&&curTab===3)renderEvents()}
 // okno: widok główny (bomble w rzędach przewijanych w bok) albo podekran „Gdzie” / „Osoba” z polem wpisywania na dole (wyniki rosną w górę)
 function fltMainHtml(){
   const sec=(k,t)=>'<div class="fsec"><div class="bsgrp">'+t+'</div><div class="fchips" id="flt_'+k+'"></div></div>';
@@ -506,7 +507,7 @@ function fltMainHtml(){
 }
 function fltSubHtml(){
   const T=fltSub==="where"?["Gdzie","Miasto, dzielnica, miejsce…"]:fltSub==="grp"?["Grupa","Nazwa grupy…"]:fltSub==="to"?["Zaproszeni","Nick osoby…"]:fltSub==="by"?["Prywatne od","Nick osoby…"]:["Osoba","Nick…"];
-  return '<div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="back">Filtry</button><b>'+T[0]+'</b><button type="button" class="lnk" id="fltclr" data-fk="clearsub" style="color:var(--bad);text-align:right;min-width:64px">Wyczyść</button></div>'
+  return '<div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="back">Filtry</button><b>'+T[0]+'</b><span style="min-width:64px"></span></div>'
    +'<div class="fstk" id="fltstk"></div><input class="bsq srch" id="fltq" type="search" placeholder="'+T[1]+'" autocomplete="off" value="'+esc(fltQ)+'">'
    +'<button type="button" class="b big" data-fk="back">Gotowe</button>';
 }
