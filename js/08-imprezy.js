@@ -202,7 +202,7 @@ function actHidHtml(keys,what){const K=[...new Set(keys.map(k=>k||"bike"))];if(!
 function areaReveal(lat,lon,name){if(lat==null||lon==null||inArea(lat,lon))return "";areaPeek={name:name||"miejsce",lat:+lat,lon:+lon};areaChanged();return "Pokazuję okolicę: "+areaPeek.name+" (podgląd — ✕ na plakietce wraca)."}
 // punkty do obrazka i liczników: zaproszenia (nadchodzące, z miejscem), sygnały z dziś, imprezy nadchodzące
 function areaPts(){const P=[],now=Date.now();
-  (wants||[]).forEach(w=>{if(w.place_lat==null||!w.starts_at||Date.parse(w.starts_at)<now-3*36e5)return;P.push({k:"w",id:w.id,lat:+w.place_lat,lon:+w.place_lon,nm:[w.place,w.place_city].filter(Boolean).join(" · "),lab:arLab(w.place_city||w.place),t:(w.place_city||w.place||"Zaproszenie")+" · "+new Date(w.starts_at).toLocaleString("pl-PL",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit"})})});
+  (wants||[]).forEach(w=>{if(w.place_lat==null||!w.starts_at||Date.parse(w.starts_at)<now-3*36e5)return;P.push({k:"w",id:w.id,lat:+w.place_lat,lon:+w.place_lon,nm:[w.place,w.place_city].filter(Boolean).join(" · "),lab:arLab(w.place_city||w.place),t:(w.visibility==="private"?"🔒 ":"")+(w.place_city||w.place||"Zaproszenie")+" · "+new Date(w.starts_at).toLocaleString("pl-PL",{weekday:"short",day:"numeric",month:"numeric",hour:"2-digit",minute:"2-digit"})})});
   try{sigListAll().forEach(x=>{if(x.lat!=null)P.push({k:"s",id:x.user_id,lat:+x.lat,lon:+x.lon,t:(x.user_id===uid?"Ty":nickOf(x.user_id))+" — ma ochotę"+(typeof sigA==="function"?" "+sigA(x.activity)[2]:"")})})}catch(e){}
   (evs||[]).forEach(e=>{if(evHasGeo(e)&&!evPast(e))P.push({k:"e",id:e.id,lat:+e.lat,lon:+e.lon,nm:e.place||"",lab:arLab(e.place),t:(e.name||e.place||"Impreza")+(e.date_from?" · "+new Date(e.date_from+"T12:00").toLocaleDateString("pl-PL",{day:"numeric",month:"short"}):"")})});
   return P}
@@ -437,7 +437,7 @@ function areaNearHtml(a){const c={lat:a.lat,lon:a.lon},best={};
     if(!b)return '<div class="arnr off"><span class="arna '+k+'">'+ar+'</span><div><small>'+t+'</small><b>brak</b><span>na razie nic</span></div></div>';
     const deg=Math.round(arBear(c,b.p)),here=b.d<1.5;
     return '<button type="button" class="arnr" data-hm="nrgo" data-k="'+k+'" data-id="'+esc(String(b.p.id||""))+'" data-t="'+esc(b.p.t||"")+'" data-lat="'+b.p.lat.toFixed(5)+'" data-lon="'+b.p.lon.toFixed(5)+'" aria-label="'+t+' — pokaż na radarze"><span class="arna '+k+'"'+(here?'':' style="transform:rotate('+deg+'deg)"')+'>'+(here?uiIcon("pin"):ar)+'</span><div><small>'+t+'</small><b>'+(here?'tutaj':arKmT(b.d))+'</b>'
-      +'<span>'+(here?esc(a.name||""):AR_DIR[Math.round(deg/45)%8]+(b.p.lab&&k!=="s"?' · '+esc(arCut(b.p.lab,14)):''))+'</span></div></button>'};
+      +'<span>'+(here?esc(a.name||""):b.d>(a.km||300)?AR_DIR[Math.round(deg/45)%8]+' · poza okolicą':AR_DIR[Math.round(deg/45)%8]+(b.p.lab&&k!=="s"?' · '+esc(arCut(b.p.lab,14)):''))+'</span></div></button>'};   // v364: najbliższe ze wszystkich widocznych (w tym prywatne, do których jesteś zaproszony); dalej niż promień → „poza okolicą"
   // v349: las i woda z siatki terenu (js/25) — kafelki jak wyżej, bez nazwy (OSM nie zawsze ją ma)
   const tt=(k,t,ic)=>{const q=typeof terNear==="function"?terNear(a,k):null;
     if(!q)return '<div class="arnr off"><span class="arna t'+k+'">'+uiIcon(ic)+'</span><div><small>'+t+'</small><b>daleko</b><span>ponad 60 km</span></div></div>';
