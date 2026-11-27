@@ -1637,3 +1637,11 @@ html[data-theme=dark] .arte,html[data-theme=dark] .arco.e .arcon{fill:#8fa8ff}ht
 @keyframes fabnudge{0%,86%,100%{transform:translateX(0)}90%{transform:translateX(-7px)}94%{transform:translateX(3px)}97%{transform:translateX(-2px)}}
 @media (prefers-reduced-motion:reduce){.fabb[data-fk=undo]{animation:none}}
 .archip:not(.peek) .ui-i{filter:drop-shadow(0 0 3px color-mix(in srgb,var(--acc) 75%,transparent))}   /* v316: radar w zielonym neonie */
+/* v317: Cofnij — subtelna żółta strzałka ze smugą (podpowiedź przesunięcia kciukiem w dół i w górę) */
+.fabb[data-fk=undo]{position:relative;animation:none}
+.fabb[data-fk=undo]:not([data-ok])::after{content:"";position:absolute;right:11px;top:50%;width:9px;height:22px;margin-top:-11px;pointer-events:none;opacity:0;background:linear-gradient(to top,rgba(255,204,0,0),rgba(255,204,0,.55)) center/2px 14px no-repeat;animation:fabswipe 3.2s ease-in-out 1.2s infinite}
+.fabb[data-fk=undo]:not([data-ok])::before{content:"";position:absolute;right:11px;top:50%;width:6px;height:6px;margin:-3px 0 0 1px;pointer-events:none;opacity:0;border-right:2px solid #ffcc00;border-bottom:2px solid #ffcc00;transform:rotate(45deg);animation:fabtip 3.2s ease-in-out 1.2s infinite}
+@keyframes fabswipe{0%,100%{opacity:0;transform:translateY(-9px)}12%{opacity:1}38%{opacity:1;transform:translateY(7px)}50%{opacity:0;transform:translateY(7px)}62%{opacity:0;transform:translateY(7px) scaleY(-1)}70%{opacity:1}88%{opacity:1;transform:translateY(-9px) scaleY(-1)}96%{opacity:0;transform:translateY(-9px) scaleY(-1)}}
+@keyframes fabtip{0%,100%{opacity:0;transform:translateY(-4px) rotate(45deg)}12%{opacity:1}38%{opacity:1;transform:translateY(12px) rotate(45deg)}50%{opacity:0;transform:translateY(12px) rotate(45deg)}62%{opacity:0;transform:translateY(-2px) rotate(-135deg)}70%{opacity:1}88%{opacity:1;transform:translateY(-14px) rotate(-135deg)}96%{opacity:0;transform:translateY(-14px) rotate(-135deg)}}
+.fabb[data-fk=undo]:active::before,.fabb[data-fk=undo]:active::after{animation:none;opacity:0}
+@media (prefers-reduced-motion:reduce){.fabb[data-fk=undo]::before,.fabb[data-fk=undo]::after{animation:none;opacity:0}}
