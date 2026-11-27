@@ -207,21 +207,27 @@ function areaPts(){const P=[],now=Date.now();
 function areaCount(a){const c={w:0,s:0,e:0,out:0};areaPts().forEach(p=>{if(areaIn(a,p.lat,p.lon))c[p.k]++;else c.out++});return c}
 const areaCntTxt=c=>[c.w?c.w+" "+plf(c.w,["zaproszenie","zaproszenia","zaproszeń"]):"",c.s?c.s+" "+plf(c.s,["sygnał","sygnały","sygnałów"]):"",c.e?c.e+" "+plf(c.e,["impreza","imprezy","imprez"]):""].filter(Boolean).join(" · ")||"na razie nic";
 // 🛰 v308: RADAR okolicy — krąg obszaru zawsze tej samej wielkości, suwak „przybliża/oddala” punkty (na żywo).
-// Kierunki i odległości prawdziwe (północ u góry). Na radarze: miejscowości z OpenStreetMap (ile — suwak gęstości),
+// Kierunki i odległości prawdziwe (północ u góry). Na radarze: miejscowości z OpenStreetMap (które — suwak wielkości z dwoma uchwytami),
 // miejscowości z imprezami (zawsze podpisane), a rzeczy spoza radaru przy brzegu z odnośnikiem: nazwa · km.
 const AR_W=430,AR_H=290,AR_CX=215,AR_CY=145,AR_R0=75,AR_RB=105,AR_RM=101;   // R0 = promień okolicy, RB = brzeg radaru, RM = do niego dociągamy dalekie punkty
 const arSlP=(v,mn,mx)=>(((+v)-mn)/(mx-mn)).toFixed(4);   // 0–1: pozycja suwaka radaru (wypełnienie skali)
-const AR_DENS=[0,3,6,10,15,21,28,36];   // suwak gęstości → ile mniejszych miejscowości dokładamy do stałych (stałe — zawsze)
+// v335: suwak miejscowości z dwoma uchwytami — klasy wielkości (tys. mieszkańców): 0 = od 100 tys. … 6 = do 2 tys.; lewy uchwyt chowa największe, prawy dokłada mniejsze
+const AR_CLS=[100,50,20,10,5,2,0],AR_CLN=AR_CLS.length-1,AR_CLT=["100+","50","20","10","5","2","wsie"];
 const AR_DIR=["płn.","płn.-wsch.","wsch.","płd.-wsch.","płd.","płd.-zach.","zach.","płn.-zach."];
 const arLab=t=>{t=String(t||"").split(/[,·(]/)[0].trim();return t.length>2?t:""};
 const arCut=(t,n)=>t.length>n?t.slice(0,n-1)+"…":t;
 let arLiveKm=null,arRaf=0;
-const arDens=()=>{let v=2;try{const x=localStorage.getItem("arDens");if(x!=null&&x!==""&&isFinite(+x))v=Math.max(0,Math.min(AR_DENS.length-1,Math.round(+x)))}catch(e){}return v};
-const arDensTxt=d=>AR_DENS[d]?"główne + "+AR_DENS[d]:"tylko główne";
+const arCls=p=>{for(let i=0;i<AR_CLN;i++)if(p>=AR_CLS[i])return i;return AR_CLN};
+const arRng=()=>{let r=[0,4];try{const x=localStorage.getItem("arRng"),d=localStorage.getItem("arDens");   // dawny suwak gęstości (arDens 0–7) → zbliżony przedział
+    if(x){const v=x.split("-").map(Number);if(v.length===2&&v.every(isFinite))r=v}else if(d!=null&&d!==""&&isFinite(+d))r=[0,+d<1?3:+d<4?4:+d<6?5:6]}catch(e){}
+  r=r.map(n=>Math.max(0,Math.min(AR_CLN,Math.round(n))));return r[0]>r[1]?[r[1],r[0]]:r};
+const arRngTxt=([lo,hi])=>lo===0&&hi===AR_CLN?"wszystkie":hi===AR_CLN?"do "+AR_CLS[lo-1]+" tys.":lo===0?"od "+AR_CLS[hi]+" tys.":"od "+AR_CLS[hi]+" do "+AR_CLS[lo-1]+" tys.";
+const arAutoS=()=>1+(AR_SMAX-1)*arRng()[0]/AR_CLN;   // „sam się przybliża”: im mniejsze największe miejscowości (lewy uchwyt w prawo), tym bliżej
+const arHomeView=()=>({z:1,x:0,y:0,s:arAutoS()});
 const arBear=(a,b)=>{const y=Math.sin(rad(b.lon-a.lon))*Math.cos(rad(b.lat)),x=Math.cos(rad(a.lat))*Math.sin(rad(b.lat))-Math.sin(rad(a.lat))*Math.cos(rad(b.lat))*Math.cos(rad(b.lon-a.lon));return (Math.atan2(y,x)*180/Math.PI+360)%360};
 const arKmT=d=>(d<10?d.toFixed(1).replace(".",","):String(Math.round(d)))+" km";
 // miejscowości na radarze: wbudowana lista (miasta Polski + całe Mazowsze z wsiami gminnymi), „nazwa|szer.|dł.|tys. mieszkańców|stała”;
-// stała (1) = zawsze podpisana: miasta od 15 tys. i siedziby powiatów Mazowsza (plus Serock, Nasielsk); reszta wg suwaka gęstości.
+// stała (1) = pierwsza w kolejce do podpisu (miasta od 15 tys. i siedziby powiatów Mazowsza, plus Serock, Nasielsk); które klasy wielkości — wg suwaka.
 // współrzędne z OpenStreetMap (Nominatim, 2026-11-27). Bez zapytań do serwera — radar rysuje się od razu i bez internetu.
 const AR_TOWNS_RAW="Warszawa|52.232|21.007|1860|1;Radom|51.402|21.154|200|1;Płock|52.546|19.701|115|1;Siedlce|52.166|22.277|77|1;Pruszków|52.163|20.808|62|1;Legionowo|52.395|20.931|54|1;Ostrołęka|53.084|21.567|51|1;Piaseczno|52.075|21.027|50|1;Otwock|52.104|21.268|45|1;Ciechanów|52.882|20.619|43|1;Żyrardów|52.054|20.444|40|1;Mińsk Mazowiecki|52.181|21.559|41|1;Wołomin|52.347|21.242|38|1;Marki|52.325|21.105|39|1;Ząbki|52.293|21.116|41|1;Kobyłka|52.339|21.197|26|1;Sochaczew|52.23|20.238|36|1;Grodzisk Mazowiecki|52.107|20.631|32|1;Mława|53.112|20.383|30|1;Nowy Dwór Mazowiecki|52.431|20.715|28|1;Płońsk|52.623|20.371|22|1;Ostrów Mazowiecka|52.8|21.898|22|1;Józefów|52.136|21.235|21|1;Sulejówek|52.243|21.278|20|1;Wyszków|52.593|21.458|27|1;Piastów|52.181|20.842|22|1;Konstancin-Jeziorna|52.083|21.121|17|1;Łomianki|52.336|20.895|17|1;Ożarów Mazowiecki|52.208|20.794|12|1;Węgrów|52.399|22.017|12|1;Sokołów Podlaski|52.408|22.253|18|1;Gostynin|52.429|19.461|18|1;Pułtusk|52.705|21.084|19|1;Garwolin|51.897|21.615|17|1;Kozienice|51.585|21.55|17|1;Grójec|51.866|20.868|16|1;Przasnysz|53.019|20.88|17|1;Żuromin|53.067|19.908|9|1;Sierpc|52.853|19.668|18|1;Łosice|52.212|22.717|7|1;Białobrzegi|51.648|20.95|7|1;Lipsko|51.159|21.649|5|1;Zwoleń|51.356|21.584|8|1;Szydłowiec|51.224|20.858|11|1;Pionki|51.473|21.444|18|1;Przysucha|51.359|20.629|6|1;Mszczonów|51.974|20.513|6|0;Tłuszcz|52.43|21.436|8|0;Radzymin|52.418|21.181|13|0;Karczew|52.078|21.251|10|0;Góra Kalwaria|51.984|21.214|12|0;Nasielsk|52.587|20.813|7|1;Serock|52.514|21.073|4|1;Maków Mazowiecki|52.866|21.101|10|1;Różan|52.889|21.399|3|0;Gąbin|52.399|19.731|4|0;Raciąż|52.781|20.118|4|0;Drobin|52.738|19.989|3|0;Bieżuń|52.962|19.89|2|0;Glinojeck|52.819|20.286|3|0;Wyszogród|52.388|20.191|3|0;Zakroczym|52.433|20.612|3|0;Kałuszyn|52.209|21.812|6|0;Łochów|52.53|21.685|7|0;Kosów Lacki|52.596|22.147|2|0;Brok|52.699|21.86|2|0;Chorzele|53.261|20.898|3|0;Myszyniec|53.383|21.342|3|0;Tarczyn|51.98|20.834|4|0;Warka|51.785|21.183|12|0;Halinów|52.226|21.353|4|0;Zielonka|52.311|21.152|17|1;Milanówek|52.126|20.664|16|1;Brwinów|52.143|20.717|13|0;Błonie|52.195|20.617|12|0;Nowe Miasto nad Pilicą|51.617|20.58|4|0;Łaskarzew|51.789|21.592|5|0;Żelechów|51.81|21.896|4|0;Pilawa|51.96|21.527|4|0;Pomiechówek|52.472|20.734|5|0;Jabłonna|52.377|20.918|2|0;Wieliszew|52.45|20.969|2|0;Nieporęt|52.423|21.035|2|0;Pokrzywnica|52.923|21.609|1|0;Obryte|52.717|21.255|1|0;Zatory|52.606|21.184|1|0;Winnica|52.644|20.941|1|0;Gzy|52.74|20.943|1|0;Świercze|52.671|20.767|1|0;Gołymin-Ośrodek|52.809|20.873|1|0;Karniewo|52.836|20.991|1|0;Szelków|52.816|21.171|1|0;Rzewnie|52.835|21.339|1|0;Somianka|52.562|21.3|1|0;Zabrodzie|53.106|21.537|1|0;Długosiodło|52.76|21.593|1|0;Rząśnik|52.713|21.368|1|0;Joniec|52.602|20.58|1|0;Czosnów|52.391|20.734|1|0;Naruszewo|52.527|20.357|1|0;Baboszewo|52.681|20.258|1|0;Krasne|52.923|20.967|1|0;Opinogóra Górna|52.904|20.714|1|0;Sońsk|52.781|20.696|1|0;Sochocin|52.69|20.471|1|0;Nowe Miasto|52.656|20.631|1|0;Krasnosielc|53.034|21.158|1|0;Sypniewo|53.005|21.306|1|0;Płoniawy-Bramura|52.98|21.063|1|0;Młynarze|52.532|21.366|1|0;Goworowo|52.901|21.557|1|0;Zaręby Kościelne|52.757|22.125|1|0;Wąsewo|52.873|21.674|1|0;Jadów|52.478|21.633|1|0;Strachówka|52.431|21.633|1|0;Klembów|52.406|21.332|1|0;Wierzbica|51.249|21.079|1|0;Kraków|50.062|19.937|800|1;Tarnów|50.012|20.988|105|1;Nowy Sącz|49.625|20.691|83|1;Oświęcim|50.038|19.221|37|1;Chrzanów|50.141|19.403|36|1;Olkusz|50.279|19.56|35|1;Nowy Targ|49.482|20.031|33|1;Bochnia|49.969|20.431|30|1;Gorlice|49.658|21.159|27|1;Zakopane|49.297|19.95|26|1;Wadowice|49.883|19.493|19|1;Wieliczka|49.982|20.06|24|1;Myślenice|49.835|19.938|18|1;Limanowa|49.706|20.422|15|1;Katowice|50.26|19.022|280|1;Częstochowa|50.812|19.113|210|1;Sosnowiec|50.278|19.134|190|1;Gliwice|50.294|18.666|170|1;Zabrze|50.309|18.786|155|1;Bielsko-Biała|49.822|19.045|165|1;Bytom|50.347|18.923|160|1;Rybnik|50.096|18.542|135|1;Ruda Śląska|50.286|18.875|135|1;Tychy|50.114|18.997|125|1;Dąbrowa Górnicza|50.331|19.208|115|1;Chorzów|50.298|18.954|105|1;Jaworzno|50.203|19.272|89|1;Jastrzębie-Zdrój|49.952|18.602|86|1;Żory|50.045|18.694|62|1;Siemianowice Śląskie|50.305|19.028|66|1;Będzin|50.323|19.132|55|1;Racibórz|50.092|18.22|54|1;Świętochłowice|50.291|18.92|49|1;Zawiercie|50.484|19.433|48|1;Wodzisław Śląski|50.002|18.463|47|1;Mikołów|50.169|18.904|41|1;Cieszyn|49.749|18.633|34|1;Żywiec|49.689|19.203|31|1;Lubliniec|50.669|18.683|23|1;Myszków|50.574|19.322|31|1;Wrocław|51.109|17.033|670|1;Wałbrzych|50.766|16.283|108|1;Legnica|51.208|16.16|98|1;Jelenia Góra|50.903|15.734|78|1;Lubin|51.397|16.205|70|1;Głogów|51.663|16.086|66|1;Świdnica|50.842|16.487|56|1;Bolesławiec|51.263|15.565|38|1;Oleśnica|51.21|17.38|37|1;Dzierżoniów|50.728|16.651|32|1;Kłodzko|50.439|16.655|26|1;Oława|50.943|17.296|33|1;Zgorzelec|51.148|15.008|30|1;Poznań|52.408|16.934|540|1;Kalisz|51.762|18.09|98|1;Konin|52.23|18.252|72|1;Piła|53.151|16.738|72|1;Ostrów Wielkopolski|51.65|17.817|70|1;Gniezno|52.536|17.596|67|1;Leszno|51.844|16.574|62|1;Śrem|52.089|17.016|30|1;Września|52.325|17.565|30|1;Krotoszyn|51.696|17.437|28|1;Turek|52.016|18.502|27|1;Koło|52.202|18.636|22|1;Słupca|52.287|17.871|13|0;Gdańsk|54.348|18.654|470|1;Gdynia|54.516|18.54|240|1;Słupsk|54.465|17.028|88|1;Tczew|54.087|18.8|59|1;Starogard Gdański|53.967|18.532|47|1;Wejherowo|54.603|18.248|47|1;Rumia|54.57|18.393|50|1;Sopot|54.445|18.568|35|1;Chojnice|53.695|17.561|40|1;Malbork|54.036|19.037|38|1;Kwidzyn|53.734|18.932|38|1;Lębork|54.539|17.747|35|1;Kościerzyna|54.121|17.978|23|1;Szczecin|53.43|14.551|390|1;Koszalin|54.191|16.177|105|1;Stargard|53.338|15.035|67|1;Kołobrzeg|54.176|15.576|46|1;Świnoujście|53.91|14.251|40|1;Szczecinek|53.708|16.694|40|1;Police|53.549|14.566|32|1;Wałcz|53.27|16.467|25|1;Bydgoszcz|53.122|18|330|1;Toruń|53.01|18.605|195|1;Włocławek|52.66|19.072|105|1;Grudziądz|53.488|18.756|92|1;Inowrocław|52.795|18.26|70|1;Brodnica|53.258|19.399|28|1;Świecie|53.407|18.446|26|1;Chełmno|53.349|18.424|19|1;Rypin|53.067|19.406|16|1;Lipno|52.847|19.179|14|0;Golub-Dobrzyń|53.114|19.054|12|0;Wąbrzeźno|53.28|18.947|13|0;Nakło nad Notecią|53.139|17.6|18|1;Aleksandrów Kujawski|52.877|18.694|12|0;Lublin|51.251|22.57|330|1;Zamość|50.717|23.253|61|1;Chełm|51.134|23.471|60|1;Biała Podlaska|52.034|23.119|56|1;Puławy|51.417|21.972|46|1;Świdnik|51.22|22.7|39|1;Kraśnik|50.925|22.229|34|1;Łuków|51.93|22.379|29|1;Biłgoraj|50.542|22.721|26|1;Lubartów|51.466|22.605|22|1;Tomaszów Lubelski|50.447|23.417|19|1;Międzyrzec Podlaski|51.985|22.784|17|1;Hrubieszów|50.805|23.887|17|1;Radzyń Podlaski|51.783|22.621|15|1;Ryki|51.627|21.936|9|0;Dęblin|51.562|21.865|15|1;Zielona Góra|51.938|15.505|140|1;Gorzów Wielkopolski|52.731|15.24|120|1;Żary|51.639|15.142|37|1;Nowa Sól|51.802|15.718|38|1;Żagań|51.615|15.32|25|1;Świebodzin|52.25|15.532|21|1;Międzyrzecz|52.445|15.579|18|1;Białystok|53.132|23.159|290|1;Suwałki|54.099|22.928|69|1;Łomża|53.175|22.073|62|1;Augustów|53.844|22.98|30|1;Bielsk Podlaski|52.769|23.193|25|1;Zambrów|52.986|22.241|22|1;Grajewo|53.647|22.455|22|1;Hajnówka|52.737|23.588|20|1;Sokółka|53.405|23.5|18|1;Siemiatycze|52.428|22.863|14|0;Wysokie Mazowieckie|52.915|22.513|9|0;Kolno|53.411|21.931|10|0;Ciechanowiec|52.679|22.499|4|0;Mielnik|52.331|23.049|1|0;Rzeszów|50.037|22.005|200|1;Przemyśl|49.782|22.775|59|1;Stalowa Wola|50.565|22.064|58|1;Mielec|50.29|21.423|59|1;Tarnobrzeg|50.573|21.679|45|1;Krosno|49.694|21.765|46|1;Dębica|50.051|21.41|45|1;Jarosław|50.016|22.68|37|1;Sanok|49.561|22.207|37|1;Jasło|49.747|21.474|35|1;Łańcut|50.069|22.232|18|1;Kielce|50.872|20.631|185|1;Ostrowiec Świętokrzyski|50.94|21.387|66|1;Starachowice|51.052|21.076|47|1;Skarżysko-Kamienna|51.114|20.858|44|1;Sandomierz|50.679|21.75|23|1;Końskie|51.191|20.407|19|1;Busko-Zdrój|50.468|20.719|16|1;Jędrzejów|50.639|20.305|15|1;Łódź|51.769|19.457|660|1;Piotrków Trybunalski|51.408|19.696|71|1;Pabianice|51.664|19.354|64|1;Tomaszów Mazowiecki|51.532|20.008|60|1;Bełchatów|51.367|19.369|56|1;Zgierz|51.856|19.405|55|1;Skierniewice|51.957|20.143|47|1;Radomsko|51.067|19.445|45|1;Kutno|52.232|19.357|42|1;Zduńska Wola|51.603|18.933|41|1;Sieradz|51.594|18.738|41|1;Łowicz|52.108|19.945|28|1;Wieluń|51.22|18.57|22|1;Łęczyca|52.059|19.202|14|0;Rawa Mazowiecka|51.762|20.252|17|1;Opole|50.667|17.924|125|1;Kędzierzyn-Koźle|50.345|18.211|59|1;Nysa|50.474|17.332|43|1;Brzeg|50.861|17.47|35|1;Kluczbork|50.973|18.214|23|1;Olsztyn|53.777|20.477|170|1;Elbląg|54.156|19.404|115|1;Ełk|53.825|22.362|61|1;Ostróda|53.703|19.962|32|1;Iława|53.598|19.561|32|1;Giżycko|54.04|21.771|29|1;Kętrzyn|54.076|21.375|26|1;Szczytno|53.565|20.992|23|1;Bartoszyce|54.252|20.814|23|1;Mrągowo|53.866|21.305|21|1;Działdowo|53.235|20.182|21|1;Pisz|53.629|21.808|19|1;Lidzbark Warmiński|54.126|20.581|15|1;Nidzica|53.361|20.428|13|0;Braniewo|54.383|19.827|17|1";
 let arTownsL=null;
@@ -229,7 +235,7 @@ const arTownsGet=()=>arTownsL||(arTownsL=AR_TOWNS_RAW.split(";").map(x=>{const v
 // 🤏 przybliżanie i przesuwanie radaru (dwa palce / kółko myszy / jeden palec lub mysz); „Wyśrodkuj” i dwuklik wracają do skali i środka
 let arView={z:1,x:0,y:0,s:1};   // z — zawsze 1, s — skala całego radaru z pierścieniem (1…AR_SMAX)
 const AR_SMAX=2.4,arZmT=s=>'translate('+AR_CX+' '+AR_CY+') scale('+s.toFixed(3)+') translate('+(-AR_CX)+' '+(-AR_CY)+')';
-const arViewMoved=()=>arView.s>1.01||Math.abs(arView.x)>.5||Math.abs(arView.y)>.5;
+const arViewMoved=()=>Math.abs(arView.s-arAutoS())>.01||Math.abs(arView.x)>.5||Math.abs(arView.y)>.5;
 // 🧭 pierścień kompasu wokół radaru (półprzezroczysty, nieruchomy przy przybliżaniu): N/E/S/W, co 30° liczby, co 10° kreski; delikatny jasny łuk krąży (animacja),
 // a pomarańczowy znacznik pokazuje, w którą stronę patrzy telefon (jeśli ma kompas) — północ na radarze zawsze u góry, jak w prawdziwych kierunkach
 const AR_CI=108,AR_CO=128;let arCmpHtml="";
@@ -258,10 +264,11 @@ function areaSvgIn(a){const V={z:1,x:arView.x,y:arView.y},S=a.km||300,CX=AR_CX,C
   const hit=b=>B.some(o=>b.x<o.x+o.w&&b.x+b.w>o.x&&b.y<o.y+o.h&&b.y+b.h>o.y);
   const inR=b=>[[b.x,b.y],[b.x+b.w,b.y],[b.x,b.y+b.h],[b.x+b.w,b.y+b.h]].every(([x,y])=>Math.hypot(x-CX,y-CY)<AR_RB-2);
   // napis obok punktu: próbujemy prawo, lewo, nad, pod — pierwszy wolny i mieszczący się w radarze
-  const label=(x,y,t,fs,cls)=>{const w=t.length*fs*.56,h=fs*1.15;
-    for(const [lx,ly,an,bx] of [[x+5,y+fs*.35,"start",x+5],[x-5,y+fs*.35,"end",x-5-w],[x,y-6,"middle",x-w/2],[x,y+fs+4,"middle",x-w/2]]){
-      const b={x:bx-1,y:ly-fs*.85,w:w+2,h};if(hit(b)||!inR(b))continue;B.push(b);
-      return '<text class="'+cls+'" x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'" text-anchor="'+an+'" font-size="'+fs+'">'+esc(t)+'</text>'}
+  // v335: napisy i kropki miejscowości w stałej wielkości na ekranie — przy przybliżeniu nie rosną, więc mieści się ich więcej
+  const Z=Math.max(1,arView.s),label=(x,y,t,fs,cls)=>{fs/=Z;const w=t.length*fs*.56,h=fs*1.15,o=5/Z;
+    for(const [lx,ly,an,bx] of [[x+o,y+fs*.35,"start",x+o],[x-o,y+fs*.35,"end",x-o-w],[x,y-6/Z,"middle",x-w/2],[x,y+fs+4/Z,"middle",x-w/2]]){
+      const b={x:bx-1/Z,y:ly-fs*.85,w:w+2/Z,h};if(hit(b)||!inR(b))continue;B.push(b);
+      return '<text class="'+cls+'" x="'+lx.toFixed(1)+'" y="'+ly.toFixed(1)+'" text-anchor="'+an+'" font-size="'+fs.toFixed(2)+'"'+(Z>1.01?' style="stroke-width:'+(3/Z).toFixed(2)+'px"':'')+'>'+esc(t)+'</text>'}
     return null};
   // punkty: zaproszenia, sygnały, imprezy (kropki w tym samym miejscu łączą się w jedną większą)
   areaPts().forEach(p=>{let {x,y,d}=xy(p.lat,p.lon);const m=Math.hypot(x,y),edge=m>AR_RM;if(edge){x*=AR_RM/m;y*=AR_RM/m}
@@ -271,15 +278,15 @@ function areaSvgIn(a){const V={z:1,x:arView.x,y:arView.y},S=a.km||300,CX=AR_CX,C
   const hn=arCut(a.name||"",18),hfs=12.5,hw=hn.length*hfs*.58;if(homeIn)B.push({x:OX-13,y:OY-25,w:26,h:26},{x:OX-hw/2-2,y:OY+5,w:hw+4,h:hfs*1.2});
   B.push({x:CX-6,y:CY-AR_RB+2,w:12,h:12});   // „N”
   const ringT=a.km?Math.round(S/2)+" km":"";if(ringT)B.push({x:OX+2,y:OY-R0/2-11,w:ringT.length*5.4+2,h:11});
-  // podpisy: najpierw miejscowości z imprezami (zawsze), potem miejscowości z OSM wg wielkości — tyle, ile pozwala suwak gęstości
+  // podpisy: najpierw miejscowości z imprezami (zawsze), potem miejscowości z OSM z przedziału wielkości (suwak) — od największych, ile się zmieści
   let lab="",seen=new Set([String(a.name||"").toLowerCase()]);
   areaPts().filter(p=>p.k==="e"&&p.lab).forEach(p=>{const q=xy(p.lat,p.lon);if(Math.hypot(q.x,q.y)>AR_RM||seen.has(p.lab.toLowerCase()))return;
     const t=label(CX+q.x,CY+q.y,arCut(p.lab,16),11.5,"arte");if(t){lab+=t;seen.add(p.lab.toLowerCase())}});
-  const N=AR_DENS[arDens()],T=arTownsGet();let tw="",n=0;
-  if(T)T.map(t=>Object.assign({t},xy(t[1],t[2]))).filter(o=>o.d>1.5&&Math.hypot(o.x,o.y)<AR_RM-3&&!seen.has(o.t[0].toLowerCase()))
-    .sort((u,v)=>(v.t[5]-u.t[5])||(v.t[4]-u.t[4])).forEach(o=>{if(!o.t[5]&&n>=N)return;const x=CX+o.x,y=CY+o.y,big=o.t[3]===2,out=!!a.km&&o.d>S;
-      const t=label(x,y,arCut(o.t[0],16),big?12:11,"artn"+(big?" big":"")+(out?" out":""));if(!t)return;if(!o.t[5])n++;seen.add(o.t[0].toLowerCase());
-      tw+='<circle class="artd'+(out?' out':'')+'" cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(big?2.6:2)+'"/>'+t});
+  const [lo,hi]=arRng(),T=arTownsGet();let tw="";
+  if(T)T.map(t=>Object.assign({t},xy(t[1],t[2]))).filter(o=>{const c=arCls(o.t[4]);return c>=lo&&c<=hi&&o.d>1.5&&Math.hypot(o.x,o.y)<AR_RM-3&&!seen.has(o.t[0].toLowerCase())})
+    .sort((u,v)=>(v.t[5]-u.t[5])||(v.t[4]-u.t[4])).forEach(o=>{const x=CX+o.x,y=CY+o.y,big=o.t[3]===2,out=!!a.km&&o.d>S;
+      const t=label(x,y,arCut(o.t[0],16),big?12:11,"artn"+(big?" big":"")+(out?" out":""));if(!t)return;seen.add(o.t[0].toLowerCase());
+      tw+='<circle class="artd'+(out?' out':'')+'" cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+((big?2.6:2)/Z).toFixed(2)+'"/>'+t});
   // spoza radaru: odnośniki na boki — po 4 z każdej strony, najbliższe
   let co="";const F=Object.values(far).sort((u,v)=>u.d-v.d).slice(0,8);
   [1,-1].forEach(sd=>{const L=F.filter(o=>(o.x>=0?1:-1)===sd).slice(0,4).sort((u,v)=>u.y-v.y);let prev=-1e9;
@@ -324,7 +331,10 @@ function renderAreaChip(){const el=$("mearea");if(!el)return;const a=areaCur();
   el.innerHTML=uiIcon(a.peek?"eye":"radar")+'<span class="arname">'+esc(a.name)+'</span><span class="arkm">'+areaKmTxt(a.km)+'</span>'
     +(a.peek?'<span class="arx" data-area-off="1" role="button" aria-label="Wróć do mojej okolicy">'+uiIcon("x")+'</span>':'');
   el.title=a.peek?"Podgląd okolicy: "+a.name+" — kliknij ✕, żeby wrócić do swojej":"Twoja okolica — kliknij, żeby zmienić promień albo podejrzeć inną"}
-function openHome(mode){arView={z:1,x:0,y:0,s:1};homeRes=[];homeMsg="";hmMode=mode||"peek";renderHome();if(mode==="home")setTimeout(()=>{const i=$("homeq");if(i)i.focus()},120)}
+function openHome(mode){arView=arHomeView();homeRes=[];homeMsg="";hmMode=mode||"peek";renderHome();if(mode==="home")setTimeout(()=>{const i=$("homeq");if(i)i.focus()},120)}
+// v335: suwak z dwoma uchwytami = dwa .arrng nałożone na siebie; dolny (#arlo) rysuje ścieżkę z wypełnieniem między uchwytami (--a…--b)
+const arRngHtml=()=>{const [lo,hi]=arRng(),i=(id,v,l)=>'<input id="'+id+'" class="arrng" type="range" min="0" max="'+AR_CLN+'" step="1" value="'+v+'" aria-label="'+l+'">';
+  return '<div class="ar2" style="--a:'+(lo/AR_CLN).toFixed(4)+';--b:'+(hi/AR_CLN).toFixed(4)+';--tk:'+(100/AR_CLN).toFixed(3)+'%">'+i("arlo",lo,"Największe miejscowości na radarze")+i("arhi",hi,"Najmniejsze miejscowości na radarze")+'</div>'};
 function renderHome(){arHeadOn();
   arLiveKm=null;const p=$("homesheet"),a=areaCur(),h=areaHome(),c=areaCount(a),q=$("homeq")?$("homeq").value:"",favs=areaFavs(),fk=x=>x.name+"|"+areaRound(x.lat).toFixed(2)+"|"+areaRound(x.lon).toFixed(2);
   const isFav=x=>favs.some(f=>fk(f)===fk(x));
@@ -337,7 +347,7 @@ function renderHome(){arHeadOn();
    +'<div class="arvis">'+areaSvg(a)+'<button type="button" class="fch arctr arloc'+(areaPeek&&areaPeek.gps?' on':'')+'" data-hm="gpspeek">'+uiIcon("locate")+' Gdzie jestem</button>'+'<button type="button" class="fch arctr'+(arViewMoved()?'':' off')+'" data-hm="center">'+uiIcon("target")+' Wyśrodkuj</button></div><div class="arcnt">'+arCntInner(a.km,c)+'</div>'
    +'<div class="hleg arleg"><i class="hc w"></i> zaproszenia <i class="hc s"></i> sygnały <i class="hc ev"></i> imprezy</div>'
    +'<div class="arsl"><div class="arslh"><span>Promień</span><b id="arkmv">'+areaKmTxt(a.km)+'</b></div><input id="arkm" class="arrng" type="range" min="5" max="51" step="1" value="'+arSlVal(a.km)+'" style="--p:'+arSlP(arSlVal(a.km),5,51)+'" aria-label="Promień okolicy"><div class="arslt"><span>5 km</span><span>50 km</span><span>Polska</span></div>'
-   +'<div class="arslh arsl2"><span>Miejscowości na radarze</span><b id="ardensv">'+arDensTxt(arDens())+'</b></div><input id="ardens" class="arrng" type="range" min="0" max="'+(AR_DENS.length-1)+'" step="1" value="'+arDens()+'" style="--p:'+arSlP(arDens(),0,AR_DENS.length-1)+';--tk:'+(100/(AR_DENS.length-1)).toFixed(3)+'%" aria-label="Ile miejscowości podpisać na radarze"><div class="arslt"><span>tylko główne</span><span>więcej</span></div>'+AREA_INFO+'</div>'
+   +'<div class="arslh arsl2"><span>Miejscowości na radarze</span><b id="ardensv">'+arRngTxt(arRng())+'</b></div>'+arRngHtml()+'<div class="arslt ar2t">'+AR_CLT.map(t=>'<span>'+t+'</span>').join("")+'</div>'+AREA_INFO+'</div>'
    +areaNearHtml(a)
    +'<div class="bsgrp">Moja miejscowość</div>'
    +'<div class="hmcur">'+uiIcon("pin")+'<span><b>'+esc(h.name)+'</b>'+(h.def?' <small>(domyślnie)</small>':'')+'</span><button type="button" class="lnk" data-hm="'+(hmMode==="home"?"mpeek":"mhome")+'">'+(hmMode==="home"?"Anuluj":"Zmień")+'</button></div>'
@@ -368,7 +378,9 @@ function useGps(after){
 // suwaki: radar na żywo (najwyżej raz na klatkę), promień zapisany po puszczeniu (oszczędnie dla serwera)
 $("homesheet").addEventListener("input",e=>{const id=e.target.id;
   if(e.target.classList&&e.target.classList.contains("arrng"))e.target.style.setProperty("--p",arSlP(e.target.value,+e.target.min,+e.target.max));
-  if(id==="ardens"){try{localStorage.setItem("arDens",String(e.target.value))}catch(x){}const v=$("ardensv");if(v)v.textContent=arDensTxt(arDens())}
+  if(id==="arlo"||id==="arhi"){const L=$("arlo"),H=$("arhi");let lo=+L.value,hi=+H.value;if(lo>hi){if(id==="arlo")H.value=hi=lo;else L.value=lo=hi}   // uchwyt popycha drugi — nigdy się nie zakleszczą
+    try{localStorage.setItem("arRng",lo+"-"+hi)}catch(x){}const w=L.parentNode;w.style.setProperty("--a",(lo/AR_CLN).toFixed(4));w.style.setProperty("--b",(hi/AR_CLN).toFixed(4));
+    const v=$("ardensv");if(v)v.textContent=arRngTxt([lo,hi]);arView.s=arAutoS();const V=arView,m=AR_RB,d=Math.hypot(V.x,V.y);if(d>m){V.x*=m/d;V.y*=m/d}}
   else if(id==="arkm"){arLiveKm=arKmFromSl(e.target.value);const v=$("arkmv");if(v)v.textContent=areaKmTxt(arLiveKm)}
   else return;
   if(!arRaf)arRaf=requestAnimationFrame(()=>{arRaf=0;arRedraw()})});
@@ -388,15 +400,15 @@ $("homesheet").addEventListener("pointermove",e=>{if(!arPt.has(e.pointerId))retu
   arView.x+=(mid.x-arG.mid.x)/arView.s;arView.y+=(mid.y-arG.mid.y)/arView.s;arG.mid=mid;arZoomAt(mid,arG.z*dd/Math.max(1,arG.d))});
 ["pointerup","pointercancel"].forEach(t=>$("homesheet").addEventListener(t,e=>{arPt.delete(e.pointerId);arG=null}));
 $("homesheet").addEventListener("wheel",e=>{const s=e.target.closest(".arsvg");if(!s)return;e.preventDefault();arZoomAt(arU(s,e),arView.s*Math.exp(-e.deltaY*.0015))},{passive:false});
-$("homesheet").addEventListener("dblclick",e=>{if(!e.target.closest(".arsvg"))return;arView={z:1,x:0,y:0,s:1};arRedraw()});
+$("homesheet").addEventListener("dblclick",e=>{if(!e.target.closest(".arsvg"))return;arView=arHomeView();arRedraw()});
 $("homesheet").addEventListener("change",async e=>{if(e.target.id!=="arkm")return;const k=arKmFromSl(e.target.value);if(await areaSave({area_km:k})){arLiveKm=null;areaChanged()}});
 $("homesheet").addEventListener("click",async e=>{
   if(e.target===$("homesheet")){closeHome();return}
   const b=e.target.closest("[data-hm]");if(!b)return;const k=b.dataset.hm;
   if(k==="close"){closeHome();return}
-  if(k==="center"){arView={z:1,x:0,y:0,s:1};arRedraw();return}
+  if(k==="center"){arView=arHomeView();arRedraw();return}
   // 📡 radar od mojej lokalizacji z telefonu: podgląd okolicy (nic nie zapisujemy, powiadomienia dalej z Mojej miejscowości)
-  if(k==="gpspeek"){arHeadAsk();useGps(x=>{if(!x)return;areaPeek={name:x.name||"Tu jesteś",lat:+x.lat,lon:+x.lon,gps:true};arView={z:1,x:0,y:0,s:1};areaChanged();renderHome()});return}
+  if(k==="gpspeek"){arHeadAsk();useGps(x=>{if(!x)return;areaPeek={name:x.name||"Tu jesteś",lat:+x.lat,lon:+x.lon,gps:true};arView=arHomeView();areaChanged();renderHome()});return}
   if(k==="find"){homeFind();return}
   if(k==="mhome"||k==="mpeek"){homeRes=[];homeMsg="";hmMode=k==="mhome"?"home":"peek";renderHome();if(hmMode==="home")setTimeout(()=>{const i=$("homeq");if(i)i.focus()},60);return}
   if(k==="unpeek"){areaPeek=null;areaChanged();renderHome();return}

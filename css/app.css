@@ -1567,7 +1567,7 @@ html[data-theme=dark] .tdeck{filter:drop-shadow(0 8px 6px rgba(0,0,0,.9)) drop-s
 .arsvg.kg .ardhit{cursor:pointer}.arsvg.kg .ardot{transform-box:fill-box;transform-origin:center;transition:transform .15s}.arsvg.kg .ardg:hover .ardot{transform:scale(1.7)}   /* 👑 v297: większe trafienie i powiększenie kropek */
 .arsvg .ardhit{fill:transparent;stroke:none}
 
-/* 🛰 v308: radar okolicy — miejscowości (OSM, suwak gęstości), imprezy podpisane, odnośniki do dalekich miejsc, „Najbliżej” */
+/* 🛰 v308: radar okolicy — miejscowości (OSM, suwak wielkości), imprezy podpisane, odnośniki do dalekich miejsc, „Najbliżej” */
 .arax{stroke:var(--line);stroke-width:1}.arhalf{fill:none;stroke:var(--acc);stroke-width:1;stroke-dasharray:2 4;opacity:.45}
 .arsweep{transform-origin:215px 145px;animation:arsw 7s linear infinite}.arsweep path{fill:var(--acc);opacity:.07}@keyframes arsw{to{transform:rotate(360deg)}}
 .arsvg text{paint-order:stroke;stroke:var(--card);stroke-width:3px;stroke-linejoin:round}
@@ -1619,7 +1619,7 @@ html[data-theme=dark] .arte,html[data-theme=dark] .arco.e .arcon{fill:#8fa8ff}ht
 .arcon,.arcok{paint-order:stroke}
 @media (prefers-reduced-motion:reduce){.arcsw{animation:none}}
 .arsl{background:linear-gradient(135deg,color-mix(in srgb,var(--acc) 9%,var(--fill)),var(--fill) 60%,color-mix(in srgb,#5ac8fa 8%,var(--fill)))}
-.arrng{--g1:var(--acc);--g2:#5ac8fa}#ardens.arrng{--g1:#f5b301;--g2:var(--acc)}
+.arrng{--g1:var(--acc);--g2:#5ac8fa}.ar2 .arrng{--g1:#f5b301;--g2:var(--acc)}
 .arrng::-webkit-slider-runnable-track{background:
  linear-gradient(90deg,var(--g1),var(--g2)) 0 50%/calc(11px + (100% - 22px)*var(--p)) 4px no-repeat,
  linear-gradient(var(--line),var(--line)) 0 50%/100% 4px no-repeat,
@@ -1729,3 +1729,19 @@ html[data-theme=dark] .wdeck{filter:drop-shadow(0 7px 5px rgba(0,0,0,.85)) drop-
 @keyframes dicewig{0%,86%,100%{transform:rotate(0)}90%{transform:rotate(-14deg)}94%{transform:rotate(10deg)}97%{transform:rotate(-4deg)}}
 @keyframes diceroll{0%{transform:rotate(0) scale(1)}25%{transform:rotate(-200deg) scale(1.35) translateY(-3px)}55%{transform:rotate(-330deg) scale(.9)}75%{transform:rotate(-370deg) scale(1.08)}100%{transform:rotate(-360deg) scale(1)}}
 @media (prefers-reduced-motion:reduce){.dice .ui-i,.dice.roll .ui-i{animation:none}}
+/* v335: suwak miejscowości z dwoma uchwytami — dwa .arrng nałożone; dolny (#arlo) rysuje ścieżkę z wypełnieniem między uchwytami (--a…--b), górny (#arhi) tylko uchwyt */
+.ar2{position:relative;height:30px}
+.arsl .ar2 input.arrng{position:absolute;left:0;top:0;pointer-events:none}
+.ar2 .arrng::-webkit-slider-thumb{pointer-events:auto}.ar2 .arrng::-moz-range-thumb{pointer-events:auto}
+.ar2 #arlo::-webkit-slider-runnable-track{background:
+ linear-gradient(90deg,var(--g1),var(--g2)) calc(11px + (100% - 22px)*var(--a)) 50%/calc((100% - 22px)*(var(--b) - var(--a)) + 2px) 4px no-repeat,
+ linear-gradient(var(--line),var(--line)) 0 50%/100% 4px no-repeat,
+ repeating-linear-gradient(90deg,var(--mut) 0 1px,transparent 1px var(--tk)) 0 100%/calc(100% + 1px) 6px no-repeat}
+.ar2 #arlo::-moz-range-track{background:
+ linear-gradient(90deg,var(--g1),var(--g2)) calc(11px + (100% - 22px)*var(--a)) 50%/calc((100% - 22px)*(var(--b) - var(--a)) + 2px) 4px no-repeat,
+ linear-gradient(var(--line),var(--line)) 0 50%/100% 4px no-repeat,
+ repeating-linear-gradient(90deg,var(--mut) 0 1px,transparent 1px var(--tk)) 0 100%/calc(100% + 1px) 6px no-repeat}
+.ar2 #arhi::-webkit-slider-runnable-track{background:none}.ar2 #arhi::-moz-range-track{background:none}
+.ar2 #arlo::-webkit-slider-thumb{border-color:var(--g1);background:radial-gradient(circle,var(--g1) 0 3px,var(--card) 3.5px);box-shadow:0 0 0 4px color-mix(in srgb,var(--g1) 20%,transparent),0 1px 4px rgba(0,0,0,.25)}
+.ar2 #arlo::-moz-range-thumb{border-color:var(--g1);background:radial-gradient(circle,var(--g1) 0 3px,var(--card) 3.5px)}
+.arsl .ar2t span{width:0;display:flex;justify-content:center;white-space:nowrap}.arsl .ar2t{padding:0 11px}
