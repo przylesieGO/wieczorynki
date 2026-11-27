@@ -1615,7 +1615,7 @@ html[data-theme=dark] .arte,html[data-theme=dark] .arco.e .arcon{fill:#8fa8ff}ht
 .arcsw{fill:none;stroke:var(--acc);opacity:.09;transform-origin:215px 145px;animation:arcsw 14s linear infinite}@keyframes arcsw{to{transform:rotate(360deg)}}
 .arct line{stroke:var(--mut);stroke-width:1;opacity:.35}
 .arcd{font-size:7.5px;font-weight:600;fill:var(--mut);opacity:.55}.arcl{font-size:11px;font-weight:800;fill:var(--ink);opacity:.5}.arcl.n{fill:#f59e0b;opacity:.9}
-.arhd{transform-origin:215px 145px;transition:opacity .3s}.arhd path{fill:#f59e0b;filter:drop-shadow(0 0 3px rgba(245,158,11,.7))}.arhd.off{opacity:0}
+.arhd{transition:opacity .3s}   /* obrót ma własny środek w atrybucie transform — transform-origin tu psuł położenie */.arhd path{fill:#f59e0b;filter:drop-shadow(0 0 3px rgba(245,158,11,.7))}.arhd.off{opacity:0}
 .arcon,.arcok{paint-order:stroke}
 @media (prefers-reduced-motion:reduce){.arcsw{animation:none}}
 .arsl{background:linear-gradient(135deg,color-mix(in srgb,var(--acc) 9%,var(--fill)),var(--fill) 60%,color-mix(in srgb,#5ac8fa 8%,var(--fill)))}
@@ -1632,3 +1632,7 @@ html[data-theme=dark] .arte,html[data-theme=dark] .arco.e .arcon{fill:#8fa8ff}ht
 .arrng::-moz-range-thumb{border-color:var(--g2);background:radial-gradient(circle,var(--g2) 0 3px,var(--card) 3.5px)}
 .arslh b{background:linear-gradient(90deg,var(--acc),#5ac8fa);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
 .fabb[data-fk=undo]{touch-action:none;user-select:none;-webkit-user-select:none}.fabb[data-ok]{background:var(--accbtn);color:#fff;border-color:transparent}
+/* v315: pływające przyciski Filtrów — ta sama szerokość (OK jest krótsze od Cofnij), delikatna animacja zachęcająca do przesunięcia */
+.fabb{width:128px;justify-content:center;padding:0 12px}.fabb[data-fk=undo]{animation:fabnudge 4.5s ease-in-out 1.5s infinite}.fabb[data-fk=undo]:active{animation:none}
+@keyframes fabnudge{0%,86%,100%{transform:translateX(0)}90%{transform:translateX(-7px)}94%{transform:translateX(3px)}97%{transform:translateX(-2px)}}
+@media (prefers-reduced-motion:reduce){.fabb[data-fk=undo]{animation:none}}

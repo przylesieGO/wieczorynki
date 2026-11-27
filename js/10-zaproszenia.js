@@ -549,7 +549,7 @@ $("fltsheet").addEventListener("click",e=>{
   fltSave();fltRefresh();
 });
 $("fltsheet").addEventListener("pointerdown",e=>{const b=e.target.closest("#fltundo");if(b)b._sw={x:e.clientX,y:e.clientY}});
-$("fltsheet").addEventListener("pointermove",e=>{const b=e.target.closest("#fltundo");if(!b||!b._sw||b.dataset.ok)return;if(Math.hypot(e.clientX-b._sw.x,e.clientY-b._sw.y)>18){b.dataset.ok="1";b.innerHTML=fltUndoLbl(true);fltSwiped=Date.now();if(navigator.vibrate)try{navigator.vibrate(8)}catch(x){}}});   // przesunięcie kciukiem po „Cofnij” → „OK”
+$("fltsheet").addEventListener("pointermove",e=>{const b=e.target.closest("#fltundo");if(!b||!b._sw||b._sw.t)return;if(Math.hypot(e.clientX-b._sw.x,e.clientY-b._sw.y)>18){b._sw.t=1;const ok=!b.dataset.ok;if(ok)b.dataset.ok="1";else delete b.dataset.ok;b.innerHTML=fltUndoLbl(ok);fltSwiped=Date.now();if(navigator.vibrate)try{navigator.vibrate(8)}catch(x){}}});   // przesunięcie kciukiem po przycisku przełącza „Cofnij” ⇄ „OK” (jedno przełączenie na gest)
 $("fltsheet").addEventListener("pointerup",e=>{const b=e.target.closest("#fltundo");if(b)b._sw=null});
 $("fltsheet").addEventListener("input",e=>{if(e.target.id==="fltq"){fltQ=e.target.value;fltStkPaint(null)}});
 $("fltsheet").addEventListener("change",e=>{if(e.target.id==="fltdate"){flt.date=e.target.value;flt.when=flt.date?"date":"";fltSave();fltRefresh()}});

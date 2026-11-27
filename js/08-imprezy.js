@@ -242,7 +242,10 @@ function arCompass(){if(arCmpHtml)return arCmpHtml;const CX=AR_CX,CY=AR_CY,pt=(d
     +'<g class="arhd off" id="arhd"><path d="M'+CX+' '+(CY-AR_CI-1)+'l-5 -9h10z"/></g></g>'}
 // kierunek, w który patrzy telefon (Android: zdarzenie absolutne; iPhone: webkitCompassHeading po zgodzie — prosimy przy „Gdzie jestem”)
 let arHeadOnF=false,arHeadRaf=0;
-function arHeadSet(h){if(arHeadRaf)return;arHeadRaf=requestAnimationFrame(()=>{arHeadRaf=0;const g=document.getElementById("arhd");if(!g)return;g.classList.remove("off");g.setAttribute("transform","rotate("+Math.round(h)+" "+AR_CX+" "+AR_CY+")")})}
+let arHeadCur=null;   // wygładzony kierunek: lekki filtr (ok. 25 % różnicy na odczyt) i martwa strefa 1,5° — mniej drgań czujnika
+function arHeadSet(h){if(arHeadRaf)return;arHeadRaf=requestAnimationFrame(()=>{arHeadRaf=0;const g=document.getElementById("arhd");if(!g)return;
+  if(arHeadCur==null)arHeadCur=h;else{const d=((h-arHeadCur+540)%360)-180;if(Math.abs(d)<1.5)return;arHeadCur=(arHeadCur+d*.25+360)%360}
+  g.classList.remove("off");g.setAttribute("transform","rotate("+arHeadCur.toFixed(1)+" "+AR_CX+" "+AR_CY+")")})}
 function arHeadOn(){if(arHeadOnF||typeof window.DeviceOrientationEvent==="undefined")return;arHeadOnF=true;
   const f=e=>{const h=typeof e.webkitCompassHeading==="number"?e.webkitCompassHeading:(e.absolute||e.type==="deviceorientationabsolute")&&e.alpha!=null?(360-e.alpha)%360:null;if(h!=null&&isFinite(h))arHeadSet(h)};
   window.addEventListener("deviceorientationabsolute",f,true);window.addEventListener("deviceorientation",f,true)}
