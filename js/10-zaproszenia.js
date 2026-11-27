@@ -824,21 +824,28 @@ function wfEndFix(){
 // skróty godzin: nieaktywne, gdy godzina już minęła (dla zakresu — gdy start za wcześnie)
 function wfQuickSync(){
   const b=wfDate(),lim=Date.now()+(wfRange()?65:5)*60000;
-  [...$("wquick").children].forEach(x=>{const [h,m]=x.dataset.q.split(":").map(Number);let dis=false;if(b){const t=new Date(b);t.setHours(h,m,0,0);dis=t.getTime()<lim}x.disabled=dis;x.classList.toggle("on",h===wf.h&&m===wf.m)});
+  [...$("wquick").children].forEach(x=>{const [h,m]=x.dataset.q.split(":").map(Number);let dis=false;if(b){const t=new Date(b);t.setHours(h,m,0,0);dis=t.getTime()<lim}x.disabled=dis;x.classList.toggle("on",h===wf.h)});   // podświetlona godzina z zegara (też przy minutach ≠ :00)
   // lista DO: tylko godziny 2–12 h po początku; „+1” = następnego dnia
   const s0=wf.h*60+wf.m;
-  [...$("wquick2").children].forEach(x=>{const h=+x.dataset.q2,g=((h*60-s0)%1440+1440)%1440;x.disabled=g<WF_MIN||g>WF_MAX;x.classList.toggle("nx",h*60<=s0);x.classList.toggle("on",h===wf.h2&&wf.m2===0)});
+  [...$("wquick2").children].forEach(x=>{const h=+x.dataset.q2,g=((h*60-s0)%1440+1440)%1440;x.disabled=g<WF_MIN||g>WF_MAX;x.classList.toggle("nx",h*60<=s0);x.classList.toggle("on",h===wf.h2)});
 }
 // ⏰ v325: lista godzin co godzinę (pion, widać 4) — przewija się do godziny z zegara albo pierwszej, która jeszcze nie minęła
 function wfQuickScroll(){const q=$("wquick"),B=[...q.children];if(!B.length)return;
-  const t=B.find(b=>+b.dataset.q.split(":")[0]===wf.h&&!b.disabled)||B.find(b=>!b.disabled)||B[B.length-1];q.scrollTop=Math.max(0,t.offsetTop-40);wfQuickScroll2()}
+  const t=B.find(b=>+b.dataset.q.split(":")[0]===wf.h&&!b.disabled)||B.find(b=>!b.disabled)||B[B.length-1];q.scrollTop=t.offsetTop;wfQuickScroll2()}
+// ⏰ v327: listy idą za zegarem klapkowym — póki godzina jest widoczna, przesuwa się tylko podświetlenie; poza widokiem lista przewija się i ta godzina staje na górze (OD za zegarem OD, DO za zegarem DO)
+let wfQSkip="";   // lista, w którą właśnie kliknięto — nie przewija się (przewija się tylko za zegarem)
+function wfQuickFollow(){const sm=matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth";
+  [["wquick",wf.h,"q"],["wquick2",wf.h2,"q2"]].forEach(([id,h,k])=>{const q=$(id);if(!q||q.classList.contains("hide")||id===wfQSkip)return;
+    const t=[...q.children].find(b=>parseInt(b.dataset[k],10)===h);if(!t)return;
+    if(t.offsetTop>=q.scrollTop-1&&t.offsetTop+t.offsetHeight<=q.scrollTop+q.clientHeight+1)return;   // widoczna — stoi, przesuwa się tylko podświetlenie
+    q.scrollTo({top:t.offsetTop,behavior:sm})})}
 function wfQuickScroll2(){const q=$("wquick2"),B=[...q.children];if(!B.length||q.classList.contains("hide"))return;
   const nx=Array.from({length:24},(_,i)=>B[(wf.h+1+i)%24]).find(b=>!b.disabled);   // pierwsza dozwolona godzina po początku (przez północ)
-  const t=B.find(b=>+b.dataset.q2===wf.h2&&!b.disabled)||nx||B[0];q.scrollTop=Math.max(0,t.offsetTop-40)}
+  const t=B.find(b=>+b.dataset.q2===wf.h2&&!b.disabled)||nx||B[0];q.scrollTop=t.offsetTop}
 function wfSetTime2(hh,mm){
   wf.h2=((hh%24)+24)%24;wf.m2=mm;
   flipCard($("fch2"),pad(wf.h2));flipCard($("fcm2"),pad(wf.m2));
-  wfUpdate();
+  wfUpdate();try{wfQuickFollow()}catch(e){}
 }
 function flipCard(el,txt){
   if(el.textContent===txt)return;
@@ -856,13 +863,13 @@ function wfApplyAt(d){
   wf.h=d.getHours();wf.m=d.getMinutes();$("fch").textContent=pad(wf.h);$("fcm").textContent=pad(wf.m);
   const e=new Date(d.getTime()+Math.max(len,15*6e4));wf.h2=e.getHours();wf.m2=e.getMinutes();$("fch2").textContent=pad(wf.h2);$("fcm2").textContent=pad(wf.m2);
   wfEndFix();
-  wfUpdate();
+  wfUpdate();try{wfQuickFollow()}catch(e){}
 }
 function wfSetTime(hh,mm){
   wf.h=((hh%24)+24)%24;wf.m=mm;
   flipCard($("fch"),pad(wf.h));flipCard($("fcm"),pad(wf.m));
   wfEndFix();
-  wfUpdate();
+  wfUpdate();try{wfQuickFollow()}catch(e){}
 }
 function wfStep(unit,dir){
   const two=unit.endsWith("2");
@@ -1400,13 +1407,13 @@ let wheelT=0;
   window.addEventListener("mouseup",()=>{my0=null});
 });
 $("wquick2").innerHTML=Array.from({length:24},(_,h)=>'<button type="button" data-q2="'+h+'">'+h+':00</button>').join("");
-$("wquick2").addEventListener("click",e=>{const b=e.target.closest("button[data-q2]");if(!b||b.disabled)return;wfSetTime2(+b.dataset.q2,0);try{navigator.vibrate&&navigator.vibrate(8)}catch(_){}});
+$("wquick2").addEventListener("click",e=>{const b=e.target.closest("button[data-q2]");if(!b||b.disabled)return;wfQSkip="wquick2";wfSetTime2(+b.dataset.q2,0);wfQSkip="";try{navigator.vibrate&&navigator.vibrate(8)}catch(_){}});
 $("wquick").innerHTML=Array.from({length:24},(_,h)=>'<button type="button" data-q="'+h+':00">'+h+':00</button>').join("");
 $("wquick").addEventListener("click",e=>{
   const b=e.target.closest("button[data-q]");if(!b||b.disabled)return;
   // skok: ustawia tylko zegar „od” (dzień bez zmian); „do” = „od” + 2 h
   const [hh,mm]=b.dataset.q.split(":").map(Number),t=(hh*60+mm+WF_MIN)%1440;
-  wfSetTime(hh,mm);wfSetTime2(Math.floor(t/60),t%60);wfQuickScroll2();
+  wfQSkip="wquick";wfSetTime(hh,mm);wfSetTime2(Math.floor(t/60),t%60);wfQSkip="";
 });
 $("wtitle").addEventListener("input",()=>{wf.titleAuto=false;wfTitleHint()});
 $("wtitle").addEventListener("focus",()=>{if(wf.titleAuto)$("wtitle").select()});
