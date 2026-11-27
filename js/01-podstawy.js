@@ -199,7 +199,8 @@ const placeCache={};
 // o = {ms: limit czasu na serwer, post: wysyłka POST (długie zapytania)}
 async function overpass(q,o){
   o=o||{};let last;
-  for(const ep of ["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"]){
+  // v350: najpierw overpass.openstreetmap.fr (2026-11-27 jedyny szybki — główny przeciążony, kumi bez odpowiedzi), potem pozostałe
+  for(const ep of ["https://overpass.openstreetmap.fr/api/interpreter","https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"]){
     const ac=typeof AbortController!=="undefined"?new AbortController():null,tm=ac?setTimeout(()=>ac.abort(),o.ms||15000):0;
     try{const r=o.post?await fetch(ep,Object.assign({method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:"data="+encodeURIComponent(q)},ac?{signal:ac.signal}:{}))
         :await fetch(ep+"?data="+encodeURIComponent(q),ac?{signal:ac.signal}:{});

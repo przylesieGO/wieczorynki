@@ -4,6 +4,11 @@ const fbf={kind:"bug",rating:0,text:"",dev:true,trace:true};let fbReplyTxt="",fb
 // 🔢 numeracja wydań: 0.x.y w czasie BETY (1.0 = publiczne wydanie); x — paczka nowości, y — poprawki.
 // Nowe wydanie: dopisz pozycję na początku APP_REL (wersja, data, nowości) — w ❓ Pomocy pokaże się „Co nowego” i kropka przy ❓.
 const APP_REL=[
+  {v:"0.14",d:"27.11.2026",items:[
+    ["tree","<b>Lasy, woda i rzeki na radarze</b> — w oknie <b>📍 Moja okolica</b> po prawej od licznika włączysz zielone plamy lasów, niebieskie jezior i zalewów oraz linie głównych rzek (Mazowsze z okolicą, działa też bez internetu). Kafelki <b>Najbliżej</b> pokazują teraz także najbliższy las i wodę."],
+    ["cloudsun","<b>Pogoda na radarze</b> — kolorowy pierścień wokół radaru pokazuje pogodę w każdym kierunku, a suwak <b>Pogoda</b> przesuwa czas do 48 godzin do przodu; przy największych miejscowościach widać temperaturę."],
+    ["map","<b>Trasa na radarze</b> — „Wczytaj GPX” albo „Baza tras ›” (i „Pokaż na radarze” w oknie trasy zaproszenia): trasa rysuje się od startu do mety, z listą miejscowości po drodze."],
+    ["sliders","<b>Suwak miejscowości z dwoma uchwytami</b> — wybierasz, od jakich do jakich miejscowości pokazywać podpisy; przełącznikami obok suwaków schowasz miejscowości albo pogodę, żeby radar był czystszy. ⬆ w rogu okna wraca do radaru."]]},
   {v:"0.13",d:"27.11.2026",items:[
     ["pin","<b>Radar okolicy</b> — kliknij plakietkę <b>📍 miejscowość · km</b>: radar jest teraz duży, na środku, z nazwami miejscowości (główne zawsze, mniejsze dokłada suwak), podpisanymi imprezami i odnośnikami do dalekich miejsc („Kraków · 304 km”). Suwak promienia chodzi płynnie co 1 km, a pod nim kafelki <b>Najbliżej</b> pokazują najbliższy sygnał, zaproszenie i imprezę ze strzałką w ich stronę."]]},
   {v:"0.12",d:"26.11.2026",items:[
