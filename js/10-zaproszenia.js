@@ -1484,7 +1484,7 @@ function wsecSync(){const hasMy=myCnt>0,hasCal=!!$("wantlist").querySelector(".w
   $("wsecmy").classList.remove("hide");$("wseccal").classList.toggle("hide",!(hasMy&&hasCal));   // pasek z 🕓 i 👤 jest zawsze (prośba właściciela 2026-11-25): bez własnych zaproszeń 👤 jest wyszarzone
   const sw=$("mysw"),so=$("mysort");sw.classList.toggle("on",on);sw.setAttribute("aria-pressed",String(on));
   sw.classList.toggle("dis",!hasMy);sw.setAttribute("aria-disabled",String(!hasMy));sw.title=hasMy?"Twoje zaproszenia osobno na górze":"Nie masz swoich zaproszeń";
-  if(!sw.firstChild){sw.innerHTML=uiIcon("user");so.innerHTML=uiIcon("clock")}
+  if(!sw.firstChild){sw.innerHTML=uiIcon("user")+'<span class="mml">Moje</span>';so.innerHTML=uiIcon("clock")+'<span class="mml">Najnowsze</span>'}   // v322: stos kart — podpis ma tylko aktywna karta
   const sn=flt.sort==="new";so.classList.toggle("on",sn);so.setAttribute("aria-pressed",String(sn));   // dwie ikony: 🕓 od najnowszych (wg daty dodania) | 👤 moje osobno na górze
   if(typeof sigWinSync==="function")sigWinSync();
   mysfSync()}

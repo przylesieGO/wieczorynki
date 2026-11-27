@@ -1653,3 +1653,15 @@ html[data-theme=dark] .arte,html[data-theme=dark] .arco.e .arcon{fill:#8fa8ff}ht
 .arsvg.zm{overflow:hidden}   /* v319: przybliżony radar (cały, z pierścieniem) przycięty do ramki */
 .archip{max-width:calc(100vw - 32px)}   /* v320: plakietka nie jest już zwężana do szerokości nagłówka (h1 kurczy się na telefonie do ~75 px i ucinało „Pułtusk”) */
 .menick{width:max-content;max-width:calc(100vw - 32px)}   /* v321: nick pod tytułem też nie jest ucinany do szerokości kurczącego się nagłówka */
+
+/* v322: przełączniki widoku zaproszeń (Najnowsze · Ekipa · Moje) jako stos kart — jak talia zakładek: karta aktywna rozwija podpis, reszta chowa się pod spodem */
+.mymode{gap:0;padding:0;border-radius:0;background:none;isolation:isolate;filter:drop-shadow(0 4px 4px rgba(0,0,0,.28)) drop-shadow(0 1px 1px rgba(0,0,0,.22))}
+html[data-theme=dark] .mymode{filter:drop-shadow(0 5px 5px rgba(0,0,0,.8)) drop-shadow(0 1px 1px rgba(0,0,0,.55))}
+.mymode button{position:relative;z-index:1;width:auto;min-width:0;height:34px;padding:0 16px;margin-left:-12px;border-radius:12px;border:1px solid var(--line);background:var(--fill);color:var(--mut);box-shadow:none;transition:background .15s,color .15s}
+.mymode button:first-child{margin-left:0}
+.mymode button.on{z-index:2;background:var(--accbtn);color:var(--white);border-color:transparent;box-shadow:0 1px 0 rgba(255,255,255,.25) inset}
+.mymode button.sgmini{z-index:3;min-width:0;padding:0 16px;gap:4px;background:#f5c94e;color:#1a6a30;border-color:transparent}
+.mymode button.dis,.mymode button.sgmini.dis{opacity:1}.mymode button.dis:not(.sgmini){color:color-mix(in srgb,var(--mut) 55%,transparent)}.mymode button.sgmini.dis{background:color-mix(in srgb,#f5c94e 55%,var(--fill))}
+.mymode .mml{display:inline-block;max-width:0;overflow:hidden;opacity:0;white-space:nowrap;font-size:13px;font-weight:700;transition:max-width .25s,opacity .2s,margin .25s}
+.mymode button.on .mml{max-width:90px;opacity:1;margin-left:6px}
+@media (prefers-reduced-motion:reduce){.mymode .mml{transition:none}}
