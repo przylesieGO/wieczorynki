@@ -42,8 +42,8 @@ function rbSvg(prev,w,h,white){
   return '<svg viewBox="0 0 '+w+' '+h+'" aria-hidden="true"><path d="M'+P.map(p=>pt(p).join(' ')).join(' L')+'" fill="none" stroke="'+c+'" stroke-width="'+(white?2.6:3)+'" stroke-linejoin="round" stroke-linecap="round"/><circle cx="'+a[0]+'" cy="'+a[1]+'" r="4" fill="'+(white?'#1f9d55':'#fff')+'" stroke="'+c+'" stroke-width="2.5"/></svg>';
 }
 // v352: zawartość przycisku „Baza tras” — mały szkic prawdziwej trasy z bazy (najczęściej używana) + ikona stosu; bez tekstu
-function rbBtnIn(){const L=(rbList||[]).filter(x=>x.preview&&!x.hidden).sort((a,b)=>rbUses(b)-rbUses(a)),x=L[0],pv=x?x.preview:(typeof REP_DEMO_ROUTE!=="undefined"?REP_DEMO_ROUTE:"");
-  return '<span class="wrsk">'+rbSvg(pv,56,32)+'</span>'+uiIcon("layers")}
+function rbBtnIn(){let L=(rbList||[]).filter(x=>x.preview&&!x.hidden).sort((a,b)=>rbUses(b)-rbUses(a)),P=L.slice(0,3).map(x=>x.preview);if(!P.length&&typeof REP_DEMO_ROUTE!=="undefined")P=[REP_DEMO_ROUTE];
+  return P.map(p=>'<span class="wrsk">'+rbSvg(p,30,26)+'</span>').join("")+uiIcon("layers")}
 function rbFiltered(){
   const q=lc(rb.q.trim()),s=rb.sort;
   const L=(rbList||[]).filter(x=>(!rb.bike||x.bike===rb.bike)&&(!q||lc(x.name+" "+(x.start_city||"")).includes(q))&&(rb.all||q||typeof inArea!=="function"||inArea(x.start_lat,x.start_lon)));   // 📍 v270: domyślnie trasy z Mojej okolicy (szukanie po nazwie — wszędzie)
@@ -120,7 +120,8 @@ async function renderRbDetail(){
   const x=(rbList||[]).find(y=>y.id===rb.open);if(!x){rb.open=null;renderRb();return}
   rbCloseMap();const tok=rbTok,p=$("rbsheet"),u=rbStats[x.id]||{},k=rbKmFrom(x),can=rbCanEdit(x);
   const dd=t=>new Date(t).toLocaleDateString("pl-PL",{day:"numeric",month:"numeric",year:"numeric"});
-  p.innerHTML='<div class="bsbox rbbox" role="dialog" aria-modal="true" aria-label="Trasa"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-rb="back">‹ Trasy</button><b class="rbtitle">'+esc(x.name)+'</b><span style="min-width:64px"></span></div><div class="bslist">'
+  p.innerHTML='<div class="bsbox rbbox" role="dialog" aria-modal="true" aria-label="Trasa"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-rb="back">‹ Trasy</button><b class="rbtitle">'+esc(x.name)+'</b><span style="min-width:64px"></span></div>'
+   +'<div class="rbtopb"><button type="button" class="b big rbinvb" data-rb="'+(rbPicking()?'pick':'invite')+'">'+rbInvLbl()+'</button>'+rbPrevBtn()+'</div><div class="bslist">'
    +'<div class="mapwrap"><div class="map rsmap" id="map4"></div><div class="warrow hide" id="warrow4"></div></div>'
    +'<div class="legend"><span><i class="dot" style="background:#d64545"></i>pod wiatr</span><span><i class="dot" style="background:#e0b83a"></i>bocznie</span><span><i class="dot" style="background:#2a9d5c"></i>z wiatrem</span></div>'
    +'<div class="stats" id="stats4"></div><div class="note" id="windinfo4" style="margin-top:8px">Ładuję trasę…</div><div class="routeinfo hide" id="placesbox4"></div><div class="routeinfo hide" id="osmbox4"></div>'
@@ -130,11 +131,13 @@ async function renderRbDetail(){
       '👤 '+(x.created_by&&nicks[x.created_by]?esc(nicks[x.created_by]):'—')+' · dodana '+esc(dd(x.created_at))].filter(Boolean).map(t=>'<div>'+t+'</div>').join("")+'</div>'
    +'<div id="rbrev">'+rbRevHtml(x)+'</div>'
    +(x.demo?'<div class="note warnbox" style="margin-top:8px">🧪 Trasa DEMO — kształt do podglądu. Bez pliku GPX; tylko do zaproszeń testowych.</div>':'')+(x.hidden?'<div class="note warnbox" style="margin-top:8px">🙈 Ukryta — widzisz ją tylko Ty'+(isAdmin?' i admini':'')+'.</div>':'')
-   +'<button type="button" class="b big" style="margin-top:12px;width:100%" data-rb="'+(rbPicking()?'pick':'invite')+'" id="rbinvbtn">'+rbInvLbl()+'</button>'
+   +'<button type="button" class="b big rbinvb" style="margin-top:12px;width:100%" data-rb="'+(rbPicking()?'pick':'invite')+'">'+rbInvLbl()+'</button>'+(rb.mode==="radar"?'':'<button type="button" class="b g big" style="margin-top:8px;width:100%" data-rb="prev">'+uiIcon("radar")+' Podgląd na radarze</button>')
    +'<div class="pbtns" style="margin-top:8px">'+(x.demo?'':'<button type="button" class="b g" data-rb="gpx">⬇ GPX</button>')+(can?'<button type="button" class="b g" data-rb="rename">✏️ Nazwa</button><button type="button" class="b g" data-rb="hide">'+(x.hidden?'👁 Pokaż':'🙈 Ukryj')+'</button>':'')+'</div>'
    +(can?'<button type="button" class="lnk rbdel" data-rb="del">Usuń z bazy tras</button>':'')
-   +'<div class="ptg">Czas jazdy przy tempie ok. 20 km/h, z wiatrem. Pogoda dla punktu startu. Mapa © OpenStreetMap · pogoda: Open-Meteo.</div></div></div>';
-  p.classList.remove("hide");
+   +'<div class="ptg">Czas jazdy przy tempie ok. 20 km/h, z wiatrem. Pogoda dla punktu startu. Mapa © OpenStreetMap · pogoda: Open-Meteo.</div></div>'
+   +'<div class="rbfoot"><button type="button" class="b g big" data-rb="back">‹ Cofnij</button></div>'
+   +'<button type="button" class="totop rbtop" data-rb="top" aria-label="Na górę okna" title="Na górę"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 14.5l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>';
+  p.classList.remove("hide");{const l=p.querySelector(".bslist"),t=p.querySelector(".rbtop");if(l&&t)l.addEventListener("scroll",()=>t.classList.toggle("on",l.scrollTop>260),{passive:true})}   // v353: ⬆ i „Cofnij” na dole okna trasy
   if(!(x.id in rbReviews))rbLoadReviews(x.id).then(()=>{if(tok===rbTok&&rb.open===x.id&&!rb.rate){const el=$("rbrev");if(el)el.innerHTML=rbRevHtml(x)}});
   let pts;try{pts=await rbRoute(x.id)}catch(e){pts=null}
   if(tok!==rbTok)return;
@@ -152,6 +155,7 @@ const WMO_T=c=>c==null?"":c===0?"bezchmurnie":c<=2?"małe zachmurzenie":c===3?"p
 // przycisk „Zaproś na tę trasę” z terminem wybranym w „Przed jazdą”
 // v337: tryb „radar” — wybór trasy do podglądu na radarze okolicy (jak „pick”, ale bez terminu)
 const rbPicking=()=>rb.mode==="pick"||rb.mode==="radar";
+const rbPrevBtn=()=>rb.mode==='radar'?'':'<button type="button" class="b g big rbprev" data-rb="prev" aria-label="Podgląd trasy na radarze" title="Podgląd na radarze">'+uiIcon("radar")+' Podgląd</button>';
 function rbInvLbl(){if(rb.mode==="radar")return uiIcon("radar")+' Pokaż na radarze';const d=pwWhen(),n=dayDiff(d),dn=d.toLocaleDateString("pl-PL",{weekday:"long"});
   return (rb.mode==="pick"?uiIcon("check")+' Wybierz tę trasę':uiIcon("bike")+' Zaproś na tę trasę')+'<small class="rbinvt">'+esc((n===0?"Dziś":n===1?"Jutro ("+dn+")":dn.charAt(0).toUpperCase()+dn.slice(1)+" "+d.getDate()+"."+pad(d.getMonth()+1))+" · "+hhmm(d))+'</small>'}
 function pwDefault(){const h=new Date().getHours()+1;return h>23?{day:1,h:0}:{day:0,h}}
@@ -465,7 +469,7 @@ $("rbsheet").addEventListener("click",async e=>{
   const pk=e.target.closest("[data-pwit]");if(pk){pwPackToggle(pk);return}
   const pd=e.target.closest("[data-rbpd]"),ph=e.target.closest("[data-rbph]");
   if(pd||ph){const v=rb.pw||(rb.pw=pwDefault());v.ch=1;if(ph)v.m=0;if(pd){v.day=+pd.dataset.rbpd;if(v.day===0&&v.h<=new Date().getHours()-1)v.h=Math.min(23,new Date().getHours()+1)}else{v.h=+ph.dataset.rbph;if(ph.dataset.rbpn)v.day=Math.min(6,v.day+1)}
-    const hs=$("pwhrs"),sl=hs?hs.scrollLeft:0;$("pwsel").innerHTML=pwSelHtml();const ib=$("rbinvbtn");if(ib)ib.innerHTML=rbInvLbl();const h2=$("pwhrs");if(h2){h2.scrollLeft=sl;if(pd||(ph&&ph.dataset.rbpn))pwHrsCenter()}pwUpdate();return}
+    const hs=$("pwhrs"),sl=hs?hs.scrollLeft:0;$("pwsel").innerHTML=pwSelHtml();document.querySelectorAll(".rbinvb").forEach(ib=>{ib.innerHTML=rbInvLbl()});const h2=$("pwhrs");if(h2){h2.scrollLeft=sl;if(pd||(ph&&ph.dataset.rbpn))pwHrsCenter()}pwUpdate();return}
   const so=e.target.closest("[data-rbs]");if(so){rb.sort=so.dataset.rbs;renderRb();return}
   const bk=e.target.closest("[data-rbb]");if(bk){rb.bike=bk.dataset.rbb;renderRb();return}
   const ba=e.target.closest("[data-rba]");if(ba){rb.all=ba.dataset.rba==="all";renderRb();return}   // 📍 v270: trasy z okolicy / wszystkie
@@ -480,6 +484,7 @@ $("rbsheet").addEventListener("click",async e=>{
     if(!r){renderRbAdd();return}
     rb.add=null;await rbLoad(true);rb.open=r.id;renderRb();if(r.isNew)say("📚 Dodano trasę do bazy: "+n);return}
   if(k==="close"){closeRb();return}
+  if(k==="top"){const l=$("rbsheet").querySelector(".bslist");if(l)l.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});try{navigator.vibrate&&navigator.vibrate(8)}catch(err){}return}
   if(k==="back"){if(rb.rate){rb.rate=false}else rb.open=null;renderRb();return}
   if(k==="rate"){const mine=(rbReviews[rb.open]||[]).find(r=>r.user_id===uid);rb.rv=rvFrom(mine);rb.rate=true;renderRb();return}
   if(k==="rvsave"){const row=rvRow(rb.open,rb.rv);if(!rvHas(row)){say("Zaznacz coś albo napisz komentarz.");return}
@@ -495,6 +500,8 @@ $("rbsheet").addEventListener("click",async e=>{
   if(k==="towns"){rbTowns(rbTok);return}
   if(k==="osmre"){rbOsmShow(rbTok,true);return}
   if(k==="rev"){rb.rev=!rb.rev;if(rbMap&&rbPts)drawRoute(rbMap,rb.rev?rbPts.slice().reverse():rbPts,null,false);rbTowns(rbTok);rbOsmShow(rbTok);pwUpdate();return}
+  if(k==="prev"){let pts;try{pts=await rbRoute(x.id)}catch(err){pts=null}if(!pts){say("Nie udało się wczytać trasy.");return}
+    if(rb.rev)pts=pts.slice().reverse();closeRb();openHome();arRouteSet(pts,x.name);return}
   if(k==="pick"&&rb.mode==="radar"){let pts;try{pts=await rbRoute(x.id)}catch(err){pts=null}if(!pts){say("Nie udało się wczytać trasy.");return}
     if(rb.rev)pts=pts.slice().reverse();closeRb();arRouteSet(pts,x.name);return}
   if((k==="pick"||k==="invite")&&x.demo&&!testOk){say("🧪 Trasa DEMO jest tylko do testowych zaproszeń — a ich nie masz włączonych.");return}
