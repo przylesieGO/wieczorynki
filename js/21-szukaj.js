@@ -192,7 +192,7 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Kolory nicków",s:"kolory nicków płeć",p:"Ustawienia → Administracja → Narzędzia",i:"palette",go:[ADM,'[data-c="colors"]'],ok:A&&genderOk},
   {t:"Etykiety notatek (👑)",s:"etykiety notatek słownik słowo ikona kolor plakietka wilk wataha kawa kebab nocna speeday",p:"Ustawienia → Administracja → Narzędzia",i:"tag",go:[ADM,'[data-nt="open"]'],ok:K},
   {t:"Wyjście przyciskiem „wstecz”",s:"wstecz cofnij wyjście zamknij aplikację przycisk telefonu android ostrzeżenie wychodzi",p:"Przycisk „wstecz” w telefonie — dwa razy, żeby wyjść",i:"logout",fn:()=>say("Naciśnij „wstecz” dwa razy (w ciągu 3 s), żeby wyjść z aplikacji."),ok:true},
-  {t:"Losuj komentarz do zaproszenia",s:"losuj komentarz notatka zabawny śmieszny losowy żart pomysł opis zaproszenia",p:"Zaproszenia → ➕ → Komentarz → ✨ Losuj",i:"sparkles",fn:()=>{show(0);openWantForm(null)},ok:S&&!pv},
+  {t:"Losuj komentarz do zaproszenia",s:"losuj komentarz notatka zabawny śmieszny losowy żart pomysł opis zaproszenia sezonowy święta",p:"Zaproszenia → ➕ → Komentarz → ✨ Losuj",i:"sparkles",fn:()=>{show(0);openWantForm(null)},ok:S&&!pv},
   {t:"Etykieta przy notatce",s:"etykieta notatki plakietka ikona kolor automatycznie same wataha wilk kawa kebab nocna speeday las jezioro deszcz góry notatka",p:"Zaproszenia → ➕ → Komentarz (słowo ze słownika)",i:"tag",fn:()=>{show(0);openWantForm(null)},ok:S&&!pv},
   {t:"Zakazane nicki",s:"zakazane słowa nicki blokada",p:"Ustawienia → Administracja → Narzędzia",i:"hand",go:[ADM,'[data-c="nickbans"]'],ok:A},
   {t:"Miejsca zbiórki",s:"miejsca zbiórki punkty",p:"Ustawienia → Administracja → Narzędzia",i:"pin",go:[ADM,'[data-c="places"]'],ok:A&&placeOk},

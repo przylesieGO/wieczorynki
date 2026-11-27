@@ -340,10 +340,20 @@ function fltOk(w){
   return true;
 }
 const FLT_WHO=[["mine","Moje"],["going","Jadę"],["inv","Zaproszony"],["part","Biorę udział"],["fav","Ulubieni"]];   // „Biorę udział” tylko z licznika nad listą (w oknie bez bomblu)
-// 🔒 nazwa plakietki prywatnego zaproszenia — losowana z puli, ale stała dla danego zaproszenia (hasz z id); PRIV_EXTRA = sezonowe nazwy z bazy (później)
+// 🎲 teksty losowane z bazy (KROK 111, `fun_texts`): kind priv/comment, okno dat MMDD (puste = zawsze), acts (puste = wszystkie)
+// bez tabeli / przed wczytaniem: zapas PRIV_LBL i WF_FUN niżej
+let FUN_DB=null;
+function funSet(rows){FUN_DB=(rows||[]).filter(x=>x&&x.txt)}
+const funMd=d=>(d.getMonth()+1)*100+d.getDate();
+const funIn=(x,md)=>x.md_from==null||(x.md_from<=x.md_to?md>=x.md_from&&md<=x.md_to:md>=x.md_from||md<=x.md_to);
+// 🔒 nazwa plakietki prywatnego zaproszenia — stała dla zaproszenia (hasz z id); wg daty jazdy: w oknie święta nazwa sezonowa, poza nim stała pula
 const PRIV_LBL=["Dla wtajemniczonych","Tylko dla swoich","Na zaproszenie VIP","Ekipa za kurtyną","Cicha ustawka","Wąskie grono","Dla wybranych"];
-let PRIV_EXTRA=[];
-function privLbl(w){const P=PRIV_LBL.concat(PRIV_EXTRA),s=String(w&&w.id||"");let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return P[h%P.length]}
+function privLbl(w){const s=String(w&&w.id||"");let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;
+  let P=PRIV_LBL;if(FUN_DB){const d=w&&(w.starts_at||w.range_from)?wantStart(w):null,md=d&&!isNaN(d)?funMd(d):0,
+    S=md?FUN_DB.filter(x=>x.kind==="priv"&&x.md_from!=null&&funIn(x,md)).map(x=>x.txt):[],
+    B=FUN_DB.filter(x=>x.kind==="priv"&&x.md_from==null).map(x=>x.txt);
+    if(S.length)P=S;else if(B.length)P=B}
+  return P[h%P.length]}
 const FLT_VIS=[["open","Otwarte"],["priv","Tylko dla swoich"]];
 const FLT_ACT=()=>actList.filter(x=>actAvail().includes(x)||flt.act===x.key).map(x=>[x.key,x.name_many]);   // 🏃 z bazy (KROK 94), klucze jak wants.activity
 const FLT_ICO={mine:"user",going:"check",inv:"mail",fav:"star",open:"globe",priv:"lock"};   // ikony aktywności — actOf(k).icon
@@ -1436,7 +1446,10 @@ $("wnotesel").addEventListener("change",()=>{
 // 🎲 v325: „Losuj” przy komentarzu — zabawne komentarze (lista w kodzie; nowe dopisywać tutaj)
 const WF_FUN=["Podróż po żołędzie","Jedziemy zbierać liście i igły","Poszukamy czystego śniegu","Liczymy wrony na polach","Szukamy najkrótszej drogi naokoło","Wyprowadzam rower na spacer","Testujemy błoto — certyfikowane","Pogoń za zachodem słońca","Objazd kałuż całego powiatu","Ekspedycja po jedną bułkę","Kontrola stanu jesieni","Sprawdzamy, czy las jeszcze stoi","Szukamy szyszki idealnej","Wyścig z żółwiem — dajemy fory","Jazda bez celu, ale z kawą","Przewietrzyć kask","Inspekcja mostków i kładek","Polowanie na grzyby z siodełka","Odwiedzamy znajome bociany","Trasa: tam i z powrotem (chyba)","Zgubimy się, ale razem","Rozjeżdżamy kalorie z obiadu","Szukamy końca tęczy","Posłuchać, co mówi las","Czy rzeka dalej płynie w tę stronę?","Wielka wyprawa po małe lody","Na skraj mapy i z powrotem","Wiatr w oczy, uśmiech na twarzy","Gonimy własny cień","Zbieramy kilometry do słoika","Degustacja świeżego powietrza","Pedałujemy na przekór kanapie","Mgła, mrok i my","Szlakiem zagubionych skarpetek","Wieczorny patrol sarenek","Jesienny przegląd kolorów","Odśnieżamy ścieżki oponami","Spis powszechny kretowisk","Sprawdzamy, czy góry są dalej płaskie","Wycieczka do najbliższej ławki"];
 $("wnoterand").innerHTML=uiIcon("sparkles")+"Losuj";
-$("wnoterand").onclick=()=>{const cur=$("wnote").value.trim(),P=WF_FUN.filter(x=>x!==cur);$("wnote").value=P[Math.floor(Math.random()*P.length)];wfNoteSync();try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}};
+// pula „Losuj”: z bazy (KROK 111) — pasujące do aktywności formularza i do dnia jazdy (święta, pory roku); bez bazy WF_FUN
+function wfFunPool(){if(!FUN_DB)return WF_FUN;const md=funMd(wfDate()||new Date()),a=wf.act||"bike",
+  P=FUN_DB.filter(x=>x.kind==="comment"&&(!x.acts||x.acts.includes(a))&&funIn(x,md)).map(x=>x.txt);return P.length?P:WF_FUN}
+$("wnoterand").onclick=()=>{const cur=$("wnote").value.trim(),P=wfFunPool().filter(x=>x!==cur);$("wnote").value=P[Math.floor(Math.random()*P.length)];wfNoteSync();try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}};
 // ⬆ v325: „Na górę” w formularzu — ten sam przycisk co przy kartach zaproszeń, lewy dolny róg nad „Wyślij”
 $("wfscroll").addEventListener("scroll",()=>$("wftop").classList.toggle("on",$("wfscroll").scrollTop>260),{passive:true});
 $("wftop").onclick=()=>{$("wfscroll").scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}};

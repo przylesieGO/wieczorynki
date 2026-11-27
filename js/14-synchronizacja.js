@@ -237,6 +237,8 @@ async function loadRemote(selectId){
   {const ac=await sb.from("activities").select("key,name,name_many,verb,verb_you,want_txt,invite_txt,with_txt,title_suffix,icon,emoji,pace,uses_bike,msgs,ev_kinds,sort,state").order("sort");if(!ac.error)actsSet(ac.data)}
   // 🏷️ słownik etykiet notatek (KROK 103) — czytają wszyscy; zmiana w Administracji → sync „misc” → pełne wczytanie; bez tabeli: notatki jak dotąd
   {const nt=await sb.from("note_tags").select("key,word,icon,color,sort,on").order("sort");if(!nt.error)ntSet(nt.data);else ntOk=false}
+  // 🎲 teksty losowane (KROK 111) — plakietka „prywatne” i „Losuj”; kolejność po id = stała nazwa plakietki; bez tabeli: zapas z js/10
+  {const ft=await sb.from("fun_texts").select("kind,txt,acts,md_from,md_to").eq("on",true).order("id");if(!ft.error)funSet(ft.data)}
   if(session){
     const ok=r=>r.error?null:r.data;
     await loadMyPriv();   // 👤 KROK 50
