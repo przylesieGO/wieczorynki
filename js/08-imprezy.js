@@ -320,7 +320,7 @@ function arRedraw(){const p=$("homesheet");if(!p||p.classList.contains("hide"))r
 // plakietka w nagłówku: „📍 Pułtusk · 20 km”, w podglądzie „👁 Serock · 20 km ✕”
 function renderAreaChip(){const el=$("mearea");if(!el)return;const a=areaCur();
   el.classList.toggle("peek",a.peek);el.classList.remove("hide");
-  el.innerHTML=uiIcon(a.peek?"eye":"pin")+'<span class="arname">'+esc(a.name)+'</span><span class="arkm">'+areaKmTxt(a.km)+'</span>'
+  el.innerHTML=uiIcon(a.peek?"eye":"radar")+'<span class="arname">'+esc(a.name)+'</span><span class="arkm">'+areaKmTxt(a.km)+'</span>'
     +(a.peek?'<span class="arx" data-area-off="1" role="button" aria-label="Wróć do mojej okolicy">'+uiIcon("x")+'</span>':'');
   el.title=a.peek?"Podgląd okolicy: "+a.name+" — kliknij ✕, żeby wrócić do swojej":"Twoja okolica — kliknij, żeby zmienić promień albo podejrzeć inną"}
 function openHome(mode){arView={z:1,x:0,y:0};homeRes=[];homeMsg="";hmMode=mode||"peek";renderHome();if(mode==="home")setTimeout(()=>{const i=$("homeq");if(i)i.focus()},120)}

@@ -1500,9 +1500,9 @@ html[data-theme=dark] .repbox .rrmini{background:#24332a}
 
 /* 📍 Moja okolica (KROK 104, v269): plakietka w nagłówku pod nickiem + okno z kręgiem, suwakiem i ulubionymi miejscowościami */
 .archip{display:flex;width:max-content;align-items:center;gap:4px;max-width:100%;margin:5px 0 0;padding:2px 9px 2px 7px;border:0;border-radius:999px;background:var(--fill);color:var(--ink);font:inherit;font-size:13px;font-weight:600;line-height:1.5;cursor:pointer;vertical-align:middle;white-space:nowrap}
-.archip.hide{display:none}.archip .ui-i{width:14px;height:14px;flex:none;color:var(--acc)}.archip .arname{overflow:hidden;text-overflow:ellipsis;max-width:120px}.archip .arkm{color:var(--mut);font-weight:600}.archip .arkm::before{content:"· "}
+.archip.hide{display:none}.archip .ui-i{width:14px;height:14px;flex:none;color:var(--acc)}.archip .arname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}.archip .arkm{color:var(--mut);font-weight:600}.archip .arkm::before{content:"· "}
 .archip.peek{background:var(--priv);color:#fff}.archip.peek .ui-i,.archip.peek .arkm{color:#fff}.archip .arx{display:inline-flex;margin-left:2px;padding:2px;border-radius:50%;background:rgba(255,255,255,.22)}.archip .arx .ui-i{width:12px;height:12px}
-.hdr.compact .archip{margin:0;flex:none}.hdr.compact .archip .arname{display:none}.hdr.compact .archip .arkm::before{content:none}
+.hdr.compact .archip{margin:0;flex:none}.hdr.compact .archip .arname{max-width:84px;white-space:nowrap}.hdr.compact .archip .arkm::before{content:none}
 .bshead b .ui-i{width:18px;height:18px;vertical-align:-3px;color:var(--acc)}
 .arvis{position:sticky;top:0;z-index:3;display:flex;justify-content:center;margin:0 -6px 2px;background:var(--card);box-shadow:0 8px 10px -8px rgba(0,0,0,.18)}   /* 📌 v309: radar przypięty u góry okna — suwaki przewijają się pod nim */.arsvg{display:block;width:100%;max-width:460px;height:auto;overflow:visible}   /* 🛰 v308: radar na środku, na całą szerokość okna */
 .arcnt{display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;min-width:0;margin:0 0 8px}.arcnt b{font-size:17px}.arcnt span{font-size:14px;color:var(--ink)}.arcnt small{font-size:13px;color:var(--mut)}
@@ -1636,3 +1636,4 @@ html[data-theme=dark] .arte,html[data-theme=dark] .arco.e .arcon{fill:#8fa8ff}ht
 .fabb{width:128px;justify-content:center;padding:0 12px}.fabb[data-fk=undo]{animation:fabnudge 4.5s ease-in-out 1.5s infinite}.fabb[data-fk=undo]:active{animation:none}
 @keyframes fabnudge{0%,86%,100%{transform:translateX(0)}90%{transform:translateX(-7px)}94%{transform:translateX(3px)}97%{transform:translateX(-2px)}}
 @media (prefers-reduced-motion:reduce){.fabb[data-fk=undo]{animation:none}}
+.archip:not(.peek) .ui-i{filter:drop-shadow(0 0 3px color-mix(in srgb,var(--acc) 75%,transparent))}   /* v316: radar w zielonym neonie */

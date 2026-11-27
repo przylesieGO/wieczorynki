@@ -108,7 +108,7 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Zmień nick",s:"nick nazwa pseudonim ksywka",p:"Ustawienia → Edytuj profil → Nick",i:"pencil",go:[SR_PROF],hl:'[data-c="nickopen"]',ok:S},
   {t:"Zdjęcie profilowe",s:"zdjęcie awatar fotka foto",p:"Ustawienia → Edytuj profil → Zdjęcie",i:"cam",go:[SR_PROF],hl:".pe-av",ok:S&&profExOk},
   {t:"Płeć",s:"płeć kobieta mężczyzna kolor nicku",p:"Ustawienia → Edytuj profil → Płeć",i:"users",go:[SR_PROF],hl:"#gsex",ok:S&&genderOk},
-  {t:"Moja okolica (promień)",s:"okolica obszar promień km kilometry zasięg moja okolica suwak cała polska daleko blisko dalej wszystkie imprezy trasy w okolicy",p:"Nagłówek → plakietka 📍 (miejscowość · km)",i:"pin",fn:()=>openHome(),ok:true},
+  {t:"Moja okolica (promień)",s:"okolica obszar promień km kilometry zasięg moja okolica suwak cała polska daleko blisko dalej wszystkie imprezy trasy w okolicy",p:"Nagłówek → plakietka z ikoną radaru (miejscowość · km)",i:"pin",fn:()=>openHome(),ok:true},
   {t:"Odległość sygnału z daleka",s:"sygnał mam ochotę odległość km od ciebie daleko okolica pin",p:"🔔 / Ekipa → sygnał → 📍 ok. N km od Ciebie",i:"pin",fn:()=>{show(0);openSig(typeof sigActive==="function"&&sigActive()?"mine":"pick")}},
   {t:"Miejscowości w karcie dnia (filtr)",s:"miejscowość etykieta pigułka filtr gdzie nasielsk serock legionowo karta dnia zwinięta kraków warszawa linijka pin odległość km daleko",p:"Zaproszenia → karta dnia → 📍 miejscowość · km (dotknij = filtr)",i:"pin",fn:()=>{show(0)}},
   {t:"Punkt zbiórki (pinezka)",s:"punkt zbiórki miejsce spotkania pinezka mapa gdzie start zaproszenie nowe miejsce wymagane obowiązkowe",p:"➕ Zaproś → 📍 Punkt zbiórki (na górze)",i:"pin",fn:()=>{show(0)}},
