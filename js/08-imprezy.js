@@ -436,8 +436,8 @@ function areaNearHtml(a){const c={lat:a.lat,lon:a.lon},best={};
   const tile=(k,t)=>{const b=best[k];
     if(!b)return '<div class="arnr off"><span class="arna '+k+'">'+ar+'</span><div><small>'+t+'</small><b>brak</b><span>na razie nic</span></div></div>';
     const deg=Math.round(arBear(c,b.p)),here=b.d<1.5;
-    return '<div class="arnr"><span class="arna '+k+'"'+(here?'':' style="transform:rotate('+deg+'deg)"')+'>'+(here?uiIcon("pin"):ar)+'</span><div><small>'+t+'</small><b>'+(here?'tutaj':arKmT(b.d))+'</b>'
-      +'<span>'+(here?esc(a.name||""):AR_DIR[Math.round(deg/45)%8]+(b.p.lab&&k!=="s"?' · '+esc(arCut(b.p.lab,14)):''))+'</span></div></div>'};
+    return '<button type="button" class="arnr" data-hm="nrgo" data-k="'+k+'" data-lat="'+b.p.lat.toFixed(5)+'" data-lon="'+b.p.lon.toFixed(5)+'" aria-label="'+t+' — pokaż na radarze"><span class="arna '+k+'"'+(here?'':' style="transform:rotate('+deg+'deg)"')+'>'+(here?uiIcon("pin"):ar)+'</span><div><small>'+t+'</small><b>'+(here?'tutaj':arKmT(b.d))+'</b>'
+      +'<span>'+(here?esc(a.name||""):AR_DIR[Math.round(deg/45)%8]+(b.p.lab&&k!=="s"?' · '+esc(arCut(b.p.lab,14)):''))+'</span></div></button>'};
   // v349: las i woda z siatki terenu (js/25) — kafelki jak wyżej, bez nazwy (OSM nie zawsze ją ma)
   const tt=(k,t,ic)=>{const q=typeof terNear==="function"?terNear(a,k):null;
     if(!q)return '<div class="arnr off"><span class="arna t'+k+'">'+uiIcon(ic)+'</span><div><small>'+t+'</small><b>daleko</b><span>ponad 60 km</span></div></div>';
@@ -445,6 +445,14 @@ function areaNearHtml(a){const c={lat:a.lat,lon:a.lon},best={};
     return '<button type="button" class="arnr" data-hm="poi" data-lat="'+q.lat.toFixed(5)+'" data-lon="'+q.lon.toFixed(5)+'" aria-label="'+t+' — pokaż na mapie"><span class="arna t'+k+'"'+(here?'':' style="transform:rotate('+deg+'deg)"')+'>'+(here?uiIcon(ic):ar)+'</span><div><small>'+t+'</small><b>'+(here?'tutaj':arKmT(d))+'</b><span>'+(here?'w okolicy środka':AR_DIR[Math.round(deg/45)%8])+'</span></div></button>'};
   return '<div class="bsgrp">Najbliżej</div><div class="arnear">'+tile("s","Sygnał")+tile("w","Zaproszenie")+tile("e","Impreza")+tt("f","Las","tree")+tt("w","Woda","droplet")+'</div>'+(typeof poiTilesHtml==="function"?poiTilesHtml(a):'')}
 // v360: gdy dociągną się miejsca z OSM — przerysowanie okna (z zachowaniem przewinięcia), tylko gdy dotyczą tego, co widać
+// v362: kafelek sygnału / zaproszenia / imprezy → przewinięcie do radaru, przybliżenie na to miejsce i znikający duży punkt z ikoną
+function arPing(k,lat,lon){const a=Object.assign(areaCur(),arLiveKm!=null?{km:arLiveKm}:{}),S=a.km||300,kc=Math.cos(a.lat*Math.PI/180);
+  const dy=(lat-a.lat)*111.2,dx=(lon-a.lon)*111.2*kc,d=Math.hypot(dx,dy),z=Math.max(1,Math.min(8,S*1.4/Math.max(4,d*.8))),f=AR_R0/S*z;
+  arView={z,x:-dx*f,y:dy*f,s:arView.s||1};arRedraw();
+  const sv=$("homesheet").querySelector(".arsvg .arzm");if(!sv)return;const o=sv.querySelector(".arping");if(o)o.remove();
+  const ic=uiIcon(k==="s"?"hand":k==="e"?"flag":"ebike").replace('<svg ','<svg x="'+(AR_CX-11)+'" y="'+(AR_CY-11)+'" width="22" height="22" ');
+  sv.insertAdjacentHTML("beforeend",'<g class="arping '+k+'"><circle cx="'+AR_CX+'" cy="'+AR_CY+'" r="16"/><circle cx="'+AR_CX+'" cy="'+AR_CY+'" r="16"/><circle class="arpgc" cx="'+AR_CX+'" cy="'+AR_CY+'" r="15"/><g class="arpgi">'+ic+'</g></g>');
+  setTimeout(()=>{const g=sv.querySelector(".arping");if(g)g.remove()},3200)}
 function arPoiDone(key){try{const s=$("homesheet");if(s&&!s.classList.contains("hide")&&typeof areaCur==="function"&&poiKey(areaCur())===key)renderHome()}catch(e){}}
 // odrysowanie samego radaru i licznika (suwaki, dociągnięte miejscowości) — bez przebudowy całego okna
 function arRedraw(){const p=$("homesheet");if(!p||p.classList.contains("hide"))return;const s=p.querySelector(".arsvg");if(!s)return;
@@ -543,6 +551,8 @@ $("homesheet").addEventListener("click",async e=>{
   if(k==="top"){const l=$("homesheet").querySelector(".bslist");if(l)l.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});try{navigator.vibrate&&navigator.vibrate(8)}catch(err){}return}   // v349: ⬆ jak w formularzu zaproszenia (.totop)
   if(k==="center"){arView={z:1,x:0,y:0,s:1};if(arHide.size){arHide.clear();renderHome();return}arRedraw();return}
   if(k==="lg"){const t=b.dataset.k;if(arHide.has(t))arHide.delete(t);else arHide.add(t);b.classList.toggle("off",arHide.has(t));b.setAttribute("aria-pressed",String(!arHide.has(t)));arRedraw();return}   // v339: pełny widok (suwak dalej decyduje, które miejscowości)
+  if(k==="nrgo"){const l=$("homesheet").querySelector(".bslist"),rm=matchMedia("(prefers-reduced-motion: reduce)").matches;if(l)l.scrollTo({top:0,behavior:rm?"auto":"smooth"});
+    setTimeout(()=>arPing(b.dataset.k,+b.dataset.lat,+b.dataset.lon),l&&l.scrollTop>40&&!rm?420:0);return}
   if(k==="poi"){const la=b.dataset.lat,lo=b.dataset.lon,ios=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
     window.open(ios?"https://maps.apple.com/?daddr="+la+","+lo+"&dirflg=w":"https://www.google.com/maps/dir/?api=1&destination="+la+","+lo+"&travelmode=bicycling","_blank","noopener");return}   // v361: kafelek → nawigacja w telefonie (iPhone: Mapy Apple, Android: Mapy Google rowerem)
   if(k==="more"){try{sessionStorage.setItem("arMore",arMoreOn()?"0":"1")}catch(err){}renderHome();return}
