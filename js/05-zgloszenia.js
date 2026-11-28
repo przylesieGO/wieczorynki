@@ -459,6 +459,8 @@ $("gearpanel").addEventListener("click",async e=>{
   const sn=e.target.closest("button[data-sn]");
   const sgp=e.target.closest("button[data-sgp]");   // 💬 okienka „Mam ochotę” (KROK 90)
   if(sgp){lsSet("sigPopOff",sgp.dataset.sgp==="1"?"1":"0");renderGear();say(sgp.dataset.sgp==="1"?"Bez okienek — sygnały zobaczysz pod 🔔.":"Pokażę okienko, gdy ktoś będzie miał ochotę.");return}
+  const eva=e.target.closest("button[data-eva]");   // 📍 Pytaj o imprezy spoza okolicy (KROK 114, js/08)
+  if(eva){evAskSet(eva.dataset.eva==="1");return}
   const ro=e.target.closest("button[data-ro]");
   if(ro){try{localStorage.setItem("repOff",ro.dataset.ro==="1"?"1":"0")}catch(err){}renderGear();say(ro.dataset.ro==="1"?"Nie będę pytać „Jak poszło?”.":"Zapytam „Jak poszło?” po jeździe.");return}
   const ht=e.target.closest("button[data-ht]");

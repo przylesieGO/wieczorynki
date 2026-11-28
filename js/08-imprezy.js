@@ -143,6 +143,52 @@ function evNearHtml(){
        +' · <button type="button" class="lnk" data-evo="area">zmień okolicę</button>'+(g?'':' · <button type="button" class="lnk" data-evo="gps">📡 moja lokalizacja</button>')
        +' · <button type="button" class="lnk" data-evnear="1">pokaż dalej ›</button></div></div>';
 }
+/* 📍 okienko przy wejściu w Imprezy (KROK 114, t CHECKbox 2 — decyzje właściciela 2026-11-28):
+   gdy „W okolicy” ukrywa nadchodzące imprezy — „Pokaż wszystkie” (cała Polska do zamknięcia aplikacji, bez zapisu evArea)
+   albo „Zostań przy okolicy”; raz na uruchomienie. „Nie pokazuj więcej” = user_opts.ev_area_ask (konto) + kopia w telefonie;
+   przywraca przełącznik ⚙️ → Jazdy i zaproszenia → „Pytaj o imprezy spoza okolicy”. */
+let evAsk={on:true,at:0,for:""},evAskDone=false,evAskPend=false;
+const evAskKey=()=>"evAsk:"+uid;
+function evAskOn(){if(evAsk.for!==uid){evAsk={on:(()=>{try{return localStorage.getItem(evAskKey())!=="0"}catch(e){return true}})(),at:0,for:uid}}return evAsk.on}
+async function evAskLoad(){
+  evAskOn();if(Date.now()-evAsk.at<6e5)return evAsk.on;   // z bazy najwyżej co 10 min
+  try{const r=await sb.from("user_opts").select("ev_area_ask").eq("user_id",uid).maybeSingle();
+    if(!r.error){evAsk.at=Date.now();evAsk.on=!r.data||r.data.ev_area_ask!==false;lsSet(evAskKey(),evAsk.on?"1":"0")}}catch(e){}
+  return evAsk.on;
+}
+async function evAskSet(v,quiet){
+  evAskOn();const old=evAsk.on;evAsk.on=v;lsSet(evAskKey(),v?"1":"0");if(gearOpen)renderGear();
+  try{const row={ev_area_ask:v,updated_at:new Date().toISOString()};
+    let r=await sb.from("user_opts").update(row).eq("user_id",uid).select("user_id");
+    if(!r.error&&!(r.data&&r.data.length))r=await sb.from("user_opts").insert(Object.assign({user_id:uid},row)).select("user_id");
+    if(r.error)throw r.error;evAsk.at=Date.now();
+    if(!quiet)say(v?"Zapytam, gdy „W okolicy” ukryje część imprez.":"Nie będę pytać o imprezy spoza okolicy.")}
+  catch(e){evAsk.on=old;lsSet(evAskKey(),old?"1":"0");if(gearOpen)renderGear();say("Nie udało się zapisać — spróbuj jeszcze raz.")}
+}
+const evTabOn=()=>{const p=$("p3");return !!p&&!p.classList.contains("hide")};
+async function evAreaAsk(){
+  if(evAskDone||!session||DEMO||PV_GUEST||!evOk||!evNearOn||!evGeoOk||!areaKm()||!originGet())return;
+  if(!evLoaded){evAskPend=true;return}   // dokończy renderEvents po wczytaniu imprez
+  evAskPend=false;
+  const up=evs.filter(e=>!evPast(e)&&(evFlt!=="delreq"||e.delete_req_at)&&(typeof fltEvOk!=="function"||fltEvOk(e)));
+  const near=up.filter(nearOk).length,far=up.length-near;if(!far)return;
+  evAskDone=true;
+  if(!await evAskLoad()||!evTabOn()||!evNearOn)return;
+  const a=areaCur(),noGeo=up.filter(e=>!evHasGeo(e)).length;
+  const r=await askOk((near?"Imprezy w okolicy: "+near+" z "+up.length:"W okolicy nie ma imprez")
+    +"\n\n📍 "+a.name+" · "+areaKmTxt(a.km)+". "+far+" "+plf(far,["impreza jest","imprezy są","imprez jest"])+" dalej"+(noGeo?" albo bez miejsca na mapie":"")+". Pokazać wszystkie do zamknięcia aplikacji?",
+    "Pokaż wszystkie",false,"Zostań przy okolicy","Nie pokazuj więcej");
+  if(r.ok){evNearOn=false;renderEvents()}   // bez zapisu „evArea” — po ponownym uruchomieniu wraca okolica
+  if(r.chk)evAskSet(false,true);
+  say((r.ok?"Pokazuję imprezy z całej Polski — do zamknięcia aplikacji. „📍 W okolicy” wraca do okolicy.":"Zostajesz przy imprezach z okolicy.")
+    +(r.chk?" Nie zapytam więcej — włączysz w ⚙️ → Jazdy i zaproszenia.":""));
+}
+// ⚙️ → Jazdy i zaproszenia: wiersz przełącznika (js/06 setRidesHtml)
+function evAskRow(){
+  if(!session||DEMO||!evGeoOk||!tabOk(3))return "";
+  const on=evAskOn();
+  return iosIt("#ff9f0a","pin","Pytaj o imprezy spoza okolicy",on?"Przy wejściu w Imprezy, gdy „W okolicy” ukrywa część z nich":"Wyłączone — całą Polskę pokaże przycisk „📍 W okolicy”",iosSw(on,"data-eva",on?"0":"1"));
+}
 // wyszukiwanie miejsc w OpenStreetMap (Nominatim) — tylko Polska
 async function geoSearch(q){
   q=String(q||"").trim();if(q.length<2)return [];
@@ -653,6 +699,7 @@ function renderEvents(){
   box.innerHTML=(evNearOn&&evGeoOk&&!originGet()?'<div class="note" style="margin-top:12px">Ustaw swoją miejscowość albo użyj lokalizacji, żeby zobaczyć imprezy w okolicy.</div>':
      h||'<div class="note" style="margin-top:12px">'+(evNearOn&&evGeoOk&&areaKm()?'Brak imprez w promieniu '+areaKm()+' km. <button type="button" class="lnk" data-evnear="1">Pokaż dalej ›</button>':evFltOn()?'Brak imprez dla tych filtrów. <button type="button" class="lnk" data-fxall="1">Wyczyść filtry</button>':(session?'Nie ma jeszcze imprez. Dodaj pierwszą — „＋ Dodaj imprezę”.':'Nie ma jeszcze imprez.'))+'</div>')
    +(noGeo?'<div class="note evnogeo">'+noGeo+' '+plf(noGeo,["impreza","imprezy","imprez"])+' bez miejsca na mapie (np. „do ogłoszenia”) — nie wiadomo, czy '+(noGeo===1?'jest':'są')+' blisko.</div>':'');
+  if(evAskPend&&evLoaded&&evTabOn())setTimeout(evAreaAsk,350);   // 📍 KROK 114: okienko czekało na wczytanie imprez
   $("evarch").innerHTML=past.length?'<div class="arch"><button type="button" class="ah" data-ev="arch">🗄 Minione imprezy<span>'+past.length+' '+(evArchOpen?'⌃':'⌄')+'</span></button>'+(evArchOpen?past.map(evCard).join(""):'')+'</div>':'';
 }
 async function evJoin(e,did){

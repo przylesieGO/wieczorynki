@@ -14,7 +14,9 @@ function show(n,dir){
   setTimeout(()=>{if(n===1&&map1)map1.m.invalidateSize();if(n===2&&map2)map2.m.invalidateSize()},60);
   try{tdLay()}catch(e){}   // 🃏 talia kart w nagłówku pokazuje tę samą zakładkę (try: show() bywa wołane, zanim talia powstanie)
 }
-[0,1,2,3].forEach(i=>{$("t"+i).onclick=()=>show(i)});
+// 📍 wejście użytkownika w Imprezy (przycisk, przesunięcie, talia kart) — okienko „W okolicy” (KROK 114, js/08); bez evGo i wyników wyszukiwania
+const tabIn=i=>{if(i===3&&typeof evAreaAsk==="function")setTimeout(evAreaAsk,350)};
+[0,1,2,3].forEach(i=>{$("t"+i).onclick=()=>{show(i);tabIn(i)}});
 /* przesuwanie palcem w bok przełącza zakładki (poza mapą, karuzelą zaproszeń, kartkami zegara i polami) */
 (()=>{
   let x0=0,y0=0,lock=0,dx=0,sec=null;
@@ -40,7 +42,7 @@ function show(n,dir){
     if(lock!==1||!sec){lock=0;return}
     const t=tabs(),i=t.indexOf(curTab),go=Math.abs(dx)>70?(dx<0?1:-1):0,ni=i+go;
     lock=0;
-    if(go&&ni>=0&&ni<t.length){show(t[ni],go)}
+    if(go&&ni>=0&&ni<t.length){show(t[ni],go);tabIn(t[ni])}
     else{sec.style.transition="transform .2s,opacity .2s";sec.style.transform="";sec.style.opacity=""}
   },{passive:true});
   document.addEventListener("touchcancel",()=>{if(sec){sec.style.transform="";sec.style.opacity=""}lock=0},{passive:true});
@@ -87,7 +89,7 @@ function tdLay(){const E=tdCards(),n=E.length;if(!n)return;const k0=TD_T.findInd
 // dir: 1 / -1 = przesunięcie (pomija puste karty), 0 = klik w kartę (pusta karta tylko się zatrzęsie — „Wkrótce”)
 function tdGo(k,dir){const n=TD_T.length;
   for(let s=0;s<n;s++){const kk=((k+s*(dir||1))%n+n)%n,i=TD_T[kk][0];
-    if(tabOk(i)){if(i!==curTab)show(i);else tdLay();return}
+    if(tabOk(i)){if(i!==curTab){show(i);tabIn(i)}else tdLay();return}
     if(!dir){const e=tdCards()[kk];e.classList.remove("wob");void e.offsetWidth;e.classList.add("wob");return}}}
 function tdHintDone(){lsSet(TD_HK,"1");const h=$("tdhint");if(h)h.remove()}
 const tdHint=()=>{const h=$("tdhint"),d=$("tdeck");if(!h||!d)return;if(lsGet(TD_HK)){h.remove();return}

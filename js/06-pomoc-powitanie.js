@@ -42,8 +42,9 @@ function setLookHtml(guest){
 function setRidesHtml(){
   return gGrp("Jazdy i zaproszenia",[reportOk?iosIt("#34c759","bike","Pytaj „Jak poszło?” po jeździe",repOff()?"Wyłączone — możesz ocenić jazdę z karty w 🗄 Archiwum":"Raz po jeździe: km, średnia, ocena (bez testowych)",iosSw(!repOff(),"data-ro",repOff()?"0":"1")):"",
     sigOn()?iosIt("#248a3d","hand","Okienka „Mam ochotę”",sigPopOff()?"Wyłączone — sygnały znajdziesz pod 🔔":"Pokaż od razu, gdy ktoś ma ochotę na jazdę, bieg albo spacer",iosSw(!sigPopOff(),"data-sgp",sigPopOff()?"0":"1")):"",
+    typeof evAskRow==="function"?evAskRow():"",
     typeof demoOptHtml==="function"?demoOptHtml():"",
-    typeof stActsRow==="function"?stActsRow():""]);   // 🧪 Ekipa demo (KROK 95, js/18); 🚪 Powiadamiaj mnie o (KROK 106, js/23)
+    typeof stActsRow==="function"?stActsRow():""]);   // 📍 Pytaj o imprezy spoza okolicy (KROK 114, js/08); 🧪 Ekipa demo (KROK 95, js/18); 🚪 Powiadamiaj mnie o (KROK 106, js/23)
 }
 // Testy: Testowe zaproszenia (każdy z włączoną funkcją) + Funkcje testowe (tylko testerzy)
 function setTestHtml(){
@@ -163,7 +164,7 @@ function helpFullHtml(){
      "Rajdy, gravele, maratony, biegi i marsze. Na karcie: data, miejsce, dystanse (z przewyższeniem i limitem czasu), „🏁 start za 12 dni”, zapisy trwają / zakończone, kto z nas jedzie.",
      "<b>Rozwiń kartę</b>, wybierz dystans i kliknij „Jadę!” (przy biegu „Biegnę”, przy marszu „Idę”). ❤ Lubię, 📅 do Google Kalendarza, udostępnij.",
      "<b>Filtry</b> nad listą (dla zalogowanych) — aktywność, rodzaj roweru, kiedy, gdzie, relacja (moje, jadę, zaproszony, ulubieni) i osoba. To te same filtry co w Zaproszeniach: ustawione tu działają też tam. Bomble Gravel / Szosa / MTB / E-bike / Bieg / Marsz / Moje to skróty, „Wszystkie” je czyści.",
-     "<b>📍 W okolicy</b> — domyślnie widzisz imprezy z <b>Mojej okolicy</b> (ten sam promień co na plakietce 📍 w nagłówku). <b>Pokaż dalej ›</b> albo kliknięcie „📍 W okolicy” pokazuje imprezy z całej Polski; „zmień okolicę” otwiera okno z suwakiem, „📡 moja lokalizacja” liczy odległość od miejsca, w którym jesteś. Na każdej karcie widać odległość w linii prostej.",
+     "<b>📍 W okolicy</b> — domyślnie widzisz imprezy z <b>Mojej okolicy</b> (ten sam promień co na plakietce 📍 w nagłówku). <b>Pokaż dalej ›</b> albo kliknięcie „📍 W okolicy” pokazuje imprezy z całej Polski; „zmień okolicę” otwiera okno z suwakiem, „📡 moja lokalizacja” liczy odległość od miejsca, w którym jesteś. Na każdej karcie widać odległość w linii prostej. Gdy okolica ukrywa część imprez, przy wejściu w Imprezy pojawia się okienko: <b>Pokaż wszystkie</b> (cała Polska do zamknięcia aplikacji) albo <b>Zostań przy okolicy</b>; „Nie pokazuj więcej” wyłącza je na koncie — włączysz w ⚙️ → Jazdy i zaproszenia → „Pytaj o imprezy spoza okolicy”.",
      "<b>＋ Dodaj imprezę</b> — każdy zalogowany. Autor i admin edytują; ⧉ Duplikuj tworzy kolejną edycję (rok i daty +1). Dystanse ułożysz, przeciągając ⋮⋮. Usuwa admin (autor prosi o usunięcie)."]):'')
    +(rbOk?sec("🗺️ Baza tras",[
      "<b>⚙️ → Baza tras</b> — trasy, którymi jeździmy. Sortowanie: najczęściej wybierane, najlepsze, najbardziej malownicze, najtrudniejsze, najłatwiejsze, najmniej aut, najwięcej lasu, asfalt, teren, gastronomia, najdłuższe, najbliżej (od Mojej miejscowości); filtr roweru i szukajka.",

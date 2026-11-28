@@ -257,16 +257,20 @@ document.addEventListener("click",e=>{
 });
 /* ✅ okno potwierdzenia w stylu aplikacji (zamiast systemowego confirm(), który część przeglądarek blokuje — wtedy nic się nie działo).
    askOk(tekst, napis przycisku, czerwony?, napis anulowania? — false = samo „OK”, okno informacyjne) → Promise<true/false>. Pierwszy akapit (do „\n\n”) to pytanie, reszta — opis pod nim. Enter = potwierdź, Esc / tło = anuluj. */
-function askOk(msg,ok,danger,no){
+// chk (KROK 114) — opcjonalne pole wyboru pod treścią (np. „Nie pokazuj więcej”, ten sam wygląd co w „Jak poszło?”):
+// wtedy wynik to {ok, chk} zamiast true/false; bez chk wszystko jak dotąd
+function askOk(msg,ok,danger,no,chk){
   return new Promise(res=>{
     const old=document.getElementById("cfm");if(old)old.remove();
     const [t,...rest]=String(msg).split("\n\n");
     const d=document.createElement("div");d.id="cfm";d.className="sheet cfm";d.setAttribute("role","alertdialog");d.setAttribute("aria-modal","true");
     d.innerHTML='<div class="sheetbox cfmbox"><div class="cfmt">'+esc(t)+'</div>'+(rest.length?'<div class="cfmd">'+esc(rest.join("\n\n"))+'</div>':'')
+      +(chk?'<button type="button" class="rchk" role="checkbox" aria-checked="false"><span class="cbx">'+(typeof CHECK!=="undefined"?CHECK:"")+'</span><span>'+esc(chk)+'</span></button>':'')
       +'<div class="cfmb">'+(no===false?'':'<button type="button" class="cfmno">'+esc(no||"Anuluj")+'</button>')+'<button type="button" class="cfmok'+(danger?' bad':'')+'">'+esc(ok||"OK")+'</button></div></div>';
     const kd=e=>{if(e.key==="Escape"||e.key==="Enter"){e.preventDefault();e.stopPropagation();done(e.key==="Enter")}};
-    const done=v=>{document.removeEventListener("keydown",kd,true);d.remove();res(v)};
-    d.addEventListener("click",e=>{e.stopPropagation();if(e.target===d||e.target.closest(".cfmno"))done(false);else if(e.target.closest(".cfmok"))done(true)});
+    const done=v=>{document.removeEventListener("keydown",kd,true);const c=d.querySelector(".rchk");d.remove();res(chk?{ok:v,chk:!!c&&c.classList.contains("on")}:v)};
+    d.addEventListener("click",e=>{e.stopPropagation();const c=e.target.closest(".rchk");if(c){const on=c.classList.toggle("on");c.setAttribute("aria-checked",on);return}
+      if(e.target===d||e.target.closest(".cfmno"))done(false);else if(e.target.closest(".cfmok"))done(true)});
     document.addEventListener("keydown",kd,true);document.body.appendChild(d);d.querySelector(".cfmok").focus();
   });
 }
