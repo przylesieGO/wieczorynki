@@ -635,7 +635,7 @@ function renderWants0(){
      +'<div class="ftile'+(n===0?' today':'')+(d.ws.some(wLive)?' live':'')+'">'+ftInner(dt)+ftWxHtml(d.ws)+'</div>'
      +'<div class="wtx"><div class="wl1">'+l1+' · <span class="whrs'+(open?' whrsall':'')+'">'+wHrsHtml(d.ws,open,ord.length?ord[Math.min(dayIdx[d.k]||0,ord.length-1)].id:'',d.k)+'</span></div>'
      +(byNew&&typeof agoTxt==="function"?'<div class="wdad">dodano '+esc(agoTxt(cr(d.ws[0])))+'</div>':'')
-     +'<div class="wl2">'+pplHtml+'</div>'+wFarLine(d.ws)+'</div>'+wl4Html(d.ws)
+     +'<div class="wl2">'+pplHtml+'</div>'+wFarLine(d.ws)+twDay(d.ws,open&&ord.length?ord[Math.min(dayIdx[d.k]||0,ord.length-1)].id:'')+'</div>'+wl4Html(d.ws)
      +(cnt>1||dPriv?'<span class="wbd">'+(dPriv?'<span class="wlk" aria-label="'+dPriv+' prywatne">'+uiIcon("lock")+dPriv+'</span>':'')+(cnt>1?'<span class="wcnt" aria-label="'+cnt+' '+zg+'">'+cnt+'</span>':'')+'</span>':'')
      +'</summary>'+mineTop.map(wantDayHtml).join("")+(ord.length>1
        ?'<div class="dcar" data-day="'+d.k+'">'+ord.map(w=>wantHtml(w)).join("")+'</div><div class="mydots ddots"><button type="button" class="darr" data-dd="-1" aria-label="Poprzednie zaproszenie"'+((dayIdx[d.k]||0)<=0?' disabled':'')+'><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button>'+ord.map((_,i)=>'<button type="button" data-ddot="'+i+'" class="'+(i===(dayIdx[d.k]||0)?'on':'')+'" aria-label="Zaproszenie '+(i+1)+'"></button>').join("")+'<button type="button" class="darr" data-dd="1" aria-label="Następne zaproszenie"'+((dayIdx[d.k]||0)>=ord.length-1?' disabled':'')+'><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><span>'+(Math.min(dayIdx[d.k]||0,ord.length-1)+1)+' z '+ord.length+'</span></div>'
@@ -655,6 +655,13 @@ function wFarLine(ws){const c=new Map(),o=areaCur(),km=w=>dist({lat:o.lat,lon:o.
   ws.filter(wFar).forEach(w=>{const p=c.get(w.place_city)||{n:0,k:Infinity};p.n++;p.k=Math.min(p.k,km(w));c.set(w.place_city,p)});   // miejscowość → ile zaproszeń z niej w tym dniu, najbliższe
   const a=[...c.keys()].sort((x,y)=>c.get(x).k-c.get(y).k);
   return a.length?'<div class="wl2 wfar">'+uiIcon("pin")+a.slice(0,3).map(x=>{const p=c.get(x);return '<button type="button" class="wfc'+(flt.where==="c:"+x?' on':'')+'" data-wc="'+esc(x)+'">'+esc(x)+(isFinite(p.k)?' · '+(p.k<1?'&lt;1':Math.round(p.k))+' km':'')+(p.n>1?' <i>'+p.n+'</i>':'')+'</button>'}).join("")+(a.length>3?'<b>+'+(a.length-3)+'</b>':'')+'</div>':''}
+/* 📍 v384: „Na radarze:” w zwiniętej karcie dnia — miejscowości ze wszystkich zaproszeń dnia (od najbliższej środka okolicy, bez tych, które są już w pigułce odległości), zwinięta: 2 + „+N”; rozwinięta: wszystkie, a te, których nie dotyczy widoczne w karuzeli zaproszenie, przygaszone (.twoff — jak godziny); stuknięcie otwiera radar (handler [data-tw] na końcu pliku) */
+const twMemo=new Map();
+function twDay(ws,cur){const o=areaCur(),far=new Set(ws.filter(wFar).map(w=>lc(w.place_city))),m=new Map();
+  ws.forEach(w=>{const tx=(w.title||"")+" . "+(w.note||"");let L=twMemo.get(tx);if(!L){L=townsIn(tx);if(twMemo.size>400)twMemo.clear();twMemo.set(tx,L)}
+    L.forEach(t=>{if(far.has(lc(t[0])))return;const e=m.get(t[0])||{t,ids:[]};e.ids.push(w.id);m.set(t[0],e)})});
+  const a=[...m.values()].sort((x,y)=>dist({lat:o.lat,lon:o.lon},{lat:x.t[1],lon:x.t[2]})-dist({lat:o.lat,lon:o.lon},{lat:y.t[1],lon:y.t[2]}));
+  return a.length?'<div class="wl2 twrow twcol">'+uiIcon("radar")+a.map(e=>'<button type="button" class="twchip'+(cur&&!e.ids.includes(cur)?' twoff':'')+'" data-tw="'+esc(e.t[0])+'" data-lat="'+e.t[1]+'" data-lon="'+e.t[2]+'" data-wids="'+esc(e.ids.join(" "))+'">'+esc(e.t[0])+'</button>').join("")+(a.length>2?'<span class="twmore">+'+(a.length-2)+'</span>':'')+'</div>':''}
 function wHrsHtml(ws0,open,cur,k){
   const ex=k?wMyDay(k).filter(w=>!ws0.includes(w)):[],ws=ex.length?ws0.concat(ex).sort(flt.sort==="new"?(a,b)=>new Date(b.created_at||b.starts_at)-new Date(a.created_at||a.starts_at):(a,b)=>new Date(a.starts_at)-new Date(b.starts_at)):ws0;   // cur = zaproszenie widoczne w rozwiniętym dniu (.hon) — pozostałe godziny przygaszone, tylko gdy dzień otwarty
   const hw=ws.filter(wLive).concat(ws.filter(w=>!wLive(w)));
@@ -669,7 +676,7 @@ function wHrsHtml(ws0,open,cur,k){
 const dayIdx={};
 let lastSort=flt.sort;
 // fioletowa ramka otwartego dnia, gdy widać w nim zaproszenie prywatne (aktualna karta karuzeli lub własne u góry)
-function wdPvSync(c,idx){const d=c.closest("details.wday");if(!d)return;const it=c.children[idx];d.querySelectorAll(".whb").forEach(b=>b.classList.toggle("hon",!!it&&b.dataset.whr===it.dataset.wid));d.classList.toggle("wpv",!!d.querySelector(":scope>.want[data-priv]")||!!(it&&it.dataset.priv==="1"))}
+function wdPvSync(c,idx){const d=c.closest("details.wday");if(!d)return;const it=c.children[idx];d.querySelectorAll(".whb").forEach(b=>b.classList.toggle("hon",!!it&&b.dataset.whr===it.dataset.wid));d.querySelectorAll(".twchip[data-wids]").forEach(b=>b.classList.toggle("twoff",!!it&&!b.dataset.wids.split(" ").includes(it.dataset.wid)));d.classList.toggle("wpv",!!d.querySelector(":scope>.want[data-priv]")||!!(it&&it.dataset.priv==="1"))}
 function dcarGoto(c,idx,smooth){
   const it=c.children[idx];if(!it)return;
   const left=it.offsetLeft-c.offsetLeft-(c.clientWidth-it.offsetWidth)/2;
