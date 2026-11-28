@@ -230,6 +230,7 @@ function nickEditHtml(){
      +'<p class="note pe-note">Najlepiej <b>imię + litera nazwiska</b> albo ksywka, np. <i>Ania K</i>, <i>Marek z Bielan</i>. Co najmniej 3 litery, do 20 znaków: litery, cyfry, spacja, kropka, _ lub -. Nick musi być unikalny; widzą go inni zalogowani. Zmienisz go raz na 14 dni.'+(nickNext?' <b>Kolejna zmiana możliwa od '+esc(nickDay(nickNext))+'.</b>':'')+'</p>'
      +'<div class="nsug hide" id="gnicksug"></div>':'')
    +sex
+   +(typeof profActsHtml==="function"?profActsHtml():"")   // 🔔 v392: te same kafelki aktywności co na karcie profilu
    +profHubHtml()
    +gGrp("Konto",[gRow("#636366","key","Zmień hasło",esc(session&&session.user.email||""),'','data-c="pwd"')])
    +'<div class="note" id="gnickinfo" style="color:var(--bad);margin-top:8px"></div>'

@@ -98,6 +98,29 @@ const tdHint=()=>{const h=$("tdhint"),d=$("tdeck");if(!h||!d)return;if(lsGet(TD_
   h.classList.remove("go");d.classList.remove("nudge");void h.offsetWidth;h.classList.add("go");d.classList.add("nudge");
   setTimeout(()=>{h.classList.remove("go");d.classList.remove("nudge")},3000)};
 tdLay();setTimeout(tdHint,4000);setInterval(tdHint,45000);
+/* 🌓 v392: co jakiś czas okienko na głównym ekranie — „Jasny czy ciemny motyw?” (przyciski Jasny / Ciemny / Auto, na dole „Nie pokazuj więcej”).
+   Pierwszy raz doba po wejściu w tę wersję, potem co 7 dni; „Nie pokazuj więcej” zapamiętane na tym urządzeniu (lsGet/lsSet) */
+const THM_EVERY=7*864e5;
+function themeAsk(force){
+  if(document.getElementById("cfm"))return;
+  const d=document.createElement("div");d.id="cfm";d.className="sheet cfm";d.setAttribute("role","dialog");d.setAttribute("aria-modal","true");
+  const seg=()=>'<div class="seg">'+[["light","☀️ Jasny"],["dark","🌙 Ciemny"],["auto","Auto"]].map(([k,n])=>'<button type="button" data-tm="'+k+'" class="'+(themeMode===k?"on":"")+'">'+n+'</button>').join("")+'</div>';
+  d.innerHTML='<div class="sheetbox cfmbox"><div class="cfmt">Jasny czy ciemny motyw?</div><div class="cfmd">Wybierz wygląd aplikacji. Zmienisz go w każdej chwili: ⚙️ → Wygląd albo przyciskiem przy nazwie aplikacji.</div>'
+    +seg()+'<button type="button" class="rchk" role="checkbox" aria-checked="false"><span class="cbx">'+(typeof CHECK!=="undefined"?CHECK:"")+'</span><span>Nie pokazuj więcej</span></button>'
+    +'<div class="cfmb"><button type="button" class="cfmok">Gotowe</button></div></div>';
+  const done=()=>{document.removeEventListener("keydown",kd,true);const c=d.querySelector(".rchk");lsSet("thmAskAt",String(Date.now()));if(c&&c.classList.contains("on"))lsSet("thmAskOff","1");d.remove()};
+  const kd=e=>{if(e.key==="Escape"||e.key==="Enter"){e.preventDefault();e.stopPropagation();done()}};
+  d.addEventListener("click",e=>{e.stopPropagation();const t=e.target.closest("[data-tm]");
+    if(t){setTheme(t.dataset.tm);d.querySelectorAll("[data-tm]").forEach(b=>b.classList.toggle("on",b===t));return}
+    const c=e.target.closest(".rchk");if(c){const on=c.classList.toggle("on");c.setAttribute("aria-checked",on);return}
+    if(e.target===d||e.target.closest(".cfmok"))done()});
+  document.addEventListener("keydown",kd,true);document.body.appendChild(d);d.querySelector(".cfmok").focus();
+}
+function themeAskTick(){
+  if(lsGet("thmAskOff")||document.hidden||!session||DEMO||gearOpen||curTab!==0||document.getElementById("cfm")||document.documentElement.classList.contains("sheetlock"))return;
+  const at=+lsGet("thmAskAt");if(!at){lsSet("thmAskAt",String(Date.now()-THM_EVERY+864e5));return}   // pierwszy raz za dobę
+  if(Date.now()-at>=THM_EVERY)themeAsk()}
+setTimeout(themeAskTick,15000);setInterval(themeAskTick,10*60000);
 setInterval(()=>{if(!document.hidden)tdBadges(false)},5000);
 setInterval(()=>{if(!document.hidden){tdPh^=1;tdBadges(true)}},30000);
 

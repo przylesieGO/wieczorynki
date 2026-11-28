@@ -27,11 +27,11 @@
 <meta property="og:image:height" content="512">
 <meta property="og:image:alt" content="Logo PrzylesieGo! — dwa koła">
 <meta name="twitter:card" content="summary">
-<link rel="stylesheet" href="css/app.css?v=391">
+<link rel="stylesheet" href="css/app.css?v=392">
 </head>
 <body>
 <!-- ===== EKRAN ŁADOWANIA (wariant A2 — kręcące się koła logo; znika po wczytaniu danych) ===== -->
-<script>try{var t=localStorage.getItem("theme")||"auto";document.documentElement.dataset.theme=(t==="dark"||(t==="auto"&&matchMedia("(prefers-color-scheme: dark)").matches))?"dark":"light"}catch(e){}</script>
+<script>try{var t=localStorage.getItem("theme");if(t===null&&localStorage.length===0){t="dark";localStorage.setItem("theme","dark")}t=t||"auto";document.documentElement.dataset.theme=(t==="dark"||(t==="auto"&&matchMedia("(prefers-color-scheme: dark)").matches))?"dark":"light"}catch(e){}</script>
 <div id="boot" class="boot" role="status" aria-live="polite"><svg class="bootlogo" viewBox="0 0 120 120" aria-hidden="true"><rect width="120" height="120" rx="27" fill="#1f9d55"/><g class="bw1"><circle cx="44" cy="62" r="25" fill="none" stroke="#fff" stroke-width="9" stroke-dasharray="118 39"/></g><g class="bw2"><circle cx="76" cy="62" r="25" fill="none" stroke="#fbbf24" stroke-width="9" stroke-dasharray="118 39"/></g><circle cx="44" cy="62" r="4" fill="#fff"/><circle cx="76" cy="62" r="4" fill="#fbbf24"/></svg><div class="bootnm">PrzylesieGo!</div><div class="boottx" id="boottx">Wczytuję zaproszenia…</div>
 <div class="booterr hide" id="booterr"><div class="bootmsg" id="bootmsg">📡 Brak połączenia z internetem</div><button type="button" class="b" id="bootretry">↻ Spróbuj ponownie</button><button type="button" class="lnk" id="bootskip">Kontynuuj bez czekania ›</button></div>
 <div class="bootbeta">Wersja testowa (BETA)</div></div>
@@ -306,30 +306,30 @@
 <div class="toast hide" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" integrity="sha384-0w2KAL2YHP6wKOkUDzkCDGgVvfmHnj02DHeQ6XcHOgTfFsGyonKOpShMH1x6nk9o" crossorigin="anonymous"></script>
-<script src="js/01-podstawy.js?v=391"></script>
-<script src="js/02-ikony.js?v=391"></script>
-<script src="js/03-stan.js?v=391"></script>
-<script src="js/04-ustawienia.js?v=391"></script>
-<script src="js/05-zgloszenia.js?v=391"></script>
-<script src="js/06-pomoc-powitanie.js?v=391"></script>
-<script src="js/07-pogoda-zaproszen.js?v=391"></script>
-<script src="js/08-imprezy.js?v=391"></script>
-<script src="js/09-trasy.js?v=391"></script>
-<script src="js/10-zaproszenia.js?v=391"></script>
-<script src="js/11-dzwonek.js?v=391"></script>
-<script src="js/12-wieczorynki.js?v=391"></script>
-<script src="js/13-online-statystyki.js?v=391"></script>
-<script src="js/14-synchronizacja.js?v=391"></script>
-<script src="js/15-wieczorynki-formularz.js?v=391"></script>
-<script src="js/16-start.js?v=391"></script>
-<script src="js/17-grupy.js?v=391"></script>
-<script src="js/18-ekipa-demo.js?v=391"></script>
-<script src="js/20-serwis.js?v=391"></script>
-<script src="js/21-szukaj.js?v=391"></script>
-<script src="js/22-przewodnik.js?v=391"></script>
-<script src="js/23-start.js?v=391"></script>
-<script src="js/24-slad.js?v=391"></script>
-<script src="js/25-teren.js?v=391"></script>
-<script src="js/26-miejsca.js?v=391"></script>
+<script src="js/01-podstawy.js?v=392"></script>
+<script src="js/02-ikony.js?v=392"></script>
+<script src="js/03-stan.js?v=392"></script>
+<script src="js/04-ustawienia.js?v=392"></script>
+<script src="js/05-zgloszenia.js?v=392"></script>
+<script src="js/06-pomoc-powitanie.js?v=392"></script>
+<script src="js/07-pogoda-zaproszen.js?v=392"></script>
+<script src="js/08-imprezy.js?v=392"></script>
+<script src="js/09-trasy.js?v=392"></script>
+<script src="js/10-zaproszenia.js?v=392"></script>
+<script src="js/11-dzwonek.js?v=392"></script>
+<script src="js/12-wieczorynki.js?v=392"></script>
+<script src="js/13-online-statystyki.js?v=392"></script>
+<script src="js/14-synchronizacja.js?v=392"></script>
+<script src="js/15-wieczorynki-formularz.js?v=392"></script>
+<script src="js/16-start.js?v=392"></script>
+<script src="js/17-grupy.js?v=392"></script>
+<script src="js/18-ekipa-demo.js?v=392"></script>
+<script src="js/20-serwis.js?v=392"></script>
+<script src="js/21-szukaj.js?v=392"></script>
+<script src="js/22-przewodnik.js?v=392"></script>
+<script src="js/23-start.js?v=392"></script>
+<script src="js/24-slad.js?v=392"></script>
+<script src="js/25-teren.js?v=392"></script>
+<script src="js/26-miejsca.js?v=392"></script>
 </body>
 </html>

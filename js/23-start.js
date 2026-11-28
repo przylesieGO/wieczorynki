@@ -129,3 +129,16 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-stgo]");if
 // wiersze do ⚙️ (js/06 woła je przy rysowaniu, gdy plik jest wczytany)
 const stTestRow=()=>stOn()&&meTester()?gRow("#bf5af2","sparkles","Pokaż ekran startowy jeszcze raz","Kroki po zalogowaniu: okolica i aktywności (🧪 BETA)","",'data-stgo="all"'):"";
 const stActsRow=()=>stOn()||stActsHas()?gRow("#34c759","heart","Powiadamiaj mnie o",stActsTxt(),"",'data-stgo="acts"'):"";
+// 🔔 v392: „Otrzymujesz powiadomienia dla:” — klikane kafelki aktywności na karcie profilu w ⚙️ i w Edytuj profil (tylko właściciel konta; te same kafelki .wbk co na ekranie startowym, ten sam zapis profile_private.acts)
+function profActsHtml(){
+  if(!session||DEMO||!(stOn()||stActsHas()))return "";
+  const A=myPriv&&Array.isArray(myPriv.acts)?myPriv.acts:[];
+  return gGrp(A.length?"Otrzymujesz powiadomienia dla:":"Powiadomienia dla wszystkich aktywności — wybierz, co lubisz:",['<div class="ios-it dmcol"><div class="wbike sigacts stacts">'+actAvail().map(a=>{const on=A.includes(a.key);
+    return '<button type="button" class="wbk'+(on?' on':'')+'" data-pfa="'+esc(a.key)+'" aria-pressed="'+on+'">'+uiIcon(a.icon||"bike")+'<span>'+esc(a.name_many||a.name)+'</span></button>'}).join("")+'</div></div>']);
+}
+let pfaBusy=false;
+document.addEventListener("click",async e=>{const b=e.target.closest("[data-pfa]");if(!b||pfaBusy)return;
+  const k=b.dataset.pfa,A=myPriv&&Array.isArray(myPriv.acts)?myPriv.acts.filter(x=>stActKeys().includes(x)):[],N=A.includes(k)?A.filter(x=>x!==k):A.concat([k]);
+  if(!N.length){say("Zostaw co najmniej jedną aktywność.");return}
+  pfaBusy=true;try{if(await stSave({acts:N}))say("Zapisane: "+stActsTxt()+".")}finally{pfaBusy=false}
+  if(gearOpen)renderGear()});
