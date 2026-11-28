@@ -183,7 +183,7 @@ async function evAreaAsk(){
   say((r.ok?"Pokazuję wszystkie imprezy — do zamknięcia aplikacji. Filtr „📍 W okolicy” wraca do okolicy.":"Zostajesz przy imprezach z okolicy.")
     +(r.chk?" Nie zapytam więcej — włączysz w ⚙️ → Jazdy i zaproszenia.":""));
 }
-// 📍 przycisk „W okolicy” — JEDEN wygląd w Zaproszeniach i Imprezach (v375): włączony = Moja okolica · km, wyłączony = wszystko
+// 📍 przycisk „W okolicy” w Imprezach (v375): włączony = Moja okolica · km, wyłączony = wszystko; Zaproszenia — Filtry → Okolica (v376)
 function nearChip(on,attr){if(!areaKm())return "";const a=areaCur();
   return '<button type="button" class="fch near'+(on?' on':'')+'" '+attr+' aria-pressed="'+on+'" title="'+(on?'Pokazuję tylko okolicę — kliknij, żeby pokazać wszystkie':'Pokazuję wszystkie — kliknij, żeby zostawić tylko okolicę')+'">'+uiIcon("pin")+(on?(a.peek?esc(a.name)+' · ':'W okolicy · ')+areaKmTxt(a.km):'W okolicy')+'</button>'}
 // Zaproszenia: filtr widoku (domyślnie włączony — okolica to główny mechanizm, decyzja 2026-11-26); 🔔 i powiadomienia liczą się z okolicy zawsze

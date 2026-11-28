@@ -387,13 +387,13 @@ function renderWants(){try{renderSteps()}catch(e){}
   try{renderWants0()}finally{wants=raw;wantsNoFlt=null}
   {const out=raw.filter(wUpcoming).length-inA.filter(wUpcoming).length,l=$("wantlist");   // 📍 v270: ile otwartych zaproszeń jest poza okolicą
     if(out>0&&l&&typeof areaCur==="function"){const a=areaCur();l.insertAdjacentHTML("beforeend",'<div class="note arout">'+uiIcon("pin")+' Poza okolicą ('+esc(a.name)+' · '+areaKmTxt(a.km)+'): '+out+' '+plf(out,["zaproszenie","zaproszenia","zaproszeń"])+' · <button type="button" class="lnk" data-arout="1">zmień okolicę ›</button></div>')}
+    if(!wNearOn&&session&&l&&typeof areaCur==="function"){const a=areaCur();l.insertAdjacentHTML("beforeend",'<div class="note arout">'+uiIcon("pin")+' Wszystkie zaproszenia — także spoza okolicy ('+esc(a.name)+' · '+areaKmTxt(a.km)+') · <button type="button" class="lnk" data-wnear="1">tylko okolica ›</button></div>')}   // 📍 v376: okolica wyłączona w Filtrach
     const hid=inA.filter(wUpcoming).filter(w=>!all.includes(w));   // 🔔 v283: zaproszenia innych aktywności w okolicy
     if(hid.length&&l&&typeof actHidHtml==="function")l.insertAdjacentHTML("beforeend",actHidHtml(hid.map(w=>w.activity),"zaproszeń"))}
   renderArch(raw);
   const ws=$("wstat");if(ws){const up=all.filter(wUpcoming),me=up.filter(w=>w.user_id===uid||(joins[w.id]||[]).includes(uid)).length;   // widoczne dla mnie / biorę udział
     ws.classList.toggle("hide",!session);ws.innerHTML=uiIcon("hand")+'<button type="button" data-ws="all" class="'+(flt.who!=="part"?"on":"")+'">'+up.length+'</button><s>/</s><button type="button" data-ws="part" class="'+(flt.who==="part"?"on":"")+'">'+me+'</button>';
     ws.title="Zaproszenia widoczne dla Ciebie / te, w których bierzesz udział";ws.setAttribute("aria-label","Zaproszeń widocznych: "+up.length+", w których bierzesz udział: "+me)}
-  {const wn=$("wnear");if(wn)wn.innerHTML=session&&typeof nearChip==="function"?nearChip(wNearOn,'data-wnear="1"'):""}   // 📍 v375: ten sam przycisk co w Imprezach
   const b=$("fltbtn"),bar=$("fltbar");if(!b)return;
   b.classList.toggle("hide",!session);mysfSync();
   const n=fltKeys().length;
@@ -512,7 +512,8 @@ function fltRefresh(){if($("fltok")||$("fltstk"))fltDraw();renderWants();if(type
 function fltMainHtml(){
   const sec=(k,t)=>'<div class="fsec"><div class="bsgrp">'+t+'</div><div class="fchips" id="flt_'+k+'"></div></div>';
   const go=(k,ico,t)=>'<div class="fsec"><button type="button" class="secbar fgo" data-fk="sub" data-fv="'+k+'"><span class="bst">'+uiIcon(ico)+'<span>'+t+'</span></span><span class="wsplsel" id="fsum_'+k+'"></span><svg class="bschev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>';
-  const ar=typeof areaCur==="function"?areaCur():null,area=ar?'<div class="fsec"><button type="button" class="secbar fgo" data-fk="area"><span class="bst">'+uiIcon(ar.peek?"eye":"radar")+'<span>Okolica</span></span><span class="wsplsel'+(ar.peek?' farpeek':'')+'">'+esc(ar.name)+' · '+areaKmTxt(ar.km)+'</span><svg class="bschev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>':'';   // 📍 v270: Moja okolica (promień w profilu, nie znika z filtrami)
+  const ar=typeof areaCur==="function"?areaCur():null,nOn=fltScope==="ev"?evNearOn:wNearOn,area=ar?'<div class="fsec farea"><button type="button" class="secbar fgo'+(nOn?'':' foff')+'" data-fk="area"><span class="bst">'+uiIcon(ar.peek?"eye":"radar")+'<span>Okolica</span></span><span class="wsplsel'+(ar.peek?' farpeek':'')+(nOn?'':' foff')+'">'+(nOn?esc(ar.name)+' · '+areaKmTxt(ar.km):'wyłączona — widzisz wszystkie')+'</span><svg class="bschev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>'
+    +'<button type="button" class="ios-sw'+(nOn?' on':'')+'" role="switch" aria-checked="'+nOn+'" aria-label="Tylko okolica" title="'+(nOn?'Tylko okolica — wyłącz, żeby pokazać wszystkie':'Wszystkie — włącz, żeby zostawić tylko okolicę')+'" data-fk="near" data-fv="'+(nOn?"0":"1")+'"></button></div>':'';   // 📍 v270: Moja okolica (promień — wiersz otwiera radar); v376: przełącznik „tylko okolica” w tym samym wierszu (zamiast przycisku w nagłówku listy)
   if(fltScope==="ev")return '<div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="close">Zamknij</button><b>Filtry imprez</b><span style="min-width:64px"></span></div>'
    +'<div class="bslist" id="fltlist"><div class="note fscope">Te same filtry działają w Zaproszeniach i w „Mam ochotę” pod 🔔.</div>'+area+sec("act","Aktywność")+'<div id="fltbikebox"'+(fltBikeOn()?'':' class="hide"')+'>'+sec("bike","Rodzaj roweru")+'</div>'+sec("when","Kiedy")+sec("who","Relacja")
    +go("where","pin","Gdzie")+go("user","user","Osoba")+'</div>'+fltFabHtml()+'<button type="button" class="b big" id="fltok" data-fk="close">Gotowe</button>';
@@ -541,7 +542,8 @@ $("fltsheet").addEventListener("click",e=>{
   const k=b.dataset.fk;
   if(k==="close"){closeFlt();return}
   if(k==="sigwin"){closeFlt();openSigWin();return}
-  if(k==="area"){closeFlt();openHome();return}   // 📍 v270: okno Moja okolica (js/08)   // bombel „Sygnały” w Relacji → okno z listą sygnałów (js/11)
+  if(k==="area"){closeFlt();openHome();return}
+  if(k==="near"){const on=b.dataset.fv==="1";if(fltScope==="ev"){evNearOn=on;lsSet("evNear",on?"1":"0")}else{wNearOn=on;lsSet("wArea",on?"1":"0")}renderFlt();fltRefresh();return}   // 📍 v376   // 📍 v270: okno Moja okolica (js/08)   // bombel „Sygnały” w Relacji → okno z listą sygnałów (js/11)
   if(k==="undo"){if(Date.now()-fltSwiped<500)return;if(b.dataset.ok){closeFlt();return}const t=fltHist.pop();if(t){flt=Object.assign(fltEmpty(),JSON.parse(t));fltSave();fltRefresh()}else closeFlt();return}   // Cofnij: cofa zmianę; po przesunięciu kciukiem to OK = zamknij; bez zmian do cofnięcia — zamyka okno
   if(k==="clear"){fltSnap();flt=fltEmpty();fltQ="";fltSave();fltRefresh();return}
   if(k==="sub"){const l=$("fltlist");fltScroll=l?l.scrollTop:0;fltSub=b.dataset.fv;fltQ="";renderFlt();return}

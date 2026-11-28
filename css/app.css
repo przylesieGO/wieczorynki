@@ -1031,6 +1031,10 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 .ucrole{color:var(--acc);font-weight:600}.ucrole .ui-i{width:15px;height:15px;vertical-align:-2px}
 /* ▸ zwijane sekcje osób i list — jeden wygląd (pasek + drabinka jak pod 🔔), w oknach i w Ustawieniach */
 .secbar{display:flex;align-items:center;gap:8px;width:100%;border:0;background:var(--fill);border-radius:12px;padding:13px 14px;margin:10px 0 6px;font:inherit;font-size:16px;font-weight:700;color:var(--ink);cursor:pointer;text-align:left}
+.farea{display:flex;align-items:center;gap:10px}.farea .secbar{flex:1;min-width:0}.farea .wsplsel.foff{color:var(--bad);font-weight:700}
+.farea .secbar.foff .bschev{width:24px;height:24px;color:var(--bad);stroke-width:3;animation:fnudge 1.1s ease-in-out infinite}   /* v376: okolica wyłączona — czerwona strzałka „pcha” w stronę przełącznika */
+@keyframes fnudge{0%,100%{transform:rotate(-90deg) translateY(0)}50%{transform:rotate(-90deg) translateY(5px)}}
+@media (prefers-reduced-motion:reduce){.farea .secbar.foff .bschev{animation:none}}   /* v376: Filtry → Okolica + przełącznik „tylko okolica” */
 .secbar .bst{display:inline-flex;align-items:center;gap:8px;min-width:0;flex:none}.secbar .bst .ui-i{width:19px;height:19px;color:var(--acc);flex:none}.secbar .secstar .ui-i{color:#ffcc00}
 .secbar .cnt0{min-width:22px;height:22px;border-radius:10px;padding:0 6px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;background:var(--card);color:var(--mut);box-shadow:inset 0 0 0 1.5px var(--line);flex:none}
 .secbar .wsplsel{flex:1;min-width:0;font-size:14px;font-weight:600;color:var(--acc);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
@@ -1381,7 +1385,7 @@ mark.srmk.out{background:transparent;color:inherit;box-shadow:none}
 @media (hover:hover) and (pointer:fine),(min-width:700px){.fltbox .fchips,#flt_when{flex-wrap:wrap;overflow:visible;margin-right:0;padding-right:0;row-gap:7px}.evchips{flex-wrap:wrap;overflow:visible;row-gap:7px}}   /* myszka / szeroki ekran: bomble się zawijają */
 .fscope{margin:0 0 4px;font-size:13px}
 .evchips .fch.evfb{display:inline-flex;align-items:center;gap:5px;order:-1}.evchips .fch.evfb .ui-i,.fch.near .ui-i{width:15px;height:15px}
-.fch.near{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}#wnear .fch.near{padding:7px 12px;font-size:14px}   /* v375: 📍 W okolicy — ten sam przycisk w Zaproszeniach (obok Filtrów) i Imprezach */
+.fch.near{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}   /* v375: 📍 W okolicy (Imprezy); w Zaproszeniach — Filtry → Okolica (v376) */
 #evfltbar{margin-top:8px}
 .arng{margin:8px 0 2px;flex-wrap:wrap}.arng .fch{padding:6px 12px;font-size:14px}
 .srold{display:flex;flex-direction:column;gap:6px;padding:9px 12px;background:var(--fill);border-bottom:1px solid var(--line)}
