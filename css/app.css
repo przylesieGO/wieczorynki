@@ -1083,7 +1083,7 @@ html[data-theme=dark] .want.wgrp,html[data-theme=dark] .nit.wgrp{--gcb:color-mix
 html[data-theme=dark] .popbox.wgrp{background:color-mix(in srgb,var(--gc,#8e8e93) 22%,var(--card))}
 /* 🔒 okno „Nowe zaproszenie” po wejściu do aplikacji: prywatne = fioletowe jak karta w kalendarzu (2026-11-24) */
 /* okienko zaproszenia: tło karty lekko przezroczyste (80%); prywatność = plakietka „prywatne” (.lockt.priv, jak na zaproszeniach), godzina bez zmian */
-.popbox:not(.wgrp){background:color-mix(in srgb,var(--card) 80%,transparent)}
+.popbox:not(.wgrp){background:color-mix(in srgb,var(--card) 90%,transparent)}   /* v386: krycie okien popup 80% → 90% (czytelność) */
 .ttag .ui-i{width:12px;height:12px;vertical-align:-2px;margin-right:3px}   /* ikona kolby w plakietce TEST (zamiast emotki) */
 .popbox .lockt{display:inline-block;font-size:12px;font-weight:800;padding:2px 10px;letter-spacing:.03em;line-height:18px;text-transform:uppercase}.popbox .ptag:has(+.lockt){margin-right:6px}.popbox .pcard>.lockt{margin-right:40px}   /* plakietki w jednym rzędzie, po kolei; 40px zapasu przy ✕ tylko za ostatnią */
 .popbox .sgpriv.pp{font-size:13px;margin-left:6px}
