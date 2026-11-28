@@ -252,7 +252,8 @@ async function loadRemote(selectId){
     const wSince=new Date(Date.now()-31*864e5).toISOString(); // + archiwum 30 dni (KROK 38)
     const wq=cols=>{wColsTry=cols;return sb.from("wants").select(cols).gte("starts_at",wSince).order("starts_at").limit(1000)};
     const WFULL="id,user_id,starts_at,note,visibility,range_from,range_to,settled_at,is_test,route_km,pace,km,dur_min,place,place_lat,place_lon,bike,place_city,place_area,created_at";   // created_at — „wysłane …” w 🔔
-    let w=await wq(WFULL+",route_base_id,title,title_auto,group_id,activity,from_sig");   // 🤝 KROK 101: zaproszenie z sygnału „Mam ochotę” (dopisywanie tylko osób z Reakcją)
+    let w=await wq(WFULL+",route_base_id,title,title_auto,group_id,activity,from_sig,edited_at");   // 🕓 KROK 115: edited_at — „zmieniono …” na karcie; bez kolumny wracamy do zapytania niżej
+    if(w.error)w=await wq(WFULL+",route_base_id,title,title_auto,group_id,activity,from_sig");   // 🤝 KROK 101: zaproszenie z sygnału „Mam ochotę” (dopisywanie tylko osób z Reakcją)
     if(w.error)w=await wq(WFULL+",route_base_id,title,title_auto,group_id,activity");   // + rodzaj zaproszenia (KROK 64) — filtr „Aktywność”; bez kolumny wracamy do dotychczasowego zapytania
     wActOk=!w.error;   // 🏃 KROK 94: zaproszenie na bieg / spacer / wędrówkę (formularz zapisuje wants.activity)
     if(w.error)w=await wq(WFULL+",route_base_id,title,title_auto,group_id");

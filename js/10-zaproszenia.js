@@ -818,7 +818,13 @@ function wantHtml(w,top){
      +(myOpen?'</div>':'')+'</div>'
      +(mine&&open&&!live&&wTally(w).length?'<div class="myl myla"><button class="lnk" data-my="settlepick" data-id="'+esc(w.id)+'">Inna godzina ›</button></div>':'')
      +(mine&&open&&!live?'<div class="myl"><button class="lnk" data-my="edit" data-id="'+esc(w.id)+'">Edytuj ›</button></div>':'')
-     +'</div>';
+     +wStamp(w)+'</div>';
+}
+// 🕓 v390: mała linia na końcu karty — kiedy dodano i (jeśli była zmiana) kiedy zmieniono; zmiana = wants.edited_at (KROK 115), bez kolumny tylko „dodano”
+function wStamp(w){
+  if(!w.created_at||typeof agoTxt!=="function")return "";
+  const ed=w.edited_at&&new Date(w.edited_at)-new Date(w.created_at)>60000?w.edited_at:null;
+  return '<div class="wdad">dodano '+esc(agoTxt(w.created_at))+(ed?' · zmieniono '+esc(agoTxt(ed)):'')+'</div>';
 }
 /* ---------- formularz zaproszenia: dzień + zegar klapkowy + notatka ---------- */
 const wf={day:"0",h:19,m:0,h2:21,m2:0,mode:"one",editId:null,vis:"all",pick:new Set()};
