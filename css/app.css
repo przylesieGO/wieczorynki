@@ -1864,3 +1864,7 @@ button.arnr{border:0;font:inherit;color:inherit;cursor:pointer;width:100%;-webki
 /* v365: punkt na radarze także dla lasu, wody i „Najbliżej Ciebie” — kolory; etykieta prowadzi do nawigacji */
 .arping.tf,.arplab.tf{--pc:#2a9d5c}.arping.tw,.arplab.tw,.arping.rest,.arplab.rest{--pc:#2f7fe8}.arping.fuel,.arplab.fuel{--pc:#e8590c}.arping.shop,.arplab.shop{--pc:#8e44ad}.arping.med,.arplab.med{--pc:#e03131}.arping.hut,.arplab.hut{--pc:#8d6e3f}
 .arplab .ui-i{width:14px;height:14px;vertical-align:-2px}
+
+/* 📍 v380: wiersz „Na radarze: miejscowość” na karcie zaproszenia — obrys bez wypełnienia i ikona radaru, żeby nie mylić z pigułkami miejscowości (.wfc → filtr „Gdzie”) */
+.twrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.twlead{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:700;color:var(--mut)}.twlead .ui-i{width:15px;height:15px;color:var(--acc)}
+.twchip{border:1.5px solid var(--acc);background:transparent;color:var(--acc);font:inherit;font-size:13px;font-weight:700;border-radius:999px;padding:1px 10px;cursor:pointer;-webkit-tap-highlight-color:transparent}.twchip:active{transform:scale(.95)}

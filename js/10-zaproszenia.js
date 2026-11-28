@@ -781,7 +781,7 @@ function wantHtml(w,top){
     const myOpen=mine&&open&&!live;   // własne zaproszenie z godziną do ustalenia: na wąskim ekranie linki pod „Ustal”, na szerokim ikony Zmień ustaloną / Edytuj obok „Ustal” jako osobna grupa od Zaproś / Udostępnij / Kosz
     return '<div class="want'+(mine?' mine':'')+(peek?' peek':'')+(isTest(w)?' test':'')+grCls(w)+'" data-wid="'+esc(w.id)+'"'+(priv?' data-priv="1"':'')+'>'+(peek?pkCorner:'')+(top?'<div class="wtop wtopm">'+testTag(w)+(priv?(wGr(w)?grTagHtml(w):'<span class="lockt priv">🔒 '+esc(privLbl(w))+'</span>'):'')+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(top.n?'<i class="wcnt">'+top.n+'</i>':'')+'</div>'+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+top.d:(peek?testTag(w):wIcons(w,own,priv)+testTag(w))+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+'<div class="wtop">'+nk(w.user_id)+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w):'')+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv&&wGr(w)?grTagHtml(w):'')+(own?'<span class="note">(Twoje zaproszenie)</span>':mine?'<span class="note">(jesteś współautorem)</span>':'')+'</div>')
      +(live?liveHtml(w):'')
-     +paceHtml(w)+bikeHtml(w)+(live?'':durLineHtml(w))+placeHtml(w)+noteHtml(w.note,"wnt")+(live?'':wxHtml(w))+routeBoxHtml(w)
+     +paceHtml(w)+bikeHtml(w)+(live?'':durLineHtml(w))+placeHtml(w)+noteHtml(w.note,"wnt")+twHtml(w)+(live?'':wxHtml(w))+routeBoxHtml(w)
      +invitedHtml(w)+edLineHtml(w)
      +(mine&&open&&new Date(w.range_from).getTime()>Date.now()+36e5?'<div class="meta">🕖 Ustali się sama o '+esc(hhmm(new Date(new Date(w.range_from).getTime()-36e5)))+', jeśli jej nie wybierzesz</div>':'')
      +(open?tallyHtml(w):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w)+(live?'':myPickHtml(w,myp,joined,mine)))
@@ -2162,3 +2162,7 @@ $("picksheet").addEventListener("click",async e=>{
   }catch(err){k.disabled=false;say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
 });
 renderRep=shWrap(renderRep,"repsheet");renderPick=shWrap(renderPick,"picksheet");   // 📱 bez skoku na górę („Jak poszło?”, „Kiedy możesz?” / „Ustal godzinę”)
+
+// 📍 v380: plakietka miejscowości na karcie → radar okolicy, przybliżenie na miejscowość, znikający punkt z podpisem (stuknięcie podpisu: nawigacja)
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("button[data-tw]");if(!b)return;e.stopPropagation();e.preventDefault();
+  openHome("peek");setTimeout(()=>arPing("pin",+b.dataset.lat,+b.dataset.lon,"nav",b.dataset.tw),300)},true);
