@@ -277,7 +277,7 @@ const lc=t=>(t||"").toLocaleLowerCase("pl");
 // najbliższy weekend; w niedzielę: dziś + następny weekend
 function fltWknd(){const d=new Date().getDay();return d===6?[0,1]:d===0?[0,6,7]:[6-d,7-d]}
 /* 🧩 wspólny silnik filtrów (etap C, 2026-11-24): JEDEN stan `flt` dla zaproszeń, imprez (js/08) i „Mam ochotę” (🔔, js/11).
-   Wspólne wymiary: Aktywność, Rodzaj roweru, Kiedy, Gdzie, Relacja, Osoba. Każdy rodzaj sprawdza tylko wymiary, które ma —
+   Wspólne wymiary: Aktywność, Rodzaj roweru, Kiedy, Gdzie, Relacja, Użytkownik. Każdy rodzaj sprawdza tylko wymiary, które ma —
    pozostałe go nie zawężają (np. tempo nie ukrywa imprez). FLT_KINDS = które wymiary liczą się przy danym rodzaju. */
 const FLT_KINDS={ev:["act","bike","when","where","who","user"]};
 const fltKeysFor=k=>FLT_KINDS[k]?fltKeys().filter(x=>FLT_KINDS[k].includes(x)):fltKeys();
@@ -458,7 +458,7 @@ function fltItems(k,q){
 function fltStackHtml(){
   const k=fltSub,q=lc(fltQ.trim()),mu=FLT_MULTI.includes(k);
   const r=fltItems(k,q).sort((a,b)=>a.sc-b.sc||a.t.localeCompare(b.t,"pl"));
-  if(!r.length)return '<div class="note">'+(q?'Nic nie znaleziono.':k==="where"?'Brak miejsc w '+(fltScope==="ev"?'imprezach':'zaproszeniach')+'.':k==="grp"?'Brak grup.':'Brak osób.')+'</div>';
+  if(!r.length)return '<div class="note">'+(q?'Nic nie znaleziono.':k==="where"?'Brak miejsc w '+(fltScope==="ev"?'imprezach':'zaproszeniach')+'.':k==="grp"?'Brak grup.':'Brak użytkowników.')+'</div>';
   const sel=mu&&flt[k].length?'<div class="fltchips fselr">'+flt[k].map(u=>'<button type="button" class="fac" data-fk="'+k+'" data-fv="'+esc(u)+'">'+esc(nicks[u]||"osoba")+' ✕</button>').join("")+'</div>':'';
   const L1=x=>(x.t||"").trim().charAt(0).toLocaleUpperCase("pl"),az=!q&&r.length>12?[...new Set(r.map(L1).filter(c=>/\p{L}/u.test(c)))].sort((a,b)=>a.localeCompare(b,"pl")):[];   // pasek A–Z: przy długiej liście (osoby, miejsca, grupy) i bez wpisanego tekstu
   const clr=fltOn(k)?'<div class="fsclr"><button type="button" class="lnk" data-fk="clearsub">Wyczyść'+(mu?' ('+flt[k].length+')':'')+'</button></div>':'';   // pod kciukiem: tuż nad paskiem A–Z, nie w nagłówku
@@ -510,7 +510,7 @@ function fltDraw(){
   const n=wants.filter(wUpcoming).filter(w=>typeof wNearOk!=="function"||wNearOk(w)).filter(w=>typeof wActShow!=="function"||wActShow(w)).filter(fltOk).length,na=flt.arch&&fltActive()?withOldJoins(()=>archList(wants).filter(fltOk).length):0;$("fltok").textContent=fltActive()?"Pokaż "+n+" "+(n===1?"zaproszenie":n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"zaproszenia":"zaproszeń")+(flt.arch?" + "+na+" w archiwum":""):"Gotowe";
 }
 function fltRefresh(){if($("fltok")||$("fltstk"))fltDraw();renderWants();if(typeof renderEvents==="function"&&curTab===3)renderEvents()}
-// okno: widok główny (bomble w rzędach przewijanych w bok) albo podekran „Gdzie” / „Osoba” z polem wpisywania na dole (wyniki rosną w górę)
+// okno: widok główny (bomble w rzędach przewijanych w bok) albo podekran „Gdzie” / „Użytkownik” z polem wpisywania na dole (wyniki rosną w górę)
 function fltMainHtml(){
   const sec=(k,t)=>'<div class="fsec"><div class="bsgrp">'+t+'</div><div class="fchips" id="flt_'+k+'"></div></div>';
   const go=(k,ico,t)=>'<div class="fsec"><button type="button" class="secbar fgo" data-fk="sub" data-fv="'+k+'"><span class="bst">'+uiIcon(ico)+'<span>'+t+'</span></span><span class="wsplsel" id="fsum_'+k+'"></span><svg class="bschev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>';
@@ -518,14 +518,14 @@ function fltMainHtml(){
     +'<button type="button" class="ios-sw'+(nOn?' on':'')+'" role="switch" aria-checked="'+nOn+'" aria-label="Tylko okolica" title="'+(nOn?'Tylko okolica — wyłącz, żeby pokazać wszystkie':'Wszystkie — włącz, żeby zostawić tylko okolicę')+'" data-fk="near" data-fv="'+(nOn?"0":"1")+'"></button></div>':'';   // 📍 v270: Moja okolica (promień — wiersz otwiera radar); v376: przełącznik „tylko okolica” w tym samym wierszu (zamiast przycisku w nagłówku listy)
   if(fltScope==="ev")return '<div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="close">Zamknij</button><b>Filtry imprez</b><span style="min-width:64px"></span></div>'
    +'<div class="bslist" id="fltlist"><div class="note fscope">Te same filtry działają w Zaproszeniach i w „Mam ochotę” pod 🔔.</div>'+area+sec("act","Aktywność")+'<div id="fltbikebox"'+(fltBikeOn()?'':' class="hide"')+'>'+sec("bike","Rodzaj roweru")+'</div>'+sec("when","Kiedy")+sec("who","Relacja")
-   +go("where","pin","Gdzie")+go("user","user","Osoba")+'</div>'+fltFabHtml()+'<button type="button" class="b big" id="fltok" data-fk="close">Gotowe</button>';
+   +go("where","pin","Gdzie")+go("user","user","Użytkownik")+'</div>'+fltFabHtml()+'<button type="button" class="b big" id="fltok" data-fk="close">Gotowe</button>';
   return '<div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="close">Zamknij</button><b>Filtry</b><span style="min-width:64px"></span></div>'
    +'<div class="bslist" id="fltlist"><div class="note fscope">Działają też w Imprezach i w „Mam ochotę” pod 🔔 — tam, gdzie mają sens.</div>'+area+sec("src","Źródło i archiwum")+sec("vis","Widoczność")+(fltHasAct()?sec("act","Aktywność"):'')+sec("when","Kiedy")+sec("sort","Kolejność")+sec("who","Relacja")+(bikeOk?'<div id="fltbikebox"'+(fltBikeOn()?'':' class="hide"')+'>'+sec("bike","Rodzaj roweru")+'</div>':'')+(paceOk?sec("pace","Tempo"):'')
-   +(placeOk?go("where","pin","Gdzie start"):'')+go("user","user","Osoba")+(fltAdm()?'<div class="bsgrp">👑 Administrator</div>'+go("to","mail","Zaproszeni: osoba")+go("by","lock","Prywatne od osoby"):'')+'</div>'
+   +(placeOk?go("where","pin","Gdzie start"):'')+go("user","user","Użytkownik")+(fltAdm()?'<div class="bsgrp">👑 Administrator</div>'+go("to","mail","Zaproszeni: użytkownik")+go("by","lock","Prywatne od użytkownika"):'')+'</div>'
    +fltFabHtml()+'<button type="button" class="b big" id="fltok" data-fk="close">Gotowe</button>';
 }
 function fltSubHtml(){
-  const T=fltSub==="where"?[fltScope==="ev"?"Gdzie":"Gdzie start","Miasto, dzielnica, miejsce…"]:fltSub==="grp"?["Grupa","Nazwa grupy…"]:fltSub==="to"?["Zaproszeni","Nick osoby…"]:fltSub==="by"?["Prywatne od","Nick osoby…"]:["Osoba","Nick…"];
+  const T=fltSub==="where"?[fltScope==="ev"?"Gdzie":"Gdzie start","Miasto, dzielnica, miejsce…"]:fltSub==="grp"?["Grupa","Nazwa grupy…"]:fltSub==="to"?["Zaproszeni","Nick użytkownika…"]:fltSub==="by"?["Prywatne od","Nick użytkownika…"]:["Użytkownik","Nick…"];
   return '<div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-fk="back">Filtry</button><b>'+T[0]+'</b><span style="min-width:64px"></span></div>'
    +'<div class="fstk" id="fltstk"></div><input class="bsq srch" id="fltq" type="search" placeholder="'+T[1]+'" autocomplete="off" value="'+esc(fltQ)+'">'
    +'<button type="button" class="b big" data-fk="back">Gotowe</button>';
