@@ -1031,7 +1031,7 @@ html[data-theme=dark] .beta{color:#c4a8ff;background:rgba(196,168,255,.16)}
 .ucrole{color:var(--acc);font-weight:600}.ucrole .ui-i{width:15px;height:15px;vertical-align:-2px}
 /* ▸ zwijane sekcje osób i list — jeden wygląd (pasek + drabinka jak pod 🔔), w oknach i w Ustawieniach */
 .secbar{display:flex;align-items:center;gap:8px;width:100%;border:0;background:var(--fill);border-radius:12px;padding:13px 14px;margin:10px 0 6px;font:inherit;font-size:16px;font-weight:700;color:var(--ink);cursor:pointer;text-align:left}
-.farea{display:flex;align-items:center;gap:10px}.farea .secbar{flex:1;min-width:0}.farea .wsplsel.foff{color:var(--bad);font-weight:700}
+.farea{display:flex;align-items:center;gap:10px}.farea .secbar{flex:1;min-width:0}.fsec.farea .secbar .wsplsel.foff{color:var(--bad);font-weight:700;font-size:13px;line-height:1.15;white-space:normal;text-align:right;overflow:visible;text-overflow:clip}   /* v378: „Widzisz wszystkie” — czerwony (mocniejszy selektor niż .fsec .secbar .wsplsel), na wąskim telefonie w dwóch liniach */
 .farea .secbar.foff .bschev{width:24px;height:24px;color:var(--bad);stroke-width:3;animation:fnudge 1.1s ease-in-out infinite}   /* v376: okolica wyłączona — czerwona strzałka „pcha” w stronę przełącznika */
 @keyframes fnudge{0%,100%{transform:rotate(-90deg) translateY(0)}50%{transform:rotate(-90deg) translateY(5px)}}
 @media (prefers-reduced-motion:reduce){.farea .secbar.foff .bschev{animation:none}}   /* v376: Filtry → Okolica + przełącznik „tylko okolica” */
