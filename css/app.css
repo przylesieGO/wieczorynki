@@ -1871,3 +1871,5 @@ button.arnr{border:0;font:inherit;color:inherit;cursor:pointer;width:100%;-webki
 /* 📍 v384: „Na radarze:” w karcie dnia — zwinięta: jedna linijka, 2 chipy + „+N”; rozwinięta: wszystkie, nieobecne w widocznym zaproszeniu przygaszone (jak godziny .whb) */
 .twcol{flex-wrap:nowrap;overflow:hidden;gap:6px;margin-top:3px}.twcol .ui-i{width:15px;height:15px;color:var(--acc);flex:none}.twcol .twchip{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto}.twmore{font-size:13px;font-weight:800;color:var(--acc);flex:none}
 details.wday:not([open]) .twcol .twchip:nth-of-type(n+3){display:none}details.wday[open] .twcol{flex-wrap:wrap;overflow:visible}details.wday[open] .twmore{display:none}details.wday .twchip{transition:opacity .2s}details.wday[open] .twchip.twoff{opacity:.4}
+/* 📍 v385: pigułka miejscowości (.wfc, filtr „Gdzie”) w rozwiniętym dniu też przygaszona, gdy nie dotyczy widocznego zaproszenia — filtrowanie po stuknięciu bez zmian */
+details.wday .wfc{transition:opacity .2s}details.wday[open] .wfc.twoff{opacity:.4}

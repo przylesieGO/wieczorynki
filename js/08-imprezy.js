@@ -401,7 +401,7 @@ function townsIn(txt){
   if(!txt)return [];
   const T=[...String(txt).matchAll(/\p{L}+/gu)].map(m=>({n:twNorm(m[0]),cap:/^\p{Lu}/u.test(m[0])})),out=[],seen=new Set();
   let cov=0;   // v383: słowa już zajęte przez rozpoznaną nazwę (bez drugiego chipa z jej części)
-  for(let i=0;i<T.length&&out.length<3;i++){if(!T[i].cap||i<cov)continue;
+  for(let i=0;i<T.length&&out.length<5;i++){if(!T[i].cap||i<cov)continue;
     for(const x of twIndex()){const k=x.ws.length;if(seen.has(x.t[0])||i+k>T.length)continue;
       let ok=true;for(let j=0;j<k&&ok;j++){const n=T[i+j].n,st=x.st[j],mx=st.length<4?0:st.length<7?4:5;ok=(j>0||T[i+j].cap)&&n.startsWith(st)&&n.length-st.length<=mx}
       if(!ok)continue;

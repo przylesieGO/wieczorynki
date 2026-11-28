@@ -243,7 +243,7 @@ async function archRange(d){
   archBusy=false;archOpen=true;if($("fltok"))fltDraw();renderWants()}
 /* ---------- 🔍 filtry zaproszeń (decyzje właściciela 2026-11-15 18:58: jak w makiecie filtry.png + z karty osoby) ---------- */
 // zapamiętane w telefonie; działają na listę zaproszeń (karty dni i Twoje zaproszenia), nie na 🔔
-const fltEmpty=()=>({who:"",vis:"",act:"",grp:"",when:"",date:"",where:"",bike:"",pace:"",user:[],demo:"",to:[],by:[],arch:"",sort:""});   // sort:"new" = Kolejność „od najnowszych” (data dodania; nic nie ukrywa, znika razem z filtrami); vis: Widoczność, act: Aktywność, grp: 👥 grupa (KROK 71); user / to / by: tablice id osób
+const fltEmpty=()=>({who:"",vis:"",act:"",grp:"",when:"",date:"",hour:"",where:"",bike:"",pace:"",user:[],demo:"",to:[],by:[],arch:"",sort:""});   // sort:"new" = Kolejność „od najnowszych” (data dodania; nic nie ukrywa, znika razem z filtrami); vis: Widoczność, act: Aktywność, grp: 👥 grupa (KROK 71); user / to / by: tablice id osób
 const FLT_MULTI=["user","to","by"];   // osoby, które można wybrać kilka naraz
 let flt=(()=>{let f;try{f=Object.assign(fltEmpty(),JSON.parse(localStorage.getItem("flt")||"{}"))}catch(e){f=fltEmpty()}
   if(f.who==="priv"||f.who==="open"){f.vis=f.who;f.who=""}   // „Czyje” rozdzielone na Relację i Widoczność — stary zapis przenosimy
@@ -330,6 +330,7 @@ function fltOk(w){
   if(flt.grp&&wGr(w)!==flt.grp)return false;
   if(!fltWhenOk(dd,dd))return false;
   if(!fltWhereOk(w.place_city,w.place_area,w.place))return false;
+  if(flt.hour&&wTime(w)!==flt.hour)return false;   // v385: filtr godziny (przytrzymanie godziny w zwiniętej karcie dnia)
   if(fltBikeOn()){if(flt.bike==="all"&&w.bike)return false;
     if(flt.bike&&flt.bike!=="all"&&w.bike&&w.bike!==flt.bike)return false}
   if(flt.pace&&w.pace!==flt.pace)return false;
@@ -370,6 +371,7 @@ function fltLabel(k){
   if(k==="act")return f(FLT_ACT());
   if(k==="when")return v==="date"?(flt.date?new Date(flt.date+"T12:00").toLocaleDateString("pl-PL",{weekday:"short",day:"numeric",month:"short"}):"Data"):f(FLT_WHEN);
   if(k==="where"){const t=v.slice(0,1),x=v.slice(2);return t==="a"?x.replace("|"," · "):t==="q"?"„"+x+"”":x}
+  if(k==="hour")return "Godz. "+v;
   if(k==="bike")return f(FLT_BIKE());
   if(k==="pace")return f(FLT_PACE());
   if(k==="user")return fltNm(v);
@@ -635,7 +637,7 @@ function renderWants0(){
      +'<div class="ftile'+(n===0?' today':'')+(d.ws.some(wLive)?' live':'')+'">'+ftInner(dt)+ftWxHtml(d.ws)+'</div>'
      +'<div class="wtx"><div class="wl1">'+l1+' · <span class="whrs'+(open?' whrsall':'')+'">'+wHrsHtml(d.ws,open,ord.length?ord[Math.min(dayIdx[d.k]||0,ord.length-1)].id:'',d.k)+'</span></div>'
      +(byNew&&typeof agoTxt==="function"?'<div class="wdad">dodano '+esc(agoTxt(cr(d.ws[0])))+'</div>':'')
-     +'<div class="wl2">'+pplHtml+'</div>'+wFarLine(d.ws)+twDay(d.ws,open&&ord.length?ord[Math.min(dayIdx[d.k]||0,ord.length-1)].id:'')+'</div>'+wl4Html(d.ws)
+     +'<div class="wl2">'+pplHtml+'</div>'+wFarLine(d.ws,open&&ord.length?ord[Math.min(dayIdx[d.k]||0,ord.length-1)].id:'')+twDay(d.ws,open&&ord.length?ord[Math.min(dayIdx[d.k]||0,ord.length-1)].id:'')+'</div>'+wl4Html(d.ws)
      +(cnt>1||dPriv?'<span class="wbd">'+(dPriv?'<span class="wlk" aria-label="'+dPriv+' prywatne">'+uiIcon("lock")+dPriv+'</span>':'')+(cnt>1?'<span class="wcnt" aria-label="'+cnt+' '+zg+'">'+cnt+'</span>':'')+'</span>':'')
      +'</summary>'+mineTop.map(wantDayHtml).join("")+(ord.length>1
        ?'<div class="dcar" data-day="'+d.k+'">'+ord.map(w=>wantHtml(w)).join("")+'</div><div class="mydots ddots"><button type="button" class="darr" data-dd="-1" aria-label="Poprzednie zaproszenie"'+((dayIdx[d.k]||0)<=0?' disabled':'')+'><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button>'+ord.map((_,i)=>'<button type="button" data-ddot="'+i+'" class="'+(i===(dayIdx[d.k]||0)?'on':'')+'" aria-label="Zaproszenie '+(i+1)+'"></button>').join("")+'<button type="button" class="darr" data-dd="1" aria-label="Następne zaproszenie"'+((dayIdx[d.k]||0)>=ord.length-1?' disabled':'')+'><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button><span>'+(Math.min(dayIdx[d.k]||0,ord.length-1)+1)+' z '+ord.length+'</span></div>'
@@ -651,10 +653,10 @@ const wMyDay=k=>myOn()?(wantsNoFlt||wants).filter(w=>wEdMe(w)&&!wDone(w)&&localI
 /* 📍 v279/v280: „inna miejscowość” = miejsce zaproszenia w innej miejscowości niż Twoja (Moja miejscowość / podgląd okolicy) — oznaczamy ją w zwiniętej karcie dnia; dotknięcie pigułki włącza filtr „Gdzie” */
 const wFar=w=>!!w.place_city&&w.place_lat!=null&&typeof areaCur==="function"&&lc(w.place_city)!==lc(areaCur().name||"");
 // 📍 v284: przy miejscowości odległość od środka okolicy („Zatory · 34 km”); kolejność od najbliższej
-function wFarLine(ws){const c=new Map(),o=areaCur(),km=w=>dist({lat:o.lat,lon:o.lon},{lat:+w.place_lat,lon:+w.place_lon});
-  ws.filter(wFar).forEach(w=>{const p=c.get(w.place_city)||{n:0,k:Infinity};p.n++;p.k=Math.min(p.k,km(w));c.set(w.place_city,p)});   // miejscowość → ile zaproszeń z niej w tym dniu, najbliższe
+function wFarLine(ws,cur){const c=new Map(),o=areaCur(),km=w=>dist({lat:o.lat,lon:o.lon},{lat:+w.place_lat,lon:+w.place_lon});
+  ws.filter(wFar).forEach(w=>{const p=c.get(w.place_city)||{n:0,k:Infinity,ids:[]};p.ids.push(w.id);p.n++;p.k=Math.min(p.k,km(w));c.set(w.place_city,p)});   // miejscowość → ile zaproszeń z niej w tym dniu, najbliższe
   const a=[...c.keys()].sort((x,y)=>c.get(x).k-c.get(y).k);
-  return a.length?'<div class="wl2 wfar">'+uiIcon("pin")+a.slice(0,3).map(x=>{const p=c.get(x);return '<button type="button" class="wfc'+(flt.where==="c:"+x?' on':'')+'" data-wc="'+esc(x)+'">'+esc(x)+(isFinite(p.k)?' · '+(p.k<1?'&lt;1':Math.round(p.k))+' km':'')+(p.n>1?' <i>'+p.n+'</i>':'')+'</button>'}).join("")+(a.length>3?'<b>+'+(a.length-3)+'</b>':'')+'</div>':''}
+  return a.length?'<div class="wl2 wfar">'+uiIcon("pin")+a.slice(0,3).map(x=>{const p=c.get(x);return '<button type="button" class="wfc'+(flt.where==="c:"+x?' on':'')+(cur&&!p.ids.includes(cur)?' twoff':'')+'" data-wc="'+esc(x)+'" data-wids="'+esc(p.ids.join(" "))+'">'+esc(x)+(isFinite(p.k)?' · '+(p.k<1?'&lt;1':Math.round(p.k))+' km':'')+(p.n>1?' <i>'+p.n+'</i>':'')+'</button>'}).join("")+(a.length>3?'<b>+'+(a.length-3)+'</b>':'')+'</div>':''}
 /* 📍 v384: „Na radarze:” w zwiniętej karcie dnia — miejscowości ze wszystkich zaproszeń dnia (od najbliższej środka okolicy, bez tych, które są już w pigułce odległości), zwinięta: 2 + „+N”; rozwinięta: wszystkie, a te, których nie dotyczy widoczne w karuzeli zaproszenie, przygaszone (.twoff — jak godziny); stuknięcie otwiera radar (handler [data-tw] na końcu pliku) */
 const twMemo=new Map();
 function twDay(ws,cur){const o=areaCur(),far=new Set(ws.filter(wFar).map(w=>lc(w.place_city))),m=new Map();
@@ -676,7 +678,7 @@ function wHrsHtml(ws0,open,cur,k){
 const dayIdx={};
 let lastSort=flt.sort;
 // fioletowa ramka otwartego dnia, gdy widać w nim zaproszenie prywatne (aktualna karta karuzeli lub własne u góry)
-function wdPvSync(c,idx){const d=c.closest("details.wday");if(!d)return;const it=c.children[idx];d.querySelectorAll(".whb").forEach(b=>b.classList.toggle("hon",!!it&&b.dataset.whr===it.dataset.wid));d.querySelectorAll(".twchip[data-wids]").forEach(b=>b.classList.toggle("twoff",!!it&&!b.dataset.wids.split(" ").includes(it.dataset.wid)));d.classList.toggle("wpv",!!d.querySelector(":scope>.want[data-priv]")||!!(it&&it.dataset.priv==="1"))}
+function wdPvSync(c,idx){const d=c.closest("details.wday");if(!d)return;const it=c.children[idx];d.querySelectorAll(".whb").forEach(b=>b.classList.toggle("hon",!!it&&b.dataset.whr===it.dataset.wid));d.querySelectorAll(".twchip[data-wids],.wfc[data-wids]").forEach(b=>b.classList.toggle("twoff",!!it&&!b.dataset.wids.split(" ").includes(it.dataset.wid)));d.classList.toggle("wpv",!!d.querySelector(":scope>.want[data-priv]")||!!(it&&it.dataset.priv==="1"))}
 function dcarGoto(c,idx,smooth){
   const it=c.children[idx];if(!it)return;
   const left=it.offsetLeft-c.offsetLeft-(c.clientWidth-it.offsetWidth)/2;
@@ -709,6 +711,15 @@ $("wantlist").addEventListener("click",e=>{
   const b=e.target.closest("button[data-ddot]");if(!b)return;
   const c=b.closest(".ddots").previousElementSibling;if(c)dcarGoto(c,+b.dataset.ddot,true);
 });
+/* ⏱ v385: PRZYTRZYMANIE godziny w ZWINIĘTEJ karcie dnia = filtr „Godz. HH:MM” (zaproszenia z tej godziny we wszystkich dniach; drugi raz = zdejmuje); zwykłe stuknięcie nadal przechodzi do zaproszenia */
+let whbT=0,whbXY=null,whbHold=0;
+const whbCancel=()=>{clearTimeout(whbT);whbT=0};
+$("wantlist").addEventListener("pointerdown",e=>{const b=e.target.closest("button.whb");whbCancel();if(!b||b.closest("details.wday[open]"))return;whbXY=[e.clientX,e.clientY];
+  whbT=setTimeout(()=>{whbT=0;const w=wants.find(z=>z.id===b.dataset.whr);if(!w)return;const h=wTime(w);whbHold=Date.now();flt.hour=flt.hour===h?"":h;fltSave();try{navigator.vibrate&&navigator.vibrate(15)}catch(x){}fltRefresh()},500)});
+$("wantlist").addEventListener("pointermove",e=>{if(whbT&&whbXY&&Math.hypot(e.clientX-whbXY[0],e.clientY-whbXY[1])>10)whbCancel()});
+["pointerup","pointercancel"].forEach(t=>$("wantlist").addEventListener(t,whbCancel));
+$("wantlist").addEventListener("contextmenu",e=>{if(e.target.closest("button.whb"))e.preventDefault()});
+document.addEventListener("click",e=>{if(Date.now()-whbHold<700){e.preventDefault();e.stopPropagation();whbHold=0}},true);   // klik kończący przytrzymanie nie rozwija karty ani nie przewija
 // 🕖 klik w godzinę u góry karty dnia: otwiera dzień (jeśli zwinięty) i przewija do tego zaproszenia — w karuzeli albo wśród „Twoich” przypiętych wyżej
 $("wantlist").addEventListener("click",e=>{
   const wc=e.target.closest("button.wfc");   // 📍 v280: pigułka miejscowości → filtr „Gdzie: miejscowość” (drugi raz = zdejmuje)
