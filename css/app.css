@@ -1873,3 +1873,5 @@ button.arnr{border:0;font:inherit;color:inherit;cursor:pointer;width:100%;-webki
 details.wday:not([open]) .twcol .twchip:nth-of-type(n+3){display:none}details.wday[open] .twcol{flex-wrap:wrap;overflow:visible}details.wday[open] .twmore{display:none}details.wday .twchip{transition:opacity .2s}details.wday[open] .twchip.twoff{opacity:.4}
 /* 📍 v385: pigułka miejscowości (.wfc, filtr „Gdzie”) w rozwiniętym dniu też przygaszona, gdy nie dotyczy widocznego zaproszenia — filtrowanie po stuknięciu bez zmian */
 details.wday .wfc{transition:opacity .2s}details.wday[open] .wfc.twoff{opacity:.4}
+.sgcall{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;font-size:14px;font-weight:700;line-height:1.25;color:var(--good);text-align:left}   /* v396: podpis pod „Na co masz dziś ochotę?” */
+html[data-theme=dark] .sgcall{color:#6fd36f}

@@ -781,6 +781,7 @@ function renderSig(){
   p.innerHTML='<div class="sheetbox popbox sigbox" role="dialog" aria-modal="true"><button class="sclose" data-sg="later" aria-label="Zamknij">✕</button>'
    +'<span class="ptag">MAM OCHOTĘ</span>'
    +'<div class="ph">'+(intro?'Nie masz pomysłu na jazdę, ale masz ochotę pojeździć?':edit?'Zmień swój sygnał':'Na co masz dziś ochotę?')+'</div>'
+   +(intro||edit?'':'<div class="sgcall"><span class="sigmini">'+sigWheel+'</span><span>Wyślij SYGNAŁ<br>i zbierz EKIPĘ na dziś</span></div>')   // v396
    +'<div class="pmeta">'+(intro?'Daj znać innym — bez godziny i trasy. Zobaczą to pod 🔔'+(tg?' i na kanale Telegram':'')+' i mogą Cię zaprosić.'
       :'Bez godziny i trasy. Inni zobaczą to pod 🔔'+(tg?' i na kanale Telegram':'')+' i dadzą Reakcję — zaproszenie założysz Ty.')+'</div>'
    +'<div class="wbike sigacts">'+sigActKeys().map(k=>'<button type="button" class="wbk'+(sigPick===k?' on':'')+'" data-sga="'+esc(k)+'" aria-pressed="'+(sigPick===k)+'">'+uiIcon(sigA(k)[0])+'<span>'+esc(sigA(k)[1])+'</span></button>').join("")+'</div>'
