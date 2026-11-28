@@ -322,15 +322,38 @@ const arTownsGet=()=>arTownsL||(arTownsL=AR_TOWNS_RAW.split(";").map(x=>{const v
 // Ostrożnie: tylko wyrazy pisane wielką literą, z odmianą („w Wyszkowie”, „do Serocka”). Nazwy będące zwykłymi słowami (Marki, Police, Warka…) liczą się tylko po przyimku („w Markach”).
 const TW_AMB=new Set(["marki","police","kolo","pila","turek","brok","krasne","winnica","zatory","gzy","obryte","nysa","slupca","wrzesnia","lipno","pisz","zary","ryki","zielonka","wierzbica","joniec","pilawa","kolno","mielnik","warka","pionki","jadow","rzewnie","nowe miasto","swiercze","opole","lubin","brzeg","koszalin","jaroslaw"]);
 const TW_PREP=new Set(["w","we","do","na","przez","pod","nad","k","kolo","okolice","okolicach","okolicy"]);   // bez „z / ze / od” — „z Jarosławiem” to osoba
+// słownik miejsc (lokale i cele wypadów na wsiach; nazwa w tekście → podpis i współrzędne). Źródło: OpenStreetMap (2026-11-28, promień 50 km od Pułtuska, tylko poza miastami) + wpisy właściciela.
+// Wpis: [[nazwy w tekście…], podpis na radarze, szer., dł.]; kolejne dopisujemy na prośbę właściciela.
+const TW_PLACES=[
+[["Pazibroda"],"Pazibroda · Chrzanowo",52.838,21.0647],
+[["Bar Borowik","Borowik"],"Bar Borowik · Popowo-Letnisko",52.5458,21.1336],
+[["Karczma pod Strzechą"],"Karczma pod Strzechą · Klusek",52.552,21.0756],
+[["Hacienda Drwały","Hacienda"],"Hacienda Drwały · Drwały",52.6234,21.2015],
+[["Młyn Gąsiorowo"],"Młyn Gąsiorowo · Gąsiorowo",52.6951,20.8909],
+[["Cicha Zatoka"],"Cicha Zatoka · Wierzbica",52.5316,21.0742],
+[["Złoty Lin"],"Złoty Lin · Wierzbica",52.5314,21.0699],
+[["Restauracja SAPA"],"Restauracja SAPA · Wierzbica",52.5295,21.0707],
+[["Restauracja przy Skansenie"],"Restauracja przy Skansenie · Kuligów",52.5112,21.1783],
+[["Zajazd Pauza"],"Zajazd Pauza · Marynino",52.5065,21.0069],
+[["Fun Chill","Bar nad Bugiem"],"Fun&Chill Bar nad Bugiem · Józefów",52.5189,21.2149],
+[["Gospoda Kamieńczyk"],"Gospoda Kamieńczyk · Kamieńczyk",52.6024,21.5405],
+[["Gościniec Mazowsze"],"Gościniec Mazowsze · Łaguny",52.9715,20.7993],
+[["Karczma Rządza","Rządza"],"Karczma Rządza · Stary Kraszew",52.4004,21.2714],
+[["Zajazd Kalwados","Kalwados"],"Zajazd Kalwados · Słupno",52.3783,21.1515],
+[["Wilczy Jar"],"Wilczy Jar · Strubiny",52.476,20.608],
+[["Gospoda za Miedzą"],"Gospoda za Miedzą · Przyjmy",52.7143,21.6959],
+[["Zajazd Myśliwski"],"Zajazd Myśliwski · Michałówek",52.5351,20.5141],
+[["Gród Mazowiecki"],"Gród Mazowiecki · Szymaki",52.6862,20.358],
+[["Zajazd Hubus","Hubus"],"Zajazd Hubus · Grabowo",53.0571,21.5284]];
 const twNorm=s=>s.toLowerCase().replace(/ł/g,"l").normalize("NFD").replace(/[̀-ͯ]/g,"");
 let twIdx=null;
-const twIndex=()=>twIdx||(twIdx=arTownsGet().map(t=>{const full=twNorm(t[0]).replace(/-/g," "),ws=full.split(" ");return {t,ws,amb:TW_AMB.has(full),st:ws.map(w=>/[aeiouy]$/.test(w)&&w.length>4?w.slice(0,-1):w)}}));
+const twIndex=()=>twIdx||(twIdx=arTownsGet().map(t=>[t,t[0]]).concat(TW_PLACES.flatMap(x=>x[0].map(al=>[[x[1],x[2],x[3]],al]))).map(([t,nm])=>{const full=twNorm(nm).replace(/-/g," "),ws=full.split(" ");return {t,ws,amb:TW_AMB.has(full),st:ws.map(w=>/[aeiouy]$/.test(w)&&w.length>4?w.slice(0,-1):w)}}));
 function townsIn(txt){
   if(!txt)return [];
   const T=[...String(txt).matchAll(/\p{L}+/gu)].map(m=>({n:twNorm(m[0]),cap:/^\p{Lu}/u.test(m[0])})),out=[],seen=new Set();
   for(let i=0;i<T.length&&out.length<3;i++){if(!T[i].cap)continue;
     for(const x of twIndex()){const k=x.ws.length;if(seen.has(x.t[0])||i+k>T.length)continue;
-      let ok=true;for(let j=0;j<k&&ok;j++){const n=T[i+j].n,st=x.st[j],mx=st.length<4?0:st.length<7?4:5;ok=T[i+j].cap&&n.startsWith(st)&&n.length-st.length<=mx}
+      let ok=true;for(let j=0;j<k&&ok;j++){const n=T[i+j].n,st=x.st[j],mx=st.length<4?0:st.length<7?4:5;ok=(j>0||T[i+j].cap)&&n.startsWith(st)&&n.length-st.length<=mx}
       if(!ok)continue;
       if(x.amb&&!(i>0&&TW_PREP.has(T[i-1].n)))continue;
       seen.add(x.t[0]);out.push(x.t);break}}
