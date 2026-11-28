@@ -81,7 +81,8 @@ function tdBadges(anim){tdCards().forEach((e,k)=>{const b=e.querySelector(".tdb"
 function tdLay(){const E=tdCards(),n=E.length;if(!n)return;const k0=TD_T.findIndex(([i])=>i===curTab);if(k0>=0)tdA=k0;
   E.forEach((e,k)=>{e.classList.toggle("tdempty",!tabOk(TD_T[k][0]));e.classList.toggle("top",k===tdA);e.setAttribute("aria-selected",k===tdA?"true":"false");e.tabIndex=k===tdA?0:-1});
   tdBadges(false);
-  requestAnimationFrame(()=>{const tw=E[tdA].offsetWidth,S=20;$("tdeck").style.width=(S+tw+(n-2)*S)+"px";
+  requestAnimationFrame(()=>{const tw=E[tdA].offsetWidth,S=20;if(!tw)return;   // v391: talia ukryta (nagłówek zwinięty / karta w tle) — pomiar = 0 dawał szerokość 60 px i kartę wystającą za prawą krawędź; zostaje poprzedni układ, a po rozwinięciu nagłówka liczymy od nowa (js/03 onScroll)
+    $("tdeck").style.width=(S+tw+(n-2)*S)+"px";
     for(let r=0;r<n;r++){const e=E[(tdA+r)%n],L=r===n-1,dp=L?1:r,x=r===0?S:L?0:S+tw-44+r*S;
       e.classList.toggle("tdleft",L);e.style.transformOrigin=L?"left center":"right center";
       e.style.transform="translateX("+x+"px) scale("+(r?Math.pow(.9,dp):1)+")";e.style.zIndex=L?9:10-r;

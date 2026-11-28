@@ -65,7 +65,7 @@ function onScroll(){
   if(c===hdrCompact)return;
   hdrCompact=c;const h=$("hdr"),de=document.documentElement;de.style.overflowAnchor="none";
   if(c){const a=h.offsetHeight;h.classList.add("compact");hdrGap=Math.max(0,a-h.offsetHeight);h.style.marginBottom=hdrGap+"px"}
-  else{const b=h.offsetHeight;h.classList.remove("compact");h.style.marginBottom="";hdrGap=Math.max(0,h.offsetHeight-b)}
+  else{const b=h.offsetHeight;h.classList.remove("compact");h.style.marginBottom="";hdrGap=Math.max(0,h.offsetHeight-b);if(typeof tdLay==="function")try{tdLay()}catch(e){}}   // v391: talia kart ponownie widoczna — przelicz układ
   requestAnimationFrame(()=>requestAnimationFrame(()=>{de.style.overflowAnchor=""}));
 }
 window.addEventListener("scroll",onScroll,{passive:true});
