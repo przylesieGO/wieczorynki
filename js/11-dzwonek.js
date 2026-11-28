@@ -310,7 +310,9 @@ $("bellsheet").addEventListener("click",async e=>{
         say("Jedziesz ✔ "+wfLabel(new Date(w.starts_at)));
       }else{await declineWant(w);say("OK — zapisano „Nie dam rady”.")}
       await markRead(ids);await syncNow();
-    }catch(err){a.disabled=false;say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+    }catch(err){a.disabled=false;
+      if(err&&(err.code==="42501"||/row-level security/i.test(err.message||""))){rideStartedInfo()}
+      else say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
     return;
   }
   const nu=e.target.closest(".nit[data-nu]");
@@ -451,8 +453,12 @@ $("popsheet").addEventListener("click",async e=>{
   try{
     if((q==="join"||q==="pref")&&!(joins[it.w.id]||[]).includes(uid)&&!wJoinOk(it.w)){popNext();rideStartedInfo();return}   // jazda ruszyła, gdy okienko było otwarte
     if(q==="join"&&!(joins[it.w.id]||[]).includes(uid)){
+      const c0=joinClash(it.w);   // jazda, z której „Przenieś się” wypisze — do cofnięcia, gdy zapis na nową się nie uda
       if(!await joinClashOk(it.w))return;
-      const r=await sb.from("want_joins").insert({want_id:it.w.id});if(r.error)throw r.error;
+      const r=await sb.from("want_joins").insert({want_id:it.w.id});
+      if(r.error){
+        if(c0&&c0.user_id!==uid&&!isOpen(it.w)&&!(joins[c0.id]||[]).includes(uid)){try{const b=await sb.from("want_joins").insert({want_id:c0.id});if(!b.error)joins[c0.id]=(joins[c0.id]||[]).concat(uid)}catch(e2){}}   // wróć na poprzednią jazdę (jeśli baza jeszcze pozwala)
+        throw r.error}
       try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}
     }
     if(q==="join"&&(decls[it.w.id]||[]).includes(uid))await sb.from("want_declines").delete().eq("want_id",it.w.id).eq("user_id",uid);
@@ -468,9 +474,12 @@ $("popsheet").addEventListener("click",async e=>{
     else if(q==="no")say("OK. Zaproszenie zostaje na Starcie, gdybyś zmienił zdanie.");
     else if(q==="leave")say("Zrezygnowano.");
     if(q!=="read")await syncNow();
-  }catch(err){say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
+  }catch(err){
+    if(err&&(err.code==="42501"||/row-level security/i.test(err.message||""))){popNext();rideStartedInfo()}   // jazda ruszyła (baza przyjmuje zapis do 15 min po starcie) — zamiast surowego błędu bazy
+    else say("Nie udało się: "+(err&&err.message?err.message:"błąd"))}
   finally{popBusy=false}
 });
+setInterval(()=>{if(popOpen()&&popList.some(x=>!wJoinOk(x.w)))popNext()},15000);   // okienko znika samo, gdy jazda ruszyła, a ono wisi otwarte
 
 /* ---------- 🟡 „Mam ochotę” (KROK 64, 2.0 — KROK 90): sygnał „mam dziś ochotę pojeździć / pobiegać / na spacer / na wędrówkę” ----------
    Okrągły przycisk z machającą dłonią 👋 nad ➕ — tylko gdy na dziś nie ma zaproszeń i nie dałeś jeszcze znać.
