@@ -323,7 +323,7 @@ const arTownsGet=()=>arTownsL||(arTownsL=AR_TOWNS_RAW.split(";").map(x=>{const v
 const TW_AMB=new Set(["marki","police","kolo","pila","turek","brok","krasne","winnica","zatory","gzy","obryte","nysa","slupca","wrzesnia","lipno","pisz","zary","ryki","zielonka","wierzbica","joniec","pilawa","kolno","mielnik","warka","pionki","jadow","rzewnie","nowe miasto","swiercze","opole","lubin","brzeg","koszalin","jaroslaw"]);
 const TW_PREP=new Set(["w","we","do","na","przez","pod","nad","k","kolo","okolice","okolicach","okolicy"]);   // bez „z / ze / od” — „z Jarosławiem” to osoba
 // słownik miejsc (lokale i cele wypadów na wsiach; nazwa w tekście → podpis i współrzędne). Źródło: OpenStreetMap (2026-11-28, promień 50 km od Pułtuska, tylko poza miastami) + wpisy właściciela.
-// Wpis: [[nazwy w tekście…], podpis na radarze, szer., dł.]; kolejne dopisujemy na prośbę właściciela.
+// Wpis: [[nazwy w tekście…], podpis na radarze, szer., dł., (1 = nazwa jak zwykłe słowo — tylko po przyimku)]; kolejne dopisujemy na prośbę właściciela.
 const TW_PLACES=[
 [["Pazibroda"],"Pazibroda · Chrzanowo",52.838,21.0647],
 [["Bar Borowik","Borowik"],"Bar Borowik · Popowo-Letnisko",52.5458,21.1336],
@@ -344,10 +344,52 @@ const TW_PLACES=[
 [["Gospoda za Miedzą"],"Gospoda za Miedzą · Przyjmy",52.7143,21.6959],
 [["Zajazd Myśliwski"],"Zajazd Myśliwski · Michałówek",52.5351,20.5141],
 [["Gród Mazowiecki"],"Gród Mazowiecki · Szymaki",52.6862,20.358],
-[["Zajazd Hubus","Hubus"],"Zajazd Hubus · Grabowo",53.0571,21.5284]];
+[["Zajazd Hubus","Hubus"],"Zajazd Hubus · Grabowo",53.0571,21.5284],
+[["Bar Laguna"],"Bar Laguna · Białobrzegi",52.4459,21.0568],
+[["U Honoraty"],"U Honoraty · Borzymy",52.5101,21.634],
+[["Bar u Darka"],"Bar u Darka · Brzóze Małe",52.8116,21.4626],
+[["Bizarro"],"Bizarro · Cempkowo",52.5956,20.4283,1],
+[["Samba"],"Samba · Chotomów",52.4118,20.886,1],
+[["Malinowy Bzyk"],"Malinowy Bzyk · Dalanówek",52.5891,20.4527],
+[["Karczma pod Dębem"],"Karczma Pod Dębem · Dziekanów Nowy",52.3634,20.8195],
+[["Smażalnia Ryb"],"Smażalnia Ryb · Dzierżenin",52.5582,21.0803],
+[["Willa Emilianów"],"Willa Emilianów · Emilianów",52.4331,21.2449],
+[["Gościnny Gaj"],"Gościnny Gaj · Gaj",52.5215,21.4084],
+[["Dworek Polanka"],"Dworek Polanka · Grudusk",52.9787,20.6266],
+[["Dziki Zakątek"],"Dziki Zakątek · Jabłonna",52.3595,20.9752],
+[["Kebab King"],"Kebab King · Jabłonna",52.3857,20.9267],
+[["Nad Wkrą"],"Ogródek Nad Wkrą · Joniec",52.6014,20.5809],
+[["Wypożyczalnia kajaków"],"Wypożyczalnia kajaków i bar nad rzeką · Joniec",52.6034,20.5802],
+[["Florian"],"Florian · Kaszewiec",52.8869,21.4231,1],
+[["Milord"],"Milord · Kleszewo",52.7398,21.0942,1],
+[["Kurczak z Rożna"],"Kurczak z Rożna · Klusek",52.5525,21.0762],
+[["Bartek"],"Bartek · Laski",52.2919,20.8417,1],
+[["Bar Mekong"],"Bar Mekong · Łajski",52.434,20.942],
+[["Po Staremu"],"Po Staremu · Łajski",52.429,20.9483],
+[["Klub Wiejski Wilczeniec","Wilczeniec"],"Klub Wiejski Wilczeniec · Łomianki Dolne",52.3563,20.8879],
+[["Tawerna Portowa"],"Tawerna Portowa · Nieporęt",52.4359,21.0398],
+[["Kura nie Kaczka"],"Kura nie Kaczka · Olszewnica Nowa",52.4426,20.8469],
+[["Oranżeria"],"Oranżeria · Olszewnica Nowa",52.4451,20.8472,1],
+[["Parkowa"],"Parkowa · Opinogóra Górna",52.9052,20.7174,1],
+[["Chata za wsią"],"Chata za wsią · Poczernin",52.5885,20.4489],
+[["Magnolia"],"Magnolia · Pomiechówek",52.4737,20.7393,1],
+[["Dołek"],"Dołek · Popowo-Parcele",52.53,21.1738,1],
+[["Restauracja Poświętne"],"Restauracja Poświętne · Poświętne",52.6331,20.3835],
+[["Bar Leśny"],"Bar Leśny · Skrzeszew",52.4691,20.9147],
+[["Pizzeria Słupecka"],"Pizzeria Słupecka · Słupno",52.386,21.158],
+[["Folwark Batorówka","Batorówka"],"Folwark Batorówka · Stanisławów",52.3899,20.563],
+[["Rancho Bena"],"Rancho Bena · Stanisławów Pierwszy",52.377,21.0705],
+[["Dziupla"],"Dziupla · Truskaw",52.3084,20.7693,1],
+[["ŁOŚmiechnięta Chata"],"Klubokawiarnia ŁOŚmiechnięta Chata · Truskaw",52.3097,20.7634],
+[["Karczma w Turzynie"],"Karczma · Turzyn",52.6279,21.5081],
+[["Pizzeria Topolino","Topolino"],"Pizzeria Topolino · Wieliszew",52.4522,20.9559],
+[["Restauracja Soprano"],"Restauracja Soprano · Wieliszew",52.4527,20.951],
+[["Pizzeria Memo"],"Pizzeria Memo · Wierzbica",52.5296,21.0707],
+[["Niespodzianka"],"Niespodzianka · Winnica",52.6434,20.9424,1],
+[["Helios"],"Helios · Zegrze Południowe",52.4511,21.0096,1]];
 const twNorm=s=>s.toLowerCase().replace(/ł/g,"l").normalize("NFD").replace(/[̀-ͯ]/g,"");
 let twIdx=null;
-const twIndex=()=>twIdx||(twIdx=arTownsGet().map(t=>[t,t[0]]).concat(TW_PLACES.flatMap(x=>x[0].map(al=>[[x[1],x[2],x[3]],al]))).map(([t,nm])=>{const full=twNorm(nm).replace(/-/g," "),ws=full.split(" ");return {t,ws,amb:TW_AMB.has(full),st:ws.map(w=>/[aeiouy]$/.test(w)&&w.length>4?w.slice(0,-1):w)}}));
+const twIndex=()=>twIdx||(twIdx=arTownsGet().map(t=>[t,t[0]]).concat(TW_PLACES.flatMap(x=>x[0].map(al=>[[x[1],x[2],x[3]],al,x[4]]))).map(([t,nm,fl])=>{const full=twNorm(nm).replace(/-/g," "),ws=full.split(" ");return {t,ws,amb:!!fl||TW_AMB.has(full),st:ws.map(w=>/[aeiouy]$/.test(w)&&w.length>4?w.slice(0,-1):w)}}));
 function townsIn(txt){
   if(!txt)return [];
   const T=[...String(txt).matchAll(/\p{L}+/gu)].map(m=>({n:twNorm(m[0]),cap:/^\p{Lu}/u.test(m[0])})),out=[],seen=new Set();
