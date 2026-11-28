@@ -350,6 +350,13 @@ const TW_PLACES=[
 [["Bar u Darka"],"Bar u Darka · Brzóze Małe",52.8116,21.4626],
 [["Bizarro"],"Bizarro · Cempkowo",52.5956,20.4283,1],
 [["Samba"],"Samba · Chotomów",52.4118,20.886,1],
+[["Lemany"],"Lemany",52.6494,21.2369],
+[["Lemany-Nadleśnictwo"],"Lemany-Nadleśnictwo",52.6712,21.1386],
+[["Nowe Borsuki","Nowych Borsukach"],"Nowe Borsuki",52.6537,21.1386],
+[["Borsuki-Kolonia"],"Borsuki-Kolonia",52.6459,21.1296],
+[["Borsuki"],"Borsuki",52.6498,21.1341,1],
+[["Łęcino"],"Łęcino",52.6358,21.1332],
+[["Kruczy Borek","Kruczy Bork"],"Kruczy Borek",52.622,21.1322],
 [["Malinowy Bzyk"],"Malinowy Bzyk · Dalanówek",52.5891,20.4527],
 [["Karczma pod Dębem"],"Karczma Pod Dębem · Dziekanów Nowy",52.3634,20.8195],
 [["Smażalnia Ryb"],"Smażalnia Ryb · Dzierżenin",52.5582,21.0803],
@@ -389,16 +396,17 @@ const TW_PLACES=[
 [["Helios"],"Helios · Zegrze Południowe",52.4511,21.0096,1]];
 const twNorm=s=>s.toLowerCase().replace(/ł/g,"l").normalize("NFD").replace(/[̀-ͯ]/g,"");
 let twIdx=null;
-const twIndex=()=>twIdx||(twIdx=arTownsGet().map(t=>[t,t[0]]).concat(TW_PLACES.flatMap(x=>x[0].map(al=>[[x[1],x[2],x[3]],al,x[4]]))).map(([t,nm,fl])=>{const full=twNorm(nm).replace(/-/g," "),ws=full.split(" ");return {t,ws,amb:!!fl||TW_AMB.has(full),st:ws.map(w=>/[aeiouy]$/.test(w)&&w.length>4?w.slice(0,-1):w)}}));
+const twIndex=()=>twIdx||(twIdx=arTownsGet().map(t=>[t,t[0]]).concat(TW_PLACES.flatMap(x=>x[0].map(al=>[[x[1],x[2],x[3]],al,x[4]]))).map(([t,nm,fl])=>{const full=twNorm(nm).replace(/-/g," "),ws=full.split(" ");return {t,ws,amb:!!fl||TW_AMB.has(full),st:ws.map(w=>/[aeiouy]$/.test(w)&&w.length>4?w.slice(0,-1):w)}}).sort((a,b)=>b.ws.length-a.ws.length));   // v383: dłuższe nazwy pierwsze („Nowe Borsuki” przed „Borsuki”)
 function townsIn(txt){
   if(!txt)return [];
   const T=[...String(txt).matchAll(/\p{L}+/gu)].map(m=>({n:twNorm(m[0]),cap:/^\p{Lu}/u.test(m[0])})),out=[],seen=new Set();
-  for(let i=0;i<T.length&&out.length<3;i++){if(!T[i].cap)continue;
+  let cov=0;   // v383: słowa już zajęte przez rozpoznaną nazwę (bez drugiego chipa z jej części)
+  for(let i=0;i<T.length&&out.length<3;i++){if(!T[i].cap||i<cov)continue;
     for(const x of twIndex()){const k=x.ws.length;if(seen.has(x.t[0])||i+k>T.length)continue;
       let ok=true;for(let j=0;j<k&&ok;j++){const n=T[i+j].n,st=x.st[j],mx=st.length<4?0:st.length<7?4:5;ok=(j>0||T[i+j].cap)&&n.startsWith(st)&&n.length-st.length<=mx}
       if(!ok)continue;
-      if(x.amb&&!(i>0&&TW_PREP.has(T[i-1].n)))continue;
-      seen.add(x.t[0]);out.push(x.t);break}}
+      if(x.amb&&!(i>0&&(TW_PREP.has(T[i-1].n)||((T[i-1].n=="i"||T[i-1].n=="oraz")&&i>2&&T[i-2].cap&&TW_PREP.has(T[i-3].n)))))continue;   // v383: też „przez Borsuki i Zatory” (wyliczenie po przyimku)
+      seen.add(x.t[0]);out.push(x.t);cov=i+k;break}}
   return out}
 const twHtml=w=>{const L=w?townsIn((w.title||"")+" . "+(w.note||"")):[];
   return L.length?'<div class="wpcw twrow"><span class="twlead">'+uiIcon("radar")+'Na radarze:</span>'+L.map(t=>'<button type="button" class="twchip" data-tw="'+esc(t[0])+'" data-lat="'+t[1]+'" data-lon="'+t[2]+'" aria-label="'+esc(t[0])+' — pokaż na radarze">'+esc(t[0])+'</button>').join("")+'</div>':""};
