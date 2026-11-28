@@ -179,7 +179,7 @@ function bootFail(msg){
 }
 $("bootretry").onclick=()=>location.reload();
 $("bootskip").onclick=()=>bootDone();
-bootTimer=setTimeout(()=>bootFail(),8000);
+bootTimer=setTimeout(()=>bootFail(),12000);   // v398: próg „Słabe połączenie” 8 s → 12 s (start to ~26 plików + ~60 zapytań)
 
 /* ---------- 📱 pasek „Otwórz w przeglądarce” (Facebook / Messenger / Instagram / WebView) ----------
    W przeglądarce wbudowanej nie da się zainstalować aplikacji, logowanie potrafi zniknąć po zamknięciu, a pobieranie GPX
