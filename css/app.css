@@ -785,7 +785,7 @@ html[data-theme=dark] .evp-t.soon{background:#4d2a0e;color:#ffb074}@keyframes ev
 .stc{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);flex:none;display:flex;align-items:center;justify-content:center;color:var(--white);font-size:14px;font-weight:900}
 .stit.dn{color:var(--mut)}.stit.dn .stt{text-decoration:line-through}.stit.dn .stc{background:var(--accbtn);border-color:var(--accbtn)}
 .stgo{margin-left:auto;font-weight:800;font-size:14px;white-space:nowrap}.bsempty.repsum{text-align:left}
-.evchips .fch.near{order:-1}.evchips .fch.near.on{background:var(--sys-orange);color:var(--white);border-color:var(--sys-orange)}
+.evchips .fch.near{order:-1}.fch.near.on{background:var(--sys-orange);color:var(--white);border-color:var(--sys-orange)}
 .evnear{margin-top:10px;padding:10px 12px;border-radius:14px;background:var(--fill)}
 .evnr{display:flex;align-items:center;gap:10px}.evnl{font-size:13px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
 .evnseg{flex:1;margin:0}.evnseg button{padding:6px 4px}
@@ -1380,7 +1380,8 @@ mark.srmk.out{background:transparent;color:inherit;box-shadow:none}
 /* 🔍 etap C (2026-11-24): wspólne Filtry, zakres archiwum, „Szukaj starszych”, historia wyszukiwań */
 @media (hover:hover) and (pointer:fine),(min-width:700px){.fltbox .fchips,#flt_when{flex-wrap:wrap;overflow:visible;margin-right:0;padding-right:0;row-gap:7px}.evchips{flex-wrap:wrap;overflow:visible;row-gap:7px}}   /* myszka / szeroki ekran: bomble się zawijają */
 .fscope{margin:0 0 4px;font-size:13px}
-.evchips .fch.evfb,.evchips .fch.near{display:inline-flex;align-items:center;gap:5px;order:-1}.evchips .fch.evfb .ui-i,.evchips .fch.near .ui-i{width:15px;height:15px}   /* v374: 📍 W okolicy + 🌐 Cała Polska — para na początku */
+.evchips .fch.evfb{display:inline-flex;align-items:center;gap:5px;order:-1}.evchips .fch.evfb .ui-i,.fch.near .ui-i{width:15px;height:15px}
+.fch.near{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}#wnear .fch.near{padding:7px 12px;font-size:14px}   /* v375: 📍 W okolicy — ten sam przycisk w Zaproszeniach (obok Filtrów) i Imprezach */
 #evfltbar{margin-top:8px}
 .arng{margin:8px 0 2px;flex-wrap:wrap}.arng .fch{padding:6px 12px;font-size:14px}
 .srold{display:flex;flex-direction:column;gap:6px;padding:9px 12px;background:var(--fill);border-bottom:1px solid var(--line)}

@@ -145,7 +145,7 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Zmień hasło",s:"hasło password",p:"Ustawienia → Edytuj profil → Konto → Zmień hasło",i:"key",go:[SR_PROF,'[data-c="pwd"]'],ok:S},
   {t:"Trasy DEMO (testowe)",s:"trasa demo widmo testowe zaproszenie bez gpx dalekie miasta",p:"Ustawienia → Baza tras → plakietka 🧪 DEMO",i:"map",fn:()=>openRb(),ok:!!rbOk},
   {t:"Baza tras",s:"trasy gpx mapa odkryj",p:"Ustawienia → Baza tras",i:"map",fn:()=>openRb(),ok:!!rbOk},
-  {t:"Imprezy z całej Polski / z okolicy",s:"imprezy cała polska okolica w okolicy wszystkie daleko na stałe domyślnie filtr promień",p:"Imprezy → 🌐 Cała Polska / 📍 W okolicy (pierwsze filtry)",i:"globe",fn:()=>show(3),hl:"[data-evarea]",ok:typeof tabOk==="function"&&tabOk(3)},
+  {t:"Filtr „W okolicy” (zaproszenia i imprezy)",s:"w okolicy okolica filtr wszystkie cała polska daleko poza okolicą pokaż wszystkie zaproszenia imprezy promień",p:"Zaproszenia: obok Filtrów · Imprezy: pierwszy przycisk nad listą",i:"pin",fn:()=>show(0),hl:"[data-wnear]",ok:S},
   {t:"Pytaj o imprezy spoza okolicy",s:"imprezy okolica w okolicy cała polska pokaż wszystkie zostań przy okolicy nie pokazuj więcej okienko pytanie promień daleko",p:"Ustawienia → Jazdy i zaproszenia",i:"pin",hl:"[data-eva]",ok:S&&!DEMO&&typeof evAskRow==="function"&&!!evAskRow()},
   {t:"Pytaj „Jak poszło?”",s:"jak poszło ankieta ocena po jeździe km",p:"Ustawienia → Jazdy i zaproszenia",i:"bike",hl:"[data-ro]",ok:S&&reportOk},
   {t:"Ekipa demo: pokazuj",s:"ekipa demo konta demo zmyślone ukryj pokaż zombie testowe osoby",p:"Ustawienia → Jazdy i zaproszenia",i:"users",hl:'[data-dmo="show"]',ok:S&&!DEMO},
@@ -247,7 +247,7 @@ function srReveal(w,arch){let m="";
   if(typeof demoHidU==="function"&&demoHidU(w.user_id)){demoPeek=true;deriveWants();m="Pokazuję też Ekipę demo (do zamknięcia aplikacji)."}   // ⚙️ Ekipa demo ukryta (KROK 95)
   if(session&&(!arch||flt.arch)&&fltActive()&&!fltOk(w)){flt=fltEmpty();fltSave();m="Wyłączyłem filtry, żeby pokazać ten wynik."}
   if(!arch&&typeof wActShow==="function"&&!wActShow(w)){actPeek=true;m="Pokazuję też aktywności spoza „Powiadamiaj mnie o” (do zamknięcia aplikacji)."}   // 🔔 v283
-  if(!arch&&typeof wAreaOk==="function"&&!wAreaOk(w))m=areaReveal(w.place_lat,w.place_lon,w.place_city||w.place)||m;   // 📍 v270: spoza Mojej okolicy → podgląd jej okolicy   // archiwum filtrujemy tylko z „Filtruj też archiwum”
+  if(!arch&&typeof wNearOk==="function"&&!wNearOk(w))m=areaReveal(w.place_lat,w.place_lon,w.place_city||w.place)||m;   // 📍 v270: spoza Mojej okolicy → podgląd jej okolicy   // archiwum filtrujemy tylko z „Filtruj też archiwum”
   return m}
 function srGoWant(w){const m=srReveal(w);const x=wants.find(y=>y.id===w.id);if(!x){say("Tego zaproszenia nie da się teraz pokazać.");return}goToWant(x);if(m)setTimeout(()=>say(m),400);
   setTimeout(()=>srFocus(()=>document.querySelector('#mywant .want[data-wid="'+x.id+'"],#wantlist .want[data-wid="'+x.id+'"]'),srGoQ),150)}

@@ -127,8 +127,8 @@ function evCard(e){
 /* ---------- 📍 „W okolicy” (KROK 43; decyzja właściciela 2026-11-16 10:56) ----------
    promień 50/100/200 km; odległość w linii prostej od „Mojej miejscowości” (⚙️, zapamiętana w tym telefonie)
    albo od GPS (tylko na tę wizytę); imprezy bez punktu na mapie nie przechodzą przez filtr */
-// 📍 v270: „W okolicy” = Moja okolica (promień z plakietki, KROK 104), domyślnie włączone; wyłączone = cała Polska
-let evNearOn=(()=>{try{return localStorage.getItem("evArea")!=="0"}catch(e){return true}})();
+// 📍 v270: „W okolicy” = Moja okolica (promień z plakietki, KROK 104); v375: domyślnie WYŁĄCZONE, nowy klucz evNear (stary evArea pomijany) (wszystkie imprezy) — włącza przycisk „📍 W okolicy” (decyzja właściciela 2026-11-28)
+let evNearOn=(()=>{try{return localStorage.getItem("evNear")==="1"}catch(e){return false}})();
 const homeGet=()=>{try{const h=JSON.parse(localStorage.getItem("home")||"null");return h&&isFinite(h.lat)&&isFinite(h.lon)?h:null}catch(e){return null}};
 const gpsGet=()=>{try{const h=JSON.parse(sessionStorage.getItem("gpsOrigin")||"null");return h&&isFinite(h.lat)&&isFinite(h.lon)?h:null}catch(e){return null}};
 const originGet=()=>gpsGet()||areaCur();   // środek okolicy (albo podgląd innej) — js/08 niżej
@@ -180,16 +180,20 @@ async function evAreaAsk(){
     "Pokaż wszystkie",false,"Zostań przy okolicy","Nie pokazuj więcej");
   if(r.ok){evNearOn=false;renderEvents()}   // bez zapisu „evArea” — po ponownym uruchomieniu wraca okolica
   if(r.chk)evAskSet(false,true);
-  say((r.ok?"Pokazuję imprezy z całej Polski — do zamknięcia aplikacji. Filtr „📍 W okolicy” wraca do okolicy.":"Zostajesz przy imprezach z okolicy.")
+  say((r.ok?"Pokazuję wszystkie imprezy — do zamknięcia aplikacji. Filtr „📍 W okolicy” wraca do okolicy.":"Zostajesz przy imprezach z okolicy.")
     +(r.chk?" Nie zapytam więcej — włączysz w ⚙️ → Jazdy i zaproszenia.":""));
 }
-// 📍 / 🌐 chipy „W okolicy” i „Cała Polska” na początku rzędu filtrów imprez (v374) — wybór zapamiętany w telefonie (evArea)
-function evAreaSet(on){if(evNearOn===on)return;evNearOn=on;try{localStorage.setItem("evArea",on?"1":"0")}catch(e){}renderEvents()}
+// 📍 przycisk „W okolicy” — JEDEN wygląd w Zaproszeniach i Imprezach (v375): włączony = Moja okolica · km, wyłączony = wszystko
+function nearChip(on,attr){if(!areaKm())return "";const a=areaCur();
+  return '<button type="button" class="fch near'+(on?' on':'')+'" '+attr+' aria-pressed="'+on+'" title="'+(on?'Pokazuję tylko okolicę — kliknij, żeby pokazać wszystkie':'Pokazuję wszystkie — kliknij, żeby zostawić tylko okolicę')+'">'+uiIcon("pin")+(on?(a.peek?esc(a.name)+' · ':'W okolicy · ')+areaKmTxt(a.km):'W okolicy')+'</button>'}
+// Zaproszenia: filtr widoku (domyślnie włączony — okolica to główny mechanizm, decyzja 2026-11-26); 🔔 i powiadomienia liczą się z okolicy zawsze
+let wNearOn=(()=>{try{return localStorage.getItem("wArea")!=="0"}catch(e){return true}})();
+const wNearOk=w=>!wNearOn||wAreaOk(w);
 // ⚙️ → Jazdy i zaproszenia: wiersz przełącznika (js/06 setRidesHtml)
 function evAskRow(){
   if(!session||DEMO||!evGeoOk||!tabOk(3))return "";
   const on=evAskOn();
-  return iosIt("#ff9f0a","pin","Pytaj o imprezy spoza okolicy",on?"Przy wejściu w Imprezy, gdy „W okolicy” ukrywa część z nich":"Wyłączone — całą Polskę pokaże filtr „Cała Polska” w Imprezach",iosSw(on,"data-eva",on?"0":"1"));
+  return iosIt("#ff9f0a","pin","Pytaj o imprezy spoza okolicy",on?"Przy wejściu w Imprezy, gdy „W okolicy” ukrywa część z nich":"Wyłączone — okolicę włączasz i wyłączasz przyciskiem „📍 W okolicy” w Imprezach",iosSw(on,"data-eva",on?"0":"1"));
 }
 // wyszukiwanie miejsc w OpenStreetMap (Nominatim) — tylko Polska
 async function geoSearch(q){
@@ -568,7 +572,7 @@ function useGps(after){
   navigator.geolocation.getCurrentPosition(async pos=>{
     const la=pos.coords.latitude,lo=pos.coords.longitude,g=await revGeo(la,lo);
     try{sessionStorage.setItem("gpsOrigin",JSON.stringify({name:(g&&g.city)||"Twoja lokalizacja",lat:la,lon:lo}))}catch(e){}
-    evNearOn=true;try{localStorage.setItem("evArea","1")}catch(e){}
+    evNearOn=true;try{localStorage.setItem("evNear","1")}catch(e){}
     say("📡 Odległości liczone od: "+((g&&g.city)||"Twojej lokalizacji"));after&&after({name:(g&&g.city)||"",lat:la,lon:lo});if(curTab===3)renderEvents()},
    err=>{say(err&&err.code===1?"Brak zgody na lokalizację — zezwól na nią w ustawieniach przeglądarki (ikona kłódki obok adresu) albo wpisz miejscowość ręcznie.":"Nie udało się ustalić lokalizacji — sprawdź, czy lokalizacja w telefonie jest włączona.")},
    {enableHighAccuracy:false,timeout:12000,maximumAge:600000});
@@ -635,7 +639,7 @@ $("homesheet").addEventListener("click",async e=>{
   if(k==="unpeek"){areaPeek=null;areaChanged();renderHome();return}
   if(k==="sethome"){const x=areaPeek;if(!x||!x.name)return;areaSetHome({name:x.name,lat:+x.lat,lon:+x.lon});hmMode="peek";arView=arHomeView();renderHome();say("📍 Moja miejscowość: "+x.name);return}
   if(k==="pick"){const x=homeRes[+b.dataset.i];if(!x)return;
-    if(hmMode==="home"){areaSetHome(x);evNearOn=true;try{localStorage.setItem("evArea","1")}catch(err){}homeRes=[];homeMsg="";hmMode="peek";renderHome();say("📍 Moja miejscowość: "+x.name);return}
+    if(hmMode==="home"){areaSetHome(x);homeRes=[];homeMsg="";hmMode="peek";renderHome();say("📍 Moja miejscowość: "+x.name);return}
     areaPeek={name:x.name,lat:x.lat,lon:x.lon};areaChanged();homeRes=[];homeMsg="";renderHome();return}
   if(k==="fpick"){const x=areaFavs()[+b.dataset.i];if(!x)return;areaPeek=(areaPeek&&areaPeek.name===x.name)?null:{name:x.name,lat:+x.lat,lon:+x.lon};areaChanged();renderHome();return}
   if(k==="fav"){const x=homeRes[+b.dataset.i];if(!x)return;const fk=y=>y.name+"|"+areaRound(y.lat).toFixed(2)+"|"+areaRound(y.lon).toFixed(2);
@@ -684,8 +688,7 @@ function renderEvents(){
   if(!evLoaded&&!evLoading&&tabOk(3)){evLoading=true;(session?loadEvents():loadEventsPub()).then(()=>{evLoading=false;renderEvents();try{snapSave()}catch(e){}}).catch(()=>{evLoading=false})}
   const box=$("evlist");if(!box)return;
   $("evbeta").innerHTML=betaTag("tab_events");$("evadd").classList.toggle("hide",!session);
-  $("evchips").innerHTML=(evGeoOk?'<button type="button" class="fch near'+(evNearOn?' on':'')+'" data-evarea="near">📍 '+(evNearOn?(areaCur().peek?esc(areaCur().name)+' · ':'W okolicy · ')+areaKmTxt(areaKm()):'W okolicy')+'</button>'
-     +'<button type="button" class="fch near'+(evNearOn?'':' on')+'" data-evarea="all">'+uiIcon("globe")+'Cała Polska</button>':'')
+  $("evchips").innerHTML=(evGeoOk?nearChip(evNearOn,'data-evnear="1"'):'')
    +(session?'<button type="button" class="fch evfb'+(evFltOn()?' on':'')+'" data-evflt="1">'+uiIcon("sliders")+'Filtry'+(fltKeysFor("ev").length?'<span class="fcn">'+fltKeysFor("ev").length+'</span>':'')+'</button>':'')
    +[["","Wszystkie"]].concat(EV_QUICK).concat(session?[["mine","🙋 Moje"]]:[]).concat(isAdmin&&evs.some(x=>x.delete_req_at)?[["delreq","🗑 Do usunięcia ("+evs.filter(x=>x.delete_req_at).length+")"]]:[]).map(([v,t])=>'<button type="button" class="fch'+(evQuickOn(v)?' on':'')+'" data-evf="'+v+'">'+t+'</button>').join("");
   const fb=$("evfltbar");if(fb){const K=session?fltKeysFor("ev"):[];fb.classList.toggle("hide",!K.length);   // aktywne filtry (też ustawione w Zaproszeniach) — każdy z ✕
@@ -721,8 +724,8 @@ async function evLeave(e){
 $("p3").addEventListener("click",async e=>{
   const f=e.target.closest("[data-evf]");if(f){evQuick(f.dataset.evf);return}
   if(e.target.closest("[data-evflt]")){openFlt("ev");return}
-  {const ea=e.target.closest("[data-evarea]");if(ea){evAreaSet(ea.dataset.evarea==="near");return}}   // 📍 / 🌐 (v374)
-  if(e.target.closest("[data-evnear]")){evNearOn=!evNearOn;try{localStorage.setItem("evArea",evNearOn?"1":"0")}catch(err){}renderEvents();return}
+  if(e.target.closest("[data-wnear]")){wNearOn=!wNearOn;try{localStorage.setItem("wArea",wNearOn?"1":"0")}catch(err){}renderWants();return}   // 📍 Zaproszenia (v375)
+  if(e.target.closest("[data-evnear]")){evNearOn=!evNearOn;try{localStorage.setItem("evNear",evNearOn?"1":"0")}catch(err){}renderEvents();return}
   const eo=e.target.closest("[data-evo]");if(eo){const k=eo.dataset.evo;
     if(k==="area")openHome();else if(k==="set")openHome("home");else if(k==="gps")useGps();else if(k==="home"){try{sessionStorage.removeItem("gpsOrigin")}catch(err){}renderEvents()}return}
   if(e.target.closest("#evadd")){if(!session)return;openEvForm(null);return}

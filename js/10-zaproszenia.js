@@ -381,7 +381,7 @@ function fltLabel(k){
 }
 let wantsNoFlt=null;   // wszystkie zaproszenia bez filtrów — „Moje” (👤) zawsze pokazuje wszystkie Twoje, filtry ich nie chowają
 function renderWants(){try{renderSteps()}catch(e){}
-  const raw=wants,inA=typeof wAreaOk==="function"?raw.filter(wAreaOk):raw,all=typeof wActShow==="function"?inA.filter(wActShow):inA,on=!!session&&fltActive();   // 📍 v270: najpierw Moja okolica (js/08), 🔔 v283: potem „Powiadamiaj mnie o”, potem Filtry
+  const raw=wants,inA=typeof wNearOk==="function"?raw.filter(wNearOk):raw,all=typeof wActShow==="function"?inA.filter(wActShow):inA,on=!!session&&fltActive();   // 📍 v270: najpierw Moja okolica (js/08), 🔔 v283: potem „Powiadamiaj mnie o”, potem Filtry
   wants=on?all.filter(fltOk):all;
   wantsNoFlt=all;
   try{renderWants0()}finally{wants=raw;wantsNoFlt=null}
@@ -393,6 +393,7 @@ function renderWants(){try{renderSteps()}catch(e){}
   const ws=$("wstat");if(ws){const up=all.filter(wUpcoming),me=up.filter(w=>w.user_id===uid||(joins[w.id]||[]).includes(uid)).length;   // widoczne dla mnie / biorę udział
     ws.classList.toggle("hide",!session);ws.innerHTML=uiIcon("hand")+'<button type="button" data-ws="all" class="'+(flt.who!=="part"?"on":"")+'">'+up.length+'</button><s>/</s><button type="button" data-ws="part" class="'+(flt.who==="part"?"on":"")+'">'+me+'</button>';
     ws.title="Zaproszenia widoczne dla Ciebie / te, w których bierzesz udział";ws.setAttribute("aria-label","Zaproszeń widocznych: "+up.length+", w których bierzesz udział: "+me)}
+  {const wn=$("wnear");if(wn)wn.innerHTML=session&&typeof nearChip==="function"?nearChip(wNearOn,'data-wnear="1"'):""}   // 📍 v375: ten sam przycisk co w Imprezach
   const b=$("fltbtn"),bar=$("fltbar");if(!b)return;
   b.classList.toggle("hide",!session);mysfSync();
   const n=fltKeys().length;
@@ -504,7 +505,7 @@ function fltDraw(){
   const bb=$("fltbikebox");if(bb)bb.classList.toggle("hide",!fltBikeOn());
   {const c=$("fltclrb");if(c)c.classList.toggle("hide",!fltKeys().length);const u=$("fltundo");if(u&&u.dataset.ok){delete u.dataset.ok;u.innerHTML=fltUndoLbl(false)}}   // „Wyczyść” tylko gdy jakiś filtr jest włączony
   if(fltScope==="ev"){const ne=evs.filter(e=>!evPast(e)&&evMatch(e)).length;$("fltok").textContent=fltActiveFor("ev")?"Pokaż "+ne+" "+plf(ne,["imprezę","imprezy","imprez"]):"Gotowe";return}
-  const n=wants.filter(wUpcoming).filter(w=>typeof wAreaOk!=="function"||wAreaOk(w)).filter(w=>typeof wActShow!=="function"||wActShow(w)).filter(fltOk).length,na=flt.arch&&fltActive()?withOldJoins(()=>archList(wants).filter(fltOk).length):0;$("fltok").textContent=fltActive()?"Pokaż "+n+" "+(n===1?"zaproszenie":n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"zaproszenia":"zaproszeń")+(flt.arch?" + "+na+" w archiwum":""):"Gotowe";
+  const n=wants.filter(wUpcoming).filter(w=>typeof wNearOk!=="function"||wNearOk(w)).filter(w=>typeof wActShow!=="function"||wActShow(w)).filter(fltOk).length,na=flt.arch&&fltActive()?withOldJoins(()=>archList(wants).filter(fltOk).length):0;$("fltok").textContent=fltActive()?"Pokaż "+n+" "+(n===1?"zaproszenie":n%10>=2&&n%10<=4&&(n%100<12||n%100>14)?"zaproszenia":"zaproszeń")+(flt.arch?" + "+na+" w archiwum":""):"Gotowe";
 }
 function fltRefresh(){if($("fltok")||$("fltstk"))fltDraw();renderWants();if(typeof renderEvents==="function"&&curTab===3)renderEvents()}
 // okno: widok główny (bomble w rzędach przewijanych w bok) albo podekran „Gdzie” / „Osoba” z polem wpisywania na dole (wyniki rosną w górę)
