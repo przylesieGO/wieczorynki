@@ -4,7 +4,8 @@ function show(n,dir){
   [0,1,2,3].forEach(i=>{$("p"+i).classList.toggle("hide",i!==n);$("t"+i).classList.toggle("on",i===n)});
   const p=$("p"+n);p.style.transition="";p.style.transform="";p.style.opacity="";
   if(dir){p.classList.remove("slin-l","slin-r");void p.offsetWidth;p.classList.add(dir>0?"slin-r":"slin-l");setTimeout(()=>p.classList.remove("slin-l","slin-r"),300)}
-  if(n===3&&curTab!==3)evStick=new Set();
+  if(n===3&&curTab!==3){evStick=new Set();
+    if(typeof fltActive==="function"&&session&&fltActive()){flt=fltEmpty();fltSave();fltQ="";try{renderWants()}catch(e){}say("Wyczyściłem filtry zaproszeń")}}   // v397: filtry ustawione w Zaproszeniach nie przechodzą do Imprez — wejście w Imprezy czyści je
   curTab=n;
   window.scrollTo({top:0});
   updateFab();

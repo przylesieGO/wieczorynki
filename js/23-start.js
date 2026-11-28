@@ -129,12 +129,14 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-stgo]");if
 // wiersze do ⚙️ (js/06 woła je przy rysowaniu, gdy plik jest wczytany)
 const stTestRow=()=>stOn()&&meTester()?gRow("#bf5af2","sparkles","Pokaż ekran startowy jeszcze raz","Kroki po zalogowaniu: okolica i aktywności (🧪 BETA)","",'data-stgo="all"'):"";
 const stActsRow=()=>stOn()||stActsHas()?gRow("#34c759","heart","Powiadamiaj mnie o",stActsTxt(),"",'data-stgo="acts"'):"";
-// 🔔 v392: „Otrzymujesz powiadomienia dla:” — klikane kafelki aktywności na karcie profilu w ⚙️ i w Edytuj profil (tylko właściciel konta; te same kafelki .wbk co na ekranie startowym, ten sam zapis profile_private.acts)
-function profActsHtml(){
+// 🔔 v392: „Otrzymujesz powiadomienia dla:” — klikane kafelki aktywności w Edytuj profil (tylko właściciel konta; te same kafelki .wbk co na ekranie startowym, ten sam zapis profile_private.acts)
+function profActsHtml(inCard){
   if(!session||DEMO||!(stOn()||stActsHas()))return "";
-  const A=myPriv&&Array.isArray(myPriv.acts)?myPriv.acts:[];
-  return gGrp(A.length?"Otrzymujesz powiadomienia dla:":"Powiadomienia dla wszystkich aktywności — wybierz, co lubisz:",['<div class="ios-it dmcol"><div class="wbike sigacts stacts">'+actAvail().map(a=>{const on=A.includes(a.key);
-    return '<button type="button" class="wbk'+(on?' on':'')+'" data-pfa="'+esc(a.key)+'" aria-pressed="'+on+'">'+uiIcon(a.icon||"bike")+'<span>'+esc(a.name_many||a.name)+'</span></button>'}).join("")+'</div></div>']);
+  const A=myPriv&&Array.isArray(myPriv.acts)?myPriv.acts:[],H=A.length?"Otrzymujesz powiadomienia dla:":"Powiadomienia dla wszystkich aktywności — wybierz, co lubisz:",
+    T='<div class="wbike sigacts stacts">'+actAvail().map(a=>{const on=A.includes(a.key);
+    return '<button type="button" class="wbk'+(on?' on':'')+'" data-pfa="'+esc(a.key)+'" aria-pressed="'+on+'">'+uiIcon(a.icon||"bike")+'<span>'+esc(a.name_many||a.name)+'</span></button>'}).join("")+'</div>';
+  if(inCard)return '<div class="gpacts" role="group" aria-label="'+H+'" title="'+H+'"><span class="gpbell" aria-hidden="true">'+uiIcon("bell")+'</span>'+T+'</div>';   // v397: w karcie profilu — bez napisu, z ikoną dzwonka, mniejsze kafelki
+  return gGrp(H,['<div class="ios-it dmcol">'+T+'</div>']);
 }
 let pfaBusy=false;
 document.addEventListener("click",async e=>{const b=e.target.closest("[data-pfa]");if(!b||pfaBusy)return;

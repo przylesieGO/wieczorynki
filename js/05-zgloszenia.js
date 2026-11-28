@@ -355,7 +355,7 @@ function renderGear(){
   else if(gearView==="inst")body=instHtml();
   // ⚙️ góra w stylu grup iPhone'a + wyróżniona „Baza tras” (wariant B, decyzja właściciela 2026-11-16 15:11)
   else body=session
-    ?profCardHtml()+(typeof profActsHtml==="function"?profActsHtml():"")   // 🔔 v392: kafelki „Otrzymujesz powiadomienia dla:” pod kartą profilu
+    ?profCardBoxHtml()   // v397: karta profilu z małymi kafelkami aktywności (ikona dzwonka) pod „Edytuj profil”
      +(typeof grRow==="function"?gGrp("Ludzie",[grRow()]):'')   // 👥 grupy wysoko — zaproszenia od razu widać (KROK 70)
      +(isAdmin?gGrp("Administracja",[gRow("#8e8e93","shield","Administracja","Użytkownicy, zgłoszenia, statystyki, uprawnienia",fbAdmUnread().length?'<span class="ios-bdg">'+fbAdmUnread().length+'</span>':'','data-c="admin"')]):'')
      +(isKingReal()?gGrp("Podgląd aplikacji",[

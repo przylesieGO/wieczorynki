@@ -1875,3 +1875,8 @@ details.wday:not([open]) .twcol .twchip:nth-of-type(n+3){display:none}details.wd
 details.wday .wfc{transition:opacity .2s}details.wday[open] .wfc.twoff{opacity:.4}
 .sgcall{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;font-size:14px;font-weight:700;line-height:1.25;color:var(--good);text-align:left}   /* v396: podpis pod „Na co masz dziś ochotę?” */
 html[data-theme=dark] .sgcall{color:#6fd36f}
+.gprofbox{background:var(--fill);border-radius:16px;margin:40px 0 4px;padding-bottom:14px}.gprofbox .gprof{background:none;margin:0}   /* v397: karta profilu + kafelki aktywności */
+.gpacts{display:flex;align-items:center;gap:8px;padding:0 14px}.gpbell{flex:none;display:flex;align-items:center;justify-content:center;width:30px;height:30px;color:var(--mut)}.gpbell .ui-i{width:20px;height:20px}
+.gpacts .sigacts{flex:1;min-width:0;margin-top:0;gap:6px}.gpacts .wbk{min-width:0;padding:6px 2px 5px;gap:2px;font-size:11px;border-radius:10px;border-width:1px}.gpacts .wbk .ui-i{width:16px;height:16px}.gpacts .wbk span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gsz .nw{white-space:nowrap}   /* v397: „Z nami od …” i „· N dni” łamią się w całości do nowego wiersza, bez dzielenia „9 / dni” */
+.gpacts .wbk:not(.on){border-color:color-mix(in srgb,var(--mut) 40%,transparent)}   /* v397: delikatna szara obwódka — widać nieaktywne kafelki */
