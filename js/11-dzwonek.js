@@ -1,6 +1,6 @@
 /* ---------- 🔔 dzwonek: lista powiadomień (do Ciebie / Twoje zaproszenia) ---------- */
-const ME_KINDS=["invite","time","set","info","added"],OWN_KINDS=["join","pref","leave","decline","rejoin","added"];   // rejoin — KROK 46; added — KROK 101 (dopisany do zaproszenia z sygnału)
-const N_ICON={invite:"📩",time:"🕖",set:"✅",info:"✏️",join:"🙋",pref:"🕖",leave:"👋",decline:"🙅",rejoin:"🔁",added:"➕"};
+const ME_KINDS=["invite","time","set","info","added","coauthor","w_owner"],OWN_KINDS=["join","pref","leave","decline","rejoin","added","coauthor","w_owner"];   // ✍️ coauthor, w_owner — KROK 113; rejoin — KROK 46; added — KROK 101 (dopisany do zaproszenia z sygnału)
+const N_ICON={invite:"📩",time:"🕖",set:"✅",info:"✏️",join:"🙋",pref:"🕖",leave:"👋",decline:"🙅",rejoin:"🔁",added:"➕",coauthor:"✍️",w_owner:"✍️"};
 const nWant=n=>wants.find(w=>w.id===n.want_id);
 // 🔔 „przeczytane” pojedynczych pozycji bez własnego stanu w bazie (logowania, nowi, usunięte, imprezy, chęci) — pamięć tego urządzenia
 const bsDone=()=>{try{return new Set(JSON.parse(localStorage.getItem("bellDone")||"[]"))}catch(e){return new Set()}};
@@ -33,6 +33,8 @@ function newsTxt(n,w){
     case "pref":return who+' '+v("zmienił","zmieniła")+' godzinę'+(pf?' · pasuje <b>'+esc(hhmm(new Date(pf)))+'</b>':'');
     case "leave":return who+' '+v("zrezygnował","zrezygnowała");
     case "added":return who+' '+v("dopisany","dopisana")+' do ekipy';   // 🤝 KROK 101: actor = dopisana osoba
+    case "coauthor":return who+' '+v("dodał","dodała")+' Cię jako współautora — możesz edytować to zaproszenie';   // ✍️ KROK 113
+    case "w_owner":return who+' '+v("przekazał","przekazała")+' Ci to zaproszenie — jesteś teraz autorem';
     case "rejoin":return who+' '+v("wrócił","wróciła")+' — jednak jedzie 🚴'+(pf&&isOpen(w)?' · pasuje <b>'+esc(hhmm(new Date(pf)))+'</b>':'');
     default:return who+' nie da rady';
   }
@@ -91,7 +93,7 @@ const dlRows=()=>lgOk?dlList.filter(x=>x.user_id!==uid):[];
 const dlUnread=()=>{const s=dlSeen(),D=bsDone();return dlRows().filter(x=>new Date(x.created_at).getTime()>s&&!D.has("dl:"+x.id))};
 function dlRow(x,un){const m=x.meta||{},d=new Date(x.created_at),k=genders[x.user_id]==="K",au=m.author;
   const who=nicks[x.user_id]?nk(x.user_id):'<b>ktoś</b>';
-  const what=m.by_admin?' (admin) '+(k?'usunęła':'usunął')+' zaproszenie od '+(au&&nicks[au]?esc(nicks[au]):'ktoś'):' '+(k?'usunęła':'usunął')+' swoje zaproszenie';
+  const what=m.by_admin?' (admin) '+(k?'usunęła':'usunął')+' zaproszenie od '+(au&&nicks[au]?esc(nicks[au]):'ktoś'):m.by_editor?' (współautor) '+(k?'usunęła':'usunął')+' zaproszenie od '+(au&&nicks[au]?esc(nicks[au]):'ktoś'):' '+(k?'usunęła':'usunął')+' swoje zaproszenie';   // ✍️ by_editor — KROK 113
   const st=m.starts_at?new Date(m.starts_at):null;
   const det=[st?'jazda: '+(st<new Date()?relDayPast(st):relDay(st)).toLowerCase()+' '+hhmm(st):'',m.joined?'zapisani: '+m.joined:'nikt nie był zapisany',m.private?'🔒 prywatne':'',m.test?'testowe':''].filter(Boolean).join(' · ');
   return '<div class="nit'+(un?' new':'')+'" data-nu="'+esc(x.user_id)+'"><div class="ic">🗑️</div><div class="tx">'+who+esc(what)+'<div class="w">'+esc(lgWhen(d))+' · '+esc(det)+'</div></div>'+(un?bsMk("dl:"+x.id):'')+'</div>'}

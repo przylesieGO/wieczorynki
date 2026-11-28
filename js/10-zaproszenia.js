@@ -63,7 +63,7 @@ function openReport(id){
   // ocena trasy z bazy: wczytaj swoją dotychczasową
   if(rs.rv){const rid=w.route_base_id,sid=id;sb.from("route_reviews").select("rating,scenic,difficulty,traffic,tags,comment").eq("route_id",rid).eq("user_id",uid).limit(1).then(r=>{const d=r&&r.data&&r.data[0];
       if(d&&rs&&rs.id===sid&&rs.rv&&!rs.rvTouched){const v=rvFrom(d);v.comment=rs.rv.comment||v.comment;rs.rv=v;if(!rs.rrating&&d.rating)rs.rrating=d.rating;renderRep()}},()=>{})}
-  if(w.user_id===uid)(joins[w.id]||[]).filter(x=>x!==uid).forEach(x=>{const r=(reports[w.id]||[]).find(y=>y.user_id===x);rs.who[x]=r?r.went:true});
+  if(wEdMe(w))[w.user_id,...(joins[w.id]||[])].filter((x,i,a)=>x!==uid&&a.indexOf(x)===i).forEach(x=>{const r=(reports[w.id]||[]).find(y=>y.user_id===x);rs.who[x]=r?r.went:true});
   renderRep();
   if(w.route_base_id&&!rbList&&typeof rbLoad==='function')rbLoad().then(()=>{if(rs&&rs.id===id)renderRep()},()=>{});
 }
@@ -75,7 +75,7 @@ const repRouteHtml=w=>{const x=w.route_base_id&&rbList&&rbList.find(r=>r.id===w.
     :'<div class="rrmini ph" aria-hidden="true">'+rbSvg(REP_DEMO_ROUTE,320,120)+'<span>brak trasy</span></div>'};
 function renderRep(){
   const w=rs&&wants.find(x=>x.id===rs.id);if(!w){closeRep();return}
-  const plan=kmOf(w),p=$("repsheet"),pend=repPending(),idx=pend.findIndex(x=>x.id===w.id),own=w.user_id===uid;
+  const plan=kmOf(w),p=$("repsheet"),pend=repPending(),idx=pend.findIndex(x=>x.id===w.id),own=wEdMe(w);
   const others=Object.keys(rs.who),RR=reports[w.id]||[];
   p.classList.remove("hide");
   p.innerHTML='<div class="bsbox bsauto repbox" role="dialog" aria-modal="true" aria-label="Jak poszło?"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-rs="later">Później</button><b>🚴 Jak poszło?</b><span style="min-width:64px;text-align:right" class="note">'+(pend.length>1&&idx>=0?(idx+1)+' z '+pend.length:'')+'</span></div>'
@@ -119,7 +119,7 @@ async function saveReport(){
     if(rs.rv&&rs.went&&w.route_base_id){const v=Object.assign({},rs.rv,{rating:rs.rrating||0}),rr=rvRow(w.route_base_id,v,w.id);
       if(rvHas(rr))try{await rvSave(rr)}catch(err){say("Odpowiedź zapisana, ale ocena trasy nie: "+(err&&err.message||"błąd"))}}
     const RR=reports[w.id]=(reports[w.id]||[]).filter(x=>x.user_id!==uid);RR.push(Object.assign({self:true,updated_at:new Date().toISOString()},row));
-    if(w.user_id===uid)for(const id of Object.keys(rs.who)){
+    if(wEdMe(w))for(const id of Object.keys(rs.who)){
       if(RR.some(y=>y.user_id===id&&y.self))continue;
       const q=await sb.from("ride_reports").upsert({want_id:w.id,user_id:id,went:!!rs.who[id]},{onConflict:"want_id,user_id"});
       if(!q.error){const i=RR.findIndex(y=>y.user_id===id);const o={want_id:w.id,user_id:id,went:!!rs.who[id],self:false,km:null,rating:null,tags:[]};if(i>=0)RR[i]=o;else RR.push(o)}
@@ -592,7 +592,7 @@ function renderWants0(){
   $("wantmain").classList.toggle("hide",guest);
   if(guest)return;
   renderMyWant();
-  const list=wants.filter(w=>!wDone(w)&&!(myOn()&&w.user_id===uid));
+  const list=wants.filter(w=>!wDone(w)&&!(myOn()&&wEdMe(w)));
   const box=$("wantlist");
   if(!list.length&&myCnt){box.innerHTML='<div class="note wonly">Poza Tobą nikt jeszcze nie zaprasza.</div>';wsecSync();return}
   if(!list.length){box.innerHTML='<div class="wempty"><div class="wemi">'+uiIcon("bike")+'</div><b>Nikt jeszcze nie zaprasza</b><span>Bądź pierwszy — wybierz dzień i godzinę, a reszta ekipy dostanie zaproszenie.</span>'
@@ -644,7 +644,7 @@ function renderWants0(){
 }
 /* godziny w nagłówku karty dnia: zwinięta karta — 4 + „+N” (etykieta); rozwinięta — wszystkie, klikalne (przewijają/otwierają właściwe zaproszenie w karuzeli) */
 // Twoje zaproszenia z tego dnia pokazane osobno na górze (👤 włączone) — ich godziny są też w nagłówku karty dnia (zielone / gradient)
-const wMyDay=k=>myOn()?(wantsNoFlt||wants).filter(w=>w.user_id===uid&&!wDone(w)&&localIso(new Date(w.starts_at)).slice(0,10)===k):[];
+const wMyDay=k=>myOn()?(wantsNoFlt||wants).filter(w=>wEdMe(w)&&!wDone(w)&&localIso(new Date(w.starts_at)).slice(0,10)===k):[];
 /* 📍 v279/v280: „inna miejscowość” = miejsce zaproszenia w innej miejscowości niż Twoja (Moja miejscowość / podgląd okolicy) — oznaczamy ją w zwiniętej karcie dnia; dotknięcie pigułki włącza filtr „Gdzie” */
 const wFar=w=>!!w.place_city&&w.place_lat!=null&&typeof areaCur==="function"&&lc(w.place_city)!==lc(areaCur().name||"");
 // 📍 v284: przy miejscowości odległość od środka okolicy („Zatory · 34 km”); kolejność od najbliższej
@@ -750,7 +750,7 @@ document.addEventListener("toggle",e=>{
   d.open?joinOpen.add(d.dataset.j):joinOpen.delete(d.dataset.j);
 },true);
 // w karcie dnia: Twoje zaproszenie jest już pełne na górze („Twoje zaproszenia”) — tu tylko krótka linia z przejściem w górę
-const wAbove=w=>w.user_id===uid&&!!document.querySelector('#mywant [data-wid="'+w.id+'"]');
+const wAbove=w=>wEdMe(w)&&!!document.querySelector('#mywant [data-wid="'+w.id+'"]');
 function wantDayHtml(w){
   const jn=(joins[w.id]||[]).length;
   return '<div class="want wmine'+(isTest(w)?' test':'')+'" data-wid="'+esc(w.id)+'"'+(isPriv(w)?' data-priv="1"':'')+'><div class="wmn"><span class="wmt">'+uiIcon("hand")+'<b>Twoje · '+esc(wTime(w))+'</b></span>'
@@ -770,16 +770,16 @@ const pkCorner='<span class="pkcorner" role="img" aria-label="Podgląd admina" t
 function wantHtml(w,top){
   // ⛔ „Jadę!” koliduje z jazdą, którą SAM prowadzisz (blokada z joinClashOk) — widać to od razu na karcie (2026-11-25, prośba właściciela)
   const ownCl=w.user_id!==uid&&!isOpen(w)&&!(joins[w.id]||[]).includes(uid)&&wantStart(w).getTime()>Date.now()-15*6e4?(c=>c&&c.user_id===uid?c:null)(joinClash(w)):null;
-    const j=joins[w.id]||[],mine=w.user_id===uid,joined=j.includes(uid),others=j.filter(x=>x!==w.user_id);
+    const j=joins[w.id]||[],own=w.user_id===uid,mine=wEdMe(w),joined=j.includes(uid),others=j.filter(x=>x!==w.user_id);   // ✍️ mine = autor albo współautor (KROK 113)
     const priv=isPriv(w),canInv=priv&&!mine&&wantCanInvite(w);
     // admin widzi cudze prywatne zaproszenie tylko podglądowo (bez „Jadę!”), chyba że jest zaproszony
     const peek=priv&&!mine&&!wInvMe(w)&&!joined;
     const open=isOpen(w)&&!wLive(w),myp=(prefs[w.id]||{})[uid],dec=(decls[w.id]||[]).includes(uid),live=wLive(w);
     const myOpen=mine&&open&&!live;   // własne zaproszenie z godziną do ustalenia: na wąskim ekranie linki pod „Ustal”, na szerokim ikony Zmień ustaloną / Edytuj obok „Ustal” jako osobna grupa od Zaproś / Udostępnij / Kosz
-    return '<div class="want'+(mine?' mine':'')+(peek?' peek':'')+(isTest(w)?' test':'')+grCls(w)+'" data-wid="'+esc(w.id)+'"'+(priv?' data-priv="1"':'')+'>'+(peek?pkCorner:'')+(top?'<div class="wtop wtopm">'+testTag(w)+(priv?(wGr(w)?grTagHtml(w):'<span class="lockt priv">🔒 '+esc(privLbl(w))+'</span>'):'')+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(top.n?'<i class="wcnt">'+top.n+'</i>':'')+'</div>'+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+top.d:(peek?testTag(w):wIcons(w,mine,priv)+testTag(w))+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+'<div class="wtop">'+nk(w.user_id)+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w):'')+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv&&wGr(w)?grTagHtml(w):'')+(mine?'<span class="note">(Twoje zaproszenie)</span>':'')+'</div>')
+    return '<div class="want'+(mine?' mine':'')+(peek?' peek':'')+(isTest(w)?' test':'')+grCls(w)+'" data-wid="'+esc(w.id)+'"'+(priv?' data-priv="1"':'')+'>'+(peek?pkCorner:'')+(top?'<div class="wtop wtopm">'+testTag(w)+(priv?(wGr(w)?grTagHtml(w):'<span class="lockt priv">🔒 '+esc(privLbl(w))+'</span>'):'')+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(top.n?'<i class="wcnt">'+top.n+'</i>':'')+'</div>'+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+top.d:(peek?testTag(w):wIcons(w,own,priv)+testTag(w))+(live?'<div class="wlivet">'+trwaTag()+'</div>':'')+wTitleHtml(w)+'<div class="wtop">'+nk(w.user_id)+(wGr(w)&&typeof grRoleTag==="function"?grRoleTag(w):'')+'<span>🕖 <b>'+esc(wTime(w))+'</b></span>'+(open?'<span class="wopen">godzina do ustalenia</span>':fromRange(w)?'<span class="lockt">✅ ustalona</span>':'')+(priv&&wGr(w)?grTagHtml(w):'')+(own?'<span class="note">(Twoje zaproszenie)</span>':mine?'<span class="note">(jesteś współautorem)</span>':'')+'</div>')
      +(live?liveHtml(w):'')
      +paceHtml(w)+bikeHtml(w)+(live?'':durLineHtml(w))+placeHtml(w)+noteHtml(w.note,"wnt")+(live?'':wxHtml(w))+routeBoxHtml(w)
-     +invitedHtml(w)
+     +invitedHtml(w)+edLineHtml(w)
      +(mine&&open&&new Date(w.range_from).getTime()>Date.now()+36e5?'<div class="meta">🕖 Ustali się sama o '+esc(hhmm(new Date(new Date(w.range_from).getTime()-36e5)))+', jeśli jej nie wybierzesz</div>':'')
      +(open?tallyHtml(w):joinedHtml(w.id,others,mine?'Na razie nikt się nie dołączył.':'Na razie nikt więcej.')+declHtml(w)+(live?'':myPickHtml(w,myp,joined,mine)))
      +(wLate(w)&&!mine&&!peek&&!joined?lateNote():'')
@@ -792,6 +792,7 @@ function wantHtml(w,top){
        :open?'<button class="b join'+(joined?' g':'')+'" data-w="pref" data-id="'+esc(w.id)+'">'+(joined&&myp?'✓ '+esc(hhmm(new Date(myp)))+' · zmień':dec?'Jednak mogę? Wybierz godzinę':'Pasuje mi o…')+'</button>'
        :'<button class="b join'+(joined?' g':ownCl?' off':'')+'" data-w="join" data-id="'+esc(w.id)+'"'+(ownCl?' aria-disabled="true"':'')+'>'+(joined?'Rezygnuję':dec?'Jednak '+wVerb(w).toLowerCase()+'!':wVerb(w)+'!')+'</button>')
      +(canInv&&!live&&wDeclOk(w)?'<button class="ib" data-w="inv" data-id="'+esc(w.id)+'" title="Zaproś kogoś jeszcze" aria-label="Zaproś kogoś jeszcze">'+ICON.addp+'</button>':'')
+     +(isAdmin&&!mine&&!live&&edOk?'<button class="ib" data-w="ed" data-id="'+esc(w.id)+'" title="Współautorzy i autor (admin)" aria-label="Współautorzy i autor (admin)">'+uiIcon("pencil")+'</button>':'')
      +((mine||isAdmin)?'<button class="ib del'+(mine?'':' adm')+'" data-w="del" data-id="'+esc(w.id)+'" title="'+(mine?'Odwołaj zaproszenie':'Usuń (admin)')+'" aria-label="'+(mine?'Odwołaj zaproszenie':'Usuń (admin)')+'">'+ICON.del+'</button>':'')
      +(myOpen?'</div>':'')+'</div>'
      +(mine&&open&&!live&&wTally(w).length?'<div class="myl myla"><button class="lnk" data-my="settlepick" data-id="'+esc(w.id)+'">Inna godzina ›</button></div>':'')
@@ -976,6 +977,7 @@ function openWantForm(w,preset){
   if(w&&isPriv(w)){wf.vis="pick";wf.pick=new Set((invs[w.id]||[]).map(x=>x.u));wf.gr=wGr(w)}
   $("wwhowrap").classList.toggle("hide",!visOk);
   renderWhoBtn();
+  wf.ed=new Set(w?edIds(w):[]);wf.ed0=[...wf.ed];$("wedwrap").classList.toggle("hide",!edOk||DEMO||(!!w&&!edCanSet(w)));renderEdBtn();   // ✍️ współautorzy (KROK 113)
   $("wftitle").textContent="Planowany start";
   let d;
   if(w)d=new Date(w.starts_at);
@@ -1191,7 +1193,7 @@ let placeOk=false,bikeOk=false,places=[],wantsAll=[];
 const mapUrl=(lat,lon,name)=>"https://www.google.com/maps/search/?api=1&query="+(lat!=null?lat+","+lon:encodeURIComponent(name||""));
 function placeHtml(w){
   // 📍 v287: zaproszenie bez punktu zbiórki (sprzed v285; testowe też) — ostrzeżenie: autor uzupełnia przez ✏️, zaproszeni widzą, że miejsce jeszcze nie ustalone
-  if(w&&!w.place)return '<div class="wplace warn">⚠️ <b>Brak punktu zbiórki</b> — '+(w.user_id===uid?'wskaż go przez ✏️ Edytuj':'autor jeszcze go nie wskazał')+'</div>';
+  if(w&&!w.place)return '<div class="wplace warn">⚠️ <b>Brak punktu zbiórki</b> — '+(wEdMe(w)?'wskaż go przez ✏️ Edytuj':'autor jeszcze go nie wskazał')+'</div>';
   if(!w||!w.place)return "";
   const g=w.place_lat!=null;
   return '<div class="wplace">📍 <b>'+esc(w.place)+'</b>'+(w.place_city?' · <b>'+esc(w.place_city+(w.place_area?' · '+w.place_area:''))+'</b>':'')+(g?' · <a href="'+esc(mapUrl(w.place_lat,w.place_lon))+'" target="_blank" rel="noopener">Mapa ›</a>':'')+'</div>';
@@ -1262,7 +1264,7 @@ async function savePlaceToList(){
   if(places.some(x=>x.name.toLowerCase()===wf.place.toLowerCase()))return;
   try{const row={name:wf.place,lat:wf.plat,lon:wf.plon};if(bikeOk&&wf.pcity){row.city=wf.pcity;row.area=wf.parea||null}const r=await sb.from("places").insert(row).select(bikeOk?"id,name,lat,lon,created_by,city,area":"id,name,lat,lon,created_by").single();if(!r.error&&r.data)places.push(r.data)}catch(e){}
 }
-function wfSnap(){return JSON.stringify([wf.day,$("wdt").value,wf.mode,wf.h,wf.m,wf.h2,wf.m2,wf.vis,[...wf.pick].sort(),wf.gr,wf.test,wf.act,wf.pace,wf.bike,wf.km,wf.dur,wf.place,wf.plat,(wf.titleAuto?"":$("wtitle").value.trim()),$("wnote").value.trim(),!!wf.route,wf.routeTouched])}
+function wfSnap(){return JSON.stringify([wf.day,$("wdt").value,wf.mode,wf.h,wf.m,wf.h2,wf.m2,wf.vis,[...wf.pick].sort(),wf.gr,wf.test,wf.act,wf.pace,wf.bike,wf.km,wf.dur,wf.place,wf.plat,(wf.titleAuto?"":$("wtitle").value.trim()),$("wnote").value.trim(),!!wf.route,wf.routeTouched,[...(wf.ed||[])].sort()])}
 function wfTryClose(){
   if($("wantform").classList.contains("hide"))return;
   if(wf.snap0&&wfSnap()!==wf.snap0){
@@ -1493,7 +1495,7 @@ $("wsave").onclick=async()=>{
   // prywatne → wszyscy: potwierdzenie (ogłoszenie na kanale Telegram nie da się cofnąć; baza wysyła je tylko raz — KROK 52)
   if(ow1&&visOk&&isPriv(ow1)&&!ePriv&&!await askOk("Zaproszenie zobaczą wszyscy zalogowani.\n\nJeśli jeszcze nie było na kanale Telegram, trafi tam teraz — wiadomości z kanału nie da się cofnąć (nawet gdy później znów zrobisz je prywatnym).\n\nZapisać?","Zapisz"))return;
   if(priv&&!ids.length&&!wf.gr){say(wf.vis==="fav"?"Nie masz jeszcze ulubionych — wybierz osoby w „Kto zobaczy”.":"Wybierz co najmniej jedną osobę w „Kto zobaczy”.");return}
-  let editedPriv=false,sigInv=null;
+  let editedPriv=false,sigInv=null,edWant=null,edMsg="";
   try{
     await savePlaceToList();
     // 📚 baza tras: trasa wybrana z bazy albo dodana przełącznikiem „Dodaj do bazy tras”
@@ -1512,6 +1514,7 @@ $("wsave").onclick=async()=>{
       else if(isOpen(ow0)){upd.range_from=null;upd.range_to=null}
       const res=await sb.from("wants").update(upd).eq("id",wf.editId).select("id");
       if(res.error||!res.data||!res.data.length)throw new Error(res.error?res.error.message:"zmiana terminu wymaga KROKU 11 w bazie");
+      edWant=wf.editId;
       const ow=wants.find(x=>x.id===wf.editId);editedPriv=!!ow&&((invs[ow.id]||[]).length>0||(joins[ow.id]||[]).some(x=>x!==uid));
       if(ow1&&visOk){
         const was=isPriv(ow1),cur=(invs[ow1.id]||[]).map(x=>x.u);
@@ -1533,6 +1536,7 @@ $("wsave").onclick=async()=>{
       if(wSigOk()&&wf.sigFor===uid&&dayDiff(d)===0)row.from_sig=true;   // 🤝 KROK 101: zaproszenie z własnego sygnału (baza sprawdza, czy sygnał jest dziś aktywny)
       const res=await sb.from("wants").insert(row).select("id").single();
       if(res.error)throw res.error;
+      edWant=res.data.id;
       if(rbNew)sb.from("route_base").update({src_want:res.data.id}).eq("id",rbNew).then(()=>{},()=>{});
       if(priv&&ids.length){
         const r2=await sb.from("want_invitees").insert(ids.map(u=>({want_id:res.data.id,user_id:u,added_by:uid})));
@@ -1541,15 +1545,19 @@ $("wsave").onclick=async()=>{
       // 🟡 z „Mam ochotę”: osoba, która dała znać, dostaje zaproszenie (także przy publicznym)
       if(wf.sigFor&&wf.sigFor!==uid&&!ids.includes(wf.sigFor)){const r3=await sb.from("want_invitees").insert({want_id:res.data.id,user_id:wf.sigFor,added_by:uid});if(!r3.error)sigInv=wf.sigFor}
     }
+    // ✍️ współautorzy (KROK 113) — po zapisaniu zaproszenia, tylko gdy lista się zmieniła
+    if(edOk&&edWant&&wf.ed){const A=[...wf.ed].sort(),B=(wf.ed0||[]).slice().sort();
+      if(A.join()!==B.join()){const re=await sb.rpc("want_editors_set",{p_want:edWant,p_users:A});
+        edMsg=re.error?" ⚠️ Współautorów nie zapisano: "+edErr(re.error):A.length?" ✍️ Współautorzy: "+A.map(nickOf).join(", ")+".":" Bez współautorów."}}
     try{localStorage.setItem("lastWant",JSON.stringify({h:wf.h,m:wf.m,note}))}catch(e){}
     try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}
     const wasEdit=!!wf.editId;
     closeWantForm();$("wnote").value="";$("wtitle").value="";
     await syncNow();
     const lbl=wfLabel(d)+(rng?"–"+hhmm(d2):"");
-    if(sigInv){say("Wysłane ✔ "+lbl+" — "+(nicks[sigInv]||"ta osoba")+" dostanie zaproszenie.");return}
-    say(wasEdit?"Zapisano ✔ "+lbl+(visMsg||(editedPriv&&visOk?" — zaproszeni dostaną powiadomienie.":""))
-      :priv&&wf.gr?"Wysłane 👥 do grupy „"+grNm(wf.gr)+"”"+(ids.length?" i "+ids.length+" "+osob(ids.length):"")+" ✔ Dostaną powiadomienie w aplikacji.":priv?"Wysłane 🔒 do "+ids.length+" "+osob(ids.length)+" ✔ Dostaną powiadomienie w aplikacji.":testOk&&wf.test?"Wysłane 🧪 testowe zaproszenie na "+lbl+" ✔ (na kanale Telegram z oznaczeniem TESTOWE)":"Wysłane ✔ Zaproszenie na "+lbl+(DEMO?" (demo — nikt poza Tobą go nie zobaczy).":" jest też na kanale Telegram."));
+    if(sigInv){say("Wysłane ✔ "+lbl+" — "+(nicks[sigInv]||"ta osoba")+" dostanie zaproszenie."+edMsg);return}
+    say((wasEdit?"Zapisano ✔ "+lbl+(visMsg||(editedPriv&&visOk?" — zaproszeni dostaną powiadomienie.":""))
+      :priv&&wf.gr?"Wysłane 👥 do grupy „"+grNm(wf.gr)+"”"+(ids.length?" i "+ids.length+" "+osob(ids.length):"")+" ✔ Dostaną powiadomienie w aplikacji.":priv?"Wysłane 🔒 do "+ids.length+" "+osob(ids.length)+" ✔ Dostaną powiadomienie w aplikacji.":testOk&&wf.test?"Wysłane 🧪 testowe zaproszenie na "+lbl+" ✔ (na kanale Telegram z oznaczeniem TESTOWE)":"Wysłane ✔ Zaproszenie na "+lbl+(DEMO?" (demo — nikt poza Tobą go nie zobaczy).":" jest też na kanale Telegram."))+edMsg);
   }catch(e){say("Nie udało się: "+(e&&e.message?e.message:"błąd"))}
 };
 /* ---------- Twoje zaproszenie (zamiast dużego przycisku) ---------- */
@@ -1576,7 +1584,7 @@ document.addEventListener("click",e=>{const b=e.target.closest("[data-wmup]");if
 function renderMyWant(){
   const box=$("mywant");if(!box)return;
   const act=w=>!wDone(w);
-  const mine=(wantsNoFlt||wants).filter(w=>w.user_id===uid&&act(w)).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));   // karuzela „Moje”: wg terminu jazdy (jak w kalendarzu); „od najnowszych” robi 🕓 w kartach dni
+  const mine=(wantsNoFlt||wants).filter(w=>wEdMe(w)&&act(w)).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));   // karuzela „Moje”: wg terminu jazdy (jak w kalendarzu); „od najnowszych” robi 🕓 w kartach dni
   const others=wants.filter(w=>w.user_id!==uid&&act(w)&&dayDiff(new Date(w.starts_at))===0).length;
   const bd=$("wbadge");bd.innerHTML='<span class="fbn">'+others+'</span><span class="fbd"> dziś</span>';bd.classList.toggle("hide",!others);
   myCnt=mine.length;
@@ -1642,6 +1650,7 @@ $("wantlist").addEventListener("click",async e=>{
   const b=e.target.closest("button[data-w]");if(!b)return;
   const id=b.dataset.id;
   if(b.dataset.w==="inv"){openWho("add",id);return}
+  if(b.dataset.w==="ed"){edOpen(id);return}   // ✍️ admin: współautorzy / autor (KROK 113)
   if(b.dataset.w==="pref"){openPick("pref",id);return}
   if(b.dataset.w==="goto"){const c=wants.find(x=>x.id===id);if(c&&typeof goToWant==="function")goToWant(c);return}
   try{
@@ -1661,6 +1670,13 @@ $("wantlist").addEventListener("click",async e=>{
 
 /* ---------- zaproszenia dla wybranych osób (KROK 13) ---------- */
 let visOk=false,invs={},notifs=[];
+// ✍️ współautorzy zaproszenia (KROK 113): eds[want_id] = [user_id…], edOk — baza ma tabelę want_editors (wczytuje js/14)
+let eds={},edOk=false;const ED_MAX=3;
+const edIds=w=>w&&eds[w.id]||[];
+const wEdMe=w=>!!w&&!!session&&(w.user_id===uid||edIds(w).includes(uid));   // autor albo współautor — edytuje, ustala godzinę, dopasza, usuwa
+const edCanSet=w=>edOk&&!!w&&(isAdmin||wEdMe(w)&&new Date(w.starts_at).getTime()>Date.now());   // zmiana współautorów: autor / współautor przed startem, admin zawsze
+function edLineHtml(w){const L=edIds(w).filter(id=>nicks[id]);if(!L.length)return "";
+  return '<div class="meta">'+uiIcon("pencil")+' Współautorzy:<div class="nks">'+L.map(id=>nk(id)).join("")+'</div></div>'}
 /* 🧪 zaproszenia testowe (KROK 22) */
 let testOk=false;const isTest=w=>!!w&&!!w.is_test&&!pv&&!PV_GUEST;   // w podglądzie 👑 testowe wyglądają jak prawdziwe
 // data dodania na karcie — tylko przy włączonym 🕓 „od najnowszych”
@@ -1682,7 +1698,7 @@ const wGrList=()=>wGrOk&&typeof grForWant==="function"?grForWant():[];
 const invIds=w=>(invs[w.id]||[]).map(x=>x.u);
 // zaproszony: wpis w want_invitees albo aktywny członek grupy zaproszenia (👥 KROK 71)
 const wInvMe=w=>invIds(w).includes(uid)||(!!wGr(w)&&typeof grIn==="function"&&grIn(w.group_id));
-const wantCanInvite=w=>isPriv(w)&&new Date(w.starts_at).getTime()>Date.now()&&(w.user_id===uid||wInvMe(w));   // dopraszanie tylko przed startem (baza: want_invitees „tylko przed startem”)
+const wantCanInvite=w=>isPriv(w)&&new Date(w.starts_at).getTime()>Date.now()&&(wEdMe(w)||wInvMe(w));   // dopraszanie tylko przed startem (baza: want_invitees „tylko przed startem”)
 // błąd dopraszania po ludzku — reguła bazy „tylko przed startem” (jazda ruszyła, gdy okno było otwarte)
 const invErrTxt=err=>/przed startem/.test(err&&err.message||"")?"Jazda już ruszyła — po starcie nie można już nikogo dopisać.":(err&&err.message?err.message:"błąd");
 // lista zaproszonych: do 2 osób pigułki, od 3 — zwinięta (jak „Dołączyło”); „dopr. X” przy dopraszanych
@@ -1724,6 +1740,25 @@ function wfSigRestSync(){
   el.classList.toggle("hide",!el.innerHTML);
 }
 $("wwho").onclick=()=>openWho("form");
+/* ✍️ pole „Współautorzy” w formularzu (KROK 113): do 3 osób, zapis razem z zaproszeniem (want_editors_set) */
+function renderEdBtn(){const b=$("wed");if(!b)return;const L=[...(wf.ed||[])].filter(id=>nicks[id]);
+  b.className="who";
+  b.innerHTML='<span class="wic">✍️</span><span class="wtx"><b>'+(L.length?'Współautorzy ('+L.length+')':'Bez współautorów')+'</b><span>'+esc(L.length?L.map(id=>nicks[id]).join(", "):'Do '+ED_MAX+' osób, które mogą edytować i usuwać zaproszenie')+'</span></span><span class="war">›</span>'}
+$("wed").onclick=()=>{const ow=wf.editId?wants.find(x=>x.id===wf.editId):null;
+  edPrep(ow?ow.user_id:uid,ow?!!ow.is_test:!!wf.test,[...(wf.ed||[])],ids=>{wf.ed=new Set(ids);renderEdBtn()});openWho("ed",wf.editId||null)};
+// błąd z bazy po ludzku: funkcje KROKU 113 mają podpowiedź (hint) po polsku
+const edErr=err=>err&&(err.hint||err.message)||"błąd";
+function edPrep(author,test,pick,cb){ws.edAuthor=author;ws.edTest=test;ws.edPick=pick;ws.cb=cb}
+// karta zaproszenia: współautorzy od razu w bazie (admin — przycisk ✏️ na cudzej karcie)
+function edOpen(wantId){const w=wants.find(x=>x.id===wantId);if(!w||!edCanSet(w))return;
+  edPrep(w.user_id,!!w.is_test,edIds(w),async ids=>{const r=await sb.rpc("want_editors_set",{p_want:w.id,p_users:ids});if(r.error)throw r.error;
+    await syncNow();say(ids.length?"✍️ Współautorzy: "+ids.map(nickOf).join(", "):"Zaproszenie bez współautorów")});openWho("ed",w.id)}
+// 🛡️ admin / 👑: przekazanie zaproszenia innemu autorowi — stary autor zostaje współautorem
+function edOwnOpen(wantId){const w=wants.find(x=>x.id===wantId);if(!w||!isAdmin)return;
+  edPrep(w.user_id,!!w.is_test,[],async ids=>{if(!ids.length)return false;
+    if(!await askOk("Przekazać zaproszenie: "+nickOf(ids[0])+"?\n\n"+nickOf(w.user_id)+" zostanie współautorem. Oboje dostaną powiadomienie.","Przekaż"))return false;
+    const r=await sb.rpc("admin_want_transfer",{p_want:w.id,p_new:ids[0]});if(r.error)throw r.error;
+    await syncNow();say("✍️ Autor zaproszenia: "+nickOf(ids[0]))});openWho("own",w.id)}
 /* okno „Kogo zapraszasz?” (wysuwane od dołu): wybór do formularza albo dopraszanie do zaproszenia */
 const ws={mode:"form",vis:"all",pick:new Set(),want:null,q:""};
 const favIds=()=>[...favs].filter(id=>nicks[id]&&id!==uid);
@@ -1751,6 +1786,7 @@ function openWho(mode,wantId){
   else if(mode==="sig"){ws.vis=sg.vis==="pick"?"pick":"all";const M=new Set(ws.gr?grMemIds(ws.gr):[]);ws.pick=new Set([...sg.pick].filter(id=>!M.has(id)))}   // 🟡 „Mam ochotę” 2.0: wybór wraca do okienka sygnału (js/11)
   else if(mode==="evf"){ws.vis="pick";ws.pick=new Set(ef&&ef.inv||[]);ws.msg=ef&&ef.invMsg||""}
   else if(mode==="grn"){ws.vis="pick";ws.pick=new Set(wantId||[]);ws.want=null}   // 👥 nowa grupa (js/17): wybór wraca do formularza grupy
+  else if(mode==="ed"||mode==="own"){ws.vis="pick";ws.pick=new Set(ws.edPick||[])}   // ✍️ współautorzy / nowy autor (KROK 113): ws.edAuthor, ws.edTest, ws.cb — edPrep
   else{ws.vis="pick";ws.pick=new Set()}
   // domyślnie: Listy zwinięte, ⭐ Ulubieni rozwinięci, Pozostali zwinięci; przy ≤10 osobach wszystko rozwinięte
   const few=whoPeople().length<=10;ws.fq=null;ws.exp=new Set();   // 🔤 „zapraszano N×” liczone od nowa przy każdym otwarciu okna
@@ -1780,6 +1816,7 @@ function whoPeople(){
   let ids=Object.keys(nicks).filter(id=>id!==uid&&!modGone(id));
   if(ws.mode==="add"){const w=wants.find(x=>x.id===ws.want),ex=new Set(w?[w.user_id,...invIds(w)]:[]);ids=ids.filter(id=>!ex.has(id));
     if(wSigAddOnly(w)){const A=wSigAddable(w);ids=ids.filter(id=>A.has(id))}}
+  if(ws.mode==="ed"||ws.mode==="own")ids=ids.concat(ws.mode==="own"&&uid!==ws.edAuthor?[uid]:[]).filter(id=>id!==ws.edAuthor&&(ws.edTest||typeof demoIds==="undefined"||!demoIds.has(id)));   // konto demo tylko w testowym (jak w bazie)
   if(whoEv())ids=ids.filter(evAccess);
   return ids.sort((a,b)=>nicks[a].localeCompare(nicks[b],"pl"));
 }
@@ -1858,8 +1895,9 @@ function renderWho(first){
   if(first){
     const w=ws.mode==="add"?wants.find(x=>x.id===ws.want):null,ev=ws.mode==="ev"?evs.find(x=>x.id===ws.want):null;
     ws.hist=[];ws.last=whoKey();ws.swiped=0;   // 🔙 historia zmian wyboru (do „Cofnij”) — od nowa przy każdym otwarciu
-    p.innerHTML='<div class="bsbox bsauto wsbox" role="dialog" aria-modal="true"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-k="cancel">Anuluj</button><b>'+(ws.mode==="sig"?"Kto zobaczy?":ws.mode==="grn"?"Kogo zaprosić do grupy?":ws.mode==="gr"?"Zaproś do grupy":ws.mode==="pl"?"Osoby na liście":ws.mode==="add"?"Zaproś kogoś jeszcze":whoEv()?"Zaproś na imprezę":"Kogo zapraszasz?")+'</b><span class="wscnt" id="wscnt"></span></div>'
+    p.innerHTML='<div class="bsbox bsauto wsbox" role="dialog" aria-modal="true"><div class="bsgrab"></div><div class="bshead"><button type="button" class="lnk" data-k="cancel">Anuluj</button><b>'+(ws.mode==="sig"?"Kto zobaczy?":ws.mode==="grn"?"Kogo zaprosić do grupy?":ws.mode==="gr"?"Zaproś do grupy":ws.mode==="pl"?"Osoby na liście":ws.mode==="add"?"Zaproś kogoś jeszcze":ws.mode==="ed"?"Współautorzy (do "+ED_MAX+")":ws.mode==="own"?"Nowy autor zaproszenia":whoEv()?"Zaproś na imprezę":"Kogo zapraszasz?")+'</b><span class="wscnt" id="wscnt"></span></div>'
      +(ws.mode==="pl"&&plById(ws.want)?'<div class="note" id="wspln" style="margin-top:6px;text-align:center;font-size:14px"></div>':'')
+     +(ws.mode==="ed"&&isAdmin&&ws.want?'<div class="note" style="margin-top:6px;text-align:center;font-size:14px"><button type="button" class="lnk" data-k="own">Zmień autora zaproszenia (admin) ›</button></div>':'')
      +(ws.mode==="gr"&&typeof grName==="function"?'<div class="note" style="margin-top:6px;text-align:center;font-size:14px">'+uiIcon("users")+' '+esc(grName(ws.want))+'</div>':'')
      +(ev?'<div class="note" style="margin-top:6px;text-align:center;font-size:14px">🏁 '+esc(ev.name)+' · '+esc(evDates(ev))+'</div>':'')
      +(whoFormLike()?'<div class="seg" id="wsseg">'+[["all","🌍 Wszyscy"],["fav","⭐ Ulubieni"],["pick","👥 Wybieram"]].map(([k,t])=>'<button type="button" data-v="'+k+'">'+t+'</button>').join("")+'</div>'
@@ -1891,10 +1929,10 @@ function renderWho(first){
     :''):'';
   const jn=ws.mode==="form"&&wf.editId?(joins[wf.editId]||[]).filter(x=>x!==uid).length:0;
   const gSel=whoFormLike()&&ws.vis!=="all"&&ws.gr?grNm(ws.gr):"";
-  $("wshint").textContent=ws.mode==="sig"?(ws.vis==="all"?"Twój sygnał zobaczą wszyscy zalogowani"+(flags.mam_ochote&&flags.mam_ochote.state==="all"?" i kanał Telegram.":"."):"🔒 Sygnał zobaczą tylko wybrane osoby"+(gSel?" i członkowie grupy „"+gSel+"” (stan na teraz)":"")+" — pod 🔔 i w okienku. Nie trafi na kanał Telegram."):gSel?"👥 Zobaczą wszyscy członkowie grupy „"+gSel+"” — także ci, którzy dołączą później"+(ws.vis==="fav"?" — i Twoi ulubieni":" — i osoby wybrane niżej")+". Nie trafi na publiczny kanał Telegram."+(jn?" Osoby, które już dołączyły ("+jn+"), zostaną zaproszone.":""):ws.mode==="grn"?(typeof grFree==="function"&&whoCount()>grFree()?"⚠️ Za dużo o "+(whoCount()-grFree())+" — wolnych miejsc w nowej grupie: "+grFree()+".":"👥 Zaproszenie dostaną po założeniu grupy. Wolnych miejsc: "+(typeof grFree==="function"?grFree():"")+"."):ws.mode==="gr"?"👥 Dostaną zaproszenie do grupy w aplikacji (⚙️ → Grupy). Członkiem zostanie ten, kto je przyjmie. Wyszarzeni już są w grupie albo mają zaproszenie.":ws.mode==="pl"?"📋 Tylko Ty widzisz tę listę. Osoby nie dostaną żadnego powiadomienia.":whoEv()?"Dostaną powiadomienie w aplikacji i od bota na Telegramie (jeśli go połączyli). Zaprosić można osoby, które widzą zakładkę Imprezy.":ws.vis==="all"?"":ws.mode==="add"?"Dostaną powiadomienie i zobaczą to zaproszenie.":"🔒 Zaproszenie zobaczą tylko wybrane osoby (i kogo one doproszą). Nie trafi na publiczny kanał Telegram."+(jn?" Osoby, które już dołączyły ("+jn+"), zostaną zaproszone.":"");
+  $("wshint").textContent=ws.mode==="ed"?"✍️ Współautorzy mogą edytować i usuwać zaproszenie, ustalać godzinę, dopraszać i wypełnić „Jak poszło?” za innych. Od razu są zapisani na jazdę.":ws.mode==="own"?"Obecny autor ("+nickOf(ws.edAuthor)+") zostanie współautorem. Oboje dostaną powiadomienie.":ws.mode==="sig"?(ws.vis==="all"?"Twój sygnał zobaczą wszyscy zalogowani"+(flags.mam_ochote&&flags.mam_ochote.state==="all"?" i kanał Telegram.":"."):"🔒 Sygnał zobaczą tylko wybrane osoby"+(gSel?" i członkowie grupy „"+gSel+"” (stan na teraz)":"")+" — pod 🔔 i w okienku. Nie trafi na kanał Telegram."):gSel?"👥 Zobaczą wszyscy członkowie grupy „"+gSel+"” — także ci, którzy dołączą później"+(ws.vis==="fav"?" — i Twoi ulubieni":" — i osoby wybrane niżej")+". Nie trafi na publiczny kanał Telegram."+(jn?" Osoby, które już dołączyły ("+jn+"), zostaną zaproszone.":""):ws.mode==="grn"?(typeof grFree==="function"&&whoCount()>grFree()?"⚠️ Za dużo o "+(whoCount()-grFree())+" — wolnych miejsc w nowej grupie: "+grFree()+".":"👥 Zaproszenie dostaną po założeniu grupy. Wolnych miejsc: "+(typeof grFree==="function"?grFree():"")+"."):ws.mode==="gr"?"👥 Dostaną zaproszenie do grupy w aplikacji (⚙️ → Grupy). Członkiem zostanie ten, kto je przyjmie. Wyszarzeni już są w grupie albo mają zaproszenie.":ws.mode==="pl"?"📋 Tylko Ty widzisz tę listę. Osoby nie dostaną żadnego powiadomienia.":whoEv()?"Dostaną powiadomienie w aplikacji i od bota na Telegramie (jeśli go połączyli). Zaprosić można osoby, które widzą zakładkę Imprezy.":ws.vis==="all"?"":ws.mode==="add"?"Dostaną powiadomienie i zobaczą to zaproszenie.":"🔒 Zaproszenie zobaczą tylko wybrane osoby (i kogo one doproszą). Nie trafi na publiczny kanał Telegram."+(jn?" Osoby, które już dołączyły ("+jn+"), zostaną zaproszone.":"");
   const n=whoCount(),ok=$("wsok");
-  ok.textContent=ws.mode==="grn"?"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]):ws.mode==="gr"?(n?"Zaproś do grupy · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.mode==="pl"?"Zapisz · "+n+" "+plf(n,["osoba","osoby","osób"]):ws.mode==="ev"?(n?"Zaproś · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.mode==="evf"?(n?"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]):"Gotowe · nikogo"):ws.mode==="add"?(n?"Zaproś · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.vis==="all"?"Gotowe · wszyscy":gSel?"Gotowe · 👥 "+gSel+(whoCount()?" + "+whoCount()+" "+plf(whoCount(),["osoba","osoby","osób"]):""):"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]);
-  ok.disabled=(ws.mode==="add"||ws.mode==="ev"||ws.mode==="gr")&&!n;
+  ok.textContent=ws.mode==="ed"?"Gotowe · "+n+" z "+ED_MAX:ws.mode==="own"?(n?"Przekaż":"Wybierz osobę"):ws.mode==="grn"?"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]):ws.mode==="gr"?(n?"Zaproś do grupy · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.mode==="pl"?"Zapisz · "+n+" "+plf(n,["osoba","osoby","osób"]):ws.mode==="ev"?(n?"Zaproś · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.mode==="evf"?(n?"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]):"Gotowe · nikogo"):ws.mode==="add"?(n?"Zaproś · "+n+" "+plf(n,["osobę","osoby","osób"]):"Wybierz osoby"):ws.vis==="all"?"Gotowe · wszyscy":gSel?"Gotowe · 👥 "+gSel+(whoCount()?" + "+whoCount()+" "+plf(whoCount(),["osoba","osoby","osób"]):""):"Gotowe · "+n+" "+plf(n,["osoba","osoby","osób"]);
+  ok.disabled=(ws.mode==="add"||ws.mode==="ev"||ws.mode==="gr"||ws.mode==="own")&&!n;
   $("wscnt").textContent=ws.vis==="all"?"wszyscy":n+" "+plf(n,["osoba","osoby","osób"]);   // 🔢 licznik wybranych zawsze widoczny w nagłówku
   const ub=$("wsundo");ub.innerHTML=whoUndoLbl(!!ub.dataset.ok);
 }
@@ -1933,6 +1971,8 @@ $("whosheet").addEventListener("click",async e=>{
     if(whoLocked().has(id)){say((nicks[id]||"Ta osoba")+" już dołączył(a) — zostaje zaproszony(a).");return}
     if(whoDis().has(id)){say((nicks[id]||"Ta osoba")+" — "+whoDis().get(id)+".");return}
     if(ws.vis==="fav"){ws.vis="pick";ws.fo=true;ws.pick=new Set(favIds());whoLocked().forEach(x=>ws.pick.add(x))}
+    if(ws.mode==="own"){ws.pick=new Set(ws.pick.has(id)?[]:[id]);renderWho();return}   // ✍️ nowy autor — jedna osoba
+    if(ws.mode==="ed"&&!ws.pick.has(id)&&ws.pick.size>=ED_MAX){say("Najwyżej "+ED_MAX+" współautorów.");return}
     ws.pick.has(id)?ws.pick.delete(id):ws.pick.add(id);
     renderWho();return;
   }
@@ -1951,6 +1991,11 @@ $("whosheet").addEventListener("click",async e=>{
   if(k.dataset.k==="clr"){const L=whoLocked();ws.pick=new Set([...ws.pick].filter(id=>L.has(id)));renderWho();return}
   if(ws.mode==="gr"){const ids=[...ws.pick];if(!ids.length||typeof grInvite!=="function")return;k.disabled=true;   // 👥 KROK 70 (js/17)
     try{await grInvite(ws.want,ids);closeWho()}catch(err){k.disabled=false;say(grErr(err))}return}
+  if(k.dataset.k==="own"){const id=ws.want;closeWho();edOwnOpen(id);return}   // ✍️ admin: z „Współautorzy” do „Nowy autor”
+  if(ws.mode==="ed"||ws.mode==="own"){const ids=[...ws.pick];
+    if(ws.mode==="ed"&&ids.length>ED_MAX){say("Najwyżej "+ED_MAX+" współautorów — odznacz "+(ids.length-ED_MAX)+".");return}
+    const cb=ws.cb;if(!cb){closeWho();return}k.disabled=true;
+    try{const r=await cb(ids);if(r===false)k.disabled=false;else closeWho()}catch(err){k.disabled=false;say("Nie udało się: "+edErr(err))}return}
   if(ws.mode==="grn"){const ids=[...ws.pick];closeWho();if(typeof grPicked==="function")grPicked(ids);return}
   if(ws.mode==="sig"){   // 🟡 „Mam ochotę” 2.0: grupa i ulubieni rozwijają się do osób w chwili wysłania
     let ids=ws.vis==="all"?[]:ws.vis==="fav"?favIds():[...ws.pick];const gr=ws.vis==="all"?"":ws.gr||"";

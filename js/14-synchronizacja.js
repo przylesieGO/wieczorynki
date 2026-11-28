@@ -65,13 +65,14 @@ async function syncWants(ids){
   for(let i=0;i<ids.length;i+=100){const r=await sb.from("wants").select(wCols).in("id",ids.slice(i,i+100));if(r.error)throw r.error;got.push(...(r.data||[]))}
   const S=new Set(ids);
   wRaw=wRaw.filter(x=>!S.has(x.id)).concat(got).sort((a,b)=>new Date(a.starts_at)-new Date(b.starts_at));
-  ids.forEach(id=>{delete joins[id];delete prefs[id];delete invs[id];delete decls[id];delete reports[id]});
+  ids.forEach(id=>{delete joins[id];delete prefs[id];delete invs[id];delete decls[id];delete reports[id];delete eds[id]});
   const f=got.map(x=>x.id);if(!f.length)return;
   const by=async(tbl,cols)=>{const out=[];for(let i=0;i<f.length;i+=100){const r=await sb.from(tbl).select(cols).in("want_id",f.slice(i,i+100)).limit(5000);if(r.error)throw r.error;out.push(...(r.data||[]))}return out};
   const [j,iv,dc]=await Promise.all([by("want_joins",rangeOk?"want_id,user_id,pref_at":"want_id,user_id"),visOk?by("want_invitees","want_id,user_id,added_by"):[],(visOk&&rangeOk)?by("want_declines","want_id,user_id"):[]]);
   j.forEach(x=>{(joins[x.want_id]=joins[x.want_id]||[]).push(x.user_id);if(x.pref_at)(prefs[x.want_id]=prefs[x.want_id]||{})[x.user_id]=x.pref_at});
   iv.forEach(x=>{(invs[x.want_id]=invs[x.want_id]||[]).push({u:x.user_id,by:x.added_by})});
   dc.forEach(x=>{(decls[x.want_id]=decls[x.want_id]||[]).push(x.user_id)});
+  if(edOk){try{(await by("want_editors","want_id,user_id")).forEach(x=>{(eds[x.want_id]=eds[x.want_id]||[]).push(x.user_id)})}catch(e){}}   // ✍️ KROK 113
   if(reportOk){const st=got.filter(x=>wantStart(x).getTime()<=Date.now()).map(x=>x.id);
     for(let i=0;i<st.length;i+=100){const r=await sb.from("ride_reports").select("want_id,user_id,went,km,avg_kmh,rating,route_rating,tags,self,updated_at").in("want_id",st.slice(i,i+100));if(r.error)throw r.error;
       (r.data||[]).forEach(x=>{(reports[x.want_id]=reports[x.want_id]||[]).push(x)})}}
@@ -152,7 +153,7 @@ function snapSave(){
       sorted,rsvps,watchOk,watchN,flags,
       myPriv,profExOk,genderOk,nicks,genders,joinedAt,avAt,medias,meNick:me.nick,
       rbOk,titleOk,wGrOk,wActOk,bikeOk,placeOk,distOk,paceOk,wRouteOk,testOk,rangeOk,visOk,wCols,
-      wRaw,joins,prefs,invs,decls,notifs,reportOk,reports,lib,
+      wRaw,joins,prefs,invs,decls,notifs,reportOk,reports,lib,eds,edOk,
       adminIds,nickColors,nickBgs,favOk,favs:[...favs],plOk,plists,plMem,supers:[...supers],testerOk,testerIds:[...testerIds],
       evOk,evNewOk,evGeoOk,evExtraOk,evInvOk,evPriceOk,evLoaded,evs,evDist,evPart,evLikes,evInv,
       fbOk,fbList,fbDone,tgOk,tgLink,modOk,modBanned:[...modBanned],modHidden:[...modHidden],places,stealthOk,stealthIds:[...stealthIds]};
@@ -169,7 +170,7 @@ function snapLoad(){
     sorted=d.sorted||[];rsvps=d.rsvps||{};watchOk=d.watchOk;watchN=d.watchN||{};flags=d.flags||{};flagsReady=true;
     myPriv=d.myPriv;profExOk=d.profExOk;genderOk=d.genderOk;nicks=d.nicks||{};genders=d.genders||{};joinedAt=d.joinedAt||{};avAt=d.avAt||{};medias=d.medias||{};me.nick=d.meNick||null;
     rbOk=d.rbOk;titleOk=!!d.titleOk;wGrOk=!!d.wGrOk;wActOk=!!d.wActOk||/(^|,)activity(,|$)/.test(String(d.wCols||""));   // kopia sprzed ?v=196 nie ma wActOk — kolumna activity w wCols wystarczybikeOk=d.bikeOk;placeOk=d.placeOk;distOk=d.distOk;paceOk=d.paceOk;wRouteOk=d.wRouteOk;testOk=d.testOk;rangeOk=d.rangeOk;visOk=d.visOk;wCols=d.wCols;
-    wRaw=d.wRaw||[];joins=d.joins||{};prefs=d.prefs||{};invs=d.invs||{};decls=d.decls||{};notifs=d.notifs||[];reportOk=d.reportOk;reports=d.reports||{};lib=d.lib||[];
+    wRaw=d.wRaw||[];joins=d.joins||{};prefs=d.prefs||{};invs=d.invs||{};decls=d.decls||{};eds=d.eds||{};edOk=!!d.edOk;notifs=d.notifs||[];reportOk=d.reportOk;reports=d.reports||{};lib=d.lib||[];
     adminIds=d.adminIds||[];isAdmin=adminIds.includes(uid)&&!pv;nickColors=d.nickColors||{...DEF_COLORS};nickBgs=d.nickBgs||{...DEF_BGS};
     favOk=d.favOk;favs=new Set(d.favs||[]);plOk=!!d.plOk;plists=d.plists||[];plMem=d.plMem||{};supers=new Set(d.supers||[]);testerOk=d.testerOk;testerIds=new Set(d.testerIds||[]);
     evOk=d.evOk;evNewOk=d.evNewOk;evGeoOk=d.evGeoOk;evExtraOk=d.evExtraOk;evInvOk=d.evInvOk;evPriceOk=!!d.evPriceOk;evLoaded=!!d.evLoaded;evs=d.evs||[];evDist=d.evDist||{};evPart=d.evPart||{};evLikes=d.evLikes||{};evInv=d.evInv||[];
@@ -287,6 +288,7 @@ async function loadRemote(selectId){
     ]):[{data:[]},{data:[]},{data:[]}];
     decls={};((dc&&!dc.error&&dc.data)||[]).forEach(x=>{(decls[x.want_id]=decls[x.want_id]||[]).push(x.user_id)});
     invs={};((iv&&!iv.error&&iv.data)||[]).forEach(x=>{(invs[x.want_id]=invs[x.want_id]||[]).push({u:x.user_id,by:x.added_by})});
+    {const re=await byWant("want_editors","want_id,user_id");edOk=!re.error;eds={};((edOk&&re.data)||[]).forEach(x=>{(eds[x.want_id]=eds[x.want_id]||[]).push(x.user_id)})}   // ✍️ współautorzy (KROK 113)
     notifs=(nt&&!nt.error&&nt.data)||[];
     // 🚴 „Jak poszło?” (KROK 39): odpowiedzi do jazd, które już wystartowały
     {const rq=await sb.from("ride_reports").select("want_id").limit(1);reportOk=!rq.error;reports={};
@@ -344,7 +346,7 @@ async function loadRemote(selectId){
     if(isAdmin){const sq=await sb.from("admin_stealth").select("user_id");stealthOk=!sq.error;stealthIds=new Set((ok(sq)||[]).map(x=>x.user_id))}else{stealthOk=false;stealthIds=new Set()}
     applyPresence();
     renderBan();
-  }else{wRaw=[];syncN=null;snapClear();favs=new Set();favOk=false;plOk=false;plists=[];plMem={};nicks={};genders={};me.nick=null;wants=[];joins={};prefs={};decls={};invs={};notifs=[];testerIds=new Set();testerOk=false;tgOk=false;tgLink=null;tgCode="";fbOk=false;fbList=[];fbDone={};lib=[];adminIds=[];isAdmin=false;stopPresence();
+  }else{wRaw=[];syncN=null;snapClear();favs=new Set();favOk=false;plOk=false;plists=[];plMem={};nicks={};genders={};me.nick=null;wants=[];joins={};prefs={};decls={};invs={};eds={};notifs=[];testerIds=new Set();testerOk=false;tgOk=false;tgLink=null;tgCode="";fbOk=false;fbList=[];fbDone={};lib=[];adminIds=[];isAdmin=false;stopPresence();
     // 👤 imprezy dla gości (KROK 61): same imprezy i liczby z events_pub(); bez przełącznika „Goście” — nic
     evPub=false;evLoaded=false;evOk=false;evs=[];evDist={};evPart={};evLikes={};evInv=[];evCnt={};
     if(tabOk(3))await loadEventsPub()}

@@ -307,7 +307,7 @@ let userId="",userBack="";
 let delReq=null;
 function askDelete(kind,id){
   let r={kind,id},own=false,joined=0;
-  if(kind==="want"){const w=wants.find(x=>x.id===id);if(!w)return;own=w.user_id===uid;joined=(joins[id]||[]).filter(x=>x!==w.user_id).length;
+  if(kind==="want"){const w=wants.find(x=>x.id===id);if(!w)return;own=w.user_id===uid;r.ed=!own&&typeof edIds==="function"&&edIds(w).includes(uid);joined=(joins[id]||[]).filter(x=>x!==w.user_id&&x!==uid).length;
     r.title=own?"Odwołać zaproszenie?":"Usunąć zaproszenie?";r.author=w.user_id;r.what=wfLabel(new Date(w.starts_at))+(w.note?" · "+w.note:"");r.extra=joined?"Dołączyło: "+joined+" — ich zgłoszenia też znikną.":"Nikt jeszcze nie dołączył.";}
   if(kind==="ride"){const x=sorted.find(y=>y.id===id);if(!x)return;own=x.creator===uid;const g=(rsvps[id]||[]).length;
     r.title="Usunąć wieczorynkę?";r.author=x.creator;r.what=x.title+" · "+fmtWhen(x.when);r.extra="Zapisanych: "+g+" — ich zapisy znikną. Tej operacji nie można cofnąć.";}
@@ -323,7 +323,7 @@ function confDelHtml(){
   const r=delReq;
   return '<div class="sname">🗑️ '+esc(r.title)+'</div>'
    +'<div class="sleft">'
-   +(r.own?'':'<div class="changed" style="margin-top:12px">⚠️ Usuwasz cudzy wpis'+(nicks[r.author]?' — autor: '+nk(r.author):'')+'</div>')
+   +(r.own?'':'<div class="changed" style="margin-top:12px">⚠️ '+(r.ed?'Usuwasz zaproszenie, którego jesteś współautorem':'Usuwasz cudzy wpis')+(nicks[r.author]?' — autor: '+nk(r.author):'')+'</div>')
    +'<div class="arow" style="flex-direction:column;align-items:flex-start;gap:4px;margin-top:6px"><b>'+esc(r.what)+'</b><span class="note">'+esc(r.extra)+'</span></div>'
    +'<label for="gconf" style="font-size:15px;margin-top:16px">Aby potwierdzić, wpisz <b>USUŃ</b></label>'
    +'<input id="gconf" maxlength="10" autocomplete="off" autocapitalize="characters">'
