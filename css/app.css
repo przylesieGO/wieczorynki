@@ -1380,7 +1380,7 @@ mark.srmk.out{background:transparent;color:inherit;box-shadow:none}
 /* 🔍 etap C (2026-11-24): wspólne Filtry, zakres archiwum, „Szukaj starszych”, historia wyszukiwań */
 @media (hover:hover) and (pointer:fine),(min-width:700px){.fltbox .fchips,#flt_when{flex-wrap:wrap;overflow:visible;margin-right:0;padding-right:0;row-gap:7px}.evchips{flex-wrap:wrap;overflow:visible;row-gap:7px}}   /* myszka / szeroki ekran: bomble się zawijają */
 .fscope{margin:0 0 4px;font-size:13px}
-.evchips .fch.evfb{display:inline-flex;align-items:center;gap:5px;order:-1}.evchips .fch.evfb .ui-i{width:15px;height:15px}
+.evchips .fch.evfb,.evchips .fch.near{display:inline-flex;align-items:center;gap:5px;order:-1}.evchips .fch.evfb .ui-i,.evchips .fch.near .ui-i{width:15px;height:15px}   /* v374: 📍 W okolicy + 🌐 Cała Polska — para na początku */
 #evfltbar{margin-top:8px}
 .arng{margin:8px 0 2px;flex-wrap:wrap}.arng .fch{padding:6px 12px;font-size:14px}
 .srold{display:flex;flex-direction:column;gap:6px;padding:9px 12px;background:var(--fill);border-bottom:1px solid var(--line)}

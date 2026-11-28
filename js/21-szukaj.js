@@ -145,6 +145,7 @@ function SR_OPT(){const S=!!session,A=S&&isAdmin,K=S&&isSuper(uid),KR=isKingReal
   {t:"Zmień hasło",s:"hasło password",p:"Ustawienia → Edytuj profil → Konto → Zmień hasło",i:"key",go:[SR_PROF,'[data-c="pwd"]'],ok:S},
   {t:"Trasy DEMO (testowe)",s:"trasa demo widmo testowe zaproszenie bez gpx dalekie miasta",p:"Ustawienia → Baza tras → plakietka 🧪 DEMO",i:"map",fn:()=>openRb(),ok:!!rbOk},
   {t:"Baza tras",s:"trasy gpx mapa odkryj",p:"Ustawienia → Baza tras",i:"map",fn:()=>openRb(),ok:!!rbOk},
+  {t:"Imprezy z całej Polski / z okolicy",s:"imprezy cała polska okolica w okolicy wszystkie daleko na stałe domyślnie filtr promień",p:"Imprezy → 🌐 Cała Polska / 📍 W okolicy (pierwsze filtry)",i:"globe",fn:()=>show(3),hl:"[data-evarea]",ok:typeof tabOk==="function"&&tabOk(3)},
   {t:"Pytaj o imprezy spoza okolicy",s:"imprezy okolica w okolicy cała polska pokaż wszystkie zostań przy okolicy nie pokazuj więcej okienko pytanie promień daleko",p:"Ustawienia → Jazdy i zaproszenia",i:"pin",hl:"[data-eva]",ok:S&&!DEMO&&typeof evAskRow==="function"&&!!evAskRow()},
   {t:"Pytaj „Jak poszło?”",s:"jak poszło ankieta ocena po jeździe km",p:"Ustawienia → Jazdy i zaproszenia",i:"bike",hl:"[data-ro]",ok:S&&reportOk},
   {t:"Ekipa demo: pokazuj",s:"ekipa demo konta demo zmyślone ukryj pokaż zombie testowe osoby",p:"Ustawienia → Jazdy i zaproszenia",i:"users",hl:'[data-dmo="show"]',ok:S&&!DEMO},
