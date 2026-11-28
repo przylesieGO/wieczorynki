@@ -24,7 +24,7 @@ const tabIn=i=>{if(i===3&&typeof evAreaAsk==="function")setTimeout(evAreaAsk,350
   const skip=t=>!!t.closest("#tdeck,.leaflet-container,.mycar.multi,.dcar,.rstrip,#fclock,#fclock2,input,select,textarea,.sheet,#welcome");
   document.addEventListener("touchstart",e=>{
     lock=0;dx=0;sec=null;
-    if(e.touches.length!==1||gearOpen||skip(e.target))return;
+    if(e.touches.length!==1||gearOpen||curTab===0||curTab===3||skip(e.target))return;   // v389: na Zaproszeniach (0) i Imprezach (3) bez gestu — zakładki tylko przez talię kart (lepsze przewijanie list i komponentów)
     x0=e.touches[0].clientX;y0=e.touches[0].clientY;sec=$("p"+curTab);lock=-1;
   },{passive:true});
   document.addEventListener("touchmove",e=>{
